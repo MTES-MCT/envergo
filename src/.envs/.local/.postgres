@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=envergo
+POSTGRES_USER=kEioYGVGthwVchTWJncxWxOUtirAyqiM
+POSTGRES_PASSWORD=u3xm7kHf1enF3OUVLktG9mneNWi1fsIwvpFMVZLW0ETyEJCOpAEnLPjkKB1mu9Ty
