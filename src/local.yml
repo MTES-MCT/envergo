@@ -33,3 +33,18 @@ services:
       - local_postgres_data_backups:/backups:z
     env_file:
       - ./.envs/.local/.postgres
+
+  node:
+    build:
+      context: .
+      dockerfile: ./compose/local/node/Dockerfile
+    image: envergo_local_node
+    container_name: node
+    depends_on:
+      - django
+    volumes:
+      - .:/app:z
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+      - "3001:3001"
