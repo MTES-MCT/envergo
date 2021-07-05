@@ -31,293 +31,31 @@
   {% block extra_js %}{% endblock %}
   {% endblock javascript %}
 </head>
+
 <body>
 
-  <div class="fr-skiplinks">
-    <nav class="fr-container" role="navigation" aria-label="Accès rapide">
-      <ul class="fr-skiplinks__list">
-        <li>
-          <a class="fr-nav__link" href="#contenu">Contenu</a>
-        </li>
-        <li>
-          <a class="fr-nav__link" href="#header-navigation">Menu</a>
-        </li>
-        <li>
-          <a class="fr-nav__link" href="#header-search">Recherche</a>
-        </li>
-        <li>
-          <a class="fr-nav__link" href="#footer">Pied de page</a>
-        </li>
-      </ul>
-    </nav>
-  </div>
+  {% include '_skiplinks.html' %}
 
   <header role="banner" class="fr-header">
-    <div class="fr-header__body">
-      <div class="fr-container">
-        <div class="fr-header__body-row">
-          <div class="fr-header__brand fr-enlarge-link">
-            <div class="fr-header__brand-top">
-              <div class="fr-header__logo">
-                <p class="fr-logo">
-                  République
-                  <br>Française
-                </p>
-              </div>
-              <div class="fr-header__navbar">
-                <button class="fr-btn--menu fr-btn" data-fr-opened="false" aria-controls="modal-menu"
-                  aria-haspopup="menu" title="Menu">
-                  Menu
-                </button>
-              </div>
-            </div>
-            <div class="fr-header__service">
-              <a href="/" title="Accueil - Démo du Design System de l&#39;Etat - version 1.0.0-rc1.0">
-                <p class="fr-header__service-title">Démo du Design System de l&#39;Etat - version 1.0.0-rc1.0</p>
-              </a>
-              <p class="fr-header__service-tagline">Un site pour tester le Design System de l&#39;État et
-                s&#39;inspirer.</p>
-            </div>
-          </div>
-
-          <div class="fr-header__tools">
-            <div class="fr-header__tools-links">
-              <ul class="fr-links-group">
-                <li>
-                  <a class="fr-link fr-fi-external-link-line fr-link--icon-right"
-                    href="https://gouvfr.atlassian.net/wiki/spaces/DB/"
-                    title="documentation officielle - nouvelle fenêtre" target="_blank" rel="noopener">Documentation
-                    officielle</a>
-                </li>
-                <li>
-                  <button class="fr-link fr-fi-sun-fill-line fr-link--icon-left" aria-controls="fr-theme-modal"
-                    data-fr-opened="false">Paramètres d'affichage</button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TODO : fix arria-labellby -->
-    <div class="fr-header__menu fr-modal" id="modal-menu" aria-labelledby="button-825">
-      <div class="fr-container">
-        <button class="fr-link--close fr-link" aria-controls="modal-menu">Fermer</button>
-        <div class="fr-header__menu-links">
-        </div>
-
-        <nav class="fr-nav" role="navigation" aria-label="Menu principal">
-          <ul class="fr-nav__list">
-            <li class="fr-nav__item">
-              <a class="fr-nav__link" href="/" target="_self" aria-current="page">Accueil</a>
-            </li>
-            <li class="fr-nav__item">
-              <a class="fr-nav__link" href="/components" target="_self">Des composants</a>
-            </li>
-            <li class="fr-nav__item">
-              <a class="fr-nav__link" href="/formulaire" target="_self">Un formulaire</a>
-            </li>
-            <li class="fr-nav__item">
-              <a class="fr-nav__link" href="/typography" target="_self">La typographie</a>
-            </li>
-            <li class="fr-nav__item">
-              <button class="fr-nav__btn" aria-expanded="false" aria-controls="fr-nav-colors">Des couleurs</button>
-              <div class="fr-menu fr-collapse" id="fr-nav-colors">
-                <ul class="fr-menu__list">
-                  <li><a class="fr-nav__link" href="/colors" target="_self">Palette de couleur</a></li>
-                  <li><a class="fr-nav__link" href="/colors#combinaisons" target="_self">Combinaisons accessibles</a>
-                  </li>
-                  <li><a class="fr-nav__link" href="/colors#variables" target="_self">Palette de couleur</a></li>
-                </ul>
-              </div>
-            </li>
-            <li class="fr-nav__item">
-              <a class="fr-nav__link" href="/ressources" target="_self">Ressources</a>
-            </li>
-          </ul>
-      </div>
-      </nav>
-    </div>
-    </div>
-
+    {% block header %}
+    {% include '_header.html' %}
+    {% endblock %}
   </header>
+
   <main role="main" id="contenu">
-    <div class="fr-container fr-py-6w fr-px-2w">
-      <h1>Démo du Design System de l'État</h1>
-      <p>
-        Ce site est un effort bénévole pour proposer une démo au design system de l'Etat. Il n'est pas maintenu par le
-        SIG : pas de garantie qu'il soit complet, ni parfait !
-      </p>
-
-      <div class="fr-container-fluid fr-my-6w">
-        <div class="fr-grid-row fr-grid-row--gutters">
-          <div class="fr-col-12 fr-col-md-3">
-            <div class="fr-card fr-enlarge-link">
-              <div class="fr-card__body">
-                <h2 class="fr-card__title"><a href="/components">Composants</a></h2>
-                <p class="fr-card__desc">Cartes, boutons...</p>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="fr-col-12 fr-col-md-3">
-            <div class="fr-card fr-enlarge-link">
-              <div class="fr-card__body">
-                <h2 class="fr-card__title"><a href="/formulaire">Formulaire</a></h2>
-                <p class="fr-card__desc">Input, textarea...</p>
-              </div>
-
-            </div>
-          </div>
-          <div class="fr-col-12 fr-col-md-3">
-            <div class="fr-card fr-enlarge-link">
-              <div class="fr-card__body">
-                <h2 class="fr-card__title"><a href="/typography">Typographie</a></h2>
-                <p class="fr-card__desc">Titres, paragraphes...</p>
-              </div>
-
-            </div>
-          </div>
-          <div class="fr-col-12 fr-col-md-3">
-            <div class="fr-card fr-enlarge-link">
-              <div class="fr-card__body">
-                <h2 class="fr-card__title"><a href="/colors">Couleurs</a></h2>
-                <p class="fr-card__desc">Palettes, combinaisons accessibles...</p>
-              </div>
-
-            </div>
-          </div>
-          <div class="fr-col-12 fr-col-md-3">
-            <div class="fr-card fr-enlarge-link">
-              <div class="fr-card__body">
-                <h2 class="fr-card__title"><a href="/ressources">Ressources</a></h2>
-                <p class="fr-card__desc">Documentation et lien vers des sites exemples en production</p>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="fr-container-fluid">
-        <h2>Vous voulez participer ? </h2>
-        <ul>
-          <li><a class="fr-link fr-fi-external-link-line fr-link--icon-right" target="blank"
-              href="https://github.com/betagouv/template-design-system-de-l-etat/issues">Voir les problèmes
-              signalés</a></li>
-          <li><a class="fr-link fr-fi-external-link-line fr-link--icon-right" target="blank"
-              href="https://github.com/betagouv/template-design-system-de-l-etat/issues/new">Signaler un problème</a>
-          </li>
-          <li><a class="fr-link fr-fi-external-link-line fr-link--icon-right" target="blank"
-              href="https://github.com/betagouv/template-design-system-de-l-etat/">Contribuer au code source</a></li>
-      </div>
+    {% block main %}
+    <div class="fr-container fr-py-6w">
+      {% block container %}
+      {% endblock %}
     </div>
-    </div>
-
-    </div>
+    {% endblock %}
   </main>
 
-
   <footer role="contentinfo" class="fr-footer" id="footer">
-    <div class="fr-container">
-      <div class="fr-footer__body">
-        <div class="fr-footer__brand fr-enlarge-link">
-          <a href="/" title="Retour à l’accueil">
-            <p class="fr-logo">
-              République
-              <br>française
-            </p>
-          </a>
-        </div>
-        <div class="fr-footer__content">
-          <p class="fr-footer__content-desc">
-            Un site pour tester le Design System de l&#39;État et s&#39;inspirer.
-          </p>
-          <p class="fr-footer__content-desc">
-            Le code source est ouvert et les contributions sont bienvenues.
-            <a title="Voir le code source" href="https://github.com/betagouv/template-design-system-de-l-etat"
-              target="_blank" rel="noopener">Voir le code source</a>
-          </p>
-          <ul class="fr-footer__content-list">
-            <li class="fr-footer__content-item">
-              <a class="fr-footer__content-link" title="Contactez-nous" href="#">
-                Contactez-nous
-              </a>
-            </li>
-            <li class="fr-footer__content-item">
-              <a class="fr-footer__content-link" href="https://www.numerique.gouv.fr/">numerique.gouv.fr</a>
-            </li>
-            <li class="fr-footer__content-item">
-              <a class="fr-footer__content-link" href="https://beta.gouv.fr/">beta.gouv.fr</a>
-            </li>
-            <li class="fr-footer__content-item">
-              <a class="fr-footer__content-link" href="https://www.gouvernement.fr/">gouvernement.fr</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="fr-footer__bottom">
-        <ul class="fr-footer__bottom-list">
-          <li class="fr-footer__bottom-item">
-            <a class="fr-footer__bottom-link" href="/accessibilite">Accessibilité : non conforme</a>
-          </li>
-          <li class="fr-footer__bottom-item">
-            <a class="fr-footer__bottom-link" href="/mentions-legales">Mentions légales</a>
-          </li>
-          <li class="fr-footer__bottom-item">
-            <a class="fr-footer__bottom-link" href="/contact">Contactez-nous</a>
-          </li>
-          <li class="fr-footer__bottom-item">
-            <button class="fr-footer__bottom-link fr-fi-sun-fill-line fr-link--icon-left" aria-controls="fr-theme-modal"
-              data-fr-opened="false">Paramètres d'affichage</button>
-          </li>
-        </ul>
-        <div class="fr-footer__bottom-copy">
-          <p>Sauf mention contraire, tous les textes de ce site sont sous <a
-              href="https://github.com/etalab/licence-ouverte/blob/master/LO.md" target="_blank">licence
-              etalab-2.0</a>
-          </p>
-        </div>
-      </div>
-    </div>
-    <dialog id="fr-theme-modal" class="fr-modal" role="dialog" aria-labelledby="fr-theme-modal-title">
-      <div class="fr-container--fluid fr-container-md">
-        <div class="fr-grid-row fr-grid-row--center">
-          <div class="fr-col-12 fr-col-md-6 fr-col-lg-4">
-            <div class="fr-modal__body">
-              <div class="fr-modal__header">
-                <button class="fr-link--close fr-link" aria-controls="fr-theme-modal">Fermer</button>
-              </div>
-              <div class="fr-modal__content">
-                <h1 id="fr-theme-modal-title" class="fr-modal__title">
-                  Paramètres d’affichage
-                </h1>
-                <div id="fr-switch-theme" class="fr-form-group fr-switch-theme">
-                  <fieldset class="fr-fieldset">
-                    <legend class="fr-fieldset__legend">Choisissez un thème pour personnaliser l’apparence du site.
-                    </legend>
-                    <div class="fr-fieldset__content">
-                      <div class="fr-radio-group fr-radio-rich">
-                        <input type="radio" id="fr-radios-theme-light" name="fr-radios-theme" value="light">
-                        <label class="fr-label" for="fr-radios-theme-light">Thème clair
-                        </label>
-                      </div>
-                      <div class="fr-radio-group fr-radio-rich">
-                        <input type="radio" id="fr-radios-theme-dark" name="fr-radios-theme" value="dark">
-                        <label class="fr-label" for="fr-radios-theme-dark">Thème sombre
-                        </label>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </dialog>
+    {% block footer %}
+    {% include '_footer.html' %}
+    {% endblock %}
   </footer>
 </body>
+
 </html>
