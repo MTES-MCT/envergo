@@ -2,8 +2,8 @@ FROM node:14-buster-slim
 
 WORKDIR /app
 
-COPY ./src/package.json /app
-COPY ./src/package-lock.json /app
+COPY ./src/package.json .
+COPY ./src/package-lock.json .
 
 RUN npm install && npm cache clean --force
 
