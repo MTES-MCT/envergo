@@ -27,7 +27,7 @@ RUN pip wheel --wheel-dir /usr/src/app/wheels  \
 FROM python as python-run-stage
 
 ARG BUILD_ENVIRONMENT=local
-ARG APP_HOME=/app
+ARG APP_HOME=/app/
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -64,6 +64,6 @@ RUN chmod +x /start
 
 
 # copy application code to WORKDIR
-COPY . ${APP_HOME}
+COPY ./src/* ./
 
 ENTRYPOINT ["/entrypoint"]
