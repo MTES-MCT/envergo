@@ -1,7 +1,9 @@
 {
   "name": "envergo",
   "version": "1.0.0",
-  "dependencies": {},
+  "dependencies": {
+    "@gouvfr/dsfr": "^1.0.0"
+  },
   "devDependencies": {
     "autoprefixer": "^9.4.7",
     "browser-sync": "^2.14.0",
