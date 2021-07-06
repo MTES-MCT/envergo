@@ -11,11 +11,7 @@ from django.urls import reverse
 from envergo.users.forms import UserChangeForm
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
-from envergo.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-)
+from envergo.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 

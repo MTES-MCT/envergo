@@ -64,6 +64,6 @@ RUN chmod +x /start
 
 
 # copy application code to WORKDIR
-COPY ./src .
+COPY . ${APP_HOME}
 
 ENTRYPOINT ["/entrypoint"]

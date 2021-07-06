@@ -8,7 +8,7 @@ DEBUG = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env(
     "DJANGO_SECRET_KEY",
-    default="CtyjwVAgBdZtED4xr6jWTVuqC3UDv1A82FZj830Cz7YmFekOLBXyVNVfSJZR1Akt",
+    default="xa7B39ApH5wH2VZS28Hk1CfLs7Hta6iPAkModtOEft8iGv3jppqDeGSCvpW1AX4p",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "envergo.local"]
@@ -54,6 +54,12 @@ if env("USE_DOCKER") == "yes":
 
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
+    try:
+        _, _, ips = socket.gethostbyname_ex("node")
+        INTERNAL_IPS.extend(ips)
+    except socket.gaierror:
+        # The node container isn't started (yet?)
+        pass
 
 # django-extensions
 # ------------------------------------------------------------------------------
