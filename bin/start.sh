@@ -6,4 +6,3 @@ python manage.py compilemessages
 python manage.py collectstatic --noinput
 python manage.py compress --force
 gunicorn config.wsgi:application --log-file -
-echo "Completed start web script"
