@@ -17,9 +17,6 @@
     "gulp-uglify-es": "^1.0.4",
     "pixrem": "^5.0.0"
   },
-  "engines": {
-    "node": ">=8"
-  },
   "browserslist": [
     "last 2 versions"
   ],
