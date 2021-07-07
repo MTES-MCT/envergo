@@ -11,23 +11,21 @@
   <meta name="author" content="MTES">
 
 
-  <link rel="apple-touch-icon" href="/static/@gouvfr/dsfr/dist/favicons/apple-touch-icon.png">
-  <link rel="icon" href="/static/@gouvfr/dsfr/dist/favicons/favicon.svg" type="image/svg+xml">
-  <link rel="shortcut icon" href="/static/@gouvfr/dsfr/dist/favicons/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="{% static '@gouvfr/dsfr/dist/favicons/apple-touch-icon.png' %}">
+  <link rel="icon" href="{% static '@gouvfr/dsfr/dist/favicons/favicon.svg" type="image/svg+xml' %}">
+  <link rel="shortcut icon" href="{% static '@gouvfr/dsfr/dist/favicons/favicon.ico' %}" type="image/x-icon">
 
   {% block css %}
   {% compress css %}
-  <link href="/static/@gouvfr/dsfr/dist/css/dsfr.css" rel="stylesheet">
-  <link href="/static/css/project.css" rel="stylesheet">
+  <link href="{% static '@gouvfr/dsfr/dist/css/dsfr.css' %}" rel="stylesheet">
+  <link href="{% static 'css/project.css' %}" rel="stylesheet">
   {% endcompress %}
   {% block extra_css %}{% endblock %}
   {% endblock css %}
 
   {% block javascript %}
-  {% compress js %}
-  <script defer type="module" src="/static/@gouvfr/dsfr/dist/js/dsfr.module.js"></script>
-  <script defer type="text/javascript" nomodule src="/static/@gouvfr/dsfr/dist/js/dsfr.nomodule.js"></script>
-  {% endcompress %}
+  <script defer type="module" src="{% static '@gouvfr/dsfr/dist/js/dsfr.module.min.js' %}"></script>
+  <script defer type="text/javascript" nomodule src="{% static '@gouvfr/dsfr/dist/js/dsfr.nomodule.min.js' %}"></script>
   {% block extra_js %}{% endblock %}
   {% endblock javascript %}
 </head>
