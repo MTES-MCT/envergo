@@ -1,3 +1,4 @@
+{% load pages %}
 <div class="fr-header__body">
   <div class="fr-container">
     <div class="fr-header__body-row">
@@ -50,7 +51,10 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">
-          <a class="fr-nav__link" href="/" target="_self" aria-current="page">Accueil</a>
+          {% menu_item 'home' _('Home') %}
+        </li>
+        <li class="fr-nav__item">
+          {% menu_item 'water_law' _('Water law') %}
         </li>
       </ul>
     </nav>

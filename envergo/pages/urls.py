@@ -19,4 +19,9 @@ urlpatterns = [
         TemplateView.as_view(template_name="pages/contact_us.html"),
         name="contact_us",
     ),
+    path(
+        _("water-law/"),
+        TemplateView.as_view(template_name="pages/water_law.html"),
+        name="water_law",
+    ),
 ]
