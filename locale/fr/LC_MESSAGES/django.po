@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-08 10:57+0200\n"
+"POT-Creation-Date: 2021-07-08 12:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,12 +35,19 @@ msgid "water-law/"
 msgstr "loi-sur-leau"
 
 #: envergo/templates/_header.html:54
+#: envergo/templates/pages/legal_mentions.html:11
 msgid "Home"
 msgstr "Accueil"
 
 #: envergo/templates/_header.html:57
 msgid "Water law"
 msgstr "Loi sur l'eau"
+
+#: envergo/templates/pages/legal_mentions.html:3
+#: envergo/templates/pages/legal_mentions.html:14
+#: envergo/templates/pages/legal_mentions.html:24
+msgid "Legal mentions"
+msgstr "Mentions légales"
 
 #: envergo/users/admin.py:18
 msgid "Personal info"
