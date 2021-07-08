@@ -67,7 +67,7 @@ THIRD_PARTY_APPS = []
 
 LOCAL_APPS = [
     "envergo.users.apps.UsersConfig",
-    # Your stuff: custom apps go here
+    "envergo.pages",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -217,7 +217,7 @@ EMAIL_TIMEOUT = 5
 # Django Admin URL.
 ADMIN_URL = "admin/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = [x.split(":") for x in env.list("DJANGO_ADMINS")]
+ADMINS = [x.split(":") for x in env.list("DJANGO_ADMINS", default=[])]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
