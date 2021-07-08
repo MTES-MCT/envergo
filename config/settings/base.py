@@ -254,3 +254,9 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+ANALYTICS = {
+    "TRACKER_ENABLED": env("DJANGO_TRACKER_ENABLED", default=False),
+    "TRACKER_URL": env("DJANGO_TRACKER_URL", default=""),
+    "SITE_ID": env("DJANGO_SITE_ID", default=""),
+}
