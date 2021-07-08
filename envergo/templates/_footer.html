@@ -30,16 +30,13 @@
   <div class="fr-footer__bottom">
     <ul class="fr-footer__bottom-list">
       <li class="fr-footer__bottom-item">
-        <a class="fr-footer__bottom-link" href="">Accessibilité : non conforme</a>
+        <a class="fr-footer__bottom-link" href="{% url 'accessibility' %}">Accessibilité : non conforme</a>
       </li>
       <li class="fr-footer__bottom-item">
-        <a class="fr-footer__bottom-link" href="">Mentions légales</a>
+        <a class="fr-footer__bottom-link" href="{% url 'legal_mentions' %}">Mentions légales</a>
       </li>
       <li class="fr-footer__bottom-item">
-        <a class="fr-footer__bottom-link" href="">Données personnelles</a>
-      </li>
-      <li class="fr-footer__bottom-item">
-        <a class="fr-footer__bottom-link" href="">Contactez-nous</a>
+        <a class="fr-footer__bottom-link" href="{% url 'contact_us' %}">Contactez-nous</a>
       </li>
       <li class="fr-footer__bottom-item">
         <button class="fr-footer__bottom-link fr-fi-sun-fill-line fr-link--icon-left" aria-controls="fr-theme-modal"

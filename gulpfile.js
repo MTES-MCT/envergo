@@ -137,6 +137,6 @@ const dev = parallel(
   watchPaths
 )
 
-exports.default = series(generateAssets, dev)
+exports.default = series(dev)
 exports["generate-assets"] = generateAssets
 exports["dev"] = dev
