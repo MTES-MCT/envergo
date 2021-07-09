@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from envergo.evaluations.validators import application_number_validator
+
 
 class EvaluationFormMixin(forms.Form):
     """Common code for all evaluation forms."""
@@ -11,6 +13,7 @@ class EvaluationFormMixin(forms.Form):
         label=_("Application number"),
         help_text=_('A 15 chars value starting with "P"'),
         widget=forms.TextInput(attrs={"placeholder": "PC04412621D1029"}),
+        validators=[application_number_validator],
         max_length=64,
     )
 
