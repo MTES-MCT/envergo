@@ -21,7 +21,10 @@
 
 {% block container %}
 <h1>Demande de permis n°{{ evaluation.application_number }}</h1>
-<p class="fr-text--lead">Votre évaluation Loi sur l'eau est disponible !</p>
+<p class="fr-text--lead">
+  <span class="fr-fi-checkbox-circle-fill" aria-hidden="true"></span>
+  Votre évaluation Loi sur l'eau est disponible !
+</p>
 
 <a href="{{ evaluation.evaluation_file.url }}" rel="download" class="fr-btn">Consulter l'évaluation</a>
 
