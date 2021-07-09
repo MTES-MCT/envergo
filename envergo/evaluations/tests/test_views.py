@@ -12,11 +12,11 @@ def test_searching_inexisting_eval(client):
     res = client.post(
         search_url, data={"application_number": application_number}, follow=True
     )
-    assert res.status_code == 200
+    assert res.status_code == 404
 
     content = res.content.decode("utf-8")
     assert (
-        "l'évaluation Loi sur l'eau n’est pas encore disponible pour ce projet."
+        "l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet"
         in content
     )
 
