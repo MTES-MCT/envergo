@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-08 12:27+0200\n"
+"POT-Creation-Date: 2021-07-09 12:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,34 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: config/urls.py:10
+msgid "evaluations/"
+msgstr "évaluations/"
+
+#: envergo/evaluations/forms.py:9 envergo/evaluations/models.py:17
+msgid "Application number"
+msgstr "Numéro de demande de permis"
+
+#: envergo/evaluations/forms.py:10
+msgid "A 15 chars value starting with \"P\""
+msgstr "Une valeur à 15 caractères démarrant par « PC » ou « PA »."
+
+#: envergo/evaluations/models.py:19
+msgid "Evaluation file"
+msgstr "Fichier d'évaluation"
+
+#: envergo/evaluations/models.py:23
+msgid "Date created"
+msgstr "Date de création"
+
+#: envergo/evaluations/models.py:26
+msgid "Evaluation"
+msgstr "Évaluation"
+
+#: envergo/evaluations/models.py:27
+msgid "Evaluations"
+msgstr "Évaluations"
 
 #: envergo/pages/urls.py:8
 msgid "legal-mentions/"
@@ -33,6 +61,19 @@ msgstr "contact/"
 #: envergo/pages/urls.py:23
 msgid "water-law/"
 msgstr "loi-sur-leau"
+
+#: envergo/templates/_form_header.html:6
+msgid ""
+"We <strong>could not process</strong> your form because it contains some "
+"errors."
+msgstr ""
+"Nous <strong>n'avons pas pu traiter votre formulaire</strong> car il "
+"contient des erreurs."
+
+#: envergo/templates/_form_header.html:9
+msgid ""
+"Please check your submission below and fix all errors before trying again."
+msgstr "Merci de vérifier votre saisie ci-dessous avant de réessayer."
 
 #: envergo/templates/_header.html:54
 #: envergo/templates/pages/legal_mentions.html:11
@@ -61,16 +102,24 @@ msgstr ""
 msgid "Important dates"
 msgstr ""
 
-#: envergo/users/apps.py:7
+#: envergo/users/apps.py:7 envergo/users/models.py:54
 msgid "Users"
 msgstr ""
 
-#: envergo/users/forms.py:18 envergo/users/tests/test_forms.py:39
+#: envergo/users/forms.py:18
 msgid "This username has already been taken."
 msgstr ""
 
-#: envergo/users/models.py:11
+#: envergo/users/models.py:43
+msgid "Email address"
+msgstr ""
+
+#: envergo/users/models.py:44
 msgid "Name of User"
+msgstr ""
+
+#: envergo/users/models.py:53
+msgid "User"
 msgstr ""
 
 #: envergo/users/views.py:25

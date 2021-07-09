@@ -10,7 +10,8 @@ def menu_item(context, route, label):
     """Generate html for a main menu item."""
 
     url = reverse(route)
-    current_route = context.request.resolver_match.url_name
+    request = getattr(context, "request", None)
+    current_route = request.resolver_match.url_name if request else ""
     aria_current = 'aria-current="page"' if route == current_route else ""
     return mark_safe(
         f"""
