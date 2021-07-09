@@ -3,7 +3,7 @@ import uuid
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 def evaluation_file_format(instance, filename):
