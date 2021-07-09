@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
@@ -11,8 +13,8 @@ def evaluation_file_format(instance, filename):
 class Evaluation(models.Model):
     """A single evaluation for a building permit application."""
 
+    uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application_number = models.CharField(_("Application number"), max_length=15)
-
     evaluation_file = models.FileField(
         _("Evaluation file"),
         upload_to=evaluation_file_format,
