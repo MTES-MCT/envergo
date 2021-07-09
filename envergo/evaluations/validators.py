@@ -15,12 +15,7 @@ PERMIT_NUMBER_RE = (
 )
 
 
-class IgnoreWhitespacesRegexValidator(RegexValidator):
-    def __call__(self, value):
-        return super().__call__(value.strip().replace(' ', ''))
-
-
-application_number_validator = IgnoreWhitespacesRegexValidator(
+application_number_validator = RegexValidator(
     regex=PERMIT_NUMBER_RE,
     message=_('The application number format is invalid.'),
     flags=re.I
