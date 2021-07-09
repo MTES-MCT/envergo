@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-09 12:17+0200\n"
+"POT-Creation-Date: 2021-07-09 14:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,29 +22,33 @@ msgstr ""
 msgid "evaluations/"
 msgstr "évaluations/"
 
-#: envergo/evaluations/forms.py:9 envergo/evaluations/models.py:17
+#: envergo/evaluations/forms.py:11 envergo/evaluations/models.py:20
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/forms.py:10
+#: envergo/evaluations/forms.py:12
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères démarrant par « PC » ou « PA »."
 
-#: envergo/evaluations/models.py:19
+#: envergo/evaluations/models.py:27
 msgid "Evaluation file"
 msgstr "Fichier d'évaluation"
 
-#: envergo/evaluations/models.py:23
+#: envergo/evaluations/models.py:31
 msgid "Date created"
 msgstr "Date de création"
 
-#: envergo/evaluations/models.py:26
+#: envergo/evaluations/models.py:34
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/models.py:27
+#: envergo/evaluations/models.py:35
 msgid "Evaluations"
 msgstr "Évaluations"
+
+#: envergo/evaluations/validators.py:20
+msgid "The application number format is invalid."
+msgstr "Le format du numéro de dossier est invalide."
 
 #: envergo/pages/urls.py:8
 msgid "legal-mentions/"
