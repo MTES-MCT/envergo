@@ -5,6 +5,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from envergo.evaluations.validators import application_number_validator
+
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
@@ -14,7 +16,11 @@ class Evaluation(models.Model):
     """A single evaluation for a building permit application."""
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    application_number = models.CharField(_("Application number"), max_length=15)
+    application_number = models.CharField(
+        _("Application number"),
+        max_length=15,
+        validators=[application_number_validator],
+    )
     evaluation_file = models.FileField(
         _("Evaluation file"),
         upload_to=evaluation_file_format,
