@@ -34,3 +34,18 @@ def test_search_existing_eval(client, evaluation):
 
     content = res.content.decode("utf-8")
     assert "Votre évaluation Loi sur l'eau est disponible !" in content
+
+
+def test_search_form_allows_spaces_in_application_field(client, evaluation):
+    """Don't prevent spaces in the search field."""
+
+    evaluation.application_number = "PC04412621D1029"
+    evaluation.save()
+
+    search_url = reverse("evaluation_search")
+    res = client.post(
+        search_url,
+        data={"application_number": "pc 044 126 21 d1029"},
+        follow=True,
+    )
+    assert res.status_code == 200
