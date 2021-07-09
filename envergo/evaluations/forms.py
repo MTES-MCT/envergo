@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 
-class EvaluationFormMixin:
+class EvaluationFormMixin(forms.Form):
     """Common code for all evaluation forms."""
 
     # We don't set `maxlength` to 15 because we want to allow copy-pasting
