@@ -1,9 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Page not found{% endblock %}
+{% block title %}Page non trouvée (erreur 404){% endblock %}
 
-{% block content %}
-<h1>Page not found</h1>
+{% block container %}
+<h1>Page non trouvée (erreur 404)</h1>
 
-<p>{% if exception %}{{ exception }}{% else %}This is not the page you were looking for.{% endif %}</p>
-{% endblock content %}
+<p class="fr-text--lead">
+  La page à laquelle vous essayez d'accéder n'existe pas, ou plus.
+</p>
+<p>
+  Peut-être avez-vous suivi un lien invalide ? Il peut aussi s'agir d'une erreur
+  de notre part.
+</p>
+<p>
+  Vous pouvez retourner à la page d'accueil.
+  Si vous pensez qu'il s'agit d'une erreur,
+  <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter.</a>
+</p>
+{% endblock %}

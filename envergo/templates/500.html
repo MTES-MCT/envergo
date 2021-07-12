@@ -1,11 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Server Error{% endblock %}
+{% block title %}Erreur serveur (code 500){% endblock %}
 
-{% block content %}
-<h1>Ooops!!! 500</h1>
+{% block container %}
+<h1>Erreur serveur (code 500)</h1>
 
-<h3>Looks like something went wrong!</h3>
-
-<p>We track these errors automatically, but if the problem persists feel free to contact us. In the meantime, try refreshing.</p>
-{% endblock content %}
+<p class="fr-text--lead">
+  Une erreur technique nous empêche d'afficher ce contenu.
+</p>
+<p>
+  Il s'agit vraissemblablement d'un bug de notre côté.
+</p>
+<p>
+  Notre équipe technique a d'ores et déjà été informée du problème.
+  Si l'erreur persiste,
+  <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter.</a>
+</p>
+{% endblock %}

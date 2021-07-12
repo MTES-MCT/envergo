@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Forbidden (403){% endblock %}
+{% block title %}Accès interdit (code 403){% endblock %}
 
-{% block content %}
-<h1>Forbidden (403)</h1>
+{% block container %}
+<h1>Accès interdit (code 403)</h1>
 
-<p>{% if exception %}{{ exception }}{% else %}You're not allowed to access this page.{% endif %}</p>
-{% endblock content %}
+<p class="fr-text--lead">
+  Vous n'avez pas l'autorisation d'accéder à cette ressource.
+</p>
+<p>
+  Peut-être avez-vous besoin de vous connecter ?
+</p>
+<p>
+  Si vous pensez qu'il s'agit d'une erreur,
+  <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter.</a>
+</p>
+{% endblock %}
