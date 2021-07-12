@@ -1,2 +1,2 @@
-postdeploy: python manage.py migrate
+postdeploy: bash bin/postdeploy.sh
 web: bash bin/start.sh

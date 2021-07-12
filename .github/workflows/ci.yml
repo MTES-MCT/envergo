@@ -31,7 +31,7 @@ jobs:
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
       # since the action is run on a branch in detached head state
-      - name: Install and Run Pre-commit 
+      - name: Install and Run Pre-commit
         uses: pre-commit/action@v2.0.3
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
@@ -47,7 +47,7 @@ jobs:
         run:  docker-compose -f local.yml build
 
       - name: Run DB Migrations
-        run:  docker-compose -f local.yml run --rm django python manage.py migrate
+        run:  docker-compose -f local.yml run --rm django bash bin/postdeploy.sh
 
       - name: Run Django Tests
         run:  docker-compose -f local.yml run django pytest
