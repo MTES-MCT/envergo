@@ -27,7 +27,7 @@ msgid "Application number"
 msgstr "Numéro de demande de permis"
 
 #: envergo/evaluations/forms.py:12
-msgid "A 15-char value starting with \"P\""
+msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
 #: envergo/evaluations/models.py:27
