@@ -1,2 +1,2 @@
 # envergo
-Améliorer la transparence des décisions de l'État sur la Loi sur l'Eau
+Améliorer la prise en compte de l'environnement dans les projets d'urbanisme
