@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Contactez-nous{% endblock %}
+
+{% block breadcrumbs %}
+<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d’Ariane</button>
+  <div class="fr-collapse" id="breadcrumb-1">
+    <ol class="fr-breadcrumb__list">
+      <li>
+        <a class="fr-breadcrumb__link" href="/">Accueil</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" aria-current="page">Contact</a>
+      </li>
+    </ol>
+  </div>
+</nav>
+{% endblock %}
+
+{% block container %}
+<article>
+  <h1>Contactez-nous</h1>
+  <p class="fr-text--lead">Pour une question, remarque, suggestion…</p>
+
+  <p>
+    Vous pouvez joindre l'équipe d'EnvErgo par mail à cette adresse :
+  </p>
+  <p>
+    <a href="mailto:envergo@beta.gouv.fr">envergo@beta.gouv.fr</a>
+  </p>
+</article>
+{% endblock %}
