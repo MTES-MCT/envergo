@@ -12,7 +12,7 @@ class EvaluationFormMixin(forms.Form):
     application_number = forms.CharField(
         label=_("Application number"),
         help_text=_('A 15 chars value starting with "P"'),
-        widget=forms.TextInput(attrs={"placeholder": "PC04412621D1029"}),
+        widget=forms.TextInput(attrs={"placeholder": "PC05112321D0123"}),
         max_length=64,
     )
 

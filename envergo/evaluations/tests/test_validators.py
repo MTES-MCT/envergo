@@ -6,10 +6,10 @@ from envergo.evaluations.validators import application_number_validator
 
 def test_application_number_validator():
     valid_numbers = [
-        "PC04412621D1029",
-        "PA04412621D1029",
-        "PA04412621A1029",
-        "pc04412621d1029",
+        "PC05412621D1029",
+        "PA05412621D1029",
+        "PA05412621A1029",
+        "pc05412621d1029",
     ]
 
     # Test will succeed if no exceptions are raised
