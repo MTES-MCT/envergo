@@ -47,6 +47,9 @@ jobs:
       - name: Build the Stack
         run:  docker-compose -f local.yml build
 
+      - name: Listing volumes
+        run:  docker volume ls
+
       - name: Build assets
         run:  docker-compose -f local.yml run --rm django bash bin/build_assets.sh
 
