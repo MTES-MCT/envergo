@@ -15,6 +15,7 @@ else:
 END
 }
 
+echo "Running the post_compile hook"
 if compress_enabled
 then
   python manage.py compress
