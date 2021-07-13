@@ -18,10 +18,10 @@ END
 
 echo "Starting the post_compile hook"
 
-if compress_enabled
-then
-  python manage.py compress --force
-fi
+# if compress_enabled
+# then
+#   python manage.py compress --force
+# fi
 python manage.py collectstatic --noinput
 python manage.py compilemessages -l fr -i .scalingo
 
