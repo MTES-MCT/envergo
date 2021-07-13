@@ -47,8 +47,11 @@ jobs:
       - name: Build the Stack
         run:  docker-compose -f local.yml build
 
+      - name: Build assets
+        run:  docker-compose -f local.yml run --rm django bash bin/build_assets.sh
+
       - name: Run DB Migrations
-        run:  docker-compose -f local.yml run --rm django bash bin/postdeploy.sh
+        run:  docker-compose -f local.yml run --rm django bash bin/post_deploy.sh
 
       - name: Run Django Tests
         run:  docker-compose -f local.yml run django pytest
