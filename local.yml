@@ -3,6 +3,7 @@ version: '3'
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
+  local_node_modules: {}
 
 services:
   django:
@@ -15,6 +16,7 @@ services:
       - postgres
     volumes:
       - .:/app:z
+      - local_node_modules:/app/node_modules
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
@@ -45,7 +47,7 @@ services:
     volumes:
       - .:/app:z
       # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
-      - /app/node_modules
+      - local_node_modules:/app/node_modules
     command: npm run dev
     ports:
       - "3000:3000"
