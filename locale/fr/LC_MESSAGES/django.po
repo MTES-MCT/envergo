@@ -64,7 +64,7 @@ msgstr "contact/"
 
 #: envergo/pages/urls.py:23
 msgid "water-law/"
-msgstr "loi-sur-leau"
+msgstr "loi-sur-leau/"
 
 #: envergo/templates/_form_header.html:6
 msgid ""
