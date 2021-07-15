@@ -2,8 +2,10 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
+from envergo.evaluations.views import EvaluationSearch
+
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path("", EvaluationSearch.as_view(), name="home"),
     path(
         _("legal-mentions/"),
         TemplateView.as_view(template_name="pages/legal_mentions.html"),
