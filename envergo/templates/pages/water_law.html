@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Qu'est-ce que la Loi sur l'eau ?{% endblock %}
 
@@ -7,10 +8,11 @@
   <article class="fr-col fr-col-md-8">
     <h1 id="questcequelaloisurleau">Qu'est-ce que la Loi sur l'eau ?</h1>
 
-    <p>La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les
+    <p class="fr-text--lead">La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les
       milieux aquatiques.</p>
 
-    <p>Si un projet se situe dans <strong>certaines zones de risque</strong> ou dépasse <strong>certains seuils
+    <p class="fr-highlight">Si un projet se situe dans <strong>certaines zones de risque</strong> ou dépasse
+      <strong>certains seuils
         de surface</strong> définis par la réglementation, le responsable de ce projet doit
       <strong>obligatoirement déposer un dossier Loi sur l'eau</strong>. Il suit une procédure
       d'instruction spécifique, distincte de la demande de permis de construire, avec
@@ -92,7 +94,7 @@
         la DDT(M).</li>
     </ul>
 
-    <p>Vous ne pouvez pas démarrer les travaux avant la fin de l'instruction par la
+    <p class="fr-highlight">Vous ne pouvez pas démarrer les travaux avant la fin de l'instruction par la
       préfecture, sauf si le récepissé de déclaration en fait explicitement mention.</p>
 
     <p>Nous vous invitons à vous rapprocher du service Police de l'eau de votre
@@ -111,7 +113,17 @@
 
     <ul>
       <li>La première case du cadre n°8 doit être cochée si votre projet est soumis à
-        Déclaration au titre de la nomenclature IOTA :</li>
+        Déclaration au titre de la nomenclature IOTA :
+
+
+        <figure class="fr-content-media" role="group"
+          aria-label="Pensez à cocher la case appropriée si votre projet est soumis à la Loi sur l'eau">
+          <img src="{% static '/images/capture_cerfa.png' %}" class="fr-responsive-img"
+            alt="Extrait du formulaire Cerfa 13409-07, cadre 8. La première case est cochée." />
+          <figcaption class="fr-content-media__caption">Pensez à cocher la case appropriée si votre projet est soumis à
+            la Loi sur l'eau</figcaption>
+        </figure>
+      </li>
 
       <li>La deuxième case du cadre n°8 doit être cochée si votre projet est soumis à
         Autorisation au titre de la nomenclature IOTA, qui correspond à un niveau
