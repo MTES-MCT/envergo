@@ -46,6 +46,11 @@
     <div id="contenu" class="fr-container fr-mt-5w fr-pb-6w">
       {% block breadcrumbs %}{% endblock %}
       {% block container %}
+      <div class="fr-grid-row fr-grid-row--center">
+        <article class="fr-col fr-col-md-8">
+          {% block article %}{% endblock %}
+        </article>
+      </div>
       {% endblock %}
     </div>
     {% endblock %}
