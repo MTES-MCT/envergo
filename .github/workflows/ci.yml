@@ -14,7 +14,7 @@ on:
     branches: [ "main" ]
 
   push:
-    branches: [ "main", "actions" ]
+    branches: [ "main" ]
 
 jobs:
   linter:
