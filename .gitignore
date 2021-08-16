@@ -281,3 +281,8 @@ envergo/media/
 !.envs/.local/
 
 .vscode
+
+
+project.css
+project.min.css
+*.min.js

@@ -2,7 +2,7 @@
   "name": "envergo",
   "version": "1.0.0",
   "dependencies": {
-    "@gouvfr/dsfr": "^1.0.0"
+    "@gouvfr/dsfr": "^1.1.0"
   },
   "devDependencies": {
     "autoprefixer": "^9.4.7",
@@ -21,6 +21,7 @@
     "last 2 versions"
   ],
   "scripts": {
-    "dev": "gulp"
+    "dev": "gulp",
+    "build": "gulp generate-assets"
   }
 }
