@@ -71,3 +71,9 @@ class Evaluation(models.Model):
 
     def __str__(self):
         return self.application_number
+
+    @property
+    def application_number_display(self):
+        an = self.application_number
+        # Those are non-breaking spaces
+        return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
