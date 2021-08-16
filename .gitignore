@@ -282,5 +282,7 @@ envergo/media/
 
 .vscode
 
-*.min.css
+
+project.css
+project.min.css
 *.min.js
