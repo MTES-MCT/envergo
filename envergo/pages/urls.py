@@ -26,9 +26,4 @@ urlpatterns = [
         TemplateView.as_view(template_name="pages/water_law.html"),
         name="water_law",
     ),
-    path(
-        _("faq/"),
-        TemplateView.as_view(template_name="pages/faq.html"),
-        name="faq",
-    ),
 ]
