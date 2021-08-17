@@ -5,7 +5,7 @@
 
 {% block breadcrumbs %}
 <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d’Ariane</button>
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
   <div class="fr-collapse" id="breadcrumb-1">
     <ol class="fr-breadcrumb__list">
       <li>
@@ -80,9 +80,9 @@
         </p>
 
         <p>
-          <strong>Quel impact environnemental ?</strong> En cas de débordement du cours d’eau, le bâti diminue le volume
-          d’expansion des eaux de la crue. Cela peut engendrer une augmentation des hauteurs d’eau et des vitesses
-          d’écoulement,
+          <strong>Quel impact environnemental ?</strong> En cas de débordement du cours d'eau, le bâti diminue le volume
+          d'expansion des eaux de la crue. Cela peut engendrer une augmentation des hauteurs d'eau et des vitesses
+          d'écoulement,
           et ainsi rendre la crue plus destructrice.
         </p>
       </div>
@@ -102,7 +102,7 @@
 
     <div class="fr-collapse" id="accordion-wetland">
 
-      <p class="fr-text--highlight"> Rubrique 3.3.1.0. de la nomenclature Loi sur l’eau </p>
+      <p class="fr-text--highlight"> Rubrique 3.3.1.0. de la nomenclature Loi sur l'eau </p>
 
       <p>
         <strong>Pourquoi mon projet est-il concerné ?</strong>
@@ -113,7 +113,7 @@
         <strong>Quel impact environnemental ?</strong>
         Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles assurent le
         développement
-        de la biodiversité ; elles préservent la qualité de l’eau en jouant un rôle de filtre ; et elles réduisent les
+        de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et elles réduisent les
         impacts
         des inondations par leur effet « tampon » sur le niveau des rivières.
       </p>
@@ -135,24 +135,24 @@
 
       <div class="fr-collapse" id="accordion-rainwater_runoff">
 
-        <p class="fr-text--highlight">Rubrique 2.1.5.0. de la nomenclature Loi sur l’eau</p>
+        <p class="fr-text--highlight">Rubrique 2.1.5.0. de la nomenclature Loi sur l'eau</p>
 
         <p>
           <strong>Pourquoi mon projet est-il concerné ?</strong>
           {{ evaluation.rainwater_runoff_impact }}
         </p>
 
-        <p>Note : Le projet ne sera concerné par cette rubrique de la Loi sur l’eau que si les eaux interceptées sont
+        <p>Note : Le projet ne sera concerné par cette rubrique de la Loi sur l'eau que si les eaux interceptées sont
           rejetées
-          dans les milieux (sol, sous-sol ou cours d’eau), pas si elles sont évacuées dans le réseau communal.</p>
+          dans les milieux (sol, sous-sol ou cours d'eau), pas si elles sont évacuées dans le réseau communal.</p>
 
         <p><strong>Quel impact environnemental ?</strong>
-          Une surface imperméabilisée ne peut plus absorber l’eau pluviale et les écoulements provenant de l’amont. Les
-          conséquences sont une plus grande quantité d’eau concentrée au point de rejet, entraînant une aggravation du
+          Une surface imperméabilisée ne peut plus absorber l'eau pluviale et les écoulements provenant de l'amont. Les
+          conséquences sont une plus grande quantité d'eau concentrée au point de rejet, entraînant une aggravation du
           risque
           d'inondation et de pollution.</p>
 
-        <p><strong>Comment l’aire du bassin naturel intercepté est-elle calculée ?</strong> Ce calcul est complexe, se
+        <p><strong>Comment l'aire du bassin naturel intercepté est-elle calculée ?</strong> Ce calcul est complexe, se
           fonde
           sur
           la topographie du lieu et la géométrie des bâtiments et aménagements créés et existants aux alentours.</p>
@@ -160,5 +160,80 @@
     </section>
   </li>
 </ul>
+
+<h2>Pour en savoir plus…</h2>
+
+<div class="fr-grid-row fr-grid-row--gutters">
+
+  <div class="fr-col-12 fr-col-md-6">
+    <div class="fr-card fr-enlarge-link">
+      <div class="fr-card__body">
+        <h4 class="fr-card__title">
+          <a href="{% url 'faq' %}#loi-sur-leau" class="fr-card__link">
+            Qu'est-ce que la Loi sur l'eau ?
+          </a>
+        </h4>
+        <p class="fr-card__desc">
+          La Loi sur l'eau encadre tous les projets qui risquent d'impacter les milieux
+          aquatiques.
+        </p>
+        <p class="fr-card__detail">En savoir plus</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fr-col-12 fr-col-md-6">
+    <div class="fr-card fr-enlarge-link">
+      <div class="fr-card__body">
+        <h4 class="fr-card__title">
+          <a href="{% url 'faq' %}#quelles-consequences-omission" class="fr-card__link">
+            Quelles conséquences en cas d'omission ?
+          </a>
+        </h4>
+        <p class="fr-card__desc">
+          Un contrôle par la police de l'eau peut avoir lieu avant,
+          pendant les travaux, ou après la réalisation du projet.
+          S'il s'avère que projet est réalisé sans autorisation du préfet, <strong>le responsable s'expose à des
+            sanctions administratives et pénales</strong>.
+        </p>
+        <p class="fr-card__detail">En savoir plus</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="fr-col-12 fr-col-md-6">
+    <div class="fr-card fr-enlarge-link">
+      <div class="fr-card__body">
+        <h4 class="fr-card__title">
+          <a href="{% url 'faq' %}#que-faire" class="fr-card__link">
+            Que faire si mon projet est soumis à la Loi sur l'eau ?
+          </a>
+        </h4>
+        <p class="fr-card__desc">
+          Vous devez obligatoire déposer un dossier Loi sur l'eau, <strong>en plus</strong> de la demande de permis de
+          construire.
+        </p>
+        <p class="fr-card__detail">En savoir plus</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fr-col-12 fr-col-md-6">
+    <div class="fr-card fr-enlarge-link">
+      <div class="fr-card__body">
+        <h4 class="fr-card__title">
+          <a href="{% url 'faq' %}#vers-qui-me-tourner" class="fr-card__link">
+            Vers qui me tourner ?
+          </a>
+        </h4>
+        <p class="fr-card__desc">
+          Comment déterminer avec certitude si votre projet est soumis à la Loi sur l'eau ?
+        </p>
+        <p class="fr-card__detail">En savoir plus</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
