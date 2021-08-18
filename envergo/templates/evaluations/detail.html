@@ -32,6 +32,18 @@
 
 <h3>Mon projet est-il soumis à la Loi sur l'eau ?</h3>
 
+<ul>
+  <li>Commune : {{ evaluation.commune }}</li>
+  <li>Surface créée : {{ evaluation.created_surface }} m²</li>
+  <li>Surface existante :
+    {% if evaluation.existing_surface %}
+    {{ evaluation.existing_surface }} m²
+    {% else %}
+    <abbr title="Non communiqué">NC</abbr>
+    {% endif %}
+  </li>
+</ul>
+
 <p class="fr-callout">
   Au vu des informations renseignées dans le permis de construire, il est
   {% probability evaluation.global_probability %}
