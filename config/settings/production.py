@@ -25,7 +25,7 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # no
 # ------------------------------------------------------------------------------
 CACHES = {
     "default": {
-        "BACKEND": env("CACHE_BACKEND", "django_redis.cache.RedisCache"),
+        "BACKEND": env("DJANGO_CACHE_BACKEND", "django_redis.cache.RedisCache"),
         "LOCATION": env("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
