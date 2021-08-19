@@ -37,6 +37,16 @@ article {
   position: relative;
   margin-bottom: 1.5rem;
 
+  figure {
+    padding: 0;
+    margin: 0;
+  }
+
+  svg {
+    background-color: white;
+    padding: .75rem;
+  }
+
   #meter {
     width: 100%;
     height: 100%;
@@ -45,6 +55,4 @@ article {
   circle {
     fill: none;
   }
-
-  .needle {}
 }

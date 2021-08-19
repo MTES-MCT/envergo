@@ -45,7 +45,14 @@
 </ul>
 
 <div id="probability-gauge">
-  {% include 'evaluations/_gauge.html' %}
+  <figure role="group">
+    <div>
+      {% include 'evaluations/_gauge.html' with probability=evaluation.global_probability %}
+    </div>
+    <figcaption>
+      Probabilité de soumission à la Loi sur l'eau.
+    </figcaption>
+  </figure>
 </div>
 
 <p class="fr-callout">

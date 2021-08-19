@@ -1,36 +1,64 @@
+{% load evaluations %}
 <svg id="meter" width="100" height="50" viewBox="0 0 100 50">
+  <title>Jauge de mesure de la probability que le projet soit soumis à la Loi sur l'eau.</title>
+  <g>
+    <title>Non-soumis à la loi sur l'eau</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#F2F2F9" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(180,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#F2F2F9" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(180,50,50)">
-  </circle>
+  <g>
+    <title>Peu probable</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#00AC8C" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(210,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#00AC8C" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(210,50,50)">
-  </circle>
+  <g>
+    <title>Possible</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#5770BE" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(240,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#5770BE" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(240,50,50)">
-  </circle>
+  <g>
+    <title>Probable</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#FDCF41" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(270,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#FDCF41" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(270,50,50)">
-  </circle>
+  <g>
+    <title>Très probable</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#FF6F4C" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(300,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#FF6F4C" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(300,50,50)">
-  </circle>
+  <g>
+    <title>Soumis avec certitude à la Loi sur l'eau</title>
+    <circle id="high" r="45" cx="50" cy="50" stroke="#E1000F" stroke-width="10" stroke-dasharray="24,259"
+      transform="rotate(330,50,50)">
+    </circle>
+  </g>
 
-  <circle id="high" r="45" cx="50" cy="50" stroke="#E1000F" stroke-width="10" stroke-dasharray="24,259"
-    transform="rotate(330,50,50)">
-  </circle>
 
-  <path class="needle" fill="none" stroke-width="1" stroke="black" stroke-miterlimit="4" stroke-linejoin="round"
-    transform="translate(45,8) rotate(45,5,40)"
+  <path class="needle" fill="#000074" stroke-width="1" stroke="#000074" stroke-miterlimit="4" stroke-linejoin="round"
+    transform="translate(45,8) rotate({% gauge_angle probability %},5,40)"
     d="M 4.9990141,0.49939951 0.57025697,35.321036 a 4.4970702,3.5819744 0 0 0 -0.0527001,0.415098 l -0.0175663,0.141477 h 0.005858 a 4.4970702,3.5819744 0 0 0 -0.003902,0.04042 4.4970702,3.5819744 0 0 0 4.49707163,3.581974 4.4970702,3.5819744 0 0 0 4.4970716,-3.581974 4.4970702,3.5819744 0 0 0 -0.00194,-0.04042 h 0.00586 l -0.0078,-0.05596 a 4.4970702,3.5819744 0 0 0 -0.066372,-0.5317 z" />
-</svg>
 
+  <g transform="translate(12 41)">
+    <text x="0" y="0">
+      <tspan font-size="3px" x="0" dy="1.2em">Non-soumis</tspan>
+    </text>
+  </g>
 
-
-<!-- Mask -->
+  <g transform="translate(70 40)">
+    <text x="0" y="0">
+      <tspan font-size="3px" x="0" dy="1.2em">Soumis avec</tspan>
+      <tspan font-size="3px" x="0" dy="1.2em">certitude</tspan>
+    </text>
+  </g>
 
 </svg>
