@@ -32,3 +32,16 @@ article {
   text-transform: uppercase;
   font-weight: bold;
 }
+
+#probability-gauge {
+  position: relative;
+
+  #meter {
+    width: 100%;
+    height: 100%;
+  }
+
+  circle {
+    fill: none;
+  }
+}
