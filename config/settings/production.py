@@ -25,10 +25,9 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # no
 # ------------------------------------------------------------------------------
 CACHES = {
     "default": {
-        "BACKEND": env("DJANGO_CACHE_BACKEND", default="django_redis.cache.RedisCache"),
-        "LOCATION": env("REDIS_URL"),
+        "BACKEND": env("DJANGO_CACHE_BACKEND"),
+        "LOCATION": env("DJANGO_CACHE_LOCATION"),
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
             # Mimicing memcache behavior.
             # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
             "IGNORE_EXCEPTIONS": True,
