@@ -35,6 +35,7 @@ article {
 
 #probability-gauge {
   position: relative;
+  margin-bottom: 1.5rem;
 
   #meter {
     width: 100%;
@@ -44,4 +45,6 @@ article {
   circle {
     fill: none;
   }
+
+  .needle {}
 }
