@@ -101,6 +101,8 @@ class Criterion(models.Model):
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
     description_html = models.TextField(_("Description (html)"))
+    map = models.ImageField(_("Map"), null=True, blank=True)
+    legend = models.CharField(_("Legend"), max_length=256, blank=True)
 
     class Meta:
         verbose_name = _("Criterion")

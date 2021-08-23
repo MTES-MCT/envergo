@@ -16,5 +16,17 @@
 
     {{ criterion.description_html|safe }}
 
+    {% if criterion.map %}
+
+    <figure class="fr-content-media" role="group" aria-label="{{ criterion.legend }}">
+      <img src="{{ criterion.map.url }}" class="fr-responsive-img"
+        alt="Cartographie illustrant ce critère d'évaluation" />
+      {% if criterion.legend %}
+      <figcaption class="fr-content-media__caption">{{ criterion.legend }}</figcaption>
+      {% endif %}
+    </figure>
+
+    {% endif %}
+
   </div>
 </section>
