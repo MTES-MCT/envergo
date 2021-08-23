@@ -47,10 +47,12 @@
 <div id="probability-gauge">
   <figure role="group">
     <div>
+      {% probability evaluation.global_probability as p_label %}
       {% include 'evaluations/_gauge.html' with probability=evaluation.global_probability %}
     </div>
     <figcaption>
-      Probabilité de soumission à la Loi sur l'eau.
+      Il est {% probability evaluation.global_probability %} que votre projet soit soumis à Déclaration au titre de la
+      Loi sur l'eau.
     </figcaption>
   </figure>
 </div>
