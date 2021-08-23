@@ -14,3 +14,4 @@ whitenoise
 redis
 hiredis
 pip-tools
+markdown

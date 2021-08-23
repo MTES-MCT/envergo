@@ -47,6 +47,8 @@ hiredis==1.1.0
     # via -r base.in
 idna==3.2
     # via requests
+markdown==3.3.4
+    # via -r base.in
 oauthlib==3.1.1
     # via requests-oauthlib
 pep517==0.11.0
