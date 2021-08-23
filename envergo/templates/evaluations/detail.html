@@ -83,106 +83,12 @@
 <p>…par rapport aux différents impacts que la réglementation Loi sur l'eau vise à limiter.</p>
 
 <ul class="fr-accordions-group">
+
+  {% for criterion in criterions %}
   <li>
-
-    <section class="fr-accordion">
-
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-flood_zone">
-          <span>
-            Construction de plus de 400 m2 en zone inondable —
-            {% probability evaluation.flood_zone_probability %}
-          </span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-flood_zone">
-        <p class="fr-text--light">Rubrique 3.2.2.0. de la nomenclature Loi sur l'eau</p>
-
-        <p>
-          <strong>Pourquoi mon projet est-il concerné ?</strong>
-          {{ evaluation.flood_zone_impact }}
-        </p>
-
-        <p>
-          <strong>Quel impact environnemental ?</strong> En cas de débordement du cours d'eau, le bâti diminue le volume
-          d'expansion des eaux de la crue. Cela peut engendrer une augmentation des hauteurs d'eau et des vitesses
-          d'écoulement,
-          et ainsi rendre la crue plus destructrice.
-        </p>
-      </div>
-    </section>
+    {% include 'evaluations/_criterion.html' with criterion=criterion %}
   </li>
-
-  <section class="fr-accordion">
-
-    <h3 class="fr-accordion__title">
-      <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-wetland">
-        <span>
-          Impact de plus de 1000 m2 sur une zone humide —
-          {% probability evaluation.wetland_probability %}
-        </span>
-      </button>
-    </h3>
-
-    <div class="fr-collapse" id="accordion-wetland">
-
-      <p class="fr-text--highlight"> Rubrique 3.3.1.0. de la nomenclature Loi sur l'eau </p>
-
-      <p>
-        <strong>Pourquoi mon projet est-il concerné ?</strong>
-        {{ evaluation.wetland_impact }}
-      </p>
-
-      <p>
-        <strong>Quel impact environnemental ?</strong>
-        Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles assurent le
-        développement
-        de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et elles réduisent les
-        impacts
-        des inondations par leur effet « tampon » sur le niveau des rivières.
-      </p>
-    </div>
-  </section>
-  </li>
-
-  <li>
-    <section class="fr-accordion">
-
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-rainwater_runoff">
-          <span>
-            Captation de plus de 1 ha de ruissellement d'eaux de pluie —
-            {% probability evaluation.rainwater_runoff_probability %}
-            <span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-rainwater_runoff">
-
-        <p class="fr-text--highlight">Rubrique 2.1.5.0. de la nomenclature Loi sur l'eau</p>
-
-        <p>
-          <strong>Pourquoi mon projet est-il concerné ?</strong>
-          {{ evaluation.rainwater_runoff_impact }}
-        </p>
-
-        <p>Note : Le projet ne sera concerné par cette rubrique de la Loi sur l'eau que si les eaux interceptées sont
-          rejetées
-          dans les milieux (sol, sous-sol ou cours d'eau), pas si elles sont évacuées dans le réseau communal.</p>
-
-        <p><strong>Quel impact environnemental ?</strong>
-          Une surface imperméabilisée ne peut plus absorber l'eau pluviale et les écoulements provenant de l'amont. Les
-          conséquences sont une plus grande quantité d'eau concentrée au point de rejet, entraînant une aggravation du
-          risque
-          d'inondation et de pollution.</p>
-
-        <p><strong>Comment l'aire du bassin naturel intercepté est-elle calculée ?</strong> Ce calcul est complexe, se
-          fonde
-          sur
-          la topographie du lieu et la géométrie des bâtiments et aménagements créés et existants aux alentours.</p>
-      </div>
-    </section>
+  {% endfor %}
   </li>
 </ul>
 

@@ -39,16 +39,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {
-                "fields": (
-                    "global_probability",
-                    "rainwater_runoff_probability",
-                    "rainwater_runoff_impact",
-                    "flood_zone_probability",
-                    "flood_zone_impact",
-                    "wetland_probability",
-                    "wetland_impact",
-                )
-            },
+            {"fields": ("global_probability",)},
         ),
     )

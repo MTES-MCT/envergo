@@ -81,9 +81,9 @@ class Evaluation(models.Model):
 
 
 CRITERIONS = Choices(
-    ("rainwater_runoff", _("Rainwater runoff")),
-    ("flood_zone", _("Flood zone")),
-    ("wetland", _("Wetland")),
+    ("rainwater_runoff", _("Capture of more than 1 ha of rainwater runoff")),
+    ("flood_zone", _("Building of more than 400 m¹ in a flood zone")),
+    ("wetland", _("More than 1000 m² impact on wetlands")),
 )
 
 
@@ -91,7 +91,10 @@ class Criterion(models.Model):
     """A single evaluation item."""
 
     evaluation = models.ForeignKey(
-        "Evaluation", on_delete=models.CASCADE, verbose_name=_("Evaluation")
+        "Evaluation",
+        on_delete=models.CASCADE,
+        verbose_name=_("Evaluation"),
+        related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
     probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
@@ -107,3 +110,12 @@ class Criterion(models.Model):
     def save(self, *args, **kwargs):
         self.description_html = markdown_to_html(self.description_md)
         super().save(*args, **kwargs)
+
+    def get_law_code(self):
+        """Return the water law code describing this criterion."""
+
+        return {
+            "rainwater_runoff": "2.1.5.0",
+            "flood_zone": "3.2.2.0",
+            "wetland": "3.3.1.0",
+        }.get(self.criterion)
