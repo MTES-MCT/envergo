@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 
 from envergo.evaluations.validators import application_number_validator
+from envergo.utils.markdown import markdown_to_html
 
 
 def evaluation_file_format(instance, filename):
@@ -77,3 +78,31 @@ class Evaluation(models.Model):
         an = self.application_number
         # Those are non-breaking spaces
         return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
+
+
+CRITERIONS = Choices(
+    ("rainwater_runoff", _("Rainwater runoff")),
+    ("flood_zone", _("Flood zone")),
+    ("wetland", _("Wetland")),
+)
+
+
+class Criterion(models.Model):
+    """A single evaluation item."""
+
+    evaluation = models.ForeignKey(
+        "Evaluation", on_delete=models.CASCADE, verbose_name=_("Evaluation")
+    )
+    order = models.PositiveIntegerField(_("Order"), default=0)
+    probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
+    description_md = models.TextField(_("Description"))
+    description_html = models.TextField(_("Description (html)"))
+
+    class Meta:
+        verbose_name = _("Criterion")
+        verbose_name_plural = _("Criterions")
+
+    def save(self, *args, **kwargs):
+        self.description_html = markdown_to_html(self.description_md)
+        super().save(*args, **kwargs)
