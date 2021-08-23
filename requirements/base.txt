@@ -29,7 +29,7 @@ django==3.2.6
     #   django-appconf
     #   django-model-utils
     #   django-redis
-django-allauth==0.44.0
+django-allauth==0.45.0
     # via -r base.in
 django-appconf==1.0.4
     # via django-compressor
@@ -43,7 +43,7 @@ django-model-utils==4.1.1
     # via -r base.in
 django-redis==5.0.0
     # via -r base.in
-hiredis==1.1.0
+hiredis==2.0.0
     # via -r base.in
 idna==3.2
     # via requests
@@ -53,7 +53,7 @@ oauthlib==3.1.1
     # via requests-oauthlib
 pep517==0.11.0
     # via pip-tools
-pillow==8.2.0
+pillow==8.3.1
     # via -r base.in
 pip-tools==6.2.0
     # via -r base.in
@@ -99,7 +99,7 @@ urllib3==1.26.6
     # via requests
 wheel==0.37.0
     # via pip-tools
-whitenoise==5.2.0
+whitenoise==5.3.0
     # via -r base.in
 
 # The following packages are considered to be unsafe in a requirements file:

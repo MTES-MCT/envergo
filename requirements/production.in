@@ -1,6 +1,6 @@
 # PRECAUTION: avoid production dependencies that aren't in development
 
--c base.txt
+-r base.txt
 
 gunicorn
 psycopg2

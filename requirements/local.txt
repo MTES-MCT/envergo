@@ -6,9 +6,11 @@
 #
 appdirs==1.4.4
     # via black
+argon2-cffi==20.1.0
+    # via -r base.txt
 asgiref==3.4.1
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   django
 astroid==2.7.2
     # via pylint
@@ -20,35 +22,77 @@ backports.entry-points-selectable==1.1.0
     # via virtualenv
 black==21.7b0
     # via -r local.in
+certifi==2021.5.30
+    # via
+    #   -r base.txt
+    #   requests
+cffi==1.14.6
+    # via
+    #   -r base.txt
+    #   argon2-cffi
+    #   cryptography
 cfgv==3.3.0
     # via pre-commit
+charset-normalizer==2.0.4
+    # via
+    #   -r base.txt
+    #   requests
 click==8.0.1
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   black
+    #   pip-tools
 coverage==5.5
     # via
     #   -r local.in
     #   django-coverage-plugin
+cryptography==3.4.7
+    # via
+    #   -r base.txt
+    #   pyjwt
 decorator==5.0.9
     # via
     #   ipdb
     #   ipython
+defusedxml==0.7.1
+    # via
+    #   -r base.txt
+    #   python3-openid
 distlib==0.3.2
     # via virtualenv
 django==3.2.6
     # via
-    #   -c base.txt
+    #   -r base.txt
+    #   django-allauth
+    #   django-appconf
     #   django-debug-toolbar
     #   django-extensions
+    #   django-model-utils
+    #   django-redis
     #   django-stubs
     #   django-stubs-ext
+django-allauth==0.45.0
+    # via -r base.txt
+django-appconf==1.0.4
+    # via
+    #   -r base.txt
+    #   django-compressor
+django-compressor==2.4.1
+    # via -r base.txt
 django-coverage-plugin==2.0.0
     # via -r local.in
+django-crispy-forms==1.12.0
+    # via -r base.txt
 django-debug-toolbar==3.2.2
     # via -r local.in
+django-environ==0.4.5
+    # via -r base.txt
 django-extensions==3.1.3
     # via -r local.in
+django-model-utils==4.1.1
+    # via -r base.txt
+django-redis==5.0.0
+    # via -r base.txt
 django-stubs==1.8.0
     # via -r local.in
 django-stubs-ext==0.2.0
@@ -65,8 +109,14 @@ flake8==3.9.2
     #   flake8-isort
 flake8-isort==4.0.0
     # via -r local.in
+hiredis==2.0.0
+    # via -r base.txt
 identify==2.2.13
     # via pre-commit
+idna==3.2
+    # via
+    #   -r base.txt
+    #   requests
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.9
@@ -83,6 +133,8 @@ jedi==0.18.0
     # via ipython
 lazy-object-proxy==1.6.0
     # via astroid
+markdown==3.3.4
+    # via -r base.txt
 matplotlib-inline==0.1.2
     # via ipython
 mccabe==0.6.1
@@ -99,6 +151,10 @@ mypy-extensions==0.4.3
     #   mypy
 nodeenv==1.6.0
     # via pre-commit
+oauthlib==3.1.1
+    # via
+    #   -r base.txt
+    #   requests-oauthlib
 packaging==21.0
     # via
     #   pytest
@@ -107,10 +163,18 @@ parso==0.8.2
     # via jedi
 pathspec==0.9.0
     # via black
+pep517==0.11.0
+    # via
+    #   -r base.txt
+    #   pip-tools
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
+pillow==8.3.1
+    # via -r base.txt
+pip-tools==6.2.0
+    # via -r base.txt
 platformdirs==2.2.0
     # via
     #   pylint
@@ -129,10 +193,18 @@ py==1.10.0
     # via pytest
 pycodestyle==2.7.0
     # via flake8
+pycparser==2.20
+    # via
+    #   -r base.txt
+    #   cffi
 pyflakes==2.3.1
     # via flake8
 pygments==2.10.0
     # via ipython
+pyjwt[crypto]==2.1.0
+    # via
+    #   -r base.txt
+    #   django-allauth
 pylint==2.10.2
     # via
     #   pylint-django
@@ -154,23 +226,52 @@ pytest-sugar==0.9.4
     # via -r local.in
 python-dateutil==2.8.2
     # via faker
+python-slugify==5.0.2
+    # via -r base.txt
+python3-openid==3.2.0
+    # via
+    #   -r base.txt
+    #   django-allauth
 pytz==2021.1
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   django
 pyyaml==5.4.1
     # via pre-commit
+rcssmin==1.0.6
+    # via
+    #   -r base.txt
+    #   django-compressor
+redis==3.5.3
+    # via
+    #   -r base.txt
+    #   django-redis
 regex==2021.8.21
     # via black
+requests==2.26.0
+    # via
+    #   -r base.txt
+    #   django-allauth
+    #   requests-oauthlib
+requests-oauthlib==1.3.0
+    # via
+    #   -r base.txt
+    #   django-allauth
+rjsmin==1.1.0
+    # via
+    #   -r base.txt
+    #   django-compressor
 six==1.16.0
     # via
-    #   -c base.txt
+    #   -r base.txt
+    #   argon2-cffi
+    #   django-compressor
     #   django-coverage-plugin
     #   python-dateutil
     #   virtualenv
 sqlparse==0.4.1
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   django
     #   django-debug-toolbar
 termcolor==1.1.0
@@ -179,8 +280,9 @@ testfixtures==6.18.1
     # via flake8-isort
 text-unidecode==1.3
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   faker
+    #   python-slugify
 toml==0.10.2
     # via
     #   ipdb
@@ -190,8 +292,9 @@ toml==0.10.2
     #   pytest
 tomli==1.2.1
     # via
-    #   -c base.txt
+    #   -r base.txt
     #   black
+    #   pep517
 traitlets==5.0.5
     # via
     #   ipython
@@ -200,14 +303,25 @@ typing-extensions==3.10.0.0
     # via
     #   django-stubs
     #   mypy
+urllib3==1.26.6
+    # via
+    #   -r base.txt
+    #   requests
 virtualenv==20.7.2
     # via pre-commit
 wcwidth==0.2.5
     # via prompt-toolkit
 werkzeug==2.0.1
     # via -r local.in
+wheel==0.37.0
+    # via
+    #   -r base.txt
+    #   pip-tools
+whitenoise==5.3.0
+    # via -r base.txt
 wrapt==1.12.1
     # via astroid
 
 # The following packages are considered to be unsafe in a requirements file:
+# pip
 # setuptools
