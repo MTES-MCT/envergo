@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-23 14:22+0200\n"
+"POT-Creation-Date: 2021-08-23 14:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -134,7 +134,7 @@ msgstr "Impact de plus de 1000 m² sur une zone humide"
 msgid "Order"
 msgstr "Ordre"
 
-#: envergo/evaluations/models.py:101 envergo/evaluations/models.py:106
+#: envergo/evaluations/models.py:101 envergo/evaluations/models.py:108
 msgid "Criterion"
 msgstr "Critère"
 
@@ -146,7 +146,15 @@ msgstr "Description"
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:107
+#: envergo/evaluations/models.py:104
+msgid "Map"
+msgstr "Carte"
+
+#: envergo/evaluations/models.py:105
+msgid "Legend"
+msgstr "Légende"
+
+#: envergo/evaluations/models.py:109
 msgid "Criterions"
 msgstr "Critères"
 
