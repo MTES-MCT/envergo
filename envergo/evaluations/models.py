@@ -102,6 +102,7 @@ class Criterion(models.Model):
     class Meta:
         verbose_name = _("Criterion")
         verbose_name_plural = _("Criterions")
+        unique_together = [("evaluation", "criterion")]
 
     def save(self, *args, **kwargs):
         self.description_html = markdown_to_html(self.description_md)
