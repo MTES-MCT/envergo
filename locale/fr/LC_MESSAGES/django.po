@@ -124,7 +124,7 @@ msgstr "Captation de plus de 1 ha de ruissellement d'eaux de pluie"
 
 #: envergo/evaluations/models.py:85
 msgid "Building of more than 400 m¹ in a flood zone"
-msgstr "Construction de plus de 400 m¹ en zone inondable"
+msgstr "Construction de plus de 400 m² en zone inondable"
 
 #: envergo/evaluations/models.py:86
 msgid "More than 1000 m² impact on wetlands"
