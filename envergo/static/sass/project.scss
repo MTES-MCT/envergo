@@ -1,3 +1,5 @@
+@use "node_modules/@gouvfr/dsfr/src/schemes/styles/settings/colors";
+
 $white: #fff;
 $mint-green: #d6e9c6;
 $black: #000;
@@ -21,6 +23,23 @@ $red: #b94a48;
 .probability {
   text-transform: uppercase;
   font-weight: bold;
+  color: black;
+
+  &.probability-1 {
+    background-color: colors.$green-soft-400;
+  }
+
+  &.probability-2 {
+    background-color: colors.$blue-soft-300;
+  }
+
+  &.probability-3 {
+    background-color: colors.$yellow-dark-400;
+  }
+
+  &.probability-4 {
+    background-color: colors.$orange-soft-400;
+  }
 }
 
 #probability-gauge {
@@ -35,7 +54,6 @@ $red: #b94a48;
     fill: none;
   }
 }
-
 
 /**
 /* Design system issues quickfixes

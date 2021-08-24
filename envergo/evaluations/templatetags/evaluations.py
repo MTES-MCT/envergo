@@ -17,7 +17,7 @@ def probability(p):
     ]
     label = p_labels[p]
 
-    display = f'<span class="probability probability-{p}">{label}</span>'
+    display = f'<span class="fr-tag probability probability-{p}">{label}</span>'
     return mark_safe(display)
 
 
