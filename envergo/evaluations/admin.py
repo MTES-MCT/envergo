@@ -16,7 +16,7 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
-    fields = ("order", "probability", "criterion", "description_md", "map", "legend")
+    fields = ("order", "probability", "criterion", "description_md", "map", "legend_md")
 
 
 @admin.register(Evaluation)

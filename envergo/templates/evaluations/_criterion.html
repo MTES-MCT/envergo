@@ -23,8 +23,8 @@
         <img src="{{ criterion.map.url }}" class="fr-responsive-img"
           alt="Cartographie illustrant ce critère d'évaluation" />
       </div>
-      {% if criterion.legend %}
-      <figcaption class="fr-content-media__caption">{{ criterion.legend }}</figcaption>
+      {% if criterion.legend_html %}
+      <figcaption class="fr-content-media__caption">{{ criterion.legend_html|safe }}</figcaption>
       {% endif %}
     </figure>
 

@@ -26,8 +26,6 @@ $red: #b94a48;
 #probability-gauge {
   margin-bottom: 1.5rem;
 
-  figure {}
-
   svg {
     background-color: white;
     padding: .75rem;
@@ -52,6 +50,10 @@ $red: #b94a48;
 .fr-content-media__img svg {
   position: unset;
   object-fit: unset;
+}
+
+figcaption :last-child {
+  margin-bottom: 0;
 }
 
 article {
