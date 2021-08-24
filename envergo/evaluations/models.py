@@ -63,6 +63,8 @@ class Evaluation(models.Model):
         _("Wetland probability"), choices=PROBABILITIES
     )
     wetland_impact = models.TextField(_("Wetland impact"))
+    contact_md = models.TextField(_("Contact"), blank=True)
+    contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -72,6 +74,10 @@ class Evaluation(models.Model):
 
     def __str__(self):
         return self.application_number
+
+    def save(self, *args, **kwargs):
+        self.contact_html = markdown_to_html(self.contact_md)
+        super().save(*args, **kwargs)
 
     @property
     def application_number_display(self):

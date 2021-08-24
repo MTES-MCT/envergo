@@ -52,7 +52,13 @@ $red: #b94a48;
   object-fit: unset;
 }
 
+// Remove double margins below images with captions
 figcaption :last-child {
+  margin-bottom: 0;
+}
+
+// Remove double margins belowe lists
+ul li:last-child p:last-child {
   margin-bottom: 0;
 }
 
