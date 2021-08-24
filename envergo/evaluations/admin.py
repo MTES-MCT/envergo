@@ -26,7 +26,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     inlines = [CriterionInline]
 
     fieldsets = (
-        (None, {"fields": ("application_number",)}),
+        (None, {"fields": ("application_number", "evaluation_file")}),
         (
             _("Project data"),
             {
