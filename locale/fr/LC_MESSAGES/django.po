@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-23 14:40+0200\n"
+"POT-Creation-Date: 2021-08-24 11:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,6 +29,10 @@ msgstr "Données projet"
 #: envergo/evaluations/admin.py:41
 msgid "Evaluation report"
 msgstr "Rapport d'évaluation"
+
+#: envergo/evaluations/admin.py:45
+msgid "Contact data"
+msgstr "Informations de contact"
 
 #: envergo/evaluations/forms.py:13 envergo/evaluations/models.py:30
 msgid "Application number"
@@ -78,7 +82,7 @@ msgstr "En m²"
 msgid "Existing surface"
 msgstr "Surface existante"
 
-#: envergo/evaluations/models.py:53 envergo/evaluations/models.py:100
+#: envergo/evaluations/models.py:53 envergo/evaluations/models.py:106
 msgid "Probability"
 msgstr "Probabilité"
 
@@ -106,55 +110,67 @@ msgstr "Zone humide (probabilité)"
 msgid "Wetland impact"
 msgstr "Zone humide (détails)"
 
+#: envergo/evaluations/models.py:66
+msgid "Contact"
+msgstr "Contact"
+
 #: envergo/evaluations/models.py:67
+msgid "Contact (html)"
+msgstr "Contact (html)"
+
+#: envergo/evaluations/models.py:69
 msgid "Date created"
 msgstr "Date de création"
 
-#: envergo/evaluations/models.py:70 envergo/evaluations/models.py:96
+#: envergo/evaluations/models.py:72 envergo/evaluations/models.py:102
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/models.py:71
+#: envergo/evaluations/models.py:73
 msgid "Evaluations"
 msgstr "Évaluations"
 
-#: envergo/evaluations/models.py:84
+#: envergo/evaluations/models.py:90
 msgid "Capture of more than 1 ha of rainwater runoff"
 msgstr "Captation de plus de 1 ha de ruissellement d'eaux de pluie"
 
-#: envergo/evaluations/models.py:85
+#: envergo/evaluations/models.py:91
 msgid "Building of more than 400 m¹ in a flood zone"
 msgstr "Construction de plus de 400 m² en zone inondable"
 
-#: envergo/evaluations/models.py:86
+#: envergo/evaluations/models.py:92
 msgid "More than 1000 m² impact on wetlands"
 msgstr "Impact de plus de 1000 m² sur une zone humide"
 
-#: envergo/evaluations/models.py:99
+#: envergo/evaluations/models.py:105
 msgid "Order"
 msgstr "Ordre"
 
-#: envergo/evaluations/models.py:101 envergo/evaluations/models.py:108
+#: envergo/evaluations/models.py:107 envergo/evaluations/models.py:115
 msgid "Criterion"
 msgstr "Critère"
 
-#: envergo/evaluations/models.py:102
+#: envergo/evaluations/models.py:108
 msgid "Description"
 msgstr "Description"
 
-#: envergo/evaluations/models.py:103
+#: envergo/evaluations/models.py:109
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:104
+#: envergo/evaluations/models.py:110
 msgid "Map"
 msgstr "Carte"
 
-#: envergo/evaluations/models.py:105
+#: envergo/evaluations/models.py:111
 msgid "Legend"
 msgstr "Légende"
 
-#: envergo/evaluations/models.py:109
+#: envergo/evaluations/models.py:112
+msgid "Legend (html)"
+msgstr "Légende (html)"
+
+#: envergo/evaluations/models.py:116
 msgid "Criterions"
 msgstr "Critères"
 
