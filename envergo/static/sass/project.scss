@@ -18,6 +18,42 @@ $red: #b94a48;
   color: $red;
 }
 
+.probability {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+#probability-gauge {
+  margin-bottom: 1.5rem;
+
+  figure {}
+
+  svg {
+    background-color: white;
+    padding: .75rem;
+  }
+
+  circle {
+    fill: none;
+  }
+}
+
+
+/**
+/* Design system issues quickfixes
+**/
+
+// Don't force a 16:9 ratio on images
+.fr-content-media__img::before {
+  content: none;
+}
+
+.fr-content-media__img img,
+.fr-content-media__img svg {
+  position: unset;
+  object-fit: unset;
+}
+
 article {
 
   p,
@@ -25,34 +61,5 @@ article {
     // Reset some faulty design system margins
     --xl-block: 0;
     margin-bottom: 1.5rem;
-  }
-}
-
-.probability {
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-#probability-gauge {
-  position: relative;
-  margin-bottom: 1.5rem;
-
-  figure {
-    padding: 0;
-    margin: 0;
-  }
-
-  svg {
-    background-color: white;
-    padding: .75rem;
-  }
-
-  #meter {
-    width: 100%;
-    height: 100%;
-  }
-
-  circle {
-    fill: none;
   }
 }

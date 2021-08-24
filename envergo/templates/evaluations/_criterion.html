@@ -18,9 +18,11 @@
 
     {% if criterion.map %}
 
-    <figure class="fr-content-media" role="group" aria-label="{{ criterion.legend }}">
-      <img src="{{ criterion.map.url }}" class="fr-responsive-img"
-        alt="Cartographie illustrant ce critère d'évaluation" />
+    <figure class="fr-content-media fr-content-media--sm" role="group" aria-label="{{ criterion.legend }}">
+      <div class="fr-content-media__img">
+        <img src="{{ criterion.map.url }}" class="fr-responsive-img"
+          alt="Cartographie illustrant ce critère d'évaluation" />
+      </div>
       {% if criterion.legend %}
       <figcaption class="fr-content-media__caption">{{ criterion.legend }}</figcaption>
       {% endif %}

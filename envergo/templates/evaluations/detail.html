@@ -45,8 +45,8 @@
 </ul>
 
 <div id="probability-gauge">
-  <figure role="group">
-    <div>
+  <figure role="group" class="fr-content-media fr-content-media--sm">
+    <div class="fr-content-media__img">
       {% probability evaluation.global_probability as p_label %}
       {% include 'evaluations/_gauge.html' with probability=evaluation.global_probability %}
     </div>
