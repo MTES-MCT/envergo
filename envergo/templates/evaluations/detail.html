@@ -39,10 +39,17 @@
     {% if evaluation.existing_surface %}
     {{ evaluation.existing_surface }} m²
     {% else %}
-    <abbr title="Non communiqué">NC</abbr>
+    Inconnue
     {% endif %}
   </li>
 </ul>
+
+<p class="fr-callout">
+  Au vu des informations renseignées dans le permis de construire, il est
+  {% probability evaluation.global_probability %}
+  que votre projet soit soumis à
+  Déclaration au titre de la Loi sur l'eau.
+</p>
 
 <div id="probability-gauge">
   <figure role="group" class="fr-content-media fr-content-media--sm">
@@ -56,13 +63,6 @@
     </figcaption>
   </figure>
 </div>
-
-<p class="fr-callout">
-  Au vu des informations renseignées dans le permis de construire, il est
-  {% probability evaluation.global_probability %}
-  que votre projet soit soumis à
-  Déclaration au titre de la Loi sur l'eau.
-</p>
 
 <p class="fr-text--light">
   Cette estimation est une indication qui ne vaut pas position de l'administration.
