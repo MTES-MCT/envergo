@@ -58,7 +58,7 @@ figcaption :last-child {
 }
 
 // Remove double margins belowe lists
-ul li:last-child p:last-child {
+ul>li:last-child>p:last-child {
   margin-bottom: 0;
 }
 
