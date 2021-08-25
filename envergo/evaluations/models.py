@@ -5,6 +5,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
+from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
 from envergo.utils.markdown import markdown_to_html
@@ -120,3 +121,33 @@ class Criterion(models.Model):
             "flood_zone": "3.2.2.0",
             "wetland": "3.3.1.0",
         }.get(self.criterion)
+
+
+class Request(models.Model):
+    """An evaluation request by a petitioner."""
+
+    # Project localisation
+    address = models.TextField(_("Address"))
+
+    # Project specs
+    application_number = models.CharField(
+        _("Application number"),
+        max_length=15,
+        unique=True,
+        db_index=True,
+        validators=[application_number_validator],
+    )
+    created_surface = models.IntegerField(
+        _("Created surface"), help_text=_("In square meters")
+    )
+    existing_surface = models.IntegerField(
+        _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
+    )
+
+    # Petitioner data
+    contact_email = models.EmailField(_("E-mail"))
+    phone_number = PhoneNumberField(_("Phone number"), max_length=20, blank=True)
+
+    class Meta:
+        verbose_name = _("Evaluation request")
+        verbose_name_plural = _("Evaluation requests")
