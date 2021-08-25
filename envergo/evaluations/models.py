@@ -51,18 +51,6 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
-    rainwater_runoff_probability = models.IntegerField(
-        _("Rainwater runoff probability"), choices=PROBABILITIES
-    )
-    rainwater_runoff_impact = models.TextField(_("Rainwater runoff impact"))
-    flood_zone_probability = models.IntegerField(
-        _("Flood zone probability"), choices=PROBABILITIES
-    )
-    flood_zone_impact = models.TextField(_("Flood zone impact"))
-    wetland_probability = models.IntegerField(
-        _("Wetland probability"), choices=PROBABILITIES
-    )
-    wetland_impact = models.TextField(_("Wetland impact"))
     contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
