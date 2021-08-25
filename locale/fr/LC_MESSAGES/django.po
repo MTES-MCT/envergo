@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-09 14:48+0200\n"
+"POT-Creation-Date: 2021-08-24 11:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,47 +22,175 @@ msgstr ""
 msgid "evaluations/"
 msgstr "évaluations/"
 
-#: envergo/evaluations/forms.py:11 envergo/evaluations/models.py:20
+#: envergo/evaluations/admin.py:31
+msgid "Project data"
+msgstr "Données projet"
+
+#: envergo/evaluations/admin.py:41
+msgid "Evaluation report"
+msgstr "Rapport d'évaluation"
+
+#: envergo/evaluations/admin.py:45
+msgid "Contact data"
+msgstr "Informations de contact"
+
+#: envergo/evaluations/forms.py:13 envergo/evaluations/models.py:30
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/forms.py:12
+#: envergo/evaluations/forms.py:14
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
-#: envergo/evaluations/models.py:27
+#: envergo/evaluations/models.py:18
+msgid "Unlikely"
+msgstr "Peu probable"
+
+#: envergo/evaluations/models.py:19
+msgid "Possible"
+msgstr "Possible"
+
+#: envergo/evaluations/models.py:20
+msgid "Likely"
+msgstr "Probable"
+
+#: envergo/evaluations/models.py:21
+msgid "Very likely"
+msgstr "Très probable"
+
+#: envergo/evaluations/models.py:37
 msgid "Evaluation file"
 msgstr "Fichier d'évaluation"
 
-#: envergo/evaluations/models.py:31
+#: envergo/evaluations/models.py:43
+msgid "Commune"
+msgstr "Commune"
+
+#: envergo/evaluations/models.py:45
+msgid "The name and postcode of the project commune"
+msgstr "Nom et code postal de la commune du projet"
+
+#: envergo/evaluations/models.py:48
+msgid "Created surface"
+msgstr "Surface créée"
+
+#: envergo/evaluations/models.py:48 envergo/evaluations/models.py:51
+msgid "In square meters"
+msgstr "En m²"
+
+#: envergo/evaluations/models.py:51
+msgid "Existing surface"
+msgstr "Surface existante"
+
+#: envergo/evaluations/models.py:53 envergo/evaluations/models.py:106
+msgid "Probability"
+msgstr "Probabilité"
+
+#: envergo/evaluations/models.py:55
+msgid "Rainwater runoff probability"
+msgstr "Ruissellement des eaux de pluies (probabilité)"
+
+#: envergo/evaluations/models.py:57
+msgid "Rainwater runoff impact"
+msgstr "Ruissellement des eaux de pluies (détails)"
+
+#: envergo/evaluations/models.py:59
+msgid "Flood zone probability"
+msgstr "Zone inondable (probabilité)"
+
+#: envergo/evaluations/models.py:61
+msgid "Flood zone impact"
+msgstr "Zone inondable (détails)"
+
+#: envergo/evaluations/models.py:63
+msgid "Wetland probability"
+msgstr "Zone humide (probabilité)"
+
+#: envergo/evaluations/models.py:65
+msgid "Wetland impact"
+msgstr "Zone humide (détails)"
+
+#: envergo/evaluations/models.py:66
+msgid "Contact"
+msgstr "Contact"
+
+#: envergo/evaluations/models.py:67
+msgid "Contact (html)"
+msgstr "Contact (html)"
+
+#: envergo/evaluations/models.py:69
 msgid "Date created"
 msgstr "Date de création"
 
-#: envergo/evaluations/models.py:34
+#: envergo/evaluations/models.py:72 envergo/evaluations/models.py:102
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/models.py:35
+#: envergo/evaluations/models.py:73
 msgid "Evaluations"
 msgstr "Évaluations"
+
+#: envergo/evaluations/models.py:90
+msgid "Capture of more than 1 ha of rainwater runoff"
+msgstr "Captation de plus de 1 ha de ruissellement d'eaux de pluie"
+
+#: envergo/evaluations/models.py:91
+msgid "Building of more than 400 m¹ in a flood zone"
+msgstr "Construction de plus de 400 m² en zone inondable"
+
+#: envergo/evaluations/models.py:92
+msgid "More than 1000 m² impact on wetlands"
+msgstr "Impact de plus de 1000 m² sur une zone humide"
+
+#: envergo/evaluations/models.py:105
+msgid "Order"
+msgstr "Ordre"
+
+#: envergo/evaluations/models.py:107 envergo/evaluations/models.py:115
+msgid "Criterion"
+msgstr "Critère"
+
+#: envergo/evaluations/models.py:108
+msgid "Description"
+msgstr "Description"
+
+#: envergo/evaluations/models.py:109
+msgid "Description (html)"
+msgstr " Description (html)"
+
+#: envergo/evaluations/models.py:110
+msgid "Map"
+msgstr "Carte"
+
+#: envergo/evaluations/models.py:111
+msgid "Legend"
+msgstr "Légende"
+
+#: envergo/evaluations/models.py:112
+msgid "Legend (html)"
+msgstr "Légende (html)"
+
+#: envergo/evaluations/models.py:116
+msgid "Criterions"
+msgstr "Critères"
 
 #: envergo/evaluations/validators.py:20
 msgid "The application number format is invalid."
 msgstr "Le format du numéro de dossier est invalide."
 
-#: envergo/pages/urls.py:8
+#: envergo/pages/urls.py:10
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:13
+#: envergo/pages/urls.py:15
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:18
+#: envergo/pages/urls.py:20
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:23
+#: envergo/pages/urls.py:25
 msgid "water-law/"
 msgstr "loi-sur-leau/"
 
@@ -79,20 +207,15 @@ msgid ""
 "Please check your submission below and fix all errors before trying again."
 msgstr "Merci de vérifier votre saisie ci-dessous avant de réessayer."
 
-#: envergo/templates/_header.html:54
+#: envergo/templates/pages/legal_mentions.html:3
+#: envergo/templates/pages/legal_mentions.html:14
+#: envergo/templates/pages/legal_mentions.html:22
+msgid "Legal mentions"
+msgstr "Mentions légales"
+
 #: envergo/templates/pages/legal_mentions.html:11
 msgid "Home"
 msgstr "Accueil"
-
-#: envergo/templates/_header.html:57
-msgid "Water law"
-msgstr "Loi sur l'eau"
-
-#: envergo/templates/pages/legal_mentions.html:3
-#: envergo/templates/pages/legal_mentions.html:14
-#: envergo/templates/pages/legal_mentions.html:24
-msgid "Legal mentions"
-msgstr "Mentions légales"
 
 #: envergo/users/admin.py:18
 msgid "Personal info"
@@ -102,7 +225,7 @@ msgstr ""
 msgid "Permissions"
 msgstr ""
 
-#: envergo/users/admin.py:31
+#: envergo/users/admin.py:29
 msgid "Important dates"
 msgstr ""
 
@@ -128,4 +251,4 @@ msgstr ""
 
 #: envergo/users/views.py:25
 msgid "Information successfully updated"
-msgstr ""
+msgstr "Information mise à jour correctement"

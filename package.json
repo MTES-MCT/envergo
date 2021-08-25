@@ -2,9 +2,7 @@
   "name": "envergo",
   "version": "1.0.0",
   "dependencies": {
-    "@gouvfr/dsfr": "^1.1.0"
-  },
-  "devDependencies": {
+    "@gouvfr/dsfr": "^1.1.0",
     "autoprefixer": "^9.4.7",
     "browser-sync": "^2.14.0",
     "cssnano": "^4.1.10",
@@ -13,10 +11,12 @@
     "gulp-plumber": "^1.2.1",
     "gulp-postcss": "^8.0.0",
     "gulp-rename": "^1.2.2",
-    "gulp-sass": "^4.0.2",
+    "gulp-sass": "^5.0.0",
     "gulp-uglify-es": "^1.0.4",
-    "pixrem": "^5.0.0"
+    "pixrem": "^5.0.0",
+    "sass": "^1.38.1"
   },
+  "devDependencies": {},
   "browserslist": [
     "last 2 versions"
   ],

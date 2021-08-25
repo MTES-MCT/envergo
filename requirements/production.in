@@ -1,0 +1,12 @@
+# PRECAUTION: avoid production dependencies that aren't in development
+
+-r base.txt
+
+gunicorn
+psycopg2
+sentry-sdk
+
+# Django
+# ------------------------------------------------------------------------------
+django-storages[boto3]
+django-anymail[sendinblue]

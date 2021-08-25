@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load evaluations %}
 
-{% block title %}Téléchargez l'évaluation pour votre projet{% endblock %}
+{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
 {% block breadcrumbs %}
 <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d’Ariane</button>
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
   <div class="fr-collapse" id="breadcrumb-1">
     <ol class="fr-breadcrumb__list">
       <li>
@@ -22,12 +23,108 @@
 {% endblock %}
 
 {% block article %}
-<h1>Demande de permis n°{{ evaluation.application_number }}</h1>
+<h1>Évaluation Loi sur l'eau</h1>
+
 <p class="fr-text--lead">
-  <span class="fr-fi-checkbox-circle-fill" aria-hidden="true"></span>
-  Votre évaluation Loi sur l'eau est disponible !
+  Demande de permis n°
+  {{ evaluation.application_number_display }}
 </p>
 
-<a href="{{ evaluation.evaluation_file.url }}" rel="download" class="fr-btn">Consulter l'évaluation</a>
+<h3>Mon projet est-il soumis à la Loi sur l'eau ?</h3>
+
+<ul>
+  <li>Commune : {{ evaluation.commune }}</li>
+  <li>Surface créée : {{ evaluation.created_surface }} m²</li>
+  <li>Surface existante :
+    {% if evaluation.existing_surface %}
+    {{ evaluation.existing_surface }} m²
+    {% else %}
+    Inconnue
+    {% endif %}
+  </li>
+</ul>
+
+<p class="fr-callout">
+  Au vu des informations renseignées dans le permis de construire, il est
+  {% probability evaluation.global_probability %}
+  que votre projet soit soumis à
+  Déclaration au titre de la Loi sur l'eau.
+</p>
+
+<div id="probability-gauge">
+  <figure role="group" class="fr-content-media fr-content-media--sm">
+    <div class="fr-content-media__img">
+      {% probability evaluation.global_probability as p_label %}
+      {% include 'evaluations/_gauge.html' with probability=evaluation.global_probability %}
+    </div>
+    <figcaption>
+      Il est {% probability evaluation.global_probability %} que votre projet soit soumis à Déclaration au titre de la
+      Loi sur l'eau.
+    </figcaption>
+  </figure>
+</div>
+
+<p class="fr-text--light">
+  Cette estimation est une indication qui ne vaut pas position de l'administration.
+  Ce document vise à vous guider dans les actions à engager pour établir avec certitude si votre projet est soumis à
+  la
+  Loi sur l'eau.
+</p>
+
+<h2>Sur quels éléments cette estimation se fonde-t-elle ?</h2>
+
+<p>L'estimation a été établie en considérant les caractéristiques du projet :</p>
+
+<ul>
+  <li>sa localisation géographique ;</li>
+  <li>la surface du projet et du bâti existant ;</li>
+</ul>
+
+<p>…par rapport aux différents impacts que la réglementation Loi sur l'eau vise à limiter.</p>
+
+<ul class="fr-accordions-group">
+
+  {% for criterion in criterions %}
+  <li>
+    {% include 'evaluations/_criterion.html' with criterion=criterion %}
+  </li>
+  {% endfor %}
+  </li>
+</ul>
+
+{% if evaluation.contact_html %}
+<h2>Vers qui me tourner ?</h2>
+<p>
+  Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé de se
+  rapprocher :
+</p>
+
+<ul>
+  <li>
+    <p><strong>Du service qui instruit les dossiers Loi sur l'eau</strong></p>
+    {{ evaluation.contact_html|safe }}
+  </li>
+  <li>
+    <p><strong>D'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
+    <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau,
+      et s'il y a lieu de constituer un dossier et de le déposer aux services de la DDTM (Direction
+      Départementale du Territoire et de la Mer).</p>
+  </li>
+  <li>
+    <p><strong>De l'équipe EnvErgo</strong></p>
+    <p>
+      Vous pouvez également <a href="{% url 'contact_us' %}">contacter l'équipe d'EnvErgo</a> – le présent
+      service public numérique – afin d'obtenir une évaluation de votre dossier ou des précisions sur la
+      procédure à suivre.
+    </p>
+  </li>
+</ul>
+
+{% endif %}
+
+<h2>Pour en savoir plus…</h2>
+
+<p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>.</p>
+
 
 {% endblock %}

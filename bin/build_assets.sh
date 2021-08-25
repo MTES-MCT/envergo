@@ -18,6 +18,7 @@ END
 
 echo "Starting the post_compile hook"
 
+npm run build
 if compress_enabled
 then
   python manage.py compress --force

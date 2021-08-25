@@ -1,0 +1,34 @@
+{
+  "env": {
+    "DJANGO_DEBUG": {
+      "value": "True"
+    },
+    "DJANGO_CACHE_BACKEND": {
+      "value": "django.core.cache.backends.locmem.LocMemCache"
+    },
+    "REDIS_URL": {
+      "value": null
+    },
+    "DJANGO_TRACKER_ENABLED": {
+      "value": "False"
+    },
+    "DJANGO_SITE_ID": {
+      "value": "0"
+    },
+    "ENV_NAME": {
+      "value": "staging"
+    },
+    "IS_REVIEW_APP": {
+      "value": "True"
+    },
+    "DJANGO_AWS_S3_ENDPOINT_URL": {
+      "value": "https://envergo-stage.s3.fr-par.scw.cloud"
+    },
+    "DJANGO_AWS_STORAGE_BUCKET_NAME": {
+      "value": "envergo-stage"
+    }
+  },
+  "scripts": {
+    "first-deploy": "bash bin/first_deploy.sh"
+  }
+}

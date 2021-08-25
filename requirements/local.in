@@ -1,0 +1,30 @@
+-r base.txt
+
+Werkzeug
+ipdb
+psycopg2
+
+# Testing
+# ------------------------------------------------------------------------------
+mypy
+django-stubs
+pytest
+pytest-sugar
+
+# Code quality
+# ------------------------------------------------------------------------------
+flake8
+flake8-isort
+coverage
+black
+pylint-django
+pre-commit
+
+# Django
+# ------------------------------------------------------------------------------
+factory-boy
+
+django-debug-toolbar
+django-extensions
+django-coverage-plugin
+pytest-django

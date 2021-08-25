@@ -1,0 +1,17 @@
+django<3.3
+django-environ
+django-model-utils
+django-allauth
+django-crispy-forms
+django-compressor
+django-redis
+pytz
+python-slugify
+Pillow
+rcssmin
+argon2-cffi
+whitenoise
+redis
+hiredis
+pip-tools
+markdown

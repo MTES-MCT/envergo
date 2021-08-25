@@ -1,3 +1,5 @@
+@use "node_modules/@gouvfr/dsfr/src/schemes/styles/settings/colors";
+
 $white: #fff;
 $mint-green: #d6e9c6;
 $black: #000;
@@ -16,6 +18,66 @@ $red: #b94a48;
   background-color: $pink;
   border-color: $dark-pink;
   color: $red;
+}
+
+.probability {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: black;
+
+  &.probability-1 {
+    background-color: colors.$green-soft-400;
+  }
+
+  &.probability-2 {
+    background-color: colors.$blue-soft-300;
+  }
+
+  &.probability-3 {
+    background-color: colors.$yellow-dark-400;
+  }
+
+  &.probability-4 {
+    background-color: colors.$orange-soft-400;
+  }
+}
+
+#probability-gauge {
+  margin-bottom: 1.5rem;
+
+  svg {
+    background-color: white;
+    padding: .75rem;
+  }
+
+  circle {
+    fill: none;
+  }
+}
+
+/**
+/* Design system issues quickfixes
+**/
+
+// Don't force a 16:9 ratio on images
+.fr-content-media__img::before {
+  content: none;
+}
+
+.fr-content-media__img img,
+.fr-content-media__img svg {
+  position: unset;
+  object-fit: unset;
+}
+
+// Remove double margins below images with captions
+figcaption :last-child {
+  margin-bottom: 0;
+}
+
+// Remove double margins belowe lists
+ul>li:last-child>p:last-child {
+  margin-bottom: 0;
 }
 
 article {

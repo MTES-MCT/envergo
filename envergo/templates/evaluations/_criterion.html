@@ -1,0 +1,34 @@
+{% load evaluations %}
+
+<section class="fr-accordion">
+
+  <h3 class="fr-accordion__title">
+    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-{{ criterion.criterion }}">
+      <span>
+        {{ criterion.get_criterion_display }} —
+        {% probability criterion.probability %}
+      </span>
+    </button>
+  </h3>
+
+  <div class="fr-collapse" id="accordion-{{ criterion.criterion }}">
+    <p class="fr-text--light fr-text--sm">Rubrique {{ criterion.get_law_code }} de la nomenclature Loi sur l'eau</p>
+
+    {{ criterion.description_html|safe }}
+
+    {% if criterion.map %}
+
+    <figure class="fr-content-media fr-content-media--sm" role="group" aria-label="{{ criterion.legend_md }}">
+      <div class="fr-content-media__img">
+        <img src="{{ criterion.map.url }}" class="fr-responsive-img"
+          alt="Cartographie illustrant ce critère d'évaluation" />
+      </div>
+      {% if criterion.legend_html %}
+      <figcaption class="fr-content-media__caption">{{ criterion.legend_html|safe }}</figcaption>
+      {% endif %}
+    </figure>
+
+    {% endif %}
+
+  </div>
+</section>

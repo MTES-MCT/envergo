@@ -57,6 +57,9 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Update package list
+        run: |
+          sudo apt update
 
       - name: Set up french locale
         run: |

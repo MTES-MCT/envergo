@@ -1,3 +1,4 @@
 # This file is expected by Heroku.
+# Do not modify by hand! Use pip-tools and requirements.in instead!
 
 -r requirements/production.txt

@@ -33,7 +33,7 @@ def test_search_existing_eval(client, evaluation):
     assert res.status_code == 200
 
     content = res.content.decode("utf-8")
-    assert "Votre évaluation Loi sur l'eau est disponible !" in content
+    assert "<h1>Évaluation Loi sur l'eau</h1>" in content
 
 
 def test_search_form_allows_spaces_in_application_field(client, evaluation):

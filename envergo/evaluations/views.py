@@ -1,10 +1,11 @@
+from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import DetailView, FormView
 
 from envergo.evaluations.forms import EvaluationSearchForm
-from envergo.evaluations.models import Evaluation
+from envergo.evaluations.models import Criterion, Evaluation
 
 
 class EvaluationSearch(FormView):
@@ -25,6 +26,12 @@ class EvaluationDetail(DetailView):
     slug_field = "application_number"
     context_object_name = "evaluation"
 
+    def get_queryset(self):
+        qs = Evaluation.objects.prefetch_related(
+            Prefetch("criterions", queryset=Criterion.objects.order_by("order"))
+        )
+        return qs
+
     def get(self, request, *args, **kwargs):
         try:
             self.object = self.get_object()
@@ -39,3 +46,8 @@ class EvaluationDetail(DetailView):
             res = render(request, "evaluations/not_found.html", context, status=404)
 
         return res
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["criterions"] = self.object.criterions.all()
+        return context
