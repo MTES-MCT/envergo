@@ -2,7 +2,7 @@ import factory
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 
-from envergo.evaluations.models import Evaluation
+from envergo.evaluations.models import Criterion, Evaluation
 
 
 class EvaluationFactory(DjangoModelFactory):
@@ -16,9 +16,27 @@ class EvaluationFactory(DjangoModelFactory):
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     global_probability = 2
-    rainwater_runoff_probability = 2
-    rainwater_runoff_impact = factory.Faker("text")
-    flood_zone_probability = 2
-    flood_zone_impact = factory.Faker("text")
-    wetland_probability = 2
-    wetland_impact = factory.Faker("text")
+    contact_md = "envergo@example.org"
+    contact_html = "envergo@example.org"
+
+    @factory.post_generation
+    def criterions(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for criterion in extracted:
+                self.criterions.add(criterion)
+        else:
+            self.criterions.add(CriterionFactory(evaluation=self))
+
+
+class CriterionFactory(DjangoModelFactory):
+    class Meta:
+        model = Criterion
+
+    evaluation = factory.SubFactory(EvaluationFactory)
+    probability = fuzzy.FuzzyInteger(1, 4)
+    criterion = "rainwater_runoff"
+    description_md = factory.Faker("text")
+    description_html = factory.Faker("text")
