@@ -264,3 +264,5 @@ ANALYTICS = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+PHONENUMBER_DEFAULT_REGION = "FR"
