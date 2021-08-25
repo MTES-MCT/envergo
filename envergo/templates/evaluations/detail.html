@@ -36,10 +36,10 @@
   <li>Commune : {{ evaluation.commune }}</li>
   <li>Surface créée : {{ evaluation.created_surface }} m²</li>
   <li>Surface existante :
-    {% if evaluation.existing_surface %}
-    {{ evaluation.existing_surface }} m²
-    {% else %}
+    {% if evaluation.existing_surface is None %}
     Inconnue
+    {% else %}
+    {{ evaluation.existing_surface }} m²
     {% endif %}
   </li>
 </ul>
