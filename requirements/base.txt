@@ -28,6 +28,7 @@ django==3.2.6
     #   django-allauth
     #   django-appconf
     #   django-model-utils
+    #   django-phonenumber-field
     #   django-redis
 django-allauth==0.45.0
     # via -r base.in
@@ -41,6 +42,8 @@ django-environ==0.4.5
     # via -r base.in
 django-model-utils==4.1.1
     # via -r base.in
+django-phonenumber-field[phonenumbers]==5.2.0
+    # via -r base.in
 django-redis==5.0.0
     # via -r base.in
 hiredis==2.0.0
@@ -53,6 +56,8 @@ oauthlib==3.1.1
     # via requests-oauthlib
 pep517==0.11.0
     # via pip-tools
+phonenumbers==8.12.31
+    # via django-phonenumber-field
 pillow==8.3.1
     # via -r base.in
 pip-tools==6.2.0
