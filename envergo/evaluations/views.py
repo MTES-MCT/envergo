@@ -3,8 +3,9 @@ from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import DetailView, FormView
+from django.views.generic.edit import CreateView
 
-from envergo.evaluations.forms import EvaluationSearchForm
+from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
 
 
@@ -53,3 +54,8 @@ class EvaluationDetail(DetailView):
         if self.object:
             context["criterions"] = self.object.criterions.all()
         return context
+
+
+class RequestEvaluation(CreateView):
+    template_name = "evaluations/request.html"
+    form_class = RequestForm
