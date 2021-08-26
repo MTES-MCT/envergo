@@ -128,6 +128,7 @@ class Request(models.Model):
 
     # Project localisation
     address = models.TextField(_("Address"))
+    parcels = models.ManyToManyField("geodata.Parcel", verbose_name=("Parcels"))
 
     # Project specs
     application_number = models.CharField(
