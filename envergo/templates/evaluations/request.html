@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load evaluations %}
+
+{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
+
+{% block breadcrumbs %}
+<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+  <div class="fr-collapse" id="breadcrumb-1">
+    <ol class="fr-breadcrumb__list">
+      <li>
+        <a class="fr-breadcrumb__link" href="/">Accueil</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" aria-current="page">Demandez une évaluation</a>
+      </li>
+    </ol>
+  </div>
+</nav>
+{% endblock %}
+
+{% block article %}
+<h1>Demandez une évaluation de votre projet</h1>
+
+<p class="fr-text--lead">
+  EnvErgo peut vous aider à déterminer si votre projet d'urbanisme
+  est soumis à la Loi sur l'eau. Recevez une réponse dans les deux jours ouvrés.
+</p>
+
+<form action="" method="post" id="request-evaluation-form">
+  {% csrf_token %}
+
+  <fieldset class="fr-mb-3w">
+    <legend class="fr-h2"> Localisation de votre projet </legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Elle est essentielle pour connaître les règles locales relatives à la Loi sur l'eau.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.address %}
+  </fieldset>
+
+  <fieldset class="fr-mb-3w">
+    <legend class="fr-h2">Caractéristiques du projet</legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.application_number %}
+    {% include '_field_snippet.html' with field=form.created_surface %}
+    {% include '_field_snippet.html' with field=form.existing_surface %}
+  </fieldset>
+
+  <fieldset class="fr-mb-3w">
+    <legend class="fr-h2">Vos informations de contact</legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.contact_email %}
+    {% include '_field_snippet.html' with field=form.phone_number %}
+  </fieldset>
+
+
+  <button type="submit" class="fr-mt-6w fr-mb-3w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
+    Envoyez votre demande évaluation
+  </button>
+
+  <div role="alert" class="fr-alert fr-alert--info">
+    <p>En validant votre formulaire, vous acceptez que vos données soient traitées <a href="{% url 'legal_mentions' %}"
+        target="_blank" rel="noopener">en accord avec notre politique de
+        traitement des données</a>.</p>
+  </div>
+
+</form>
+
+{% endblock %}

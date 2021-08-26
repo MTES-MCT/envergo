@@ -55,9 +55,25 @@ $red: #b94a48;
   }
 }
 
+
 /**
-/* Design system issues quickfixes
-**/
+ * Forms
+ **/
+form {
+  fieldset {
+    border: none;
+    padding: 0;
+
+    legend {
+      width: 100%;
+      padding: 0;
+    }
+  }
+}
+
+/**
+ * Design system issues quickfixes
+ **/
 
 // Don't force a 16:9 ratio on images
 .fr-content-media__img::before {

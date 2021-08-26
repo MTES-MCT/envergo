@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from envergo.evaluations.models import Request
 from envergo.evaluations.validators import application_number_validator
 
 
@@ -27,3 +28,16 @@ class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
     """Search for a single evaluation."""
 
     pass
+
+
+class RequestForm(EvaluationFormMixin, forms.ModelForm):
+    class Meta:
+        model = Request
+        fields = [
+            "address",
+            "application_number",
+            "created_surface",
+            "existing_surface",
+            "contact_email",
+            "phone_number",
+        ]
