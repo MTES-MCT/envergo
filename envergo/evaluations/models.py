@@ -149,6 +149,9 @@ class Request(models.Model):
     contact_email = models.EmailField(_("E-mail"))
     phone_number = PhoneNumberField(_("Phone number"), max_length=20, blank=True)
 
+    # Meta fields
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
     class Meta:
         verbose_name = _("Evaluation request")
         verbose_name_plural = _("Evaluation requests")
