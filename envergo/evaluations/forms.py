@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import Request
 from envergo.evaluations.validators import application_number_validator
@@ -32,6 +33,8 @@ class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(label=_("What is your project's address?"))
+    contact_email = forms.EmailField(label=_("Your e-mail address"))
+    phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
 
     class Meta:
         model = Request
@@ -43,3 +46,10 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "contact_email",
             "phone_number",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["contact_email"].widget.attrs[
+            "placeholder"
+        ] = "pierre.dupont@example.com"
+        self.fields["phone_number"].widget.attrs["placeholder"] = "06123456789"
