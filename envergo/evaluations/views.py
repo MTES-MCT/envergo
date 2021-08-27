@@ -1,8 +1,9 @@
+from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, TemplateView
 from django.views.generic.edit import CreateView
 
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
@@ -90,9 +91,19 @@ class RequestEvaluation(CreateView):
             return self.form_invalid(form, parcel_formset)
 
     def form_valid(self, form, parcel_formset):
-        pass
+        with transaction.atomic():
+            evaluation = form.save()
+            parcels = parcel_formset.save()
+            evaluation.parcels.set(parcels)
+
+        success_url = reverse("request_success")
+        return HttpResponseRedirect(success_url)
 
     def form_invalid(self, form, parcel_formset):
         return self.render_to_response(
             self.get_context_data(form=form, parcel_formset=parcel_formset)
         )
+
+
+class RequestSuccess(TemplateView):
+    template_name = "evaluations/request_success.html"
