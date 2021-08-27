@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-27 09:27+0000\n"
+"POT-Creation-Date: 2021-08-27 09:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -124,7 +124,7 @@ msgstr "Construction de plus de 400 m² en zone inondable"
 msgid "More than 1000 m² impact on wetlands"
 msgstr "Impact de plus de 1000 m² sur une zone humide"
 
-#: envergo/evaluations/models.py:94 envergo/geodata/models.py:66
+#: envergo/evaluations/models.py:94 envergo/geodata/models.py:82
 msgid "Order"
 msgstr "Ordre"
 
@@ -196,11 +196,11 @@ msgstr "Code commune"
 msgid "Section"
 msgstr "Section"
 
-#: envergo/geodata/forms.py:16 envergo/geodata/models.py:64
+#: envergo/geodata/forms.py:16 envergo/geodata/models.py:73
 msgid "Prefix"
 msgstr "Préfixe"
 
-#: envergo/geodata/forms.py:17 envergo/geodata/models.py:69
+#: envergo/geodata/forms.py:17 envergo/geodata/models.py:92
 msgid "Parcel"
 msgstr "Parcelle"
 
@@ -208,11 +208,27 @@ msgstr "Parcelle"
 msgid "Commune INSEE code"
 msgstr "Commune Code INSEE"
 
-#: envergo/geodata/models.py:59
+#: envergo/geodata/models.py:58
+msgid "The code must be a 5-digit number"
+msgstr "Le code est un nombre à 5 chiffres."
+
+#: envergo/geodata/models.py:63
 msgid "Section letter(s)"
 msgstr "Lettre(s) de Section"
 
-#: envergo/geodata/models.py:70
+#: envergo/geodata/models.py:68
+msgid "The section must be one or two uppercase letters."
+msgstr "La section correspond à une ou deux lettres en majuscule."
+
+#: envergo/geodata/models.py:77
+msgid "The prefix must be a 3-digit number."
+msgstr "Le préfixe est un nombre à trois chiffres."
+
+#: envergo/geodata/models.py:86
+msgid "The parcel must be a number between 1 and 9999"
+msgstr "La parcelle est un nombre entre 1 et 9999."
+
+#: envergo/geodata/models.py:93
 msgid "Parcels"
 msgstr "Parcelles"
 
