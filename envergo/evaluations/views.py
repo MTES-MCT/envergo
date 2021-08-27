@@ -7,6 +7,7 @@ from django.views.generic.edit import CreateView
 
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
+from envergo.geodata.forms import ParcelFormSet
 
 
 class EvaluationSearch(FormView):
@@ -59,3 +60,15 @@ class EvaluationDetail(DetailView):
 class RequestEvaluation(CreateView):
     template_name = "evaluations/request.html"
     form_class = RequestForm
+
+    def get_parcel_formset(self):
+        form_kwargs = self.get_form_kwargs()
+        form_kwargs["prefix"] = "parcel"
+        del form_kwargs["instance"]
+        parcel_formset = ParcelFormSet(**form_kwargs)
+        return parcel_formset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["parcel_formset"] = self.get_parcel_formset()
+        return context
