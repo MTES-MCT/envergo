@@ -1,6 +1,8 @@
 import pytest
 from django.urls import reverse
 
+from envergo.evaluations.models import Request
+
 pytestmark = pytest.mark.django_db
 
 
@@ -49,3 +51,30 @@ def test_search_form_allows_spaces_in_application_field(client, evaluation):
         follow=True,
     )
     assert res.status_code == 200
+
+
+def test_eval_request_creation(client):
+    data = {
+        "address": "11B rue Barnier 34110 Vic la Gardiole",
+        "parcel-TOTAL_FORMS": "3",
+        "parcel-INITIAL_FORMS": "0",
+        "parcel-MIN_NUM_FORMS": "0",
+        "parcel-MAX_NUM_FORMS": "1000",
+        "parcel-0-commune": "34333",
+        "parcel-0-section": "BV",
+        "parcel-0-prefix": "000",
+        "parcel-0-order": "68",
+        "application_number": "PC04412321D0123",
+        "created_surface": "250",
+        "existing_surface": "100",
+        "contact_email": "toto@tata.com",
+        "phone_number": "0612345678",
+    }
+    request_url = reverse("request_evaluation")
+    request_qs = Request.objects.all()
+
+    assert request_qs.count() == 0
+
+    res = client.post(request_url, data=data)
+    assert res.status_code == 302
+    assert request_qs.count() == 1

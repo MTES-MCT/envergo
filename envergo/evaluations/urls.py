@@ -6,6 +6,7 @@ from envergo.evaluations.views import (
     EvaluationDetail,
     EvaluationSearch,
     RequestEvaluation,
+    RequestSuccess,
 )
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
         include(
             [
                 path("", RequestEvaluation.as_view(), name="request_evaluation"),
+                path(_("success/"), RequestSuccess.as_view(), name="request_success"),
             ]
         ),
     ),
