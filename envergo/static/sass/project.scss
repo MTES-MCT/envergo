@@ -69,6 +69,22 @@ form {
       padding: 0;
     }
   }
+
+  .formset {
+    margin-bottom: 2rem;
+
+    .formset-header {
+      margin-bottom: 0;
+      background-color: var(--bf100-g750);
+      color: var(--g700);
+      box-shadow: 0 1px 0 0 var(--g300);
+      padding: .5rem 1rem;
+    }
+
+    .formset-field {
+      padding-top: 0;
+    }
+  }
 }
 
 /**

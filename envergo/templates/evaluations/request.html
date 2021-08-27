@@ -42,10 +42,16 @@
 
     {% include '_field_snippet.html' with field=form.address %}
 
+    <label class="fr-label fr-mb-3w">Renseignez une ou plusieurs parcelles cadastrales concernées par
+      votre projet.</label>
+
     {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
 
-    <iframe class="fr-mt-3w" width="100%" height="500"
-      src=" https://cadastre.data.gouv.fr/map?style=vector#13/43.68413/3.58926">
+    <div role="alert" class="fr-my-3w fr-alert fr-alert--info">
+      <p>Vous pouvez utiliser la carte embarquée pour trouver les identifiants de vos parcelles.</p>
+    </div>
+
+    <iframe width="100%" height="500" src=" https://cadastre.data.gouv.fr/map?style=vector#13/43.68413/3.58926">
     </iframe>
   </fieldset>
 
