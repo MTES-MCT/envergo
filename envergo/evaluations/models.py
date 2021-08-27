@@ -36,6 +36,8 @@ class Evaluation(models.Model):
     evaluation_file = models.FileField(
         _("Evaluation file"),
         upload_to=evaluation_file_format,
+        null=True,
+        blank=True,
         validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
     )
 
