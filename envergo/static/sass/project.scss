@@ -70,6 +70,10 @@ form {
     }
   }
 
+  .fr-input-group.required>.fr-label .label-content:after {
+    content: " *";
+  }
+
   .formset {
     margin-bottom: 2rem;
 
