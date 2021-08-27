@@ -31,6 +31,8 @@ class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
 
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
+    address = forms.CharField(label=_("What is your project's address?"))
+
     class Meta:
         model = Request
         fields = [
