@@ -64,11 +64,35 @@ class RequestEvaluation(CreateView):
     def get_parcel_formset(self):
         form_kwargs = self.get_form_kwargs()
         form_kwargs["prefix"] = "parcel"
-        del form_kwargs["instance"]
+
+        if "instance" in form_kwargs:
+            del form_kwargs["instance"]
+
         parcel_formset = ParcelFormSet(**form_kwargs)
         return parcel_formset
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["parcel_formset"] = self.get_parcel_formset()
-        return context
+        if "parcel_formset" not in kwargs:
+            kwargs["parcel_formset"] = self.get_parcel_formset()
+        return super().get_context_data(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests: instantiate a form instance with the passed
+        POST variables and then check if it's valid.
+        """
+        self.object = None
+        form = self.get_form()
+        parcel_formset = self.get_parcel_formset()
+        if form.is_valid() and parcel_formset.is_valid():
+            return self.form_valid(form, parcel_formset)
+        else:
+            return self.form_invalid(form, parcel_formset)
+
+    def form_valid(self, form, parcel_formset):
+        pass
+
+    def form_invalid(self, form, parcel_formset):
+        return self.render_to_response(
+            self.get_context_data(form=form, parcel_formset=parcel_formset)
+        )

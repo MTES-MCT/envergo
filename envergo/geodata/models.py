@@ -1,4 +1,4 @@
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -53,17 +53,40 @@ class Parcel(models.Model):
     commune = models.CharField(
         _("Commune INSEE code"),
         max_length=5,
-        validators=[RegexValidator(regex=r"^[\d]{5}$")],
+        validators=[
+            RegexValidator(
+                regex=r"^[\d]{5}$", message=_("The code must be a 5-digit number")
+            )
+        ],
     )
     section = models.CharField(
         _("Section letter(s)"),
         max_length=2,
-        validators=[RegexValidator(regex=r"^[0A-Z][A-Z]$")],
+        validators=[
+            RegexValidator(
+                regex=r"^[0A-Z][A-Z]$",
+                message=_("The section must be one or two uppercase letters."),
+            )
+        ],
     )
     prefix = models.CharField(
-        _("Prefix"), max_length=3, validators=[RegexValidator(regex=r"^[\d]{3}$")]
+        _("Prefix"),
+        max_length=3,
+        validators=[
+            RegexValidator(
+                regex=r"^[\d]{3}$", message=_("The prefix must be a 3-digit number.")
+            )
+        ],
     )
-    order = models.PositiveIntegerField(_("Order"))
+    order = models.PositiveIntegerField(
+        _("Order"),
+        validators=[
+            MaxValueValidator(
+                limit_value=9999,
+                message=_("The parcel must be a number between 1 and 9999"),
+            )
+        ],
+    )
 
     class Meta:
         verbose_name = _("Parcel")
