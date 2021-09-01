@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-27 09:58+0000\n"
+"POT-Creation-Date: 2021-09-01 08:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "evaluations/"
 msgstr "évaluations/"
 
-#: envergo/evaluations/admin.py:31
+#: envergo/evaluations/admin.py:31 envergo/evaluations/admin.py:58
 msgid "Project data"
 msgstr "Données projet"
 
@@ -34,18 +34,38 @@ msgstr "Rapport d'évaluation"
 msgid "Contact data"
 msgstr "Informations de contact"
 
-#: envergo/evaluations/forms.py:14 envergo/evaluations/models.py:31
+#: envergo/evaluations/admin.py:56
+msgid "Project localisation"
+msgstr "Localisation du projet"
+
+#: envergo/evaluations/admin.py:68
+msgid "Contact info"
+msgstr "Infos de contact"
+
+#: envergo/evaluations/admin.py:76
+msgid "Meta info"
+msgstr "Infos meta"
+
+#: envergo/evaluations/forms.py:15 envergo/evaluations/models.py:31
 #: envergo/evaluations/models.py:135
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/forms.py:15
+#: envergo/evaluations/forms.py:16
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
-#: envergo/evaluations/forms.py:34
+#: envergo/evaluations/forms.py:35
 msgid "What is your project's address?"
 msgstr "À quelle adresse se situe votre projet ?"
+
+#: envergo/evaluations/forms.py:36
+msgid "Your e-mail address"
+msgstr "Votre adresse e-mail"
+
+#: envergo/evaluations/forms.py:37
+msgid "Your phone number"
+msgstr "Votre numéro de téléphone"
 
 #: envergo/evaluations/models.py:19
 msgid "Unlikely"
@@ -100,7 +120,7 @@ msgstr "Contact"
 msgid "Contact (html)"
 msgstr "Contact (html)"
 
-#: envergo/evaluations/models.py:58
+#: envergo/evaluations/models.py:58 envergo/evaluations/models.py:153
 msgid "Date created"
 msgstr "Date de création"
 
@@ -168,17 +188,21 @@ msgstr "E-mail"
 msgid "Phone number"
 msgstr "Numéro de téléphone"
 
-#: envergo/evaluations/models.py:153
+#: envergo/evaluations/models.py:156
 msgid "Evaluation request"
 msgstr "Demande d'évaluation"
 
-#: envergo/evaluations/models.py:154
+#: envergo/evaluations/models.py:157
 msgid "Evaluation requests"
 msgstr "Demandes d'évaluation"
 
-#: envergo/evaluations/urls.py:14
+#: envergo/evaluations/urls.py:15
 msgid "requests/"
 msgstr "demandes/"
+
+#: envergo/evaluations/urls.py:19
+msgid "success/"
+msgstr "succès/"
 
 #: envergo/evaluations/validators.py:20
 msgid "The application number format is invalid."
