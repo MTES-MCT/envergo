@@ -67,6 +67,10 @@ jobs:
           sudo locale-gen
           sudo update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
+      - name: Install dependencies
+        run: |
+          sudo apt install binutils libproj-dev gdal-bin
+
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
