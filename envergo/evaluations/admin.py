@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
-from envergo.evaluations.models import Criterion, Evaluation
+from envergo.evaluations.models import Criterion, Evaluation, Request
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
@@ -45,4 +45,33 @@ class EvaluationAdmin(admin.ModelAdmin):
             _("Contact data"),
             {"fields": ("contact_md",)},
         ),
+    )
+
+
+@admin.register(Request)
+class RequestAdmin(admin.ModelAdmin):
+    list_display = ["application_number", "created_at", "contact_email", "phone_number"]
+    readonly_fields = ["created_at", "parcels"]
+    fieldsets = (
+        (_("Project localisation"), {"fields": ("address", "parcels")}),
+        (
+            _("Project data"),
+            {
+                "fields": (
+                    "application_number",
+                    "created_surface",
+                    "existing_surface",
+                )
+            },
+        ),
+        (
+            _("Contact info"),
+            {
+                "fields": (
+                    "contact_email",
+                    "phone_number",
+                )
+            },
+        ),
+        (_("Meta info"), {"fields": ("created_at",)}),
     )
