@@ -35,7 +35,7 @@
 
   {% include '_form_header.html' with form=form %}
 
-  <fieldset class="fr-mb-3w">
+  <fieldset class="fr-mb-6w">
     <legend class="fr-h2"> Localisation de votre projet </legend>
 
     <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
@@ -59,7 +59,7 @@
     </div>
   </fieldset>
 
-  <fieldset class="fr-mb-3w">
+  <fieldset class="fr-mb-6w">
     <legend class="fr-h2">Caractéristiques du projet</legend>
 
     <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
@@ -67,11 +67,18 @@
     </div>
 
     {% include '_field_snippet.html' with field=form.application_number %}
-    {% include '_field_snippet.html' with field=form.created_surface %}
-    {% include '_field_snippet.html' with field=form.existing_surface %}
+
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-12 fr-col-md-6">
+        {% include '_field_snippet.html' with field=form.existing_surface %}
+      </div>
+      <div class="fr-col-12 fr-col-md-6">
+        {% include '_field_snippet.html' with field=form.created_surface %}
+      </div>
+    </div>
   </fieldset>
 
-  <fieldset class="fr-mb-3w">
+  <fieldset class="fr-mb-6w">
     <legend class="fr-h2">Vos informations de contact</legend>
 
     <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
