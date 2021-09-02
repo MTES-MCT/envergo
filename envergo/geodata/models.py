@@ -17,6 +17,8 @@ class Parcel(models.Model):
        5 char long number
        The commune's INSEE (Code Officiel Géographique) code where it's
        located (e.g 34333) THIS IS NOT THE POSTCODE!
+       There are exeptions where the commune code is replaced with a district
+       (« arrondissement ») code.
 
      - section:
        1 or two letters
@@ -48,6 +50,12 @@ class Parcel(models.Model):
     Became :
     91228 / AA / 182 / 1
 
+    Fun fact, even though the "feuille" is a subdivision of the section, it is
+    generally written before it (so, a prefix) in parcel identifiers.
+
+    E.g For the IGN and betagouv apis, the parcel « 911182 / AA / 000 / 1 »
+    is identified by: « 911182000AA0001 »
+
     """
 
     commune = models.CharField(
@@ -65,7 +73,9 @@ class Parcel(models.Model):
         validators=[
             RegexValidator(
                 regex=r"^[0A-Z][A-Z]$",
-                message=_("The section must be one or two uppercase letters."),
+                message=_(
+                    "The section must be one (zero-prefixed) or two uppercase letters."
+                ),
             )
         ],
     )
@@ -97,3 +107,16 @@ class Parcel(models.Model):
 
     def __str__(self):
         return f"{self.commune} / {self.section} / {self.prefix} / {self.order:04}"
+
+    @property
+    def reference(self):
+        """Return the reference, as noted by the IGN or Etalab apis.
+
+        Those kind of references are used, for example for IGN's geocoder
+        service:
+        https://geoservices.ign.fr/documentation/services/services-beta/geocodage-beta/documentation-du-geocodage#2463
+
+        Or in Etalab's cadastre data:
+        https://cadastre.data.gouv.fr/datasets/cadastre-etalab
+        """
+        return f"{self.commune}{self.prefix}{self.section}{self.order:04}"

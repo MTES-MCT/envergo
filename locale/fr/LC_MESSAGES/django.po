@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-01 08:03+0000\n"
+"POT-Creation-Date: 2021-09-02 07:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -144,7 +144,7 @@ msgstr "Construction de plus de 400 m² en zone inondable"
 msgid "More than 1000 m² impact on wetlands"
 msgstr "Impact de plus de 1000 m² sur une zone humide"
 
-#: envergo/evaluations/models.py:94 envergo/geodata/models.py:82
+#: envergo/evaluations/models.py:94 envergo/geodata/models.py:92
 msgid "Order"
 msgstr "Ordre"
 
@@ -179,6 +179,10 @@ msgstr "Critères"
 #: envergo/evaluations/models.py:130
 msgid "Address"
 msgstr "Adresse"
+
+#: envergo/evaluations/models.py:131 envergo/geodata/models.py:103
+msgid "Parcels"
+msgstr "Parcelles"
 
 #: envergo/evaluations/models.py:149
 msgid "E-mail"
@@ -220,41 +224,37 @@ msgstr "Code commune"
 msgid "Section"
 msgstr "Section"
 
-#: envergo/geodata/forms.py:16 envergo/geodata/models.py:73
+#: envergo/geodata/forms.py:16 envergo/geodata/models.py:83
 msgid "Prefix"
 msgstr "Préfixe"
 
-#: envergo/geodata/forms.py:17 envergo/geodata/models.py:92
+#: envergo/geodata/forms.py:17 envergo/geodata/models.py:102
 msgid "Parcel"
 msgstr "Parcelle"
 
-#: envergo/geodata/models.py:54
+#: envergo/geodata/models.py:62
 msgid "Commune INSEE code"
 msgstr "Commune Code INSEE"
 
-#: envergo/geodata/models.py:58
+#: envergo/geodata/models.py:66
 msgid "The code must be a 5-digit number"
 msgstr "Le code est un nombre à 5 chiffres."
 
-#: envergo/geodata/models.py:63
+#: envergo/geodata/models.py:71
 msgid "Section letter(s)"
 msgstr "Lettre(s) de Section"
 
-#: envergo/geodata/models.py:68
-msgid "The section must be one or two uppercase letters."
-msgstr "La section correspond à une ou deux lettres en majuscule."
-
 #: envergo/geodata/models.py:77
+msgid "The section must be one (zero-prefixed) or two uppercase letters."
+msgstr "La section correspond à une (préfixée par zéro) ou deux lettres en majuscule."
+
+#: envergo/geodata/models.py:87
 msgid "The prefix must be a 3-digit number."
 msgstr "Le préfixe est un nombre à trois chiffres."
 
-#: envergo/geodata/models.py:86
+#: envergo/geodata/models.py:96
 msgid "The parcel must be a number between 1 and 9999"
 msgstr "La parcelle est un nombre entre 1 et 9999."
-
-#: envergo/geodata/models.py:93
-msgid "Parcels"
-msgstr "Parcelles"
 
 #: envergo/pages/urls.py:10
 msgid "legal-mentions/"
