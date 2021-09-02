@@ -53,7 +53,7 @@
     <div class="fr-col-md-6">
       <div class="ratio-4x3">
         <div class="ratio-content">
-          {% leaflet_map 'cadastre_map' callback="window.map_init" %}
+          {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
         </div>
       </div>
     </div>
@@ -78,7 +78,24 @@
   var map;
   var geojsonLayer;
 
-  function map_init(newMap, options) {
+  function mapClicked(e) {
+    console.log("Map clicked " + e.latlng);
+
+    var searchUrl =
+      `https://geocodage.ign.fr/look4/parcel/reverse?searchGeom={"type":"Point","coordinates":[${e.latlng.lng},${e.latlng.lat}]}&returnTrueGeometry=true`;
+    fetch(searchUrl)
+      .then(response => {
+        return response.json();
+      })
+      .then(response => {
+        console.log(response);
+        var parcel = response.features[0];
+        var polygon = rewind(parcel.properties.trueGeometry);
+        geojsonLayer.addData(polygon);
+      });
+  };
+
+  function mapInit(newMap, options) {
     map = newMap;
 
     var layer = L.tileLayer(
@@ -100,8 +117,9 @@
       }
     );
     layer.addTo(newMap);
-
     geojsonLayer = L.geoJSON().addTo(map);
+
+    newMap.on('click', mapClicked);
   };
 
 </script>
@@ -128,8 +146,7 @@
 
         var parcel = rewind(features.properties.trueGeometry);
 
-        console.log(parcel);
-        L.geoJSON(parcel).addTo(map);
+        geojsonLayer.addData(parcel);
       });
   });
 
