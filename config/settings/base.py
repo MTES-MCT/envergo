@@ -268,3 +268,11 @@ ANALYTICS = {
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 PHONENUMBER_DEFAULT_REGION = "FR"
+
+LEAFLET_CONFIG = {
+    "TILES": "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "DEFAULT_CENTER": (47, 1.7),
+    "DEFAULT_ZOOM": 6,
+    "MIN_ZOOM": 5,
+    "MAX_ZOOM": 19,
+}
