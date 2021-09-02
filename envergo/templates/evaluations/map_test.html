@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags %}
+
+{% block title %}Test carto{% endblock %}
+
+{% block breadcrumbs %}
+<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+  <div class="fr-collapse" id="breadcrumb-1">
+    <ol class="fr-breadcrumb__list">
+      <li>
+        <a class="fr-breadcrumb__link" href="/">Accueil</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" aria-current="page">Demandez une évaluation</a>
+      </li>
+    </ol>
+  </div>
+</nav>
+{% endblock %}
+
+{% block container %}
+<h1>Test de la carto</h1>
+
+
+<form action="" method="post" id="request-evaluation-form" novalidate>
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-md-6">
+      <fieldset class="fr-mb-6w">
+        <legend class="fr-h2"> Localisation de votre projet </legend>
+
+        {% include '_field_snippet.html' with field=form.address %}
+
+        {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
+
+        <div class="fr-input-group">
+          <label for="id_parcel">Parcelle</label>
+          <input type="text" id="id_parcel" name="parcel" value="34333000BV0068" />
+        </div>
+
+        <button type="button" class="fr-btn" id="test_btn">Test</button>
+
+      </fieldset>
+    </div>
+
+    <div class="fr-col-md-6">
+      <div class="ratio-4x3">
+        <div class="ratio-content">
+          {% leaflet_map 'cadastre_map' callback="window.map_init" %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="fr-mt-6w fr-mb-3w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
+    Envoyez votre demande évaluation
+  </button>
+
+</form>
+
+{% endblock %}
+
+{% block extra_css %}
+{% leaflet_css %}
+{% endblock %}
+
+{% block extra_js %}
+{% leaflet_js %}
+<script>
+  var map;
+  var geojsonLayer;
+
+  function map_init(newMap, options) {
+    map = newMap;
+
+    var layer = L.tileLayer(
+      "https://wxs.ign.fr/parcellaire/geoportail/wmts?" +
+      "&REQUEST=GetTile" +
+      "&SERVICE=WMTS" +
+      "&VERSION=1.0.0" +
+      "&STYLE=PCI vecteur" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/png" +
+      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+        minZoom: 0,
+        maxZoom: 18,
+        attribution: "IGN-F/Geoportail",
+        tileSize: 256 // les tuiles du Géooportail font 256x256px
+      }
+    );
+    layer.addTo(newMap);
+
+    geojsonLayer = L.geoJSON().addTo(map);
+  };
+
+</script>
+{% endblock %}
+
+{% block bottom_js %}
+<script>
+  var btn = document.getElementById('test_btn');
+  var parcelInput = document.getElementById('id_parcel');
+  btn.addEventListener('click', function (btn) {
+    var parcelId = parcelInput.value;
+
+    var searchUrl = `https://geocodage.ign.fr/look4/parcel/search?q=${parcelId}&returnTrueGeometry=true`;
+    fetch(searchUrl)
+      .then(response => {
+        return response.json();
+      })
+      .then(response => {
+        var features = response.features[0];
+        var coordinates = features.geometry.coordinates;
+        var geometry = features.properties.trueGeometry.coordinates[0][0];
+
+        map.setView([coordinates[1], coordinates[0]], 18);
+
+        var parcel = rewind(features.properties.trueGeometry);
+
+        console.log(parcel);
+        L.geoJSON(parcel).addTo(map);
+      });
+  });
+
+  function rewind(gj, outer) {
+    var type = gj && gj.type,
+      i;
+
+    if (type === 'FeatureCollection') {
+      for (i = 0; i < gj.features.length; i++) rewind(gj.features[i], outer);
+
+    } else if (type === 'GeometryCollection') {
+      for (i = 0; i < gj.geometries.length; i++) rewind(gj.geometries[i], outer);
+
+    } else if (type === 'Feature') {
+      rewind(gj.geometry, outer);
+
+    } else if (type === 'Polygon') {
+      rewindRings(gj.coordinates, outer);
+
+    } else if (type === 'MultiPolygon') {
+      for (i = 0; i < gj.coordinates.length; i++) rewindRings(gj.coordinates[i], outer);
+    }
+
+    return gj;
+  }
+
+  function rewindRings(rings, outer) {
+    if (rings.length === 0) return;
+
+    rewindRing(rings[0], outer);
+    for (var i = 1; i < rings.length; i++) {
+      rewindRing(rings[i], !outer);
+    }
+  }
+
+  function rewindRing(ring, dir) {
+    var area = 0,
+      err = 0;
+    for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+      var k = (ring[i][0] - ring[j][0]) * (ring[j][1] + ring[i][1]);
+      var m = area + k;
+      err += Math.abs(area) >= Math.abs(k) ? area - m + k : k - m + area;
+      area = m;
+    }
+    if (area + err >= 0 !== !!dir) ring.reverse();
+  }
+
+</script>
+{% endblock %}

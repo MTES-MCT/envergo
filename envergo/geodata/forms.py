@@ -28,4 +28,8 @@ class ParcelForm(forms.ModelForm):
         self.fields["order"].widget.attrs["placeholder"] = "68"
 
 
-ParcelFormSet = forms.modelformset_factory(Parcel, form=ParcelForm, extra=3)
+ParcelFormSet = forms.modelformset_factory(Parcel, form=ParcelForm, extra=0)
+
+
+class ParcelMapForm(forms.Form):
+    address = forms.CharField(label=_("Address"))
