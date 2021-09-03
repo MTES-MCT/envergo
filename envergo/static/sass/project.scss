@@ -75,7 +75,10 @@ form {
   }
 
   .formset {
-    margin-bottom: 2rem;
+
+    &+.formset {
+      margin-top: 2rem;
+    }
 
     .formset-header {
       margin-bottom: 0;
