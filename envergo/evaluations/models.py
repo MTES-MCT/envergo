@@ -135,6 +135,7 @@ class Request(models.Model):
     # Project specs
     application_number = models.CharField(
         _("Application number"),
+        blank=True,
         max_length=15,
         unique=True,
         db_index=True,
