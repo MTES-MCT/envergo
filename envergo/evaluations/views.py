@@ -101,7 +101,11 @@ class RequestEvaluation(CreateView):
 
     def form_invalid(self, form, parcel_formset):
         return self.render_to_response(
-            self.get_context_data(form=form, parcel_formset=parcel_formset)
+            self.get_context_data(
+                form=form,
+                parcel_formset=parcel_formset,
+                other_form_errors=parcel_formset.errors,
+            )
         )
 
 
