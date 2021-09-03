@@ -44,20 +44,13 @@
 
     {% include '_field_snippet.html' with field=form.address %}
 
-    <label class="fr-label fr-mb-3w">Renseignez une ou plusieurs parcelles cadastrales concernées par
-      votre projet.</label>
+    <label class="fr-label fr-mb-3w">
+      Renseignez une ou plusieurs parcelles cadastrales concernées par votre projet.
+      Vous pouvez utiliser <a href="https://cadastre.data.gouv.fr/map?style=vector" target="_blank" rel="noopener">cette
+        carte cadastrale pour trouver les identifiants de vos parcelles</a>.</label>
 
     {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
 
-    <div role="alert" class="fr-my-3w fr-alert fr-alert--info">
-      <p>Vous pouvez utiliser la carte embarquée pour trouver les identifiants de vos parcelles.</p>
-    </div>
-
-    <div class="ratio-4x3">
-      <div class="ratio-content">
-        {% leaflet_map 'cadastre_map' callback="window.map_init" %}
-      </div>
-    </div>
   </fieldset>
 
   <fieldset class="fr-mb-6w">
