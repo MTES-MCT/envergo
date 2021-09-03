@@ -46,10 +46,6 @@
     };
 
 
-
-
-
-
 })(this, L, rewind);
 
 const parcelMapApp = new ParcelMapApp();
