@@ -60,14 +60,14 @@
       <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
     </div>
 
-    {% include '_field_snippet.html' with field=form.application_number %}
+    {% include '_field_snippet.html' with field=form.created_surface %}
 
     <div class="fr-grid-row fr-grid-row--gutters">
       <div class="fr-col-12 fr-col-md-6">
         {% include '_field_snippet.html' with field=form.existing_surface %}
       </div>
       <div class="fr-col-12 fr-col-md-6">
-        {% include '_field_snippet.html' with field=form.created_surface %}
+        {% include '_field_snippet.html' with field=form.application_number %}
       </div>
     </div>
   </fieldset>
@@ -104,6 +104,7 @@
 
 {% block extra_js %}
 {% leaflet_js %}
+
 <script>
   function map_init(map, options) {
     //var lc = L.control.layers().addTo(map);
