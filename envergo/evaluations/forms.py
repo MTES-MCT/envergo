@@ -53,3 +53,4 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "placeholder"
         ] = "pierre.dupont@example.com"
         self.fields["phone_number"].widget.attrs["placeholder"] = "06123456789"
+        self.fields["application_number"].required = False
