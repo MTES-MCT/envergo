@@ -70,6 +70,7 @@ class RequestEvaluation(CreateView):
             del form_kwargs["instance"]
 
         parcel_formset = ParcelFormSet(**form_kwargs)
+        print(parcel_formset.errors)
         return parcel_formset
 
     def get_context_data(self, **kwargs):
@@ -104,7 +105,8 @@ class RequestEvaluation(CreateView):
             self.get_context_data(
                 form=form,
                 parcel_formset=parcel_formset,
-                other_form_errors=parcel_formset.errors,
+                has_errors=True,
+                other_non_field_errors=parcel_formset.non_form_errors(),
             )
         )
 
