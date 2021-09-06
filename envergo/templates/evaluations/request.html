@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load evaluations leaflet_tags %}
+{% load evaluations leaflet_tags static %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
@@ -51,6 +51,10 @@
 
     {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
 
+    <button type="button" id="btn-more-parcels" class="fr-btn">
+      Ajouter une parcelle
+    </button>
+
   </fieldset>
 
   <fieldset class="fr-mb-6w">
@@ -83,7 +87,6 @@
     {% include '_field_snippet.html' with field=form.phone_number %}
   </fieldset>
 
-
   <button type="submit" class="fr-mt-6w fr-mb-3w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
     Envoyez votre demande évaluation
   </button>
@@ -96,6 +99,10 @@
 
 </form>
 
+<template id="tpl-form-parcel" class="form-template">
+  {% include 'geodata/_parcel_line_form.html' with form=parcel_formset.empty_form counter='__prefix__' %}
+</template>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -104,32 +111,5 @@
 
 {% block extra_js %}
 {% leaflet_js %}
-
-<script>
-  function map_init(map, options) {
-    //var lc = L.control.layers().addTo(map);
-
-    // An example from the Atlas of Living Australia https://www.ala.org.au/
-    var layer = L.tileLayer(
-      "https://wxs.ign.fr/parcellaire/geoportail/wms?" +
-      "&REQUEST=GetTile" +
-      "&SERVICE=WMS" +
-      "&VERSION=1.3.0" +
-      "&STYLE=PCI vecteur" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/png" +
-      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-        minZoom: 0,
-        maxZoom: 18,
-        attribution: "IGN-F/Geoportail",
-        tileSize: 256 // les tuiles du Géooportail font 256x256px
-      }
-    );
-    layer.addTo(map);
-  }
-
-</script>
+<script defer src="{% static 'js/libs/parcel_fieldset.js' %}"></script>
 {% endblock %}
