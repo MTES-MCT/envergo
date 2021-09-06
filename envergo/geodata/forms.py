@@ -28,7 +28,15 @@ class ParcelForm(forms.ModelForm):
         self.fields["order"].widget.attrs["placeholder"] = "68"
 
 
-ParcelFormSet = forms.modelformset_factory(Parcel, form=ParcelForm, extra=0)
+class BaseParcelFormSet(forms.BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.queryset = Parcel.objects.none()
+
+
+ParcelFormSet = forms.modelformset_factory(
+    Parcel, form=ParcelForm, formset=BaseParcelFormSet, extra=1
+)
 
 
 class ParcelMapForm(forms.Form):
