@@ -27,6 +27,7 @@ django==3.2.6
     #   -r base.in
     #   django-allauth
     #   django-appconf
+    #   django-leaflet
     #   django-model-utils
     #   django-phonenumber-field
     #   django-redis
@@ -39,6 +40,8 @@ django-compressor==2.4.1
 django-crispy-forms==1.12.0
     # via -r base.in
 django-environ==0.4.5
+    # via -r base.in
+django-leaflet==0.28.1
     # via -r base.in
 django-model-utils==4.1.1
     # via -r base.in
