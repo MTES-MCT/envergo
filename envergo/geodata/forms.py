@@ -13,7 +13,7 @@ class ParcelForm(forms.ModelForm):
         label=_("Section"),
         max_length=2,
     )
-    prefix = forms.CharField(label=_("Prefix"), max_length=3)
+    prefix = forms.CharField(label=_("Prefix"), max_length=3, required=False)
     order = forms.CharField(label=_("Parcel"), max_length=4)
 
     class Meta:
@@ -26,6 +26,15 @@ class ParcelForm(forms.ModelForm):
         self.fields["section"].widget.attrs["placeholder"] = "BV"
         self.fields["prefix"].widget.attrs["placeholder"] = "000"
         self.fields["order"].widget.attrs["placeholder"] = "68"
+
+    def clean_prefix(self):
+        """The default prefix is often "000" and not provided at all."""
+        prefix = self.cleaned_data["prefix"]
+        return prefix or "000"
+
+    def clean_section(self):
+        section = self.cleaned_data["section"]
+        return section.upper().zfill(2)
 
 
 class BaseParcelFormSet(forms.BaseModelFormSet):
