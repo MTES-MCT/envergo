@@ -28,14 +28,25 @@ class ParcelForm(forms.ModelForm):
         self.fields["order"].widget.attrs["placeholder"] = "68"
 
 
-class BaseParcelFormSet(forms.BaseFormSet):
+class BaseParcelFormSet(forms.BaseModelFormSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.queryset = Parcel.objects.none()
 
+    def clean(self):
+        if any(self.errors):
+            return
+
+        new_forms = [f for f in self.extra_forms if f.has_changed()]
+        if len(new_forms) == 0:
+            raise forms.ValidationError(_("You must provide at least one parcel."))
+
 
 ParcelFormSet = forms.modelformset_factory(
-    Parcel, form=ParcelForm, formset=BaseParcelFormSet, extra=1
+    Parcel,
+    form=ParcelForm,
+    formset=BaseParcelFormSet,
+    extra=1,
 )
 
 

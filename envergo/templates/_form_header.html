@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% if form.errors or other_form_errors%}
+{% if form.errors or has_errors %}
 <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
   <p class="fr-alert__title">
     {{ _('We <strong>could not process</strong> your form because it contains some errors.') }}
