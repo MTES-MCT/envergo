@@ -1,6 +1,6 @@
 {{ formset.management_form }}
 {% for parcel_form in formset %}
-<div class="fr-grid-row fr-grid-row--gutters formset">
-  {% include 'geodata/_parcel_line_form.html' with counter=forloop.counter form=parcel_form %}
+<div id="formset-parcel" class="fr-grid-row fr-grid-row--gutters formset">
+  {% include 'geodata/_parcel_line_form.html' with counter=forloop.counter0 form=parcel_form %}
 </div>
 {% endfor %}
