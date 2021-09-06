@@ -20,6 +20,9 @@ class EvaluationFormMixin(forms.Form):
 
     def clean_application_number(self):
         dirty_number = self.cleaned_data.get("application_number")
+        if dirty_number == "":
+            return ""
+
         clean_number = dirty_number.replace(" ", "").strip().upper()
         application_number_validator(clean_number)
         return clean_number
