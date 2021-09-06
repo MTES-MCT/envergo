@@ -16,3 +16,4 @@ redis
 hiredis
 pip-tools
 markdown
+django-leaflet

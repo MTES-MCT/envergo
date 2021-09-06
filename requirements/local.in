@@ -28,4 +28,3 @@ django-debug-toolbar
 django-extensions
 django-coverage-plugin
 pytest-django
-django-leaflet
