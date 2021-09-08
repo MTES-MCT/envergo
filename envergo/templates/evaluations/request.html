@@ -108,7 +108,7 @@
 
 {% block extra_css %}
 {% leaflet_css %}
-<link rel="stylesheet" href="{% static '@algolia/autocomplete-theme-classic/dist/theme.min.css' %}" />
+<link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 </style>
 
 {% endblock %}
@@ -116,12 +116,10 @@
 {% block extra_js %}
 {% leaflet_js %}
 <script defer src="{% static 'js/libs/parcel_fieldset.js' %}"></script>
-<script defer src="{% static '@algolia/autocomplete-js/dist/umd/index.production.js' %}"></script>
+<script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
 
 <script>
   window.addEventListener('load', function() {
-    const { autocomplete } = window['@algolia/autocomplete-js'];
-
     function debouncePromise(fn, time) {
       let timerId = undefined;
 
@@ -137,40 +135,54 @@
     }
 
     const debouncedFetch = debouncePromise(fetch, 150);
+    const autocompleteContainer = document.getElementById('autocomplete_address_input');
 
-    autocomplete({
-      container: '#autocomplete_address_input',
-      placeholder: 'Recherchez une adresse',
-      getSources: function({ query }) {
-        return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?type=housenumber&autocomplete=1&q=${query}`)
+    accessibleAutocomplete({
+      element: autocompleteContainer,
+      id: '#autocomplete_address_input',
+      minLength: 3,
+      templates: {
+        inputValue: function(item) {
+          const value = item ? item.properties.label : '';
+          return value;
+        },
+        suggestion: function(item) {
+          return `<div>
+            <strong>${item.properties.label}</strong> <br />
+            <span>${item.properties.context}</span>
+          </div>`;
+        }
+      },
+      tNoResults: () => 'Aucun résultat trouvé',
+      tStatusQueryTooShort: (minQueryLength) => `Saisissez au moins ${minQueryLength} caractères pour voir des résultats`,
+      tStatusNoResults: () => 'Aucun résultat de recherche',
+      tStatusSelectedOption: (selectedOption, length, index) => `${selectedOption} ${index + 1} de ${length} est en surbrillance`,
+      tStatusResults: function(length, contentSelectedOption) {
+        let result;
+        if (length === 1) {
+          result = `<span>1 résultat disponible. ${contentSelectedOption}</span>`;
+        } else {
+          result = `<span>${length} résultats disponibles. ${contentSelectedOption}</span>`;
+        }
+        return result;
+      },
+      tAssistiveHint: function() {
+        return "Quand des résultats d'autocomplétion sont disponibles, utilisez " +
+          "les flèches haut et bas pour les parcourir. Utilisez entrée pour " +
+          "sélectionner. Sur périphérique tactile, explorez en glissant le doigt.";
+      },
+      onConfirm: function(val) {
+        console.log(val);
+      },
+      source: function(query, populateResults) {
+        return fetch(`https://api-adresse.data.gouv.fr/search/?type=housenumber&autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {
-            return [{
-              sourceId: 'addresses',
-              getItems: function() {
-                return features;
-              },
-              getItemInputValue({ item }) {
-                return item.properties.label;
-              },
-              templates: {
-                item: function({ item, createElement, Fragment }) {
-                  const h = createElement;
-                  const div = h('div', { class: 'aa-itemWrapper' }, ...[
-                    h('strong', { class: 'aa-itemContent' }, item.properties.label),
-                    h('br', {}),
-                    h('span', {}, item.properties.context)
-                  ]);
-                  return div;
-                }
-              },
-              noResults() {
-                return 'Aucun résultat trouvéaliser';
-              },
-            }]
+            const results = features.map((f) => f.properties.label);
+            populateResults(features);
           })
           .catch(() => []);
-      },
+      }
     });
   });
 </script>
