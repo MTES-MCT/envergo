@@ -175,13 +175,12 @@
         console.log(val);
       },
       source: function(query, populateResults) {
-        return fetch(`https://api-adresse.data.gouv.fr/search/?type=housenumber&autocomplete=1&q=${query}`)
+        return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?type=housenumber&autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {
-            const results = features.map((f) => f.properties.label);
             populateResults(features);
           })
-          .catch(() => []);
+          .catch((error) => console.log(error));
       }
     });
   });
