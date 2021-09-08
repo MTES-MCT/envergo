@@ -54,6 +54,6 @@
 })(this);
 
 
-window.onload = function () {
+window.addEventListener('load', function () {
     new Formset('parcel');
-};
+});
