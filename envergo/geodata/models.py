@@ -101,9 +101,6 @@ class Parcel(models.Model):
     class Meta:
         verbose_name = _("Parcel")
         verbose_name_plural = _("Parcels")
-        unique_together = [
-            ("commune", "section", "prefix", "order"),
-        ]
 
     def __str__(self):
         return f"{self.commune} / {self.section} / {self.prefix} / {self.order:04}"
