@@ -70,7 +70,10 @@
         suggestion: function(item) {
           return `<div>
               <strong>${item.properties.label}</strong> <br />
-              <span>${item.properties.context}</span>
+              <span>
+                ${item.properties.context}
+                (Code commune : ${item.properties.citycode})
+              </span>
             </div>`;
         }
       },
@@ -93,7 +96,11 @@
           "sélectionner. Sur périphérique tactile, explorez en glissant le doigt.";
       },
       onConfirm: function(val) {
-        console.log(val);
+        if (val) {
+          const citycode = val.properties.citycode;
+          const event = new CustomEvent('EnvErgo:citycode_selected', { detail: citycode });
+          window.dispatchEvent(event);
+        }
       },
       source: function(query, populateResults) {
         return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?type=housenumber&autocomplete=1&q=${query}`)
