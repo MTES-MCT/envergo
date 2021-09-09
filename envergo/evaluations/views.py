@@ -9,6 +9,7 @@ from django.views.generic.edit import CreateView
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
 from envergo.geodata.forms import ParcelFormSet, ParcelMapForm
+from envergo.utils.mattermost import notify
 
 
 class EvaluationSearch(FormView):
@@ -101,6 +102,13 @@ class RequestEvaluation(CreateView):
             evaluation = form.save()
             parcels = parcel_formset.save()
             evaluation.parcels.set(parcels)
+
+        request_url = reverse("admin:evaluations_request_change", args=[evaluation.id])
+        msg = f"""Une nouvelle évaluation a été demandée.
+
+        https://{self.request.get_host()}/{request_url}
+        """
+        notify(msg)
 
         success_url = reverse("request_success")
         return HttpResponseRedirect(success_url)
