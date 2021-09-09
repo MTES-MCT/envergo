@@ -135,8 +135,6 @@ class Request(models.Model):
         _("Application number"),
         blank=True,
         max_length=15,
-        unique=True,
-        db_index=True,
         validators=[application_number_validator],
     )
     created_surface = models.IntegerField(
