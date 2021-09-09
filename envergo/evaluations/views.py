@@ -12,6 +12,8 @@ from envergo.geodata.forms import ParcelFormSet, ParcelMapForm
 
 
 class EvaluationSearch(FormView):
+    """A simple search form to find evaluations for a project."""
+
     template_name = "evaluations/search.html"
     form_class = EvaluationSearchForm
 
@@ -23,6 +25,8 @@ class EvaluationSearch(FormView):
 
 
 class EvaluationDetail(DetailView):
+    """The complete evaluation detail."""
+
     template_name = "evaluations/detail.html"
     model = Evaluation
     slug_url_kwarg = "application_number"
@@ -59,6 +63,8 @@ class EvaluationDetail(DetailView):
 
 
 class RequestEvaluation(CreateView):
+    """A form to request an evaluation for a project."""
+
     template_name = "evaluations/request.html"
     form_class = RequestForm
 
@@ -70,7 +76,6 @@ class RequestEvaluation(CreateView):
             del form_kwargs["instance"]
 
         parcel_formset = ParcelFormSet(**form_kwargs)
-        print(parcel_formset.errors)
         return parcel_formset
 
     def get_context_data(self, **kwargs):
