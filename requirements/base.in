@@ -17,3 +17,4 @@ hiredis
 pip-tools
 markdown
 django-leaflet
+celery

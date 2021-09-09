@@ -4,10 +4,16 @@
 #
 #    pip-compile base.in
 #
+amqp==5.0.6
+    # via kombu
 argon2-cffi==20.1.0
     # via -r base.in
 asgiref==3.4.1
     # via django
+billiard==3.6.4.0
+    # via celery
+celery==5.1.2
+    # via -r base.in
 certifi==2021.5.30
     # via requests
 cffi==1.14.6
@@ -16,8 +22,19 @@ cffi==1.14.6
     #   cryptography
 charset-normalizer==2.0.4
     # via requests
-click==8.0.1
-    # via pip-tools
+click==7.1.2
+    # via
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
+    #   pip-tools
+click-didyoumean==0.0.3
+    # via celery
+click-plugins==1.1.1
+    # via celery
+click-repl==0.2.0
+    # via celery
 cryptography==3.4.7
     # via pyjwt
 defusedxml==0.7.1
@@ -53,6 +70,8 @@ hiredis==2.0.0
     # via -r base.in
 idna==3.2
     # via requests
+kombu==5.1.0
+    # via celery
 markdown==3.3.4
     # via -r base.in
 oauthlib==3.1.1
@@ -65,6 +84,8 @@ pillow==8.3.1
     # via -r base.in
 pip-tools==6.2.0
     # via -r base.in
+prompt-toolkit==3.0.20
+    # via click-repl
 pycparser==2.20
     # via cffi
 pyjwt[crypto]==2.1.0
@@ -76,6 +97,7 @@ python3-openid==3.2.0
 pytz==2021.1
     # via
     #   -r base.in
+    #   celery
     #   django
 rcssmin==1.0.6
     # via
@@ -96,6 +118,7 @@ rjsmin==1.1.0
 six==1.16.0
     # via
     #   argon2-cffi
+    #   click-repl
     #   django-compressor
 sqlparse==0.4.1
     # via django
@@ -105,6 +128,13 @@ tomli==1.2.1
     # via pep517
 urllib3==1.26.6
     # via requests
+vine==5.0.0
+    # via
+    #   amqp
+    #   celery
+    #   kombu
+wcwidth==0.2.5
+    # via prompt-toolkit
 wheel==0.37.0
     # via pip-tools
 whitenoise==5.3.0
