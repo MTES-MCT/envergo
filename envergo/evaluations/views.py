@@ -104,10 +104,10 @@ class RequestEvaluation(CreateView):
             evaluation.parcels.set(parcels)
 
         request_url = reverse("admin:evaluations_request_change", args=[evaluation.id])
-        msg = f"""Une nouvelle évaluation a été demandée.
-
-        https://{self.request.get_host()}/{request_url}
-        """
+        msg = (
+            f"Une nouvelle évaluation a été demandée. "
+            f"https://{self.request.get_host()}{request_url}"
+        )
         notify(msg)
 
         success_url = reverse("request_success")
