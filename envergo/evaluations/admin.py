@@ -50,7 +50,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ["application_number", "created_at", "contact_email", "phone_number"]
+    list_display = ["created_at", "application_number", "contact_email", "phone_number"]
     readonly_fields = ["created_at", "parcels"]
     fieldsets = (
         (_("Project localisation"), {"fields": ("address", "parcels")}),
@@ -70,6 +70,7 @@ class RequestAdmin(admin.ModelAdmin):
                 "fields": (
                     "contact_email",
                     "phone_number",
+                    "other_contacts",
                 )
             },
         ),
