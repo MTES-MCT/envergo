@@ -37,7 +37,7 @@
 
     this.updateCurrentInput();
     this.enableAutocomplete();
-    // this.syncInputStyles();
+    this.syncInputs();
   };
   exports.AddressAutocomplete = AddressAutocomplete;
 
@@ -113,9 +113,10 @@
     });
   };
 
-  AddressAutocomplete.prototype.syncInputStyles = function() {
+  AddressAutocomplete.prototype.syncInputs = function() {
+    const currentValue = this.inputElement.value;
     const autocomplete = document.getElementById(this.inputId);
-    autocomplete.style.class = this.inputElement.class;
+    autocomplete.value = currentValue;
   };
 
 })(this, accessibleAutocomplete);
