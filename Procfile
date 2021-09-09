@@ -10,3 +10,6 @@ web: bash bin/start_web.sh
 
 # This is run once at the end of the deployment, in a one-off container
 postdeploy: bash bin/post_deploy.sh
+
+# Run celery worker
+worker: bash bin/start_celery_worker.sh
