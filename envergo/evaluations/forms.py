@@ -38,6 +38,14 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(label=_("What is your project's address?"))
     contact_email = forms.EmailField(label=_("Your e-mail address"))
     phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
+    other_contacts = forms.CharField(
+        label=_("Other contacts data"),
+        required=False,
+        help_text=_(
+            "Please let us know if we should warn others about the evaluation result."
+        ),
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
 
     class Meta:
         model = Request
@@ -48,6 +56,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "existing_surface",
             "contact_email",
             "phone_number",
+            "other_contacts",
         ]
 
     def __init__(self, *args, **kwargs):

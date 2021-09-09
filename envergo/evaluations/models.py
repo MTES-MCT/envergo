@@ -149,6 +149,7 @@ class Request(models.Model):
     # Petitioner data
     contact_email = models.EmailField(_("E-mail"))
     phone_number = PhoneNumberField(_("Phone number"), max_length=20, blank=True)
+    other_contacts = models.TextField(_("Other contacts"), blank=True)
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
