@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.urls import reverse
 
@@ -143,3 +145,17 @@ def test_eval_error_missing_parcel(client, eval_request_data):
     assert request_qs.count() == 0
     assert parcel_qs.count() == 0
     assert "Vous devez fournir une parcelle" in res.content.decode()
+
+
+@patch("envergo.utils.mattermost.requests.post")
+def test_eval_triggers_ping_to_mattermost(
+    mock_post, settings, client, eval_request_data
+):
+    """Requesting an evaluation pings the project team."""
+
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    request_url = reverse("request_evaluation")
+    res = client.post(request_url, data=eval_request_data)
+    assert res.status_code == 302
+
+    mock_post.assert_called_once()

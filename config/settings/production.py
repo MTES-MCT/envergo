@@ -211,3 +211,5 @@ sentry_sdk.init(
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+MATTERMOST_ENDPOINT = env("DJANGO_MATTERMOST_ENDPOINT")
