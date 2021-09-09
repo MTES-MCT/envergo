@@ -256,6 +256,17 @@ LOGGING = {
 INSTALLED_APPS += ["compressor"]
 STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
+# CELERY
+if USE_TZ:
+    CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL", default="memory://")
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
