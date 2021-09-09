@@ -10,6 +10,6 @@ def notify(msg):
     endpoint = settings.MATTERMOST_ENDPOINT
     if endpoint:
         payload = {"text": msg}
-        requests.post(endpoint, data=payload)
+        requests.post(endpoint, json=payload)
     else:
         print(msg)
