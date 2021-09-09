@@ -19,8 +19,13 @@
 
     this.state = {
       totalForms: parseInt(this.inputs.totalFormsInput.value),
-      selectedCitycode: '',
+      selectedCommune: {
+        name: '',
+        code: ''
+      },
     };
+
+    this.citycodeHintElement = undefined;
 
     window.addEventListener('EnvErgo:citycode_selected', this.onCitycodeSelected.bind(this));
   };
@@ -54,20 +59,31 @@
     // Update the TOTAl_FORMS input value
     this.inputs.totalFormsInput.value = nbTargetForms;
 
-    // Update empty commue fields with the selected citycode
-    const inputs = document.querySelectorAll('input[name$=-commune]');
-    inputs.forEach(function(input) {
-      if (input.value === '') {
-        input.value = this.state.selectedCitycode;
-      }
-    }.bind(this));
+    this.renderCitycodeHint();
+  };
+
+  Formset.prototype.renderCitycodeHint = function() {
+    if (this.citycodeHintElement === undefined) {
+      this.citycodeHintElement = document.createElement('p');
+      this.citycodeHintElement.classList.add('fr-alert', 'fr-alert--info', 'fr-mt-3w');
+    }
+
+    const name = this.state.selectedCommune.name;
+    const code = this.state.selectedCommune.code;
+    this.citycodeHintElement.innerHTML = `Code commune pour ${name} : <strong>${code}</strong>`;
+
+    this.formset.parentElement.insertBefore(this.citycodeHintElement, this.formset);
   };
 
   Formset.prototype.onCitycodeSelected = function(e) {
-    const citycode = e.detail;
-    this.state.selectedCitycode = citycode;
+    const { communeName, citycode } = e.detail;
+    this.state.selectedCommune = {
+      name: communeName,
+      code: citycode
+    };
     this.render();
   };
+
 })(this);
 
 
