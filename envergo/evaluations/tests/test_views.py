@@ -159,3 +159,13 @@ def test_eval_triggers_ping_to_mattermost(
     assert res.status_code == 302
 
     mock_post.assert_called_once()
+
+
+def test_eval_triggers_email_to_requester(client, eval_request_data, mailoutbox):
+    """Requesting an evaluation pings the project team."""
+
+    request_url = reverse("request_evaluation")
+    res = client.post(request_url, data=eval_request_data)
+    assert res.status_code == 302
+
+    assert len(mailoutbox) == 1
