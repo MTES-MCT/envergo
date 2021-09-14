@@ -7,14 +7,23 @@ from envergo.geodata.models import Parcel
 class ParcelForm(forms.ModelForm):
     commune = forms.CharField(
         label=_("Commune code"),
+        help_text=_("5 chars long INSEE code"),
         max_length=5,
     )
     section = forms.CharField(
         label=_("Section"),
+        help_text=_("One or two letters"),
         max_length=2,
     )
-    prefix = forms.CharField(label=_("Prefix"), max_length=3, required=False)
-    order = forms.CharField(label=_("Parcel"), max_length=4)
+    prefix = forms.CharField(
+        label=_("Prefix"),
+        help_text=_("3 chars long number"),
+        max_length=3,
+        required=False,
+    )
+    order = forms.CharField(
+        label=_("Parcel"), help_text=_("A number ≤ 9999"), max_length=4
+    )
 
     class Meta:
         model = Parcel
@@ -22,10 +31,6 @@ class ParcelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["commune"].widget.attrs["placeholder"] = "34333"
-        self.fields["section"].widget.attrs["placeholder"] = "BV"
-        self.fields["prefix"].widget.attrs["placeholder"] = "000"
-        self.fields["order"].widget.attrs["placeholder"] = "68"
 
     def clean_prefix(self):
         """The default prefix is often "000" and not provided at all."""
