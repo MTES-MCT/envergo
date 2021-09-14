@@ -9,7 +9,7 @@
 <p class="fr-text--lead">La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les
   milieux aquatiques.</p>
 
-<ul class="fr-accordions-group">
+<ul id="water-law-accordion" class="fr-accordions-group">
 
   <li>
     <section class="fr-accordion">
@@ -342,4 +342,8 @@
   </li>
 
 </ul>
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
 {% endblock %}
