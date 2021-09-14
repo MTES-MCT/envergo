@@ -4,18 +4,28 @@
 #
 #    pip-compile production.in
 #
+amqp==5.0.6
+    # via
+    #   -r base.txt
+    #   kombu
 argon2-cffi==20.1.0
     # via -r base.txt
 asgiref==3.4.1
     # via
     #   -r base.txt
     #   django
+billiard==3.6.4.0
+    # via
+    #   -r base.txt
+    #   celery
 boto3==1.18.26
     # via django-storages
 botocore==1.21.26
     # via
     #   boto3
     #   s3transfer
+celery==5.1.2
+    # via -r base.txt
 certifi==2021.5.30
     # via
     #   -r base.txt
@@ -30,10 +40,26 @@ charset-normalizer==2.0.4
     # via
     #   -r base.txt
     #   requests
-click==8.0.1
+click==7.1.2
     # via
     #   -r base.txt
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
     #   pip-tools
+click-didyoumean==0.0.3
+    # via
+    #   -r base.txt
+    #   celery
+click-plugins==1.1.1
+    # via
+    #   -r base.txt
+    #   celery
+click-repl==0.2.0
+    # via
+    #   -r base.txt
+    #   celery
 cryptography==3.4.7
     # via
     #   -r base.txt
@@ -48,7 +74,9 @@ django==3.2.6
     #   django-allauth
     #   django-anymail
     #   django-appconf
+    #   django-leaflet
     #   django-model-utils
+    #   django-phonenumber-field
     #   django-redis
     #   django-storages
 django-allauth==0.45.0
@@ -65,7 +93,11 @@ django-crispy-forms==1.12.0
     # via -r base.txt
 django-environ==0.4.5
     # via -r base.txt
+django-leaflet==0.28.1
+    # via -r base.txt
 django-model-utils==4.1.1
+    # via -r base.txt
+django-phonenumber-field[phonenumbers]==5.2.0
     # via -r base.txt
 django-redis==5.0.0
     # via -r base.txt
@@ -83,6 +115,10 @@ jmespath==0.10.0
     # via
     #   boto3
     #   botocore
+kombu==5.1.0
+    # via
+    #   -r base.txt
+    #   celery
 markdown==3.3.4
     # via -r base.txt
 oauthlib==3.1.1
@@ -93,10 +129,18 @@ pep517==0.11.0
     # via
     #   -r base.txt
     #   pip-tools
+phonenumbers==8.12.31
+    # via
+    #   -r base.txt
+    #   django-phonenumber-field
 pillow==8.3.1
     # via -r base.txt
 pip-tools==6.2.0
     # via -r base.txt
+prompt-toolkit==3.0.20
+    # via
+    #   -r base.txt
+    #   click-repl
 psycopg2==2.9.1
     # via -r production.in
 pycparser==2.20
@@ -118,6 +162,7 @@ python3-openid==3.2.0
 pytz==2021.1
     # via
     #   -r base.txt
+    #   celery
     #   django
 rcssmin==1.0.6
     # via
@@ -149,6 +194,7 @@ six==1.16.0
     # via
     #   -r base.txt
     #   argon2-cffi
+    #   click-repl
     #   django-compressor
     #   python-dateutil
 sqlparse==0.4.1
@@ -169,6 +215,16 @@ urllib3==1.26.6
     #   botocore
     #   requests
     #   sentry-sdk
+vine==5.0.0
+    # via
+    #   -r base.txt
+    #   amqp
+    #   celery
+    #   kombu
+wcwidth==0.2.5
+    # via
+    #   -r base.txt
+    #   prompt-toolkit
 wheel==0.37.0
     # via
     #   -r base.txt

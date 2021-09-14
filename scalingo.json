@@ -1,4 +1,14 @@
 {
+  "formation": {
+    "web": {
+      "amount": 1,
+      "size": "S"
+    },
+    "worker": {
+      "amount": 1,
+      "size": "S"
+    }
+  },
   "env": {
     "DJANGO_DEBUG": {
       "value": "True"

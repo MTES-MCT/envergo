@@ -63,12 +63,16 @@ DJANGO_APPS = [
     "django.contrib.admin",
     "django.forms",
 ]
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = [
+    "phonenumber_field",
+    "leaflet",
+]
 
 LOCAL_APPS = [
     "envergo.users.apps.UsersConfig",
     "envergo.pages",
     "envergo.evaluations",
+    "envergo.geodata",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -252,6 +256,16 @@ LOGGING = {
 INSTALLED_APPS += ["compressor"]
 STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
+# CELERY
+if USE_TZ:
+    CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL", default="memory://localhost/")
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
@@ -262,3 +276,15 @@ ANALYTICS = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+PHONENUMBER_DEFAULT_REGION = "FR"
+
+LEAFLET_CONFIG = {
+    "TILES": "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "DEFAULT_CENTER": (47, 1.7),
+    "DEFAULT_ZOOM": 6,
+    "MIN_ZOOM": 5,
+    "MAX_ZOOM": 19,
+}
+
+MATTERMOST_ENDPOINT = ""

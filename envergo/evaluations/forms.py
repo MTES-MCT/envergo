@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.formfields import PhoneNumberField
 
+from envergo.evaluations.models import Request
 from envergo.evaluations.validators import application_number_validator
 
 
@@ -18,6 +20,9 @@ class EvaluationFormMixin(forms.Form):
 
     def clean_application_number(self):
         dirty_number = self.cleaned_data.get("application_number")
+        if dirty_number == "":
+            return ""
+
         clean_number = dirty_number.replace(" ", "").strip().upper()
         application_number_validator(clean_number)
         return clean_number
@@ -27,3 +32,37 @@ class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
     """Search for a single evaluation."""
 
     pass
+
+
+class RequestForm(EvaluationFormMixin, forms.ModelForm):
+    address = forms.CharField(label=_("What is your project's address?"))
+    contact_email = forms.EmailField(label=_("Your e-mail address"))
+    phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
+    other_contacts = forms.CharField(
+        label=_("Other contacts data"),
+        required=False,
+        help_text=_(
+            "Please let us know if we should warn others about the evaluation result."
+        ),
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    class Meta:
+        model = Request
+        fields = [
+            "address",
+            "application_number",
+            "created_surface",
+            "existing_surface",
+            "contact_email",
+            "phone_number",
+            "other_contacts",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["contact_email"].widget.attrs[
+            "placeholder"
+        ] = "pierre.dupont@example.com"
+        self.fields["phone_number"].widget.attrs["placeholder"] = "06123456789"
+        self.fields["application_number"].required = False

@@ -5,6 +5,7 @@ django-allauth
 django-crispy-forms
 django-compressor
 django-redis
+django-phonenumber-field[phonenumbers]
 pytz
 python-slugify
 Pillow
@@ -15,3 +16,5 @@ redis
 hiredis
 pip-tools
 markdown
+django-leaflet
+celery

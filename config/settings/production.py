@@ -209,5 +209,11 @@ sentry_sdk.init(
     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
 )
 
+# CELERY
+CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL")
+
+
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+MATTERMOST_ENDPOINT = env("DJANGO_MATTERMOST_ENDPOINT")

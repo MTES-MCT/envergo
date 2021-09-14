@@ -1,14 +1,23 @@
+from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, TemplateView
+from django.views.generic.edit import CreateView
 
-from envergo.evaluations.forms import EvaluationSearchForm
+from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
+from envergo.evaluations.tasks import (
+    confirm_request_to_admin,
+    confirm_request_to_requester,
+)
+from envergo.geodata.forms import ParcelFormSet
 
 
 class EvaluationSearch(FormView):
+    """A simple search form to find evaluations for a project."""
+
     template_name = "evaluations/search.html"
     form_class = EvaluationSearchForm
 
@@ -20,6 +29,8 @@ class EvaluationSearch(FormView):
 
 
 class EvaluationDetail(DetailView):
+    """The complete evaluation detail."""
+
     template_name = "evaluations/detail.html"
     model = Evaluation
     slug_url_kwarg = "application_number"
@@ -53,3 +64,64 @@ class EvaluationDetail(DetailView):
         if self.object:
             context["criterions"] = self.object.criterions.all()
         return context
+
+
+class RequestEvaluation(CreateView):
+    """A form to request an evaluation for a project."""
+
+    template_name = "evaluations/request.html"
+    form_class = RequestForm
+
+    def get_parcel_formset(self):
+        form_kwargs = self.get_form_kwargs()
+        form_kwargs["prefix"] = "parcel"
+
+        if "instance" in form_kwargs:
+            del form_kwargs["instance"]
+
+        parcel_formset = ParcelFormSet(**form_kwargs)
+        return parcel_formset
+
+    def get_context_data(self, **kwargs):
+        if "parcel_formset" not in kwargs:
+            kwargs["parcel_formset"] = self.get_parcel_formset()
+        return super().get_context_data(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests: instantiate a form instance with the passed
+        POST variables and then check if it's valid.
+        """
+        self.object = None
+        form = self.get_form()
+        parcel_formset = self.get_parcel_formset()
+        if form.is_valid() and parcel_formset.is_valid():
+            return self.form_valid(form, parcel_formset)
+        else:
+            return self.form_invalid(form, parcel_formset)
+
+    def form_valid(self, form, parcel_formset):
+        with transaction.atomic():
+            request = form.save()
+            parcels = parcel_formset.save()
+            request.parcels.set(parcels)
+
+        confirm_request_to_requester.delay(request.id)
+        confirm_request_to_admin.delay(request.id, self.request.get_host())
+
+        success_url = reverse("request_success")
+        return HttpResponseRedirect(success_url)
+
+    def form_invalid(self, form, parcel_formset):
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                parcel_formset=parcel_formset,
+                has_errors=True,
+                other_non_field_errors=parcel_formset.non_form_errors(),
+            )
+        )
+
+
+class RequestSuccess(TemplateView):
+    template_name = "evaluations/request_success.html"

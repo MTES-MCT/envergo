@@ -55,9 +55,121 @@ $red: #b94a48;
   }
 }
 
+
 /**
-/* Design system issues quickfixes
-**/
+ * Forms
+ **/
+form {
+  fieldset {
+    border: none;
+    padding: 0;
+
+    legend {
+      width: 100%;
+      padding: 0;
+    }
+  }
+
+  .fr-input-group.required>.fr-label .label-content:after {
+    content: " *";
+  }
+
+  .formset {
+
+    &+.formset {
+      margin-top: 2rem;
+    }
+
+    .formset-header {
+      margin-bottom: 0;
+      background-color: var(--bf100-g750);
+      color: var(--g700);
+      box-shadow: 0 1px 0 0 var(--g300);
+      padding: .5rem 1rem;
+    }
+
+    .formset-field {
+      padding-top: 0;
+    }
+  }
+}
+
+/**
+ * Autocomplete fields
+ */
+.fr-label+div>.autocomplete__wrapper {
+  margin-top: .5rem;
+}
+
+.autocomplete__wrapper .autocomplete__input {
+  border: 0;
+  border-radius: space(1v) space(1v) 0 0;
+  color: var(--g800);
+  background-color: var(--g200);
+  box-shadow: inset 0 -2px 0 0 var(--g600);
+  border-radius: 0.25rem 0.25rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  padding: 0.5rem 1rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline-offset: 2px;
+  outline-width: 2px;
+}
+
+.autocomplete__wrapper .autocomplete__input--focused {
+  outline-color: var(--focus);
+}
+
+.autocomplete__wrapper .autocomplete__menu {
+  width: calc(100% + 8px);
+  border: 2px solid var(--focus);
+  border-top: none;
+  margin-top: 4px;
+  left: -4px;
+}
+
+.fr-input-group--error .autocomplete__wrapper .autocomplete__input {
+  box-shadow: inset 0 -2px 0 0 var(--error);
+}
+
+/**
+ * Stupid little helpers
+ */
+
+.ratio-4x3 {
+  // Smart little trick to fix the aspect ratio of an element
+  // See https://css-tricks.com/aspect-ratio-boxes/
+  width: 100%;
+  position: relative;
+
+  &:before {
+    content: "";
+    display: block;
+    padding-bottom: 75%;
+  }
+
+  .ratio-content {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+div.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/**
+ * Design system issues quickfixes
+ **/
 
 // Don't force a 16:9 ratio on images
 .fr-content-media__img::before {

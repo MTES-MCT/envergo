@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour votre projet{% endblock %}
+
+{% block breadcrumbs %}
+<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+  <div class="fr-collapse" id="breadcrumb-1">
+    <ol class="fr-breadcrumb__list">
+      <li>
+        <a class="fr-breadcrumb__link" href="/">Accueil</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+      </li>
+      <li>
+        <a class="fr-breadcrumb__link" aria-current="page">Demandez une évaluation</a>
+      </li>
+    </ol>
+  </div>
+</nav>
+{% endblock %}
+
+{% block article %}
+<h1>Demandez une évaluation de votre projet</h1>
+
+<p class="fr-text--lead">
+  EnvErgo vous aide à déterminer si votre projet d'urbanisme
+  est soumis à la Loi sur l'eau. Recevez une réponse dans les deux jours ouvrés.
+</p>
+
+<form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+
+  <fieldset class="fr-mb-6w">
+    <legend class="fr-h2"> Localisation de votre projet </legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Elle est essentielle pour connaître les règles locales relatives à la Loi sur l'eau.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.address %}
+
+    <label class="fr-label fr-mb-3w">
+      Renseignez la ou les parcelles cadastrales concernées par votre projet.
+      Vous pouvez utiliser <a href="https://cadastre.data.gouv.fr/map?style=vector" target="_blank" rel="noopener">cette
+        carte cadastrale pour trouver les identifiants de vos parcelles</a>.</label>
+
+    {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
+
+    <button type="button" id="btn-add-parcel" class="fr-btn fr-mt-3w">
+      Saisir une parcelle supplémentaire
+    </button>
+
+  </fieldset>
+
+  <fieldset class="fr-mb-6w">
+    <legend class="fr-h2">Caractéristiques du projet</legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.created_surface %}
+
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-12 fr-col-md-6">
+        {% include '_field_snippet.html' with field=form.existing_surface %}
+      </div>
+      <div class="fr-col-12 fr-col-md-6">
+        {% include '_field_snippet.html' with field=form.application_number %}
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="fr-mb-6w">
+    <legend class="fr-h2">Vos informations de contact</legend>
+
+    <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+      <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+    </div>
+
+    {% include '_field_snippet.html' with field=form.contact_email %}
+    {% include '_field_snippet.html' with field=form.phone_number %}
+    {% include '_field_snippet.html' with field=form.other_contacts %}
+  </fieldset>
+
+  <button type="submit" class="fr-mt-6w fr-mb-3w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
+    Envoyer votre demande d'évaluation
+  </button>
+
+  <div role="alert" class="fr-alert fr-alert--info">
+    <p>En validant votre formulaire, vous acceptez que vos données soient traitées <a href="{% url 'legal_mentions' %}" target="_blank" rel="noopener">en accord avec notre politique de
+        traitement des données</a>.</p>
+  </div>
+
+</form>
+
+<template id="tpl-form-parcel" class="form-template">
+  {% include 'geodata/_parcel_line_form.html' with form=parcel_formset.empty_form counter='__prefix__' %}
+</template>
+
+{% endblock %}
+
+{% block extra_css %}
+{% leaflet_css %}
+<link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+
+{% endblock %}
+
+{% block extra_js %}
+{% leaflet_js %}
+<script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+<script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+<script defer src="{% static 'js/libs/parcel_fieldset.js' %}"></script>
+{% endblock %}
