@@ -14,7 +14,6 @@ class EvaluationFormMixin(forms.Form):
     application_number = forms.CharField(
         label=_("Application number"),
         help_text=_('A 15 chars value starting with "P"'),
-        widget=forms.TextInput(attrs={"placeholder": "PC05112321D0123"}),
         max_length=64,
     )
 
@@ -35,7 +34,10 @@ class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
 
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
-    address = forms.CharField(label=_("What is your project's address?"))
+    address = forms.CharField(
+        label=_("What is your project's address?"),
+        help_text=_("Type in a few characters to see suggestions"),
+    )
     contact_email = forms.EmailField(label=_("Your e-mail address"))
     phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
     other_contacts = forms.CharField(
@@ -61,8 +63,4 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["contact_email"].widget.attrs[
-            "placeholder"
-        ] = "pierre.dupont@example.com"
-        self.fields["phone_number"].widget.attrs["placeholder"] = "06123456789"
         self.fields["application_number"].required = False
