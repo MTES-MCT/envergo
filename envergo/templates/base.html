@@ -24,11 +24,12 @@
   {% endblock css %}
 
   {% block javascript %}
+  {% include '_sentry.html' %}
   <script defer type="module" src="{% static '@gouvfr/dsfr/dist/js/dsfr.module.min.js' %}"></script>
   <script defer type="text/javascript" nomodule src="{% static '@gouvfr/dsfr/dist/js/dsfr.nomodule.min.js' %}"></script>
   {% block extra_js %}{% endblock %}
-  {% endblock javascript %}
   {% include '_analytics.html' %}
+  {% endblock javascript %}
 </head>
 
 <body>

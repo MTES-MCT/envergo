@@ -8,4 +8,6 @@ def settings_context(_request):
     return {
         "DEBUG": settings.DEBUG,
         "ANALYTICS": settings.ANALYTICS,
+        "SENTRY_DSN": settings.SENTRY_DSN,
+        "ENV_NAME": settings.ENV_NAME,
     }

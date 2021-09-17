@@ -4,7 +4,7 @@
   /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
   _paq.push(['trackPageView']);
   _paq.push(['enableLinkTracking']);
-  (function () {
+  (function() {
     var u = "{{ ANALYTICS.TRACKER_URL }}";
     _paq.push(['setTrackerUrl', u + 'piwik.php']);
     _paq.push(['setSiteId', '{{ ANALYTICS.SITE_ID }}']);
@@ -18,5 +18,9 @@
     s.parentNode.insertBefore(g, s);
   })();
 
+  window.addEventListener('hashchange', function() {
+    _paq.push(['setCustomUrl', window.location.href]);
+    _paq.push(['trackPageView']);
+  });
 </script>
 {% endif %}
