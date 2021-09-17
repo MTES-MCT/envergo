@@ -71,3 +71,5 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+ENV_NAME = "local"
