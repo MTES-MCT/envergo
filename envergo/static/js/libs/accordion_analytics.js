@@ -11,9 +11,13 @@
 (function(exports) {
   'use strict';
 
-  const AccordionAnalytics = function(accordionElt) {
+  const AccordionAnalytics = function(accordionElt, currentHash) {
     this.accordionElt = accordionElt;
     this.init();
+
+    if (currentHash) {
+      this.openSection(currentHash);
+    }
   };
   exports.AccordionAnalytics = AccordionAnalytics;
 
@@ -53,9 +57,22 @@
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   };
 
+  /**
+   * Trigger one accordion section's opening
+   */
+  AccordionAnalytics.prototype.openSection = function(sectionId) {
+    const button = this.accordionElt.querySelector(`[aria-controls=${sectionId}]`);
+    if (button) {
+      // Directly clicking on the button randomly does not work
+      // Using a slight timeout seems to do the trick.
+      window.setTimeout(function() { button.click(); }, 50);
+    }
+  };
+
 })(this);
 
 window.addEventListener('load', function() {
   const accordion = document.getElementById('water-law-accordion');
-  new AccordionAnalytics(accordion);
+  const currentHash = window.location.hash.substring(1);
+  new AccordionAnalytics(accordion, currentHash);
 });
