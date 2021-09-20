@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load evaluations %}
+{% load evaluations static %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
@@ -82,15 +82,11 @@
 
 <p>…par rapport aux différents impacts que la réglementation Loi sur l'eau vise à limiter.</p>
 
-<ul class="fr-accordions-group">
-
+<div id="evaluation-accordion">
   {% for criterion in criterions %}
-  <li>
-    {% include 'evaluations/_criterion.html' with criterion=criterion %}
-  </li>
+  {% include 'evaluations/_criterion.html' with criterion=criterion %}
   {% endfor %}
-  </li>
-</ul>
+</div>
 
 {% if evaluation.contact_html %}
 <h2>Vers qui me tourner ?</h2>
@@ -127,4 +123,14 @@
 <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>.</p>
 
 
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+<script>
+  window.addEventListener('load', function() {
+    const accordion = document.getElementById('evaluation-accordion');
+    new AccordionAnalytics(accordion);
+  });
+</script>
 {% endblock %}

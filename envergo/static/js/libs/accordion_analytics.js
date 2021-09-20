@@ -11,12 +11,13 @@
 (function(exports) {
   'use strict';
 
-  const AccordionAnalytics = function(accordionElt, currentHash) {
+  const AccordionAnalytics = function(accordionElt) {
     this.accordionElt = accordionElt;
+    this.currentHash = window.location.hash.substring(1);
     this.init();
 
-    if (currentHash) {
-      this.openSection(currentHash);
+    if (this.currentHash) {
+      this.openSection(this.currentHash);
     }
   };
   exports.AccordionAnalytics = AccordionAnalytics;
@@ -70,9 +71,3 @@
   };
 
 })(this);
-
-window.addEventListener('load', function() {
-  const accordion = document.getElementById('water-law-accordion');
-  const currentHash = window.location.hash.substring(1);
-  new AccordionAnalytics(accordion, currentHash);
-});
