@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-14 10:30+0200\n"
+"POT-Creation-Date: 2021-09-20 13:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -267,9 +267,9 @@ msgstr "Nombre à 3 chiffres"
 msgid "Parcel"
 msgstr "Parcelle"
 
-#: envergo/geodata/forms.py:25
-msgid "A number ≤ 9999"
-msgstr "Un nombre ≤ 9999"
+#: envergo/geodata/forms.py:24
+msgid "A number"
+msgstr "Un nombre"
 
 #: envergo/geodata/forms.py:56
 msgid "You must provide at least one parcel."
