@@ -39,7 +39,9 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("Type in a few characters to see suggestions"),
     )
     contact_email = forms.EmailField(label=_("Your e-mail address"))
-    phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
+    phone_number = PhoneNumberField(
+        label=_("Your phone number"), required=False, region="FR"
+    )
     other_contacts = forms.CharField(
         label=_("Other contacts data"),
         required=False,
