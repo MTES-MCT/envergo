@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-20 13:14+0000\n"
+"POT-Creation-Date: 2021-09-20 13:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,20 +71,18 @@ msgstr "Saisissez quelques caractères pour voir des suggestions"
 msgid "Your e-mail address"
 msgstr "Votre adresse e-mail"
 
-#: envergo/evaluations/forms.py:42
+#: envergo/evaluations/forms.py:43
 msgid "Your phone number"
 msgstr "Votre numéro de téléphone"
 
-#: envergo/evaluations/forms.py:44
-msgid "Other contacts data"
-msgstr "Autres contacts"
+#: envergo/evaluations/forms.py:46
+msgid "Other email addresses"
+msgstr "Autres adresses e-mail"
 
-#: envergo/evaluations/forms.py:47
+#: envergo/evaluations/forms.py:49
 msgid ""
 "Please let us know if we should warn others about the evaluation result."
-msgstr ""
-"Indiquez si nous devons prévenir d'autres contacts lorsque l'évaluation sera "
-"disponible."
+msgstr "Nous enverrons l'évaluation à ces destinataires également."
 
 #: envergo/evaluations/models.py:19
 msgid "Unlikely"
@@ -195,7 +193,7 @@ msgstr "Légende (html)"
 msgid "Criterions"
 msgstr "Critères"
 
-#: envergo/evaluations/models.py:132 envergo/geodata/forms.py:68
+#: envergo/evaluations/models.py:132 envergo/geodata/forms.py:66
 msgid "Address"
 msgstr "Adresse"
 
@@ -263,7 +261,7 @@ msgstr "Préfixe"
 msgid "3 chars long number"
 msgstr "Nombre à 3 chiffres"
 
-#: envergo/geodata/forms.py:25 envergo/geodata/models.py:102
+#: envergo/geodata/forms.py:24 envergo/geodata/models.py:102
 msgid "Parcel"
 msgstr "Parcelle"
 
@@ -271,7 +269,7 @@ msgstr "Parcelle"
 msgid "A number"
 msgstr "Un nombre"
 
-#: envergo/geodata/forms.py:56
+#: envergo/geodata/forms.py:54
 msgid "You must provide at least one parcel."
 msgstr "Vous devez fournir une parcelle"
 
@@ -378,6 +376,9 @@ msgstr ""
 #: envergo/users/views.py:25
 msgid "Information successfully updated"
 msgstr "Information mise à jour correctement"
+
+#~ msgid "Other contacts data"
+#~ msgstr "Autres contacts"
 
 #~ msgid "Rainwater runoff probability"
 #~ msgstr "Ruissellement des eaux de pluies (probabilité)"

@@ -43,7 +43,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Your phone number"), required=False, region="FR"
     )
     other_contacts = forms.CharField(
-        label=_("Other contacts data"),
+        label=_("Other email addresses"),
         required=False,
         help_text=_(
             "Please let us know if we should warn others about the evaluation result."
