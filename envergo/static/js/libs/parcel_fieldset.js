@@ -43,6 +43,12 @@
    * Update the dom depending on current state
    */
   Formset.prototype.render = function() {
+    this.renderFormset();
+    this.renderCitycodeHint();
+    this.renderCitycodeFields();
+  };
+
+  Formset.prototype.renderFormset = function() {
     const nbCurrentForms = parseInt(this.inputs.totalFormsInput.value);
     const nbTargetForms = this.state.totalForms;
     const delta = nbTargetForms - nbCurrentForms;
@@ -58,10 +64,11 @@
 
     // Update the TOTAl_FORMS input value
     this.inputs.totalFormsInput.value = nbTargetForms;
-
-    this.renderCitycodeHint();
   };
 
+  /**
+   * Display the selected address's corresponding city code
+   */
   Formset.prototype.renderCitycodeHint = function() {
     if (this.citycodeHintElement === undefined) {
       this.citycodeHintElement = document.createElement('p');
@@ -75,6 +82,21 @@
     this.formset.parentElement.insertBefore(this.citycodeHintElement, this.formset);
   };
 
+  /**
+   * Pre-fill the city code fields.
+   */
+  Formset.prototype.renderCitycodeFields = function() {
+    const fields = this.formset.querySelectorAll('input[name$=commune]');
+    fields.forEach(function(field) {
+      if (field.value === '') {
+        field.value = this.state.selectedCommune.code;
+      }
+    }.bind(this));
+  };
+
+  /**
+   * React when a new address is selected.
+   */
   Formset.prototype.onCitycodeSelected = function(e) {
     const { communeName, citycode } = e.detail;
     this.state.selectedCommune = {

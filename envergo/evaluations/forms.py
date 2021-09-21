@@ -38,10 +38,24 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         label=_("What is your project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
     )
+    created_surface = forms.IntegerField(
+        label=_("Created surface"),
+        help_text=_("Created_surface_help_text"),
+        widget=forms.TextInput,
+    )
+    existing_surface = forms.IntegerField(
+        label=_("Existing surface"),
+        required=False,
+        help_text=_("Existing surface help text"),
+        widget=forms.TextInput,
+    )
+
     contact_email = forms.EmailField(label=_("Your e-mail address"))
-    phone_number = PhoneNumberField(label=_("Your phone number"), required=False)
+    phone_number = PhoneNumberField(
+        label=_("Your phone number"), required=False, region="FR"
+    )
     other_contacts = forms.CharField(
-        label=_("Other contacts data"),
+        label=_("Other email addresses"),
         required=False,
         help_text=_(
             "Please let us know if we should warn others about the evaluation result."
@@ -63,4 +77,10 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["created_surface"].widget.attrs["placeholder"] = _(
+            "In square meters"
+        )
+        self.fields["existing_surface"].widget.attrs["placeholder"] = _(
+            "In square meters"
+        )
         self.fields["application_number"].required = False

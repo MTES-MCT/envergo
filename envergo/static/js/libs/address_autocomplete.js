@@ -72,7 +72,6 @@
               <strong>${item.properties.label}</strong> <br />
               <span>
                 ${item.properties.context}
-                (Code commune : ${item.properties.citycode})
               </span>
             </div>`;
         }

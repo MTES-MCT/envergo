@@ -21,9 +21,7 @@ class ParcelForm(forms.ModelForm):
         max_length=3,
         required=False,
     )
-    order = forms.CharField(
-        label=_("Parcel"), help_text=_("A number ≤ 9999"), max_length=4
-    )
+    order = forms.CharField(label=_("Parcel"), help_text=_("A number"), max_length=4)
 
     class Meta:
         model = Parcel

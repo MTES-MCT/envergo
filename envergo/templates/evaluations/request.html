@@ -65,15 +65,8 @@
     </div>
 
     {% include '_field_snippet.html' with field=form.created_surface %}
-
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col-12 fr-col-md-6">
-        {% include '_field_snippet.html' with field=form.existing_surface %}
-      </div>
-      <div class="fr-col-12 fr-col-md-6">
-        {% include '_field_snippet.html' with field=form.application_number %}
-      </div>
-    </div>
+    {% include '_field_snippet.html' with field=form.existing_surface %}
+    {% include '_field_snippet.html' with field=form.application_number %}
   </fieldset>
 
   <fieldset class="fr-mb-6w">
@@ -88,14 +81,14 @@
     {% include '_field_snippet.html' with field=form.other_contacts %}
   </fieldset>
 
-  <button type="submit" class="fr-mt-6w fr-mb-3w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
-    Envoyer votre demande d'évaluation
-  </button>
-
-  <div role="alert" class="fr-alert fr-alert--info">
+  <div role="alert" class="fr-alert fr-alert--info fr-mt-8w">
     <p>En validant votre formulaire, vous acceptez que vos données soient traitées <a href="{% url 'legal_mentions' %}" target="_blank" rel="noopener">en accord avec notre politique de
         traitement des données</a>.</p>
   </div>
+
+  <button type="submit" class="fr-mt-4w fr-btn fr-btn--lg fr-fi-checkbox-circle-line fr-btn--icon-left">
+    Envoyer votre demande d'évaluation
+  </button>
 
 </form>
 
