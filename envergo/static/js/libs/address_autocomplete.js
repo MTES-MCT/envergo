@@ -37,7 +37,6 @@
 
     this.updateCurrentInput();
     this.enableAutocomplete();
-    this.syncInputs();
   };
   exports.AddressAutocomplete = AddressAutocomplete;
 
@@ -62,12 +61,17 @@
       id: this.inputId,
       minLength: 3,
       name: this.inputName,
+      defaultValue: this.inputElement.value,
       templates: {
         inputValue: function(item) {
+          if (typeof item === 'string') return item;
+
           const value = item ? item.properties.label : '';
           return value;
         },
         suggestion: function(item) {
+          if (typeof item === 'string') return item;
+
           return `<div>
               <strong>${item.properties.label}</strong> <br />
               <span>
@@ -95,6 +99,8 @@
           "sélectionner. Sur périphérique tactile, explorez en glissant le doigt.";
       },
       onConfirm: function(val) {
+        if (val === undefined || !val.hasOwnProperty('properties')) return;
+
         if (val) {
           const eventData = {
             communeName: val.properties.city,
@@ -113,12 +119,6 @@
           .catch((error) => console.log(error));
       }
     });
-  };
-
-  AddressAutocomplete.prototype.syncInputs = function() {
-    const currentValue = this.inputElement.value;
-    const autocomplete = document.getElementById(this.inputId);
-    autocomplete.value = currentValue;
   };
 
 })(this, accessibleAutocomplete);
