@@ -65,15 +65,8 @@
     </div>
 
     {% include '_field_snippet.html' with field=form.created_surface %}
-
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col-12 fr-col-md-6">
-        {% include '_field_snippet.html' with field=form.existing_surface %}
-      </div>
-      <div class="fr-col-12 fr-col-md-6">
-        {% include '_field_snippet.html' with field=form.application_number %}
-      </div>
-    </div>
+    {% include '_field_snippet.html' with field=form.existing_surface %}
+    {% include '_field_snippet.html' with field=form.application_number %}
   </fieldset>
 
   <fieldset class="fr-mb-6w">

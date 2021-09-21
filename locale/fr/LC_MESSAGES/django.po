@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-20 13:32+0000\n"
+"POT-Creation-Date: 2021-09-21 09:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,22 +67,46 @@ msgstr "À quelle adresse se situe votre projet ?"
 msgid "Type in a few characters to see suggestions"
 msgstr "Saisissez quelques caractères pour voir des suggestions"
 
-#: envergo/evaluations/forms.py:41
+#: envergo/evaluations/forms.py:42 envergo/evaluations/models.py:51
+#: envergo/evaluations/models.py:143
+msgid "Created surface"
+msgstr "Surface créée"
+
+#: envergo/evaluations/forms.py:43
+msgid "Created_surface_help_text"
+msgstr "Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)"
+
+#: envergo/evaluations/forms.py:47 envergo/evaluations/models.py:54
+#: envergo/evaluations/models.py:146
+msgid "Existing surface"
+msgstr "Surface existante"
+
+#: envergo/evaluations/forms.py:49
+msgid "Existing surface help text"
+msgstr "Somme des emprises au sol de toutes les installations existantes (bâtiment, voirie, remblais, noue, serre, bassin…)"
+
+#: envergo/evaluations/forms.py:53
 msgid "Your e-mail address"
 msgstr "Votre adresse e-mail"
 
-#: envergo/evaluations/forms.py:43
+#: envergo/evaluations/forms.py:55
 msgid "Your phone number"
 msgstr "Votre numéro de téléphone"
 
-#: envergo/evaluations/forms.py:46
+#: envergo/evaluations/forms.py:58
 msgid "Other email addresses"
 msgstr "Autres adresses e-mail"
 
-#: envergo/evaluations/forms.py:49
+#: envergo/evaluations/forms.py:61
 msgid ""
 "Please let us know if we should warn others about the evaluation result."
 msgstr "Nous enverrons l'évaluation à ces destinataires également."
+
+#: envergo/evaluations/forms.py:81 envergo/evaluations/forms.py:84
+#: envergo/evaluations/models.py:51 envergo/evaluations/models.py:54
+#: envergo/evaluations/models.py:143 envergo/evaluations/models.py:146
+msgid "In square meters"
+msgstr "En m²"
 
 #: envergo/evaluations/models.py:19
 msgid "Unlikely"
@@ -111,19 +135,6 @@ msgstr "Commune"
 #: envergo/evaluations/models.py:48
 msgid "The name and postcode of the project commune"
 msgstr "Nom et code postal de la commune du projet"
-
-#: envergo/evaluations/models.py:51 envergo/evaluations/models.py:143
-msgid "Created surface"
-msgstr "Surface créée"
-
-#: envergo/evaluations/models.py:51 envergo/evaluations/models.py:54
-#: envergo/evaluations/models.py:143 envergo/evaluations/models.py:146
-msgid "In square meters"
-msgstr "En m²"
-
-#: envergo/evaluations/models.py:54 envergo/evaluations/models.py:146
-msgid "Existing surface"
-msgstr "Surface existante"
 
 #: envergo/evaluations/models.py:56 envergo/evaluations/models.py:97
 msgid "Probability"
