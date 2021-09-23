@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-21 09:40+0200\n"
+"POT-Creation-Date: 2021-09-23 13:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,12 +50,12 @@ msgstr "Infos meta"
 msgid "Lien vers la carte des parcelles"
 msgstr ""
 
-#: envergo/evaluations/forms.py:15 envergo/evaluations/models.py:31
-#: envergo/evaluations/models.py:137
+#: envergo/evaluations/forms.py:15 envergo/evaluations/forms.py:53
+#: envergo/evaluations/models.py:31 envergo/evaluations/models.py:137
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/forms.py:16
+#: envergo/evaluations/forms.py:16 envergo/evaluations/forms.py:93
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
@@ -74,7 +74,9 @@ msgstr "Surface créée"
 
 #: envergo/evaluations/forms.py:43
 msgid "Created_surface_help_text"
-msgstr "Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)"
+msgstr ""
+"Somme des emprises au sol de toutes les installations nouvelles (bâtiment, "
+"voirie, remblais, noue, serre, bassin…)"
 
 #: envergo/evaluations/forms.py:47 envergo/evaluations/models.py:54
 #: envergo/evaluations/models.py:146
@@ -83,26 +85,32 @@ msgstr "Surface existante"
 
 #: envergo/evaluations/forms.py:49
 msgid "Existing surface help text"
-msgstr "Somme des emprises au sol de toutes les installations existantes (bâtiment, voirie, remblais, noue, serre, bassin…)"
+msgstr ""
+"Somme des emprises au sol de toutes les installations existantes avant le "
+"projet (bâtiment, voirie, remblais, noue, serre, bassin…)"
 
-#: envergo/evaluations/forms.py:53
+#: envergo/evaluations/forms.py:54
+msgid "If an application number was already submitted."
+msgstr "Si une demande de permis de construire ou d'aménager a déjà été soumise"
+
+#: envergo/evaluations/forms.py:58
 msgid "Your e-mail address"
 msgstr "Votre adresse e-mail"
 
-#: envergo/evaluations/forms.py:55
+#: envergo/evaluations/forms.py:60
 msgid "Your phone number"
 msgstr "Votre numéro de téléphone"
 
-#: envergo/evaluations/forms.py:58
+#: envergo/evaluations/forms.py:63
 msgid "Other email addresses"
 msgstr "Autres adresses e-mail"
 
-#: envergo/evaluations/forms.py:61
+#: envergo/evaluations/forms.py:66
 msgid ""
 "Please let us know if we should warn others about the evaluation result."
 msgstr "Nous enverrons l'évaluation à ces destinataires également."
 
-#: envergo/evaluations/forms.py:81 envergo/evaluations/forms.py:84
+#: envergo/evaluations/forms.py:86 envergo/evaluations/forms.py:89
 #: envergo/evaluations/models.py:51 envergo/evaluations/models.py:54
 #: envergo/evaluations/models.py:143 envergo/evaluations/models.py:146
 msgid "In square meters"
@@ -204,7 +212,7 @@ msgstr "Légende (html)"
 msgid "Criterions"
 msgstr "Critères"
 
-#: envergo/evaluations/models.py:132 envergo/geodata/forms.py:66
+#: envergo/evaluations/models.py:132 envergo/geodata/forms.py:78
 msgid "Address"
 msgstr "Adresse"
 
@@ -280,7 +288,7 @@ msgstr "Parcelle"
 msgid "A number"
 msgstr "Un nombre"
 
-#: envergo/geodata/forms.py:54
+#: envergo/geodata/forms.py:66
 msgid "You must provide at least one parcel."
 msgstr "Vous devez fournir une parcelle"
 
