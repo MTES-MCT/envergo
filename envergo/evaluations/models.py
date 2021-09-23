@@ -9,6 +9,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.models import ReferenceField
 
 
 def evaluation_file_format(instance, filename):
@@ -27,6 +28,7 @@ class Evaluation(models.Model):
     """A single evaluation for a building permit application."""
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    reference = ReferenceField()
     application_number = models.CharField(
         _("Application number"),
         max_length=15,
