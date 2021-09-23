@@ -39,6 +39,18 @@ class ParcelForm(forms.ModelForm):
         section = self.cleaned_data["section"]
         return section.upper().zfill(2)
 
+    def has_changed(self):
+        """Custom validation rule for forms with only the commune field.
+
+        When a form in a formset is empty, it is just ignored.
+        Well, since we autofill the commune field, we also ignore when
+        this only field is set, so as to not block form submission.
+        """
+
+        if len(self.changed_data) == 1 and "commune" in self.changed_data:
+            return False
+        return super().has_changed()
+
 
 class BaseParcelFormSet(forms.BaseModelFormSet):
     def __init__(self, *args, **kwargs):
