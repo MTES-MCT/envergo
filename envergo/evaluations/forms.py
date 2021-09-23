@@ -49,6 +49,11 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("Existing surface help text"),
         widget=forms.TextInput,
     )
+    application_number = forms.CharField(
+        label=_("Application number"),
+        help_text=_("If an application number was already submitted."),
+        max_length=64,
+    )
 
     contact_email = forms.EmailField(label=_("Your e-mail address"))
     phone_number = PhoneNumberField(
@@ -84,3 +89,6 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "In square meters"
         )
         self.fields["application_number"].required = False
+        self.fields["application_number"].widget.attrs["placeholder"] = _(
+            'A 15 chars value starting with "P"'
+        )
