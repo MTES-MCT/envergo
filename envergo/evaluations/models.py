@@ -53,6 +53,7 @@ class Evaluation(models.Model):
     request = models.ForeignKey(
         "evaluations.Request",
         verbose_name=_("Request"),
+        help_text=_("Does this evaluation answers to an existing request?"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

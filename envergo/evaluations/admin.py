@@ -6,10 +6,22 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
-from envergo.evaluations.models import Criterion, Evaluation, Request
+from envergo.evaluations.models import (
+    Criterion,
+    Evaluation,
+    Request,
+    generate_reference,
+)
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
+    reference = forms.CharField(
+        label=_("Reference"),
+        help_text=_("If you select an existing request, this value will be replaced."),
+        required=False,
+        initial=generate_reference,
+        max_length=64,
+    )
     application_number = forms.CharField(
         label=_("Application number"),
         required=False,
@@ -66,13 +78,20 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
     )
 
+    def save_model(self, request, obj, form, change):
+        """Synchronize the references."""
+        if obj.request:
+            obj.reference = obj.request.reference
+            super().save_model(request, obj, form, change)
+
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = ["created_at", "application_number", "contact_email", "phone_number"]
-    readonly_fields = ["created_at", "parcels", "parcels_map"]
+    readonly_fields = ["reference", "created_at", "parcels", "parcels_map"]
     search_fields = ["reference", "application_number"]
     fieldsets = (
+        (None, {"fields": ("reference",)}),
         (_("Project localisation"), {"fields": ("address", "parcels", "parcels_map")}),
         (
             _("Project data"),
