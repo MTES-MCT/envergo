@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-24 09:12+0000\n"
+"POT-Creation-Date: 2021-09-24 09:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,14 +29,18 @@ msgstr "Référence"
 
 #: envergo/evaluations/admin.py:20
 msgid "If you select an existing request, this value will be replaced."
-msgstr "Si vous associez cette évaluation à une requête, cette valeur sera synchronisée."
+msgstr ""
+"Si vous associez cette évaluation à une requête, cette valeur sera "
+"synchronisée."
 
 #: envergo/evaluations/admin.py:26 envergo/evaluations/forms.py:15
-#: envergo/evaluations/models.py:62 envergo/evaluations/models.py:177
+#: envergo/evaluations/forms.py:53 envergo/evaluations/models.py:62
+#: envergo/evaluations/models.py:177
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
 #: envergo/evaluations/admin.py:28 envergo/evaluations/forms.py:16
+#: envergo/evaluations/forms.py:93
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
@@ -67,15 +71,6 @@ msgstr "Infos meta"
 #: envergo/evaluations/admin.py:119
 msgid "Lien vers la carte des parcelles"
 msgstr ""
-
-#: envergo/evaluations/forms.py:15 envergo/evaluations/forms.py:53
-#: envergo/evaluations/models.py:31 envergo/evaluations/models.py:137
-msgid "Application number"
-msgstr "Numéro de demande de permis"
-
-#: envergo/evaluations/forms.py:16 envergo/evaluations/forms.py:93
-msgid "A 15 chars value starting with \"P\""
-msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
 #: envergo/evaluations/forms.py:38
 msgid "What is your project's address?"
@@ -109,7 +104,8 @@ msgstr ""
 
 #: envergo/evaluations/forms.py:54
 msgid "If an application number was already submitted."
-msgstr "Si une demande de permis de construire ou d'aménager a déjà été soumise"
+msgstr ""
+"Si une demande de permis de construire ou d'aménager a déjà été soumise"
 
 #: envergo/evaluations/forms.py:58
 msgid "Your e-mail address"
@@ -129,8 +125,8 @@ msgid ""
 msgstr "Nous enverrons l'évaluation à ces destinataires également."
 
 #: envergo/evaluations/forms.py:86 envergo/evaluations/forms.py:89
-#: envergo/evaluations/models.py:51 envergo/evaluations/models.py:54
-#: envergo/evaluations/models.py:143 envergo/evaluations/models.py:146
+#: envergo/evaluations/models.py:82 envergo/evaluations/models.py:85
+#: envergo/evaluations/models.py:183 envergo/evaluations/models.py:186
 msgid "In square meters"
 msgstr "En m²"
 
@@ -238,7 +234,7 @@ msgstr "Légende (html)"
 msgid "Criterions"
 msgstr "Critères"
 
-#: envergo/evaluations/models.py:132 envergo/geodata/forms.py:78
+#: envergo/evaluations/models.py:172 envergo/geodata/forms.py:78
 msgid "Address"
 msgstr "Adresse"
 
