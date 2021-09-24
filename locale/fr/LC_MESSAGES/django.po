@@ -30,7 +30,7 @@ msgstr "Référence"
 #: envergo/evaluations/admin.py:20
 msgid "If you select an existing request, this value will be replaced."
 msgstr ""
-"Si vous associez cette évaluation à une requête, cette valeur sera "
+"Si vous associez cette évaluation à une demande existante, cette valeur sera "
 "synchronisée."
 
 #: envergo/evaluations/admin.py:26 envergo/evaluations/forms.py:15
