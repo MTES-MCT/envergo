@@ -94,7 +94,7 @@ class Evaluation(models.Model):
         verbose_name_plural = _("Evaluations")
 
     def __str__(self):
-        return self.application_number
+        return self.reference
 
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
@@ -196,3 +196,11 @@ class Request(models.Model):
     class Meta:
         verbose_name = _("Evaluation request")
         verbose_name_plural = _("Evaluation requests")
+
+    def __str__(self):
+        if self.application_number:
+            ref = f"{self.reference} ({self.application_number})"
+        else:
+            ref = self.reference
+
+        return ref

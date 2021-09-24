@@ -29,12 +29,23 @@ class CriterionInline(admin.StackedInline):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
-    list_display = ["application_number", "created_at"]
+    list_display = ["reference", "application_number", "created_at"]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
+    autocomplete_fields = ["request"]
 
     fieldsets = (
-        (None, {"fields": ("application_number", "evaluation_file")}),
+        (
+            None,
+            {
+                "fields": (
+                    "reference",
+                    "request",
+                    "application_number",
+                    "evaluation_file",
+                )
+            },
+        ),
         (
             _("Project data"),
             {
@@ -60,6 +71,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 class RequestAdmin(admin.ModelAdmin):
     list_display = ["created_at", "application_number", "contact_email", "phone_number"]
     readonly_fields = ["created_at", "parcels", "parcels_map"]
+    search_fields = ["reference", "application_number"]
     fieldsets = (
         (_("Project localisation"), {"fields": ("address", "parcels", "parcels_map")}),
         (
