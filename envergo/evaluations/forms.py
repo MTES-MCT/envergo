@@ -27,10 +27,10 @@ class EvaluationFormMixin(forms.Form):
         return clean_number
 
 
-class EvaluationSearchForm(EvaluationFormMixin, forms.Form):
+class EvaluationSearchForm(forms.Form):
     """Search for a single evaluation."""
 
-    pass
+    reference = forms.CharField(label=_("Reference"), max_length=64)
 
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):

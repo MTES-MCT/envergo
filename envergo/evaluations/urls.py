@@ -21,7 +21,7 @@ urlpatterns = [
         ),
     ),
     path(
-        "<slug:application_number>/",
+        "<slug:reference>/",
         EvaluationDetail.as_view(),
         name="evaluation_detail",
     ),
