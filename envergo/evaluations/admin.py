@@ -10,7 +10,12 @@ from envergo.evaluations.models import Criterion, Evaluation, Request
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
-    pass
+    application_number = forms.CharField(
+        label=_("Application number"),
+        required=False,
+        help_text=_('A 15 chars value starting with "P"'),
+        max_length=64,
+    )
 
 
 class CriterionAdminForm(forms.ModelForm):

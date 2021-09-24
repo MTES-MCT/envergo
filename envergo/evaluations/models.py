@@ -61,8 +61,8 @@ class Evaluation(models.Model):
         _("Application number"),
         max_length=15,
         unique=True,
-        db_index=True,
         validators=[application_number_validator],
+        blank=True,
     )
     evaluation_file = models.FileField(
         _("Evaluation file"),
