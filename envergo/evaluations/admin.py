@@ -87,7 +87,13 @@ class EvaluationAdmin(admin.ModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ["created_at", "application_number", "contact_email", "phone_number"]
+    list_display = [
+        "reference",
+        "created_at",
+        "application_number",
+        "contact_email",
+        "phone_number",
+    ]
     readonly_fields = ["reference", "created_at", "parcels", "parcels_map"]
     search_fields = ["reference", "application_number"]
     fieldsets = (
