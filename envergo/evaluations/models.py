@@ -1,5 +1,7 @@
+import secrets
 import uuid
 
+from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
@@ -9,11 +11,24 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
 from envergo.utils.markdown import markdown_to_html
-from envergo.utils.models import ReferenceField
 
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
+
+
+def generate_reference():
+    """Generate a short random and readable reference."""
+
+    # letters and numbers without 1, i, O, 0, etc.
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    length = settings.ENVERGO_REFERENCE_LENGTH
+
+    # Since the volume of evaluation is quite low, we just hope that we
+    # won't randomly get a profanity
+    reference = "".join(secrets.choice(alphabet) for i in range(length))
+
+    return reference
 
 
 PROBABILITIES = Choices(
@@ -28,7 +43,20 @@ class Evaluation(models.Model):
     """A single evaluation for a building permit application."""
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    reference = ReferenceField()
+    reference = models.CharField(
+        _("Reference"),
+        max_length=64,
+        default=generate_reference,
+        unique=True,
+        db_index=True,
+    )
+    request = models.ForeignKey(
+        "evaluations.Request",
+        verbose_name=_("Request"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     application_number = models.CharField(
         _("Application number"),
         max_length=15,
@@ -129,6 +157,15 @@ class Criterion(models.Model):
 
 class Request(models.Model):
     """An evaluation request by a petitioner."""
+
+    reference = models.CharField(
+        _("Reference"),
+        max_length=64,
+        null=True,
+        default=generate_reference,
+        unique=True,
+        db_index=True,
+    )
 
     # Project localisation
     address = models.TextField(_("Address"))
