@@ -56,7 +56,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
     )
 
     contact_email = forms.EmailField(label=_("Your e-mail address"))
-    phone_number = PhoneNumberField(
+    project_sponsor_phone_number = PhoneNumberField(
         label=_("Your phone number"), required=False, region="FR"
     )
     other_contacts = forms.CharField(
@@ -76,7 +76,9 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "created_surface",
             "existing_surface",
             "contact_email",
-            "phone_number",
+            "project_sponsor_emails",
+            "project_sponsor_phone_number",
+            "send_eval_to_sponsor",
             "other_contacts",
         ]
 
