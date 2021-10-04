@@ -15,7 +15,7 @@
         <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
       </li>
       <li>
-        <a class="fr-breadcrumb__link" aria-current="page">Permis n°{{ evaluation.application_number }}</a>
+        <a class="fr-breadcrumb__link" aria-current="page">Référence {{ evaluation.reference }}</a>
       </li>
     </ol>
   </div>
@@ -26,8 +26,11 @@
 <h1>Évaluation Loi sur l'eau</h1>
 
 <p class="fr-text--lead">
-  Demande de permis n°
-  {{ evaluation.application_number_display }}
+  Référence
+  {{ evaluation }}
+  {% if evaluation.application_number %}
+  — Demande de permis n° {{ evaluation.application_number }}
+  {% endif %}
 </p>
 
 <h3>Mon projet est-il soumis à la Loi sur l'eau ?</h3>

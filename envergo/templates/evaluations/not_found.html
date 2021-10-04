@@ -14,7 +14,7 @@
         <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
       </li>
       <li>
-        <a class="fr-breadcrumb__link" aria-current="page">Permis n°{{ application_number }}</a>
+        <a class="fr-breadcrumb__link" aria-current="page">Référence {{ reference }}</a>
       </li>
     </ol>
   </div>
@@ -22,7 +22,7 @@
 {% endblock %}
 
 {% block article %}
-<h1>Demande de permis n°{{ application_number }}</h1>
+<h1>Référence {{ reference }}</h1>
 <p class="fr-text--lead">
   <span class="fr-fi-alert-fill" aria-hidden="true"></span>
   Hélas, l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet.

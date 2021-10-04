@@ -34,10 +34,8 @@ def test_searching_inexisting_eval(client):
     """Searching an eval that does not exist returns an error message."""
 
     search_url = reverse("evaluation_search")
-    application_number = "PC05112321D0123"
-    res = client.post(
-        search_url, data={"application_number": application_number}, follow=True
-    )
+    reference = "PC05112321D0123"
+    res = client.post(search_url, data={"reference": reference}, follow=True)
     assert res.status_code == 404
 
     content = res.content.decode("utf-8")
@@ -53,28 +51,13 @@ def test_search_existing_eval(client, evaluation):
     search_url = reverse("evaluation_search")
     res = client.post(
         search_url,
-        data={"application_number": evaluation.application_number},
+        data={"reference": evaluation.reference},
         follow=True,
     )
     assert res.status_code == 200
 
     content = res.content.decode("utf-8")
     assert "<h1>Évaluation Loi sur l'eau</h1>" in content
-
-
-def test_search_form_allows_spaces_in_application_field(client, evaluation):
-    """Don't prevent spaces in the search field."""
-
-    evaluation.application_number = "PC05112321D0123"
-    evaluation.save()
-
-    search_url = reverse("evaluation_search")
-    res = client.post(
-        search_url,
-        data={"application_number": "pc 051 123 21 d0123"},
-        follow=True,
-    )
-    assert res.status_code == 200
 
 
 def test_eval_request_creation(client, eval_request_data):

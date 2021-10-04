@@ -1,0 +1,11 @@
+{{ request_url }}
+Adresse : {{ request.address }}
+Parcelles : {{ parcel_map_url }}
+
+Numéro de demande de permis : {{ request.application_number }}
+Surface créée : {{ request.created_surface }}
+Surface existante : {{ request.existing_surface }}
+
+E-mail: {{ request.contact_email }}
+Numéro de téléphone : {{ request.phone_number }}
+Autres contacts : {{ request.other_contacts }}

@@ -23,8 +23,8 @@ class EvaluationSearch(FormView):
 
     def form_valid(self, form):
 
-        application_number = form.cleaned_data.get("application_number")
-        success_url = reverse("evaluation_detail", args=[application_number])
+        reference = form.cleaned_data.get("reference")
+        success_url = reverse("evaluation_detail", args=[reference])
         return HttpResponseRedirect(success_url)
 
 
@@ -33,8 +33,8 @@ class EvaluationDetail(DetailView):
 
     template_name = "evaluations/detail.html"
     model = Evaluation
-    slug_url_kwarg = "application_number"
-    slug_field = "application_number"
+    slug_url_kwarg = "reference"
+    slug_field = "reference"
     context_object_name = "evaluation"
 
     def get_queryset(self):
@@ -53,7 +53,7 @@ class EvaluationDetail(DetailView):
         if self.object:
             res = self.render_to_response(context)
         else:
-            context.update({"application_number": kwargs.get("application_number")})
+            context.update({"reference": kwargs.get("reference")})
             res = render(request, "evaluations/not_found.html", context, status=404)
 
         return res

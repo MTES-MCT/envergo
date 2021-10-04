@@ -1,16 +1,35 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin
-from django.http import QueryDict
+from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import mark_safe
+from django.utils.html import linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
-from envergo.evaluations.models import Criterion, Evaluation, Request
+from envergo.evaluations.models import (
+    Criterion,
+    Evaluation,
+    Request,
+    generate_reference,
+)
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
-    pass
+    reference = forms.CharField(
+        label=_("Reference"),
+        help_text=_("If you select an existing request, this value will be replaced."),
+        required=False,
+        initial=generate_reference,
+        max_length=64,
+    )
+    application_number = forms.CharField(
+        label=_("Application number"),
+        required=False,
+        help_text=_('A 15 chars value starting with "P"'),
+        max_length=64,
+    )
 
 
 class CriterionAdminForm(forms.ModelForm):
@@ -24,12 +43,23 @@ class CriterionInline(admin.StackedInline):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
-    list_display = ["application_number", "created_at"]
+    list_display = ["reference", "application_number", "created_at"]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
+    autocomplete_fields = ["request"]
 
     fieldsets = (
-        (None, {"fields": ("application_number", "evaluation_file")}),
+        (
+            None,
+            {
+                "fields": (
+                    "reference",
+                    "request",
+                    "application_number",
+                    "evaluation_file",
+                )
+            },
+        ),
         (
             _("Project data"),
             {
@@ -50,12 +80,26 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
     )
 
+    def save_model(self, request, obj, form, change):
+        """Synchronize the references."""
+        if obj.request:
+            obj.reference = obj.request.reference
+            super().save_model(request, obj, form, change)
+
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ["created_at", "application_number", "contact_email", "phone_number"]
-    readonly_fields = ["created_at", "parcels", "parcels_map"]
+    list_display = [
+        "reference",
+        "created_at",
+        "application_number",
+        "contact_email",
+        "phone_number",
+    ]
+    readonly_fields = ["reference", "created_at", "summary", "parcels", "parcels_map"]
+    search_fields = ["reference", "application_number"]
     fieldsets = (
+        (None, {"fields": ("reference", "summary")}),
         (_("Project localisation"), {"fields": ("address", "parcels", "parcels_map")}),
         (
             _("Project data"),
@@ -83,10 +127,22 @@ class RequestAdmin(admin.ModelAdmin):
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
 
-        parcel_refs = [parcel.reference for parcel in obj.parcels.all()]
-        qd = QueryDict(mutable=True)
-        qd.setlist("parcel", parcel_refs)
-        map_url = reverse("map")
-
-        link = f"<a href='{map_url}?{qd.urlencode()}'>Voir la carte</a>"
+        parcel_map_url = obj.get_parcel_map_url()
+        link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
         return mark_safe(link)
+
+    @admin.display(description=_("Résumé"))
+    def summary(self, obj):
+        request_url = reverse("admin:evaluations_request_change", args=[obj.reference])
+        site = Site.objects.get(id=settings.SITE_ID)
+
+        parcel_map_url = obj.get_parcel_map_url()
+        summary_body = render_to_string(
+            "evaluations/eval_request_notification.txt",
+            {
+                "request": obj,
+                "request_url": f"https://{site.domain}{request_url}",
+                "parcel_map_url": f"https://{site.domain}{parcel_map_url}",
+            },
+        )
+        return mark_safe(linebreaks(summary_body))
