@@ -2,6 +2,7 @@ import secrets
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
@@ -190,8 +191,19 @@ class Request(models.Model):
 
     # Petitioner data
     contact_email = models.EmailField(_("E-mail"))
-    phone_number = PhoneNumberField(_("Phone number"), max_length=20, blank=True)
+    project_sponsor_emails = ArrayField(
+        models.EmailField(),
+        verbose_name=_("Project sponsor email(s)"),
+        blank=True,
+        default=list,
+    )
+    project_sponsor_phone_number = PhoneNumberField(
+        _("Project sponsor phone number"), max_length=20, blank=True
+    )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
+    send_eval_to_sponsor = models.BooleanField(
+        _("Send evaluation to project sponsor"), default=True
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)

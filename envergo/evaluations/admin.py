@@ -94,7 +94,7 @@ class RequestAdmin(admin.ModelAdmin):
         "created_at",
         "application_number",
         "contact_email",
-        "phone_number",
+        "project_sponsor_phone_number",
     ]
     readonly_fields = ["reference", "created_at", "summary", "parcels", "parcels_map"]
     search_fields = ["reference", "application_number"]
@@ -116,7 +116,8 @@ class RequestAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "contact_email",
-                    "phone_number",
+                    "project_sponsor_emails",
+                    "project_sponsor_phone_number",
                     "other_contacts",
                 )
             },
