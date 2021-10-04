@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.postgres.forms import SimpleArrayField
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -55,9 +56,16 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         max_length=64,
     )
 
-    contact_email = forms.EmailField(label=_("Your e-mail address"))
+    contact_email = forms.EmailField(
+        label=_("Urbanism department email"), help_text=_("Project instructor…")
+    )
+    project_sponsor_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Project sponsor email address(es)"),
+        help_text=_("Petitioner, project manager…"),
+    )
     project_sponsor_phone_number = PhoneNumberField(
-        label=_("Your phone number"), required=False, region="FR"
+        label=_("Project sponsor phone number"), required=False, region="FR"
     )
     other_contacts = forms.CharField(
         label=_("Other email addresses"),
@@ -89,6 +97,9 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         )
         self.fields["existing_surface"].widget.attrs["placeholder"] = _(
             "In square meters"
+        )
+        self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
+            "Provide one or several addresses separated by commas ','"
         )
         self.fields["application_number"].required = False
         self.fields["application_number"].widget.attrs["placeholder"] = _(
