@@ -4,6 +4,8 @@ import uuid
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.http import QueryDict
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
@@ -205,3 +207,14 @@ class Request(models.Model):
             ref = self.reference
 
         return ref
+
+    def get_parcel_map_url(self):
+        """Return an url to a parcel visualization map."""
+
+        parcel_refs = [parcel.reference for parcel in self.parcels.all()]
+        qd = QueryDict(mutable=True)
+        qd.setlist("parcel", parcel_refs)
+        map_url = reverse("map")
+
+        url = f"{map_url}?{qd.urlencode()}"
+        return url
