@@ -3,8 +3,10 @@ from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, FormView, TemplateView
 from django.views.generic.edit import CreateView
+from ratelimit.decorators import ratelimit
 
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
@@ -66,6 +68,7 @@ class EvaluationDetail(DetailView):
         return context
 
 
+@method_decorator(ratelimit(key="get:toto", rate="1/d"), name="dispatch")
 class RequestEvaluation(CreateView):
     """A form to request an evaluation for a project."""
 
@@ -87,6 +90,7 @@ class RequestEvaluation(CreateView):
             kwargs["parcel_formset"] = self.get_parcel_formset()
         return super().get_context_data(**kwargs)
 
+    @method_decorator(ratelimit(key="ip", rate="1/d", method="POST"))
     def post(self, request, *args, **kwargs):
         """
         Handle POST requests: instantiate a form instance with the passed
