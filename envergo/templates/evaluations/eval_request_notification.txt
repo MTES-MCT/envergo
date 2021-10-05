@@ -6,6 +6,7 @@ Numéro de demande de permis : {{ request.application_number }}
 Surface créée : {{ request.created_surface }}
 Surface existante : {{ request.existing_surface }}
 
-E-mail: {{ request.contact_email }}
-Numéro de téléphone : {{ request.phone_number }}
-Autres contacts : {{ request.other_contacts }}
+E-mail du service d'urbanisme : {{ request.contact_email }}
+E-mail(s) du porteur : {{ request.project_sponsor_emails|join:", " }}
+Téléphone du porteur : {{ request.project_sponsor_phone_number }}
+Envoyer au porteur : {{ request.send_eval_to_sponsor|yesno:"Oui,Non" }}
