@@ -67,6 +67,13 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
     project_sponsor_phone_number = PhoneNumberField(
         label=_("Project sponsor phone number"), required=False, region="FR"
     )
+    send_eval_to_sponsor = forms.BooleanField(
+        label=_("Send evaluation to project sponsor"),
+        initial=True,
+        help_text=_(
+            "If you uncheck this box, you will be the only recipient of the evaluation."
+        ),
+    )
     other_contacts = forms.CharField(
         label=_("Other email addresses"),
         required=False,
@@ -99,7 +106,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "In square meters"
         )
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
-            "Provide one or several addresses separated by commas ','"
+            "Provide one or several addresses separated by commas « , »"
         )
         self.fields["application_number"].required = False
         self.fields["application_number"].widget.attrs["placeholder"] = _(
