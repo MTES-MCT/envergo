@@ -99,6 +99,8 @@ django-model-utils==4.1.1
     # via -r base.txt
 django-phonenumber-field[phonenumbers]==5.2.0
     # via -r base.txt
+django-ratelimit==3.0.1
+    # via -r base.txt
 django-redis==5.0.0
     # via -r base.txt
 django-storages[boto3]==1.11.1

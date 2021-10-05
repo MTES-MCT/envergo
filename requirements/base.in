@@ -18,3 +18,4 @@ pip-tools
 markdown
 django-leaflet
 celery
+django-ratelimit
