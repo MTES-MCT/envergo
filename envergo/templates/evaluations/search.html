@@ -1,18 +1,20 @@
 {% extends 'base.html' %}
 
-{% block title %}Évaluez si votre projet est soumis à la Loi sur l'eau{% endblock %}
+{% block title %}Retrouvez une évaluation Loi sur l'eau{% endblock %}
 
 {% block article %}
 <h1>EnvErgo</h1>
 <p class="fr-text--lead">Évaluez si un projet d'aménagement est soumis à la Loi sur l'eau</p>
 
-<p>Saisissez votre référence EnvErgo pour obtenir une évaluation
-  personnalisée de votre projet.</p>
+<p>Saisissez votre référence EnvErgo pour accéder à l'évaluation personnalisée de votre projet.</p>
 
 <form method="post" action="" novalidate>
   {% csrf_token %}
   {% include '_form_snippet.html' with form=form %}
   <button type="submit" class="fr-btn">Consulter l'évaluation</button>
+
+  <p class="fr-mt-3w">Vous n'avez pas de référence EnvErgo ?
+    <a href="{% url 'home' %}">Demandez une évaluation de votre projet.</a></p>
 </form>
 
 
