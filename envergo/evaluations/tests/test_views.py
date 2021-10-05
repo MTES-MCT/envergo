@@ -25,7 +25,9 @@ def eval_request_data():
         "created_surface": "250",
         "existing_surface": "100",
         "contact_email": "toto@tata.com",
-        "phone_number": "0612345678",
+        "project_sponsor_emails": "toto1@tata.com,toto2@tata.com,toto3@tata.com",
+        "project_sponsor_phone_number": "0612345678",
+        "send_eval_to_sponsor": True,
     }
     return data
 
@@ -122,6 +124,25 @@ def test_eval_error_missing_parcel(client, eval_request_data):
             "parcel-0-order": "",
         }
     )
+
+    res = client.post(request_url, data=eval_request_data)
+    assert res.status_code == 200
+    assert request_qs.count() == 0
+    assert parcel_qs.count() == 0
+    assert "Vous devez fournir une parcelle" in res.content.decode()
+
+
+def test_eval_error_wrong_sponsor_emails(client, eval_request_data):
+    """Eval request form needs valid sponsor emails."""
+
+    request_url = reverse("request_evaluation")
+    request_qs = Request.objects.all()
+    parcel_qs = Parcel.objects.all()
+
+    assert request_qs.count() == 0
+    assert parcel_qs.count() == 0
+
+    eval_request_data.update({"project_sponsor_emails": "toto1@tata.com, toto2"})
 
     res = client.post(request_url, data=eval_request_data)
     assert res.status_code == 200

@@ -71,6 +71,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
     send_eval_to_sponsor = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
         initial=True,
+        required=False,
         help_text=_(
             "If you uncheck this box, you will be the only recipient of the evaluation."
         ),
