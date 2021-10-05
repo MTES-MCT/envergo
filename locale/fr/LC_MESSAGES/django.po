@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-05 09:49+0000\n"
+"POT-Creation-Date: 2021-10-05 12:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,8 +77,8 @@ msgid "Résumé"
 msgstr "Résumé"
 
 #: envergo/evaluations/forms.py:39
-msgid "What is your project's address?"
-msgstr "À quelle adresse se situe votre projet ?"
+msgid "What is the project's address?"
+msgstr "À quelle adresse se situe le projet ?"
 
 #: envergo/evaluations/forms.py:40
 msgid "Type in a few characters to see suggestions"

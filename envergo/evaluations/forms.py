@@ -36,7 +36,7 @@ class EvaluationSearchForm(forms.Form):
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
-        label=_("What is your project's address?"),
+        label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
     )
     created_surface = forms.IntegerField(
