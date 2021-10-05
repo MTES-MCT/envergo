@@ -84,6 +84,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "application_number",
             "created_surface",
             "existing_surface",
+            "project_description",
             "contact_email",
             "project_sponsor_emails",
             "project_sponsor_phone_number",
@@ -105,3 +106,4 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["application_number"].widget.attrs["placeholder"] = _(
             'A 15 chars value starting with "P"'
         )
+        self.fields["project_description"].widget.attrs["rows"] = 3

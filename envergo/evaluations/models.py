@@ -188,6 +188,9 @@ class Request(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
+    project_description = models.TextField(
+        _("Project description, comments"), blank=True
+    )
 
     # Petitioner data
     contact_email = models.EmailField(_("E-mail"))

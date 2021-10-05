@@ -108,6 +108,7 @@ class RequestAdmin(admin.ModelAdmin):
                     "application_number",
                     "created_surface",
                     "existing_surface",
+                    "project_description",
                 )
             },
         ),
