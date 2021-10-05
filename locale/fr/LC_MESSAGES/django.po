@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-04 13:53+0000\n"
+"POT-Creation-Date: 2021-10-05 08:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,7 +40,7 @@ msgid "Application number"
 msgstr "Numéro de demande de permis"
 
 #: envergo/evaluations/admin.py:30 envergo/evaluations/forms.py:17
-#: envergo/evaluations/forms.py:106
+#: envergo/evaluations/forms.py:114
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
@@ -70,11 +70,11 @@ msgstr "Infos meta"
 
 #: envergo/evaluations/admin.py:128
 msgid "Lien vers la carte des parcelles"
-msgstr ""
+msgstr "Lien vers la carte des parcelles"
 
 #: envergo/evaluations/admin.py:135
 msgid "Résumé"
-msgstr ""
+msgstr "Résumé"
 
 #: envergo/evaluations/forms.py:39
 msgid "What is your project's address?"
@@ -113,46 +113,54 @@ msgstr ""
 
 #: envergo/evaluations/forms.py:60
 msgid "Urbanism department email"
-msgstr ""
+msgstr "Adresse e-mail du service urbanisme"
 
 #: envergo/evaluations/forms.py:60
 msgid "Project instructor…"
-msgstr ""
+msgstr "Personne en charge de l'instruction, boîte générique…"
 
 #: envergo/evaluations/forms.py:64
-#, fuzzy
-#| msgid "Other email addresses"
 msgid "Project sponsor email address(es)"
-msgstr "Autres adresses e-mail"
+msgstr "Adresses(s) e-mail du porteur de projet"
 
 #: envergo/evaluations/forms.py:65
 msgid "Petitioner, project manager…"
-msgstr ""
+msgstr "Pétitionnaire, maître d'œuvre…"
 
 #: envergo/evaluations/forms.py:68 envergo/evaluations/models.py:201
-#, fuzzy
-#| msgid "Your phone number"
 msgid "Project sponsor phone number"
-msgstr "Votre numéro de téléphone"
+msgstr "Téléphone du porteur de projet"
 
-#: envergo/evaluations/forms.py:71
+#: envergo/evaluations/forms.py:71 envergo/evaluations/models.py:205
+msgid "Send evaluation to project sponsor"
+msgstr ""
+"Je souhaite qu'EnvErgo envoie automatiquement l'évaluation au porteur de "
+"projet"
+
+#: envergo/evaluations/forms.py:75
+msgid ""
+"If you uncheck this box, you will be the only recipient of the evaluation."
+msgstr ""
+"Si vous décochez cette case, le porteur de projet ne recevra pas l'évaluation"
+
+#: envergo/evaluations/forms.py:79
 msgid "Other email addresses"
 msgstr "Autres adresses e-mail"
 
-#: envergo/evaluations/forms.py:74
+#: envergo/evaluations/forms.py:82
 msgid ""
 "Please let us know if we should warn others about the evaluation result."
 msgstr "Nous enverrons l'évaluation à ces destinataires également."
 
-#: envergo/evaluations/forms.py:96 envergo/evaluations/forms.py:99
+#: envergo/evaluations/forms.py:104 envergo/evaluations/forms.py:107
 #: envergo/evaluations/models.py:85 envergo/evaluations/models.py:88
 #: envergo/evaluations/models.py:186 envergo/evaluations/models.py:189
 msgid "In square meters"
 msgstr "En m²"
 
-#: envergo/evaluations/forms.py:102
-msgid "Provide one or several addresses separated by commas ','"
-msgstr ""
+#: envergo/evaluations/forms.py:110
+msgid "Provide one or several addresses separated by commas « , »"
+msgstr "Saisissez une ou plusieurs adresses séparées par des virgules « , »"
 
 #: envergo/evaluations/models.py:38
 msgid "Unlikely"
@@ -272,15 +280,11 @@ msgstr "E-mail"
 
 #: envergo/evaluations/models.py:196
 msgid "Project sponsor email(s)"
-msgstr ""
+msgstr "Adresse(s) email du porteur de projet"
 
 #: envergo/evaluations/models.py:203
 msgid "Other contacts"
 msgstr "Autres contacts"
-
-#: envergo/evaluations/models.py:205
-msgid "Send evaluation to project sponsor"
-msgstr ""
 
 #: envergo/evaluations/models.py:212
 msgid "Evaluation request"
@@ -436,11 +440,11 @@ msgstr "Adresse e-mail"
 
 #: envergo/users/models.py:44
 msgid "Name of User"
-msgstr ""
+msgstr "Nom de l'utilisateur"
 
 #: envergo/users/models.py:53
 msgid "User"
-msgstr ""
+msgstr "Utilisateur"
 
 #: envergo/users/views.py:25
 msgid "Information successfully updated"
