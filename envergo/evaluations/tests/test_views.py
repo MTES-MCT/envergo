@@ -148,7 +148,7 @@ def test_eval_error_wrong_sponsor_emails(client, eval_request_data):
     assert res.status_code == 200
     assert request_qs.count() == 0
     assert parcel_qs.count() == 0
-    assert "Vous devez fournir une parcelle" in res.content.decode()
+    assert "adresse n°2 est invalide" in res.content.decode()
 
 
 @patch("envergo.utils.mattermost.requests.post")
