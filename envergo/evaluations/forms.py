@@ -63,6 +63,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         forms.EmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_sponsor_phone_number = PhoneNumberField(
         label=_("Project sponsor phone number"), required=False, region="FR"
