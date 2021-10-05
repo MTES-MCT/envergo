@@ -74,14 +74,6 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "If you uncheck this box, you will be the only recipient of the evaluation."
         ),
     )
-    other_contacts = forms.CharField(
-        label=_("Other email addresses"),
-        required=False,
-        help_text=_(
-            "Please let us know if we should warn others about the evaluation result."
-        ),
-        widget=forms.Textarea(attrs={"rows": 3}),
-    )
 
     class Meta:
         model = Request
@@ -94,7 +86,6 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "project_sponsor_emails",
             "project_sponsor_phone_number",
             "send_eval_to_sponsor",
-            "other_contacts",
         ]
 
     def __init__(self, *args, **kwargs):

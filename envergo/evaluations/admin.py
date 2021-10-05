@@ -118,7 +118,7 @@ class RequestAdmin(admin.ModelAdmin):
                     "contact_email",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
-                    "other_contacts",
+                    "send_eval_to_sponsor",
                 )
             },
         ),
