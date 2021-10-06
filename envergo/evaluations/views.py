@@ -68,7 +68,7 @@ class EvaluationDetail(DetailView):
         return context
 
 
-@method_decorator(ratelimit(key="get:toto", rate="1/d"), name="dispatch")
+@method_decorator(ratelimit(key="ip", rate="1/d"), name="dispatch")
 class RequestEvaluation(CreateView):
     """A form to request an evaluation for a project."""
 
