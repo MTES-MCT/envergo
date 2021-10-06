@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-05 12:49+0000\n"
+"POT-Creation-Date: 2021-10-06 08:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,8 +22,8 @@ msgstr ""
 msgid "evaluations/"
 msgstr "évaluations/"
 
-#: envergo/evaluations/admin.py:21 envergo/evaluations/forms.py:34
-#: envergo/evaluations/models.py:50 envergo/evaluations/models.py:166
+#: envergo/evaluations/admin.py:21 envergo/evaluations/models.py:50
+#: envergo/evaluations/models.py:166
 msgid "Reference"
 msgstr "Référence"
 
@@ -34,13 +34,13 @@ msgstr ""
 "synchronisée."
 
 #: envergo/evaluations/admin.py:28 envergo/evaluations/forms.py:16
-#: envergo/evaluations/forms.py:54 envergo/evaluations/models.py:65
+#: envergo/evaluations/forms.py:58 envergo/evaluations/models.py:65
 #: envergo/evaluations/models.py:180
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
 #: envergo/evaluations/admin.py:30 envergo/evaluations/forms.py:17
-#: envergo/evaluations/forms.py:107
+#: envergo/evaluations/forms.py:111
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
@@ -76,85 +76,93 @@ msgstr "Lien vers la carte des parcelles"
 msgid "Résumé"
 msgstr "Résumé"
 
-#: envergo/evaluations/forms.py:39
+#: envergo/evaluations/forms.py:35
+msgid "EnvErgo reference"
+msgstr "Référence EnvErgo"
+
+#: envergo/evaluations/forms.py:36
+msgid "The value you received when you requested an evaluation."
+msgstr "La valeur reçue lorsque vous avez demandé une évaluation."
+
+#: envergo/evaluations/forms.py:43
 msgid "What is the project's address?"
 msgstr "À quelle adresse se situe le projet ?"
 
-#: envergo/evaluations/forms.py:40
+#: envergo/evaluations/forms.py:44
 msgid "Type in a few characters to see suggestions"
 msgstr "Saisissez quelques caractères pour voir des suggestions"
 
-#: envergo/evaluations/forms.py:43 envergo/evaluations/models.py:85
+#: envergo/evaluations/forms.py:47 envergo/evaluations/models.py:85
 #: envergo/evaluations/models.py:186
 msgid "Created surface"
 msgstr "Surface créée"
 
-#: envergo/evaluations/forms.py:44
+#: envergo/evaluations/forms.py:48
 msgid "Created_surface_help_text"
 msgstr ""
 "Somme des emprises au sol de toutes les installations nouvelles (bâtiment, "
 "voirie, remblais, noue, serre, bassin…)"
 
-#: envergo/evaluations/forms.py:48 envergo/evaluations/models.py:88
+#: envergo/evaluations/forms.py:52 envergo/evaluations/models.py:88
 #: envergo/evaluations/models.py:189
 msgid "Existing surface"
 msgstr "Surface existante"
 
-#: envergo/evaluations/forms.py:50
+#: envergo/evaluations/forms.py:54
 msgid "Existing surface help text"
 msgstr ""
 "Somme des emprises au sol de toutes les installations existantes avant le "
 "projet (bâtiment, voirie, remblais, noue, serre, bassin…)"
 
-#: envergo/evaluations/forms.py:55
+#: envergo/evaluations/forms.py:59
 msgid "If an application number was already submitted."
 msgstr ""
 "Si une demande de permis de construire ou d'aménager a déjà été soumise"
 
-#: envergo/evaluations/forms.py:60
+#: envergo/evaluations/forms.py:64
 msgid "Urbanism department email"
 msgstr "Adresse e-mail du service urbanisme"
 
-#: envergo/evaluations/forms.py:60
+#: envergo/evaluations/forms.py:64
 msgid "Project instructor…"
 msgstr "Personne en charge de l'instruction, boîte générique…"
 
-#: envergo/evaluations/forms.py:64
+#: envergo/evaluations/forms.py:68
 msgid "Project sponsor email address(es)"
 msgstr "Adresses(s) e-mail du porteur de projet"
 
-#: envergo/evaluations/forms.py:65
+#: envergo/evaluations/forms.py:69
 msgid "Petitioner, project manager…"
 msgstr "Pétitionnaire, maître d'œuvre…"
 
-#: envergo/evaluations/forms.py:66
+#: envergo/evaluations/forms.py:70
 #, python-format
 msgid "The %(nth)s address is invalid:"
 msgstr "L'adresse n°%(nth)s est invalide :"
 
-#: envergo/evaluations/forms.py:69 envergo/evaluations/models.py:204
+#: envergo/evaluations/forms.py:73 envergo/evaluations/models.py:204
 msgid "Project sponsor phone number"
 msgstr "Téléphone du porteur de projet"
 
-#: envergo/evaluations/forms.py:72 envergo/evaluations/models.py:208
+#: envergo/evaluations/forms.py:76 envergo/evaluations/models.py:208
 msgid "Send evaluation to project sponsor"
 msgstr ""
 "Je souhaite qu'EnvErgo envoie automatiquement l'évaluation au porteur de "
 "projet"
 
-#: envergo/evaluations/forms.py:76
+#: envergo/evaluations/forms.py:80
 msgid ""
 "If you uncheck this box, you will be the only recipient of the evaluation."
 msgstr ""
 "Si vous décochez cette case, le porteur de projet ne recevra pas l'évaluation"
 
-#: envergo/evaluations/forms.py:97 envergo/evaluations/forms.py:100
+#: envergo/evaluations/forms.py:101 envergo/evaluations/forms.py:104
 #: envergo/evaluations/models.py:85 envergo/evaluations/models.py:88
 #: envergo/evaluations/models.py:186 envergo/evaluations/models.py:189
 msgid "In square meters"
 msgstr "En m²"
 
-#: envergo/evaluations/forms.py:103
+#: envergo/evaluations/forms.py:107
 msgid "Provide one or several addresses separated by commas « , »"
 msgstr "Saisissez une ou plusieurs adresses séparées par des virgules « , »"
 

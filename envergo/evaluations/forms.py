@@ -31,7 +31,11 @@ class EvaluationFormMixin(forms.Form):
 class EvaluationSearchForm(forms.Form):
     """Search for a single evaluation."""
 
-    reference = forms.CharField(label=_("Reference"), max_length=64)
+    reference = forms.CharField(
+        label=_("EnvErgo reference"),
+        help_text=_("The value you received when you requested an evaluation."),
+        max_length=64,
+    )
 
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
