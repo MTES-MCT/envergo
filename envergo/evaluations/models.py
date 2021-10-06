@@ -202,6 +202,7 @@ class Request(models.Model):
         upload_to=additional_data_file_format,
         null=True,
         blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=["pdf", "zip"])],
     )
 
     # Petitioner data
