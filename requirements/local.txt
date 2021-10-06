@@ -131,6 +131,8 @@ django-stubs==1.8.0
     # via -r local.in
 django-stubs-ext==0.2.0
     # via django-stubs
+djhtml==1.4.9
+    # via -r local.in
 factory-boy==3.2.0
     # via -r local.in
 faker==8.12.0

@@ -19,6 +19,7 @@ coverage
 black
 pylint-django
 pre-commit
+djhtml
 
 # Django
 # ------------------------------------------------------------------------------
