@@ -59,6 +59,11 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("If an application number was already submitted."),
         max_length=64,
     )
+    additional_data = forms.FileField(
+        label=_("Additional data"),
+        help_text=_("Additional files you might deem useful for the evaluation"),
+        required=False,
+    )
 
     contact_email = forms.EmailField(
         label=_("Urbanism department email"), help_text=_("Project instructor…")
