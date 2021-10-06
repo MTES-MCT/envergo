@@ -31,6 +31,7 @@ repos:
     rev: v1.4.9
     hooks:
       - id: djhtml
+        args: ['-t 2']
 
 
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
