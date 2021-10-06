@@ -89,6 +89,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "created_surface",
             "existing_surface",
             "project_description",
+            "additional_data",
             "contact_email",
             "project_sponsor_emails",
             "project_sponsor_phone_number",

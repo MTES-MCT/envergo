@@ -14,7 +14,7 @@
 <p>Vous connaissez déjà votre référence EnvErgo ? <a href="{% url 'evaluation_search' %}">
     Retrouvez votre évaluation.</a></p>
 
-<form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+<form action="" enctype="multipart/form-data" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
   {% csrf_token %}
 
   {% include '_form_header.html' with form=form %}
@@ -52,6 +52,7 @@
     {% include '_field_snippet.html' with field=form.existing_surface %}
     {% include '_field_snippet.html' with field=form.application_number %}
     {% include '_field_snippet.html' with field=form.project_description %}
+    {% include '_field_snippet.html' with field=form.additional_data %}
   </fieldset>
 
   <fieldset class="fr-mb-6w">

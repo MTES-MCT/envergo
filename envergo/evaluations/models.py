@@ -1,5 +1,6 @@
 import secrets
 import uuid
+from os.path import splitext
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -159,6 +160,11 @@ class Criterion(models.Model):
         }.get(self.criterion)
 
 
+def additional_data_file_format(instance, filename):
+    _, extension = splitext(filename)
+    return f"requests/{instance.reference}{extension}"
+
+
 class Request(models.Model):
     """An evaluation request by a petitioner."""
 
@@ -190,6 +196,12 @@ class Request(models.Model):
     )
     project_description = models.TextField(
         _("Project description, comments"), blank=True
+    )
+    additional_data = models.FileField(
+        _("Additional data"),
+        upload_to=additional_data_file_format,
+        null=True,
+        blank=True,
     )
 
     # Petitioner data
