@@ -8,6 +8,8 @@
 
   {% if field|is_checkbox %}
     {% include '_checkbox_snippet.html' with field=field %}
+  {% elif field|is_input_file %}
+    {% include '_input_file_snippet.html' with field=field %}
   {% else %}
     {% include '_field_snippet.html' with field=field %}
   {% endif %}

@@ -1,5 +1,5 @@
 from django import template
-from django.forms.widgets import CheckboxInput
+from django.forms.widgets import CheckboxInput, FileInput
 
 register = template.Library()
 
@@ -9,6 +9,13 @@ def is_checkbox(field):
     """Is the given field a checkbox input?."""
 
     return isinstance(field.field.widget, CheckboxInput)
+
+
+@register.filter
+def is_input_file(field):
+    """Is the given field an input[type=file] widget?."""
+
+    return isinstance(field.field.widget, FileInput)
 
 
 @register.filter
