@@ -68,7 +68,7 @@ class EvaluationDetail(DetailView):
         return context
 
 
-@method_decorator(ratelimit(key="ip", rate="1/d"), name="dispatch")
+@method_decorator(ratelimit(key="ip", rate="1/d", method="GET"), name="dispatch")
 class RequestEvaluation(CreateView):
     """A form to request an evaluation for a project."""
 
@@ -90,7 +90,6 @@ class RequestEvaluation(CreateView):
             kwargs["parcel_formset"] = self.get_parcel_formset()
         return super().get_context_data(**kwargs)
 
-    @method_decorator(ratelimit(key="ip", rate="1/d", method="POST"))
     def post(self, request, *args, **kwargs):
         """
         Handle POST requests: instantiate a form instance with the passed
