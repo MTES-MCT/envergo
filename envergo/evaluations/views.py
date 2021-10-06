@@ -68,7 +68,6 @@ class EvaluationDetail(DetailView):
         return context
 
 
-@method_decorator(ratelimit(key="ip", rate="1/d", method="GET"), name="dispatch")
 class RequestEvaluation(CreateView):
     """A form to request an evaluation for a project."""
 
@@ -90,6 +89,10 @@ class RequestEvaluation(CreateView):
             kwargs["parcel_formset"] = self.get_parcel_formset()
         return super().get_context_data(**kwargs)
 
+    # Rate limiting the POST view, as a precaution
+    # Indeed, the form is not captcha protected, and the file upload field
+    # could fill up the s3 space quickly
+    @method_decorator(ratelimit(key="ip", rate="256/d", block=True))
     def post(self, request, *args, **kwargs):
         """
         Handle POST requests: instantiate a form instance with the passed
