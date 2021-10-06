@@ -70,7 +70,7 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_sponsor_phone_number = PhoneNumberField(
-        label=_("Project sponsor phone number"), required=False, region="FR"
+        label=_("Project sponsor phone number"), region="FR"
     )
     send_eval_to_sponsor = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
