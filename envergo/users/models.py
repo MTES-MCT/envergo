@@ -42,6 +42,8 @@ class User(AbstractUser):
 
     email = models.EmailField(_("Email address"), unique=True)
     name = CharField(_("Name of User"), blank=True, max_length=255)
+
+    username = None  # type: ignore
     first_name = None  # type: ignore
     last_name = None  # type: ignore
 

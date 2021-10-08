@@ -7,6 +7,8 @@ from django.views import defaults as default_views
 
 urlpatterns = [
     path("", include("envergo.pages.urls")),
+    path(_("accounts/"), include("django.contrib.auth.urls")),
+    path(_("users/"), include("envergo.users.urls")),
     path(_("evaluations/"), include("envergo.evaluations.urls")),
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
