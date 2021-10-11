@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.evaluations.models import Request
@@ -173,3 +174,19 @@ def test_eval_triggers_email_to_requester(client, eval_request_data, mailoutbox)
     assert res.status_code == 302
 
     assert len(mailoutbox) == 1
+
+
+def test_eval_summary(evaluation):
+    obj = evaluation
+    request_url = reverse("admin:evaluations_request_change", args=[obj.id])
+
+    parcel_map_url = obj.get_parcel_map_url()
+    summary_body = render_to_string(
+        "evaluations/eval_request_notification.txt",
+        {
+            "request": obj,
+            "request_url": f"{request_url}",
+            "parcel_map_url": f"{parcel_map_url}",
+        },
+    )
+    return summary_body

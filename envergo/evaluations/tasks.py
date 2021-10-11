@@ -12,9 +12,18 @@ from envergo.utils.mattermost import notify
 def confirm_request_to_admin(request_id, host):
     """Send a Mattermost notification to confirm the evaluation request."""
 
+    request = Request.objects.get(id=request_id)
     request_url = reverse("admin:evaluations_request_change", args=[request_id])
-    msg = f"Une nouvelle évaluation a été demandée. https://{host}{request_url}"
-    notify(msg)
+    parcel_map_url = request.get_parcel_map_url()
+    message_body = render_to_string(
+        "evaluations/eval_request_notification.txt",
+        context={
+            "request": request,
+            "request_url": f"https://{host}{request_url}",
+            "parcel_map_url": f"https://{host}{parcel_map_url}",
+        },
+    )
+    notify(message_body)
 
 
 @app.task
