@@ -47,6 +47,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     form = EvaluationAdminForm
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
+    ordering = ["-created_at"]
 
     fieldsets = (
         (
@@ -54,6 +55,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "reference",
+                    "contact_email",
                     "request",
                     "application_number",
                     "evaluation_file",

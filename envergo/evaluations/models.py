@@ -54,6 +54,7 @@ class Evaluation(models.Model):
         unique=True,
         db_index=True,
     )
+    contact_email = models.EmailField(_("E-mail"))
     request = models.ForeignKey(
         "evaluations.Request",
         verbose_name=_("Request"),
