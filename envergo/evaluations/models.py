@@ -55,7 +55,7 @@ class Evaluation(models.Model):
         db_index=True,
     )
     contact_email = models.EmailField(_("E-mail"))
-    request = models.ForeignKey(
+    request = models.OneToOneField(
         "evaluations.Request",
         verbose_name=_("Request"),
         help_text=_("Does this evaluation answers to an existing request?"),
