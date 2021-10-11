@@ -3,6 +3,7 @@ from django.urls.conf import include
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.views import (
+    Dashboard,
     EvaluationDetail,
     EvaluationSearch,
     RequestEvaluation,
@@ -20,6 +21,7 @@ urlpatterns = [
             ]
         ),
     ),
+    path(_("dashboard/"), Dashboard.as_view(), name="dashboard"),
     path(
         "<slug:reference>/",
         EvaluationDetail.as_view(),

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load evaluations static %}
+
+{% block title %}Tableau de bord EnvErgo{% endblock %}
+
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Tableau de bord</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block article %}
+  <h1>Tableau de bord</h1>
+
+  <div class="fr-table">
+    <table>
+      <caption>Vos demandes d'évaluations en attente</caption>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for request in requests %}
+          <tr>
+            <td>{{ request.reference }}</td>
+            <td>{{ request.created_at|date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+
+  <div class="fr-table">
+    <table>
+      <caption>Vos évaluations Loi sur l'eau</caption>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Date</th>
+          <th>Probabilité</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evaluation in evaluations %}
+          <tr>
+            <td><a href="{% url 'evaluation_detail' evaluation.reference %}">{{ evaluation.reference }}</a></td>
+            <td>{{ evaluation.created_at|date }}</td>
+            <td>{% probability evaluation.global_probability %}</td>
+
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+
+{% endblock %}

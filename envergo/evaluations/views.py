@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
@@ -9,7 +10,7 @@ from django.views.generic.edit import CreateView
 from ratelimit.decorators import ratelimit
 
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
-from envergo.evaluations.models import Criterion, Evaluation
+from envergo.evaluations.models import Criterion, Evaluation, Request
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
@@ -131,3 +132,27 @@ class RequestEvaluation(CreateView):
 
 class RequestSuccess(TemplateView):
     template_name = "evaluations/request_success.html"
+
+
+class Dashboard(LoginRequiredMixin, TemplateView):
+    template_name = "evaluations/dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["requests"] = self.get_requests()
+        context["evaluations"] = self.get_evaluations()
+        return context
+
+    def get_requests(self):
+        user_email = self.request.user.email
+        return (
+            Request.objects.filter(contact_email=user_email)
+            .filter(evaluation__isnull=True)
+            .order_by("-created_at")
+        )
+
+    def get_evaluations(self):
+        user_email = self.request.user.email
+        return Evaluation.objects.filter(contact_email=user_email).order_by(
+            "-created_at"
+        )
