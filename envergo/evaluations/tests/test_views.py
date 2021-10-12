@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
 import pytest
-from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.evaluations.models import Request
+from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
 from envergo.geodata.models import Parcel
 
 pytestmark = pytest.mark.django_db
@@ -176,17 +176,39 @@ def test_eval_triggers_email_to_requester(client, eval_request_data, mailoutbox)
     assert len(mailoutbox) == 1
 
 
-def test_eval_summary(evaluation):
-    obj = evaluation
-    request_url = reverse("admin:evaluations_request_change", args=[obj.id])
+def test_dashboard_displays_empty_messages(user, client):
+    dashboard_url = reverse("dashboard")
+    client.force_login(user)
+    res = client.get(dashboard_url)
 
-    parcel_map_url = obj.get_parcel_map_url()
-    summary_body = render_to_string(
-        "evaluations/eval_request_notification.txt",
-        {
-            "request": obj,
-            "request_url": f"{request_url}",
-            "parcel_map_url": f"{parcel_map_url}",
-        },
-    )
-    return summary_body
+    assert res.status_code == 200
+    assert "aucune demande d'évaluation en attente" in res.content.decode()
+    assert "aucune évaluation disponible pour l'instant" in res.content.decode()
+
+
+def test_dashboard_lists_requests_and_evals(user, client):
+    RequestFactory.create_batch(7, contact_email=user.email)
+    EvaluationFactory.create_batch(11, contact_email=user.email)
+
+    dashboard_url = reverse("dashboard")
+    client.force_login(user)
+    res = client.get(dashboard_url)
+    content = res.content.decode()
+
+    assert res.status_code == 200
+    assert content.count('<tr class="request">') == 7
+    assert content.count('<tr class="evaluation">') == 11
+
+
+def dashboard_does_not_list_other_evals(user, client):
+    RequestFactory.create_batch(7)
+    EvaluationFactory.create_batch(11)
+
+    dashboard_url = reverse("dashboard")
+    client.force_login(user)
+    res = client.get(dashboard_url)
+    content = res.content.decode()
+
+    assert res.status_code == 200
+    assert content.count('<tr class="request">') == 0
+    assert content.count('<tr class="evaluation">') == 0
