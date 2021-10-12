@@ -212,3 +212,20 @@ def dashboard_does_not_list_other_evals(user, client):
     assert res.status_code == 200
     assert content.count('<tr class="request">') == 0
     assert content.count('<tr class="evaluation">') == 0
+
+
+def test_users_can_see_dashboard_menu(user, client):
+    client.force_login(user)
+    home_url = reverse("home")
+    res = client.get(home_url)
+
+    assert res.status_code == 200
+    assert "Tableau de bord" in res.content.decode()
+
+
+def test_anonymous_cannot_see_dashboard_menu(client):
+    home_url = reverse("home")
+    res = client.get(home_url)
+
+    assert res.status_code == 200
+    assert "Tableau de bord" not in res.content.decode()
