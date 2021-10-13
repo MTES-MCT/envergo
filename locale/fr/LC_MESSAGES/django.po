@@ -24,7 +24,7 @@ msgstr "comptes/"
 
 #: config/urls.py:11
 msgid "users/"
-msgstr "personnes/"
+msgstr "votre-espace/"
 
 #: config/urls.py:12
 msgid "evaluations/"
