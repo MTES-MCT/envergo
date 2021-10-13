@@ -60,8 +60,8 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         max_length=64,
     )
     additional_data = forms.FileField(
-        label=_("Additional data"),
-        help_text=_("Additional files you might deem useful for the evaluation"),
+        label=_("Additional files you might deem useful for the evaluation"),
+        help_text=_("Avalaible formats: pdf, zip."),
         required=False,
     )
 

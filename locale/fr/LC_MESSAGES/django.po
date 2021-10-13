@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-06 12:37+0000\n"
+"POT-Creation-Date: 2021-10-13 10:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,16 +119,17 @@ msgid "If an application number was already submitted."
 msgstr ""
 "Si une demande de permis de construire ou d'aménager a déjà été soumise"
 
-#: envergo/evaluations/forms.py:63 envergo/evaluations/models.py:201
-msgid "Additional data"
-msgstr "Fichiers complémentaires"
-
-#: envergo/evaluations/forms.py:64
+#: envergo/evaluations/forms.py:63
 msgid "Additional files you might deem useful for the evaluation"
 msgstr ""
 "Informations complémentaires utiles à l'évaluation (CERFA, plan de masse, "
-"pièces complémentaires…).<br />Formats autorisés : pdf, zip.<br />Si vous disposez de plusieurs fichiers, "
-"regroupez-les dans une archive zip."
+"pièces complémentaires…)."
+
+#: envergo/evaluations/forms.py:64
+msgid "Avalaible formats: pdf, zip."
+msgstr ""
+"Formats autorisés : pdf, zip.<br />Si vous "
+"disposez de plusieurs fichiers, regroupez-les dans une archive zip."
 
 #: envergo/evaluations/forms.py:69
 msgid "Urbanism department email"
@@ -151,11 +152,11 @@ msgstr "Pétitionnaire, maître d'œuvre…"
 msgid "The %(nth)s address is invalid:"
 msgstr "L'adresse n°%(nth)s est invalide :"
 
-#: envergo/evaluations/forms.py:78 envergo/evaluations/models.py:216
+#: envergo/evaluations/forms.py:78 envergo/evaluations/models.py:217
 msgid "Project sponsor phone number"
 msgstr "Téléphone du porteur de projet"
 
-#: envergo/evaluations/forms.py:81 envergo/evaluations/models.py:220
+#: envergo/evaluations/forms.py:81 envergo/evaluations/models.py:221
 msgid "Send evaluation to project sponsor"
 msgstr ""
 "Je souhaite qu'EnvErgo envoie automatiquement l'évaluation au porteur de "
@@ -225,7 +226,7 @@ msgstr "Contact"
 msgid "Contact (html)"
 msgstr "Contact (html)"
 
-#: envergo/evaluations/models.py:95 envergo/evaluations/models.py:224
+#: envergo/evaluations/models.py:95 envergo/evaluations/models.py:225
 msgid "Date created"
 msgstr "Date de création"
 
@@ -293,23 +294,27 @@ msgstr "Parcelles"
 msgid "Project description, comments"
 msgstr "Bref descriptif du projet et commentaires"
 
-#: envergo/evaluations/models.py:208
+#: envergo/evaluations/models.py:201
+msgid "Additional data"
+msgstr "Fichiers complémentaires"
+
+#: envergo/evaluations/models.py:209
 msgid "E-mail"
 msgstr "E-mail"
 
-#: envergo/evaluations/models.py:211
+#: envergo/evaluations/models.py:212
 msgid "Project sponsor email(s)"
 msgstr "Adresse(s) email du porteur de projet"
 
-#: envergo/evaluations/models.py:218
+#: envergo/evaluations/models.py:219
 msgid "Other contacts"
 msgstr "Autres contacts"
 
-#: envergo/evaluations/models.py:227
+#: envergo/evaluations/models.py:228
 msgid "Evaluation request"
 msgstr "Demande d'évaluation"
 
-#: envergo/evaluations/models.py:228
+#: envergo/evaluations/models.py:229
 msgid "Evaluation requests"
 msgstr "Demandes d'évaluation"
 
