@@ -8,13 +8,25 @@ Améliorer la prise en compte de l'environnement dans les projets d'urbanisme.
 Cette page concerne le code source du projet EnvErgo. Pour en savoir plus sur le
 projet lui-même, se référer au site [EnvErgo.beta.gouv.fr](https://envergo.beta.gouv.fr).
 
+## Côté technique
 
-## Démarrage
+### Solutions
 
-Le projet a été [initialisé grâce à Cookiecutter-Django](https://cookiecutter-django.readthedocs.io/en/latest/).
+Les outils principaux suivants sont utilisés :
+
+ - le [framework Django](https://www.djangoproject.com/)
+ - le [système de design de l'état français](https://www.systeme-de-design.gouv.fr/)
+ - le [projet Cookiecutter-Django pour l'initialisation du dépôt](https://cookiecutter-django.readthedocs.io/en/latest/).
 
 
-## Développement local
+### Démarrage
+
+Cookiecutter-Django est un initialiseur de projet, par les auteurs de [Two Scoops of Django](https://www.feldroy.com/books/two-scoops-of-django-3-x).
+
+Par conséquent, [on se référera à sa doc](https://cookiecutter-django.readthedocs.io/en/latest/index.html) pour en savoir plus sur l'organisation du projet et les différents outils mis en place.
+
+
+### Développement local
 
 Pour développer en local, deux solutions :
 
@@ -22,8 +34,110 @@ Pour développer en local, deux solutions :
 
 2/ [Utiliser l'image Docker](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.html).
 
+Il est recommandé de se baser sur la version docker.
 
-## Tests
+Pour lancer l'environnement rapidement :
+
+```bash
+$ docker-compose -f local.yml build
+$ docker-compose -f local.yml up
+```
+
+Pour construire la base de données (dans un autre shell) :
+
+```bash
+$ docker-compose -f local.yml run --rm django python manage.py migrate
+```
+
+### Qualité du code
+
+De nombreux outils sont mis en place pour garantir la qualité et l'homogénéité du code.
+
+ - [pre-commit](https://pre-commit.com/) qui lance plusieurs outils de validation au moment du commit (cf. (sa configuration)[https://github.com/MTES-MCT/envergo/blob/main/.pre-commit-config.yaml])
+ - [flake8 pour la validation du code python](https://flake8.pycqa.org/en/latest/)
+ - [black pour l'auto-formattage du code python](https://github.com/psf/black)
+ - [isort pour l'ordonnancement des imports python](https://github.com/PyCQA/isort)
+ - [Djhtml pour l'indentation des templates](https://github.com/rtts/djhtml)
+
+Pour activer tout ça :
+
+```bash
+pre-commit install
+```
+
+### Configurer son environnement
+
+Le projet propose un fichier [Editorconfig](https://editorconfig.org/) pour [configurer globalement les éditeurs de code](https://github.com/MTES-MCT/envergo/blob/main/.editorconfig).
+
+#### VSCode
+
+Pour VSCode, il est recommandé d'utiliser la configuration suivante.
+
+Installer les extensions :
+
+ - [EditorConfig pour vscode](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
+  - [External formatter](https://marketplace.visualstudio.com/items?itemName=SteefH.external-formatters) (pour djhtml)
+
+Pour activer le formatage à l'enregistrement et correctement affecter les bons "linters" aux bons types de fichiers :
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.associations": {
+    "**/templates/*.html": "django-html",
+    "**/templates/*": "django-txt",
+    "**/requirements{/**,*}.{txt,in}": "pip-requirements"
+  },
+  "emmet.includeLanguages": {
+    "django-html": "html"
+  },
+  "[django-html]": {
+    "editor.defaultFormatter": "SteefH.external-formatters"
+  },
+  "externalFormatters.languages": {
+    "django-html": {
+      "command": "djhtml",
+        "arguments": [
+          "-t 2"
+        ],
+    },
+  },
+  "beautify.language": {
+    "html": [
+      "htm",
+      "html",
+      "django-html"
+    ]
+  },
+  "beautify.config": {
+    "brace_style": "collapse,preserve-inline",
+    "indent_size": 2,
+    "indent_style": "space",
+  },
+  "[python]": {
+    "pythonPath": ".venv/bin/python",
+    "linting.enabled": true,
+    "linting.flake8Enabled": true,
+    "linting.pylintEnabled": false,
+    "formatting.provider": "black",
+    "formatting.blackArgs": [
+      "--line-length=88"
+    ],
+    "sortImports.args": [
+      "--profile",
+      "black"
+    ],
+  }
+}
+```
+
+
+### Tests
 
 En local :
 
