@@ -8,9 +8,7 @@ Améliorer la prise en compte de l'environnement dans les projets d'urbanisme.
 Cette page concerne le code source du projet EnvErgo. Pour en savoir plus sur le
 projet lui-même, se référer au site [EnvErgo.beta.gouv.fr](https://envergo.beta.gouv.fr).
 
-## Côté technique
-
-### Solutions
+## Solution technique
 
 Les outils principaux suivants sont utilisés :
 
@@ -19,7 +17,7 @@ Les outils principaux suivants sont utilisés :
  - le [projet Cookiecutter-Django pour l'initialisation du dépôt](https://cookiecutter-django.readthedocs.io/en/latest/).
 
 
-### Démarrage
+## Démarrage
 
 Cookiecutter-Django est un initialiseur de projet, par les auteurs de [Two Scoops of Django](https://www.feldroy.com/books/two-scoops-of-django-3-x).
 
@@ -65,11 +63,15 @@ Pour activer tout ça :
 pre-commit install
 ```
 
-### Configurer son environnement
+### Intégration continue
+
+L'intégration continue est [réalisée par des actions Github](https://github.com/MTES-MCT/envergo/blob/main/.github/workflows/ci.yml).
+
+## Configurer son environnement
 
 Le projet propose un fichier [Editorconfig](https://editorconfig.org/) pour [configurer globalement les éditeurs de code](https://github.com/MTES-MCT/envergo/blob/main/.editorconfig).
 
-#### VSCode
+### VSCode
 
 Pour VSCode, il est recommandé d'utiliser la configuration suivante.
 
@@ -136,8 +138,29 @@ Pour activer le formatage à l'enregistrement et correctement affecter les bons 
 }
 ```
 
+Pour être certain de la présence de tous les outils configurés, il est recommandé de créer un environnement virtuel python, puis d'installer toutes les dépendances locales (cf. plus bas).
 
-### Tests
+## Gestion des dépendances
+
+Les [dépendances sont gérées avec pip-tools](https://github.com/jazzband/pip-tools).
+
+Pour installer une nouvelle dépendance, il faut éditer l'un des fichiers *.in présents dans le répertoire `/requirements`.
+
+```bash
+cd requirements
+echo "<nomdupaquet>"  >> local.in
+./compile.sh
+pip-sync local.txt
+```
+
+Pour mettre à jour l'image Docker, relancer `build` puis `up`.
+
+
+## Tests
+
+Les tests sont écrits avec [pytest](https://docs.pytest.org/). Tous les helpers de [pytest-django](https://pytest-django.readthedocs.io/en/latest/) sont disponibles.
+
+Pour lancer les tests :
 
 En local :
 
@@ -154,7 +177,7 @@ docker-compose -f local.yml run --rm django pytest
 
 ## Déploiement
 
-Le déploiement se fait sur la plateforme Scalingo.
+Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement, il suffit de pousser de nouveaux commits sur la branche `prod`.
 
 Le point d'entrée se trouve dans le fichier `Procfile`.
 
