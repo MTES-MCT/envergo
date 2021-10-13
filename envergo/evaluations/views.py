@@ -3,8 +3,10 @@ from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, FormView, TemplateView
 from django.views.generic.edit import CreateView
+from ratelimit.decorators import ratelimit
 
 from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
 from envergo.evaluations.models import Criterion, Evaluation
@@ -87,6 +89,10 @@ class RequestEvaluation(CreateView):
             kwargs["parcel_formset"] = self.get_parcel_formset()
         return super().get_context_data(**kwargs)
 
+    # Rate limiting the POST view, as a precaution
+    # Indeed, the form is not captcha protected, and the file upload field
+    # could fill up the s3 space quickly
+    @method_decorator(ratelimit(key="ip", rate="256/d", block=True))
     def post(self, request, *args, **kwargs):
         """
         Handle POST requests: instantiate a form instance with the passed

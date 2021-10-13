@@ -64,6 +64,8 @@ django-model-utils==4.1.1
     # via -r base.in
 django-phonenumber-field[phonenumbers]==5.2.0
     # via -r base.in
+django-ratelimit==3.0.1
+    # via -r base.in
 django-redis==5.0.0
     # via -r base.in
 hiredis==2.0.0

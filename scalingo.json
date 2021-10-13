@@ -13,12 +13,6 @@
     "DJANGO_DEBUG": {
       "value": "True"
     },
-    "DJANGO_CACHE_BACKEND": {
-      "value": "django.core.cache.backends.locmem.LocMemCache"
-    },
-    "REDIS_URL": {
-      "value": null
-    },
     "DJANGO_TRACKER_ENABLED": {
       "value": "False"
     },
