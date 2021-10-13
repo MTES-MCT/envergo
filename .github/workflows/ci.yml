@@ -2,8 +2,6 @@ name: CI
 
 # Enable Buildkit and let compose use it to speed up image building
 env:
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
   DATABASE_URL: 'postgres://envergo:envergo@localhost:5432/envergo'
   USE_DOCKER: False
   LANG: 'fr_FR.UTF-8'
