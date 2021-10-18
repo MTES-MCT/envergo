@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.postgres.forms import SimpleArrayField
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -30,12 +31,16 @@ class EvaluationFormMixin(forms.Form):
 class EvaluationSearchForm(forms.Form):
     """Search for a single evaluation."""
 
-    reference = forms.CharField(label=_("Reference"), max_length=64)
+    reference = forms.CharField(
+        label=_("EnvErgo reference"),
+        help_text=_("The value you received when you requested an evaluation."),
+        max_length=64,
+    )
 
 
 class RequestForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
-        label=_("What is your project's address?"),
+        label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
     )
     created_surface = forms.IntegerField(
@@ -54,18 +59,31 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("If an application number was already submitted."),
         max_length=64,
     )
-
-    contact_email = forms.EmailField(label=_("Your e-mail address"))
-    phone_number = PhoneNumberField(
-        label=_("Your phone number"), required=False, region="FR"
+    additional_data = forms.FileField(
+        label=_("Additional files you might deem useful for the evaluation"),
+        help_text=_("Avalaible formats: pdf, zip."),
+        required=False,
     )
-    other_contacts = forms.CharField(
-        label=_("Other email addresses"),
+
+    contact_email = forms.EmailField(
+        label=_("Urbanism department email"), help_text=_("Project instructor…")
+    )
+    project_sponsor_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Project sponsor email address(es)"),
+        help_text=_("Petitioner, project manager…"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+    )
+    project_sponsor_phone_number = PhoneNumberField(
+        label=_("Project sponsor phone number"), region="FR"
+    )
+    send_eval_to_sponsor = forms.BooleanField(
+        label=_("Send evaluation to project sponsor"),
+        initial=True,
         required=False,
         help_text=_(
-            "Please let us know if we should warn others about the evaluation result."
+            "If you uncheck this box, you will be the only recipient of the evaluation."
         ),
-        widget=forms.Textarea(attrs={"rows": 3}),
     )
 
     class Meta:
@@ -75,9 +93,12 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             "application_number",
             "created_surface",
             "existing_surface",
+            "project_description",
+            "additional_data",
             "contact_email",
-            "phone_number",
-            "other_contacts",
+            "project_sponsor_emails",
+            "project_sponsor_phone_number",
+            "send_eval_to_sponsor",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -88,7 +109,11 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["existing_surface"].widget.attrs["placeholder"] = _(
             "In square meters"
         )
+        self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
+            "Provide one or several addresses separated by commas « , »"
+        )
         self.fields["application_number"].required = False
         self.fields["application_number"].widget.attrs["placeholder"] = _(
             'A 15 chars value starting with "P"'
         )
+        self.fields["project_description"].widget.attrs["rows"] = 3

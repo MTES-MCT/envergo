@@ -1,7 +1,9 @@
 import secrets
 import uuid
+from os.path import splitext
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
@@ -158,6 +160,11 @@ class Criterion(models.Model):
         }.get(self.criterion)
 
 
+def additional_data_file_format(instance, filename):
+    _, extension = splitext(filename)
+    return f"requests/{instance.reference}{extension}"
+
+
 class Request(models.Model):
     """An evaluation request by a petitioner."""
 
@@ -187,11 +194,32 @@ class Request(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
+    project_description = models.TextField(
+        _("Project description, comments"), blank=True
+    )
+    additional_data = models.FileField(
+        _("Additional data"),
+        upload_to=additional_data_file_format,
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=["pdf", "zip"])],
+    )
 
     # Petitioner data
     contact_email = models.EmailField(_("E-mail"))
-    phone_number = PhoneNumberField(_("Phone number"), max_length=20, blank=True)
+    project_sponsor_emails = ArrayField(
+        models.EmailField(),
+        verbose_name=_("Project sponsor email(s)"),
+        blank=True,
+        default=list,
+    )
+    project_sponsor_phone_number = PhoneNumberField(
+        _("Project sponsor phone number"), max_length=20, blank=True
+    )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
+    send_eval_to_sponsor = models.BooleanField(
+        _("Send evaluation to project sponsor"), default=True
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
