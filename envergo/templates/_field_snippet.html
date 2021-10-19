@@ -5,30 +5,30 @@
   <label class="fr-label" for="{{ field.id_for_label }}">
     <span class="label-content">{{ field.label }}</span>
     {% if field.help_text %}
-    <span class="fr-hint-text">{{ field.help_text|safe }}</span>
+      <span class="fr-hint-text">{{ field.help_text|safe }}</span>
     {% endif %}
   </label>
 
   {% if nest_field_class %}
-  <div class="{{ nest_field_class }}">
-    {% endif %}
+    <div class="{{ nest_field_class }}">
+  {% endif %}
 
-    {% if field.errors %}
+  {% if field.errors %}
     {{ field|add_classes:'fr-input fr-input--error' }}
-    {% else %}
+  {% else %}
     {{ field|add_classes:'fr-input' }}
-    {% endif %}
+  {% endif %}
 
-    {% if nest_field_class %}
-  </div>
+  {% if nest_field_class %}
+    </div>
   {% endif %}
 
 
   {% if field.errors %}
-  <p class="fr-error-text">
-    ↑
-    {{ field.errors.0 }}
-    ↑
-  </p>
+    <p class="fr-error-text">
+      ↑
+      {{ field.errors.0 }}
+      ↑
+    </p>
   {% endif %}
 </div>

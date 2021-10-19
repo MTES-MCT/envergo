@@ -4,79 +4,79 @@
 {% block title %}Affichez des parcelles sur une carte{% endblock %}
 
 {% block breadcrumbs %}
-<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-  <div class="fr-collapse" id="breadcrumb-1">
-    <ol class="fr-breadcrumb__list">
-      <li>
-        <a class="fr-breadcrumb__link" href="/">Accueil</a>
-      </li>
-      <li>
-        <a class="fr-breadcrumb__link" aria-current="page">Carte du cadastre</a>
-      </li>
-    </ol>
-  </div>
-</nav>
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Carte du cadastre</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
 {% endblock %}
 
 {% block container %}
-<h1>Test de la carto</h1>
-<div class="ratio-4x3">
-  <div class="ratio-content">
-    {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
+  <h1>Test de la carto</h1>
+  <div class="ratio-4x3">
+    <div class="ratio-content">
+      {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
+    </div>
   </div>
-</div>
 {% endblock %}
 
 {% block extra_css %}
-{% leaflet_css %}
+  {% leaflet_css %}
 {% endblock %}
 
 {% block extra_js %}
-{% leaflet_js %}
-<script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
-<script>
-  function mapInit(newMap, options) {
-    map = newMap;
+  {% leaflet_js %}
+  <script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
+  <script>
+    function mapInit(newMap, options) {
+      map = newMap;
 
-    var layer = L.tileLayer(
-      "https://wxs.ign.fr/parcellaire/geoportail/wmts?" +
-      "&REQUEST=GetTile" +
-      "&SERVICE=WMTS" +
-      "&VERSION=1.0.0" +
-      "&STYLE=PCI vecteur" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/png" +
-      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-        minZoom: 0,
-        maxZoom: 18,
-        attribution: "IGN-F/Geoportail",
-        tileSize: 256 // les tuiles du Géooportail font 256x256px
-      }
-    );
-    layer.addTo(newMap);
-    geojsonLayer = L.geoJSON().addTo(map);
-  };
+      var layer = L.tileLayer(
+        "https://wxs.ign.fr/parcellaire/geoportail/wmts?" +
+        "&REQUEST=GetTile" +
+        "&SERVICE=WMTS" +
+        "&VERSION=1.0.0" +
+        "&STYLE=PCI vecteur" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+          minZoom: 0,
+          maxZoom: 18,
+          attribution: "IGN-F/Geoportail",
+          tileSize: 256 // les tuiles du Géooportail font 256x256px
+        }
+      );
+      layer.addTo(newMap);
+      geojsonLayer = L.geoJSON().addTo(map);
+    };
 
-  function displayParcels() {
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-    const parcels = params.getAll('parcel');
+    function displayParcels() {
+      const url = new URL(window.location.href);
+      const params = url.searchParams;
+      const parcels = params.getAll('parcel');
 
-    parcels.map(displayParcel);
-  };
-  window.addEventListener('load', displayParcels);
+      parcels.map(displayParcel);
+    };
+    window.addEventListener('load', displayParcels);
 
-  function displayParcel(parcelId) {
-    var searchUrl = `https://geocodage.ign.fr/look4/parcel/search?q=${parcelId}&returnTrueGeometry=true`;
-    fetch(searchUrl)
-      .then(response => {
+    function displayParcel(parcelId) {
+      var searchUrl = `https://geocodage.ign.fr/look4/parcel/search?q=${parcelId}&returnTrueGeometry=true`;
+      fetch(searchUrl)
+        .then(response => {
         return response.json();
       })
-      .then(response => {
+        .then(response => {
         var features = response.features[0];
         var coordinates = features.geometry.coordinates;
         var parcel = rewind(features.properties.trueGeometry);
@@ -84,6 +84,6 @@
 
         map.setView([coordinates[1], coordinates[0]], 18);
       });
-  };
-</script>
+    };
+  </script>
 {% endblock %}

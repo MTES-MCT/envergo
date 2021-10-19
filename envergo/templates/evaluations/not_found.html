@@ -3,34 +3,34 @@
 {% block title %}Votre évaluation n'est pas encore disponible{% endblock %}
 
 {% block breadcrumbs %}
-<nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-  <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d’Ariane</button>
-  <div class="fr-collapse" id="breadcrumb-1">
-    <ol class="fr-breadcrumb__list">
-      <li>
-        <a class="fr-breadcrumb__link" href="/">Accueil</a>
-      </li>
-      <li>
-        <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
-      </li>
-      <li>
-        <a class="fr-breadcrumb__link" aria-current="page">Référence {{ reference }}</a>
-      </li>
-    </ol>
-  </div>
-</nav>
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d’Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Référence {{ reference }}</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
 {% endblock %}
 
 {% block article %}
-<h1>Référence {{ reference }}</h1>
-<p class="fr-text--lead">
-  <span class="fr-fi-alert-fill" aria-hidden="true"></span>
-  Hélas, l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet.
-</p>
+  <h1>Référence {{ reference }}</h1>
+  <p class="fr-text--lead">
+    <span class="fr-fi-alert-fill" aria-hidden="true"></span>
+    Hélas, l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet.
+  </p>
 
-<p>Le service étant en phase de test, nous vous invitons
-  <a href="{% url 'contact_us' %}">à nous contacter directement</a>
-  pour nous transmettre votre demande.
-</p>
+  <p>Le service étant en phase de test, nous vous invitons
+    <a href="{% url 'contact_us' %}">à nous contacter directement</a>
+    pour nous transmettre votre demande.
+  </p>
 
 {% endblock %}
