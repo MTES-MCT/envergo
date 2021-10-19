@@ -84,7 +84,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
-            super().save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Request)
