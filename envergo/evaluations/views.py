@@ -40,8 +40,21 @@ class EvaluationDetail(DetailView):
     slug_field = "reference"
     context_object_name = "evaluation"
 
+    def get_template_names(self):
+        """Return which template to use.
+
+        We use two different evaluation formats, depending on the fact that
+        the project is subject to the Water law.
+        """
+        if self.object.is_project_subject_to_water_law():
+            template_names = ["evaluations/detail_subject.html"]
+        else:
+            template_names = ["evaluations/detail_non_subject.html"]
+
+        return template_names
+
     def get_queryset(self):
-        qs = Evaluation.objects.prefetch_related(
+        qs = Evaluation.objects.select_related("request").prefetch_related(
             Prefetch("criterions", queryset=Criterion.objects.order_by("order"))
         )
         return qs
