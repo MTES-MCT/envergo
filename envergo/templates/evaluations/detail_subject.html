@@ -28,23 +28,22 @@
   <p class="fr-text--lead">
     Référence
     {{ evaluation }}
-    {% if evaluation.application_number %}
-      — Demande de permis n° {{ evaluation.application_number }}
-    {% endif %}
   </p>
 
-  <h3>Mon projet est-il soumis à la Loi sur l'eau ?</h3>
+  <h3>Projet de construction</h3>
 
   <ul>
-    <li>Commune : {{ evaluation.commune }}</li>
-    <li>Surface créée : {{ evaluation.created_surface }} m²</li>
-    <li>Surface existante :
-      {% if evaluation.existing_surface is None %}
-        Inconnue
-      {% else %}
-        {{ evaluation.existing_surface }} m²
-      {% endif %}
-    </li>
+    {% if evaluation.request %}
+      <li>Adresse : {{ evaluation.request.address }}</li>
+    {% else %}
+      <li>Commune : {{ evaluation.commune }}</li>
+    {% endif %}
+    {% if evaluation.application_number %}
+      <li>
+        Demande de permis n° {{ evaluation.application_number }}
+
+      </li>
+    {% endif %}
   </ul>
 
   <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
@@ -98,10 +97,18 @@
   <p>Cette évaluation se fonde sur les informations suivantes :</p>
 
   <ul>
-    <li>Surface créée : {{ evaluation.created_surface }} m²</li>
+    <li>
+      Surface créée : {{ evaluation.created_surface }} m²<br />
+      <span class="fr-text--light">
+        Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
+      </span>
+    </li>
 
     {% if evaluation.existing_surface %}
-      <li>Surface existante : {{ evaluation.existing_surface }} m²</li>
+      <li>
+        Surface existante : {{ evaluation.existing_surface }} m²<br />
+        <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+      </li>
     {% endif %}
 
     {% if evaluation.request %}
@@ -111,7 +118,7 @@
 
   <h2>Quels sont les impacts du projet ?</h2>
 
-  <p>Le projet a les impacts suivants :</p>
+  <p>Le projet a les impacts suivants (cliquez sur chaque élément pour voir les détails) :</p>
 
   <div id="evaluation-accordion" class="fr-mb-3w">
     {% for criterion in criterions %}
