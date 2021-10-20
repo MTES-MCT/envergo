@@ -1,13 +1,11 @@
 Bonjour,
 
-Vous avez créé un compte sur le site EnvErgo. Il reste une étape pour l'activer.
+Vous venez de faire la demande d’une création d'espace personnalisé sur EnvErgo.
 
-Pour ce faire, il vous suffit de cliquer sur le lien suivant :
+Il reste une étape pour l'activer. Pour ce faire, il vous suffit de cliquer sur le lien suivant :
 
 {{ full_login_url }}
 
-Si vous n'êtes pas à l'initiative de cette demande, vous pouvez ignorer cet e-mail.
+Si vous n’êtes pas à l’initiative de cette demande, merci de ne pas prendre ce mail en compte.
 
-Cordialement,
-L'équipe d'EnvErgo
-https://envergo.beta.gouv.fr
+{% include '_email_signature.txt' %}

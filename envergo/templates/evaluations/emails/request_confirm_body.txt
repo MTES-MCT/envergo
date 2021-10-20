@@ -12,7 +12,4 @@ Vous pouvez également nous contacter pour apporter des compléments d'informati
 
 https://envergo.beta.gouv.fr/contact/
 
-À très bientôt,
-l'équipe EnvErgo,
-07 56 81 02 11
-https://envergo.beta.gouv.fr
+{% include '_email_signature.txt' %}
