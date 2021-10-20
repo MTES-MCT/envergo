@@ -66,7 +66,7 @@
           <th>Adresse</th>
           <th>Permis</th>
           <th>Surface créée</th>
-          <th>Probabilité</th>
+          <th>Soumis</th>
         </tr>
       </thead>
       <tbody>
@@ -82,12 +82,19 @@
               {% endif %}
             </td>
             <td>{{ evaluation.application_number }}</td>
-            <td>{{ evaluation.created_surface }} m²</td>
-            <td>{% probability evaluation.global_probability %}</td>
+            <td>{{ evaluation.created_surface }} m²</td>
+
+            <td>
+              {% if evaluation.is_project_subject_to_water_law %}
+                <span class="fr-tag probability probability-4">Soumis</span>
+              {% else %}
+                <span class="fr-tag probability probability-0">Non soumis</span>
+              {% endif %}
+            </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="5">Il n'y a aucune évaluation disponible pour l'instant</td>
+            <td colspan="6">Il n'y a aucune évaluation disponible pour l'instant</td>
           </tr>
         {% endfor %}
       </tbody>
