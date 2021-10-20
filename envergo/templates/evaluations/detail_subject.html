@@ -115,7 +115,7 @@
 
   <div id="evaluation-accordion" class="fr-mb-3w">
     {% for criterion in criterions %}
-      {% include 'evaluations/_criterion.html' with criterion=criterion %}
+      {% include 'evaluations/_criterion.html' with criterion=criterion is_subject=True %}
     {% endfor %}
   </div>
 
