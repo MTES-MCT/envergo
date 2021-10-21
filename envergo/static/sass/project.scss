@@ -92,6 +92,34 @@ form {
       padding-top: 0;
     }
   }
+
+  div.input-file-box {
+    max-height: unset;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    outline-color: var(--focus);
+    outline-offset: 2px;
+    outline-width: 2px;
+
+    &.draghover {
+      outline-style: solid;
+    }
+
+    .icon {
+      display: block;
+      float: left;
+      margin-right: 1rem;
+    }
+
+    label.box-msg {
+      display: block;
+    }
+
+    * {
+      pointer-events: none;
+    }
+  }
 }
 
 /**

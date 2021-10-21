@@ -9,16 +9,16 @@
     {% endif %}
   </label>
 
-  {% if nest_field_class %}
-    <div class="{{ nest_field_class }}">
-  {% endif %}
+  <div class="input-file-box fr-input">
+    <span class="icon fr-fi--lg fr-fi-file-download-line" aria-hidden="true"></span>
+    <div>
+      {{ field }}
 
-  {{ field }}
-
-  {% if nest_field_class %}
+      <label for="{{ field.id_for_label }}" class="box-msg">
+        Cliquez sur le bouton ou glissez / déposez directement votre fichier dans cette zone.
+      </label>
     </div>
-  {% endif %}
-
+  </div>
 
   {% if field.errors %}
     <p class="fr-error-text">
