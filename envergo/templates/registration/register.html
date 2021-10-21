@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}S'enregistrer{% endblock %}
+
+{% block article %}
+  <h1>Créez votre espace EnvErgo</h1>
+
+  <p>
+    Sur votre espace EnvErgo, vous pourrez :
+  </p>
+  <ul>
+    <li>retrouver vos évaluations Loi sur l'eau ;</li>
+    <li>suivre l'évolution de vos demandes d'évaluation.</li>
+  </ul>
+
+  <form method="post" action="" novalidate class="fr-mb-3w">
+    {% csrf_token %}
+    {% include '_form_snippet.html' with form=form %}
+    <button type="submit" class="fr-btn">Créer mon espace EnvErgo</button>
+  </form>
+
+  <p class="fr-alert fr-alert--info">
+    Vous avez déjà un espace ?
+    <a href="{% url 'login' %}">Connectez-vous.</a>
+  </p>
+
+
+{% endblock %}

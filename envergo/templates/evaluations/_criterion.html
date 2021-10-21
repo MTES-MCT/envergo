@@ -18,15 +18,15 @@
 
     {% if criterion.map %}
 
-    <figure class="fr-content-media fr-content-media--sm" role="group" aria-label="{{ criterion.legend_md }}">
-      <div class="fr-content-media__img">
-        <img src="{{ criterion.map.url }}" class="fr-responsive-img"
-          alt="Cartographie illustrant ce critère d'évaluation" />
-      </div>
-      {% if criterion.legend_html %}
-      <figcaption class="fr-content-media__caption">{{ criterion.legend_html|safe }}</figcaption>
-      {% endif %}
-    </figure>
+      <figure class="fr-content-media fr-content-media--sm" role="group" aria-label="{{ criterion.legend_md }}">
+        <div class="fr-content-media__img">
+          <img src="{{ criterion.map.url }}" class="fr-responsive-img"
+            alt="Cartographie illustrant ce critère d'évaluation" />
+        </div>
+        {% if criterion.legend_html %}
+          <figcaption class="fr-content-media__caption">{{ criterion.legend_html|safe }}</figcaption>
+        {% endif %}
+      </figure>
 
     {% endif %}
 

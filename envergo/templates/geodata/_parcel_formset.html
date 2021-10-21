@@ -1,12 +1,12 @@
 {{ formset.management_form }}
 {% if formset.non_form_errors %}
-<p class="fr-alert fr-alert--error error fr-mt-3w">
-  {{ formset.non_form_errors.0 }}
-</p>
+  <p class="fr-alert fr-alert--error error fr-mt-3w">
+    {{ formset.non_form_errors.0 }}
+  </p>
 {% endif %}
 
 {% for parcel_form in formset %}
-<div id="formset-parcel" class="fr-grid-row fr-grid-row--gutters formset">
-  {% include 'geodata/_parcel_line_form.html' with counter=forloop.counter0 form=parcel_form %}
-</div>
+  <div id="formset-parcel" class="fr-grid-row fr-grid-row--gutters formset">
+    {% include 'geodata/_parcel_line_form.html' with counter=forloop.counter0 form=parcel_form %}
+  </div>
 {% endfor %}

@@ -2,7 +2,8 @@ import factory
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 
-from envergo.evaluations.models import Criterion, Evaluation
+from envergo.evaluations.models import Criterion, Evaluation, Request
+from envergo.geodata.tests.factories import ParcelFactory
 
 
 class EvaluationFactory(DjangoModelFactory):
@@ -16,6 +17,7 @@ class EvaluationFactory(DjangoModelFactory):
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     global_probability = 2
+    contact_email = factory.Sequence(lambda n: f"user_{n}@example.com")
     contact_md = "envergo@example.org"
     contact_html = "envergo@example.org"
 
@@ -40,3 +42,26 @@ class CriterionFactory(DjangoModelFactory):
     criterion = "rainwater_runoff"
     description_md = factory.Faker("text")
     description_html = factory.Faker("text")
+
+
+class RequestFactory(DjangoModelFactory):
+    class Meta:
+        model = Request
+
+    reference = factory.Sequence(lambda n: f"ABC{n:03}")
+    address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
+    created_surface = fuzzy.FuzzyInteger(25, 10000)
+    existing_surface = fuzzy.FuzzyInteger(25, 9999)
+    project_description = factory.Faker("text")
+    contact_email = factory.Sequence(lambda n: f"user_{n}@example.com")
+
+    @factory.post_generation
+    def parcels(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for parcel in extracted:
+                self.parcels.add(parcel)
+        else:
+            self.parcels.add(ParcelFactory())

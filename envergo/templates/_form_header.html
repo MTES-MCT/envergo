@@ -1,22 +1,22 @@
 {% load i18n %}
 
 {% if form.errors or has_errors %}
-<div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
-  <p class="fr-alert__title">
-    {{ _('We <strong>could not process</strong> your form because it contains some errors.') }}
-  </p>
-  <p>
-    {{ _('Please check your submission below and fix all errors before trying again.') }}
-  </p>
-</div>
+  <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
+    <p class="fr-alert__title">
+      Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.
+    </p>
+    <p>
+      Merci de vérifier votre saisie ci-dessous avant de réessayer.
+    </p>
+  </div>
 {% endif %}
 
 {% if form.non_field_errors %}
-<div class="error">
-  {{ form.non_field_errors.0 }}
-</div>
+  <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
+    <p>{{ form.non_field_errors.0 }}</p>
+  </div>
 {% endif %}
 
 {% for field in form.hidden_fields %}
-{{ field }}
+  {{ field }}
 {% endfor %}

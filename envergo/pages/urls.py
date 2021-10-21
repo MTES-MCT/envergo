@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
@@ -6,6 +6,7 @@ from envergo.evaluations.views import RequestEvaluation
 
 urlpatterns = [
     path("", RequestEvaluation.as_view(), name="home"),
+    path(_("accounts/"), include("django.contrib.auth.urls")),
     path(
         _("legal-mentions/"),
         TemplateView.as_view(template_name="pages/legal_mentions.html"),

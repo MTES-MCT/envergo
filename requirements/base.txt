@@ -44,6 +44,7 @@ django==3.2.6
     #   -r base.in
     #   django-allauth
     #   django-appconf
+    #   django-braces
     #   django-leaflet
     #   django-model-utils
     #   django-phonenumber-field
@@ -52,6 +53,8 @@ django-allauth==0.45.0
     # via -r base.in
 django-appconf==1.0.4
     # via django-compressor
+django-braces==1.14.0
+    # via -r base.in
 django-compressor==2.4.1
     # via -r base.in
 django-crispy-forms==1.12.0
@@ -121,6 +124,7 @@ six==1.16.0
     # via
     #   argon2-cffi
     #   click-repl
+    #   django-braces
     #   django-compressor
 sqlparse==0.4.1
     # via django
