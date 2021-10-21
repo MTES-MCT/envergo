@@ -1,5 +1,4 @@
 from braces.views import AnonymousRequiredMixin, MessageMixin
-from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect
@@ -75,10 +74,13 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 if is_first_login:
                     msg = "Vous venez d'activer votre espace EnvErgo. Bienvenue !"
                 else:
-                    msg = "Vous êtes maintenant connecté·e. Bienvenue !"
+                    msg = (
+                        "Vous êtes maintenant connecté·e. "
+                        "Vous pouvez changer votre mot de passe si vous le souhaitez."
+                    )
 
                 self.messages.success(msg)
-                redirect_url = reverse(settings.LOGIN_REDIRECT_URL)
+                redirect_url = reverse("password_change")
                 return HttpResponseRedirect(redirect_url)
 
         return super().get(request, *args, **kwargs)
