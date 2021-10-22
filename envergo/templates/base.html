@@ -44,18 +44,26 @@
 
     <main role="main" id="contenu">
       {% block main %}
-        <div id="contenu" class="fr-container fr-mt-5w fr-pb-6w">
-          {% block breadcrumbs %}{% endblock %}
-          {% block messages %} {% include '_messages.html' %} {% endblock %}
 
-          {% block container %}
-            <div class="fr-grid-row fr-grid-row--center">
-              <article class="fr-col fr-col-md-8">
-                {% block article %}{% endblock %}
-              </article>
-            </div>
-          {% endblock %}
-        </div>
+        {% block before-content %}
+          <div id="before-content" class="fr-container fr-mt-5w">
+            {% block breadcrumbs %}{% endblock %}
+            {% block messages %} {% include '_messages.html' %} {% endblock %}
+          </div>
+        {% endblock %}
+
+        {% block container %}
+          <div id="main-container" class="fr-container fr-pb-6w">
+            {% block content %}
+              <div class="fr-grid-row fr-grid-row--center">
+                <article class="fr-col fr-col-md-8">
+                  {% block article %}{% endblock %}
+                </article>
+              </div>
+            {% endblock %}
+          </div>
+        {% endblock %}
+
       {% endblock %}
     </main>
 
