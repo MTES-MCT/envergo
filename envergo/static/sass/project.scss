@@ -7,7 +7,6 @@ $pink: #f2dede;
 $dark-pink: #eed3d7;
 $red: #b94a48;
 
-
 .alert-debug {
   background-color: $white;
   border-color: $mint-green;
@@ -93,31 +92,57 @@ form {
     }
   }
 
+  // Custom input[type=file] styling
+  // See https://codepen.io/Scribblerockerz/pen/qdWzJw
   div.input-file-box {
-    max-height: unset;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    outline-color: var(--focus);
-    outline-offset: 2px;
-    outline-width: 2px;
+    position: relative;
 
-    &.draghover {
+    input[type=file] {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      opacity: 0;
+    }
+
+    div.input-file-widget {
+      max-height: unset;
+      padding: 1.5rem;
+
+      .icon {
+        display: block;
+        float: left;
+        margin-right: 1rem;
+      }
+
+      label.box-msg {
+        display: block;
+      }
+
+      #success-box-msg {
+        display: none;
+      }
+    }
+
+    input[type=file]:focus+div.input-file-widget {
+      outline-color: var(--focus);
+      outline-offset: 2px;
+      outline-width: 2px;
       outline-style: solid;
     }
 
-    .icon {
-      display: block;
-      float: left;
-      margin-right: 1rem;
-    }
+    // When a file has been selected
+    input[type=file]:valid+div.input-file-widget {
+      #default-box-msg {
+        display: none;
+      }
 
-    label.box-msg {
-      display: block;
-    }
-
-    * {
-      pointer-events: none;
+      #success-box-msg {
+        display: block;
+      }
     }
   }
 }

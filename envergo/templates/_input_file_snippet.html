@@ -9,14 +9,19 @@
     {% endif %}
   </label>
 
-  <div class="input-file-box fr-input">
-    <span class="icon fr-fi--lg fr-fi-file-download-line" aria-hidden="true"></span>
-    <div>
-      {{ field }}
+  <div class="input-file-box">
 
-      <label for="{{ field.id_for_label }}" class="box-msg">
-        Cliquez sur le bouton ou glissez / déposez directement votre fichier dans cette zone.
+    {{ field }}
+
+    <div class="input-file-widget fr-input">
+      <span class="icon fr-fi--lg fr-fi-file-download-line" aria-hidden="true"></span>
+      <label id="default-box-msg" for="{{ field.id_for_label }}" class="box-msg">
+        Cliquez ici ou glissez / déposez directement votre fichier dans cette zone.
       </label>
+      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg">
+        Votre fichier a bien été déposé.
+      </label>
+
     </div>
   </div>
 
