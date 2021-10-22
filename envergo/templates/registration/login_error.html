@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Erreur de connexion{% endblock %}
+
+{% block article %}
+  <h1>Erreur de connexion</h1>
+
+  <p class="lead">Nous n'avons pas pu vous connecter.</p>
+
+  <p>Le lien que vous avez utilisé pour vous connecter semble invalide.</p>
+
+  <p>Peut-être a-t-il expiré. Notez que les liens de connexion sont à usage unique.</p>
+
+  <p>
+    <a href="{% url 'login' %}">Nous vous encourageons à ré-essayer.</a>
+  </p>
+
+
+{% endblock %}

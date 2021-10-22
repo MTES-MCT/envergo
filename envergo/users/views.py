@@ -55,7 +55,7 @@ class RegisterSuccess(AnonymousRequiredMixin, TemplateView):
 class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
     """Check token and authenticates user."""
 
-    template_name = "regitration/login_error.html"
+    template_name = "registration/login_error.html"
 
     def get(self, request, *args, **kwargs):
         uidb64 = kwargs["uidb64"]
