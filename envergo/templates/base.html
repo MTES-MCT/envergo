@@ -46,14 +46,14 @@
       {% block main %}
 
         {% block before-content %}
-          <div id="before-content" class="fr-container fr-mt-5w">
+          <div id="before-content" class="fr-container fr-container--fluid fr-mt-5w">
             {% block breadcrumbs %}{% endblock %}
             {% block messages %} {% include '_messages.html' %} {% endblock %}
           </div>
         {% endblock %}
 
         {% block container %}
-          <div id="main-container" class="fr-container fr-pb-6w">
+          <div id="main-container" class="fr-container fr-container--fluid fr-pb-6w">
             {% block content %}
               <div class="fr-grid-row fr-grid-row--center">
                 <article class="fr-col fr-col-md-8">
