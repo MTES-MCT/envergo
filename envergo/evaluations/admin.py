@@ -102,9 +102,11 @@ class RequestAdmin(admin.ModelAdmin):
         "application_number",
         "contact_email",
         "project_sponsor_phone_number",
+        "evaluation_link",
     ]
     readonly_fields = ["reference", "created_at", "summary", "parcels", "parcels_map"]
     search_fields = ["reference", "application_number"]
+    ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "summary")}),
         (_("Project localisation"), {"fields": ("address", "parcels", "parcels_map")}),
@@ -134,11 +136,24 @@ class RequestAdmin(admin.ModelAdmin):
         (_("Meta info"), {"fields": ("created_at",)}),
     )
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request).select_related("evaluation")
+        return qs
+
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
 
         parcel_map_url = obj.get_parcel_map_url()
         link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
+        return mark_safe(link)
+
+    @admin.display(description=_("Evaluation"), ordering="evaluation")
+    def evaluation_link(self, obj):
+        eval = obj.evaluation
+        eval_admin_url = reverse(
+            "admin:evaluations_evaluation_change", args=[eval.reference]
+        )
+        link = f'<a href="{eval_admin_url}">{obj.evaluation}</a>'
         return mark_safe(link)
 
     @admin.display(description=_("Résumé"))
