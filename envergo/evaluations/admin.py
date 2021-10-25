@@ -45,9 +45,10 @@ class CriterionInline(admin.StackedInline):
 class EvaluationAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
+        "created_at",
         "application_number",
         "get_global_probability_display",
-        "created_at",
+        "request_link",
     ]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
@@ -92,6 +93,22 @@ class EvaluationAdmin(admin.ModelAdmin):
         if obj.request:
             obj.reference = obj.request.reference
         super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request).select_related("request")
+        return qs
+
+    @admin.display(description=_("Request"), ordering="request")
+    def request_link(self, obj):
+        if not obj.request:
+            return ""
+
+        request = obj.request
+        request_admin_url = reverse(
+            "admin:evaluations_request_change", args=[request.reference]
+        )
+        link = f'<a href="{request_admin_url}">{request}</a>'
+        return mark_safe(link)
 
 
 @admin.register(Request)
