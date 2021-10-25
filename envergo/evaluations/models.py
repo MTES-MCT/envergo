@@ -90,7 +90,7 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
-    contact_md = models.TextField(_("Contact"), blank=True)
+    contact_md = models.TextField(_("Contact"), blank=False)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
