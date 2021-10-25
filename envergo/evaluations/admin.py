@@ -149,6 +149,9 @@ class RequestAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Evaluation"), ordering="evaluation")
     def evaluation_link(self, obj):
+        if not obj.evaluation:
+            return ""
+
         eval = obj.evaluation
         eval_admin_url = reverse(
             "admin:evaluations_evaluation_change", args=[eval.reference]
