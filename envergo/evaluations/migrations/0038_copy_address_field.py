@@ -5,9 +5,13 @@ from django.db import migrations
 
 def copy_address_field(apps, *args):
     Evaluation = apps.get_model("evaluations", "Evaluation")
-    evals = Evaluation.objects.select_related("request").filter(request__isnull=False)
+    evals = Evaluation.objects.all()
     for eval in evals:
-        eval.address = eval.request.address
+        try:
+            eval.address = eval.request.address
+        except:
+            eval.address = eval.commune
+
         eval.save()
 
 

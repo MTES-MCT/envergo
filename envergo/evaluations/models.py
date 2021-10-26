@@ -80,6 +80,7 @@ class Evaluation(models.Model):
     commune = models.CharField(
         _("Commune"),
         max_length=256,
+        blank=True,
         help_text=_("The name and postcode of the project commune"),
     )
     address = models.TextField(_("Address"))
