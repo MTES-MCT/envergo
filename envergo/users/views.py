@@ -22,6 +22,9 @@ class Register(AnonymousRequiredMixin, CreateView):
         """Send a connection/confirmation link to the user."""
 
         response = super().form_valid(form)
+        self.object.is_active = False
+        self.object.save()
+
         user_email = form.cleaned_data["email"]
         send_connection_email.delay(user_email)
         return response
@@ -72,6 +75,8 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 login(self.request, user)
 
                 if is_first_login:
+                    user.is_active = True
+                    user.save()
                     msg = "Vous venez d'activer votre espace EnvErgo. Bienvenue !"
                 else:
                     msg = (
