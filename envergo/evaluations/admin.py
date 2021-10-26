@@ -73,6 +73,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "commune",
+                    "address",
                     "created_surface",
                     "existing_surface",
                 )
