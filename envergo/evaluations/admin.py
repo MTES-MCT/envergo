@@ -72,7 +72,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             _("Project data"),
             {
                 "fields": (
-                    "commune",
                     "address",
                     "created_surface",
                     "existing_surface",
