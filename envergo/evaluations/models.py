@@ -66,7 +66,6 @@ class Evaluation(models.Model):
     application_number = models.CharField(
         _("Application number"),
         max_length=15,
-        unique=True,
         validators=[application_number_validator],
         blank=True,
     )
@@ -83,6 +82,7 @@ class Evaluation(models.Model):
         max_length=256,
         help_text=_("The name and postcode of the project commune"),
     )
+    address = models.TextField(_("Address"))
     created_surface = models.IntegerField(
         _("Created surface"), help_text=_("In square meters")
     )
