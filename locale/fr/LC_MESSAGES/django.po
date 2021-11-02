@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-19 09:06+0000\n"
+"POT-Creation-Date: 2021-11-02 14:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,47 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: config/urls.py:10 envergo/pages/urls.py:9
+#: config/urls.py:12
+msgid "login/"
+msgstr "connexion/"
+
+#: config/urls.py:13
+msgid "logout/"
+msgstr "déconnexion/"
+
+#: config/urls.py:15
+msgid "password_change/"
+msgstr "changement-mot-de-passe/"
+
+#: config/urls.py:20
+msgid "password_change/done/"
+msgstr "changement-mot-de-passe/terminé/"
+
+#: config/urls.py:25
+msgid "password_reset/"
+msgstr "raz-mot-de-passe/"
+
+#: config/urls.py:30
+msgid "password_reset/done/"
+msgstr "raz-mot-de-passe/"
+
+#: config/urls.py:35
+msgid "reset/<uidb64>/<token>/"
+msgstr "raz/<uidb64>/<token>/"
+
+#: config/urls.py:40
+msgid "reset/done/"
+msgstr "raz/terminé/"
+
+#: config/urls.py:49
 msgid "accounts/"
 msgstr "comptes/"
 
-#: config/urls.py:11
+#: config/urls.py:50
 msgid "users/"
 msgstr "votre-espace/"
 
-#: config/urls.py:12
+#: config/urls.py:51
 msgid "evaluations/"
 msgstr "évaluations/"
 
@@ -407,38 +439,25 @@ msgstr "Le préfixe est un nombre à trois chiffres."
 msgid "The parcel must be a number between 1 and 9999"
 msgstr "La parcelle est un nombre entre 1 et 9999."
 
-#: envergo/pages/urls.py:11
+#: envergo/pages/urls.py:10
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:16
+#: envergo/pages/urls.py:15
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:21
+#: envergo/pages/urls.py:20
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:26
+#: envergo/pages/urls.py:25
 msgid "water-law/"
 msgstr "loi-sur-leau/"
 
-#: envergo/pages/urls.py:31
+#: envergo/pages/urls.py:30
 msgid "map/"
 msgstr "carte/"
-
-#: envergo/templates/_form_header.html:6
-msgid ""
-"We <strong>could not process</strong> your form because it contains some "
-"errors."
-msgstr ""
-"Nous <strong>n'avons pas pu traiter votre formulaire</strong> car il "
-"contient des erreurs."
-
-#: envergo/templates/_form_header.html:9
-msgid ""
-"Please check your submission below and fix all errors before trying again."
-msgstr "Merci de vérifier votre saisie ci-dessous avant de réessayer."
 
 #: envergo/templates/pages/legal_mentions.html:3
 #: envergo/templates/pages/legal_mentions.html:14
@@ -499,40 +518,3 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
-
-#~ msgid "Information successfully updated"
-#~ msgstr "Information mise à jour correctement"
-
-#~ msgid "Other email addresses"
-#~ msgstr "Autres adresses e-mail"
-
-#~ msgid ""
-#~ "Please let us know if we should warn others about the evaluation result."
-#~ msgstr "Nous enverrons l'évaluation à ces destinataires également."
-
-#~ msgid "Your e-mail address"
-#~ msgstr "Votre adresse e-mail"
-
-#~ msgid "Phone number"
-#~ msgstr "Numéro de téléphone"
-
-#~ msgid "Other contacts data"
-#~ msgstr "Autres contacts"
-
-#~ msgid "Rainwater runoff probability"
-#~ msgstr "Ruissellement des eaux de pluies (probabilité)"
-
-#~ msgid "Rainwater runoff impact"
-#~ msgstr "Ruissellement des eaux de pluies (détails)"
-
-#~ msgid "Flood zone probability"
-#~ msgstr "Zone inondable (probabilité)"
-
-#~ msgid "Flood zone impact"
-#~ msgstr "Zone inondable (détails)"
-
-#~ msgid "Wetland probability"
-#~ msgstr "Zone humide (probabilité)"
-
-#~ msgid "Wetland impact"
-#~ msgstr "Zone humide (détails)"
