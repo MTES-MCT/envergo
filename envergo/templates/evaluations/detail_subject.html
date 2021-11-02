@@ -25,7 +25,7 @@
 {% block container %}
   <article>
 
-    <section class="fr-container fr-container--fluid">
+    <section class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8">
           <h1>Notification Loi sur l'eau</h1>
@@ -57,29 +57,28 @@
       </div>
     </section>
 
-
-    <section class="fr-container fr-container--fluid alt fr-py-8w fr-mb-5w">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8">
-          <h2>Comment déposer un dossier Loi sur l'eau ?</h2>
-          <p><strong>1/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong></p>
-
-          {% if evaluation.contact_html %}
-            <div class="fr-highlight fr-mb-3w">
-              {{ evaluation.contact_html|safe }}
-            </div>
-          {% endif %}
-
-          <p><strong>2/ Consulter un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
+    <section class="alt fr-py-8w fr-mb-5w">
+      <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col fr-col-md-8">
+            <h2>Comment déposer un dossier Loi sur l'eau ?</h2>
+            <p><strong>1/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong></p>
+            {% if evaluation.contact_html %}
+              <div class="fr-highlight fr-mb-3w">
+                {{ evaluation.contact_html|safe }}
+              </div>
+            {% endif %}
+            <p><strong>2/ Consulter un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="fr-container fr-container--fluid fr-mb-5w">
+    <section class="fr-container fr-mb-5w">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8">
 
-          <h2>Sanctions en cas d'omissions</h2>
+          <h2>Sanctions en cas d'omission</h2>
 
           <div role="alert" class="fr-alert fr-alert--info fr-mt-5w">
 
@@ -103,7 +102,7 @@
       </div>
     </section>
 
-    <section class="fr-container fr-container--fluid fr-mb-5w">
+    <section class="fr-container fr-mb-5w">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8">
 
@@ -142,14 +141,16 @@
       </div>
     </section>
 
-    <section class="fr-container fr-container--fluid fr-py-8w alt">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8">
+    <section class="fr-py-8w alt">
+      <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col fr-col-md-8">
 
-          <h2>Pour en savoir plus…</h2>
+            <h2>Pour en savoir plus…</h2>
 
-          <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
-            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+            <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
+              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -165,4 +166,14 @@
       new AccordionAnalytics(accordion);
     });
   </script>
+
+  <script defer src="{% static 'js/libs/link_target_blankifier.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+      const accordion = document.getElementById('evaluation-accordion');
+      const blankifier = new LinkTargetBlankifier();
+      blankifier.blankify(accordion);
+    });
+  </script>
+
 {% endblock %}

@@ -117,3 +117,10 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
             'A 15 chars value starting with "P"'
         )
         self.fields["project_description"].widget.attrs["rows"] = 3
+
+        # This is quite hackish
+        # We use pure css to display a custom file upload widget
+        # We need the `:valid` selector to detect when a file has been selected
+        # but this will only work if the field is required.
+        # This has no other effect since we set `novalidate` in the form html
+        self.fields["additional_data"].widget.attrs["required"] = "required"
