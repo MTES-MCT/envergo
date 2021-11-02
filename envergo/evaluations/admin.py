@@ -111,52 +111,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         return mark_safe(link)
 
 
-@admin.action(description=_("Create an evaluation from this request"))
-def make_evaluation(modeladmin, request, queryset):
-    """Create an evaluation matching an existing eval request."""
-
-    if queryset.count() > 1:
-        error = _("Please, select one and only one request for this action.")
-        modeladmin.message_user(request, error, level=messages.ERROR)
-        return
-
-    req = queryset[0]
-    try:
-        req.evaluation
-    except Evaluation.DoesNotExist:
-        # Good, good…
-        pass
-    else:
-        error = _("There already is an evaluation associated with this request.")
-        modeladmin.message_user(request, error, level=messages.ERROR)
-        return
-
-    try:
-        evaluation = Evaluation.objects.create(
-            reference=req.reference,
-            contact_email=req.contact_email,
-            request=req,
-            application_number=req.application_number,
-            address=req.address,
-            created_surface=req.created_surface,
-            existing_surface=req.existing_surface,
-            global_probability=0,
-        )
-    except Exception as e:
-        error = _("There was an error creating your evaluation: %(error)s") % {
-            "error": e
-        }
-        modeladmin.message_user(request, error, level=messages.ERROR)
-        return
-
-    admin_url = reverse("admin:evaluations_evaluation_change", args=[evaluation.uid])
-    msg = _('<a href="%(admin_url)s">The new evaluation has been created.</a>') % {
-        "admin_url": admin_url
-    }
-    modeladmin.message_user(request, mark_safe(msg), level=messages.SUCCESS)
-    return
-
-
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = [
@@ -198,7 +152,7 @@ class RequestAdmin(admin.ModelAdmin):
         ),
         (_("Meta info"), {"fields": ("created_at",)}),
     )
-    actions = [make_evaluation]
+    actions = ["make_evaluation"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("evaluation")
@@ -238,3 +192,50 @@ class RequestAdmin(admin.ModelAdmin):
             },
         )
         return mark_safe(linebreaks(summary_body))
+
+    @admin.action(description=_("Create an evaluation from this request"))
+    def make_evaluation(self, request, queryset):
+        """Create an evaluation matching an existing eval request."""
+
+        if queryset.count() > 1:
+            error = _("Please, select one and only one request for this action.")
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        req = queryset[0]
+        try:
+            req.evaluation
+        except Evaluation.DoesNotExist:
+            # Good, good…
+            pass
+        else:
+            error = _("There already is an evaluation associated with this request.")
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        try:
+            evaluation = Evaluation.objects.create(
+                reference=req.reference,
+                contact_email=req.contact_email,
+                request=req,
+                application_number=req.application_number,
+                address=req.address,
+                created_surface=req.created_surface,
+                existing_surface=req.existing_surface,
+                global_probability=0,
+            )
+        except Exception as e:
+            error = _("There was an error creating your evaluation: %(error)s") % {
+                "error": e
+            }
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        admin_url = reverse(
+            "admin:evaluations_evaluation_change", args=[evaluation.uid]
+        )
+        msg = _('<a href="%(admin_url)s">The new evaluation has been created.</a>') % {
+            "admin_url": admin_url
+        }
+        self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
+        return
