@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.sites.models import Site
+from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import linebreaks, mark_safe
@@ -153,6 +154,7 @@ class RequestAdmin(admin.ModelAdmin):
         (_("Meta info"), {"fields": ("created_at",)}),
     )
     actions = ["make_evaluation"]
+    change_form_template = "evaluations/admin/request_change_form.html"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("evaluation")
@@ -192,6 +194,29 @@ class RequestAdmin(admin.ModelAdmin):
             },
         )
         return mark_safe(linebreaks(summary_body))
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        """Override the change form to show a custom action button or not."""
+
+        if obj:
+            try:
+                obj.evaluation
+            except Evaluation.DoesNotExist:
+                context["show_make_eval_button"] = True
+
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
+    def response_change(self, request, obj):
+        """Handle the custom change form actione"""
+
+        if "_make-evaluation" in request.POST:
+            qs = Request.objects.filter(pk=obj.pk)
+            self.make_evaluation(request, qs)
+            return HttpResponseRedirect(".")
+        else:
+            return super().response_change(request, obj)
 
     @admin.action(description=_("Create an evaluation from this request"))
     def make_evaluation(self, request, queryset):
