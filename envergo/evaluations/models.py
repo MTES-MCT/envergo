@@ -66,7 +66,6 @@ class Evaluation(models.Model):
     application_number = models.CharField(
         _("Application number"),
         max_length=15,
-        unique=True,
         validators=[application_number_validator],
         blank=True,
     )
@@ -78,11 +77,7 @@ class Evaluation(models.Model):
         validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
     )
 
-    commune = models.CharField(
-        _("Commune"),
-        max_length=256,
-        help_text=_("The name and postcode of the project commune"),
-    )
+    address = models.TextField(_("Address"))
     created_surface = models.IntegerField(
         _("Created surface"), help_text=_("In square meters")
     )
@@ -90,7 +85,7 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
-    contact_md = models.TextField(_("Contact"), blank=True)
+    contact_md = models.TextField(_("Contact"), blank=False)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)

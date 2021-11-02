@@ -1,0 +1,14 @@
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+
+  {% if show_make_eval_button %}
+    <div class="submit-row">
+      <span>
+        Attention ! Vos modifications en cours ne seront pas sauvegardées !
+      </span>
+      <input type="submit" value="Créer une évaluation" name="_make-evaluation">
+    </div>
+  {% endif %}
+{% endblock %}

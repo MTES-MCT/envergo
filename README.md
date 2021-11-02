@@ -51,7 +51,7 @@ $ docker-compose -f local.yml run --rm django python manage.py migrate
 
 De nombreux outils sont mis en place pour garantir la qualité et l'homogénéité du code.
 
- - [pre-commit](https://pre-commit.com/) qui lance plusieurs outils de validation au moment du commit (cf. (sa configuration)[https://github.com/MTES-MCT/envergo/blob/main/.pre-commit-config.yaml])
+ - [pre-commit](https://pre-commit.com/) qui lance plusieurs outils de validation au moment du commit (cf. [sa configuration](https://github.com/MTES-MCT/envergo/blob/main/.pre-commit-config.yaml))
  - [flake8 pour la validation du code python](https://flake8.pycqa.org/en/latest/)
  - [black pour l'auto-formattage du code python](https://github.com/psf/black)
  - [isort pour l'ordonnancement des imports python](https://github.com/PyCQA/isort)

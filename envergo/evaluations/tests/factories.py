@@ -13,7 +13,7 @@ class EvaluationFactory(DjangoModelFactory):
     application_number = factory.Sequence(lambda n: f"PC05112321D{n:04}")
     evaluation_file = factory.django.FileField(filename="eval.pdf", data=b"Hello")
 
-    commune = factory.Sequence(lambda n: f"Ville {n:05}")
+    address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     global_probability = 2
