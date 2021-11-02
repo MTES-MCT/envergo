@@ -6,7 +6,11 @@
     <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-{{ criterion.criterion }}">
       <span>
         {{ criterion.get_criterion_display }} —
-        {% probability criterion.probability %}
+        {% if is_subject %}
+          <span class="fr-tag probability probability-4">Seuil franchi</span>
+        {% else %}
+          {% probability criterion.probability %}
+        {% endif %}
       </span>
     </button>
   </h3>

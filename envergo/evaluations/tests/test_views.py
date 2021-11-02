@@ -229,3 +229,27 @@ def test_anonymous_cannot_see_dashboard_menu(client):
 
     assert res.status_code == 200
     assert "Tableau de bord" not in res.content.decode()
+
+
+def test_non_subject_evaluation_page(client, evaluation):
+    evaluation.global_probability = 1  # unlikely
+    evaluation.save()
+
+    url = reverse("evaluation_detail", args=[evaluation.reference])
+    res = client.get(url)
+
+    assert res.status_code == 200
+    assert "<h1>Évaluation Loi sur l'eau</h1>" in res.content.decode()
+    assert "<h1>Notification Loi sur l'eau</h1>" not in res.content.decode()
+
+
+def test_subject_evaluation_page(client, evaluation):
+    evaluation.global_probability = 5  # very likely
+    evaluation.save()
+
+    url = reverse("evaluation_detail", args=[evaluation.reference])
+    res = client.get(url)
+
+    assert res.status_code == 200
+    assert "<h1>Notification Loi sur l'eau</h1>" in res.content.decode()
+    assert "<h1>Évaluation Loi sur l'eau</h1>" not in res.content.decode()

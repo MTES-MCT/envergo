@@ -112,6 +112,16 @@ class Evaluation(models.Model):
         # Those are non-breaking spaces
         return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
 
+    def is_project_subject_to_water_law(self):
+        """Is the evaluated project subject to the Water law.
+
+        In our current knowledge, we cannot decide if a project
+        is for certain subject to the Law. Hence, for experimental purpose,
+        we mark a project "subject to the law" when the probablitiy is
+        "very likely".
+        """
+        return self.global_probability >= getattr(PROBABILITIES, "likely+")
+
 
 CRITERIONS = Choices(
     ("rainwater_runoff", _("Capture of more than 1 ha of rainwater runoff")),

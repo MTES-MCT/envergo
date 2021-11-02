@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static evaluations leaflet_tags %}
 
-{% block title %}Affichez des parcelles sur une carte{% endblock %}
+{% block title %}Carte cadastrale{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
@@ -19,13 +19,15 @@
   </nav>
 {% endblock %}
 
-{% block container %}
-  <h1>Test de la carto</h1>
-  <div class="ratio-4x3">
-    <div class="ratio-content">
-      {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
+{% block content %}
+  <article>
+    <h1>Carte cadastrale</h1>
+    <div class="ratio-4x3">
+      <div class="ratio-content">
+        {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
+      </div>
     </div>
-  </div>
+  </article>
 {% endblock %}
 
 {% block extra_css %}

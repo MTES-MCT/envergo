@@ -43,7 +43,12 @@ class CriterionInline(admin.StackedInline):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
-    list_display = ["reference", "application_number", "created_at"]
+    list_display = [
+        "reference",
+        "application_number",
+        "get_global_probability_display",
+        "created_at",
+    ]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
