@@ -70,7 +70,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt install binutils libproj-dev gdal-bin
+          sudo apt install binutils libproj-dev gdal-bin gettext
 
       - name: Checkout Code Repository
         uses: actions/checkout@v2
