@@ -11,7 +11,7 @@ LOGIN_SUBJECT = "Activation compte EnvErgo"
 
 
 @app.task
-def send_connection_email(user_email, body_template="emails/login_token.txt"):
+def send_account_activation_email(user_email):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -32,17 +32,20 @@ def send_connection_email(user_email, body_template="emails/login_token.txt"):
     base_url = get_base_url()
     full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
 
-    login_email_body = render_to_string(
-        body_template,
-        {
-            "base_url": base_url,
-            "user_name": user.name,
-            "full_login_url": full_login_url,
-        },
-    )
+    txt_template = "emails/activate_account.txt"
+    html_template = "emails/activate_account.html"
+    context = {
+        "base_url": base_url,
+        "user_name": user.name,
+        "full_login_url": full_login_url,
+    }
+
+    txt_body = render_to_string(txt_template, context)
+    html_body = render_to_string(html_template, context)
     send_mail(
         LOGIN_SUBJECT,
-        login_email_body,
+        txt_body,
+        html_message=html_body,
         recipient_list=[user.email],
         from_email=settings.DEFAULT_FROM_EMAIL,
         fail_silently=False,

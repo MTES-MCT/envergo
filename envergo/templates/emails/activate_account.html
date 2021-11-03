@@ -1,0 +1,19 @@
+{% extends 'emails/_base.html' %}
+
+{% block email_title %}Activation compte EnvErgo{% endblock %}
+
+{% block content %}
+
+  <p>Bonjour,</p>
+
+  <p>Vous venez de faire la demande d’une création d'espace personnalisé sur EnvErgo.</p>
+
+  <p>Il reste une étape pour l'activer.
+    Pour ce faire, il vous suffit de cliquer sur le lien suivant :</p>
+
+  <p><a href="{{ full_login_url }}">Activez votre compte EnvErgo.</a></p>
+
+  <p>Si vous n'êtes pas à l'initiative de cette demande, merci de ne pas prendre cet e-mail en compte.</p>
+
+  {% include 'emails/_email_signature.html' %}
+{% endblock %}

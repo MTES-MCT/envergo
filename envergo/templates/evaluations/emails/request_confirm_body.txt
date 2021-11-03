@@ -12,4 +12,4 @@ Vous pouvez également nous contacter pour apporter des compléments d'informati
 
 https://envergo.beta.gouv.fr/contact/
 
-{% include '_email_signature.txt' %}
+{% include 'emails/_email_signature.txt' %}

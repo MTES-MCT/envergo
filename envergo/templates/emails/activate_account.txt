@@ -6,6 +6,6 @@ Il reste une étape pour l'activer. Pour ce faire, il vous suffit de cliquer sur
 
 {{ full_login_url }}
 
-Si vous n’êtes pas à l’initiative de cette demande, merci de ne pas prendre ce mail en compte.
+Si vous n'êtes pas à l'initiative de cette demande, merci de ne pas prendre cet e-mail en compte.
 
-{% include '_email_signature.txt' %}
+{% include 'emails/_email_signature.txt' %}
