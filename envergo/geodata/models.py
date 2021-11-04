@@ -122,7 +122,7 @@ class Parcel(models.Model):
 
 class Zone(gis_models.Model):
     code = models.CharField(_("Code"), max_length=64)
-    polygon = gis_models.MultiPolygonField()
+    polygon = gis_models.MultiPolygonField(srid=3857)
 
     class Meta:
         verbose_name = _("Zone")
