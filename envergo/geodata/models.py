@@ -1,3 +1,4 @@
+from django.contrib.gis.db import models as gis_models
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -117,3 +118,12 @@ class Parcel(models.Model):
         https://cadastre.data.gouv.fr/datasets/cadastre-etalab
         """
         return f"{self.commune}{self.prefix}{self.section}{self.order:04}"
+
+
+class Zone(gis_models.Model):
+    code = models.CharField(_("Code"), max_length=64)
+    polygon = gis_models.MultiPolygonField()
+
+    class Meta:
+        verbose_name = _("Zone")
+        verbose_name_plural = _("Zones")
