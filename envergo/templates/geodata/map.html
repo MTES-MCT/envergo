@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static evaluations leaflet_tags %}
+
+{% block title %}Carte{% endblock %}
+
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Carte</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block content %}
+  <article>
+    <h1>Carte</h1>
+    <div class="ratio-4x3">
+      <div class="ratio-content">
+        {% leaflet_map 'map' callback="window.mapInit" %}
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block extra_css %}
+  {% leaflet_css %}
+{% endblock %}
+
+{% block extra_js %}
+  {% leaflet_js %}
+  <script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
+  <script>
+    function mapInit(newMap, options) {
+      map = newMap;
+      //var dataUrl = '/geo/map/{z}/{x}/{y}.geojson';
+      var dataUrl = '/geo/map/9/260/187.geojson';
+
+      fetch(dataUrl)
+        .then((response) => response.json())
+        .then((response) => {
+        L.geoJson(data).addTo(map);
+      });
+    };
+  </script>
+{% endblock %}
