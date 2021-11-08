@@ -85,6 +85,8 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    details_md = models.TextField(_("Details"), blank=True)
+    details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=False)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
@@ -99,6 +101,7 @@ class Evaluation(models.Model):
 
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
+        self.details_html = markdown_to_html(self.details_md)
         super().save(*args, **kwargs)
 
     @property
