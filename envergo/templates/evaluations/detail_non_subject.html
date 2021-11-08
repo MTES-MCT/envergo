@@ -22,109 +22,96 @@
   </nav>
 {% endblock %}
 
-{% block article %}
-  <h1>Évaluation Loi sur l'eau</h1>
+{% block container %}
+  <article>
 
-  <p class="fr-text--lead">
-    Référence
-    {{ evaluation }}
-    {% if evaluation.application_number %}
-      — Demande de permis n° {{ evaluation.application_number }}
-    {% endif %}
-  </p>
-
-  <h3>Mon projet est-il soumis à la Loi sur l'eau ?</h3>
-
-  <ul>
-    <li>Adresse : {{ evaluation.address }}</li>
-    <li>Surface créée : {{ evaluation.created_surface }} m²</li>
-    <li>Surface existante :
-      {% if evaluation.existing_surface is None %}
-        Inconnue
-      {% else %}
-        {{ evaluation.existing_surface }} m²
-      {% endif %}
-    </li>
-  </ul>
-
-  <p class="fr-callout">
-    Au vu des informations renseignées dans le permis de construire, il est
-    {% probability evaluation.global_probability %}
-    que votre projet soit soumis à
-    Déclaration au titre de la Loi sur l'eau.
-  </p>
-
-  <div id="probability-gauge">
-    <figure role="group" class="fr-content-media fr-content-media--sm">
-      <div class="fr-content-media__img">
-        {% probability evaluation.global_probability as p_label %}
-        {% include 'evaluations/_gauge.html' with probability=evaluation.global_probability %}
+    <section class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8">
+          <h1>Notification Loi sur l'eau</h1>
+          <p class="fr-text--lead">
+            Référence
+            {{ evaluation }}
+          </p>
+          <h3>Projet de construction</h3>
+          <ul>
+            <li>Adresse : {{ evaluation.address }}</li>
+            {% if evaluation.application_number %}
+              <li>
+                Demande de permis n° {{ evaluation.application_number }}
+              </li>
+            {% endif %}
+          </ul>
+          <div role="alert" class="fr-alert fr-alert--success fr-my-8w">
+            <p class="fr-alert__title">Projet non-soumis à la Loi sur l'eau.</p>
+            <p>D'après les informations dont nous disposons, ce projet n'est probablement
+              <span class="fr-tag probability probability-3">pas soumis à la Loi sur l'eau</span>.</p>
+          </div>
+        </div>
       </div>
-      <figcaption>
-        Il est {% probability evaluation.global_probability %} que votre projet soit soumis à Déclaration au titre de la
-        Loi sur l'eau.
-      </figcaption>
-    </figure>
-  </div>
+    </section>
 
-  <p class="fr-text--light">
-    Cette estimation est une indication qui ne vaut pas position de l'administration.
-    Ce document vise à vous guider dans les actions à engager pour établir avec certitude si votre projet est soumis à
-    la
-    Loi sur l'eau.
-  </p>
+    <section class="fr-container fr-mb-5w">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8">
 
-  <h2>Sur quels éléments cette estimation se fonde-t-elle ?</h2>
+          <h2>Sur quels éléments cette évaluation se fonde-t-elle ?</h2>
 
-  <p>L'estimation a été établie en considérant les caractéristiques du projet par
-    rapport aux différents impacts que la réglementation Loi sur l'eau vise à limiter :</p>
+          <p>Cette évaluation se fonde sur les informations suivantes :</p>
 
-  <ul>
-    <li>sa localisation géographique ;</li>
-    <li>la surface du projet et du bâti existant.</li>
-  </ul>
+          <ul>
+            <li>
+              Surface créée : {{ evaluation.created_surface }} m²<br />
+              <span class="fr-text--light">
+                Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
+              </span>
+            </li>
+
+            {% if evaluation.existing_surface %}
+              <li>
+                Surface existante : {{ evaluation.existing_surface }} m²<br />
+                <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+              </li>
+            {% endif %}
+
+            {% if evaluation.request %}
+              <li>Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a></li>
+            {% endif %}
+          </ul>
 
 
-  <div id="evaluation-accordion" class="fr-mb-3w">
-    {% for criterion in criterions %}
-      {% include 'evaluations/_criterion.html' with criterion=criterion %}
-    {% endfor %}
-  </div>
+          {% if criterions %}
+            <p>Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :</p>
 
-  {% if evaluation.contact_html %}
-    <h2>Vers qui me tourner ?</h2>
-    <p>
-      Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé de se
-      rapprocher :
-    </p>
+            <div id="evaluation-accordion" class="fr-mb-3w">
+              {% for criterion in criterions %}
+                {% include 'evaluations/_criterion.html' with criterion=criterion is_subject=True %}
+              {% endfor %}
+            </div>
+          {% endif %}
 
-    <ul>
-      <li>
-        <p><strong>Du service qui instruit les dossiers Loi sur l'eau</strong></p>
-        {{ evaluation.contact_html|safe }}
-      </li>
-      <li>
-        <p><strong>D'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
-        <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau,
-          et s'il y a lieu de constituer un dossier et de le déposer aux services de la DDTM (Direction
-          Départementale du Territoire et de la Mer).</p>
-      </li>
-      <li>
-        <p><strong>De l'équipe EnvErgo</strong></p>
-        <p>
-          Vous pouvez également <a href="{% url 'contact_us' %}">contacter l'équipe d'EnvErgo</a> – le présent
-          service public numérique – afin d'obtenir une évaluation de votre dossier ou des précisions sur la
-          procédure à suivre.
-        </p>
-      </li>
-    </ul>
+          {% if evaluation.details_html %}
+            {{ evaluation.details_html|safe }}
+          {% endif %}
 
-  {% endif %}
+        </div>
+      </div>
+    </section>
 
-  <h2>Pour en savoir plus…</h2>
+    <section class="fr-py-8w alt">
+      <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col fr-col-md-8">
 
-  <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>.</p>
+            <h2>Pour en savoir plus…</h2>
 
+            <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
+              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
 
 {% endblock %}
 

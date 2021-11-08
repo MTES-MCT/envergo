@@ -35,11 +35,7 @@
           </p>
           <h3>Projet de construction</h3>
           <ul>
-            {% if evaluation.request %}
-              <li>Adresse : {{ evaluation.request.address }}</li>
-            {% else %}
-              <li>Commune : {{ evaluation.commune }}</li>
-            {% endif %}
+            <li>Adresse : {{ evaluation.address }}</li>
             {% if evaluation.application_number %}
               <li>
                 Demande de permis n° {{ evaluation.application_number }}
@@ -137,6 +133,11 @@
               {% include 'evaluations/_criterion.html' with criterion=criterion is_subject=True %}
             {% endfor %}
           </div>
+
+          {% if evaluation.details_html %}
+            {{ evaluation.details_html|safe }}
+          {% endif %}
+
         </div>
       </div>
     </section>
