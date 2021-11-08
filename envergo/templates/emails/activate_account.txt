@@ -1,0 +1,11 @@
+Bonjour,
+
+Vous venez de faire la demande d'une création d'espace personnalisé sur EnvErgo.
+
+Il reste une étape pour l'activer. Pour ce faire, il vous suffit de cliquer sur le lien suivant :
+
+{{ full_login_url }}
+
+Si vous n'êtes pas à l'initiative de cette demande, merci de ne pas prendre cet e-mail en compte.
+
+{% include 'emails/_email_signature.txt' %}

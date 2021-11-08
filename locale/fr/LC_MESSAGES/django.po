@@ -40,7 +40,7 @@ msgstr "raz-mot-de-passe/"
 
 #: config/urls.py:30
 msgid "password_reset/done/"
-msgstr "raz-mot-de-passe/"
+msgstr "raz-mot-de-passe/terminé/"
 
 #: config/urls.py:35
 msgid "reset/<uidb64>/<token>/"

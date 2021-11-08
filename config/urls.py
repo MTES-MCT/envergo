@@ -23,7 +23,10 @@ auth_patterns = [
     ),
     path(
         _("password_reset/"),
-        auth_views.PasswordResetView.as_view(),
+        auth_views.PasswordResetView.as_view(
+            email_template_name="emails/password_reset.txt",
+            html_email_template_name="emails/password_reset.html",
+        ),
         name="password_reset",
     ),
     path(

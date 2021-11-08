@@ -8,7 +8,7 @@ from django.views.generic import CreateView, TemplateView
 
 from envergo.users.forms import RegisterForm
 from envergo.users.models import User
-from envergo.users.tasks import send_connection_email
+from envergo.users.tasks import send_account_activation_email
 
 
 class Register(AnonymousRequiredMixin, CreateView):
@@ -26,7 +26,7 @@ class Register(AnonymousRequiredMixin, CreateView):
         self.object.save()
 
         user_email = form.cleaned_data["email"]
-        send_connection_email.delay(user_email)
+        send_account_activation_email.delay(user_email)
         return response
 
     def form_invalid(self, form):
@@ -43,7 +43,7 @@ class Register(AnonymousRequiredMixin, CreateView):
             and form["email"].errors.as_data()[0].code == "unique"
         ):
             user_email = form.data["email"]
-            send_connection_email.delay(user_email)
+            send_account_activation_email.delay(user_email)
             return HttpResponseRedirect(self.success_url)
         else:
             return super().form_invalid(form)

@@ -59,15 +59,18 @@ jobs:
         run: |
           sudo apt update
 
-      - name: Set up french locale
+      - name: Install french locale
         run: |
           sudo apt install language-pack-fr
           sudo locale-gen
+
+      - name: Activate french locale
+        run: |
           sudo update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
       - name: Install dependencies
         run: |
-          sudo apt install binutils libproj-dev gdal-bin
+          sudo apt install binutils libproj-dev gdal-bin gettext
 
       - name: Checkout Code Repository
         uses: actions/checkout@v2

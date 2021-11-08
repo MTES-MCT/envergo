@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 
@@ -30,13 +30,15 @@ def confirm_request_to_admin(request_id, host):
 def confirm_request_to_requester(request_id):
     request = Request.objects.filter(id=request_id).first()
     user_email = request.contact_email
-    email_body = render_to_string("evaluations/emails/request_confirm_body.txt")
+    txt_body = render_to_string("evaluations/emails/request_confirm_body.txt")
+    html_body = render_to_string("evaluations/emails/request_confirm_body.html")
 
-    email = EmailMessage(
+    email = EmailMultiAlternatives(
         subject="Votre demande d'évaluation",
-        body=email_body,
+        body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email],
         bcc=[settings.DEFAULT_FROM_EMAIL],
     )
+    email.attach_alternative(html_body, "text/html")
     email.send()
