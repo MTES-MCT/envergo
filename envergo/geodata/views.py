@@ -1,11 +1,19 @@
+import logging
+
 import requests
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.serializers import serialize
 from django.http import JsonResponse
-from django.views.generic import ListView, TemplateView, View
+from django.http.response import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView, View
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
 from envergo.geodata.models import Zone
+
+logger = logging.getLogger(__name__)
 
 
 class ParcelsExport(View):
@@ -39,13 +47,13 @@ class ZoneMap(TemplateView):
     template_name = "geodata/map.html"
 
 
-class ZoneData(ListView):
-    template_name = "geodata/data.html"
-    context_object_name = "data"
+@method_decorator(csrf_exempt, name="dispatch")
+class ZoneSearch(View):
+    def post(self, request, *args, **kwargs):
 
-    def get_queryset(self):
-        qs = Zone.objects.all()[:10]
-        data = serialize(
-            "geojson", qs, geometry_field="simple_polygon", fields=["code"]
-        )
-        return data
+        geometry = GEOSGeometry(request.body.decode())
+        logger.info(geometry)
+
+        qs = Zone.objects.filter(polygon__intersects=geometry)
+        data = serialize("geojson", qs, geometry_field="polygon", fields=["code"])
+        return HttpResponse(data, content_type="application/json")
