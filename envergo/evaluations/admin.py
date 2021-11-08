@@ -81,7 +81,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("global_probability",)},
+            {"fields": ("global_probability", "details_md")},
         ),
         (
             _("Contact data"),
