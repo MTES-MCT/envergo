@@ -9,17 +9,17 @@ services:
   django:
     build:
       context: .
-      dockerfile: ./compose/local/django/Dockerfile
-    image: envergo_local_django
-    container_name: django
+      dockerfile: ./compose/django/Dockerfile
+    image: envergo_django
+    container_name: envergo_django
     depends_on:
       - postgres
     volumes:
       - .:/app:z
       - local_node_modules:/app/node_modules
     env_file:
-      - ./.envs/.local/.django
-      - ./.envs/.local/.postgres
+      - ./envs/django
+      - ./envs/postgres
     ports:
       - "8000:8000"
     command: /start
@@ -27,21 +27,21 @@ services:
   postgres:
     build:
       context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: envergo_production_postgres
-    container_name: postgres
+      dockerfile: ./compose/postgres/Dockerfile
+    image: envergo_postgres
+    container_name: envergo_postgres
     volumes:
       - local_postgres_data:/var/lib/postgresql/data:Z
       - local_postgres_data_backups:/backups:z
     env_file:
-      - ./.envs/.local/.postgres
+      - ./envs/postgres
 
   node:
     build:
       context: .
-      dockerfile: ./compose/local/node/Dockerfile
-    image: envergo_local_node
-    container_name: node
+      dockerfile: ./compose/node/Dockerfile
+    image: envergo_node
+    container_name: envergo_node
     depends_on:
       - django
     volumes:
