@@ -37,14 +37,14 @@ Il est recommandé de se baser sur la version docker.
 Pour lancer l'environnement rapidement :
 
 ```bash
-$ docker-compose -f local.yml build
-$ docker-compose -f local.yml up
+$ docker-compose build
+$ docker-compose up
 ```
 
 Pour construire la base de données (dans un autre shell) :
 
 ```bash
-$ docker-compose -f local.yml run --rm django python manage.py migrate
+$ docker-compose run --rm django python manage.py migrate
 ```
 
 ### Qualité du code
@@ -171,7 +171,7 @@ pytest
 Via Docker :
 
 ```bash
-docker-compose -f local.yml run --rm django pytest
+docker-compose run --rm django pytest
 ```
 
 
@@ -206,9 +206,9 @@ pg_dump --dbname postgresql://<user>:<pass>@localhost:10000/<db> > /tmp/envergo.
 ## Comment charger une BD de dev depuis un dump
 
 ```bash
-$ docker-compose -f local.yml exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
-$ docker-compose -f local.yml exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker-compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
+$ docker-compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ . .envs/.local/.postgres
 $ cat /tmp/envergo.dump | docker exec -i postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
-$ docker-compose -f local.yml run --rm django python manage.py migrate
+$ docker-compose run --rm django python manage.py migrate
 ```
