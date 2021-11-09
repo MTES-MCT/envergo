@@ -1,0 +1,55 @@
+version: '3'
+
+volumes:
+  envergo_postgres_data: {}
+  envergo_postgres_data_backups: {}
+  envergo_node_modules: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/django/Dockerfile
+    image: envergo_django
+    container_name: envergo_django
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+      - envergo_node_modules:/app/node_modules
+    env_file:
+      - ./envs/django
+      - ./envs/postgres
+    ports:
+      - "8000:8000"
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/postgres/Dockerfile
+    image: envergo_postgres
+    container_name: envergo_postgres
+    volumes:
+      - envergo_postgres_data:/var/lib/postgresql/data:Z
+      - envergo_postgres_data_backups:/backups:z
+    env_file:
+      - ./envs/postgres
+
+  node:
+    build:
+      context: .
+      dockerfile: ./compose/node/Dockerfile
+    image: envergo_node
+    container_name: envergo_node
+    depends_on:
+      - django
+    volumes:
+      - .:/app:z
+      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
+      - envergo_node_modules:/app/node_modules
+    command: npm run dev
+    ports:
+      - "3000:3000"
+      # Expose browsersync UI: https://www.browsersync.io/docs/options/#option-ui
+      - "3001:3001"
