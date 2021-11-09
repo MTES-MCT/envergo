@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models as gis_models
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -121,8 +122,13 @@ class Parcel(models.Model):
 
 
 class Zone(gis_models.Model):
-    code = models.CharField(_("Code"), max_length=64)
-    polygon = gis_models.MultiPolygonField()
+    """Stores an annotated geographic polygon(s)."""
+
+    name = models.CharField(_("Name"), max_length=256)
+    data = models.JSONField(_("Data"), null=True)
+    geometry = gis_models.MultiPolygonField()
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
         verbose_name = _("Zone")

@@ -12,4 +12,4 @@ class ParcelAdmin(admin.ModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.ModelAdmin):
-    list_display = ["code"]
+    list_display = ["name"]
