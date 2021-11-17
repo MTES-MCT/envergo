@@ -212,3 +212,15 @@ $ . envs/postgres
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 $ docker-compose run --rm django python manage.py migrate
 ```
+
+
+## Glossaire
+
+Voici un petit index des acronymes et termes métiers fréquemment rencontrés.
+
+ * LSE : Loi sur l'eau
+ * 3.2.2.1, 2.1.5.0… : références à certaines rubriques de la Loi sur l'eau, décrivant les critères qui font que certains projets sont soumis ou non à déclaration Loi sur l'eau.
+ * IOTA : Installations, ouvrages, travaux et aménagements, i.e un « projet ».
+ * DREAL : Direction régionale de l'Environnement, de l'aménagement et du logement.
+ * CEREMA : Centre d'études et d'expertise sur les risques, l'environnement, la mobilité et l'aménagement
+ * DGALN : Direction générale de l'Aménagement, du Logement et de la Nature
