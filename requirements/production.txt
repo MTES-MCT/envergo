@@ -126,6 +126,8 @@ kombu==5.1.0
     #   celery
 markdown==3.3.4
     # via -r base.txt
+numpy==1.21.4
+    # via -r base.txt
 oauthlib==3.1.1
     # via
     #   -r base.txt

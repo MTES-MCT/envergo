@@ -79,6 +79,8 @@ kombu==5.1.0
     # via celery
 markdown==3.3.4
     # via -r base.in
+numpy==1.21.4
+    # via -r base.in
 oauthlib==3.1.1
     # via requests-oauthlib
 pep517==0.11.0
