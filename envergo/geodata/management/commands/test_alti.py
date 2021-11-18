@@ -4,20 +4,17 @@ from termcolor import colored
 
 # Small sample for the ALTI ign database
 ALTI = [
-    [520, 520, 521, 522, 524, 524, 525, 526, 527, 529],
-    [515, 516, 517, 519, 520, 521, 522, 523, 524, 525],
+    [509, 509, 520, 515, 513, 514, 515, 516, 518, 518],
+    [515, 516, 517, 519, 520, 521, 522, 523, 510, 525],
     [517, 518, 519, 520, 521, 522, 524, 525, 526, 527],
-    [509, 509, 511, 512, 513, 514, 515, 516, 518, 518],
     [512, 514, 515, 516, 518, 519, 520, 522, 522, 523],
     [511, 512, 513, 514, 515, 516, 517, 519, 520, 521],
-    [504, 505, 506, 507, 508, 509, 510, 511, 512, 514],
-    [501, 502, 503, 504, 505, 506, 507, 508, 509, 510],
-    [498, 499, 501, 502, 503, 504, 505, 506, 507, 508],
-    [506, 507, 509, 509, 511, 511, 513, 514, 515, 516],
+    [504, 505, 506, 507, 520, 509, 510, 511, 512, 514],
+    [520, 520, 521, 522, 525, 524, 525, 526, 527, 529],
+    [506, 507, 509, 509, 525, 530, 525, 530, 515, 516],
+    [498, 499, 501, 502, 542, 524, 535, 532, 534, 539],
+    [501, 502, 503, 504, 525, 526, 507, 538, 538, 540],
 ]
-MNT = np.array(ALTI)
-
-# DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
 MESH_SIZE = 1  # 1 block = 1m x 1m = 1m²
 
@@ -51,34 +48,36 @@ class Mnt:
     def direction(self, x, y):
         return self.terrain[y, x, 1]
 
+    def window(self, x, y, dim=0):
+        xmin = max(0, x - 1)
+        xmax = min(self.terrain.shape[0], x + 2)
+        ymin = max(0, y - 1)
+        ymax = min(self.terrain.shape[1], y + 2)
+
+        window = self.terrain[ymin:ymax, xmin:xmax, dim]  # noqa
+
+        # Pad window at the edges
+        before_x = 1 if y == 0 else 0
+        after_x = 1 if y == self.terrain.shape[1] - 1 else 0
+        before_y = 1 if x == 0 else 0
+        after_y = 1 if x == self.terrain.shape[0] - 1 else 0
+        window = np.pad(
+            window,
+            ((before_x, after_x), (before_y, after_y)),
+            constant_values=999999,
+        )
+
+        return window
+
     def compute_flow(self):
         """Compute flow directions for all terrain cells."""
 
         # For each cell of the grid…
         for x in range(0, self.terrain.shape[0]):
-
-            # Compute the size of the sliding window
-            # We also handle the edges of the grid.
-            xmin = max(0, x - 1)
-            xmax = min(10, x + 2)
-
             for y in range(0, self.terrain.shape[1]):
-                ymin = max(0, y - 1)
-                ymax = min(10, y + 2)
 
                 # Extract a window of the nearby cells
-                window = self.terrain[ymin:ymax, xmin:xmax, 0]  # noqa
-
-                # Pad window at the edges
-                before_x = 1 if y == 0 else 0
-                after_x = 1 if y == self.terrain.shape[1] - 1 else 0
-                before_y = 1 if x == 0 else 0
-                after_y = 1 if x == self.terrain.shape[0] - 1 else 0
-                window = np.pad(
-                    window,
-                    ((before_x, after_x), (before_y, after_y)),
-                    constant_values=999999,
-                )
+                window = self.window(x, y)
 
                 # Find the position of the cell with the lowest elevation.
                 min_index = window.argmin()
@@ -92,42 +91,75 @@ class Mnt:
 
 mnt = Mnt(ALTI)
 mnt.compute_flow()
-breakpoint()
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
 
-        zone = [(4, 4), (4, 5), (5, 4), (5, 5)]
+        zone = [(4, 4), (5, 4), (5, 5)]
         new_zone = zone
-        surface = len(zone) * (MESH_SIZE ^ 2)
+        surface = len(zone) * (MESH_SIZE ** 2)
+        self.drawGrid([], new_zone)
+        # breakpoint()
 
         while surface < MAX_SURFACE and len(new_zone) > 0:
-            new_zone = self.expandZone(zone, new_zone)
-            zone = zone + new_zone
-            surface = len(zone) * (MESH_SIZE ^ 2)
-            self.drawGrid(zone)
+            import time
 
-    def expandZone(self, zone, new_zone):
+            time.sleep(1)
+            new_zone = self.expandZone(zone, new_zone)
+            self.drawGrid(zone, new_zone)
+            zone = zone + new_zone
+            surface = len(zone) * (MESH_SIZE ** 2)
+            # breakpoint()
+
+    def expandZone(self, old_zone, zone):
         """Find all cells with water runing off into existing zone."""
 
-        # Pour chaque cellule de la zone
-        # for x, y in new_zone:
+        new_zone = []
 
-        #     # Pour chaque case autour de la cellule
-        #     for dx in range(-1, 2):
-        #         for dy in range(-1, 2):
-        #             newx = x + dx
-        #             newy = y + dy
-        #             window = MNT[x - 1 : x + 2, y - 1 : y + 2]  # noqa
-        #     # breakpoint()
-        pass
+        # For each cell in the project zone
+        for x, y in zone:
 
-    def drawGrid(self, zone):
-        for y in range(10):
-            for x in range(10):
-                if (y, x) in zone:
-                    print(colored(f"{MNT[y][x]} ", "green"), end="")
+            # Find nearby cells with flow direction pointing toward this cell
+            window = mnt.window(x, y, 1)
+
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    coord_x = x + i
+                    coord_y = y + j
+
+                    if any(
+                        (
+                            i == j == 0,
+                            coord_x < 0,
+                            coord_x >= mnt.terrain.shape[0],
+                            coord_y < 0,
+                            coord_y >= mnt.terrain.shape[1],
+                            (coord_x, coord_y) in old_zone,
+                        )
+                    ):
+                        continue
+
+                    direction = window[j + 1, i + 1]
+                    dir_x, dir_y = DIRECTIONS[direction]
+                    flow_x, flow_y = i + dir_x, j + dir_y
+                    if flow_x == flow_y == 0:
+                        new_zone += [(coord_x, coord_y)]
+
+        return new_zone
+
+    def drawGrid(self, zone, new_zone):
+        print("\033c", end="")
+        for y in range(0, mnt.terrain.shape[1]):
+            for x in range(0, mnt.terrain.shape[0]):
+                if (x, y) in new_zone:
+                    print(
+                        colored(f"{mnt.terrain[y][x][0]}", "white", "on_red"),
+                        end="",
+                    )
+                    print(" ", end="")
+                elif (x, y) in zone:
+                    print(colored(f"{mnt.terrain[y][x][0]} ", "red"), end="")
                 else:
-                    print(colored(f"{MNT[y][x]} ", "red"), end="")
+                    print(colored(f"{mnt.terrain[y][x][0]} ", "green"), end="")
             print("")
