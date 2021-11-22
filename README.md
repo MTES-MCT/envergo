@@ -208,7 +208,7 @@ pg_dump --dbname postgresql://<user>:<pass>@localhost:10000/<db> > /tmp/envergo.
 ```bash
 $ docker-compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
 $ docker-compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
-$ . .envs/.local/.postgres
-$ cat /tmp/envergo.dump | docker exec -i postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
+$ . envs/postgres
+$ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 $ docker-compose run --rm django python manage.py migrate
 ```
