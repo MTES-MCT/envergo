@@ -48,7 +48,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "application_number",
-        "get_global_probability_display",
+        "probability",
         "request_link",
     ]
     form = EvaluationAdminForm
@@ -81,7 +81,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("global_probability",)},
+            {"fields": ("global_probability", "details_md")},
         ),
         (
             _("Contact data"),
@@ -110,6 +110,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{request_admin_url}">{request}</a>'
         return mark_safe(link)
+
+    @admin.display(description=_("Probability"))
+    def probability(self, obj):
+        return obj.get_global_probability_display()
 
 
 @admin.register(Request)
