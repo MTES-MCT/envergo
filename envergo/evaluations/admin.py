@@ -126,12 +126,22 @@ class RequestAdmin(admin.ModelAdmin):
         "project_sponsor_phone_number",
         "evaluation_link",
     ]
-    readonly_fields = ["reference", "created_at", "summary", "parcels", "parcels_map"]
+    readonly_fields = [
+        "reference",
+        "created_at",
+        "summary",
+        "parcels",
+        "parcels_map",
+        "parcels_geojson",
+    ]
     search_fields = ["reference", "application_number"]
     ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "summary")}),
-        (_("Project localisation"), {"fields": ("address", "parcels", "parcels_map")}),
+        (
+            _("Project localisation"),
+            {"fields": ("address", "parcels", "parcels_map", "parcels_geojson")},
+        ),
         (
             _("Project data"),
             {
@@ -169,6 +179,13 @@ class RequestAdmin(admin.ModelAdmin):
 
         parcel_map_url = obj.get_parcel_map_url()
         link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
+        return mark_safe(link)
+
+    @admin.display(description=_("Exporter vers QGis ou autre"))
+    def parcels_geojson(self, obj):
+
+        parcel_export_url = obj.get_parcel_geojson_export_url()
+        link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
         return mark_safe(link)
 
     @admin.display(description=_("Evaluation"), ordering="evaluation")
