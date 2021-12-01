@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+  <h1>Demandez une évaluation pour un projet</h1>
+
+  <p class="fr-text--lead">
+    EnvErgo vous aide à déterminer si un projet de construction
+    est soumis à la Loi sur l'eau. Recevez une réponse dans les deux jours ouvrés.
+  </p>
+
+  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+    {% csrf_token %}
+
+    {{ form.errors }}
+
+    <p>Étape {{ wizard.steps.step1 }} sur {{ wizard.steps.count }}</p>
+
+    {% include '_form_header.html' with form=form %}
+    {{ wizard.management_form }}
+
+    <fieldset class="fr-mb-6w">
+      <legend class="fr-h2">Caractéristiques du projet</legend>
+
+      <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+        <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
+      </div>
+
+      {% include '_field_snippet.html' with field=form.project_description %}
+
+      <div class="dropzone"></div>
+      <div class="fallback">
+        {% include '_input_file_snippet.html' with field=form.additional_data %}
+      </div>
+    </fieldset>
+
+    <fieldset class="fr-mb-6w">
+      <legend class="fr-h2">Informations de contact</legend>
+
+      <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
+        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+      </div>
+
+      {% include '_field_snippet.html' with field=form.contact_email %}
+      {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
+      {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
+      {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
+    </fieldset>
+
+    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-btns-group--icon-left fr-mt-4w">
+      {% if wizard.steps.prev %}
+        <li>
+          <button class="fr-btn fr-btn--secondary fr-fi-arrow-left-line" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">
+            {{ _("prev step") }}
+          </button>
+        </li>
+      {% endif %}
+
+      <li>
+        <button type="submit" class="fr-btn fr-fi-checkbox-circle-line">
+          Soumettre votre évaluation
+        </button>
+      </li>
+    </ul>
+
+  </form>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% leaflet_css %}
+  <link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+  {% leaflet_js %}
+  <script>
+    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address-address';
+  </script>
+  <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+{% endblock %}
