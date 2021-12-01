@@ -125,5 +125,5 @@
 
 
 window.addEventListener('load', function() {
-  new AddressAutocomplete('address');
+  new AddressAutocomplete(ADDRESS_AUTOCOMPLETE_FIELD_NAME || 'address');
 });
