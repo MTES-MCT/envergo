@@ -199,5 +199,9 @@ class RequestEvalWizard(NamedUrlSessionWizardView):
         return [TEMPLATES[self.steps.current]]
 
     def done(self, form_list, **kwargs):
+        data = self.get_all_cleaned_data()
+        request_form = RequestForm(data)
+        print(request_form.errors)
+        request_form.save()
         success_url = reverse("request_success")
         return HttpResponseRedirect(success_url)

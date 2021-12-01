@@ -11,10 +11,8 @@
     est soumis à la Loi sur l'eau. Recevez une réponse dans les deux jours ouvrés.
   </p>
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
     {% csrf_token %}
-
-    {{ form.errors }}
 
     <p>Étape {{ wizard.steps.step1 }} sur {{ wizard.steps.count }}</p>
 
@@ -29,11 +27,8 @@
       </div>
 
       {% include '_field_snippet.html' with field=form.project_description %}
+      {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
-      <div class="dropzone"></div>
-      <div class="fallback">
-        {% include '_input_file_snippet.html' with field=form.additional_data %}
-      </div>
     </fieldset>
 
     <fieldset class="fr-mb-6w">
@@ -70,15 +65,12 @@
 {% endblock %}
 
 {% block extra_css %}
-  {% leaflet_css %}
-  <link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
   {% leaflet_js %}
   <script>
-    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address-address';
+    FORM_ID = 'request-evaluation-form';
+    DROPZONE_ID = 'id_contact-additional_files-dropzone';
   </script>
-  <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
-  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 {% endblock %}
