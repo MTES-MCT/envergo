@@ -38,31 +38,36 @@ class EvaluationSearchForm(forms.Form):
     )
 
 
-class RequestForm(EvaluationFormMixin, forms.ModelForm):
+class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
         label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
-    )
-    created_surface = forms.IntegerField(
-        label=_("Created surface"),
-        help_text=_("Created_surface_help_text"),
-        widget=forms.TextInput,
-    )
-    existing_surface = forms.IntegerField(
-        label=_("Existing surface"),
-        required=False,
-        help_text=_("Existing surface help text"),
-        widget=forms.TextInput,
     )
     application_number = forms.CharField(
         label=_("Application number"),
         help_text=_("If an application number was already submitted."),
         max_length=64,
     )
-    additional_data = forms.FileField(
+
+    class Meta:
+        fields = ["application_number", "address"]
+        model = Request
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["application_number"].required = False
+        self.fields["application_number"].widget.attrs["placeholder"] = _(
+            'A 15 chars value starting with "P"'
+        )
+
+
+class WizardContactForm(forms.ModelForm):
+
+    additional_files = forms.FileField(
         label=_("Additional files you might deem useful for the evaluation"),
         help_text=_("Avalaible formats: pdf, zip."),
         required=False,
+        widget=forms.ClearableFileInput(attrs={"multiple": True}),
     )
 
     contact_email = forms.EmailField(
@@ -89,94 +94,31 @@ class RequestForm(EvaluationFormMixin, forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            "address",
-            "application_number",
-            "created_surface",
-            "existing_surface",
+            "additional_files",
             "project_description",
-            "additional_data",
             "contact_email",
             "project_sponsor_emails",
-            "project_sponsor_phone_number",
             "send_eval_to_sponsor",
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["created_surface"].widget.attrs["placeholder"] = _(
-            "In square meters"
-        )
-        self.fields["existing_surface"].widget.attrs["placeholder"] = _(
-            "In square meters"
-        )
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
-        )
-        self.fields["application_number"].required = False
-        self.fields["application_number"].widget.attrs["placeholder"] = _(
-            'A 15 chars value starting with "P"'
         )
         self.fields["project_description"].widget.attrs["rows"] = 3
 
-        # This is quite hackish
-        # We use pure css to display a custom file upload widget
-        # We need the `:valid` selector to detect when a file has been selected
-        # but this will only work if the field is required.
-        # This has no other effect since we set `novalidate` in the form html
-        self.fields["additional_data"].widget.attrs["required"] = "required"
 
-
-class WizardAddressForm(EvaluationFormMixin, forms.Form):
-    application_number = forms.CharField(
-        label=_("Application number (optional)"),
-        required=False,
-        help_text=_("Provide this value if it exists"),
-        max_length=64,
-    )
-    address = forms.CharField(
-        label=_("What is the project's address?"),
-        help_text=_("Type in a few characters to see suggestions"),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["application_number"].widget.attrs["placeholder"] = _(
-            'A 15 chars value starting with "P"'
-        )
-
-
-class WizardContactForm(forms.Form):
-    additional_files = forms.FileField(
-        required=False, widget=forms.ClearableFileInput(attrs={"multiple": True})
-    )
-    project_description = forms.CharField(
-        label=_("Project description, comments…"),
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 3}),
-    )
-    contact_email = forms.EmailField(
-        label=_("Urbanism department email"), help_text=_("Project instructor…")
-    )
-    project_sponsor_emails = SimpleArrayField(
-        forms.EmailField(),
-        label=_("Project sponsor email address(es)"),
-        help_text=_("Petitioner, project manager…"),
-        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
-    )
-    project_sponsor_phone_number = PhoneNumberField(
-        label=_("Project sponsor phone number"), region="FR"
-    )
-    send_eval_to_sponsor = forms.BooleanField(
-        label=_("Send evaluation to project sponsor"),
-        initial=True,
-        required=False,
-        help_text=_(
-            "If you uncheck this box, you will be the only recipient of the evaluation."
-        ),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
-            "Provide one or several addresses separated by commas « , »"
-        )
+class RequestForm(WizardAddressForm, WizardContactForm):
+    class Meta:
+        model = Request
+        fields = [
+            "address",
+            "application_number",
+            "project_description",
+            "additional_files",
+            "contact_email",
+            "project_sponsor_emails",
+            "project_sponsor_phone_number",
+            "send_eval_to_sponsor",
+        ]
