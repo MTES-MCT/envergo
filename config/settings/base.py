@@ -68,6 +68,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
+    "formtools",
 ]
 
 LOCAL_APPS = [
@@ -257,6 +258,9 @@ LOGGING = {
 # https://django-compressor.readthedocs.io/en/latest/quickstart/#installation
 INSTALLED_APPS += ["compressor"]
 STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
+
+# Handle file uploads
+UPLOAD_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # CELERY
 if USE_TZ:
