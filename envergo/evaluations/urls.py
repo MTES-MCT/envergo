@@ -7,8 +7,11 @@ from envergo.evaluations.views import (
     EvaluationDetail,
     EvaluationSearch,
     RequestEvaluation,
+    RequestEvalWizard,
     RequestSuccess,
 )
+
+request_wizard = RequestEvalWizard.as_view(url_name="request_eval_wizard")
 
 urlpatterns = [
     path("", EvaluationSearch.as_view(), name="evaluation_search"),
@@ -17,6 +20,11 @@ urlpatterns = [
         include(
             [
                 path("", RequestEvaluation.as_view(), name="request_evaluation"),
+                path(
+                    _("wizard/step-<slug:step>/"),
+                    request_wizard,
+                    name="request_eval_wizard",
+                ),
                 path(_("success/"), RequestSuccess.as_view(), name="request_success"),
             ]
         ),

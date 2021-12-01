@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
@@ -7,9 +9,15 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, FormView, TemplateView
 from django.views.generic.edit import CreateView
+from formtools.wizard.views import NamedUrlSessionWizardView
 from ratelimit.decorators import ratelimit
 
-from envergo.evaluations.forms import EvaluationSearchForm, RequestForm
+from envergo.evaluations.forms import (
+    EvaluationSearchForm,
+    RequestForm,
+    WizardAddressForm,
+    WizardContactForm,
+)
 from envergo.evaluations.models import Criterion, Evaluation, Request
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
@@ -169,3 +177,27 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         return Evaluation.objects.filter(contact_email=user_email).order_by(
             "-created_at"
         )
+
+
+FORMS = [
+    ("address", WizardAddressForm),
+    ("contact", WizardContactForm),
+]
+
+
+TEMPLATES = {
+    "address": "evaluations/eval_request_wizard_address.html",
+    "contact": "evaluations/eval_request_wizard_contact.html",
+}
+
+
+class RequestEvalWizard(NamedUrlSessionWizardView):
+    form_list = FORMS
+    file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)
+
+    def get_template_names(self):
+        return [TEMPLATES[self.steps.current]]
+
+    def done(self, form_list, **kwargs):
+        success_url = reverse("request_success")
+        return HttpResponseRedirect(success_url)
