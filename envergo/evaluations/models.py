@@ -198,7 +198,10 @@ class Request(models.Model):
         validators=[application_number_validator],
     )
     created_surface = models.IntegerField(
-        _("Created surface"), help_text=_("In square meters")
+        _("Created surface"),
+        null=True,
+        blank=True,
+        help_text=_("In square meters"),
     )
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
