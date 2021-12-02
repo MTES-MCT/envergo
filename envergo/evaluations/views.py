@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
+from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect
@@ -9,6 +10,8 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, FormView, TemplateView
 from django.views.generic.edit import CreateView
+from formtools.wizard.storage.exceptions import NoFileStorageConfigured
+from formtools.wizard.storage.session import SessionStorage
 from formtools.wizard.views import NamedUrlSessionWizardView
 from ratelimit.decorators import ratelimit
 
@@ -18,7 +21,7 @@ from envergo.evaluations.forms import (
     WizardAddressForm,
     WizardContactForm,
 )
-from envergo.evaluations.models import Criterion, Evaluation, Request
+from envergo.evaluations.models import Criterion, Evaluation, Request, RequestFile
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
@@ -191,17 +194,124 @@ TEMPLATES = {
 }
 
 
+class Storage(SessionStorage):
+    def set_step_files(self, step, files):
+        if files and not self.file_storage:
+            raise NoFileStorageConfigured(
+                "You need to define 'file_storage' in your "
+                "wizard view in order to handle file uploads."
+            )
+
+        if step not in self.data[self.step_files_key]:
+            self.data[self.step_files_key][step] = {}
+
+        if not files:
+            return
+
+        for field in files.keys():
+            field_files = files.getlist(field)
+            file_dicts = []
+            for field_file in field_files:
+                tmp_filename = self.file_storage.save(field_file.name, field_file)
+                file_dict = {
+                    "tmp_name": tmp_filename,
+                    "name": field_file.name,
+                    "content_type": field_file.content_type,
+                    "size": field_file.size,
+                    "charset": field_file.charset,
+                }
+                file_dicts.append(file_dict)
+
+            self.data[self.step_files_key][step][field] = file_dicts
+
+    def get_step_files(self, step):
+        wizard_files = self.data[self.step_files_key].get(step, [])
+
+        if wizard_files and not self.file_storage:
+            raise NoFileStorageConfigured(
+                "You need to define 'file_storage' in your "
+                "wizard view in order to handle file uploads."
+            )
+
+        files = {}
+        for field, field_files in wizard_files.items():
+            files[field] = []
+
+            for field_dict in field_files:
+                field_dict = field_dict.copy()
+                tmp_name = field_dict.pop("tmp_name")
+                if (step, field) not in self._files:
+                    self._files[(step, field)] = UploadedFile(
+                        file=self.file_storage.open(tmp_name), **field_dict
+                    )
+
+                files[field] = self._files[(step, field)]
+        return files or None
+
+    def reset(self):
+        # Store unused temporary file names in order to delete them
+        # at the end of the response cycle through a callback attached in
+        # `update_response`.
+        wizard_files = self.data[self.step_files_key]
+        for step_files in wizard_files.values():
+            for step_field_files in step_files.values():
+                for step_file in step_field_files:
+                    self._tmp_files.append(step_file["tmp_name"])
+        self.init_data()
+
+
 class RequestEvalWizard(NamedUrlSessionWizardView):
+    storage_name = "envergo.evaluations.views.Storage"
     form_list = FORMS
-    file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)
+    file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
 
     def get_template_names(self):
         return [TEMPLATES[self.steps.current]]
 
-    def done(self, form_list, **kwargs):
+    def done(self, form_list, form_dict, **kwargs):
         data = self.get_all_cleaned_data()
         request_form = RequestForm(data)
-        print(request_form.errors)
-        request_form.save()
+        request = request_form.save()
+
+        files = self.storage.data[self.storage.step_files_key]["contact"][
+            "contact-additional_files"
+        ]
+        for file_dict in files:
+            RequestFile.objects.create(
+                request=request,
+                file=self.file_storage.open(file_dict["tmp_name"]),
+                name=file_dict["name"],
+            )
+
         success_url = reverse("request_success")
         return HttpResponseRedirect(success_url)
+
+    def render_done(self, form, **kwargs):
+        """
+        This method gets called when all forms passed. The method should also
+        re-validate all steps to prevent manipulation. If any form fails to
+        validate, `render_revalidation_failure` should get called.
+        If everything is fine call `done`.
+        """
+        from collections import OrderedDict
+
+        final_forms = OrderedDict()
+        # walk through the form list and try to validate the data again.
+        for form_key in self.get_form_list():
+            form_obj = self.get_form(
+                step=form_key,
+                data=self.storage.get_step_data(form_key),
+                files=self.storage.get_step_files(form_key),
+            )
+            if not form_obj.is_valid():
+                return self.render_revalidation_failure(form_key, form_obj, **kwargs)
+            final_forms[form_key] = form_obj
+
+        # render the done view and reset the wizard before returning the
+        # response. This is needed to prevent from rendering done with the
+        # same data twice.
+        done_response = self.done(
+            list(final_forms.values()), form_dict=final_forms, **kwargs
+        )
+        self.storage.reset()
+        return done_response
