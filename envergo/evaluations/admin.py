@@ -13,6 +13,7 @@ from envergo.evaluations.models import (
     Criterion,
     Evaluation,
     Request,
+    RequestFile,
     generate_reference,
 )
 
@@ -116,6 +117,11 @@ class EvaluationAdmin(admin.ModelAdmin):
         return obj.get_global_probability_display()
 
 
+class RequestFileInline(admin.TabularInline):
+    model = RequestFile
+    fields = ["file", "name"]
+
+
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = [
@@ -159,6 +165,7 @@ class RequestAdmin(admin.ModelAdmin):
     )
     actions = ["make_evaluation"]
     change_form_template = "evaluations/admin/request_change_form.html"
+    inlines = [RequestFileInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("evaluation")
@@ -268,3 +275,8 @@ class RequestAdmin(admin.ModelAdmin):
         }
         self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
         return
+
+
+@admin.register(RequestFile)
+class RequestFileAdmin(admin.ModelAdmin):
+    list_display = ["file", "name", "request"]
