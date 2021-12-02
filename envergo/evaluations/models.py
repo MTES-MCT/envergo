@@ -4,6 +4,7 @@ from os.path import splitext
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from django.core.files.storage import get_storage_class
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
@@ -269,3 +270,26 @@ class Request(models.Model):
 
         url = f"{map_url}?{qd.urlencode()}"
         return url
+
+
+def request_file_format(instance, filename):
+    _, extension = splitext(filename)
+    return f"requests/{instance.request_id}_{extension}"
+
+
+class RequestFile(models.Model):
+    """Store additional files for a single request."""
+
+    request = models.ForeignKey(
+        "Request", on_delete=models.PROTECT, related_name="additional_files"
+    )
+    file = models.FileField(
+        _("File"),
+        upload_to=request_file_format,
+        storage=get_storage_class(settings.UPLOAD_FILE_STORAGE),
+    )
+    name = models.CharField(_("Name"), blank=True, max_length=1024)
+
+    class Meta:
+        verbose_name = _("Request file")
+        verbose_name_plural = _("Request files")
