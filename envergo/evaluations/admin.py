@@ -120,6 +120,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 class RequestFileInline(admin.TabularInline):
     model = RequestFile
     fields = ["file", "name"]
+    extra = 0
 
 
 @admin.register(Request)
