@@ -20,3 +20,4 @@ django-leaflet
 celery
 django-ratelimit
 django-braces
+shapely

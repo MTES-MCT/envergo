@@ -312,6 +312,8 @@ rjsmin==1.1.0
     # via
     #   -r base.txt
     #   django-compressor
+shapely==1.8.0
+    # via -r base.txt
 six==1.16.0
     # via
     #   -r base.txt

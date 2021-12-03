@@ -255,3 +255,14 @@ class Request(models.Model):
 
         url = f"{map_url}?{qd.urlencode()}"
         return url
+
+    def get_parcel_geojson_export_url(self):
+        """Return an url to download the parcels in geojson."""
+
+        parcel_refs = [parcel.reference for parcel in self.parcels.all()]
+        qd = QueryDict(mutable=True)
+        qd.setlist("parcel", parcel_refs)
+        map_url = reverse("parcels_export")
+
+        url = f"{map_url}?{qd.urlencode()}"
+        return url

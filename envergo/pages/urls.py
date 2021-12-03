@@ -2,6 +2,7 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
+from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import HomeView
 
 urlpatterns = [
@@ -30,5 +31,10 @@ urlpatterns = [
         _("map/"),
         TemplateView.as_view(template_name="pages/map.html"),
         name="map",
+    ),
+    path(
+        _("parcels.geojson"),
+        ParcelsExport.as_view(),
+        name="parcels_export",
     ),
 ]
