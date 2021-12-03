@@ -225,7 +225,7 @@ class Storage(SessionStorage):
             self.data[self.step_files_key][step][field] = file_dicts
 
     def get_step_files(self, step):
-        wizard_files = self.data[self.step_files_key].get(step, [])
+        wizard_files = self.data[self.step_files_key].get(step, {})
 
         if wizard_files and not self.file_storage:
             raise NoFileStorageConfigured(
@@ -285,33 +285,3 @@ class RequestEvalWizard(NamedUrlSessionWizardView):
 
         success_url = reverse("request_success")
         return HttpResponseRedirect(success_url)
-
-    def render_done(self, form, **kwargs):
-        """
-        This method gets called when all forms passed. The method should also
-        re-validate all steps to prevent manipulation. If any form fails to
-        validate, `render_revalidation_failure` should get called.
-        If everything is fine call `done`.
-        """
-        from collections import OrderedDict
-
-        final_forms = OrderedDict()
-        # walk through the form list and try to validate the data again.
-        for form_key in self.get_form_list():
-            form_obj = self.get_form(
-                step=form_key,
-                data=self.storage.get_step_data(form_key),
-                files=self.storage.get_step_files(form_key),
-            )
-            if not form_obj.is_valid():
-                return self.render_revalidation_failure(form_key, form_obj, **kwargs)
-            final_forms[form_key] = form_obj
-
-        # render the done view and reset the wizard before returning the
-        # response. This is needed to prevent from rendering done with the
-        # same data twice.
-        done_response = self.done(
-            list(final_forms.values()), form_dict=final_forms, **kwargs
-        )
-        self.storage.reset()
-        return done_response
