@@ -263,7 +263,7 @@ class Request(models.Model):
 
 def request_file_format(instance, filename):
     _, extension = splitext(filename)
-    return f"requests/{instance.request_id}_{extension}"
+    return f"requests/{instance.request_id}{extension}"
 
 
 class RequestFile(models.Model):
