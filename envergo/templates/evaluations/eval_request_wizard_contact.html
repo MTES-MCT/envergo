@@ -65,12 +65,16 @@
 {% endblock %}
 
 {% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
   {% leaflet_js %}
   <script>
     FORM_ID = 'request-evaluation-form';
-    DROPZONE_ID = 'id_contact-additional_files-dropzone';
+    DROPZONE_FORM = 'request-evaluation-form';
+    DROPZONE_FIELD = 'id_contact-additional_files-dropzone';
   </script>
+  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
+  <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
 {% endblock %}

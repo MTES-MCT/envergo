@@ -9,7 +9,8 @@
     {% endif %}
   </label>
 
-  <div id="{{ field.id_for_label }}-dropzone" class="dropzone">
+  <div id="dropzone-previews" class="dropzone-previews"></div>
+  <div id="{{ field.id_for_label }}-dropzone">
 
     {% if nest_field_class %}
       <div class="{{ nest_field_class }}">
