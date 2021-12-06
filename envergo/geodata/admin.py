@@ -6,3 +6,4 @@ from envergo.geodata.models import Parcel
 @admin.register(Parcel)
 class ParcelAdmin(admin.ModelAdmin):
     list_display = ["commune", "prefix", "section", "order"]
+    search_fields = ["commune", "prefix", "section", "order"]
