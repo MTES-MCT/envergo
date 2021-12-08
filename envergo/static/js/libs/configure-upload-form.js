@@ -9,7 +9,7 @@ window.addEventListener('load', function() {
 
   var dropzone = new Dropzone(form, {
     url: DROPZONE_UPLOAD_URL,
-    paramName: 'additional_files',
+    paramName: function() { return 'additional_files'; },
     maxFilesize: 20,
     maxFiles: 10,
     acceptedFiles: 'image/*,application/pdf,application/zip',

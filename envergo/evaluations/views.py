@@ -228,7 +228,15 @@ class RequestEvalWizardStepFiles(FormView):
     success_url = reverse_lazy("request_eval_wizard_submit")
 
     def form_valid(self, form):
-        # TODO
+        files = self.request.FILES.getlist("additional_files")
+        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+        filedicts = []
+        for file in files:
+            saved_name = file_storage.save(file.name, file)
+            filedicts.append({"name": file.name, "saved_name": saved_name})
+        self.request.session[FILES_KEY] = filedicts
+        self.request.session.modified = True
+
         return JsonResponse({})
 
 
@@ -241,25 +249,22 @@ class RequestEvalWizardSubmit(FormView):
         """Return the keyword arguments for instantiating the form."""
         kwargs = super().get_form_kwargs()
         if self.request.method in ("POST", "PUT"):
-            kwargs.update(
-                {
-                    "data": self.request.session.get(DATA_KEY, {}),
-                    "files": self.request.session.get(FILES_KEY, {}),
-                }
-            )
+            kwargs.update({"data": self.request.session.get(DATA_KEY, {})})
         return kwargs
 
     def form_valid(self, form):
         request = form.save()
         file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
-        # TODO
-        files = []
-        for file_dict in files:
+        filedicts = self.request.session[FILES_KEY]
+        for filedict in filedicts:
             RequestFile.objects.create(
                 request=request,
-                file=file_storage.open(file_dict["tmp_name"]),
-                name=file_dict["name"],
+                file=file_storage.open(filedict["saved_name"]),
+                name=filedict["name"],
             )
+
+        del self.request.session[DATA_KEY]
+        del self.request.session[FILES_KEY]
         return super().form_valid(form)
 
     def form_invalid(self, form):
