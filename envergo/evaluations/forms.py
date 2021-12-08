@@ -108,6 +108,23 @@ class WizardContactForm(forms.ModelForm):
         )
         self.fields["project_description"].widget.attrs["rows"] = 3
 
+    def clean_project_sponsor_phone_number(self):
+        phone = self.cleaned_data["project_sponsor_phone_number"]
+        return str(phone)
+
+
+class WizardFilesForm(forms.ModelForm):
+    additional_files = forms.FileField(
+        label=_("Additional files you might deem useful for the evaluation"),
+        help_text=_("Avalaible formats: pdf, zip."),
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"multiple": True}),
+    )
+
+    class Meta:
+        model = Request
+        fields = ["additional_files"]
+
 
 class RequestForm(WizardAddressForm, WizardContactForm):
     class Meta:

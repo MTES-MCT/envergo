@@ -14,9 +14,10 @@
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
     {% csrf_token %}
 
-    <p>Étape 2 sur 2</p>
+    <p>Étape {{ wizard.steps.step1 }} sur {{ wizard.steps.count }}</p>
 
     {% include '_form_header.html' with form=form %}
+    {{ wizard.management_form }}
 
     <fieldset class="fr-mb-6w">
       <legend class="fr-h2">Caractéristiques du projet</legend>
@@ -25,22 +26,8 @@
         <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
       </div>
 
-      {% include '_field_snippet.html' with field=form.project_description %}
-      {% include '_dropzone_snippet.html' with field=form.additional_files %}
+      {% include '_field_snippet.html' with field=form.additional_files %}
 
-    </fieldset>
-
-    <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Informations de contact</legend>
-
-      <div role="alert" class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
-      </div>
-
-      {% include '_field_snippet.html' with field=form.contact_email %}
-      {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
-      {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
-      {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
     </fieldset>
 
     <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-btns-group--icon-left fr-mt-4w">
@@ -61,19 +48,4 @@
 
   </form>
 
-{% endblock %}
-
-{% block extra_css %}
-  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
-{% endblock %}
-
-{% block extra_js %}
-  <script>
-    FORM_ID = 'request-evaluation-form';
-    DROPZONE_FORM = 'request-evaluation-form';
-    DROPZONE_FIELD = 'id-additional_files-dropzone';
-    DROPZONE_UPLOAD_URL = '{% url "request_eval_wizard_step_files" %}';
-  </script>
-  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
-  <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
 {% endblock %}

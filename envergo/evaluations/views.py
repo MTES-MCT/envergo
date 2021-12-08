@@ -3,13 +3,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
-from django.http.response import Http404, HttpResponseRedirect
+from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.generic import DetailView, FormView, TemplateView
+from django.views.generic import DetailView, FormView, RedirectView, TemplateView
 from django.views.generic.edit import CreateView
-from formtools.wizard.views import NamedUrlSessionWizardView
 from ratelimit.decorators import ratelimit
 
 from envergo.evaluations.forms import (
@@ -17,6 +16,7 @@ from envergo.evaluations.forms import (
     RequestForm,
     WizardAddressForm,
     WizardContactForm,
+    WizardFilesForm,
 )
 from envergo.evaluations.models import Criterion, Evaluation, Request, RequestFile
 from envergo.evaluations.tasks import (
@@ -179,40 +179,89 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         )
 
 
-FORMS = [
-    ("address", WizardAddressForm),
-    ("contact", WizardContactForm),
-]
+DATA_KEY = "REQUEST_WIZARD_DATA"
+FILES_KEY = "REQUEST_WIZARD_FILES"
 
 
-TEMPLATES = {
-    "address": "evaluations/eval_request_wizard_address.html",
-    "contact": "evaluations/eval_request_wizard_contact.html",
-}
+class RequestEvalWizardReset(RedirectView):
+    pattern_name = "request_eval_wizard_step_1"
+
+    def dispatch(self, request, *args, **kwargs):
+        if DATA_KEY in request.session:
+            del request.session[DATA_KEY]
+            request.session.modified = True
+        return super().dispatch(request, *args, **kwargs)
 
 
-class RequestEvalWizard(NamedUrlSessionWizardView):
-    storage_name = "envergo.utils.formtools_storage.MultiFileSessionStorage"
-    form_list = FORMS
-    file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+class WizardStepMixin:
+    def get_initial(self):
+        return self.request.session.get(DATA_KEY, {})
 
-    def get_template_names(self):
-        return [TEMPLATES[self.steps.current]]
+    def form_valid(self, form):
+        if DATA_KEY not in self.request.session:
+            self.request.session[DATA_KEY] = {}
 
-    def done(self, form_list, form_dict, **kwargs):
-        data = self.get_all_cleaned_data()
-        request_form = RequestForm(data)
-        request = request_form.save()
+        if FILES_KEY not in self.request.session:
+            self.request.session[FILES_KEY] = {}
 
-        files = self.storage.data[self.storage.step_files_key]["contact"][
-            "contact-additional_files"
-        ]
+        data = form.cleaned_data
+        self.request.session[DATA_KEY].update(data)
+        self.request.session.modified = True
+        return super().form_valid(form)
+
+
+class RequestEvalWizardStep1(WizardStepMixin, FormView):
+    template_name = "evaluations/eval_request_wizard_address.html"
+    form_class = WizardAddressForm
+    success_url = reverse_lazy("request_eval_wizard_step_2")
+
+
+class RequestEvalWizardStep2(WizardStepMixin, FormView):
+    template_name = "evaluations/eval_request_wizard_contact.html"
+    form_class = WizardContactForm
+    success_url = reverse_lazy("request_eval_wizard_submit")
+
+
+class RequestEvalWizardStepFiles(FormView):
+    template_name = "evaluations/eval_request_wizard_files.html"
+    form_class = WizardFilesForm
+    success_url = reverse_lazy("request_eval_wizard_submit")
+
+    def form_valid(self, form):
+        # TODO
+        return JsonResponse({})
+
+
+class RequestEvalWizardSubmit(FormView):
+    template_name = "evaluations/eval_request_wizard_submit.html"
+    form_class = RequestForm
+    success_url = reverse_lazy("request_success")
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = super().get_form_kwargs()
+        if self.request.method in ("POST", "PUT"):
+            kwargs.update(
+                {
+                    "data": self.request.session.get(DATA_KEY, {}),
+                    "files": self.request.session.get(FILES_KEY, {}),
+                }
+            )
+        return kwargs
+
+    def form_valid(self, form):
+        request = form.save()
+        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+        # TODO
+        files = []
         for file_dict in files:
             RequestFile.objects.create(
                 request=request,
-                file=self.file_storage.open(file_dict["tmp_name"]),
+                file=file_storage.open(file_dict["tmp_name"]),
                 name=file_dict["name"],
             )
+        return super().form_valid(form)
 
-        success_url = reverse("request_success")
-        return HttpResponseRedirect(success_url)
+    def form_invalid(self, form):
+        # XXX Redirect ?
+        return super().form_invalid(form)

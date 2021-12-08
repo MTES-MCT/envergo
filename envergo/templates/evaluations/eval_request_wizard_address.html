@@ -14,20 +14,14 @@
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
     {% csrf_token %}
 
-    <p>Étape {{ wizard.steps.step1 }} sur {{ wizard.steps.count }}</p>
+    <p>Étape 1 sur 2</p>
 
     {% include '_form_header.html' with form=form %}
-    {{ wizard.management_form }}
 
     <fieldset class="fr-mb-6w">
       {% include '_field_snippet.html' with field=form.address %}
       {% include '_field_snippet.html' with field=form.application_number %}
     </fieldset>
-
-    {% if wizard.steps.prev %}
-      <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{{ _("first step") }}</button>
-      <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{{ _("prev step") }}</button>
-    {% endif %}
 
     <button type="submit" class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
       Poursuivre votre demande d'évaluation
@@ -45,7 +39,7 @@
 {% block extra_js %}
   {% leaflet_js %}
   <script>
-    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address-address';
+    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
   </script>
   <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
   <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>

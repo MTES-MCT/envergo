@@ -7,11 +7,13 @@ from envergo.evaluations.views import (
     EvaluationDetail,
     EvaluationSearch,
     RequestEvaluation,
-    RequestEvalWizard,
+    RequestEvalWizardReset,
+    RequestEvalWizardStep1,
+    RequestEvalWizardStep2,
+    RequestEvalWizardStepFiles,
+    RequestEvalWizardSubmit,
     RequestSuccess,
 )
-
-request_wizard = RequestEvalWizard.as_view(url_name="request_eval_wizard")
 
 urlpatterns = [
     path("", EvaluationSearch.as_view(), name="evaluation_search"),
@@ -21,9 +23,36 @@ urlpatterns = [
             [
                 path("", RequestEvaluation.as_view(), name="request_evaluation"),
                 path(
-                    _("wizard/step-<slug:step>/"),
-                    request_wizard,
-                    name="request_eval_wizard",
+                    "wizard/",
+                    include(
+                        [
+                            path(
+                                "",
+                                RequestEvalWizardReset.as_view(),
+                                name="request_eval_wizard_reset",
+                            ),
+                            path(
+                                _("step-1/"),
+                                RequestEvalWizardStep1.as_view(),
+                                name="request_eval_wizard_step_1",
+                            ),
+                            path(
+                                _("step-2/"),
+                                RequestEvalWizardStep2.as_view(),
+                                name="request_eval_wizard_step_2",
+                            ),
+                            path(
+                                _("step-files/"),
+                                RequestEvalWizardStepFiles.as_view(),
+                                name="request_eval_wizard_step_files",
+                            ),
+                            path(
+                                _("done/"),
+                                RequestEvalWizardSubmit.as_view(),
+                                name="request_eval_wizard_submit",
+                            ),
+                        ]
+                    ),
                 ),
                 path(_("success/"), RequestSuccess.as_view(), name="request_success"),
             ]

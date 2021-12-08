@@ -8,7 +8,7 @@ window.addEventListener('load', function() {
   previewElt.classList.add('dropzone');
 
   var dropzone = new Dropzone(form, {
-    url: form.action,
+    url: DROPZONE_UPLOAD_URL,
     paramName: 'additional_files',
     maxFilesize: 20,
     maxFiles: 10,
@@ -21,6 +21,10 @@ window.addEventListener('load', function() {
     previewsContainer: previewElt,
     clickable: previewElt,
 
+    // headers: {
+    //   'X-CSRFToken': csrfToken,
+    // },
+
     dictDefaultMessage: "Cliquez ou glissez-déposez vos fichiers ici.",
     dictRemoveFile: "Supprimer",
     dictFileTooBig: "Ce fichier est tros gros ({{filesize}}mo). Taille max : {{maxFilesize}}mo.",
@@ -32,10 +36,23 @@ window.addEventListener('load', function() {
 
     init: function() {
       form.addEventListener('submit', function(evt) {
-        evt.preventDefault();
-        evt.stopPropagation();
-        this.processQueue();
+        if (this.getQueuedFiles().length > 0) {
+          evt.preventDefault();
+          evt.stopPropagation();
+          this.processQueue();
+        }
       }.bind(this));
+
+      this.on("sendingmultiple", function(data, xhr, formData) {
+        // Gets triggered when the form is actually being sent.
+        // Hide the success button or the complete form.
+      });
+      this.on("successmultiple", function(files, response, evt) {
+        form.submit()
+      });
+      this.on("errormultiple", function(files, response, evt) {
+        form.submit()
+      });
     }
   });
 });
