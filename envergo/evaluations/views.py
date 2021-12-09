@@ -6,6 +6,7 @@ from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
+from django.utils.datastructures import MultiValueDict
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
 from django.views.generic.edit import CreateView
@@ -181,33 +182,83 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
 DATA_KEY = "REQUEST_WIZARD_DATA"
 FILES_KEY = "REQUEST_WIZARD_FILES"
-
-
-class RequestEvalWizardReset(RedirectView):
-    pattern_name = "request_eval_wizard_step_1"
-
-    def dispatch(self, request, *args, **kwargs):
-        if DATA_KEY in request.session:
-            del request.session[DATA_KEY]
-            request.session.modified = True
-        return super().dispatch(request, *args, **kwargs)
+FILES_FIELD = "additional_files"
 
 
 class WizardStepMixin:
+    """Common code for a form split into several steps.
+
+    The whole form is split into several subforms, and each valid form is
+    saved in session until the last step.
+
+    Then, all form data is combined to save a single object.
+
+    Handling file is a little annoying because they cannot be stored in session,
+    so they have to be uploaded to the file storage right away.
+    """
+
+    def get_form_data(self):
+        data = MultiValueDict(self.request.session.get(DATA_KEY, {}))
+        return data
+
+    def get_files_data(self):
+        return self.request.session.get(FILES_KEY, [])
+
     def get_initial(self):
-        return self.request.session.get(DATA_KEY, {})
+        return self.get_form_data().dict()
 
     def form_valid(self, form):
+        """Save the form data in session."""
+
         if DATA_KEY not in self.request.session:
-            self.request.session[DATA_KEY] = {}
+            self.request.session[DATA_KEY] = MultiValueDict({})
 
         if FILES_KEY not in self.request.session:
-            self.request.session[FILES_KEY] = {}
+            self.request.session[FILES_KEY] = []
 
-        data = form.cleaned_data
-        self.request.session[DATA_KEY].update(data)
+        # Save form data to session
+        data = self.get_form_data()
+        data.update(form.data)
+        self.request.session[DATA_KEY] = dict(data.lists())
+
+        # Save uploaded files using the file storage
+        if FILES_FIELD in self.request.FILES:
+            file_storage = self.get_file_storage()
+            files = self.request.FILES.getlist(FILES_FIELD)
+            filedicts = []
+            for file in files:
+                saved_name = file_storage.save(file.name, file)
+                filedicts.append({"name": file.name, "saved_name": saved_name})
+            self.request.session[FILES_KEY] += filedicts
+
         self.request.session.modified = True
         return super().form_valid(form)
+
+    def get_file_storage(self):
+        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+        return file_storage
+
+    def reset_data(self):
+        """Clear tmp form data stored in session, and uploaded files."""
+
+        self.request.session.pop(DATA_KEY, None)
+
+        file_storage = self.get_file_storage()
+        filedicts = self.request.session.get(FILES_KEY, [])
+        for filedict in filedicts:
+            saved_name = filedict["saved_name"]
+            file_storage.delete(saved_name)
+
+        self.request.session.pop(FILES_KEY, None)
+        self.request.session.modified = True
+
+
+class RequestEvalWizardReset(WizardStepMixin, RedirectView):
+    pattern_name = "request_eval_wizard_step_1"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reset_data()
+        return super().dispatch(request, *args, **kwargs)
 
 
 class RequestEvalWizardStep1(WizardStepMixin, FormView):
@@ -222,25 +273,17 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
     success_url = reverse_lazy("request_eval_wizard_submit")
 
 
-class RequestEvalWizardStepFiles(FormView):
+class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_files.html"
     form_class = WizardFilesForm
     success_url = reverse_lazy("request_eval_wizard_submit")
 
     def form_valid(self, form):
-        files = self.request.FILES.getlist("additional_files")
-        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
-        filedicts = []
-        for file in files:
-            saved_name = file_storage.save(file.name, file)
-            filedicts.append({"name": file.name, "saved_name": saved_name})
-        self.request.session[FILES_KEY] = filedicts
-        self.request.session.modified = True
-
+        super().form_valid(form)
         return JsonResponse({})
 
 
-class RequestEvalWizardSubmit(FormView):
+class RequestEvalWizardSubmit(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_submit.html"
     form_class = RequestForm
     success_url = reverse_lazy("request_success")
@@ -249,13 +292,13 @@ class RequestEvalWizardSubmit(FormView):
         """Return the keyword arguments for instantiating the form."""
         kwargs = super().get_form_kwargs()
         if self.request.method in ("POST", "PUT"):
-            kwargs.update({"data": self.request.session.get(DATA_KEY, {})})
+            kwargs.update({"data": self.get_form_data()})
         return kwargs
 
     def form_valid(self, form):
         request = form.save()
-        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
-        filedicts = self.request.session[FILES_KEY]
+        file_storage = self.get_file_storage()
+        filedicts = self.get_files_data()
         for filedict in filedicts:
             RequestFile.objects.create(
                 request=request,
@@ -263,8 +306,7 @@ class RequestEvalWizardSubmit(FormView):
                 name=filedict["name"],
             )
 
-        del self.request.session[DATA_KEY]
-        del self.request.session[FILES_KEY]
+        self.reset_data()
         return super().form_valid(form)
 
     def form_invalid(self, form):

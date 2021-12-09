@@ -48,10 +48,10 @@ window.addEventListener('load', function() {
         // Hide the success button or the complete form.
       });
       this.on("successmultiple", function(files, response, evt) {
-        form.submit()
+        form.submit();
       });
       this.on("errormultiple", function(files, response, evt) {
-        form.submit()
+        form.submit();
       });
     }
   });
