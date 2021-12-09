@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-08 14:51+0000\n"
+"POT-Creation-Date: 2021-12-09 14:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,92 +62,96 @@ msgstr "votre-espace/"
 msgid "evaluations/"
 msgstr "évaluations/"
 
-#: envergo/evaluations/admin.py:22 envergo/evaluations/models.py:51
-#: envergo/evaluations/models.py:181
+#: envergo/evaluations/admin.py:23 envergo/evaluations/models.py:52
+#: envergo/evaluations/models.py:182
 msgid "Reference"
 msgstr "Référence"
 
-#: envergo/evaluations/admin.py:23
+#: envergo/evaluations/admin.py:24
 msgid "If you select an existing request, this value will be replaced."
 msgstr ""
 "Si vous associez cette évaluation à une demande existante, cette valeur sera "
 "synchronisée."
 
-#: envergo/evaluations/admin.py:29 envergo/evaluations/forms.py:16
-#: envergo/evaluations/forms.py:58 envergo/evaluations/models.py:67
-#: envergo/evaluations/models.py:195
+#: envergo/evaluations/admin.py:30 envergo/evaluations/forms.py:16
+#: envergo/evaluations/forms.py:47 envergo/evaluations/models.py:68
+#: envergo/evaluations/models.py:196
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/admin.py:31 envergo/evaluations/forms.py:17
-#: envergo/evaluations/forms.py:117
+#: envergo/evaluations/admin.py:32 envergo/evaluations/forms.py:17
+#: envergo/evaluations/forms.py:60
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
-#: envergo/evaluations/admin.py:73 envergo/evaluations/admin.py:136
+#: envergo/evaluations/admin.py:74 envergo/evaluations/admin.py:153
 msgid "Project data"
 msgstr "Données projet"
 
-#: envergo/evaluations/admin.py:83
+#: envergo/evaluations/admin.py:84
 msgid "Evaluation report"
 msgstr "Rapport d'évaluation"
 
-#: envergo/evaluations/admin.py:87
+#: envergo/evaluations/admin.py:88
 msgid "Contact data"
 msgstr "Informations de contact"
 
-#: envergo/evaluations/admin.py:102 envergo/evaluations/models.py:60
+#: envergo/evaluations/admin.py:103 envergo/evaluations/models.py:61
 msgid "Request"
 msgstr "Demande"
 
-#: envergo/evaluations/admin.py:114 envergo/evaluations/models.py:87
-#: envergo/evaluations/models.py:141
+#: envergo/evaluations/admin.py:115 envergo/evaluations/models.py:88
+#: envergo/evaluations/models.py:142
 msgid "Probability"
 msgstr "Probabilité"
 
-#: envergo/evaluations/admin.py:134
+#: envergo/evaluations/admin.py:149
 msgid "Project localisation"
 msgstr "Localisation du projet"
 
-#: envergo/evaluations/admin.py:148
+#: envergo/evaluations/admin.py:165
 msgid "Contact info"
 msgstr "Infos de contact"
 
-#: envergo/evaluations/admin.py:158
+#: envergo/evaluations/admin.py:175
 msgid "Meta info"
 msgstr "Infos meta"
 
-#: envergo/evaluations/admin.py:167
+#: envergo/evaluations/admin.py:185
 msgid "Lien vers la carte des parcelles"
 msgstr "Lien vers la carte des parcelles"
 
-#: envergo/evaluations/admin.py:174 envergo/evaluations/models.py:96
-#: envergo/evaluations/models.py:137
+#: envergo/evaluations/admin.py:192
+msgid "Exporter vers QGis ou autre"
+msgstr ""
+
+#: envergo/evaluations/admin.py:199 envergo/evaluations/models.py:97
+#: envergo/evaluations/models.py:138
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/admin.py:186
+#: envergo/evaluations/admin.py:211
 msgid "Résumé"
 msgstr "Résumé"
 
-#: envergo/evaluations/admin.py:225
+#: envergo/evaluations/admin.py:250
 msgid "Create an evaluation from this request"
 msgstr "Créer une évaluation à partir de cette demande"
 
-#: envergo/evaluations/admin.py:230
+#: envergo/evaluations/admin.py:255
 msgid "Please, select one and only one request for this action."
 msgstr "Merci de sélectionner une et une seule demande pour cette action."
 
-#: envergo/evaluations/admin.py:241
+#: envergo/evaluations/admin.py:266
 msgid "There already is an evaluation associated with this request."
 msgstr "Cette demande est déjà associée avec une évaluation existante."
 
-#: envergo/evaluations/admin.py:257
+#: envergo/evaluations/admin.py:282
 #, python-format
 msgid "There was an error creating your evaluation: %(error)s"
 msgstr "Une erreur a empêché la création de l'évaluation : %(error)s"
 
-#: envergo/evaluations/admin.py:266
+#: envergo/evaluations/admin.py:291
 #, python-format
 msgid "<a href=\"%(admin_url)s\">The new evaluation has been created.</a>"
 msgstr "<a href=\"%(admin_url)s\">La nouvelle évaluation a été créée.</a>"
@@ -168,226 +172,247 @@ msgstr "À quelle adresse se situe le projet ?"
 msgid "Type in a few characters to see suggestions"
 msgstr "Saisissez quelques caractères pour voir des suggestions"
 
-#: envergo/evaluations/forms.py:47 envergo/evaluations/models.py:82
-#: envergo/evaluations/models.py:201
-msgid "Created surface"
-msgstr "Surface créée"
-
 #: envergo/evaluations/forms.py:48
-msgid "Created_surface_help_text"
-msgstr ""
-"Somme des emprises au sol de toutes les installations nouvelles (bâtiment, "
-"voirie, remblais, noue, serre, bassin…)"
-
-#: envergo/evaluations/forms.py:52 envergo/evaluations/models.py:85
-#: envergo/evaluations/models.py:204
-msgid "Existing surface"
-msgstr "Surface existante"
-
-#: envergo/evaluations/forms.py:54
-msgid "Existing surface help text"
-msgstr ""
-"Somme des emprises au sol de toutes les installations existantes avant le "
-"projet (bâtiment, voirie, remblais, noue, serre, bassin…)"
-
-#: envergo/evaluations/forms.py:59
 msgid "If an application number was already submitted."
 msgstr ""
 "Si une demande de permis de construire ou d'aménager a déjà été soumise"
 
-#: envergo/evaluations/forms.py:63
+#: envergo/evaluations/forms.py:67 envergo/evaluations/forms.py:118
 msgid "Additional files you might deem useful for the evaluation"
 msgstr ""
 "Informations complémentaires utiles à l'évaluation (CERFA, plan de masse, "
 "pièces complémentaires…)."
 
-#: envergo/evaluations/forms.py:64
+#: envergo/evaluations/forms.py:68 envergo/evaluations/forms.py:119
 msgid "Avalaible formats: pdf, zip."
 msgstr ""
 "Formats autorisés : pdf, zip.<br />Si vous disposez de plusieurs fichiers, "
 "regroupez-les dans une archive zip."
 
-#: envergo/evaluations/forms.py:69
+#: envergo/evaluations/forms.py:74
 msgid "Urbanism department email"
 msgstr "Adresse e-mail du service urbanisme"
 
-#: envergo/evaluations/forms.py:69
+#: envergo/evaluations/forms.py:74
 msgid "Project instructor…"
 msgstr "Personne en charge de l'instruction, boîte générique…"
 
-#: envergo/evaluations/forms.py:73
+#: envergo/evaluations/forms.py:78
 msgid "Project sponsor email address(es)"
 msgstr "Adresses(s) e-mail du porteur de projet"
 
-#: envergo/evaluations/forms.py:74
+#: envergo/evaluations/forms.py:79
 msgid "Petitioner, project manager…"
 msgstr "Pétitionnaire, maître d'œuvre…"
 
-#: envergo/evaluations/forms.py:75
+#: envergo/evaluations/forms.py:80
 #, python-format
 msgid "The %(nth)s address is invalid:"
 msgstr "L'adresse n°%(nth)s est invalide :"
 
-#: envergo/evaluations/forms.py:78 envergo/evaluations/models.py:226
+#: envergo/evaluations/forms.py:83 envergo/evaluations/models.py:230
 msgid "Project sponsor phone number"
 msgstr "Téléphone du porteur de projet"
 
-#: envergo/evaluations/forms.py:81 envergo/evaluations/models.py:230
+#: envergo/evaluations/forms.py:86 envergo/evaluations/models.py:234
 msgid "Send evaluation to project sponsor"
 msgstr ""
 "Je souhaite qu'EnvErgo envoie automatiquement l'évaluation au porteur de "
 "projet"
 
-#: envergo/evaluations/forms.py:85
+#: envergo/evaluations/forms.py:90
 msgid ""
 "If you uncheck this box, you will be the only recipient of the evaluation."
 msgstr ""
 "Si vous décochez cette case, le porteur de projet ne recevra pas l'évaluation"
 
-#: envergo/evaluations/forms.py:107 envergo/evaluations/forms.py:110
-#: envergo/evaluations/models.py:82 envergo/evaluations/models.py:85
-#: envergo/evaluations/models.py:201 envergo/evaluations/models.py:204
-msgid "In square meters"
-msgstr "En m²"
-
-#: envergo/evaluations/forms.py:113
+#: envergo/evaluations/forms.py:107
 msgid "Provide one or several addresses separated by commas « , »"
 msgstr "Saisissez une ou plusieurs adresses séparées par des virgules « , »"
 
-#: envergo/evaluations/models.py:39
+#: envergo/evaluations/models.py:40
 msgid "Unlikely"
 msgstr "Peu probable"
 
-#: envergo/evaluations/models.py:40
+#: envergo/evaluations/models.py:41
 msgid "Possible"
 msgstr "Possible"
 
-#: envergo/evaluations/models.py:41
+#: envergo/evaluations/models.py:42
 msgid "Likely"
 msgstr "Probable"
 
-#: envergo/evaluations/models.py:42
+#: envergo/evaluations/models.py:43
 msgid "Very likely"
 msgstr "Seuil franchi"
 
-#: envergo/evaluations/models.py:57 envergo/evaluations/models.py:218
+#: envergo/evaluations/models.py:58 envergo/evaluations/models.py:222
 msgid "E-mail"
 msgstr "E-mail"
 
-#: envergo/evaluations/models.py:61
+#: envergo/evaluations/models.py:62
 msgid "Does this evaluation answers to an existing request?"
 msgstr "Cette évaluation répond-elle à une demande existante ?"
 
-#: envergo/evaluations/models.py:73
+#: envergo/evaluations/models.py:74
 msgid "Evaluation file"
 msgstr "Fichier d'évaluation"
 
-#: envergo/evaluations/models.py:80 envergo/evaluations/models.py:190
+#: envergo/evaluations/models.py:81 envergo/evaluations/models.py:191
 #: envergo/geodata/forms.py:78
 msgid "Address"
 msgstr "Adresse"
 
-#: envergo/evaluations/models.py:88 envergo/evaluations/models.py:89
+#: envergo/evaluations/models.py:83 envergo/evaluations/models.py:202
+msgid "Created surface"
+msgstr "Surface créée"
+
+#: envergo/evaluations/models.py:83 envergo/evaluations/models.py:86
+#: envergo/evaluations/models.py:205 envergo/evaluations/models.py:208
+msgid "In square meters"
+msgstr "En m²"
+
+#: envergo/evaluations/models.py:86 envergo/evaluations/models.py:208
+msgid "Existing surface"
+msgstr "Surface existante"
+
+#: envergo/evaluations/models.py:89 envergo/evaluations/models.py:90
 msgid "Details"
 msgstr "Détails"
 
-#: envergo/evaluations/models.py:90
+#: envergo/evaluations/models.py:91
 msgid "Contact"
 msgstr "Contact"
 
-#: envergo/evaluations/models.py:91
+#: envergo/evaluations/models.py:92
 msgid "Contact (html)"
 msgstr "Contact (html)"
 
-#: envergo/evaluations/models.py:93 envergo/evaluations/models.py:234
+#: envergo/evaluations/models.py:94 envergo/evaluations/models.py:238
 msgid "Date created"
 msgstr "Date de création"
 
-#: envergo/evaluations/models.py:97
+#: envergo/evaluations/models.py:98
 msgid "Evaluations"
 msgstr "Évaluations"
 
-#: envergo/evaluations/models.py:125
+#: envergo/evaluations/models.py:126
 msgid "Capture of more than 1 ha of rainwater runoff"
 msgstr "Captation de plus de 1 ha de ruissellement d'eaux de pluie"
 
-#: envergo/evaluations/models.py:126
+#: envergo/evaluations/models.py:127
 msgid "Building of more than 400 m¹ in a flood zone"
 msgstr "Construction de plus de 400 m² en zone inondable"
 
-#: envergo/evaluations/models.py:127
+#: envergo/evaluations/models.py:128
 msgid "More than 1000 m² impact on wetlands"
 msgstr "Impact de plus de 1000 m² sur une zone humide"
 
-#: envergo/evaluations/models.py:140 envergo/geodata/models.py:92
+#: envergo/evaluations/models.py:141 envergo/geodata/models.py:92
 msgid "Order"
 msgstr "Ordre"
 
-#: envergo/evaluations/models.py:142 envergo/evaluations/models.py:150
+#: envergo/evaluations/models.py:143 envergo/evaluations/models.py:151
 msgid "Criterion"
 msgstr "Critère"
 
-#: envergo/evaluations/models.py:143
+#: envergo/evaluations/models.py:144
 msgid "Description"
 msgstr "Description"
 
-#: envergo/evaluations/models.py:144
+#: envergo/evaluations/models.py:145
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:145
+#: envergo/evaluations/models.py:146
 msgid "Map"
 msgstr "Carte"
 
-#: envergo/evaluations/models.py:146
+#: envergo/evaluations/models.py:147
 msgid "Legend"
 msgstr "Légende"
 
-#: envergo/evaluations/models.py:147
+#: envergo/evaluations/models.py:148
 msgid "Legend (html)"
 msgstr "Légende (html)"
 
-#: envergo/evaluations/models.py:151
+#: envergo/evaluations/models.py:152
 msgid "Criterions"
 msgstr "Critères"
 
-#: envergo/evaluations/models.py:191 envergo/geodata/models.py:103
+#: envergo/evaluations/models.py:192 envergo/geodata/models.py:103
 msgid "Parcels"
 msgstr "Parcelles"
 
-#: envergo/evaluations/models.py:207
+#: envergo/evaluations/models.py:211
 msgid "Project description, comments"
 msgstr "Bref descriptif du projet et commentaires"
 
-#: envergo/evaluations/models.py:210
+#: envergo/evaluations/models.py:214
 msgid "Additional data"
 msgstr "Fichiers complémentaires"
 
-#: envergo/evaluations/models.py:221
+#: envergo/evaluations/models.py:225
 msgid "Project sponsor email(s)"
 msgstr "Adresse(s) email du porteur de projet"
 
-#: envergo/evaluations/models.py:228
+#: envergo/evaluations/models.py:232
 msgid "Other contacts"
 msgstr "Autres contacts"
 
-#: envergo/evaluations/models.py:237
+#: envergo/evaluations/models.py:241
 msgid "Evaluation request"
 msgstr "Demande d'évaluation"
 
-#: envergo/evaluations/models.py:238
+#: envergo/evaluations/models.py:242
 msgid "Evaluation requests"
 msgstr "Demandes d'évaluation"
 
-#: envergo/evaluations/urls.py:16
+#: envergo/evaluations/models.py:287
+msgid "File"
+msgstr "Fichier"
+
+#: envergo/evaluations/models.py:291
+msgid "Name"
+msgstr "Nom"
+
+#: envergo/evaluations/models.py:294
+msgid "Request file"
+msgstr "Fichier join"
+
+#: envergo/evaluations/models.py:295
+msgid "Request files"
+msgstr "Fichiers joints"
+
+#: envergo/evaluations/urls.py:20
 msgid "requests/"
 msgstr "demandes/"
 
-#: envergo/evaluations/urls.py:20
+#: envergo/evaluations/urls.py:25
+msgid "form/"
+msgstr "formulaire/"
+
+#: envergo/evaluations/urls.py:34
+msgid "step-1/"
+msgstr "étape-1/"
+
+#: envergo/evaluations/urls.py:39
+msgid "step-2/"
+msgstr "étape-2/"
+
+#: envergo/evaluations/urls.py:44
+msgid "step-files/"
+msgstr "étape-fichiers/"
+
+#: envergo/evaluations/urls.py:49
+msgid "confirm/"
+msgstr "confirmation/"
+
+#: envergo/evaluations/urls.py:56
 msgid "success/"
 msgstr "succès/"
 
-#: envergo/evaluations/urls.py:24
+#: envergo/evaluations/urls.py:60
 msgid "dashboard/"
 msgstr "tableau-de-bord/"
 
@@ -460,25 +485,29 @@ msgstr "Le préfixe est un nombre à trois chiffres."
 msgid "The parcel must be a number between 1 and 9999"
 msgstr "La parcelle est un nombre entre 1 et 9999."
 
-#: envergo/pages/urls.py:10
+#: envergo/pages/urls.py:11
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:15
+#: envergo/pages/urls.py:16
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:20
+#: envergo/pages/urls.py:21
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:25
+#: envergo/pages/urls.py:26
 msgid "water-law/"
 msgstr "loi-sur-leau/"
 
-#: envergo/pages/urls.py:30
+#: envergo/pages/urls.py:31
 msgid "map/"
 msgstr "carte/"
+
+#: envergo/pages/urls.py:36
+msgid "parcels.geojson"
+msgstr ""
 
 #: envergo/templates/pages/legal_mentions.html:3
 #: envergo/templates/pages/legal_mentions.html:14
@@ -539,3 +568,13 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "Created_surface_help_text"
+#~ msgstr ""
+#~ "Somme des emprises au sol de toutes les installations nouvelles "
+#~ "(bâtiment, voirie, remblais, noue, serre, bassin…)"
+
+#~ msgid "Existing surface help text"
+#~ msgstr ""
+#~ "Somme des emprises au sol de toutes les installations existantes avant le "
+#~ "projet (bâtiment, voirie, remblais, noue, serre, bassin…)"
