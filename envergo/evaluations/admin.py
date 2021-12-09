@@ -116,6 +116,11 @@ class EvaluationAdmin(admin.ModelAdmin):
         return obj.get_global_probability_display()
 
 
+class ParcelInline(admin.TabularInline):
+    model = Request.parcels.through
+    autocomplete_fields = ["parcel"]
+
+
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = [
@@ -134,6 +139,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_map",
         "parcels_geojson",
     ]
+    inlines = [ParcelInline]
     search_fields = ["reference", "application_number"]
     ordering = ["-created_at"]
     fieldsets = (
@@ -167,11 +173,17 @@ class RequestAdmin(admin.ModelAdmin):
         ),
         (_("Meta info"), {"fields": ("created_at",)}),
     )
+    exclude = ["parcels"]
     actions = ["make_evaluation"]
     change_form_template = "evaluations/admin/request_change_form.html"
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("evaluation")
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related("evaluation")
+            .prefetch_related("parcels")
+        )
         return qs
 
     @admin.display(description=_("Lien vers la carte des parcelles"))
