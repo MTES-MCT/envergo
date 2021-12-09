@@ -43,21 +43,9 @@
       {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
     </fieldset>
 
-    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-btns-group--icon-left fr-mt-4w">
-      {% comment %} {% if wizard.steps.prev %}
-        <li>
-          <button class="fr-btn fr-btn--secondary fr-fi-arrow-left-line" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">
-            {{ _("prev step") }}
-          </button>
-        </li>
-      {% endif %} {% endcomment %}
-
-      <li>
-        <button type="submit" class="fr-btn fr-fi-checkbox-circle-line">
-          Soumettre votre évaluation
-        </button>
-      </li>
-    </ul>
+    <button type="submit" class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+      Poursuivre votre demande d'évaluation
+    </button>
 
   </form>
 

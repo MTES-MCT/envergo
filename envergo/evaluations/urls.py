@@ -6,7 +6,6 @@ from envergo.evaluations.views import (
     Dashboard,
     EvaluationDetail,
     EvaluationSearch,
-    RequestEvaluation,
     RequestEvalWizardReset,
     RequestEvalWizardStep1,
     RequestEvalWizardStep2,
@@ -21,9 +20,9 @@ urlpatterns = [
         _("requests/"),
         include(
             [
-                path("", RequestEvaluation.as_view(), name="request_evaluation"),
+                path("", RequestEvalWizardReset.as_view(), name="request_evaluation"),
                 path(
-                    "wizard/",
+                    _("form/"),
                     include(
                         [
                             path(
@@ -47,7 +46,7 @@ urlpatterns = [
                                 name="request_eval_wizard_step_files",
                             ),
                             path(
-                                _("done/"),
+                                _("confirm/"),
                                 RequestEvalWizardSubmit.as_view(),
                                 name="request_eval_wizard_submit",
                             ),

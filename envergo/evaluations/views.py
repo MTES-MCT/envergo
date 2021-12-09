@@ -291,9 +291,14 @@ class RequestEvalWizardSubmit(WizardStepMixin, FormView):
     def get_form_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
         kwargs = super().get_form_kwargs()
-        if self.request.method in ("POST", "PUT"):
-            kwargs.update({"data": self.get_form_data()})
+        kwargs.update({"data": self.get_form_data()})
         return kwargs
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        if not form.is_valid():
+            return self.form_invalid(form)
+        return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         request = form.save()
@@ -307,8 +312,7 @@ class RequestEvalWizardSubmit(WizardStepMixin, FormView):
             )
 
         self.reset_data()
-        return super().form_valid(form)
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
-        # XXX Redirect ?
-        return super().form_invalid(form)
+        return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
