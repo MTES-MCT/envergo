@@ -228,7 +228,9 @@ class WizardStepMixin:
             filedicts = []
             for file in files:
                 saved_name = file_storage.save(file.name, file)
-                filedicts.append({"name": file.name, "saved_name": saved_name})
+                filedicts.append(
+                    {"name": file.name, "saved_name": saved_name, "size": file.size}
+                )
             self.request.session[FILES_KEY] += filedicts
 
         self.request.session.modified = True
@@ -251,6 +253,11 @@ class WizardStepMixin:
 
         self.request.session.pop(FILES_KEY, None)
         self.request.session.modified = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["uploaded_files"] = self.get_files_data()
+        return context
 
 
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):

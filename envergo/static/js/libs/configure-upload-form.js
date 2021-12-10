@@ -3,6 +3,7 @@ window.addEventListener('load', function() {
   var form = document.getElementById(DROPZONE_FORM);
   var field = document.getElementById(DROPZONE_FIELD);
   var previewElt = document.getElementById('dropzone-previews');
+  var uploadedData = JSON.parse(document.getElementById('uploaded-files').textContent);
 
   form.classList.add('dropzone');
   previewElt.classList.add('dropzone');
@@ -21,10 +22,6 @@ window.addEventListener('load', function() {
     previewsContainer: previewElt,
     clickable: previewElt,
 
-    // headers: {
-    //   'X-CSRFToken': csrfToken,
-    // },
-
     dictDefaultMessage: "Cliquez ou glissez-déposez vos fichiers ici.",
     dictRemoveFile: "Supprimer",
     dictFileTooBig: "Ce fichier est tros gros ({{filesize}}mo). Taille max : {{maxFilesize}}mo.",
@@ -35,6 +32,8 @@ window.addEventListener('load', function() {
     dictMaxFilesExceeded: "Vous ne pouvez pas envoyer plus de fichiers.",
 
     init: function() {
+
+      // Process the upload queue before submiting the form
       form.addEventListener('submit', function(evt) {
         if (this.getQueuedFiles().length > 0) {
           evt.preventDefault();
@@ -43,13 +42,18 @@ window.addEventListener('load', function() {
         }
       }.bind(this));
 
-      this.on("sendingmultiple", function(data, xhr, formData) {
-        // Gets triggered when the form is actually being sent.
-        // Hide the success button or the complete form.
-      });
+      // Display previously uploaded files in the upload preview
+      uploadedData.forEach(function(data) {
+        this.options.addedfile.call(this, data);
+      }.bind(this));
+
+
+      // Whatever happens with the upload, we need to submit the form
+      // to display success or error validation
       this.on("successmultiple", function(files, response, evt) {
         form.submit();
       });
+
       this.on("errormultiple", function(files, response, evt) {
         form.submit();
       });

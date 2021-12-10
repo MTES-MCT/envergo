@@ -62,6 +62,7 @@
     DROPZONE_FIELD = 'id-additional_files-dropzone';
     DROPZONE_UPLOAD_URL = '{% url "request_eval_wizard_step_files" %}';
   </script>
+  {{ uploaded_files|json_script:'uploaded-files' }}
   <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
   <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
 {% endblock %}
