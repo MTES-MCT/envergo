@@ -2,7 +2,7 @@ Bonjour,
 
 Nous vous confirmons avoir bien enregistré votre demande d'évaluation de votre projet au titre de la Loi sur l'eau.
 {% if application_number %}
-(Votre numéro de demande de permis : {{ application_number }}
+(Votre numéro de demande de permis : {{ application_number }}).
 {% endif %}
 Vous recevrez une réponse dans les deux jours ouvrés.
 
