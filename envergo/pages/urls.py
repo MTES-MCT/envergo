@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
 from envergo.geodata.views import ParcelsExport
-from envergo.pages.views import HomeView
+from envergo.pages.views import HomeView, StatsView
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
@@ -26,6 +26,11 @@ urlpatterns = [
         _("water-law/"),
         TemplateView.as_view(template_name="pages/water_law.html"),
         name="water_law",
+    ),
+    path(
+        _("stats/"),
+        StatsView.as_view(),
+        name="stats",
     ),
     path(
         _("map/"),
