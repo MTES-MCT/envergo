@@ -10,7 +10,6 @@ from envergo.evaluations.views import (
     RequestEvalWizardStep1,
     RequestEvalWizardStep2,
     RequestEvalWizardStepFiles,
-    RequestEvalWizardSubmit,
     RequestSuccess,
 )
 
@@ -40,11 +39,6 @@ urlpatterns = [
                     _("step-files/"),
                     RequestEvalWizardStepFiles.as_view(),
                     name="request_eval_wizard_step_files",
-                ),
-                path(
-                    _("confirm/"),
-                    RequestEvalWizardSubmit.as_view(),
-                    name="request_eval_wizard_submit",
                 ),
                 path(_("success/"), RequestSuccess.as_view(), name="request_success"),
             ]
