@@ -277,37 +277,22 @@ class RequestEvalWizardStep1(WizardStepMixin, FormView):
 class RequestEvalWizardStep2(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
-    success_url = reverse_lazy("request_eval_wizard_submit")
-
-
-class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
-    template_name = "evaluations/eval_request_wizard_files.html"
-    form_class = WizardFilesForm
-    success_url = reverse_lazy("request_eval_wizard_submit")
-
-    def form_valid(self, form):
-        super().form_valid(form)
-        return JsonResponse({})
-
-
-class RequestEvalWizardSubmit(WizardStepMixin, FormView):
-    template_name = "evaluations/eval_request_wizard_submit.html"
-    form_class = RequestForm
     success_url = reverse_lazy("request_success")
 
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = super().get_form_kwargs()
-        kwargs.update({"data": self.get_form_data()})
-        return kwargs
-
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        if not form.is_valid():
-            return self.form_invalid(form)
-        return super().get(request, *args, **kwargs)
-
     def form_valid(self, form):
+        """Since this is the last step, process the whole form."""
+        super().form_valid(form)
+
+        form_kwargs = self.get_form_kwargs()
+        form_kwargs["data"] = self.get_form_data()
+        request_form = RequestForm(**form_kwargs)
+        if request_form.is_valid():
+            return self.request_form_valid(request_form)
+        else:
+            print(request_form.errors)
+            return self.request_form_invalid(request_form)
+
+    def request_form_valid(self, form):
         request = form.save()
         file_storage = self.get_file_storage()
         filedicts = self.get_files_data()
@@ -324,5 +309,15 @@ class RequestEvalWizardSubmit(WizardStepMixin, FormView):
         self.reset_data()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form):
+    def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
+
+
+class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
+    template_name = "evaluations/eval_request_wizard_files.html"
+    form_class = WizardFilesForm
+    success_url = reverse_lazy("request_eval_wizard_submit")
+
+    def form_valid(self, form):
+        super().form_valid(form)
+        return JsonResponse({})
