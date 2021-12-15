@@ -29,6 +29,7 @@ celery==5.1.2
 certifi==2021.5.30
     # via
     #   -r base.txt
+    #   pyproj
     #   requests
     #   sentry-sdk
 cffi==1.14.6
@@ -158,6 +159,8 @@ pyjwt[crypto]==2.1.0
     # via
     #   -r base.txt
     #   django-allauth
+pyproj==3.3.0
+    # via -r base.txt
 python-dateutil==2.8.2
     # via botocore
 python-slugify==5.0.2

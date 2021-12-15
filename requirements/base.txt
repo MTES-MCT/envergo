@@ -15,7 +15,9 @@ billiard==3.6.4.0
 celery==5.1.2
     # via -r base.in
 certifi==2021.5.30
-    # via requests
+    # via
+    #   pyproj
+    #   requests
 cffi==1.14.6
     # via
     #   argon2-cffi
@@ -97,6 +99,8 @@ pycparser==2.20
     # via cffi
 pyjwt[crypto]==2.1.0
     # via django-allauth
+pyproj==3.3.0
+    # via -r base.in
 python-slugify==5.0.2
     # via -r base.in
 python3-openid==3.2.0
