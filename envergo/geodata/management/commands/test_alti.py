@@ -1,5 +1,6 @@
 from queue import Queue
 
+import numpy as np
 import requests
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand
@@ -20,6 +21,8 @@ DIRECTIONS = [
 
 MAX_SURFACE = 10000
 
+CATALOG_SIZE = 10
+
 WGS84_SRID = 4326
 LAMBERT93_SRID = 2154
 wgs_lambert_transformer = Transformer.from_crs(WGS84_SRID, LAMBERT93_SRID)
@@ -28,7 +31,7 @@ lambert_wgs_transformer = Transformer.from_crs(LAMBERT93_SRID, WGS84_SRID)
 
 def wgs_to_lambert(longitude, latitude):
     # Gotcha!
-    # In the wgs84 crs, the latitude (north, so y) axis comes first
+    # In the wgs84 crs, the latitude (north / y) axis comes first
     x, y = wgs_lambert_transformer.transform(latitude, longitude)
     return x, y
 
@@ -38,20 +41,92 @@ def lambert_to_wgs(x, y):
     return longitude, latitude
 
 
-class Alti:
-    """Data wrapper for getting coordinates altitude."""
+class RgeAltiClient:
+    def fetch_points(self, points):
+        """Fetch altitude data for a list of points."""
 
-    def __init__(self):
-        pass
+        # We have a bunch of lambert93 coordinates
+        # We want a list corresponding list of longitudes and latitudes, as strings
+        wgs_points = [lambert_to_wgs(*p) for p in points]
+        as_strings = [(str(lon), str(lat)) for lon, lat in wgs_points]
+        longitudes, latitudes = zip(*as_strings)
+        longitude_str = "|".join(longitudes)
+        latitude_str = "|".join(latitudes)
 
-    def get(self, x_y):
-        lon, lat = lambert_to_wgs(*x_y)
-        url = f"https://wxs.ign.fr/essentiels/alti/rest/elevation.json?lon={lon}&lat={lat}&indent=true"
+        # Time for the api query, yeah!
+        url = f"https://wxs.ign.fr/essentiels/alti/rest/elevation.json?lon={longitude_str}&lat={latitude_str}&zonly=true"  # noqa
         res = requests.get(url)
         data = res.json()
-        alti = data["elevations"][0]["z"]
-        print(f"Fetching alti to {lat},{lon} -> {alti}")
-        return alti
+        altis = data["elevations"]
+        return altis
+
+
+class Alti:
+    """Data wrapper for getting coordinates altitude.
+
+    Get data efficiently by fetching blocks of values at once.
+    """
+
+    def __init__(self, step_size, catalog_size=CATALOG_SIZE):
+        self.step_size = step_size
+        self.catalog_size = catalog_size
+        self.value_delta = step_size * catalog_size
+        self._catalogs = {}
+
+    def get(self, cell):
+        """Fetch a single value by retrieving it from the correct catalog."""
+
+        cell = self.snap(cell)
+        catalog = self.get_catalog_for(cell)
+        x, y = self.get_data_index(cell)
+
+        return catalog[x][y]
+
+    def snap(self, cell):
+        """Snap custom coordinates to the grid.
+
+        E.g coordinates (65, 47) are rounded to (60, 50) if the step size is 10.
+        """
+        cell_x = round(cell[0] / self.step_size) * self.step_size
+        cell_y = round(cell[1] / self.step_size) * self.step_size
+        return cell_x, cell_y
+
+    def get_catalog_for(self, cell):
+        """Return the catalog containing data for the cell."""
+
+        catalog_index = self.get_catalog_index(cell)
+        if catalog_index not in self._catalogs:
+            self._catalogs[catalog_index] = self.build_catalog(catalog_index)
+        return self._catalogs[catalog_index]
+
+    def get_data_index(self, cell):
+        """Get the cell value coordinates inside the catalog."""
+
+        x = (cell[0] // self.step_size) % self.catalog_size
+        y = (cell[1] // self.step_size) % self.catalog_size
+        return x, y
+
+    def get_catalog_index(self, cell):
+        """Returns the identifier of catalog containing the cell."""
+
+        x = cell[0] // self.value_delta
+        y = cell[1] // self.value_delta
+        return x, y
+
+    def build_catalog(self, x_y):
+        """Fetch and store data for a given catalog."""
+
+        x, y = x_y
+        min_x, min_y = x * self.value_delta, y * self.value_delta
+        max_x, max_y = min_x + self.value_delta, min_y + self.value_delta
+        points = [
+            (i, j)
+            for i in range(min_x, max_x, self.step_size)
+            for j in range(min_y, max_y, self.step_size)
+        ]
+        altis = RgeAltiClient().fetch_points(points)
+        catalog = np.array(altis).reshape((self.step_size, self.step_size))
+        return catalog
 
 
 class Mnt:
@@ -75,7 +150,7 @@ class Mnt:
 
         self.center = Point(x, y, srid=LAMBERT93_SRID)
         self.step_size = step_size
-        self.attributes = {"alti": Alti()}
+        self.attributes = {"alti": Alti(step_size)}
 
     @property
     def cell_area(self):
@@ -83,7 +158,7 @@ class Mnt:
 
     def coords(self, cell):
         x, y = cell
-        return self.center.x + x, self.center.y + y
+        return int(self.center.x + x), int(self.center.y + y)
 
     def compute_runoff_surface(self, max_surface):
         """Find the total surface of the water runoof interception area.
@@ -111,12 +186,20 @@ class Mnt:
 
     def neighbours(self, cell):
         x, y = cell
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if (i, j) != (0, 0):
-                    yield (x + i, y + j)
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if (dx, dy) != (0, 0):
+                    yield (x + dx, y + dy)
 
     def is_flowing(self, from_cell, to_cell):
+        """Does the water flows from cell 1 to cell 2?
+
+        This is the most basic implementation of the D8 algorithm.
+        Water flows entirely from one cell the cell around that as the
+        deepest elevation deficit.
+
+        See https://www.sigterritoires.fr/index.php/lhydrologie-avec-un-sig-pour-les-nuls-que-nous-sommes-calcul-de-lecoulement1/  # noqa
+        """
         return self.lowest_alti_around(from_cell) == self.alti(to_cell)
 
     def lowest_alti_around(self, cell):
@@ -131,8 +214,8 @@ class Command(BaseCommand):
     """Calcule la surface dont l'eau ruisselle jusqu'à un point."""
 
     def add_arguments(self, parser):
-        parser.add_argument("x", nargs=1, type=float)
-        parser.add_argument("y", nargs=1, type=float)
+        parser.add_argument("x", nargs=1, type=int)
+        parser.add_argument("y", nargs=1, type=int)
 
     def handle(self, *args, **options):
 
