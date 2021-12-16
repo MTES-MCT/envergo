@@ -21,7 +21,7 @@ DIRECTIONS = [
 
 MAX_SURFACE = 10000
 
-CATALOG_SIZE = 10
+PAGE_SIZE = 10
 
 WGS84_SRID = 4326
 LAMBERT93_SRID = 2154
@@ -67,20 +67,20 @@ class Alti:
     Get data efficiently by fetching blocks of values at once.
     """
 
-    def __init__(self, step_size, catalog_size=CATALOG_SIZE):
+    def __init__(self, step_size, page_size=PAGE_SIZE):
         self.step_size = step_size
-        self.catalog_size = catalog_size
-        self.value_delta = step_size * catalog_size
-        self._catalogs = {}
+        self.page_size = page_size
+        self.value_delta = step_size * page_size
+        self._pages = {}
 
     def get(self, cell):
-        """Fetch a single value by retrieving it from the correct catalog."""
+        """Fetch a single value by retrieving it from the correct page."""
 
         cell = self.snap(cell)
-        catalog = self.get_catalog_for(cell)
+        page = self.get_page_for(cell)
         x, y = self.get_data_index(cell)
 
-        return catalog[x][y]
+        return page[x][y]
 
     def snap(self, cell):
         """Snap custom coordinates to the grid.
@@ -91,30 +91,30 @@ class Alti:
         cell_y = round(cell[1] / self.step_size) * self.step_size
         return cell_x, cell_y
 
-    def get_catalog_for(self, cell):
-        """Return the catalog containing data for the cell."""
+    def get_page_for(self, cell):
+        """Return the page containing data for the cell."""
 
-        catalog_index = self.get_catalog_index(cell)
-        if catalog_index not in self._catalogs:
-            self._catalogs[catalog_index] = self.build_catalog(catalog_index)
-        return self._catalogs[catalog_index]
+        page_index = self.get_page_index(cell)
+        if page_index not in self._pages:
+            self._pages[page_index] = self.build_page(page_index)
+        return self._pages[page_index]
 
     def get_data_index(self, cell):
-        """Get the cell value coordinates inside the catalog."""
+        """Get the cell value coordinates inside the page."""
 
-        x = (cell[0] // self.step_size) % self.catalog_size
-        y = (cell[1] // self.step_size) % self.catalog_size
+        x = (cell[0] // self.step_size) % self.page_size
+        y = (cell[1] // self.step_size) % self.page_size
         return x, y
 
-    def get_catalog_index(self, cell):
-        """Returns the identifier of catalog containing the cell."""
+    def get_page_index(self, cell):
+        """Returns the identifier of page containing the cell."""
 
         x = cell[0] // self.value_delta
         y = cell[1] // self.value_delta
         return x, y
 
-    def build_catalog(self, x_y):
-        """Fetch and store data for a given catalog."""
+    def build_page(self, x_y):
+        """Fetch and store data for a given page."""
 
         x, y = x_y
         min_x, min_y = x * self.value_delta, y * self.value_delta
@@ -125,8 +125,8 @@ class Alti:
             for j in range(min_y, max_y, self.step_size)
         ]
         altis = RgeAltiClient().fetch_points(points)
-        catalog = np.array(altis).reshape((self.step_size, self.step_size))
-        return catalog
+        page = np.array(altis).reshape((self.step_size, self.step_size))
+        return page
 
 
 class Mnt:
