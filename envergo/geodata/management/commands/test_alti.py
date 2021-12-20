@@ -125,7 +125,7 @@ class Alti:
             for j in range(min_y, max_y, self.step_size)
         ]
         altis = RgeAltiClient().fetch_points(points)
-        page = np.array(altis).reshape((self.step_size, self.step_size))
+        page = np.array(altis).reshape((self.page_size, self.page_size))
         return page
 
 
@@ -158,7 +158,10 @@ class Mnt:
 
     def coords(self, cell):
         x, y = cell
-        return int(self.center.x + x), int(self.center.y + y)
+        return (
+            int(self.center.x + x * self.step_size),
+            int(self.center.y + y * self.step_size),
+        )
 
     def compute_runoff_surface(self, max_surface):
         """Find the total surface of the water runoof interception area.
@@ -216,12 +219,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("x", nargs=1, type=int)
         parser.add_argument("y", nargs=1, type=int)
+        parser.add_argument("--step_size", nargs="?", type=int, default=10)
 
     def handle(self, *args, **options):
 
         x = options["x"][0]
         y = options["y"][0]
-        mnt = Mnt(x, y, step_size=10)
+        step_size = options["step_size"]
+        mnt = Mnt(x, y, step_size=step_size)
         surface = mnt.compute_runoff_surface(MAX_SURFACE)
 
         self.stdout.write(f"Surface de ruissellement = {surface}m²")
