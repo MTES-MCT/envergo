@@ -23,3 +23,4 @@ django-braces
 shapely
 numpy
 pyproj
+matplotlib
