@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistiques{% endblock %}
+
+{% block article %}
+  <h1>Nos statistiques publiques</h1>
+
+  <p class="fr-text--lead">Depuis le 15 juillet 2021…</p>
+
+  <div class="fr-container-fluid">
+    <div class="fr-grid-row fr-grid-row--gutters">
+
+      {% for stat in stats %}
+        <div class="fr-col-12 fr-col-md-6">
+          <div class="fr-card fr-card--no-arrow ">
+            <div class="fr-card__body">
+              <p class="fr-card__desc fr-h1">{{ stat.title }}</p>
+              <p class="fr-card__desc fr-h6 fr-mb-0">{{ stat.description }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+    </div>
+  </div>
+{% endblock %}

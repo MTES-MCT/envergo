@@ -1,12 +1,13 @@
-from django.urls import path
+from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
 from envergo.geodata.views import ParcelsExport
-from envergo.pages.views import HomeView, StatsView
+from envergo.pages.views import HomeView
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
+    path(_("stats/"), include("envergo.stats.urls")),
     path(
         _("legal-mentions/"),
         TemplateView.as_view(template_name="pages/legal_mentions.html"),
@@ -26,11 +27,6 @@ urlpatterns = [
         _("water-law/"),
         TemplateView.as_view(template_name="pages/water_law.html"),
         name="water_law",
-    ),
-    path(
-        _("stats/"),
-        StatsView.as_view(),
-        name="stats",
     ),
     path(
         _("map/"),
