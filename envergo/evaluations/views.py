@@ -316,7 +316,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_files.html"
     form_class = WizardFilesForm
-    success_url = reverse_lazy("request_eval_wizard_submit")
+    success_url = reverse_lazy("request_eval_wizard_step_2")
 
     def form_valid(self, form):
         super().form_valid(form)
