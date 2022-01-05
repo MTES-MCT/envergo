@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
@@ -25,6 +27,8 @@ from envergo.evaluations.tasks import (
     confirm_request_to_requester,
 )
 from envergo.geodata.forms import ParcelFormSet
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationSearch(FormView):
@@ -296,6 +300,8 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         request = form.save()
         file_storage = self.get_file_storage()
         filedicts = self.get_files_data()
+        logger.warn(f"Saving files: {filedicts}")
+
         for filedict in filedicts:
             RequestFile.objects.create(
                 request=request,
