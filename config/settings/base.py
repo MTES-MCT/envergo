@@ -68,7 +68,6 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
-    "formtools",
 ]
 
 LOCAL_APPS = [
