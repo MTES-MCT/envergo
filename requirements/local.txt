@@ -91,7 +91,7 @@ defusedxml==0.7.1
     #   python3-openid
 distlib==0.3.2
     # via virtualenv
-django==3.2.6
+django==3.2.10
     # via
     #   -r base.txt
     #   django-allauth

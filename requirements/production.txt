@@ -73,7 +73,7 @@ defusedxml==0.7.1
     # via
     #   -r base.txt
     #   python3-openid
-django==3.2.6
+django==3.2.10
     # via
     #   -r base.txt
     #   django-allauth
