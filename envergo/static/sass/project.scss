@@ -280,4 +280,8 @@ form.dropzone {
   &.dz-drag-hover {
     border-style: none;
   }
+
+  div.dz-error .dz-image {
+    border: 2px dashed red;
+  }
 }

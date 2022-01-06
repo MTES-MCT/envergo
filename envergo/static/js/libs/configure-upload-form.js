@@ -53,10 +53,6 @@ window.addEventListener('load', function() {
       this.on("successmultiple", function(files, response, evt) {
         form.submit();
       });
-
-      this.on("errormultiple", function(files, response, evt) {
-        form.submit();
-      });
     }
   });
 });
