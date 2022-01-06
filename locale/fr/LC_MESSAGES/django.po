@@ -186,8 +186,7 @@ msgstr ""
 #: envergo/evaluations/forms.py:68 envergo/evaluations/forms.py:119
 msgid "Avalaible formats: pdf, zip."
 msgstr ""
-"Formats autorisés : pdf, zip.<br />Si vous disposez de plusieurs fichiers, "
-"regroupez-les dans une archive zip."
+"Formats autorisés : pdf, zip."
 
 #: envergo/evaluations/forms.py:74
 msgid "Urbanism department email"
