@@ -64,6 +64,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
+    readonly_fields = ["get_result_display"]
 
     fieldsets = (
         (
@@ -90,7 +91,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("result", "global_probability", "details_md")},
+            {"fields": ("get_result_display", "global_probability", "details_md")},
         ),
         (
             _("Contact data"),
