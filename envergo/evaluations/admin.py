@@ -40,7 +40,15 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
-    fields = ("order", "probability", "criterion", "description_md", "map", "legend_md")
+    fields = (
+        "order",
+        "result",
+        "probability",
+        "criterion",
+        "description_md",
+        "map",
+        "legend_md",
+    )
 
 
 @admin.register(Evaluation)
@@ -49,6 +57,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "application_number",
+        "result",
         "probability",
         "request_link",
     ]
@@ -82,7 +91,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("global_probability", "details_md")},
+            {"fields": ("result", "global_probability", "details_md")},
         ),
         (
             _("Contact data"),

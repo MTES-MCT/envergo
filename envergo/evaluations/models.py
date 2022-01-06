@@ -43,6 +43,12 @@ PROBABILITIES = Choices(
     (4, "likely+", _("Very likely")),
 )
 
+RESULTS = Choices(
+    (1, "soumis", _("Subject to LSE")),
+    (2, "non_soumis", _("Non subject to LSE")),
+    (3, "action_requise", _("Action required")),
+)
+
 
 class Evaluation(models.Model):
     """A single evaluation for a building permit application."""
@@ -85,6 +91,7 @@ class Evaluation(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
+    result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
     global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
@@ -139,6 +146,7 @@ class Criterion(models.Model):
         related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
+    result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
     probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
