@@ -286,3 +286,5 @@ envergo/media/
 project.css
 project.min.css
 *.min.js
+
+data.*

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static evaluations leaflet_tags %}
+
+{% block title %}Carte{% endblock %}
+
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Carte</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block content %}
+  <article>
+    <h1>Carte</h1>
+    <div class="ratio-4x3">
+      <div class="ratio-content">
+        {% leaflet_map 'map' callback="window.mapInit" %}
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block extra_css %}
+  {% leaflet_css %}
+{% endblock %}
+
+{% block extra_js %}
+  {% leaflet_js %}
+  <script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
+  <script>
+    function mapInit(newMap, options) {
+      const latLngAniane = [43.6861, 3.5911];
+      const map = newMap;
+      map.setView(latLngAniane, 17);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      const geojsonLayer = L.geoJSON().addTo(map);
+
+      map.on('click', ({ latlng }) => {
+        const searchUrl = `https://geocodage.ign.fr/look4/parcel/reverse?returnTrueGeometry=true&searchGeom={"type":"Point","coordinates":[${latlng.lng},${latlng.lat}]}`;
+        fetch(searchUrl)
+          .then((response) => response.json())
+          .then(response => {
+          const properties = response.features[0].properties;
+          const { identifiant, nomCommune, feuille, section, numero, trueGeometry } = properties;
+
+          geojsonLayer.addData(trueGeometry);
+          console.log(identifiant, nomCommune, feuille, section, numero);
+
+          return trueGeometry;
+        })
+          .then(geometry => {
+          const zoneUrl = '{% url "zone_search" %}';
+          fetch(zoneUrl, {method: 'POST', body: JSON.stringify(geometry)})
+            .then((response) => response.json())
+            .then(response => {
+            geojsonLayer.addData(response);
+          })
+        });
+      });
+    };
+  </script>
+{% endblock %}

@@ -21,3 +21,6 @@ celery
 django-ratelimit
 django-braces
 shapely
+numpy
+pyproj
+matplotlib
