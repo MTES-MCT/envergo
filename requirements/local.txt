@@ -239,7 +239,7 @@ phonenumbers==8.12.31
     #   django-phonenumber-field
 pickleshare==0.7.5
     # via ipython
-pillow==8.3.1
+pillow==8.3.2
     # via
     #   -r base.txt
     #   matplotlib
