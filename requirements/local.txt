@@ -355,7 +355,7 @@ six==1.16.0
     #   django-coverage-plugin
     #   python-dateutil
     #   virtualenv
-sqlparse==0.4.1
+sqlparse==0.4.2
     # via
     #   -r base.txt
     #   django
