@@ -4,7 +4,7 @@
 #
 #    pip-compile production.in
 #
-amqp==5.0.6
+amqp==5.0.9
     # via
     #   -r base.txt
     #   kombu
@@ -24,7 +24,7 @@ botocore==1.21.26
     # via
     #   boto3
     #   s3transfer
-celery==5.1.2
+celery==5.2.2
     # via -r base.txt
 certifi==2021.5.30
     # via
@@ -41,7 +41,7 @@ charset-normalizer==2.0.4
     # via
     #   -r base.txt
     #   requests
-click==7.1.2
+click==8.0.3
     # via
     #   -r base.txt
     #   celery
@@ -133,7 +133,7 @@ kiwisolver==1.3.2
     # via
     #   -r base.txt
     #   matplotlib
-kombu==5.1.0
+kombu==5.2.3
     # via
     #   -r base.txt
     #   celery
