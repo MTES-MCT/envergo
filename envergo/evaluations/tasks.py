@@ -39,7 +39,7 @@ def confirm_request_to_requester(request_id):
     )
 
     email = EmailMultiAlternatives(
-        subject="Votre demande d'évaluation",
+        subject="Votre demande d'évaluation Loi sur l'Eau",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email],
