@@ -112,6 +112,17 @@ class Evaluation(models.Model):
         self.details_html = markdown_to_html(self.details_md)
         super().save(*args, **kwargs)
 
+    def compute_result(self):
+        results = [criterion.result for criterion in self.criterions.all()]
+
+        if RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif RESULTS.action_requise in results:
+            result = RESULTS.action_requise
+        else:
+            result = RESULTS.non_soumis
+        return result
+
     @property
     def application_number_display(self):
         an = self.application_number
