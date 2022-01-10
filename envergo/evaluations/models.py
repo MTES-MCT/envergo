@@ -113,6 +113,8 @@ class Evaluation(models.Model):
         super().save(*args, **kwargs)
 
     def compute_result(self):
+        """Compute evaluation result depending on eval criterions."""
+
         results = [criterion.result for criterion in self.criterions.all()]
 
         if RESULTS.soumis in results:

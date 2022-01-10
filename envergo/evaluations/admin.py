@@ -104,7 +104,17 @@ class EvaluationAdmin(admin.ModelAdmin):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
+        obj.result = obj.compute_result()
         super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+
+        # The evaluation result depends on all the criterions, that's why
+        # we have to save them before.
+        evaluation = form.instance
+        evaluation.result = evaluation.compute_result()
+        evaluation.save()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("request")
