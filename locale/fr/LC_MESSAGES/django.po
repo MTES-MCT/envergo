@@ -268,7 +268,7 @@ msgstr "Probable"
 
 #: envergo/evaluations/models.py:42
 msgid "Very likely"
-msgstr "Très probable"
+msgstr "Seuil franchi"
 
 #: envergo/evaluations/models.py:57 envergo/evaluations/models.py:218
 msgid "E-mail"

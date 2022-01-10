@@ -12,8 +12,8 @@ def probability(p):
         "Peu probable",
         "Possible",
         "Probable",
-        "Très probable",
-        "Certain",
+        "Seuil franchi",
+        "Seuil franchi",
     ]
     label = p_labels[p]
 
