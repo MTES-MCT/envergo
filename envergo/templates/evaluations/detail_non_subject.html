@@ -120,7 +120,9 @@
   <script>
     window.addEventListener('load', function() {
       const accordion = document.getElementById('evaluation-accordion');
-      new AccordionAnalytics(accordion);
+      if (accordion) {
+        new AccordionAnalytics(accordion);
+      }
     });
   </script>
 
@@ -128,8 +130,10 @@
   <script>
     window.addEventListener('load', function() {
       const accordion = document.getElementById('evaluation-accordion');
-      const blankifier = new LinkTargetBlankifier();
-      blankifier.blankify(accordion);
+      if (accordion) {
+        const blankifier = new LinkTargetBlankifier();
+        blankifier.blankify(accordion);
+      }
     });
   </script>
 
