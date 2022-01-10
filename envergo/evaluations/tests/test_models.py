@@ -46,7 +46,7 @@ def test_evaluation_status_soumis_3():
         evaluation=evaluation, criterion="flood_zone", result=RESULTS.action_requise
     )
     CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=RESULTS.action_requise
+        evaluation=evaluation, criterion="wetland", result=RESULTS.non_soumis
     )
 
     assert evaluation.compute_result() == RESULTS.soumis
