@@ -5,13 +5,21 @@ from django.db import migrations
 
 def set_criterions_results(apps, schema_editor):
     Criterion = apps.get_model("evaluations", "Criterion")
-    very_likely_probability = 4
+    very_likely = 4
+    likely = 3
+    possible = 2
+
+    soumis = 1
+    non_soumis = 2
+    action_requise = 3
 
     for criterion in Criterion.objects.all():
-        if criterion.probability >= very_likely_probability:
-            criterion.result = 1  # soumis
+        if criterion.probability == very_likely:
+            criterion.result = soumis
+        elif criterion.probability == likely:
+            criterion.result = action_requise
         else:
-            criterion.result = 2  # non soumis
+            criterion.result = non_soumis
         criterion.save()
 
 
@@ -22,5 +30,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(set_criterions_results),
+        migrations.RunPython(set_criterions_results, migrations.RunPython.noop),
     ]
