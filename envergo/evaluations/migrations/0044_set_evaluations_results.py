@@ -2,10 +2,9 @@
 
 from django.db import migrations
 
-# RESULTS
-# 1: soumis
-# 2: non_soumis
-# 3: action_requise
+soumis = 1
+non_soumis = 2
+action_requise = 3
 
 
 def set_evaluations_results(apps, schema_editor):
@@ -14,10 +13,10 @@ def set_evaluations_results(apps, schema_editor):
     for eval in evals:
         results = [criterion.result for criterion in eval.criterions.all()]
 
-        if 1 in results:
-            eval.result = 1
+        if soumis in results:
+            eval.result = soumis
         else:
-            eval.result = 2
+            eval.result = non_soumis
         eval.save()
 
 
