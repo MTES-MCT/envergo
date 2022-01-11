@@ -30,11 +30,16 @@ def confirm_request_to_admin(request_id, host):
 def confirm_request_to_requester(request_id):
     request = Request.objects.filter(id=request_id).first()
     user_email = request.contact_email
-    txt_body = render_to_string("evaluations/emails/request_confirm_body.txt")
-    html_body = render_to_string("evaluations/emails/request_confirm_body.html")
+    context = {"application_number": request.application_number}
+    txt_body = render_to_string(
+        "evaluations/emails/request_confirm_body.txt", context=context
+    )
+    html_body = render_to_string(
+        "evaluations/emails/request_confirm_body.html", context=context
+    )
 
     email = EmailMultiAlternatives(
-        subject="Votre demande d'évaluation",
+        subject="[EnvErgo] Votre demande d'évaluation Loi sur l'Eau",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email],

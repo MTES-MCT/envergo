@@ -258,6 +258,9 @@ LOGGING = {
 INSTALLED_APPS += ["compressor"]
 STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
+# Handle file uploads
+UPLOAD_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
 # CELERY
 if USE_TZ:
     CELERY_TIMEZONE = TIME_ZONE

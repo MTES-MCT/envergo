@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+  <h1>Demandez une évaluation pour un projet</h1>
+
+  <p class="fr-text--lead">
+    EnvErgo vous aide à déterminer si un projet de construction
+    est soumis à la Loi sur l'eau. Recevez une réponse dans les deux jours ouvrés.
+  </p>
+
+  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+    {% csrf_token %}
+
+    <p>Étape 1 sur 2</p>
+
+    {% include '_form_header.html' with form=form %}
+
+    <fieldset class="fr-mb-6w">
+      {% include '_field_snippet.html' with field=form.address %}
+      {% include '_field_snippet.html' with field=form.application_number %}
+    </fieldset>
+
+    <button type="submit" class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+      Poursuivre votre demande d'évaluation
+    </button>
+
+  </form>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% leaflet_css %}
+  <link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+  {% leaflet_js %}
+  <script>
+    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+  </script>
+  <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+{% endblock %}

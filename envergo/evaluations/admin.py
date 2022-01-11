@@ -13,6 +13,7 @@ from envergo.evaluations.models import (
     Criterion,
     Evaluation,
     Request,
+    RequestFile,
     generate_reference,
 )
 
@@ -121,6 +122,12 @@ class ParcelInline(admin.TabularInline):
     autocomplete_fields = ["parcel"]
 
 
+class RequestFileInline(admin.TabularInline):
+    model = RequestFile
+    fields = ["file", "name"]
+    extra = 0
+
+
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = [
@@ -139,7 +146,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_map",
         "parcels_geojson",
     ]
-    inlines = [ParcelInline]
+    inlines = [ParcelInline, RequestFileInline]
     search_fields = ["reference", "application_number"]
     ordering = ["-created_at"]
     fieldsets = (
@@ -297,3 +304,8 @@ class RequestAdmin(admin.ModelAdmin):
         }
         self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
         return
+
+
+@admin.register(RequestFile)
+class RequestFileAdmin(admin.ModelAdmin):
+    list_display = ["file", "name", "request"]

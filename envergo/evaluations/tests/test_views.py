@@ -5,7 +5,6 @@ from django.urls import reverse
 
 from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
-from envergo.geodata.models import Parcel
 
 pytestmark = pytest.mark.django_db
 
@@ -63,116 +62,68 @@ def test_search_existing_eval(client, evaluation):
     assert "<h1>Notification Loi sur l'eau</h1>" in content
 
 
-def test_eval_request_creation(client, eval_request_data):
-    """Eval request form works as intended."""
-
-    request_url = reverse("request_evaluation")
-    request_qs = Request.objects.all()
-    parcel_qs = Parcel.objects.all()
-
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-
-    res = client.post(request_url, data=eval_request_data)
+def test_eval_request_wizard_step_1(client):
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, Testville"}
+    res = client.post(url, data=data)
     assert res.status_code == 302
-    assert request_qs.count() == 1
-    assert parcel_qs.count() == 1
-    assert request_qs[0].parcels.count() == 1
+
+    DATA_KEY = "REQUEST_WIZARD_DATA"
+    session = client.session
+    assert DATA_KEY in session
+
+    data = session[DATA_KEY]
+    assert data["address"][0] == "42 rue du Test, Testville"
 
 
-def test_eval_works_with_extra_parcels(client, eval_request_data):
-    """Eval request form needs a parcel."""
+def test_eval_request_wizard_step_2(client):
 
-    request_url = reverse("request_evaluation")
-    request_qs = Request.objects.all()
-    parcel_qs = Parcel.objects.all()
+    qs = Request.objects.all()
+    assert qs.count() == 0
 
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-
-    eval_request_data.update(
-        {
-            "parcel-TOTAL_FORMS": "2",
-            "parcel-1-commune": "34333",
-            "parcel-1-section": "BV",
-            "parcel-1-prefix": "000",
-            "parcel-1-order": "0001",
-        }
-    )
-
-    res = client.post(request_url, data=eval_request_data)
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "contact_email": "contact@example.org",
+        "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_sponsor_phone_number": "0612345678",
+    }
+    res = client.post(url, data=data)
     assert res.status_code == 302
-    assert request_qs.count() == 1
-    assert parcel_qs.count() == 2
-    assert request_qs[0].parcels.count() == 2
 
+    DATA_KEY = "REQUEST_WIZARD_DATA"
+    session = client.session
+    assert DATA_KEY in session
 
-def test_eval_error_missing_parcel(client, eval_request_data):
-    """Eval request form needs a parcel."""
-
-    request_url = reverse("request_evaluation")
-    request_qs = Request.objects.all()
-    parcel_qs = Parcel.objects.all()
-
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-
-    eval_request_data.update(
-        {
-            "parcel-0-commune": "",
-            "parcel-0-section": "",
-            "parcel-0-prefix": "",
-            "parcel-0-order": "",
-        }
-    )
-
-    res = client.post(request_url, data=eval_request_data)
-    assert res.status_code == 200
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-    assert "Vous devez fournir une parcelle" in res.content.decode()
-
-
-def test_eval_error_wrong_sponsor_emails(client, eval_request_data):
-    """Eval request form needs valid sponsor emails."""
-
-    request_url = reverse("request_evaluation")
-    request_qs = Request.objects.all()
-    parcel_qs = Parcel.objects.all()
-
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-
-    eval_request_data.update({"project_sponsor_emails": "toto1@tata.com, toto2"})
-
-    res = client.post(request_url, data=eval_request_data)
-    assert res.status_code == 200
-    assert request_qs.count() == 0
-    assert parcel_qs.count() == 0
-    assert "adresse n°2 est invalide" in res.content.decode()
+    data = session[DATA_KEY]
+    assert data["project_description"] == ["Bla bla bla"]
+    assert qs.count() == 0
 
 
 @patch("envergo.utils.mattermost.requests.post")
-def test_eval_triggers_ping_to_mattermost(
-    mock_post, settings, client, eval_request_data
-):
-    """Requesting an evaluation pings the project team."""
-
+def test_eval_wizard_all_steps(mock_post, settings, client, mailoutbox):
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
-    request_url = reverse("request_evaluation")
-    res = client.post(request_url, data=eval_request_data)
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, Testville"}
+    res = client.post(url, data=data)
     assert res.status_code == 302
 
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "contact_email": "contact@example.org",
+        "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_sponsor_phone_number": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    assert qs.count() == 1
     mock_post.assert_called_once()
-
-
-def test_eval_triggers_email_to_requester(client, eval_request_data, mailoutbox):
-    """Requesting an evaluation pings the project team."""
-
-    request_url = reverse("request_evaluation")
-    res = client.post(request_url, data=eval_request_data)
-    assert res.status_code == 302
-
     assert len(mailoutbox) == 1
 
 

@@ -7,7 +7,7 @@ from envergo.users.models import User
 from envergo.utils.auth import make_token_login_url
 from envergo.utils.tools import get_base_url
 
-LOGIN_SUBJECT = "Activation compte EnvErgo"
+LOGIN_SUBJECT = "[EnvErgo] Activation de votre compte"
 
 
 @app.task

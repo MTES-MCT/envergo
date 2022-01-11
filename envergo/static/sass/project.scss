@@ -263,3 +263,43 @@ article {
     margin-bottom: 1.5rem;
   }
 }
+
+
+/**
+ * Dropzone bad css design fixes
+ *
+ * The dropzone lib makes it difficult to style a upload field
+ * inside a complete dropzone form.
+ */
+form.dropzone {
+  min-height: unset;
+  border: unset;
+  border-radius: none;
+  padding: unset;
+
+  &.dz-drag-hover {
+    border-style: none;
+  }
+
+  div.dz-error .dz-image {
+    border: 2px dashed red;
+  }
+}
+
+
+@keyframes spinner {
+  from {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.spinner::before {
+  display: inline-block;
+  animation: spinner 2s linear infinite;
+}

@@ -7,6 +7,10 @@
 
   <p>Nous vous confirmons avoir bien enregistré votre demande d'évaluation de votre projet au titre de la Loi sur l'eau.</p>
 
+  {% if application_number %}
+    <p>(Votre numéro de demande de permis : {{ application_number }}).</p>
+  {% endif %}
+
   <p>Vous recevrez une réponse dans les deux jours ouvrés.</p>
 
   <p>En attendant, vous pouvez consulter notre FAQ sur la Loi sur l'eau.</p>

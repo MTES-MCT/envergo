@@ -1,0 +1,46 @@
+{% load utils %}
+
+<div id="form-group-{{ field.name }}" class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
+
+  <label class="fr-label" for="{{ field.id_for_label }}">
+    <span class="label-content">{{ field.label }}</span>
+    {% if field.help_text %}
+      <span class="fr-hint-text">{{ field.help_text|safe }}</span>
+    {% endif %}
+  </label>
+
+  <div id="dropzone-previews" class="dropzone-previews">
+    <div class="dz-default dz-message">
+      <button class="dz-button" type="button">
+        Cliquez ou glissez-déposez vos fichiers ici.
+      </button>
+    </div>
+  </div>
+  <div id="{{ field.id_for_label }}-dropzone">
+
+    {% if nest_field_class %}
+      <div class="{{ nest_field_class }}">
+    {% endif %}
+
+    <div class="fallback">
+      {% if field.errors %}
+        {{ field }}
+      {% else %}
+        {{ field }}
+      {% endif %}
+    </div>
+
+    {% if nest_field_class %}
+      </div>
+    {% endif %}
+
+  </div>
+
+  {% if field.errors %}
+    <p class="fr-error-text">
+      ↑
+      {{ field.errors.0 }}
+      ↑
+    </p>
+  {% endif %}
+</div>

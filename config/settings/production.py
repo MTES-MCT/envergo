@@ -68,9 +68,11 @@ AWS_S3_ENDPOINT_URL = env("DJANGO_AWS_S3_ENDPOINT_URL")
 AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
+AWS_UPLOAD_BUCKET_NAME = env("DJANGO_AWS_UPLOAD_BUCKET_NAME")
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME")
 AWS_DEFAULT_ACL = "public-read"
 AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False
 
 # DO NOT change these unless you know what you're doing.
 _AWS_EXPIRY = 60 * 60 * 24 * 7
@@ -87,6 +89,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
 DEFAULT_FILE_STORAGE = "envergo.utils.storages.MediaRootS3Boto3Storage"
+UPLOAD_FILE_STORAGE = "envergo.utils.storages.UploadS3Boto3Storage"
 MEDIA_URL = f"https://{aws_s3_domain}/media/"
 
 # TEMPLATES
