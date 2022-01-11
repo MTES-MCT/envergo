@@ -285,3 +285,21 @@ form.dropzone {
     border: 2px dashed red;
   }
 }
+
+
+@keyframes spinner {
+  from {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.spinner::before {
+  display: inline-block;
+  animation: spinner 2s linear infinite;
+}

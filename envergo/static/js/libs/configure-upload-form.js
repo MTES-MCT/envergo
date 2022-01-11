@@ -2,6 +2,8 @@ window.addEventListener('load', function() {
 
   var form = document.getElementById(DROPZONE_FORM);
   var field = document.getElementById(DROPZONE_FIELD);
+  var submitBtn = form.querySelector('button[type=submit]');
+  var btnIcon = submitBtn.querySelector('span[class^="fr-fi-"]');
   var previewElt = document.getElementById('dropzone-previews');
   var uploadedData = JSON.parse(document.getElementById('uploaded-files').textContent);
 
@@ -38,6 +40,17 @@ window.addEventListener('load', function() {
         if (this.getQueuedFiles().length > 0) {
           evt.preventDefault();
           evt.stopPropagation();
+
+          // Disable form submit
+          submitBtn.setAttribute("disabled", "");
+
+          // Update button message
+          btnIcon.classList.remove("fr-fi-checkbox-circle-line");
+          btnIcon.classList.add("fr-fi-refresh-line");
+          btnIcon.classList.add("spinner");
+          btnIcon.textContent = "Veuillez patienter, envoi en cours";
+          btnIcon.setAttribute("role", "alert");
+
           this.processQueue();
         }
       }.bind(this));
