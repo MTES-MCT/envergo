@@ -40,6 +40,7 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
+    readonly_fields = ["probability"]
     fields = (
         "order",
         "result",
@@ -65,7 +66,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
-    readonly_fields = ["result"]
+    readonly_fields = ["result", "global_probability"]
 
     fieldsets = (
         (

@@ -92,7 +92,12 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
-    global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    global_probability = models.IntegerField(
+        _("Probability"),
+        choices=PROBABILITIES,
+        null=True,
+        blank=True,
+    )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=False)
@@ -160,7 +165,12 @@ class Criterion(models.Model):
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
     result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
-    probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    probability = models.IntegerField(
+        _("Probability"),
+        choices=PROBABILITIES,
+        null=True,
+        blank=True,
+    )
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
     description_html = models.TextField(_("Description (html)"))
