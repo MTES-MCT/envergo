@@ -43,9 +43,10 @@ class CriterionInline(admin.StackedInline):
     readonly_fields = ["probability"]
     fields = (
         "order",
-        "result",
-        "probability",
         "criterion",
+        "result",
+        "required_action",
+        "probability",
         "description_md",
         "map",
         "legend_md",

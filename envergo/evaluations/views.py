@@ -111,7 +111,15 @@ class EvaluationDetail(DetailView):
         context = super().get_context_data(**kwargs)
 
         if self.object:
-            context["criterions"] = self.object.criterions.all()
+            criterions = self.object.criterions.all()
+            context["criterions"] = criterions
+
+            actions = [
+                criterion.get_required_action_display()
+                for criterion in criterions
+                if criterion.result == RESULTS.action_requise
+            ]
+            context["required_actions"] = actions
         return context
 
 

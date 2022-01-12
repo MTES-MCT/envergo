@@ -154,6 +154,23 @@ CRITERIONS = Choices(
 )
 
 
+ACTIONS = Choices(
+    ("not_in_zh", "ne se situe pas en zone humide"),
+    (
+        "surface_lt_1000",
+        "a une emprise au sol — y compris travaux et remblais — de moins de 1 000 m²",
+    ),
+    (
+        "surface_lt_400",
+        "a une emprise au sol — y compris travaux et remblais — de moins de 400 m²",
+    ),
+    (
+        "runoff_lt_10000",
+        "capte une surface de ruissellement d'eau de pluie inférieure à 10 000 m²",
+    ),
+)
+
+
 class Criterion(models.Model):
     """A single evaluation item."""
 
@@ -165,6 +182,9 @@ class Criterion(models.Model):
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
     result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
+    required_action = models.TextField(
+        _("Required action"), choices=ACTIONS, blank=True
+    )
     probability = models.IntegerField(
         _("Probability"),
         choices=PROBABILITIES,
