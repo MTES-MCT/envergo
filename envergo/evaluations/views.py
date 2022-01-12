@@ -17,7 +17,14 @@ from envergo.evaluations.forms import (
     WizardContactForm,
     WizardFilesForm,
 )
-from envergo.evaluations.models import Criterion, Evaluation, Request, RequestFile
+from envergo.evaluations.models import (
+    PROBABILITIES,
+    RESULTS,
+    Criterion,
+    Evaluation,
+    Request,
+    RequestFile,
+)
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
@@ -51,13 +58,31 @@ class EvaluationDetail(DetailView):
     def get_template_names(self):
         """Return which template to use.
 
-        We use two different evaluation formats, depending on the fact that
-        the project is subject to the Water law.
+        We use THREE different eval templates, depending on the result:
+         - soumis
+         - non-soumis
+         - action requise
+
+        Also, we keep the old formats for existing evaluations.
         """
-        if self.object.is_project_subject_to_water_law():
-            template_names = ["evaluations/detail_subject.html"]
+
+        new_templates = {
+            RESULTS.soumis: "evaluations/detail/soumis.html",
+            RESULTS.non_soumis: "evaluations/detail/non_soumis.html",
+            RESULTS.action_requise: "evaluations/detail/action_requise.html",
+        }
+        old_templates = {
+            PROBABILITIES.unlikely: "evaluations/detail/old/non_soumis.html",
+            PROBABILITIES.possible: "evaluations/detail/old/non_soumis.html",
+            PROBABILITIES.likely: "evaluations/detail/old/non_soumis.html",
+            PROBABILITIES.very_likely: "evaluations/detail/old/soumis.html",
+        }
+        evaluation = self.object
+
+        if evaluation.result:
+            template_names = [new_templates.get(evaluation.result)]
         else:
-            template_names = ["evaluations/detail_non_subject.html"]
+            template_names = [old_templates.get(evaluation.global_probability)]
 
         return template_names
 
