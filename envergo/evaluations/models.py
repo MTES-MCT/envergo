@@ -40,7 +40,7 @@ PROBABILITIES = Choices(
     (1, "unlikely", _("Unlikely")),
     (2, "possible", _("Possible")),
     (3, "likely", _("Likely")),
-    (4, "likely+", _("Very likely")),
+    (4, "very_likely", _("Very likely")),
 )
 
 RESULTS = Choices(
@@ -144,7 +144,7 @@ class Evaluation(models.Model):
         we mark a project "subject to the law" when the probablitiy is
         "very likely".
         """
-        return self.global_probability >= getattr(PROBABILITIES, "likely+")
+        return self.global_probability >= getattr(PROBABILITIES, "very_likely")
 
 
 CRITERIONS = Choices(
