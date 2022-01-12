@@ -2,7 +2,7 @@
   "name": "envergo",
   "version": "1.0.0",
   "dependencies": {
-    "@gouvfr/dsfr": "^1.1.0",
+    "@gouvfr/dsfr": "^1.2.1",
     "@sentry/browser": "^6.12.0",
     "accessible-autocomplete": "^2.0.3",
     "autoprefixer": "^9.4.7",
