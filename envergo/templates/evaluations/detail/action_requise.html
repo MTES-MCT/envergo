@@ -47,6 +47,12 @@
             <p>D'après les informations dont nous disposons, ce projet est probablement
               <span class="fr-tag probability probability-4">soumis à la Loi sur l'eau</span>.</p>
             <p>Le porteur de projet doit démontrer que son projet :</p>
+
+            <ul>
+              {% for action in required_actions %}
+                <li>{{ action }}</li>
+              {% endfor %}
+            </ul>
           </div>
         </div>
       </div>
