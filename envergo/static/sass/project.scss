@@ -1,5 +1,3 @@
-@use "node_modules/@gouvfr/dsfr/src/schemes/styles/settings/colors";
-
 $white: #fff;
 $mint-green: #d6e9c6;
 $black: #000;
@@ -25,19 +23,19 @@ $red: #b94a48;
   color: black;
 
   &.probability-1 {
-    background-color: colors.$green-soft-400;
+    background-color: #34cb6a;
   }
 
   &.probability-2 {
-    background-color: colors.$blue-soft-300;
+    background-color: #b6cffb;
   }
 
   &.probability-3 {
-    background-color: colors.$yellow-dark-400;
+    background-color: #fcc0b4;
   }
 
   &.probability-4 {
-    background-color: colors.$orange-soft-400;
+    background-color: #efcb3a;
   }
 }
 
