@@ -85,11 +85,7 @@
             <td>{{ evaluation.created_surface }} m²</td>
 
             <td>
-              {% if evaluation.is_project_subject_to_water_law %}
-                <span class="fr-tag probability probability-4">Soumis</span>
-              {% else %}
-                <span class="fr-tag probability probability-3">Non soumis</span>
-              {% endif %}
+              {% result_tag evaluation %}
             </td>
           </tr>
         {% empty %}
