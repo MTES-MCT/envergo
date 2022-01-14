@@ -2,11 +2,11 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
+from envergo.evaluations.views import RequestEvalWizardReset
 from envergo.geodata.views import ParcelsExport
-from envergo.pages.views import HomeView
 
 urlpatterns = [
-    path("", HomeView.as_view(), name="home"),
+    path("", RequestEvalWizardReset.as_view(), name="home"),
     path(_("stats/"), include("envergo.stats.urls")),
     path(
         _("legal-mentions/"),
