@@ -308,7 +308,6 @@ class RequestAdmin(admin.ModelAdmin):
                 address=req.address,
                 created_surface=req.created_surface,
                 existing_surface=req.existing_surface,
-                global_probability=0,
             )
         except Exception as e:
             error = _("There was an error creating your evaluation: %(error)s") % {
