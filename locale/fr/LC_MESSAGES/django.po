@@ -254,7 +254,7 @@ msgstr "Soumis à la LSE"
 
 #: envergo/evaluations/models.py:48
 msgid "Non subject to LSE"
-msgstr "Non-soumis à la LSE"
+msgstr "Non soumis à la LSE"
 
 #: envergo/evaluations/models.py:49
 msgid "Action required"
