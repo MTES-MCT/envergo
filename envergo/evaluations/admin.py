@@ -40,7 +40,6 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
-    readonly_fields = ["probability"]
     fields = (
         "order",
         "criterion",
