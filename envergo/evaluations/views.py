@@ -104,6 +104,7 @@ class EvaluationDetail(DetailView):
                 criterion.get_required_action_display()
                 for criterion in criterions
                 if criterion.result == RESULTS.action_requise
+                and criterion.required_action
             ]
             context["required_actions"] = actions
         return context
