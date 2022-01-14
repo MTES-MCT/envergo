@@ -191,8 +191,6 @@ class Criterion(models.Model):
     probability = models.IntegerField(
         _("Probability"),
         choices=PROBABILITIES,
-        null=True,
-        blank=True,
     )
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
