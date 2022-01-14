@@ -112,6 +112,9 @@ class Evaluation(models.Model):
     def __str__(self):
         return self.reference
 
+    def get_absolute_url(self):
+        return reverse("evaluation_detail", args=[self.reference])
+
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
