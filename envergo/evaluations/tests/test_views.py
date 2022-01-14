@@ -168,7 +168,7 @@ def dashboard_does_not_list_other_evals(user, client):
 def test_users_can_see_dashboard_menu(user, client):
     client.force_login(user)
     home_url = reverse("home")
-    res = client.get(home_url)
+    res = client.get(home_url, follow=True)
 
     assert res.status_code == 200
     assert "Tableau de bord" in res.content.decode()
@@ -176,7 +176,7 @@ def test_users_can_see_dashboard_menu(user, client):
 
 def test_anonymous_cannot_see_dashboard_menu(client):
     home_url = reverse("home")
-    res = client.get(home_url)
+    res = client.get(home_url, follow=True)
 
     assert res.status_code == 200
     assert "Tableau de bord" not in res.content.decode()

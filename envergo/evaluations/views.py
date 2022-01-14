@@ -229,7 +229,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         request = form.save()
         file_storage = self.get_file_storage()
         filedicts = self.get_files_data()
-        logger.warn(f"Saving files: {filedicts}")
+        logger.warning(f"Saving files: {filedicts}")
 
         for filedict in filedicts:
             RequestFile.objects.create(
