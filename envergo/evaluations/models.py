@@ -184,7 +184,7 @@ class Criterion(models.Model):
         related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
-    result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
+    result = models.IntegerField(_("Result"), choices=RESULTS)
     required_action = models.TextField(
         _("Required action"), choices=ACTIONS, blank=True
     )
