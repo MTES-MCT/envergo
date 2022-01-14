@@ -18,7 +18,6 @@ from envergo.evaluations.forms import (
     WizardFilesForm,
 )
 from envergo.evaluations.models import (
-    PROBABILITIES,
     RESULTS,
     Criterion,
     Evaluation,
@@ -62,28 +61,15 @@ class EvaluationDetail(DetailView):
          - soumis
          - non-soumis
          - action requise
-
-        Also, we keep the old formats for existing evaluations.
         """
 
-        new_templates = {
+        templates = {
             RESULTS.soumis: "evaluations/detail/soumis.html",
             RESULTS.non_soumis: "evaluations/detail/non_soumis.html",
             RESULTS.action_requise: "evaluations/detail/action_requise.html",
         }
-        old_templates = {
-            PROBABILITIES.unlikely: "evaluations/detail/old/non_soumis.html",
-            PROBABILITIES.possible: "evaluations/detail/old/non_soumis.html",
-            PROBABILITIES.likely: "evaluations/detail/old/non_soumis.html",
-            PROBABILITIES.very_likely: "evaluations/detail/old/soumis.html",
-        }
         evaluation = self.object
-
-        if evaluation.result:
-            template_names = [new_templates.get(evaluation.result)]
-        else:
-            template_names = [old_templates.get(evaluation.global_probability)]
-
+        template_names = [templates.get(evaluation.result)]
         return template_names
 
     def get_queryset(self):
