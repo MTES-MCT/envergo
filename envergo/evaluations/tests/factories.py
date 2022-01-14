@@ -17,7 +17,6 @@ class EvaluationFactory(DjangoModelFactory):
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     result = 1
-    global_probability = 2
     contact_email = factory.Sequence(lambda n: f"user_{n}@example.com")
     contact_md = "envergo@example.org"
     contact_html = "envergo@example.org"

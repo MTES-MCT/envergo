@@ -92,12 +92,6 @@ class Evaluation(models.Model):
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
-    global_probability = models.IntegerField(
-        _("Probability"),
-        choices=PROBABILITIES,
-        null=True,
-        blank=True,
-    )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=False)
@@ -138,16 +132,6 @@ class Evaluation(models.Model):
         an = self.application_number
         # Those are non-breaking spaces
         return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
-
-    def is_project_subject_to_water_law(self):
-        """Is the evaluated project subject to the Water law.
-
-        In our current knowledge, we cannot decide if a project
-        is for certain subject to the Law. Hence, for experimental purpose,
-        we mark a project "subject to the law" when the probablitiy is
-        "very likely".
-        """
-        return self.global_probability >= getattr(PROBABILITIES, "very_likely")
 
 
 CRITERIONS = Choices(
