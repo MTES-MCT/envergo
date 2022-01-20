@@ -221,7 +221,7 @@ class RequestAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Résumé"))
     def summary(self, obj):
-        request_url = reverse("admin:evaluations_request_change", args=[obj.reference])
+        request_url = reverse("admin:evaluations_request_change", args=[obj.id])
         site = Site.objects.get(id=settings.SITE_ID)
 
         parcel_map_url = obj.get_parcel_map_url()
