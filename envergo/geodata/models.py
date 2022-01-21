@@ -147,3 +147,6 @@ class Zone(gis_models.Model):
     class Meta:
         verbose_name = _("Zone")
         verbose_name_plural = _("Zones")
+
+    def __str__(self):
+        return self.name
