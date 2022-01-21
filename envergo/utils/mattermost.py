@@ -1,5 +1,9 @@
+import logging
+
 import requests
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def notify(msg):
@@ -8,8 +12,10 @@ def notify(msg):
     Which channel is entirely defined in the endpoint settings.
     """
     endpoint = settings.MATTERMOST_ENDPOINT
+    logger.warning(f"Sending mattermost notification {endpoint}")
     if endpoint:
         payload = {"text": msg}
-        requests.post(endpoint, json=payload)
+        res = requests.post(endpoint, json=payload)
+        logger.warning(res)
     else:
-        print(msg)
+        logger.warning("No mattermost endpoint configured. Doing nothing.")

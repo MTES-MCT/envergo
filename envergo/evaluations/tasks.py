@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -7,10 +9,14 @@ from config.celery_app import app
 from envergo.evaluations.models import Request
 from envergo.utils.mattermost import notify
 
+logger = logging.getLogger(__name__)
+
 
 @app.task
 def confirm_request_to_admin(request_id, host):
     """Send a Mattermost notification to confirm the evaluation request."""
+
+    logger.warning(f"Sending mattermost notification {request_id} {host}")
 
     request = Request.objects.get(id=request_id)
     request_url = reverse("admin:evaluations_request_change", args=[request_id])
