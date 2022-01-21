@@ -121,10 +121,23 @@ class Parcel(models.Model):
         return f"{self.commune}{self.prefix}{self.section}{self.order:04}"
 
 
+class Map(models.Model):
+    """Holds a shapefile map."""
+
+    file = models.FileField(_("File"), upload_to="maps/")
+    description = models.TextField(_("Description"))
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("Map")
+        verbose_name_plural = _("Maps")
+
+
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
     name = models.CharField(_("Name"), max_length=256)
+    map = models.ForeignKey(Map, on_delete=models.CASCADE)
     data = models.JSONField(_("Data"), null=True)
     geometry = gis_models.MultiPolygonField()
 
