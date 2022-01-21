@@ -124,6 +124,7 @@ class Parcel(models.Model):
 class Map(models.Model):
     """Holds a shapefile map."""
 
+    name = models.CharField(_("Name"), max_length=256)
     file = models.FileField(_("File"), upload_to="maps/")
     description = models.TextField(_("Description"))
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
