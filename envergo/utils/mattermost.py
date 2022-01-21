@@ -16,6 +16,7 @@ def notify(msg):
     if endpoint:
         payload = {"text": msg}
         res = requests.post(endpoint, json=payload)
-        logger.warning(res, res.text)
+        logger.warning(res)
+        logger.warning(res.text)
     else:
         logger.warning("No mattermost endpoint configured. Doing nothing.")
