@@ -28,7 +28,9 @@ class MapAdmin(admin.ModelAdmin):
 
         map = queryset[0]
         process_shapefile_map.delay(map.id)
-        msg = _("Your shapefile will be processed soon.")
+        msg = _(
+            "Your shapefile will be processed soon. It might take up to a few minutes."
+        )
         self.message_user(request, msg, level=messages.INFO)
 
     @admin.display(description=_("Nb zones"))
