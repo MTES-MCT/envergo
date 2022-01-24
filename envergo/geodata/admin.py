@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Map, Parcel, Zone
+from envergo.geodata.tasks import process_shapefile_map
 
 
 @admin.register(Parcel)
@@ -26,7 +27,9 @@ class MapAdmin(admin.ModelAdmin):
             return
 
         map = queryset[0]
-        map.extract()
+        process_shapefile_map.delay(map.id)
+        msg = _("Your shapefile will be processed soon.")
+        self.message_user(request, msg, level=messages.INFO)
 
     @admin.display(description=_("Nb zones"))
     def zone_count(self, obj):

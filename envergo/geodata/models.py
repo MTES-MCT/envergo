@@ -144,11 +144,6 @@ class Map(models.Model):
     def __str__(self):
         return self.name
 
-    def extract(self):
-        from envergo.geodata.utils import extract_shapefile
-
-        extract_shapefile(self, self.file)
-
 
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
