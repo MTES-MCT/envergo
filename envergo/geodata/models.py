@@ -133,13 +133,19 @@ class Map(models.Model):
         verbose_name = _("Map")
         verbose_name_plural = _("Maps")
 
+    def __str__(self):
+        return self.name
+
+    def extract(self):
+        from envergo.geodata.utils import extract_shapefile
+
+        extract_shapefile(self, self.file)
+
 
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
-    name = models.CharField(_("Name"), max_length=256)
     map = models.ForeignKey(Map, on_delete=models.CASCADE)
-    data = models.JSONField(_("Data"), null=True)
     geometry = gis_models.MultiPolygonField()
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -147,6 +153,3 @@ class Zone(gis_models.Model):
     class Meta:
         verbose_name = _("Zone")
         verbose_name_plural = _("Zones")
-
-    def __str__(self):
-        return self.name
