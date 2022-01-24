@@ -14,7 +14,7 @@ class ParcelAdmin(admin.ModelAdmin):
 
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
-    list_display = ["name", "created_at", "zone_count"]
+    list_display = ["name", "data_type", "created_at", "zone_count"]
     readonly_fields = ["created_at"]
     actions = ["extract"]
 
@@ -39,5 +39,6 @@ class MapAdmin(admin.ModelAdmin):
 
 
 @admin.register(Zone)
-class ZoneAdmin(gis_admin.ModelAdmin):
+class ZoneAdmin(gis_admin.OSMGeoAdmin):
     list_display = ["id", "map", "created_at"]
+    readonly_fields = ["map", "created_at"]
