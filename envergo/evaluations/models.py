@@ -119,9 +119,9 @@ class Evaluation(models.Model):
 
         results = [criterion.result for criterion in self.criterions.all()]
 
-        if RESULTS.soumis in results:
+        if CRITERION_RESULTS.soumis in results:
             result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
+        elif CRITERION_RESULTS.action_requise in results:
             result = RESULTS.action_requise
         else:
             result = RESULTS.non_soumis
@@ -158,6 +158,13 @@ ACTIONS = Choices(
 )
 
 
+CRITERION_RESULTS = Choices(
+    (1, "soumis", _("Seuil franchi")),
+    (2, "non_soumis", _("Seuil non franchi")),
+    (3, "action_requise", _("Action requise")),
+)
+
+
 class Criterion(models.Model):
     """A single evaluation item."""
 
@@ -168,13 +175,15 @@ class Criterion(models.Model):
         related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
-    result = models.IntegerField(_("Result"), choices=RESULTS)
+    result = models.IntegerField(_("Result"), choices=CRITERION_RESULTS)
     required_action = models.TextField(
         _("Required action"), choices=ACTIONS, blank=True
     )
     probability = models.IntegerField(
         _("Probability"),
         choices=PROBABILITIES,
+        null=True,
+        blank=True,
     )
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
