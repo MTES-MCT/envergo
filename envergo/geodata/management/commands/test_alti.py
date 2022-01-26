@@ -1,5 +1,9 @@
+import random
+import statistics
+from functools import lru_cache
 from queue import Queue
 
+import matplotlib.pyplot as plt
 import numpy as np
 import requests
 from django.contrib.gis.geos import Point
@@ -177,6 +181,8 @@ class Mnt:
         reached.add(start)
         reached_surface = 0
 
+        self.randomize.cache_clear()
+
         while not frontier.empty() and reached_surface < max_surface:
             current = frontier.get()
             for next in self.neighbours(current):
@@ -210,7 +216,13 @@ class Mnt:
         return min(altis)
 
     def alti(self, cell):
-        return self.attributes["alti"].get(self.coords(cell))
+        val = self.attributes["alti"].get(self.coords(cell))
+        return self.randomize(val)
+
+    @lru_cache
+    def randomize(self, val):
+        delta = random.uniform(-0.2, 0.2)
+        return val + delta
 
 
 class Command(BaseCommand):
@@ -220,13 +232,22 @@ class Command(BaseCommand):
         parser.add_argument("x", nargs=1, type=int)
         parser.add_argument("y", nargs=1, type=int)
         parser.add_argument("--step_size", nargs="?", type=int, default=10)
+        parser.add_argument("--iterations", nargs="?", type=int, default=1)
 
     def handle(self, *args, **options):
 
         x = options["x"][0]
         y = options["y"][0]
         step_size = options["step_size"]
+        iterations = options["iterations"]
         mnt = Mnt(x, y, step_size=step_size)
-        surface = mnt.compute_runoff_surface(MAX_SURFACE)
 
+        surfaces = sorted(
+            [mnt.compute_runoff_surface(MAX_SURFACE) for _ in range(iterations)]
+        )
+        print(surfaces)
+        plt.hist(surfaces)
+        plt.show()
+
+        surface = statistics.mean(surfaces)
         self.stdout.write(f"Surface de ruissellement = {surface}m²")
