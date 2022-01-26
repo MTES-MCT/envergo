@@ -179,7 +179,7 @@ msgstr "Saisissez quelques caractères pour voir des suggestions"
 #: envergo/evaluations/forms.py:48
 msgid "If an application number was already submitted."
 msgstr ""
-"Si une demande de permis de construire ou d'aménager a déjà été soumise"
+"Si une demande de permis de construire ou d'aménager a déjà été déposée"
 
 #: envergo/evaluations/forms.py:67 envergo/evaluations/forms.py:118
 msgid "Additional files you might deem useful for the evaluation"
