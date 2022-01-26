@@ -54,6 +54,6 @@ class ZoneSearch(View):
         geometry = GEOSGeometry(request.body.decode())
         logger.info(geometry)
 
-        qs = Zone.objects.filter(polygon__intersects=geometry)
-        data = serialize("geojson", qs, geometry_field="polygon", fields=["code"])
+        qs = Zone.objects.filter(geometry__intersects=geometry)
+        data = serialize("geojson", qs, geometry_field="geometry", fields=["code"])
         return HttpResponse(data, content_type="application/json")
