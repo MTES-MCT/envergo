@@ -9,7 +9,7 @@ register = template.Library()
 PROBA_CSS = {
     RESULTS.soumis: 4,
     RESULTS.action_requise: 3,
-    RESULTS.non_soumis: 2,
+    RESULTS.non_soumis: 1,
 }
 
 
