@@ -1,12 +1,14 @@
 import logging
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
+from django.core import mail
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from config.celery_app import app
-from envergo.evaluations.models import Request
+from envergo.evaluations.models import Evaluation, Request
+from envergo.users.models import User
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
@@ -56,3 +58,29 @@ def confirm_request_to_requester(request_id):
     )
     email.attach_alternative(html_body, "text/html")
     email.send()
+
+
+@app.task
+def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
+
+    user = User.objects.get(id=sender_id)
+    evaluation = Evaluation.objects.get(reference=evaluation_reference)
+    subject = "[EnvErgo] Évaluation Loi sur l'eau"
+    url = reverse("evaluation_detail", args=[evaluation_reference])
+    evaluation_url = f"https://{host}{url}"
+
+    messages = []
+    for email in emails:
+        context = {
+            "sender_email": user.email,
+            "address": evaluation.address,
+            "application_number": evaluation.application_number,
+            "evaluation_url": evaluation_url,
+        }
+        body = render_to_string(
+            "evaluations/emails/share_evaluation_by_email_body.txt", context=context
+        )
+        messages.append(EmailMessage(subject, body, to=[email]))
+
+    connection = mail.get_connection()
+    connection.send_messages(messages)

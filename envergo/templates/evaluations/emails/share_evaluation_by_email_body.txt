@@ -1,0 +1,16 @@
+Bonjour,
+
+Une évaluation Loi sur l'eau du service EnvErgo vous a été adressée.
+
+Expéditeur : {{ sender_email }}
+Adresse du projet : {{ address }}
+{% if application_number %}N° de permis d'urbanisme : {{ application_number}}{% endif %}
+
+L'évaluation est disponible à cette adresse :
+
+{{ evaluation_url }}
+
+Pour toute question, vous pouvez répondre directement à ce mail.
+
+
+{% include 'emails/_email_signature.txt' %}
