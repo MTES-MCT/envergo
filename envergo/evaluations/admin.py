@@ -59,6 +59,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "created_at",
         "application_number",
         "result",
+        "contact_email",
         "request_link",
     ]
     form = EvaluationAdminForm
@@ -66,6 +67,11 @@ class EvaluationAdmin(admin.ModelAdmin):
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
     readonly_fields = ["result"]
+    search_fields = [
+        "reference",
+        "application_number",
+        "contact_email",
+    ]
 
     fieldsets = (
         (
@@ -163,7 +169,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_geojson",
     ]
     inlines = [ParcelInline, RequestFileInline]
-    search_fields = ["reference", "application_number"]
+    search_fields = ["reference", "application_number", "contact_email"]
     ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "summary")}),
