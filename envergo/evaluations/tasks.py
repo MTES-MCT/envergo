@@ -67,7 +67,7 @@ def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
     evaluation = Evaluation.objects.get(reference=evaluation_reference)
     subject = "[EnvErgo] Évaluation Loi sur l'eau"
     url = reverse("evaluation_detail", args=[evaluation_reference])
-    evaluation_url = f"https://{host}{url}"
+    evaluation_url = f"https://{host}{url}?utm_medium=email"
 
     messages = []
     for email in emails:
