@@ -40,7 +40,13 @@ PROBABILITIES = Choices(
     (1, "unlikely", _("Unlikely")),
     (2, "possible", _("Possible")),
     (3, "likely", _("Likely")),
-    (4, "likely+", _("Very likely")),
+    (4, "very_likely", _("Very likely")),
+)
+
+RESULTS = Choices(
+    (1, "soumis", _("Subject to LSE")),
+    (2, "non_soumis", _("Non subject to LSE")),
+    (3, "action_requise", _("Action required")),
 )
 
 
@@ -85,7 +91,7 @@ class Evaluation(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
-    global_probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=False)
@@ -100,10 +106,26 @@ class Evaluation(models.Model):
     def __str__(self):
         return self.reference
 
+    def get_absolute_url(self):
+        return reverse("evaluation_detail", args=[self.reference])
+
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
         super().save(*args, **kwargs)
+
+    def compute_result(self):
+        """Compute evaluation result depending on eval criterions."""
+
+        results = [criterion.result for criterion in self.criterions.all()]
+
+        if CRITERION_RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif CRITERION_RESULTS.action_requise in results:
+            result = RESULTS.action_requise
+        else:
+            result = RESULTS.non_soumis
+        return result
 
     @property
     def application_number_display(self):
@@ -111,21 +133,35 @@ class Evaluation(models.Model):
         # Those are non-breaking spaces
         return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
 
-    def is_project_subject_to_water_law(self):
-        """Is the evaluated project subject to the Water law.
-
-        In our current knowledge, we cannot decide if a project
-        is for certain subject to the Law. Hence, for experimental purpose,
-        we mark a project "subject to the law" when the probablitiy is
-        "very likely".
-        """
-        return self.global_probability >= getattr(PROBABILITIES, "likely+")
-
 
 CRITERIONS = Choices(
     ("rainwater_runoff", _("Capture of more than 1 ha of rainwater runoff")),
     ("flood_zone", _("Building of more than 400 m¹ in a flood zone")),
     ("wetland", _("More than 1000 m² impact on wetlands")),
+)
+
+
+ACTIONS = Choices(
+    ("not_in_zh", "ne se situe pas en zone humide"),
+    (
+        "surface_lt_1000",
+        "a une emprise au sol — y compris travaux et remblais — de moins de 1 000 m²",
+    ),
+    (
+        "surface_lt_400",
+        "a une emprise au sol — y compris travaux et remblais — de moins de 400 m²",
+    ),
+    (
+        "runoff_lt_10000",
+        "capte une surface de ruissellement d'eau de pluie inférieure à 10 000 m²",
+    ),
+)
+
+
+CRITERION_RESULTS = Choices(
+    (1, "soumis", _("Seuil franchi")),
+    (2, "non_soumis", _("Seuil non franchi")),
+    (3, "action_requise", _("Action requise")),
 )
 
 
@@ -139,7 +175,16 @@ class Criterion(models.Model):
         related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
-    probability = models.IntegerField(_("Probability"), choices=PROBABILITIES)
+    result = models.IntegerField(_("Result"), choices=CRITERION_RESULTS)
+    required_action = models.TextField(
+        _("Required action"), choices=ACTIONS, blank=True
+    )
+    probability = models.IntegerField(
+        _("Probability"),
+        choices=PROBABILITIES,
+        null=True,
+        blank=True,
+    )
     criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
     description_md = models.TextField(_("Description"))
     description_html = models.TextField(_("Description (html)"))

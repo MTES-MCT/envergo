@@ -40,7 +40,16 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
-    fields = ("order", "probability", "criterion", "description_md", "map", "legend_md")
+    fields = (
+        "order",
+        "criterion",
+        "result",
+        "required_action",
+        "probability",
+        "description_md",
+        "map",
+        "legend_md",
+    )
 
 
 @admin.register(Evaluation)
@@ -49,13 +58,20 @@ class EvaluationAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "application_number",
-        "probability",
+        "result",
+        "contact_email",
         "request_link",
     ]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
+    readonly_fields = ["result"]
+    search_fields = [
+        "reference",
+        "application_number",
+        "contact_email",
+    ]
 
     fieldsets = (
         (
@@ -82,7 +98,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("global_probability", "details_md")},
+            {"fields": ("result", "details_md")},
         ),
         (
             _("Contact data"),
@@ -94,7 +110,17 @@ class EvaluationAdmin(admin.ModelAdmin):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
+        obj.result = obj.compute_result()
         super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+
+        # The evaluation result depends on all the criterions, that's why
+        # we have to save them before.
+        evaluation = form.instance
+        evaluation.result = evaluation.compute_result()
+        evaluation.save()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("request")
@@ -111,10 +137,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{request_admin_url}">{request}</a>'
         return mark_safe(link)
-
-    @admin.display(description=_("Probability"))
-    def probability(self, obj):
-        return obj.get_global_probability_display()
 
 
 class ParcelInline(admin.TabularInline):
@@ -147,7 +169,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_geojson",
     ]
     inlines = [ParcelInline, RequestFileInline]
-    search_fields = ["reference", "application_number"]
+    search_fields = ["reference", "application_number", "contact_email"]
     ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "summary")}),
@@ -287,7 +309,6 @@ class RequestAdmin(admin.ModelAdmin):
                 address=req.address,
                 created_surface=req.created_surface,
                 existing_surface=req.existing_surface,
-                global_probability=0,
             )
         except Exception as e:
             error = _("There was an error creating your evaluation: %(error)s") % {

@@ -1,5 +1,3 @@
-@use "node_modules/@gouvfr/dsfr/src/schemes/styles/settings/colors";
-
 $white: #fff;
 $mint-green: #d6e9c6;
 $black: #000;
@@ -25,19 +23,19 @@ $red: #b94a48;
   color: black;
 
   &.probability-1 {
-    background-color: colors.$green-soft-400;
+    background-color: #80d5c6;
   }
 
   &.probability-2 {
-    background-color: colors.$blue-soft-300;
+    background-color: #d5dbef;
   }
 
   &.probability-3 {
-    background-color: colors.$yellow-dark-400;
+    background-color: #fee7a0;
   }
 
   &.probability-4 {
-    background-color: colors.$orange-soft-400;
+    background-color: #ffb7a5;
   }
 }
 
@@ -157,9 +155,10 @@ form {
 .autocomplete__wrapper .autocomplete__input {
   border: 0;
   border-radius: space(1v) space(1v) 0 0;
-  color: var(--g800);
-  background-color: var(--g200);
-  box-shadow: inset 0 -2px 0 0 var(--g600);
+  color: var(--text-label-grey);
+  --blend: var(--background-contrast-grey-blend);
+  background-color: var(--background-contrast-grey);
+  box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -172,19 +171,19 @@ form {
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
-  outline-color: var(--focus);
+  outline-color: #0a76f6;
 }
 
 .autocomplete__wrapper .autocomplete__menu {
   width: calc(100% + 8px);
-  border: 2px solid var(--focus);
+  border: 2px solid #0a76f6;
   border-top: none;
   margin-top: 4px;
   left: -4px;
 }
 
 .fr-input-group--error .autocomplete__wrapper .autocomplete__input {
-  box-shadow: inset 0 -2px 0 0 var(--error);
+  box-shadow: inset 0 -2px 0 0 var(--border-plain-error);
 }
 
 /**
@@ -226,7 +225,7 @@ div.leaflet-container {
 }
 
 .alt {
-  background-color: #f6f8fc;
+  background-color: var(--background-alt-blue-france);
 }
 
 /**
@@ -264,6 +263,9 @@ article {
   }
 }
 
+.fr-alert--warning {
+  box-shadow: inset 0 0 0 1px #fcc63a, inset 2.5rem 0 0 0 #FFCA00;
+}
 
 /**
  * Dropzone bad css design fixes

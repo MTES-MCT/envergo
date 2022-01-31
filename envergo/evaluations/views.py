@@ -17,7 +17,13 @@ from envergo.evaluations.forms import (
     WizardContactForm,
     WizardFilesForm,
 )
-from envergo.evaluations.models import Criterion, Evaluation, Request, RequestFile
+from envergo.evaluations.models import (
+    RESULTS,
+    Criterion,
+    Evaluation,
+    Request,
+    RequestFile,
+)
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
@@ -51,14 +57,19 @@ class EvaluationDetail(DetailView):
     def get_template_names(self):
         """Return which template to use.
 
-        We use two different evaluation formats, depending on the fact that
-        the project is subject to the Water law.
+        We use THREE different eval templates, depending on the result:
+         - soumis
+         - non-soumis
+         - action requise
         """
-        if self.object.is_project_subject_to_water_law():
-            template_names = ["evaluations/detail_subject.html"]
-        else:
-            template_names = ["evaluations/detail_non_subject.html"]
 
+        templates = {
+            RESULTS.soumis: "evaluations/detail/soumis.html",
+            RESULTS.non_soumis: "evaluations/detail/non_soumis.html",
+            RESULTS.action_requise: "evaluations/detail/action_requise.html",
+        }
+        evaluation = self.object
+        template_names = [templates.get(evaluation.result)]
         return template_names
 
     def get_queryset(self):
@@ -86,7 +97,16 @@ class EvaluationDetail(DetailView):
         context = super().get_context_data(**kwargs)
 
         if self.object:
-            context["criterions"] = self.object.criterions.all()
+            criterions = self.object.criterions.all()
+            context["criterions"] = criterions
+
+            actions = [
+                criterion.get_required_action_display()
+                for criterion in criterions
+                if criterion.result == RESULTS.action_requise
+                and criterion.required_action
+            ]
+            context["required_actions"] = actions
         return context
 
 

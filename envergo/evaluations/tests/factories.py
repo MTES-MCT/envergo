@@ -16,7 +16,7 @@ class EvaluationFactory(DjangoModelFactory):
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
-    global_probability = 2
+    result = 1
     contact_email = factory.Sequence(lambda n: f"user_{n}@example.com")
     contact_md = "envergo@example.org"
     contact_html = "envergo@example.org"
@@ -26,7 +26,7 @@ class EvaluationFactory(DjangoModelFactory):
         if not create:
             return
 
-        if extracted:
+        if extracted is not None:
             for criterion in extracted:
                 self.criterions.add(criterion)
         else:
@@ -39,6 +39,7 @@ class CriterionFactory(DjangoModelFactory):
 
     evaluation = factory.SubFactory(EvaluationFactory)
     probability = fuzzy.FuzzyInteger(1, 4)
+    result = 1
     criterion = "rainwater_runoff"
     description_md = factory.Faker("text")
     description_html = factory.Faker("text")

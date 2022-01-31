@@ -35,17 +35,63 @@
           </p>
           <h3>Projet de construction</h3>
           <ul>
-            <li>Adresse : {{ evaluation.address }}</li>
+            <li>Adresse : {{ evaluation.address }}</li>
             {% if evaluation.application_number %}
               <li>
                 Demande de permis n° {{ evaluation.application_number }}
               </li>
             {% endif %}
           </ul>
-          <div role="alert" class="fr-alert fr-alert--success fr-my-8w">
-            <p class="fr-alert__title">Projet non soumis à la Loi sur l'eau.</p>
-            <p>D'après les informations dont nous disposons, ce projet est probablement
-              <span class="fr-tag probability probability-3">non soumis</span> à la Loi sur l'eau.</p>
+          <div role="alert" class="fr-alert fr-alert--error fr-my-8w">
+            <p class="fr-alert__title">Projet soumis à la Loi sur l'eau.</p>
+            <p>D'après les informations dont nous disposons, ce projet est
+              <span class="fr-tag probability probability-4">soumis à la Loi sur l'eau</span>.</p>
+            <p>Le porteur de projet doit déposer un dossier Loi sur l'eau.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt fr-py-8w fr-mb-5w">
+      <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col fr-col-md-8">
+            <h2>Comment déposer un dossier Loi sur l'eau ?</h2>
+            <p><strong>1/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong></p>
+            {% if evaluation.contact_html %}
+              <div class="fr-highlight fr-mb-3w">
+                {{ evaluation.contact_html|safe }}
+              </div>
+            {% endif %}
+            <p><strong>2/ Consulter un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="fr-container fr-mb-5w">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8">
+
+          <h2>Sanctions en cas d'omission</h2>
+
+          <div role="alert" class="fr-alert fr-alert--info fr-mt-5w">
+
+            <p>
+              S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
+              administratives et pénales, qui peuvent aller jusqu'à :
+            </p>
+
+            <ul class="fr-mb-0">
+              <li>
+                <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
+                  jour ;</strong>
+              </li>
+              <li>
+                un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/" target="_blank" rel="noopener">article L.173-1 du code de
+                  l'environnement</a>).
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -79,16 +125,13 @@
             {% endif %}
           </ul>
 
+          <p>Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :</p>
 
-          {% if criterions %}
-            <p>Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :</p>
-
-            <div id="evaluation-accordion" class="fr-mb-3w">
-              {% for criterion in criterions %}
-                {% include 'evaluations/_criterion.html' with criterion=criterion %}
-              {% endfor %}
-            </div>
-          {% endif %}
+          <div id="evaluation-accordion" class="fr-mb-3w">
+            {% for criterion in criterions %}
+              {% include 'evaluations/_criterion.html' with criterion=criterion %}
+            {% endfor %}
+          </div>
 
           {% if evaluation.details_html %}
             {{ evaluation.details_html|safe }}

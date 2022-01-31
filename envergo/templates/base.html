@@ -1,6 +1,6 @@
 {% load static i18n compress%}
 <!DOCTYPE html>
-<html lang="fr" data-fr-theme>
+<html lang="fr" data-fr-scheme="system">
 
   <head>
     <meta charset="utf-8">
@@ -11,13 +11,13 @@
     <meta name="author" content="MTES">
 
 
-    <link rel="apple-touch-icon" href="{% static '@gouvfr/dsfr/dist/favicons/apple-touch-icon.png' %}">
-    <link rel="icon" href="{% static '@gouvfr/dsfr/dist/favicons/favicon.svg' %}" type="image/svg+xml">
-    <link rel="shortcut icon" href="{% static '@gouvfr/dsfr/dist/favicons/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{% static '@gouvfr/dsfr/dist/favicon/apple-touch-icon.png' %}">
+    <link rel="icon" href="{% static '@gouvfr/dsfr/dist/favicon/favicon.svg' %}" type="image/svg+xml">
+    <link rel="shortcut icon" href="{% static '@gouvfr/dsfr/dist/favicon/favicon.ico' %}" type="image/x-icon">
 
     {% block css %}
       {% compress css %}
-        <link href="{% static '@gouvfr/dsfr/dist/css/dsfr.css' %}" rel="stylesheet">
+        <link href="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.css' %}" rel="stylesheet">
         <link href="{% static 'css/project.min.css' %}" rel="stylesheet">
       {% endcompress %}
       {% block extra_css %}{% endblock %}
@@ -25,8 +25,8 @@
 
     {% block javascript %}
       {% include '_sentry.html' %}
-      <script defer type="module" src="{% static '@gouvfr/dsfr/dist/js/dsfr.module.min.js' %}"></script>
-      <script defer type="text/javascript" nomodule src="{% static '@gouvfr/dsfr/dist/js/dsfr.nomodule.min.js' %}"></script>
+      <script defer type="module" src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.module.min.js' %}"></script>
+      <script defer type="text/javascript" nomodule src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.nomodule.min.js' %}"></script>
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
     {% endblock javascript %}
