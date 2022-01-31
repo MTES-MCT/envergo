@@ -16,11 +16,13 @@ logger = logging.getLogger(__name__)
 def confirm_request_to_admin(request_id, host):
     """Send a Mattermost notification to confirm the evaluation request."""
 
-    logger.warning(f"Sending mattermost notification {request_id} {host}")
-
+    logger.warning(f"[mattermost] Sending notification {request_id} {host}")
     request = Request.objects.get(id=request_id)
+    logger.warning(f"[mattermost] Request {request}")
     request_url = reverse("admin:evaluations_request_change", args=[request_id])
+    logger.warning(f"[mattermost] Request url {request_url}")
     parcel_map_url = request.get_parcel_map_url()
+    logger.warning(f"[mattermost] Parcel map url {parcel_map_url}")
     message_body = render_to_string(
         "evaluations/eval_request_notification.txt",
         context={
@@ -29,6 +31,7 @@ def confirm_request_to_admin(request_id, host):
             "parcel_map_url": f"https://{host}{parcel_map_url}",
         },
     )
+    logger.warning(f"[mattermost] message body {message_body}")
     notify(message_body)
 
 

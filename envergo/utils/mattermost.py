@@ -11,8 +11,9 @@ def notify(msg):
 
     Which channel is entirely defined in the endpoint settings.
     """
+    logger.warning("[mattermost] in notify")
     endpoint = settings.MATTERMOST_ENDPOINT
-    logger.warning(f"Sending mattermost notification {endpoint}")
+    logger.warning(f"[mattermost] {endpoint}")
     if endpoint:
         payload = {"text": msg}
         res = requests.post(endpoint, json=payload)
