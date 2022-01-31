@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
+from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -258,8 +259,12 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
                 name=filedict["name"],
             )
 
-        confirm_request_to_requester.delay(request.id)
-        confirm_request_to_admin.delay(request.id, self.request.get_host())
+        # Send notifications, once data is commited
+        def confirm_request():
+            confirm_request_to_requester.delay(request.id)
+            confirm_request_to_admin.delay(request.id, self.request.get_host())
+
+        transaction.on_commit(confirm_request)
 
         self.reset_data()
         return HttpResponseRedirect(self.get_success_url())
