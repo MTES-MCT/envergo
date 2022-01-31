@@ -10,7 +10,13 @@
 
           {% include '_form_snippet.html' with form=form %}
 
-          <button class="fr-btn" type="submit">Partager par email</button>
+          {% if request.user.is_authenticated %}
+            <button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>
+          {% else %}
+            <div class="fr-alert fr-alert--warning fr-alert--sm">
+              <p>Vous devez <a href="{% url 'login' %}">être identifié·e</a> pour utiliser cette fonctionnalité.</p>
+            </div>
+          {% endif %}
         </form>
 
       </div>

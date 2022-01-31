@@ -184,3 +184,49 @@ def test_anonymous_cannot_see_dashboard_menu(client):
 
     assert res.status_code == 200
     assert "Tableau de bord" not in res.content.decode()
+
+
+def test_share_evaluation_by_email_form_for_anonymous(client, evaluation, mailoutbox):
+    """Anonymous users cannot share by email."""
+
+    url = evaluation.get_absolute_url()
+    res = client.get(url)
+    content = res.content.decode()
+
+    assert "Partagez cette évaluation" in content
+    assert (
+        '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
+        not in content
+    )
+    assert (
+        '<input type="text" name="emails" class=" fr-input" required disabled id="id_emails">'
+        in content
+    )
+
+    res = client.post(url, data={"emails": "test@example.org"})
+    assert res.status_code == 405  # method not allowed
+    assert len(mailoutbox) == 0
+
+
+def test_share_evaluation_by_email_form(client, user, evaluation, mailoutbox):
+    """Anonymous users cannot share by email."""
+
+    client.force_login(user)
+
+    url = evaluation.get_absolute_url()
+    res = client.get(url)
+    content = res.content.decode()
+
+    assert "Partagez cette évaluation" in content
+    assert (
+        '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
+        in content
+    )
+    assert (
+        '<input type="text" name="emails" class=" fr-input" required id="id_emails">'
+        in content
+    )
+
+    res = client.post(url, data={"emails": "test@example.org"})
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1

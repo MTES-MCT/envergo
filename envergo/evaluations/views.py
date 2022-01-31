@@ -115,6 +115,19 @@ class EvaluationDetail(FormView, DetailView):
             context["required_actions"] = actions
         return context
 
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.http_method_not_allowed(request)
+        return super().post(request, *args, **kwargs)
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+
+        if not self.request.user.is_authenticated:
+            form.fields["emails"].disabled = True
+
+        return form
+
     def form_valid(self, form):
         """Process the "share by email" form."""
         user = self.request.user
