@@ -1,0 +1,19 @@
+<section class="fr-py-8w fr-background-alt-pink">
+  <div class="fr-container">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col fr-col-md-8">
+
+        <h2>Partagez cette évaluation</h2>
+
+        <form method="post" action="">
+          {% csrf_token %}
+
+          {% include '_form_snippet.html' with form=form %}
+
+          <button class="fr-btn" type="submit">Partager par email</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>

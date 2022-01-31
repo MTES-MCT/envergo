@@ -116,6 +116,7 @@ class EvaluationDetail(FormView, DetailView):
         return context
 
     def form_valid(self, form):
+        """Process the "share by email" form."""
         user = self.request.user
         sender_id = user.id
         emails = form.cleaned_data["emails"]
