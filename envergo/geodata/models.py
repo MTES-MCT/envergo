@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
 
 
 class Parcel(models.Model):
@@ -121,11 +122,33 @@ class Parcel(models.Model):
         return f"{self.commune}{self.prefix}{self.section}{self.order:04}"
 
 
+MAP_TYPES = Choices(
+    ("zone_humide", _("Zone humide")),
+    ("zone_inondable", _("Zone inondable")),
+)
+
+
+class Map(models.Model):
+    """Holds a shapefile map."""
+
+    name = models.CharField(_("Name"), max_length=256)
+    file = models.FileField(_("File"), upload_to="maps/")
+    data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
+    description = models.TextField(_("Description"))
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("Map")
+        verbose_name_plural = _("Maps")
+
+    def __str__(self):
+        return self.name
+
+
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
-    name = models.CharField(_("Name"), max_length=256)
-    data = models.JSONField(_("Data"), null=True)
+    map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="zones")
     geometry = gis_models.MultiPolygonField()
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
