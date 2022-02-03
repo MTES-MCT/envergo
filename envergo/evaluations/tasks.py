@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.core import mail
-from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 
@@ -77,10 +77,15 @@ def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
             "application_number": evaluation.application_number,
             "evaluation_url": evaluation_url,
         }
-        body = render_to_string(
+        txt_body = render_to_string(
             "evaluations/emails/share_evaluation_by_email_body.txt", context=context
         )
-        messages.append(EmailMessage(subject, body, to=[email]))
+        html_body = render_to_string(
+            "evaluations/emails/share_evaluation_by_email_body.html", context=context
+        )
+        message = EmailMultiAlternatives(subject, txt_body, to=[email])
+        message.attach_alternative(html_body, "text/html")
+        messages.append(message)
 
     connection = mail.get_connection()
     connection.send_messages(messages)
