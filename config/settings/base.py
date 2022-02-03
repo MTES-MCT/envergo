@@ -185,6 +185,8 @@ TEMPLATES = [
         },
     }
 ]
+# https://github.com/jazzband/django-debug-toolbar/issues/1550
+SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006"]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#form-renderer
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
