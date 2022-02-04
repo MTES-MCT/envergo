@@ -28,7 +28,6 @@
   <script>
     window.addEventListener('load', function() {
 
-
       L.drawLocal.draw.toolbar.buttons.polygon = 'Dessiner un polygone';
       L.drawLocal.draw.handlers.polygon.tooltip.start = 'Cliquez pour commencer à dessiner';
       L.drawLocal.draw.handlers.polygon.tooltip.cont = 'Cliquez pour continuer à dessiner';
@@ -62,11 +61,10 @@
       const latLngAniane = [43.6861, 3.5911];
       var map = L.map('map', {maxZoom: 21}).setView(latLngAniane, 13);
 
-
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 22,
         maxNativeZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
       }).addTo(map);
 
       var drawnItems = new L.FeatureGroup();
@@ -90,14 +88,10 @@
       map.addControl(drawControl);
 
       map.on("draw:created", function (e) {
-        var type = e.layerType,
-        layer = e.layer;
-        console.log(e, layer.getLatLngs());
-
+        var layer = e.layer;
         drawnItems.addLayer(layer);
         map.addLayer(layer);
       });
-
     });
   </script>
 {% endblock %}
