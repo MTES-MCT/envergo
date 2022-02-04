@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+  <h1>Saisissez les caractéristiques de votre projet</h1>
+
+
+  <div class="ratio-16x9">
+    <div class="ratio-content">
+      <div class="leaflet-container">
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+
+
+      L.drawLocal.draw.toolbar.buttons.polygon = 'Dessiner un polygone';
+      L.drawLocal.draw.handlers.polygon.tooltip.start = 'Cliquez pour commencer à dessiner';
+      L.drawLocal.draw.handlers.polygon.tooltip.cont = 'Cliquez pour continuer à dessiner';
+      L.drawLocal.draw.handlers.polygon.tooltip.end = 'Cliquez sur le premier point pour terminer';
+
+      L.drawLocal.draw.toolbar.finish.text = 'Terminer';
+      L.drawLocal.draw.toolbar.undo.text = 'Supr. le dernier point';
+      L.drawLocal.draw.toolbar.actions.text = 'Annuler';
+
+      L.drawLocal.edit.toolbar.buttons.edit = "Éditer les polygones";
+      L.drawLocal.edit.toolbar.buttons.editDisabled = "Il n'y a pas de polygone à modifier";
+
+      L.drawLocal.edit.toolbar.buttons.remove = "Supprimer des polygones";
+      L.drawLocal.edit.toolbar.buttons.removeDisabled = "Il n'y a pas de polygone à supprimer";
+
+      L.drawLocal.edit.handlers.edit.tooltip.text = "Cliquez sur « Annuler » pour… annuler les modifications";
+      L.drawLocal.edit.handlers.edit.tooltip.subtext = "Cliquez et déplacez les sommets des polygones";
+
+      L.drawLocal.edit.handlers.remove.tooltip.text = "Cliquez sur un polygone puis « Enregistrer » pour le supprimer";
+
+      L.drawLocal.edit.toolbar.actions.save.text = "Enregistrer";
+      L.drawLocal.edit.toolbar.actions.save.title = "Prendre en compte les modifications";
+
+      L.drawLocal.edit.toolbar.actions.cancel.text = "Annuler";
+      L.drawLocal.edit.toolbar.actions.cancel.title = "Interrompre la modification";
+
+      L.drawLocal.edit.toolbar.actions.clearAll.text = "Tout supprimer";
+      L.drawLocal.edit.toolbar.actions.clearAll.title = "Supprimer tous les polygones";
+
+
+      const latLngAniane = [43.6861, 3.5911];
+      var map = L.map('map', {maxZoom: 21}).setView(latLngAniane, 13);
+
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      var drawnItems = new L.FeatureGroup();
+      map.addLayer(drawnItems);
+
+      var options = {
+        draw: {
+          polyline:  false,
+          rectangle: false,
+          circle: false,
+          marker: false,
+          circlemarker: false,
+          polygon: true,
+        },
+        edit: {
+          featureGroup: drawnItems,
+        }
+      };
+
+      var drawControl = new L.Control.Draw(options);
+      map.addControl(drawControl);
+
+      map.on("draw:created", function (e) {
+        var type = e.layerType,
+        layer = e.layer;
+        console.log(e, layer.getLatLngs());
+
+        drawnItems.addLayer(layer);
+        map.addLayer(layer);
+      });
+
+    });
+  </script>
+{% endblock %}
