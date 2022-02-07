@@ -229,7 +229,7 @@ msgstr "Saisissez une ou plusieurs adresses séparées par des virgules « , �
 
 #: envergo/evaluations/forms.py:147
 msgid "Select your recipient(s) email address(es)"
-msgstr "Saisissez les adresses de vos destinataires"
+msgstr "Saisissez les adresses e-mail de vos destinataires"
 
 #: envergo/evaluations/forms.py:148
 msgid "Separate several addresses with a comma « , »"
