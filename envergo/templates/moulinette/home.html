@@ -6,14 +6,40 @@
 {% block article %}
   <h1>Saisissez les caractéristiques de votre projet</h1>
 
+  <form method="post" novalidate action="" id="moulinette-form">
+    {% csrf_token %}
 
-  <div class="ratio-16x9">
-    <div class="ratio-content">
-      <div class="leaflet-container">
-        <div id="map"></div>
+    {% include '_form_header.html' with form=form %}
+    {% include '_field_snippet.html' with field=form.created_surface %}
+    {% include '_field_snippet.html' with field=form.existing_surface %}
+
+    <div id="form-group-project_footprint" class="fr-input-group">
+      {{ form.project_footprint.as_hidden }}
+      <label>
+        Dessinez le polygone correspondant à l'emprise de votre projet
+      </label>
+
+      <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+        <div class="ratio-content">
+          <div class="leaflet-container">
+            <div id="map"></div>
+          </div>
+        </div>
       </div>
+
+      {% if form.project_footprint.errors %}
+        <p class="fr-error-text">
+          ↑
+          {{ form.project_footprint.errors.0 }}
+          ↑
+        </p>
+
+      {% endif %}
+
     </div>
-  </div>
+
+    <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
+  </form>
 
 {% endblock %}
 
@@ -89,8 +115,24 @@
 
       map.on("draw:created", function (e) {
         var layer = e.layer;
+        drawnItems.clearLayers();
         drawnItems.addLayer(layer);
         map.addLayer(layer);
+      });
+
+      var form = document.getElementById('moulinette-form');
+      form.addEventListener('submit', function(event) {
+        var jsonField = document.getElementById('id_project_footprint');
+
+        // Coordinates are in EPSG:4326 (lat / lng in degrees)
+        var geojson = drawnItems.toGeoJSON();
+        var polygon;
+        try {
+          polygon = geojson.features[0].geometry;
+        } catch (error) {
+          polygon = {};
+        }
+        jsonField.value = JSON.stringify(polygon);
       });
     });
   </script>
