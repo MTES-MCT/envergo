@@ -149,7 +149,7 @@ class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="zones")
-    geometry = gis_models.MultiPolygonField()
+    geometry = gis_models.MultiPolygonField(geography=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
