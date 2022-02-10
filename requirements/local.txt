@@ -95,7 +95,7 @@ deprecated==1.2.13
     #   redis
 distlib==0.3.4
     # via virtualenv
-django==3.2.11
+django==3.2.12
     # via
     #   -r base.txt
     #   django-allauth
@@ -169,10 +169,6 @@ idna==3.3
     # via
     #   -r base.txt
     #   requests
-importlib-metadata==4.10.0
-    # via
-    #   -r base.txt
-    #   markdown
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.9
@@ -395,12 +391,10 @@ types-pyyaml==6.0.3
     # via django-stubs
 typing-extensions==4.0.1
     # via
-    #   astroid
     #   black
     #   django-stubs
     #   django-stubs-ext
     #   mypy
-    #   pylint
 urllib3==1.26.8
     # via
     #   -r base.txt
@@ -432,10 +426,6 @@ wrapt==1.13.3
     #   -r base.txt
     #   astroid
     #   deprecated
-zipp==3.7.0
-    # via
-    #   -r base.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

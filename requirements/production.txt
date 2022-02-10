@@ -81,7 +81,7 @@ deprecated==1.2.13
     # via
     #   -r base.txt
     #   redis
-django==3.2.11
+django==3.2.12
     # via
     #   -r base.txt
     #   django-allauth
@@ -133,10 +133,6 @@ idna==3.3
     # via
     #   -r base.txt
     #   requests
-importlib-metadata==4.10.0
-    # via
-    #   -r base.txt
-    #   markdown
 jmespath==0.10.0
     # via
     #   boto3
@@ -288,10 +284,6 @@ wrapt==1.13.3
     # via
     #   -r base.txt
     #   deprecated
-zipp==3.7.0
-    # via
-    #   -r base.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
