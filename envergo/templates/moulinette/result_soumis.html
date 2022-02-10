@@ -42,9 +42,6 @@
             <li>Surface de zones humides intersectée : {{ moulinette.result.wetlands_area }} m²</li>
           </ul>
 
-
-
-
           <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
             <div class="ratio-content">
               <div class="leaflet-container">
@@ -73,6 +70,8 @@
       var map = L.map('map', {maxZoom: 21});
       var footprintStyles = {'color': 'orange', 'fillColor': 'orange'};
       var wetlandsStyles = {'color': 'blue', 'fillColor': 'blue'};
+      var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
+      var circle100Styles = {'color': 'yellow', 'fillColor': 'yellow'};
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 22,
@@ -85,10 +84,18 @@
       footprintGeoJSON.addTo(map);
 
       var wetlands = JSON.parse('{{ moulinette.wetlands_json|safe }}');
-      wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
+      var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
       wetlandsGeoJSON.addTo(map);
 
-      map.fitBounds(footprintGeoJSON.getBounds());
+      var circle25 = JSON.parse('{{ moulinette.circle_25|safe }}');
+      var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
+      circle25GeoJSON.addTo(map);
+
+      var circle100 = JSON.parse('{{ moulinette.circle_100|safe }}');
+      var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
+      circle100GeoJSON.addTo(map);
+
+      map.fitBounds(circle100GeoJSON.getBounds());
     });
   </script>
 {% endblock %}

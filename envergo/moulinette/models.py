@@ -55,3 +55,15 @@ class Moulinette:
     @property
     def eval_result(self):
         return RESULTS.soumis
+
+    @property
+    def circle_25(self):
+        buffer = self.result["footprint"].buffer(25)
+        buffer.transform(4326)
+        return buffer.geojson
+
+    @property
+    def circle_100(self):
+        buffer = self.result["footprint"].buffer(100)
+        buffer.transform(4326)
+        return buffer.geojson
