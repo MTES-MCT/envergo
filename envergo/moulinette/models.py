@@ -23,6 +23,7 @@ class Moulinette:
         footprint_dict = self.data["project_footprint"]
         footprint = GEOSGeometry(json.dumps(footprint_dict), srid=4326)
         footprint.transform(3857)  # mercator projection, to get meter units
+
         wetlands = (
             Zone.objects
             # .filter(map__data_type="zone_humide")
@@ -32,10 +33,20 @@ class Moulinette:
         )
         wetlands_area = wetlands.aggregate(total_area=Sum("area"))["total_area"]
 
+        circle_25 = footprint.buffer(25)
+        wetlands_25 = Zone.objects.filter(geometry__intersects=circle_25)
+
+        circle_100 = footprint.buffer(100)
+        wetlands_100 = Zone.objects.filter(geometry__intersects=circle_100)
+
         self.result = {
             "footprint": footprint,
             "wetlands": wetlands,
             "wetlands_area": wetlands_area.sq_m if wetlands_area else 0.0,
+            "circle_25": circle_25,
+            "wetlands_25": wetlands_25,
+            "circle_100": circle_100,
+            "wetlands_100": wetlands_100,
         }
 
     @property
@@ -57,13 +68,13 @@ class Moulinette:
         return RESULTS.soumis
 
     @property
-    def circle_25(self):
-        buffer = self.result["footprint"].buffer(25)
-        buffer.transform(4326)
-        return buffer.geojson
+    def circle_25_json(self):
+        circle = self.result["circle_25"].clone()
+        circle.transform(4326)
+        return circle.geojson
 
     @property
-    def circle_100(self):
-        buffer = self.result["footprint"].buffer(100)
-        buffer.transform(4326)
-        return buffer.geojson
+    def circle_100_json(self):
+        circle = self.result["circle_100"].clone()
+        circle.transform(4326)
+        return circle.geojson
