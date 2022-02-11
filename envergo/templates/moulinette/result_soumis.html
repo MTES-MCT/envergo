@@ -39,7 +39,11 @@
           <h2>Données calculées</h2>
           <ul>
             <li>Surface du polygone : {{ moulinette.footprint_surface }} m²</li>
+            <li>L'emprise du projet intersecte des zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
             <li>Surface de zones humides intersectée : {{ moulinette.result.wetlands_area }} m²</li>
+            <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
+            <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
+
           </ul>
 
           <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
@@ -87,11 +91,11 @@
       var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
       wetlandsGeoJSON.addTo(map);
 
-      var circle25 = JSON.parse('{{ moulinette.circle_25|safe }}');
+      var circle25 = JSON.parse('{{ moulinette.circle_25_json|safe }}');
       var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
       circle25GeoJSON.addTo(map);
 
-      var circle100 = JSON.parse('{{ moulinette.circle_100|safe }}');
+      var circle100 = JSON.parse('{{ moulinette.circle_100_json|safe }}');
       var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
       circle100GeoJSON.addTo(map);
 
