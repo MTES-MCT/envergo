@@ -59,7 +59,7 @@ class Moulinette:
 
     @property
     def wetlands_json(self):
-        wetlands = self.result["wetlands"]
+        wetlands = self.result["wetlands_100"]
         geojson = serialize("geojson", wetlands, geometry_field="geometry")
         return geojson
 
