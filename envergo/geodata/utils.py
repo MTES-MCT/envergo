@@ -1,10 +1,13 @@
 import glob
+import logging
 import zipfile
 from tempfile import TemporaryDirectory
 
 from django.contrib.gis.utils.layermapping import LayerMapping
 
 from envergo.geodata.models import Zone
+
+logger = logging.getLogger(__name__)
 
 
 class CustomMapping(LayerMapping):
@@ -20,14 +23,21 @@ class CustomMapping(LayerMapping):
 
 def extract_shapefile(map, file):
 
+    logger.info("Creating temporary directory")
     with TemporaryDirectory() as tmpdir:
+
+        logger.info("Extracting map zip file")
         zf = zipfile.ZipFile(file)
         zf.extractall(tmpdir)
 
+        logger.info("Find .shp file path")
         paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
         shapefile = paths[0]
 
+        logger.info("Instanciating custom LayerMapping")
         mapping = {"geometry": "POLYGON"}
         extra = {"map": map}
         lm = CustomMapping(Zone, shapefile, mapping, extra_kwargs=extra)
+
+        logger.info("Calling layer mapping `save`")
         lm.save()
