@@ -50,6 +50,10 @@ class Moulinette:
         }
 
     @property
+    def eval_result(self):
+        return RESULTS.soumis
+
+    @property
     def footprint_json(self):
         return json.dumps(self.data["project_footprint"])
 
@@ -62,10 +66,6 @@ class Moulinette:
         wetlands = self.result["wetlands_100"]
         geojson = serialize("geojson", wetlands, geometry_field="geometry")
         return geojson
-
-    @property
-    def eval_result(self):
-        return RESULTS.soumis
 
     @property
     def circle_25_json(self):
