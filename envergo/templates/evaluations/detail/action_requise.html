@@ -48,7 +48,7 @@
               <span class="fr-tag probability probability-4">soumis à la Loi sur l'eau</span>.</p>
 
             {% if required_actions %}
-              <p>Le porteur de projet doit démontrer que son projet :</p>
+              <p>Le porteur de projet doit pouvoir démontrer que son projet :</p>
 
               <ul>
                 {% for action in required_actions %}
@@ -66,15 +66,22 @@
         <div class="fr-grid-row fr-grid-row--center">
           <div class="fr-col fr-col-md-8">
             <h2>Marche à suivre recommandée</h2>
+            <p>Au vu des caractéristiques du projet, il est fortement conseillé au porteur
+              de projet de mener des études sur les points cités ci-dessus, afin d'évaluer
+              si le projet est soumis à la Loi sur l'eau.</p>
+            <p>Ainsi il convient de :</p>
             <p><strong>1/ Prendre contact avec un bureau d'études spécialisé Loi sur l'eau et lui communiquer ces éléments.</strong></p>
+
+            <p>Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dépôt d'un dossier Loi sur l'eau est obligatoire, sous peine de sanctions. </p>
+            <p>Si les études révèlent que le projet n'est pas soumis à la Loi sur l'eau, le porteur peut choisir de les transmettre à l'administration en lui adressant un porté à connaissance. Cela réduira les risques de sanctions en cas de contrôle. </p>
             <p><strong>2/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong> </p>
             {% if evaluation.contact_html %}
+              <p>Le dossier Loi sur l'eau, ou le porté à connaissance, sont à adresser à :
+              </p>
               <div class="fr-highlight fr-mb-3w">
                 {{ evaluation.contact_html|safe }}
               </div>
             {% endif %}
-            <p>Pour démontrer à l'administration que le projet n'est pas soumis à la Loi sur l'eau, le porteur devra lui adresser un porté à connaissance.</p>
-            <p>Dans le cas contraire, le projet est soumis à la Loi sur l'eau et doit déposer un dossier sous peine de sanctions.</p>
           </div>
         </div>
       </div>
