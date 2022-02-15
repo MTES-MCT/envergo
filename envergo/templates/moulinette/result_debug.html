@@ -38,8 +38,8 @@
 
           <h2>Données calculées</h2>
           <ul>
-            <li>Surface du polygone : {{ moulinette.footprint_surface }} m²</li>
-            <li>L'emprise du projet intersecte des zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
+            <li>Coordonnées du projet : {{ moulinette.data.coords }}</li>
+            <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
             <li>Surface de zones humides intersectée : {{ moulinette.result.wetlands_area }} m²</li>
             <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
             <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
@@ -72,7 +72,7 @@
     window.addEventListener('load', function() {
 
       var map = L.map('map', {maxZoom: 21});
-      var footprintStyles = {'color': 'orange', 'fillColor': 'orange'};
+      var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
       var wetlandsStyles = {'color': 'blue', 'fillColor': 'blue'};
       var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
       var circle100Styles = {'color': 'yellow', 'fillColor': 'yellow'};
@@ -83,9 +83,10 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
       }).addTo(map);
 
-      var footprint = JSON.parse('{{ moulinette.footprint_json|safe }}');
-      var footprintGeoJSON = L.geoJSON(footprint, {style: footprintStyles});
-      footprintGeoJSON.addTo(map);
+      var coords = JSON.parse('{{ moulinette.coords.json|safe }}');
+      console.log(coords);
+      var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
+      coordsGeoJSON.addTo(map);
 
       var wetlands = JSON.parse('{{ moulinette.wetlands_json|safe }}');
       var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});

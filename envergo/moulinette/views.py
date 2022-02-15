@@ -1,6 +1,5 @@
 import base64
 import binascii
-import json
 
 from django.core.exceptions import BadRequest
 from django.http import HttpResponseRedirect, QueryDict
@@ -18,13 +17,12 @@ class MoulinetteHome(FormView):
     def form_valid(self, form):
 
         form_data = form.cleaned_data
-        footprint_dict = form.cleaned_data.get("project_footprint")
-        footprint_json = json.dumps(footprint_dict)
-        footprint_b64 = base64.urlsafe_b64encode(footprint_json.encode()).decode()
+        coords = form_data["coords"]
+        coords_b64 = base64.urlsafe_b64encode(coords.ewkt.encode()).decode()
         url_data = {
             "created_surface": form_data["created_surface"],
             "existing_surface": form_data["existing_surface"],
-            "project_footprint": footprint_b64,
+            "coords": coords_b64,
         }
         get = QueryDict("", mutable=True)
         get.update(url_data)
@@ -49,9 +47,9 @@ class MoulinetteResult(TemplateView):
         """Parse and validate the moulinette url parameters."""
 
         data = request.GET.copy()
-        footprint_b64 = data.get("project_footprint", "e30=")  # "e30=" -> {}
-        footprint_json = base64.urlsafe_b64decode(footprint_b64).decode()
-        data["project_footprint"] = footprint_json
+        coords_b64 = data.get("coords", "e30=")  # "e30=" -> {}
+        coords = base64.urlsafe_b64decode(coords_b64).decode()
+        data["coords"] = coords
 
         form = MoulinetteForm(data)
         if not form.is_valid():
