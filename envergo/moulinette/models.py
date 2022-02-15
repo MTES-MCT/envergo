@@ -17,8 +17,8 @@ class Moulinette:
         self.data = data
 
     def run(self):
-        coords = self.data.get("coords")
-        coords.transform(3857)  # mercator projection, to get meter units
+        # Transform to mercator projection, to get meter units
+        coords = self.data.get("coords").transform(3857, clone=True)
 
         wetlands = (
             Zone.objects
@@ -55,8 +55,7 @@ class Moulinette:
 
     @property
     def coords(self):
-        coords = self.data["coords"].clone()
-        coords.transform(4326)
+        coords = self.data["coords"]
         return coords
 
     @property
@@ -67,12 +66,10 @@ class Moulinette:
 
     @property
     def circle_25_json(self):
-        circle = self.result["circle_25"].clone()
-        circle.transform(4326)
+        circle = self.result["circle_25"].transform(4326, clone=True)
         return circle.geojson
 
     @property
     def circle_100_json(self):
-        circle = self.result["circle_100"].clone()
-        circle.transform(4326)
+        circle = self.result["circle_100"].transform(4326, clone=True)
         return circle.geojson
