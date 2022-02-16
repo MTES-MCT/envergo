@@ -1,14 +1,12 @@
-from django.contrib.gis.db.models.functions import Area, Intersection
 from django.core.serializers import serialize
-from django.db.models import F, Sum
 from model_utils import Choices
 
 from envergo.geodata.models import Zone
 
 RESULTS = Choices(
     ("soumis", "Soumis"),
-    ("non-soumis", "Non soumis"),
-    ("action-requise", "Action requise"),
+    ("non_soumis", "Non soumis"),
+    ("action_requise", "Action requise"),
 )
 
 
@@ -17,41 +15,68 @@ class Moulinette:
         self.data = data
 
     def run(self):
+        project_surface = self.data["existing_surface"] + self.data["created_surface"]
+
         # Transform to mercator projection, to get meter units
         coords = self.data.get("coords").transform(3857, clone=True)
 
-        wetlands = (
-            Zone.objects
-            # .filter(map__data_type="zone_humide")
-            .filter(geometry__covers=coords)
-            # .annotate(intersection=Intersection(F("geometry"), coords))
-            # .annotate(area=Area("intersection"))
-        )
-
         circle_25 = coords.buffer(25)
         wetlands_25 = (
-            Zone.objects.filter(geometry__intersects=circle_25)
-            .annotate(intersection=Intersection(F("geometry"), coords))
-            .annotate(area=Area("intersection"))
+            Zone.objects
+            # .filter(map__data_type="zone_humide")
+            .filter(geometry__intersects=circle_25)
         )
-        wetlands_area = wetlands_25.aggregate(total_area=Sum("area"))["total_area"]
 
         circle_100 = coords.buffer(100)
         wetlands_100 = Zone.objects.filter(geometry__intersects=circle_100)
 
         self.result = {
-            "wetlands": wetlands,
-            "wetlands_area": wetlands_area.sq_m if wetlands_area else 0.0,
+            "project_surface": project_surface,
             "circle_25": circle_25,
             "wetlands_25": wetlands_25,
+            "wetlands_within_25m": bool(wetlands_25),
             "circle_100": circle_100,
             "wetlands_100": wetlands_100,
+            "wetlands_within_100m": bool(wetlands_100),
         }
 
     @property
     def eval_result(self):
-        # return RESULTS.soumis
-        return "debug"
+
+        if self.result["wetlands_within_25m"]:
+            wetland_status = "inside"
+        elif self.result["wetlands_within_100m"]:
+            wetland_status = "unknown"
+        else:
+            wetland_status = "outside"
+
+        if self.result["project_surface"] > 1000:
+            project_size = "big"
+        elif self.result["project_surface"] > 700:
+            project_size = "medium"
+        else:
+            project_size = "small"
+
+        result_matrix = {
+            "inside": {
+                "big": RESULTS.soumis,
+                "medium": RESULTS.action_requise,
+                "small": RESULTS.non_soumis,
+            },
+            "unknown": {
+                "big": RESULTS.action_requise,
+                "medium": RESULTS.non_soumis,
+                "small": RESULTS.non_soumis,
+            },
+            "outside": {
+                "big": RESULTS.non_soumis,
+                "medium": RESULTS.non_soumis,
+                "small": RESULTS.non_soumis,
+            },
+        }
+
+        result = result_matrix[wetland_status][project_size]
+        return result
 
     @property
     def coords(self):
