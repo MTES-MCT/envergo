@@ -59,7 +59,11 @@ class MoulinetteResult(TemplateView):
 
     def get_template_names(self):
         moulinette_result = self.moulinette.eval_result
-        template_name = f"moulinette/result_{moulinette_result}.html"
+        is_debug = bool(self.request.GET.get("debug", False))
+        if is_debug:
+            template_name = "moulinette/result_debug.html"
+        else:
+            template_name = f"moulinette/result_{moulinette_result}.html"
         return [template_name]
 
     def get_context_data(self, **kwargs):
