@@ -105,6 +105,7 @@
           const eventData = {
             communeName: val.properties.city,
             citycode: val.properties.citycode,
+            coordinates: val.geometry.coordinates,
           };
           const event = new CustomEvent('EnvErgo:citycode_selected', { detail: eventData });
           window.dispatchEvent(event);
