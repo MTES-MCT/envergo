@@ -12,19 +12,22 @@
     {% include '_form_header.html' with form=form %}
     {% include '_field_snippet.html' with field=form.created_surface %}
     {% include '_field_snippet.html' with field=form.existing_surface %}
-    {% include '_field_snippet.html' with field=form.address %}
 
     <div id="form-group-coords" class="fr-input-group">
       {{ form.coords.as_hidden }}
       <label>
-        Indiquez les coordonnées précises de votre projet sur la carte.
+        Placez un marqueur pour indiquer les coordonnées précises de votre projet sur la carte.
       </label>
 
 
-      <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+      <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
         <div class="ratio-content">
           <div class="leaflet-container">
-            <div id="map"></div>
+            <div class="search-control">
+              {{ form.address }}
+            </div>
+            <div id="map">
+            </div>
           </div>
         </div>
       </div>
