@@ -13,5 +13,6 @@ class MoulinetteForm(forms.Form):
     address = forms.CharField(
         label=_("Search for the address to center the map"),
         help_text=_("Type in a few characters to see suggestions"),
+        required=False,
     )
     coords = PointField(label=_("Coordinates"), required=True, srid=4326)
