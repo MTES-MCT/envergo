@@ -47,6 +47,13 @@ Pour construire la base de données (dans un autre shell) :
 $ docker-compose run --rm django python manage.py migrate
 ```
 
+Pour avoir accès aux fichiers `static` depuis le serveur de debug :
+
+```bash
+$ npm install
+$ python manage.py collectstatic
+```
+
 ### Qualité du code
 
 De nombreux outils sont mis en place pour garantir la qualité et l'homogénéité du code.
