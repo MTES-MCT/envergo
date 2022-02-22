@@ -1,3 +1,4 @@
+from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
 from model_utils import Choices
 
@@ -17,8 +18,10 @@ class Moulinette:
     def run(self):
         project_surface = self.data["existing_surface"] + self.data["created_surface"]
 
+        lat = self.data["lat"]
+        lng = self.data["lng"]
         # Transform to mercator projection, to get meter units
-        coords = self.data.get("coords").transform(3857, clone=True)
+        coords = Point(float(lng), float(lat), srid=4326).transform(3857, clone=True)
 
         circle_25 = coords.buffer(25)
         wetlands_25 = (
@@ -31,6 +34,7 @@ class Moulinette:
         wetlands_100 = Zone.objects.filter(geometry__intersects=circle_100)
 
         self.result = {
+            "coords": coords,
             "project_surface": project_surface,
             "circle_25": circle_25,
             "wetlands_25": wetlands_25,
@@ -80,7 +84,7 @@ class Moulinette:
 
     @property
     def coords(self):
-        coords = self.data["coords"]
+        coords = self.result["coords"]
         return coords
 
     @property

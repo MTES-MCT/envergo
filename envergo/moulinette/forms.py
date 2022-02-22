@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.gis.forms.fields import PointField
 from django.utils.translation import gettext_lazy as _
 
 
@@ -15,4 +14,9 @@ class MoulinetteForm(forms.Form):
         help_text=_("Type in a few characters to see suggestions"),
         required=False,
     )
-    coords = PointField(label=_("Coordinates"), required=True, srid=4326)
+    lng = forms.DecimalField(
+        label=_("Longitude"), required=True, max_digits=9, decimal_places=6
+    )
+    lat = forms.DecimalField(
+        label=_("Latitude"), required=True, max_digits=9, decimal_places=6
+    )
