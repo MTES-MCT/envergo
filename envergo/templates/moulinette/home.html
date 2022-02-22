@@ -3,116 +3,33 @@
 
 {% block title %}Demandez une évaluation pour un projet{% endblock %}
 
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Moulinette</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+
 {% block article %}
   <h1>Saisissez les caractéristiques de votre projet</h1>
 
-  <form method="post" novalidate autocomplete="off" action="" id="moulinette-form">
-    {% csrf_token %}
-
-    {% include '_form_header.html' with form=form %}
-    {% include '_field_snippet.html' with field=form.created_surface %}
-    {% include '_field_snippet.html' with field=form.existing_surface %}
-
-    <div id="form-group-coords" class="fr-input-group">
-      {{ form.coords.as_hidden }}
-      <label>
-        Placez un marqueur pour indiquer les coordonnées précises de votre projet sur la carte.
-      </label>
-
-
-      <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
-        <div class="ratio-content">
-          <div class="leaflet-container">
-            <div class="search-control">
-              {{ form.address }}
-            </div>
-            <div id="map">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {% if form.coords.errors %}
-        <p class="fr-error-text">
-          ↑
-          {{ form.coords.errors.0 }}
-          ↑
-        </p>
-
-      {% endif %}
-
-    </div>
-
-    <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
-  </form>
-
+  {% include 'moulinette/_form.html' with form=form %}
 {% endblock %}
 
 {% block extra_css %}
-  <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
-  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+  {% include 'moulinette/_form_styles.html' %}
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-  </script>
-  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
-  <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
-  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
-  <script>
-    var map;
-
-    window.addEventListener('load', function() {
-
-      L.drawLocal.draw.toolbar.buttons.marker = 'Cliquer pour placer un marqueur';
-      L.drawLocal.draw.handlers.marker.tooltip.start = 'Cliquez pour placer le marqueur';
-      L.drawLocal.draw.toolbar.actions.text = 'Annuler';
-
-      const latLngAniane = [43.6861, 3.5911];
-      map = L.map('map', {maxZoom: 21, }).setView(latLngAniane, 13);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 22,
-        maxNativeZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-      }).addTo(map);
-
-      var drawnItems = new L.FeatureGroup();
-      map.addLayer(drawnItems);
-
-      var options = {
-        draw: {
-          polyline:  false,
-          rectangle: false,
-          circle: false,
-          marker: true,
-          circlemarker: false,
-          polygon: false,
-        },
-      };
-
-      var drawControl = new L.Control.Draw(options);
-      map.addControl(drawControl);
-
-      map.on("draw:created", function (e) {
-        var layer = e.layer;
-        drawnItems.clearLayers();
-        drawnItems.addLayer(layer);
-
-        var coords = layer.getLatLng();
-        var wkt = "SRID=4326;POINT(" + coords.lng + " " + coords.lat + ")";
-        var jsonField = document.getElementById('id_coords');
-        jsonField.value = wkt;
-      });
-    });
-
-    window.addEventListener('EnvErgo:citycode_selected', function(event) {
-      const coordinates = event.detail.coordinates;
-      const latLng = [coordinates[1], coordinates[0]];
-      map.setView(latLng, 19)
-    });
-  </script>
+  {% include 'moulinette/_form_scripts.html' %}
 {% endblock %}

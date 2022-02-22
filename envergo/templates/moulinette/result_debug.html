@@ -38,11 +38,10 @@
 
           <h2>Données calculées</h2>
           <ul>
-            <li>Coordonnées du projet : {{ moulinette.data.coords }}</li>
+            <li>Coordonnées du projet : {{ moulinette.coords }}</li>
             <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
             <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
             <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
-
           </ul>
 
           <div class="ratio-16x9 fr-mt-1w fr-mb-2w">

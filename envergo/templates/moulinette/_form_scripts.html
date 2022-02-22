@@ -1,0 +1,72 @@
+{% load static l10n %}
+
+<script>
+  ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+</script>
+<script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+<script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+<script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+<script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+<script>
+  var map;
+
+  window.addEventListener('load', function() {
+
+    L.drawLocal.draw.toolbar.buttons.marker = 'Cliquer pour placer un marqueur';
+    L.drawLocal.draw.handlers.marker.tooltip.start = 'Cliquez pour placer le marqueur';
+    L.drawLocal.draw.toolbar.actions.text = 'Annuler';
+
+    const latLngAniane = [43.6861, 3.5911];
+    map = L.map('map', {maxZoom: 21, }).setView(latLngAniane, 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+    }).addTo(map);
+
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    var options = {
+      draw: {
+        polyline:  false,
+        rectangle: false,
+        circle: false,
+        marker: true,
+        circlemarker: false,
+        polygon: false,
+      },
+    };
+
+    {% if moulinette %}
+      var lngLat = [{{ moulinette.data.lat|unlocalize }}, {{ moulinette.data.lng|unlocalize }}];
+      var marker = L.marker(lngLat);
+      marker.addTo(drawnItems);
+      map.panTo(lngLat)
+    {% endif %}
+
+    var drawControl = new L.Control.Draw(options);
+    map.addControl(drawControl);
+
+    map.on("draw:created", function (e) {
+      var layer = e.layer;
+      drawnItems.clearLayers();
+      drawnItems.addLayer(layer);
+
+      var coords = layer.getLatLng();
+
+      var latField = document.getElementById('id_lat');
+      latField.value = coords.lat.toFixed(5);
+
+      var lngField = document.getElementById('id_lng');
+      lngField.value = coords.lng.toFixed(5);
+    });
+  });
+
+  window.addEventListener('EnvErgo:citycode_selected', function(event) {
+    const coordinates = event.detail.coordinates;
+    const latLng = [coordinates[1], coordinates[0]];
+    map.setView(latLng, 19)
+  });
+</script>

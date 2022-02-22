@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load evaluations static %}
+
+{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
+
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" href="{% url 'moulinette_home' %}">Moulinette</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Résultat</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block container %}
+
+  <div class="fr-container fr-mb-5w">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col fr-col-md-5">
+
+        <h2>Saisissez les caractéristiques de votre projet</h2>
+
+        {% include 'moulinette/_form.html' with form=form %}
+
+      </div>
+
+      <article class="fr-col fr-col-md-7">
+        {% block result %}{% endblock %}
+      </article>
+    </div>
+  </div>
+
+  <section class="fr-py-8w alt">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8">
+
+          <h2>Pour en savoir plus…</h2>
+
+          <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
+            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {% include 'moulinette/_form_scripts.html' %}
+{% endblock %}

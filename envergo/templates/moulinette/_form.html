@@ -1,0 +1,42 @@
+<form method="post" novalidate autocomplete="off" action="" id="moulinette-form">
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+  {% include '_field_snippet.html' with field=form.created_surface %}
+  {% include '_field_snippet.html' with field=form.existing_surface %}
+
+  <div id="form-group-coords" class="fr-input-group">
+
+    {{ form.lng.as_hidden }}
+    {{ form.lat.as_hidden }}
+
+    <label>
+      Placez un marqueur pour indiquer les coordonnées précises de votre projet sur la carte.
+    </label>
+
+
+    <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div class="search-control">
+            {{ form.address }}
+          </div>
+          <div id="map">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if form.lat.errors or form.lng.errors %}
+      <p class="fr-error-text">
+        ↑
+        Les coordonnées saisies sont incorrectes
+        ↑
+      </p>
+
+    {% endif %}
+
+  </div>
+
+  <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
+</form>

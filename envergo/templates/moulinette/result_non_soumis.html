@@ -1,62 +1,20 @@
-{% extends 'base.html' %}
+{% extends 'moulinette/base_result.html' %}
 {% load evaluations static %}
 
-{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
+{% block result %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" href="{% url 'moulinette_home' %}">Moulinette</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Résultat</a>
-        </li>
-      </ol>
+  <section>
+    <h1>Votre évaluation Loi sur l'eau</h1>
+
+    <div role="alert" class="fr-alert fr-alert--success fr-my-8w">
+      <p class="fr-alert__title">Projet non soumis à la Loi sur l'eau.</p>
+      <p>D'après les informations dont nous disposons, ce projet est
+        <span class="fr-tag probability probability-1">non soumis</span> à la Loi sur l'eau.</p>
     </div>
-  </nav>
-{% endblock %}
 
-{% block container %}
-  <article>
-
-    <section class="fr-container">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8">
-          <h1>Votre évaluation Loi sur l'eau</h1>
-
-          <div role="alert" class="fr-alert fr-alert--success fr-my-8w">
-            <p class="fr-alert__title">Projet non soumis à la Loi sur l'eau.</p>
-            <p>D'après les informations dont nous disposons, ce projet est
-              <span class="fr-tag probability probability-1">non soumis</span> à la Loi sur l'eau.</p>
-          </div>
-
-          <a class="fr-btn fr-btn--icon-left fr-fi-arrow-right-line fr-mb-8w" href="{% url 'request_evaluation' %}">
-            Demandez une évaluation approfondie
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="fr-py-8w alt">
-      <div class="fr-container">
-        <div class="fr-grid-row fr-grid-row--center">
-          <div class="fr-col fr-col-md-8">
-
-            <h2>Pour en savoir plus…</h2>
-
-            <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
-              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </article>
+    <a class="fr-btn fr-btn--icon-left fr-fi-arrow-right-line fr-mb-8w" href="{% url 'request_evaluation' %}">
+      Demandez une évaluation approfondie
+    </a>
+  </section>
 
 {% endblock %}
