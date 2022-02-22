@@ -35,7 +35,7 @@ def extract_shapefile(map, file):
         shapefile = paths[0]
 
         logger.info("Instanciating custom LayerMapping")
-        mapping = {"geometry": "POLYGON"}
+        mapping = {"geometry": "MULTIPOLYGON"}
         extra = {"map": map}
         lm = CustomMapping(Zone, shapefile, mapping, extra_kwargs=extra)
 
