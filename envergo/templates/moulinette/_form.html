@@ -2,8 +2,6 @@
   {% csrf_token %}
 
   {% include '_form_header.html' with form=form %}
-  {% include '_field_snippet.html' with field=form.created_surface %}
-  {% include '_field_snippet.html' with field=form.existing_surface %}
 
   <div id="form-group-coords" class="fr-input-group">
 
@@ -37,6 +35,9 @@
     {% endif %}
 
   </div>
+
+  {% include '_field_snippet.html' with field=form.created_surface %}
+  {% include '_field_snippet.html' with field=form.existing_surface %}
 
   <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
 </form>
