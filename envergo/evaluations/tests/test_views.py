@@ -101,7 +101,9 @@ def test_eval_request_wizard_step_2(client):
 
 
 @patch("envergo.utils.mattermost.requests.post")
-def test_eval_wizard_all_steps(mock_post, settings, client, mailoutbox):
+def test_eval_wizard_all_steps(
+    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+):
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
 
     qs = Request.objects.all()
@@ -119,9 +121,11 @@ def test_eval_wizard_all_steps(mock_post, settings, client, mailoutbox):
         "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_sponsor_phone_number": "0612345678",
     }
-    res = client.post(url, data=data)
-    assert res.status_code == 302
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
 
+    assert res.status_code == 302
+    assert len(callbacks) == 1
     assert qs.count() == 1
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
