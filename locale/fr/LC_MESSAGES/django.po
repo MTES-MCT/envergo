@@ -458,8 +458,8 @@ msgid "The application number format is invalid."
 msgstr "Le format du numéro de dossier est invalide."
 
 #: envergo/evaluations/views.py:138
-msgid "We will send this evaluation to the specified emails."
-msgstr "Nous enverrons cette évaluation aux adresses spécifiées."
+msgid "We forwarded this evaluation to the specified emails."
+msgstr "Nous avons envoyé cette évaluation aux adresses spécifiées."
 
 #: envergo/evaluations/views.py:144
 msgid "we could not process your request. Please check for errors below."

@@ -136,7 +136,7 @@ class EvaluationDetail(FormView, DetailView):
         reference = self.kwargs.get("reference")
         host = self.request.get_host()
         share_evaluation_by_email(reference, host, sender_id, emails)
-        msg = _("We will send this evaluation to the specified emails.")
+        msg = _("We forwarded this evaluation to the specified emails.")
         messages.success(self.request, msg)
 
         return HttpResponseRedirect(self.request.path)
