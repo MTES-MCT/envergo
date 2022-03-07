@@ -1,0 +1,25 @@
+<section class="fr-py-8w alt">
+  <div class="fr-container">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col fr-col-md-8">
+
+        <h2>Partagez cette évaluation</h2>
+
+        <form method="post" action="">
+          {% csrf_token %}
+
+          {% include '_form_snippet.html' with form=form %}
+
+          {% if request.user.is_authenticated %}
+            <button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>
+          {% else %}
+            <div class="fr-alert fr-alert--warning fr-alert--sm">
+              <p>Vous devez <a href="{% url 'login' %}">être identifié·e</a> pour utiliser cette fonctionnalité.</p>
+            </div>
+          {% endif %}
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>

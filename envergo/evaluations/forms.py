@@ -139,3 +139,12 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "project_sponsor_phone_number",
             "send_eval_to_sponsor",
         ]
+
+
+class EvaluationShareForm(forms.Form):
+    emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Select your recipient(s) email address(es)"),
+        help_text=_("Separate several addresses with a comma « , »"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+    )

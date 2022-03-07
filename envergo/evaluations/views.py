@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
@@ -9,10 +10,12 @@ from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
 
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
+    EvaluationShareForm,
     RequestForm,
     WizardAddressForm,
     WizardContactForm,
@@ -28,6 +31,7 @@ from envergo.evaluations.models import (
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
+    share_evaluation_by_email,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,7 +50,7 @@ class EvaluationSearch(FormView):
         return HttpResponseRedirect(success_url)
 
 
-class EvaluationDetail(DetailView):
+class EvaluationDetail(FormView, DetailView):
     """The complete evaluation detail."""
 
     template_name = "evaluations/detail.html"
@@ -54,6 +58,7 @@ class EvaluationDetail(DetailView):
     slug_url_kwarg = "reference"
     slug_field = "reference"
     context_object_name = "evaluation"
+    form_class = EvaluationShareForm
 
     def get_template_names(self):
         """Return which template to use.
@@ -109,6 +114,37 @@ class EvaluationDetail(DetailView):
             ]
             context["required_actions"] = actions
         return context
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.http_method_not_allowed(request)
+        return super().post(request, *args, **kwargs)
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+
+        if not self.request.user.is_authenticated:
+            form.fields["emails"].disabled = True
+
+        return form
+
+    def form_valid(self, form):
+        """Process the "share by email" form."""
+        user = self.request.user
+        sender_id = user.id
+        emails = form.cleaned_data["emails"]
+        reference = self.kwargs.get("reference")
+        host = self.request.get_host()
+        share_evaluation_by_email(reference, host, sender_id, emails)
+        msg = _("We forwarded this evaluation to the specified emails.")
+        messages.success(self.request, msg)
+
+        return HttpResponseRedirect(self.request.path)
+
+    def form_invalid(self, form):
+        msg = _("we could not process your request. Please check for errors below.")
+        messages.error(self.request, msg)
+        return self.get(self.request, self.args, self.kwargs)
 
 
 class Dashboard(LoginRequiredMixin, TemplateView):
