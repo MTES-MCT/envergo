@@ -17,7 +17,8 @@
     L.drawLocal.draw.toolbar.actions.text = 'Annuler';
 
     const latLngAniane = [43.6861, 3.5911];
-    map = L.map('map', {maxZoom: 21, }).setView(latLngAniane, 13);
+    const latLngBizou = [48.4961953, 0.7504093];
+    map = L.map('map', {maxZoom: 21, }).setView(latLngBizou, 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 22,
@@ -42,9 +43,13 @@
     {% if moulinette %}
       var lngLat = [{{ moulinette.data.lat|unlocalize }}, {{ moulinette.data.lng|unlocalize }}];
       var marker = L.marker(lngLat);
-      marker.addTo(drawnItems);
-      map.panTo(lngLat)
+    {% else %}
+      var lngLat = latLngBizou;
+      var marker = L.marker(latLngBizou);
     {% endif %}
+
+    marker.addTo(drawnItems);
+    map.panTo(lngLat)
 
     var drawControl = new L.Control.Draw(options);
     map.addControl(drawControl);
