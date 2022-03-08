@@ -85,6 +85,15 @@
       const latLng = event.latlng;
       this.setFieldValue(latLng);
     }.bind(this));
+
+    /**
+     * Center the map on the marker after dragging.
+     */
+    this.marker.on('moveend', function(event) {
+      const latLng = event.target.getLatLng();
+      this.map.panTo(latLng);
+    }.bind(this));
+
   };
 
 })(this, L);
