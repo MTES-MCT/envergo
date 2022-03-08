@@ -2,11 +2,11 @@
 
 <script>
   const ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-  const BIZOU_COORDS = [48.4961953, 0.7504093];  // Église de Bizou
+  const BIZOU_COORDS = {lat: 48.4961953, lng: 0.7504093};  // Église de Bizou
   const LAT_FIELD_ID = 'id_lat';
   const LNG_FIELD_ID = 'id_lng';
   {% if moulinette %}
-    const DEFAULT_LAT_LNG = [{{ moulinette.data.lat|unlocalize }}, {{ moulinette.data.lng|unlocalize }}];
+    const DEFAULT_LAT_LNG = {lat: {{ moulinette.data.lat|unlocalize }}, lng: {{ moulinette.data.lng|unlocalize }}};
   {% else %}
     const DEFAULT_LAT_LNG = BIZOU_COORDS;
   {% endif %}

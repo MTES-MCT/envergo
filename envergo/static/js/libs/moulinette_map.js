@@ -8,6 +8,7 @@
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
+    this.setFieldValue(DEFAULT_LAT_LNG);
     this.marker.addTo(this.map);
     this.map.panTo(this.marker.getLatLng());
     this.registerEvents();
