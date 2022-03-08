@@ -1,75 +1,43 @@
-{% extends 'base.html' %}
+{% extends 'moulinette/base_result.html' %}
 {% load evaluations static %}
 
-{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" href="{% url 'moulinette_home' %}">Moulinette</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Résultat</a>
-        </li>
-      </ol>
-    </div>
-  </nav>
-{% endblock %}
+{% block result %}
 
-{% block container %}
-  <article>
+  <section>
+    <h1>Paramètres de la moulinette</h1>
 
-    <section class="fr-container">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8">
-          <h1>Paramètres de la moulinette</h1>
+    <h2>Données initiales</h2>
+    <ul>
+      <li>Surface existante: {{ moulinette.data.existing_surface }}</li>
+      <li>Surface créée: {{ moulinette.data.created_surface }}</li>
+    </ul>
 
-          <h2>Données initiales</h2>
-          <ul>
-            <li>Surface existante: {{ moulinette.data.existing_surface }}</li>
-            <li>Surface créée: {{ moulinette.data.created_surface }}</li>
-          </ul>
+    <h2>Données calculées</h2>
+    <ul>
+      <li>Coordonnées du projet : {{ moulinette.coords }}</li>
+      <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
+    </ul>
 
-          <h2>Données calculées</h2>
-          <ul>
-            <li>Coordonnées du projet : {{ moulinette.coords }}</li>
-            <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
-            <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
-            <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
-          </ul>
-
-          <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
-            <div class="ratio-content">
-              <div class="leaflet-container">
-                <div id="map"></div>
-              </div>
-            </div>
-          </div>
+    <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div id="debug-map"></div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-  </article>
-
-{% endblock %}
-
-
-{% block extra_css %}
-  <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_js %}
-  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  {{ block.super }}
   <script>
     window.addEventListener('load', function() {
 
-      var map = L.map('map', {maxZoom: 21});
+      var map = L.map('debug-map', {maxZoom: 21});
       var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
       var wetlandsStyles = {'color': 'none', 'fillColor': 'blue'};
       var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
@@ -82,7 +50,6 @@
       }).addTo(map);
 
       var coords = JSON.parse('{{ moulinette.coords.json|safe }}');
-      console.log(coords);
       var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
       coordsGeoJSON.addTo(map);
 
