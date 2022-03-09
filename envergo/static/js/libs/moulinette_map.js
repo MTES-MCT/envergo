@@ -29,7 +29,7 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function() {
-    const map = L.map('map', { maxZoom: 21, }).setView(DEFAULT_LAT_LNG, 15);
+    const map = L.map('map', { maxZoom: 21, }).setView(DEFAULT_LAT_LNG, DEFAULT_ZOOM);
     map.doubleClickZoom.disable();
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
