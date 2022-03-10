@@ -54,7 +54,7 @@ class MoulinetteHome(FormView):
             context["default_zoom"] = 16
         else:
             context["display_marker"] = False
-            context["center_map"] = [47.000, 1.700]
+            context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 6
 
         return context
