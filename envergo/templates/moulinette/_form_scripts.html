@@ -2,17 +2,12 @@
 
 <script>
   const ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-  const BIZOU_COORDS = {lat: 48.4961953, lng: 0.7504093};  // Église de Bizou
-  const FRANCE_COORDS = {lat: 47.000, lng: 1.700};
+
+  const DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+  const CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+  const DEFAULT_ZOOM = {{ default_zoom }};
   const LAT_FIELD_ID = 'id_lat';
   const LNG_FIELD_ID = 'id_lng';
-  {% if moulinette %}
-    const DEFAULT_LAT_LNG = {lat: {{ moulinette.data.lat|unlocalize }}, lng: {{ moulinette.data.lng|unlocalize }}};
-    const DEFAULT_ZOOM = 16;
-  {% else %}
-    const DEFAULT_LAT_LNG = FRANCE_COORDS;
-    const DEFAULT_ZOOM = 6;
-  {% endif %}
 </script>
 <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
 <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>

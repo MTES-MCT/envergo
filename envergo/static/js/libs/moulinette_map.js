@@ -4,13 +4,15 @@
   /**
    * Settings and behavior for the moulinette form map widget.
    */
-  const MoulinetteMap = function() {
+  const MoulinetteMap = function(options) {
+    this.options = options;
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
-    this.setFieldValue(DEFAULT_LAT_LNG);
-    this.marker.addTo(this.map);
-    this.map.panTo(this.marker.getLatLng());
+
+    if (this.options.displayMarker) {
+      this.marker.addTo(this.map);
+    }
     this.registerEvents();
   };
   exports.MoulinetteMap = MoulinetteMap;
@@ -29,7 +31,7 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function() {
-    const map = L.map('map', { maxZoom: 21, }).setView(DEFAULT_LAT_LNG, DEFAULT_ZOOM);
+    const map = L.map('map', { maxZoom: 21, }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -50,20 +52,30 @@
       autoPan: true,
     };
 
-    const marker = L.marker(DEFAULT_LAT_LNG, options);
+    const marker = L.marker(this.options.centerMap, options);
     return marker;
   };
 
   MoulinetteMap.prototype.setMarkerPosition = function(latLng) {
     this.marker.setLatLng(latLng);
+
+    if (!this.map.hasLayer(this.marker)) {
+      this.marker.addTo(this.map);
+    }
     this.map.panTo(latLng);
   };
 
   MoulinetteMap.prototype.setFieldValue = function(latLng) {
-    var latField = document.getElementById(LAT_FIELD_ID);
+    var latField = document.getElementById(this.options.latFieldId);
     latField.value = latLng.lat.toFixed(5);
-    var lngField = document.getElementById(LNG_FIELD_ID);
+    var lngField = document.getElementById(this.options.lngFieldId);
     lngField.value = latLng.lng.toFixed(5);
+  };
+
+  MoulinetteMap.prototype.setMinZoom = function(minZoom) {
+    if (this.map.getZoom() < minZoom) {
+      this.map.setZoom(minZoom);
+    }
   };
 
   MoulinetteMap.prototype.registerEvents = function() {
@@ -104,13 +116,22 @@
   let moulinetteMap;
 
   window.addEventListener('load', function() {
-    moulinetteMap = new MoulinetteMap();
+    const options = {
+      displayMarker: DISPLAY_MARKER,
+      centerMap: CENTER_MAP,
+      defaultZoom: DEFAULT_ZOOM,
+      latFieldId: LAT_FIELD_ID,
+      lngFieldId: LNG_FIELD_ID,
+    }
+    moulinetteMap = new MoulinetteMap(options);
   });
 
   window.addEventListener('EnvErgo:citycode_selected', function(event) {
     const coordinates = event.detail.coordinates;
     const latLng = [coordinates[1], coordinates[0]];
+
+    // When an address is selected, place a marker and zoom on it
+    moulinetteMap.setMinZoom(19);
     moulinetteMap.setMarkerPosition(latLng);
-    // map.setView(latLng, 19)
   });
 })();

@@ -46,6 +46,17 @@ class MoulinetteHome(FormView):
             moulinette = Moulinette(form.cleaned_data)
             moulinette.run()
             context["moulinette"] = moulinette
+
+        if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
+            lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
+            context["display_marker"] = True
+            context["center_map"] = [lng, lat]
+            context["default_zoom"] = 16
+        else:
+            context["display_marker"] = False
+            context["center_map"] = [47.000, 1.700]
+            context["default_zoom"] = 6
+
         return context
 
     def render_to_response(self, context, **response_kwargs):
