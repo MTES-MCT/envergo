@@ -52,6 +52,27 @@ $red: #b94a48;
   }
 }
 
+#moulinette-container {
+
+  @media (min-width: 78em) {
+    max-width: none;
+  }
+
+  div.fr-grid-row {
+    justify-content: space-around;
+  }
+
+  #form-col {
+    max-width: 36em;
+  }
+
+  #content-col {
+    min-width: 36em;
+    max-width: 78em;
+  }
+
+}
+
 
 /**
  * Forms
@@ -302,7 +323,6 @@ form.dropzone {
   }
 }
 
-
 @keyframes spinner {
   from {
     transform: rotate(0);
@@ -312,8 +332,6 @@ form.dropzone {
     transform: rotate(360deg);
   }
 }
-
-
 
 .spinner::before {
   display: inline-block;

@@ -5,9 +5,9 @@
 
 {% block container %}
 
-  <div class="fr-container fr-mb-5w">
+  <div id="moulinette-container" class="fr-container fr-mb-5w">
     <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col fr-col-md-5">
+      <div id="form-col" class="fr-col">
 
         <h2>Saisissez les caractéristiques de votre projet</h2>
 
@@ -15,7 +15,7 @@
 
       </div>
 
-      <article class="fr-col fr-col-md-7">
+      <article id="content-col" class="fr-col">
         {% block result %}{% endblock %}
       </article>
     </div>
