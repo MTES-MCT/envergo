@@ -57,11 +57,12 @@
   };
 
   MoulinetteMap.prototype.setMarkerPosition = function(latLng) {
-    this.marker.setLatLng(latLng);
 
     if (!this.map.hasLayer(this.marker)) {
       this.marker.addTo(this.map);
     }
+
+    this.marker.setLatLng(latLng);
     this.map.panTo(latLng);
   };
 
