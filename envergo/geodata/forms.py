@@ -1,7 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from localflavor.fr.forms import FRDepartmentField
 
-from envergo.geodata.models import Parcel
+from envergo.geodata.models import DepartmentContact, Parcel
 
 
 class ParcelForm(forms.ModelForm):
@@ -76,3 +77,11 @@ ParcelFormSet = forms.modelformset_factory(
 
 class ParcelMapForm(forms.Form):
     address = forms.CharField(label=_("Address"))
+
+
+class DepartmentContacForm(forms.ModelForm):
+    department = FRDepartmentField()
+
+    class Meta:
+        model = DepartmentContact
+        fields = ["department", "contact_md"]

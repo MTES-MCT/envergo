@@ -3,7 +3,8 @@ from django.contrib.gis import admin as gis_admin
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Map, Parcel, Zone
+from envergo.geodata.forms import DepartmentContacForm
+from envergo.geodata.models import DepartmentContact, Map, Parcel, Zone
 from envergo.geodata.tasks import process_shapefile_map
 
 
@@ -47,3 +48,9 @@ class MapAdmin(admin.ModelAdmin):
 class ZoneAdmin(gis_admin.OSMGeoAdmin):
     list_display = ["id", "map", "created_at"]
     readonly_fields = ["map", "created_at"]
+
+
+@admin.register(DepartmentContact)
+class DepartmentContactAdmin(admin.ModelAdmin):
+    list_display = ["department"]
+    form = DepartmentContacForm

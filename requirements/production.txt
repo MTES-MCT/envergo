@@ -89,6 +89,7 @@ django==3.2.12
     #   django-appconf
     #   django-braces
     #   django-leaflet
+    #   django-localflavor
     #   django-model-utils
     #   django-phonenumber-field
     #   django-redis
@@ -110,6 +111,8 @@ django-crispy-forms==1.13.0
 django-environ==0.8.1
     # via -r base.txt
 django-leaflet==0.28.2
+    # via -r base.txt
+django-localflavor==3.1
     # via -r base.txt
 django-model-utils==4.2.0
     # via -r base.txt
@@ -133,6 +136,10 @@ idna==3.3
     # via
     #   -r base.txt
     #   requests
+importlib-metadata==4.11.2
+    # via
+    #   -r base.txt
+    #   markdown
 jmespath==0.10.0
     # via
     #   boto3
@@ -204,6 +211,10 @@ python-dateutil==2.8.2
     #   matplotlib
 python-slugify==5.0.2
     # via -r base.txt
+python-stdnum==1.17
+    # via
+    #   -r base.txt
+    #   django-localflavor
 python3-openid==3.2.0
     # via
     #   -r base.txt
@@ -284,6 +295,10 @@ wrapt==1.13.3
     # via
     #   -r base.txt
     #   deprecated
+zipp==3.7.0
+    # via
+    #   -r base.txt
+    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

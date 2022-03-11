@@ -24,3 +24,4 @@ shapely
 numpy
 pyproj
 matplotlib
+django-localflavor
