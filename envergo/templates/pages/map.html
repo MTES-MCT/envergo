@@ -22,6 +22,18 @@
 {% block content %}
   <article>
     <h1>Carte cadastrale</h1>
+
+    <div id="errors" class="fr-mb-3w"></div>
+
+    <template id="error-msg-tpl">
+      <div class="fr-alert fr-alert--error fr-alert--sm">
+        <p class="fr-alert__title">Impossible de récupérer des informations sur la parcelle
+          <i></i>
+        </p>
+        <p class="error-msg"></p>
+      </div>
+    </template>
+
     <div class="ratio-4x3">
       <div class="ratio-content">
         {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
@@ -39,7 +51,7 @@
   <script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
   <script>
     function mapInit(newMap, options) {
-      map = newMap;
+      const map = newMap;
 
       var layer = L.tileLayer(
         "https://wxs.ign.fr/parcellaire/geoportail/wmts?" +
@@ -76,15 +88,34 @@
       var searchUrl = `https://geocodage.ign.fr/look4/parcel/search?q=${parcelId}&returnTrueGeometry=true`;
       fetch(searchUrl)
         .then(response => {
-        return response.json();
+        let responseJson = response.json();
+
+        if (!response.ok) {
+          throw new Error(`L'API de l'IGN retourne cette erreur : « ${responseJson.detail[0]} »`);
+        }
+
+        return responseJson;
       })
         .then(response => {
+        if (response.features.length == 0) {
+          throw new Error("La parcelle est inconnue de l'API.");
+        }
         var features = response.features[0];
         var coordinates = features.geometry.coordinates;
         var parcel = rewind(features.properties.trueGeometry);
         geojsonLayer.addData(parcel);
 
         map.setView([coordinates[1], coordinates[0]], 18);
+      })
+        .catch(error => {
+        let errors = document.getElementById('errors');
+        let errorTpl = document.getElementById('error-msg-tpl');
+        let errorTplContent = document.importNode(errorTpl.content, true);
+        let parcelSlot = errorTplContent.querySelector('i');
+        parcelSlot.textContent = parcelId;
+        let msgSlot = errorTplContent.querySelector('.error-msg');
+        msgSlot.textContent = error.message;
+        errors.appendChild(errorTplContent);
       });
     };
   </script>
