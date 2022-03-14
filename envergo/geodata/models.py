@@ -165,7 +165,10 @@ class DepartmentContact(models.Model):
     """Water law contact data for a departement."""
 
     department = models.CharField(
-        _("Department"), max_length=3, choices=DEPARTMENT_CHOICES
+        _("Department"),
+        max_length=3,
+        choices=DEPARTMENT_CHOICES,
+        unique=True,
     )
     contact_md = models.TextField(_("Contact"), blank=False)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
