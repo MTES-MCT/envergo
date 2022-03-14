@@ -177,6 +177,9 @@ class DepartmentContact(models.Model):
         verbose_name = _("Department contact data")
         verbose_name_plural = _("Department contact data")
 
+    def __str__(self):
+        return self.get_department_display()
+
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         super().save(*args, **kwargs)
