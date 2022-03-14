@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
+from envergo.geodata.utils import find_contact_data
 from envergo.moulinette.forms import MoulinetteForm
 from envergo.moulinette.models import Moulinette
 
@@ -46,6 +47,11 @@ class MoulinetteHome(FormView):
             moulinette = Moulinette(form.cleaned_data)
             moulinette.run()
             context["moulinette"] = moulinette
+
+            if moulinette.result_soumis:
+                context["contact_data"] = find_contact_data(
+                    moulinette.lng, moulinette.lat
+                )
 
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]

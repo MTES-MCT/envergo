@@ -45,6 +45,14 @@ class Moulinette:
         }
 
     @property
+    def lat(self):
+        return self.data["lat"]
+
+    @property
+    def lng(self):
+        return self.data["lng"]
+
+    @property
     def eval_result(self):
 
         if self.result["wetlands_within_25m"]:
@@ -81,6 +89,10 @@ class Moulinette:
 
         result = result_matrix[wetland_status][project_size]
         return result
+
+    @property
+    def result_soumis(self):
+        return self.eval_result == RESULTS.soumis
 
     @property
     def coords(self):
