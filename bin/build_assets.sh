@@ -23,7 +23,10 @@ if compress_enabled
 then
   python manage.py compress --force
 fi
-python manage.py collectstatic --noinput --clear
+# not using collectstatic --clear because it takes ages
+rm staticfiles
+python manage.py collectstatic --noinput
+
 python manage.py compilemessages -l fr -i .scalingo -i .venv
 
 echo "Leaving the post_compile hook"
