@@ -11,6 +11,9 @@ pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/dump.pgsql
 psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
 # psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS unaccent;'
 
+# Clean dump file
+rm /tmp/dump.pgsql
+
 # Warning! This hook replaces the `post_deploy` hook that we still want to run
 bash $HOME/bin/post_deploy.sh
 
