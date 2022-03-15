@@ -53,10 +53,11 @@ $red: #b94a48;
 }
 
 #moulinette-container {
+
   max-width: none;
 
   div.fr-grid-row {
-    justify-content: space-evenly;
+    justify-content: flex-start;
   }
 
   #form-col {
@@ -81,6 +82,7 @@ $red: #b94a48;
   }
 
   @media (min-width: 78em) {
+    padding: 0 3rem;
 
     #form-col {
       padding: 0 24px;
@@ -90,6 +92,7 @@ $red: #b94a48;
     #content-col {
       padding: 0 24px;
       max-width: 848px;
+      margin: 0 auto;
     }
   }
 }
