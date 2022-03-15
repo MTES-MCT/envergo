@@ -53,25 +53,45 @@ $red: #b94a48;
 }
 
 #moulinette-container {
-
-  @media (min-width: 78em) {
-    max-width: none;
-  }
+  max-width: none;
 
   div.fr-grid-row {
-    justify-content: space-around;
+    justify-content: space-evenly;
   }
 
   #form-col {
-    min-width: 24em;
-    max-width: 36em;
+    width: 100%;
   }
 
-  #content-col {
-    min-width: 36em;
-    max-width: 78em;
+  @media (min-width: 1144px) {
+
+    #form-col {
+      flex: 0 0 calc(400% / 12);
+      width: calc(400% / 12);
+      max-width: 520px;
+      padding: 0 16px 0 8px;
+    }
+
+    #content-col {
+      flex: 0 0 calc(800% / 12);
+      width: calc(800% / 12);
+      max-width: 820px;
+      padding: 0 8px 0 16px;
+    }
   }
 
+  @media (min-width: 78em) {
+
+    #form-col {
+      padding: 0 24px;
+      max-width: 548px;
+    }
+
+    #content-col {
+      padding: 0 24px;
+      max-width: 848px;
+    }
+  }
 }
 
 
