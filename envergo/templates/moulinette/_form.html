@@ -38,5 +38,9 @@
   {% include '_field_snippet.html' with field=form.created_surface %}
   {% include '_field_snippet.html' with field=form.existing_surface %}
 
-  <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
+  {% if moulinette %}
+    <button type="submit" class="fr-btn" >Renouveler l'évaluation</button>
+  {% else %}
+    <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
+  {% endif %}
 </form>
