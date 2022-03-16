@@ -41,8 +41,6 @@ click-repl==0.2.0
     # via celery
 cryptography==36.0.1
     # via pyjwt
-cycler==0.11.0
-    # via matplotlib
 defusedxml==0.7.1
     # via python3-openid
 deprecated==1.2.13
@@ -82,40 +80,26 @@ django-ratelimit==3.0.1
     # via -r base.in
 django-redis==5.2.0
     # via -r base.in
-fonttools==4.28.5
-    # via matplotlib
 hiredis==2.0.0
     # via -r base.in
 idna==3.3
     # via requests
 importlib-metadata==4.11.2
     # via markdown
-kiwisolver==1.3.2
-    # via matplotlib
 kombu==5.2.3
     # via celery
 markdown==3.3.6
     # via -r base.in
-matplotlib==3.5.1
-    # via -r base.in
-numpy==1.22.0
-    # via
-    #   -r base.in
-    #   matplotlib
 oauthlib==3.1.1
     # via requests-oauthlib
 packaging==21.3
-    # via
-    #   matplotlib
-    #   redis
+    # via redis
 pep517==0.12.0
     # via pip-tools
 phonenumbers==8.12.40
     # via django-phonenumber-field
 pillow==9.0.0
-    # via
-    #   -r base.in
-    #   matplotlib
+    # via -r base.in
 pip-tools==6.4.0
     # via -r base.in
 prompt-toolkit==3.0.24
@@ -125,13 +109,9 @@ pycparser==2.21
 pyjwt[crypto]==2.3.0
     # via django-allauth
 pyparsing==3.0.6
-    # via
-    #   matplotlib
-    #   packaging
+    # via packaging
 pyproj==3.3.0
     # via -r base.in
-python-dateutil==2.8.2
-    # via matplotlib
 python-slugify==5.0.2
     # via -r base.in
 python-stdnum==1.17
@@ -162,9 +142,7 @@ rjsmin==1.2.0
 shapely==1.8.0
     # via -r base.in
 six==1.16.0
-    # via
-    #   click-repl
-    #   python-dateutil
+    # via click-repl
 sqlparse==0.4.2
     # via django
 text-unidecode==1.3
