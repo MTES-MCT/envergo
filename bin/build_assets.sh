@@ -18,11 +18,19 @@ END
 
 echo "Starting the post_compile hook"
 
+echo "Installing npm dev dependencies for assets generation."
+npm ci --dev
 npm run build
+
 if compress_enabled
 then
   python manage.py compress --force
 fi
+
+
+echo "Uninstall dev dependencies to prevent bloating /staticfiles"
+npm prune --production
+
 # not using collectstatic --clear because it takes ages
 rm staticfiles -Rf
 python manage.py collectstatic --noinput
