@@ -1,6 +1,10 @@
 {
   "name": "envergo",
   "version": "1.0.0",
+  "engines": {
+    "node": "16",
+    "npm": "8"
+  },
   "dependencies": {
     "@gouvfr/dsfr": "^1.2.1",
     "@sentry/browser": "^6.12.0",
