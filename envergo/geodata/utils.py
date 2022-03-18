@@ -56,8 +56,11 @@ def fetch_department_code(lng, lat):
         res = requests.get(url, timeout=5)
         data = res.json()
         departmentCode = data["features"][1]["properties"]["inseeCode"][0]
-    except (ConnectTimeout, JSONDecodeError, KeyError, IndexError):
-        logger.error(f"Cannot find department code for {lng},{lat}")
+    except (ConnectTimeout, JSONDecodeError, KeyError, IndexError) as err:
+
+        logger.error(
+            f"Cannot find department code for {lng},{lat} (url = {url}) (error = {err})"
+        )
         departmentCode = None
 
     return departmentCode
