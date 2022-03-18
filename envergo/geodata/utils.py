@@ -55,7 +55,7 @@ def fetch_department_code(lng, lat):
     try:
         res = requests.get(url, timeout=5)
         data = res.json()
-        departmentCode = data["features"][1]["properties"]["inseeCode"][0]
+        departmentCode = data["features"][0]["properties"]["inseeCode"][0]
     except (ConnectTimeout, JSONDecodeError, KeyError, IndexError) as err:
 
         logger.error(
