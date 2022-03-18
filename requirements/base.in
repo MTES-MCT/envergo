@@ -18,6 +18,7 @@ pip-tools
 markdown
 django-leaflet
 celery
+django-celery-results
 django-ratelimit
 django-braces
 shapely

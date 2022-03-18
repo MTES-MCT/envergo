@@ -31,7 +31,9 @@ billiard==3.6.4.0
 black==21.12b0
     # via -r local.in
 celery==5.2.3
-    # via -r base.txt
+    # via
+    #   -r base.txt
+    #   django-celery-results
 certifi==2021.10.8
     # via
     #   -r base.txt
@@ -113,6 +115,8 @@ django-appconf==1.0.5
     #   -r base.txt
     #   django-compressor
 django-braces==1.15.0
+    # via -r base.txt
+django-celery-results==2.3.0
     # via -r base.txt
 django-compressor==3.1
     # via -r base.txt
