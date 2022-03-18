@@ -1,14 +1,20 @@
 {
   "name": "envergo",
   "version": "1.0.0",
+  "engines": {
+    "node": "16",
+    "npm": "8"
+  },
   "dependencies": {
     "@gouvfr/dsfr": "^1.2.1",
     "@sentry/browser": "^6.12.0",
     "accessible-autocomplete": "^2.0.3",
+    "dropzone": "^6.0.0-beta.1"
+  },
+  "devDependencies": {
     "autoprefixer": "^9.4.7",
     "browser-sync": "^2.14.0",
     "cssnano": "^4.1.10",
-    "dropzone": "^6.0.0-beta.1",
     "gulp": "^4.0.0",
     "gulp-imagemin": "^5.0.3",
     "gulp-plumber": "^1.2.1",
@@ -19,7 +25,6 @@
     "pixrem": "^5.0.0",
     "sass": "^1.38.1"
   },
-  "devDependencies": {},
   "browserslist": [
     "last 2 versions"
   ],

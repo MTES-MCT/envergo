@@ -1,0 +1,16 @@
+{% load static l10n %}
+
+<script>
+  const ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+
+  const DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+  const CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+  const DEFAULT_ZOOM = {{ default_zoom }};
+  const LAT_FIELD_ID = 'id_lat';
+  const LNG_FIELD_ID = 'id_lng';
+</script>
+<script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+<script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+<script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+<script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+<script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>

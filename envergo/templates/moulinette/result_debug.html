@@ -1,0 +1,71 @@
+{% extends 'moulinette/base_result.html' %}
+{% load evaluations static %}
+
+
+{% block result %}
+
+  <section>
+    <h1>Paramètres de la moulinette</h1>
+
+    <h2>Données initiales</h2>
+    <ul>
+      <li>Surface existante: {{ moulinette.data.existing_surface }}</li>
+      <li>Surface créée: {{ moulinette.data.created_surface }}</li>
+    </ul>
+
+    <h2>Données calculées</h2>
+    <ul>
+      <li>Coordonnées du projet : {{ moulinette.coords }}</li>
+      <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
+    </ul>
+
+    <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div id="debug-map"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    window.addEventListener('load', function() {
+
+      var map = L.map('debug-map', {maxZoom: 21});
+      var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
+      var wetlandsStyles = {'color': 'none', 'fillColor': 'blue'};
+      var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
+      var circle100Styles = {'color': 'yellow', 'fillColor': 'yellow'};
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+      }).addTo(map);
+
+      var coords = JSON.parse('{{ moulinette.coords.json|safe }}');
+      var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
+      coordsGeoJSON.addTo(map);
+
+      var wetlands = JSON.parse('{{ moulinette.wetlands_json|safe }}');
+      var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
+      wetlandsGeoJSON.addTo(map);
+
+      var circle25 = JSON.parse('{{ moulinette.circle_25_json|safe }}');
+      var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
+      circle25GeoJSON.addTo(map);
+
+      var circle100 = JSON.parse('{{ moulinette.circle_100_json|safe }}');
+      var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
+      circle100GeoJSON.addTo(map);
+
+      map.fitBounds(circle100GeoJSON.getBounds());
+    });
+  </script>
+{% endblock %}

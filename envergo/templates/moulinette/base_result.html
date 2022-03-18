@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load evaluations static %}
+
+{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
+
+{% block container %}
+
+  <div id="moulinette-container" class="fr-container fr-mb-5w">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div id="form-col" class="">
+
+        <h2>Saisissez les caractéristiques de votre projet</h2>
+
+        {% include 'moulinette/_form.html' with form=form %}
+
+      </div>
+
+      <article id="content-col" class="">
+        {% block result %}{% endblock %}
+      </article>
+    </div>
+  </div>
+
+  <section class="fr-py-8w alt">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8">
+
+          <h2>Pour en savoir plus…</h2>
+
+          <p>Consultez notre <a href="{% url 'water_law' %}">page d'information sur la Loi sur l'eau</a>
+            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {% include 'moulinette/_form_scripts.html' %}
+{% endblock %}

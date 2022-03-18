@@ -3,7 +3,10 @@ from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from model_utils import Choices
+
+from envergo.utils.markdown import markdown_to_html
 
 
 class Parcel(models.Model):
@@ -149,10 +152,34 @@ class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="zones")
-    geometry = gis_models.MultiPolygonField()
+    geometry = gis_models.MultiPolygonField(geography=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
         verbose_name = _("Zone")
         verbose_name_plural = _("Zones")
+
+
+class DepartmentContact(models.Model):
+    """Water law contact data for a departement."""
+
+    department = models.CharField(
+        _("Department"),
+        max_length=3,
+        choices=DEPARTMENT_CHOICES,
+        unique=True,
+    )
+    contact_md = models.TextField(_("Contact"), blank=False)
+    contact_html = models.TextField(_("Contact (html)"), blank=True)
+
+    class Meta:
+        verbose_name = _("Department contact data")
+        verbose_name_plural = _("Department contact data")
+
+    def __str__(self):
+        return self.get_department_display()
+
+    def save(self, *args, **kwargs):
+        self.contact_html = markdown_to_html(self.contact_md)
+        super().save(*args, **kwargs)

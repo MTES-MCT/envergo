@@ -1,0 +1,46 @@
+<form method="post" novalidate autocomplete="off" action="" id="moulinette-form">
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+
+  <div id="form-group-coords" class="fr-input-group">
+
+    {{ form.lng.as_hidden }}
+    {{ form.lat.as_hidden }}
+
+    <label>
+      Double-cliquez pour placer un marqueur indiquant l'emplacement précis de votre projet.
+    </label>
+
+    <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div class="search-control">
+            {{ form.address }}
+          </div>
+          <div id="map">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if form.lat.errors or form.lng.errors %}
+      <p class="fr-error-text">
+        ↑
+        Les coordonnées saisies sont incorrectes
+        ↑
+      </p>
+
+    {% endif %}
+
+  </div>
+
+  {% include '_field_snippet.html' with field=form.created_surface %}
+  {% include '_field_snippet.html' with field=form.existing_surface %}
+
+  {% if moulinette %}
+    <button type="submit" class="fr-btn" >Renouveler l'évaluation</button>
+  {% else %}
+    <button type="submit" class="fr-btn" >Démarrer l'évaluation</button>
+  {% endif %}
+</form>

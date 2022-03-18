@@ -68,6 +68,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
+    "localflavor",
 ]
 
 LOCAL_APPS = [
@@ -76,6 +77,7 @@ LOCAL_APPS = [
     "envergo.evaluations",
     "envergo.geodata",
     "envergo.stats",
+    "envergo.moulinette",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -185,6 +187,8 @@ TEMPLATES = [
         },
     }
 ]
+# https://github.com/jazzband/django-debug-toolbar/issues/1550
+SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006"]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#form-renderer
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"

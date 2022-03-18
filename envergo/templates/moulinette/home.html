@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+  <h1>Saisissez les caractéristiques de votre projet</h1>
+
+  {% include 'moulinette/_form.html' with form=form %}
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {% include 'moulinette/_form_scripts.html' %}
+{% endblock %}
