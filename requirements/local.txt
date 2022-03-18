@@ -165,14 +165,12 @@ idna==3.3
     #   -r base.txt
     #   requests
 importlib-metadata==4.11.2
-    # via
-    #   -r base.txt
-    #   markdown
+    # via -r base.txt
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.9
     # via -r local.in
-ipython==7.31.0
+ipython==7.31.1
     # via ipdb
 isort==5.10.1
     # via
@@ -377,12 +375,10 @@ types-pyyaml==6.0.3
     # via django-stubs
 typing-extensions==4.0.1
     # via
-    #   astroid
     #   black
     #   django-stubs
     #   django-stubs-ext
     #   mypy
-    #   pylint
 urllib3==1.26.8
     # via
     #   -r base.txt
