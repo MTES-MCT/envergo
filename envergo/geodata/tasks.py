@@ -1,5 +1,7 @@
 import logging
 
+from django.db import transaction
+
 from config.celery_app import app
 from envergo.geodata.models import Map
 from envergo.geodata.utils import extract_shapefile
@@ -14,5 +16,7 @@ def process_shapefile_map(task, map_id):
     logger.info(f"Starting import on map {map_id}")
 
     map = Map.objects.get(pk=map_id)
-    map.zones.all().delete()
-    extract_shapefile(map, map.file)
+
+    with transaction.atomic():
+        map.zones.all().delete()
+        extract_shapefile(map, map.file)

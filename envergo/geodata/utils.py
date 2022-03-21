@@ -39,7 +39,9 @@ def extract_shapefile(map, file):
         logger.info("Instanciating custom LayerMapping")
         mapping = {"geometry": "MULTIPOLYGON"}
         extra = {"map": map}
-        lm = CustomMapping(Zone, shapefile, mapping, extra_kwargs=extra)
+        lm = CustomMapping(
+            Zone, shapefile, mapping, transaction_mode="autocommit", extra_kwargs=extra
+        )
 
         logger.info("Calling layer mapping `save`")
         lm.save(strict=True)
