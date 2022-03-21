@@ -42,7 +42,7 @@ def extract_shapefile(map, file):
         lm = CustomMapping(Zone, shapefile, mapping, extra_kwargs=extra)
 
         logger.info("Calling layer mapping `save`")
-        lm.save()
+        lm.save(strict=True)
 
 
 def fetch_department_code(lng, lat):
