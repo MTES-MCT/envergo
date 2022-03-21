@@ -1,5 +1,6 @@
 import glob
 import logging
+import sys
 import zipfile
 from tempfile import TemporaryDirectory
 
@@ -23,7 +24,7 @@ class CustomMapping(LayerMapping):
         return kwargs
 
 
-def extract_shapefile(map, file):
+def extract_shapefile(map, file, debug_stream=sys.stdout):
 
     logger.info("Creating temporary directory")
     with TemporaryDirectory() as tmpdir:
@@ -40,11 +41,16 @@ def extract_shapefile(map, file):
         mapping = {"geometry": "MULTIPOLYGON"}
         extra = {"map": map}
         lm = CustomMapping(
-            Zone, shapefile, mapping, transaction_mode="autocommit", extra_kwargs=extra
+            Zone,
+            shapefile,
+            mapping,
+            transaction_mode="autocommit",
+            extra_kwargs=extra,
         )
 
         logger.info("Calling layer mapping `save`")
-        lm.save(strict=True)
+        lm.save(strict=True, progress=True, verbose=True, stream=debug_stream)
+        logger.info("Importing is done")
 
 
 def fetch_department_code(lng, lat):
