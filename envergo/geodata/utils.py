@@ -1,16 +1,44 @@
 import glob
 import logging
+import re
 import sys
 import zipfile
 from tempfile import TemporaryDirectory
 
 import requests
+from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
 from requests.exceptions import ConnectTimeout, JSONDecodeError
 
 from envergo.geodata.models import DepartmentContact, Zone
 
 logger = logging.getLogger(__name__)
+
+
+class CeleryDebugStream:
+    """A sys.stdout proxy that also updates the celery task states.
+
+    Django's LayerMapping does not offer any hook to update the long running
+    import task. It does provides a way to print the task's progress, though,
+    by offering a `stream` argument to the `save` method.
+    """
+
+    def __init__(self, task, nb_zones):
+        self.task = task
+        self.nb_zones = nb_zones
+
+    def write(self, msg):
+
+        # Find the number of processed results from progress message
+        match = re.search(r"\d+", msg)
+        nb_processed = int(match[0])
+        progress = self.nb_zones / nb_processed * 100
+
+        # update task statk
+        task_msg = f"{nb_processed} zones importées sur {self.nb_zones} ({progress}%)"
+        self.task.update_state(state="PROGRESS", meta={"msg": task_msg})
+
+        sys.stdout.write(msg)
 
 
 class CustomMapping(LayerMapping):
@@ -24,7 +52,7 @@ class CustomMapping(LayerMapping):
         return kwargs
 
 
-def extract_shapefile(map, file, debug_stream=sys.stdout):
+def extract_shapefile(map, file, task=None):
 
     logger.info("Creating temporary directory")
     with TemporaryDirectory() as tmpdir:
@@ -36,6 +64,16 @@ def extract_shapefile(map, file, debug_stream=sys.stdout):
         logger.info("Find .shp file path")
         paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
         shapefile = paths[0]
+
+        logger.info("Fetching data about the shapefile")
+        ds = DataSource(shapefile)
+        layer = ds[0]
+        nb_zones = len(layer)
+
+        if task:
+            debug_stream = CeleryDebugStream(task, nb_zones)
+        else:
+            debug_stream = sys.stdout
 
         logger.info("Instanciating custom LayerMapping")
         mapping = {"geometry": "MULTIPOLYGON"}
