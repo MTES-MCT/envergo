@@ -28,6 +28,8 @@ def process_shapefile_map(task, map_id):
     map = Map.objects.get(pk=map_id)
     debug_stream = CeleryDebugStream(task)
 
+    task.update_state(state="PROGRESS", meta={"debug": "debug message"})
+
     with transaction.atomic():
         map.zones.all().delete()
         extract_shapefile(map, map.file, debug_stream)
