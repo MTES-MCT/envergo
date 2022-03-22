@@ -49,7 +49,11 @@ class MapAdmin(admin.ModelAdmin):
             return None
 
         result = AsyncResult(obj.task_id)
-        return f"{result.state} {result.info}"
+        if result.info and "msg" in result.info:
+            status = result.info["msg"]
+        else:
+            status = "ND"
+        return status
 
 
 @admin.register(Zone)
