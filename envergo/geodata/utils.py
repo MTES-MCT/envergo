@@ -32,7 +32,7 @@ class CeleryDebugStream:
         # Find the number of processed results from progress message
         match = re.search(r"\d+", msg)
         nb_processed = int(match[0])
-        progress = self.nb_zones / nb_processed * 100
+        progress = int(nb_processed / self.nb_zones * 100)
 
         # update task statk
         task_msg = f"{nb_processed} zones importées sur {self.nb_zones} ({progress}%)"
