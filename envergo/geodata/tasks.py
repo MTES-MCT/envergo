@@ -26,8 +26,10 @@ def process_shapefile_map(task, map_id):
 
     logger.info(f"Starting import on map {map_id}")
     map = Map.objects.get(pk=map_id)
-    debug_stream = CeleryDebugStream(task)
+    map.task_id = task.request.id
+    map.save()
 
+    debug_stream = CeleryDebugStream(task)
     task.update_state(state="PROGRESS", meta={"debug": "debug message"})
 
     with transaction.atomic():
