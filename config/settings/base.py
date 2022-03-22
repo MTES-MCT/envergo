@@ -270,7 +270,7 @@ UPLOAD_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 if USE_TZ:
     CELERY_TIMEZONE = TIME_ZONE
 CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL", default="memory://localhost/")
-CELERY_RESULT_BACKEND = "django-db"
+CELERY_RESULT_BACKEND = env("DJANGO_CELERY_BROKER_URL", default="memory://localhost/")
 CELERY_CACHE_BACKEND = "django-cache"
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_ACCEPT_CONTENT = ["json"]
