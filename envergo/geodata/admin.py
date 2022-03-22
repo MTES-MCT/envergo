@@ -20,6 +20,7 @@ class MapAdmin(admin.ModelAdmin):
     list_display = ["name", "data_type", "created_at", "zone_count"]
     readonly_fields = ["import_status", "created_at"]
     actions = ["extract"]
+    exclude = ["task_id"]
 
     @admin.action(description=_("Extract and import a shapefile"))
     def extract(self, request, queryset):
