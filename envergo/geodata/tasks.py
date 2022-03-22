@@ -15,7 +15,8 @@ class CeleryDebugStream:
         self.task = task
 
     def write(self, msg):
-        self.task.update_state(state="STARTED", meta={"msg": msg})
+        logger.info(f"Writing debug message to task state {msg}")
+        self.task.update_state(state="PROGRESS", meta={"msg": msg})
         sys.stdout.write(msg)
 
 
