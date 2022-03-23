@@ -52,7 +52,7 @@ class MapAdmin(admin.ModelAdmin):
         result = AsyncResult(obj.task_id)
         try:
             status = result.info["msg"]
-        except (TypeError, AttributeError, IndexError):
+        except (TypeError, AttributeError, IndexError, KeyError):
             status = "ND"
         return status
 
