@@ -47,7 +47,7 @@ class MapAdmin(admin.ModelAdmin):
 
     def import_status(self, obj):
         if not obj.task_id:
-            return None
+            return "ND"
 
         result = AsyncResult(obj.task_id)
         try:
