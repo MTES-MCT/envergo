@@ -142,6 +142,7 @@ class Map(models.Model):
     task_id = models.CharField(
         _("Celery task id"), max_length=256, null=True, blank=True
     )
+    import_error_msg = models.TextField(_("Import error message"), blank=True)
 
     class Meta:
         verbose_name = _("Map")
