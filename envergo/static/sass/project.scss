@@ -295,6 +295,12 @@ div.leaflet-container {
       background-color: white;
     }
   }
+
+  div.leaflet-control a {
+    background-image: unset;
+    background-size: unset;
+    transition: none;
+  }
 }
 
 .alt {
