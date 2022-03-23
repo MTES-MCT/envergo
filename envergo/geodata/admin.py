@@ -17,7 +17,7 @@ class ParcelAdmin(admin.ModelAdmin):
 
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
-    list_display = ["name", "data_type", "created_at", "zone_count"]
+    list_display = ["name", "data_type", "created_at", "zone_count", "import_status"]
     readonly_fields = ["import_status", "created_at"]
     actions = ["extract"]
     exclude = ["task_id"]

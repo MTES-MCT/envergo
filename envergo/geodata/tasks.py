@@ -30,3 +30,6 @@ def process_shapefile_map(task, map_id):
             # We have to raise the `Ignore` exception, otherwise celery
             # will change end the task with a SUCCESS status.
             raise Ignore()
+
+    map.task_id = None
+    map.save()
