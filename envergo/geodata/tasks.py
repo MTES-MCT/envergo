@@ -1,6 +1,6 @@
 import logging
-import sys
 
+from celery.exceptions import Ignore
 from django.db import transaction
 
 from config.celery_app import app
@@ -20,6 +20,13 @@ def process_shapefile_map(task, map_id):
     map.task_id = task.request.id
     map.save()
 
+    map.zones.all().delete()
+
     with transaction.atomic():
-        map.zones.all().delete()
-        extract_shapefile(map, map.file, task)
+        try:
+            extract_shapefile(map, map.file, task)
+        except Exception as e:
+            task.update_state("FAILURE", meta={"msg": f"Erreur d'import ({e})"})
+            # We have to raise the `Ignore` exception, otherwise celery
+            # will change end the task with a SUCCESS status.
+            raise Ignore()
