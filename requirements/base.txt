@@ -15,9 +15,7 @@ asgiref==3.4.1
 billiard==3.6.4.0
     # via celery
 celery==5.2.3
-    # via
-    #   -r base.in
-    #   django-celery-results
+    # via -r base.in
 certifi==2021.10.8
     # via
     #   pyproj
@@ -63,8 +61,6 @@ django-allauth==0.47.0
 django-appconf==1.0.5
     # via django-compressor
 django-braces==1.15.0
-    # via -r base.in
-django-celery-results==2.3.0
     # via -r base.in
 django-compressor==3.1
     # via -r base.in

@@ -69,7 +69,6 @@ THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
     "localflavor",
-    "django_celery_results",
 ]
 
 LOCAL_APPS = [
