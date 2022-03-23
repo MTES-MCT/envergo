@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-22 14:04+0000\n"
+"POT-Creation-Date: 2022-03-23 09:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -473,23 +473,22 @@ msgstr ""
 "Nous n'avons pas pu traiter votre demande. Merci de vérifier les erreurs ci-"
 "après."
 
-#: envergo/geodata/admin.py:24
+#: envergo/geodata/admin.py:25
 msgid "Extract and import a shapefile"
 msgstr "Extraire et importer le fichier shapefile"
 
-#: envergo/geodata/admin.py:27
+#: envergo/geodata/admin.py:28
 msgid "Please only select one map for this action."
 msgstr "Merci de sélectionner une et une seule carte pour cette action."
 
-#: envergo/geodata/admin.py:34
-#, python-brace-format
+#: envergo/geodata/admin.py:35
 msgid ""
-"Your shapefile will be processed soon (task {result.id}). It might take up "
-"to a few minutes."
+"Your shapefile will be processed soon. It might take up to a few minutes."
 msgstr ""
-"Votre shapefile va être traité sous peu (tâche {result.id}). La tâche peut nécessiter jusqu'à plusieurs minutes."
+"Votre shapefile va être traité. La tâche peut "
+"nécessiter jusqu'à plusieurs minutes."
 
-#: envergo/geodata/admin.py:38
+#: envergo/geodata/admin.py:39
 msgid "Nb zones"
 msgstr "Nb zones"
 

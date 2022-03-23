@@ -30,9 +30,9 @@ class MapAdmin(admin.ModelAdmin):
             return
 
         map = queryset[0]
-        result = process_shapefile_map.delay(map.id)
+        process_shapefile_map.delay(map.id)
         msg = _(
-            f"Your shapefile will be processed soon (task {result.id}). It might take up to a few minutes."
+            "Your shapefile will be processed soon. It might take up to a few minutes."
         )
         self.message_user(request, msg, level=messages.INFO)
 
