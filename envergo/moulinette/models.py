@@ -11,11 +11,38 @@ RESULTS = Choices(
 )
 
 
+def fetch_zones_around(coords, radius, zone_type):
+    """Helper method to fetch Zones around a given point."""
+
+    circle = coords.buffer(radius)
+    qs = Zone.objects.filter(map__data_type=zone_type).filter(
+        geometry__intersects=circle
+    )
+    return qs
+
+
+# Those dummy methods are useful for unit testing
+def fetch_wetlands_around_25m(coords):
+    return fetch_zones_around(coords, 25, "zones_humides")
+
+
+def fetch_wetlands_around_100m(coords):
+    return fetch_zones_around(coords, 100, "zones_humides")
+
+
 class Moulinette:
+    """Automatic water law processing tool.
+
+    Given a bunch of relevant user provided data, we try to perform an
+    automatic computation and tell if the project is subject to the Water Law.
+    """
+
     def __init__(self, data):
         self.data = data
 
     def run(self):
+        """Perform the automatic evaluation."""
+
         project_surface = self.data["existing_surface"] + self.data["created_surface"]
 
         lat = self.data["lat"]
@@ -23,15 +50,13 @@ class Moulinette:
         # Transform to mercator projection, to get meter units
         coords = Point(float(lng), float(lat), srid=4326).transform(3857, clone=True)
 
-        circle_25 = coords.buffer(25)
-        wetlands_25 = (
-            Zone.objects
-            # .filter(map__data_type="zone_humide")
-            .filter(geometry__intersects=circle_25)
-        )
+        # Fetch data for the 3.3.1.0 criteria ("Zones humides")
+        wetlands_25 = fetch_wetlands_around_25m(coords)
+        wetlands_100 = fetch_wetlands_around_100m(coords)
 
+        # Useful debug data
+        circle_25 = coords.buffer(25)
         circle_100 = coords.buffer(100)
-        wetlands_100 = Zone.objects.filter(geometry__intersects=circle_100)
 
         self.result = {
             "coords": coords,
@@ -81,7 +106,7 @@ class Moulinette:
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.non_soumis,
+                "big": RESULTS.action_requise,
                 "medium": RESULTS.non_soumis,
                 "small": RESULTS.non_soumis,
             },
