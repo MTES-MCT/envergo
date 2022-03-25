@@ -30,6 +30,10 @@ def fetch_wetlands_around_100m(coords):
     return fetch_zones_around(coords, 100, "zone_humide")
 
 
+def fetch_flood_zones_around_12m(coords):
+    return fetch_zones_around(coords, 12, "zone_inondable")
+
+
 class Moulinette:
     """Automatic water law processing tool.
 
@@ -54,19 +58,26 @@ class Moulinette:
         wetlands_25 = fetch_wetlands_around_25m(coords)
         wetlands_100 = fetch_wetlands_around_100m(coords)
 
+        # Fetch data for the 3.2.2.0 criteria ("Lit majeur")
+        flood_zones_12 = fetch_flood_zones_around_12m(coords)
+
         # Useful debug data
+        circle_12 = coords.buffer(12)
         circle_25 = coords.buffer(25)
         circle_100 = coords.buffer(100)
 
         self.result = {
             "coords": coords,
             "project_surface": project_surface,
-            "circle_25": circle_25,
             "wetlands_25": wetlands_25,
             "wetlands_within_25m": bool(wetlands_25),
-            "circle_100": circle_100,
             "wetlands_100": wetlands_100,
             "wetlands_within_100m": bool(wetlands_100),
+            "flood_zones_12": flood_zones_12,
+            "flood_zones_within_12m": bool(flood_zones_12),
+            "circle_12": circle_12,
+            "circle_25": circle_25,
+            "circle_100": circle_100,
         }
 
     @property
@@ -78,7 +89,8 @@ class Moulinette:
         return self.data["lng"]
 
     @property
-    def eval_result(self):
+    def eval_result_3310(self):
+        """Run the check for the 3.3.1.0 rule."""
 
         if self.result["wetlands_within_25m"]:
             wetland_status = "inside"
@@ -111,8 +123,56 @@ class Moulinette:
                 "small": RESULTS.non_soumis,
             },
         }
-
         result = result_matrix[wetland_status][project_size]
+        return result
+
+    @property
+    def eval_result_3220(self):
+        """Run the check for the 3.1.2.0 rule."""
+
+        if self.result["flood_zones_within_12m"]:
+            flood_zone_status = "inside"
+        else:
+            flood_zone_status = "outside"
+
+        if self.result["project_surface"] > 400:
+            project_size = "big"
+        elif self.result["project_surface"] > 350:
+            project_size = "medium"
+        else:
+            project_size = "small"
+
+        result_matrix = {
+            "inside": {
+                "big": RESULTS.soumis,
+                "medium": RESULTS.action_requise,
+                "small": RESULTS.non_soumis,
+            },
+            "outside": {
+                "big": RESULTS.non_soumis,
+                "medium": RESULTS.non_soumis,
+                "small": RESULTS.non_soumis,
+            },
+        }
+
+        result = result_matrix[flood_zone_status][project_size]
+        return result
+
+    @property
+    def eval_result(self):
+        """Combine results of the different checks to produce a full evaluation."""
+
+        result_3310 = self.eval_result_3310
+        result_3220 = self.eval_result_3220
+        results = [result_3310, result_3220]
+
+        if "soumis" in results:
+            result = "soumis"
+        elif "action_requise" in results:
+            result = "action_requise"
+        else:
+            result = "non_soumis"
+
         return result
 
     @property
@@ -129,6 +189,17 @@ class Moulinette:
         wetlands = self.result["wetlands_100"]
         geojson = serialize("geojson", wetlands, geometry_field="geometry")
         return geojson
+
+    @property
+    def flood_zones_json(self):
+        flood_zones = self.result["flood_zones_12"]
+        geojson = serialize("geojson", flood_zones, geometry_field="geometry")
+        return geojson
+
+    @property
+    def circle_12_json(self):
+        circle = self.result["circle_12"].transform(4326, clone=True)
+        return circle.geojson
 
     @property
     def circle_25_json(self):

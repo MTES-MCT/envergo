@@ -19,6 +19,7 @@
       <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
       <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
       <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones inondables à 12m du projet : {{ moulinette.result.flood_zones_12|yesno:"Oui,Non" }}</li>
     </ul>
 
     <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
@@ -40,6 +41,8 @@
       var map = L.map('debug-map', {maxZoom: 21});
       var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
       var wetlandsStyles = {'color': 'none', 'fillColor': 'blue'};
+      var floodZonesStyles = {'color': 'none', 'fillColor': 'red'};
+      var circle12Styles = {'color': 'yellow', 'fillColor': 'yellow'};
       var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
       var circle100Styles = {'color': 'yellow', 'fillColor': 'yellow'};
 
@@ -56,6 +59,14 @@
       var wetlands = JSON.parse('{{ moulinette.wetlands_json|safe }}');
       var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
       wetlandsGeoJSON.addTo(map);
+
+      var floodZones = JSON.parse('{{ moulinette.flood_zones_json|safe }}');
+      var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
+      floodZonesGeoJSON.addTo(map);
+
+      var circle12 = JSON.parse('{{ moulinette.circle_12_json|safe }}');
+      var circle12GeoJSON = L.geoJSON(circle12, {style: circle12Styles});
+      circle12GeoJSON.addTo(map);
 
       var circle25 = JSON.parse('{{ moulinette.circle_25_json|safe }}');
       var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
