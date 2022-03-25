@@ -50,8 +50,9 @@
   {% leaflet_js %}
   <script defer src="{% static 'js/vendors/geojson-rewind.js' %}"></script>
   <script>
+    var map;
     function mapInit(newMap, options) {
-      const map = newMap;
+      map = newMap;
 
       var layer = L.tileLayer(
         "https://wxs.ign.fr/parcellaire/geoportail/wmts?" +
