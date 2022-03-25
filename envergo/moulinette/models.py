@@ -23,11 +23,11 @@ def fetch_zones_around(coords, radius, zone_type):
 
 # Those dummy methods are useful for unit testing
 def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zones_humides")
+    return fetch_zones_around(coords, 25, "zone_humide")
 
 
 def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zones_humides")
+    return fetch_zones_around(coords, 100, "zone_humide")
 
 
 class Moulinette:
