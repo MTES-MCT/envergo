@@ -165,7 +165,7 @@ class Zone(gis_models.Model):
         verbose_name_plural = _("Zones")
 
 
-class DepartmentContact(models.Model):
+class Department(models.Model):
     """Water law contact data for a departement."""
 
     department = models.CharField(
@@ -174,12 +174,14 @@ class DepartmentContact(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
-    contact_md = models.TextField(_("Contact"), blank=False)
+    geometry = gis_models.MultiPolygonField()
+    contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     class Meta:
-        verbose_name = _("Department contact data")
-        verbose_name_plural = _("Department contact data")
+        verbose_name = _("Department")
+        verbose_name_plural = _("Departments")
+        ordering = ["department"]
 
     def __str__(self):
         return self.get_department_display()

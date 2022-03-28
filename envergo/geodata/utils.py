@@ -10,7 +10,7 @@ from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
 from requests.exceptions import ConnectTimeout, JSONDecodeError
 
-from envergo.geodata.models import DepartmentContact, Zone
+from envergo.geodata.models import Department, Zone
 
 logger = logging.getLogger(__name__)
 
@@ -119,12 +119,10 @@ def find_contact_data(lng, lat):
 
     departmentCode = fetch_department_code(lng, lat)
     if departmentCode:
-        departmentContact = DepartmentContact.objects.filter(
-            department=departmentCode
-        ).first()
+        department = Department.objects.filter(department=departmentCode).first()
 
-        if departmentContact:
-            contactData = departmentContact.contact_html
+        if department:
+            contactData = department.contact_html
         else:
             logger.warning(f"No contact data for department {departmentCode}")
 
