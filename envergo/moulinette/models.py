@@ -45,8 +45,6 @@ class Moulinette:
         self.data = data
 
     def run(self):
-        """Perform the automatic evaluation."""
-
         project_surface = self.data["existing_surface"] + self.data["created_surface"]
         lng = self.data["lng"]
         lat = self.data["lat"]
@@ -91,6 +89,7 @@ class Moulinette:
     def lng(self):
         return self.data["lng"]
 
+    @property
     def department(self):
         return self.result["department"]
 
