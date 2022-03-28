@@ -50,7 +50,7 @@ def fetch_department_code(lng, lat):
 
     See https://geoservices.ign.fr/documentation/services/services-beta/geocodage-beta/documentation-du-geocodage#2469
     """
-    url = f'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Point","coordinates":[{lng},{lat}]}}&filters[type]=département'
+    url = f'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Point","coordinates":[{lng},{lat}]}}&filters[type]=département'  # noqa
 
     try:
         res = requests.get(url, timeout=5)
