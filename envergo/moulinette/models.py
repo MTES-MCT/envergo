@@ -2,7 +2,7 @@ from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
 from model_utils import Choices
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
 
 RESULTS = Choices(
     ("soumis", "Soumis"),
@@ -17,11 +17,13 @@ class Moulinette:
 
     def run(self):
         project_surface = self.data["existing_surface"] + self.data["created_surface"]
-
-        lat = self.data["lat"]
         lng = self.data["lng"]
+        lat = self.data["lat"]
+        lngLat = Point(float(lng), float(lat), srid=4326)
+        department = Department.objects.filter(geometry__contains=lngLat).first()
+
         # Transform to mercator projection, to get meter units
-        coords = Point(float(lng), float(lat), srid=4326).transform(3857, clone=True)
+        coords = lngLat.transform(3857, clone=True)
 
         circle_25 = coords.buffer(25)
         wetlands_25 = (
@@ -35,6 +37,7 @@ class Moulinette:
 
         self.result = {
             "coords": coords,
+            "department": department,
             "project_surface": project_surface,
             "circle_25": circle_25,
             "wetlands_25": wetlands_25,
@@ -51,6 +54,10 @@ class Moulinette:
     @property
     def lng(self):
         return self.data["lng"]
+
+    @property
+    def department(self):
+        return self.result["department"]
 
     @property
     def eval_result(self):

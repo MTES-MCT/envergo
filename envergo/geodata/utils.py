@@ -3,11 +3,9 @@ import logging
 import zipfile
 from tempfile import TemporaryDirectory
 
-import requests
 from django.contrib.gis.utils.layermapping import LayerMapping
-from requests.exceptions import ConnectTimeout, JSONDecodeError
 
-from envergo.geodata.models import Department, Zone
+from envergo.geodata.models import Zone
 
 logger = logging.getLogger(__name__)
 
@@ -43,41 +41,3 @@ def extract_shapefile(map, file):
 
         logger.info("Calling layer mapping `save`")
         lm.save()
-
-
-def fetch_department_code(lng, lat):
-    """Use the IGN api to find department code from coordinates.
-
-    See https://geoservices.ign.fr/documentation/services/services-beta/geocodage-beta/documentation-du-geocodage#2469
-    """
-    url = f'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Point","coordinates":[{lng},{lat}]}}&filters[type]=département'
-
-    try:
-        res = requests.get(url, timeout=5)
-        data = res.json()
-        departmentCode = data["features"][0]["properties"]["inseeCode"][0]
-    except (ConnectTimeout, JSONDecodeError, KeyError, IndexError) as err:
-
-        logger.error(
-            f"Cannot find department code for {lng},{lat} (url = {url}) (error = {err})"
-        )
-        departmentCode = None
-
-    return departmentCode
-
-
-def find_contact_data(lng, lat):
-    """Return department contact data for the given coordinates"""
-
-    contactData = ""
-
-    departmentCode = fetch_department_code(lng, lat)
-    if departmentCode:
-        department = Department.objects.filter(department=departmentCode).first()
-
-        if department:
-            contactData = department.contact_html
-        else:
-            logger.warning(f"No contact data for department {departmentCode}")
-
-    return contactData
