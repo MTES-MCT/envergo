@@ -1,6 +1,6 @@
 import pytest
 
-from envergo.geodata.tests.factories import ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
 from envergo.moulinette.models import Moulinette
 
 pytestmark = pytest.mark.django_db
@@ -9,6 +9,7 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture
 def moulinette_data(footprint):
     return {
+        # Bizou coordinates
         "lat": 48.4961953,
         "lng": 0.7504093,
         "existing_surface": 0,
@@ -22,6 +23,26 @@ def no_zones(_coords):
 
 def create_zones(_coords):
     return [ZoneFactory()]
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_result_without_contact_data(moulinette_data):
+    """When dept. contact info is not set, we cannot run the eval."""
+
+    moulinette = Moulinette(moulinette_data)
+    moulinette.run()
+    assert moulinette.eval_result == "nd"
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_result_with_contact_data(moulinette_data):
+    """Dept contact info is not set, we can run the eval."""
+
+    DepartmentFactory(department=61)
+
+    moulinette = Moulinette(moulinette_data)
+    moulinette.run()
+    assert moulinette.eval_result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [50])

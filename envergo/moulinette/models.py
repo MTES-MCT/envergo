@@ -5,6 +5,7 @@ from model_utils import Choices
 from envergo.geodata.models import Department, Zone
 
 RESULTS = Choices(
+    ("nd", "Non disponible"),
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
     ("action_requise", "Action requise"),
@@ -166,6 +167,11 @@ class Moulinette:
     @property
     def eval_result(self):
         """Combine results of the different checks to produce a full evaluation."""
+
+        department = self.result["department"]
+        contact_info = getattr(department, "contact_md", None)
+        if not contact_info:
+            return RESULTS.nd
 
         result_3310 = self.eval_result_3310
         result_3220 = self.eval_result_3220

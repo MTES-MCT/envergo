@@ -8,7 +8,7 @@ from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from envergo.geodata.models import Map, Parcel, Zone
+from envergo.geodata.models import Department, Map, Parcel, Zone
 
 
 def generate_section():
@@ -87,3 +87,13 @@ class ZoneFactory(DjangoModelFactory):
 
     map = factory.SubFactory(MapFactory)
     geometry = FuzzyMultiPolygon()
+
+
+class DepartmentFactory(DjangoModelFactory):
+    class Meta:
+        model = Department
+
+    department = 61  # Orne
+    geometry = FuzzyMultiPolygon()
+    contact_md = "Bla bla bla"
+    contact_html = "<p>Bla bla bla</p>"
