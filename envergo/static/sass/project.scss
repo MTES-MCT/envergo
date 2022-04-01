@@ -5,6 +5,11 @@ $pink: #f2dede;
 $dark-pink: #eed3d7;
 $red: #b94a48;
 
+:root {
+  // Bump default font size from 16 to 18px.
+  font-size: 112.5%;
+}
+
 .alert-debug {
   background-color: $white;
   border-color: $mint-green;
