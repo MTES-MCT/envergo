@@ -44,12 +44,9 @@
           </ul>
           <div role="alert" class="fr-alert fr-alert--warning fr-my-8w">
             <p class="fr-alert__title">Une action du porteur de projet est requise.</p>
-            <p>D'après les informations dont nous disposons, ce projet est potentiellement
-              <span class="fr-tag probability probability-4">soumis à la Loi sur l'eau</span>.</p>
+            <p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
 
             {% if required_actions %}
-              <p>Le porteur de projet doit pouvoir démontrer que son projet :</p>
-
               <ul>
                 {% for action in required_actions %}
                   <li>{{ action }}</li>
