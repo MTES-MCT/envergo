@@ -47,6 +47,10 @@
    * Create the main marker object that is manipulated by the widget.
    */
   MoulinetteMap.prototype.initializeMarker = function(map) {
+    // Bypass an issue with leaflet detecting a bad icon url, caused by
+    // assets versioning
+    L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
+
     const options = {
       draggable: true,
       autoPan: true,
