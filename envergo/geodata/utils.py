@@ -87,7 +87,7 @@ def extract_shapefile(map, file, task=None):
         )
 
         logger.info("Calling layer mapping `save`")
-        lm.save(strict=True, progress=True, stream=debug_stream)
+        lm.save(strict=False, progress=True, stream=debug_stream)
         logger.info("Importing is done")
 
 
