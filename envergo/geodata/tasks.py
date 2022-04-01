@@ -17,7 +17,7 @@ def process_shapefile_map(task, map_id):
 
     map = Map.objects.get(pk=map_id)
     map.task_id = task.request.id
-    map.error_import_msg = ""
+    map.import_error_msg = ""
     map.save()
 
     map.zones.all().delete()
