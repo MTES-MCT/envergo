@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-23 09:13+0000\n"
+"POT-Creation-Date: 2022-04-04 12:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,16 +308,16 @@ msgstr "Résultat"
 msgid "Details"
 msgstr "Détails"
 
-#: envergo/evaluations/models.py:97 envergo/geodata/models.py:176
+#: envergo/evaluations/models.py:97 envergo/geodata/models.py:178
 msgid "Contact"
 msgstr "Contact"
 
-#: envergo/evaluations/models.py:98 envergo/geodata/models.py:177
+#: envergo/evaluations/models.py:98 envergo/geodata/models.py:179
 msgid "Contact (html)"
 msgstr "Contact (html)"
 
 #: envergo/evaluations/models.py:100 envergo/evaluations/models.py:283
-#: envergo/geodata/models.py:141 envergo/geodata/models.py:160
+#: envergo/geodata/models.py:141 envergo/geodata/models.py:161
 msgid "Date created"
 msgstr "Date de création"
 
@@ -375,7 +375,7 @@ msgstr "Description"
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:191 envergo/geodata/models.py:147
+#: envergo/evaluations/models.py:191 envergo/geodata/models.py:148
 msgid "Map"
 msgstr "Carte"
 
@@ -485,8 +485,8 @@ msgstr "Merci de sélectionner une et une seule carte pour cette action."
 msgid ""
 "Your shapefile will be processed soon. It might take up to a few minutes."
 msgstr ""
-"Votre shapefile va être traité. La tâche peut "
-"nécessiter jusqu'à plusieurs minutes."
+"Votre shapefile va être traité. La tâche peut nécessiter jusqu'à plusieurs "
+"minutes."
 
 #: envergo/geodata/admin.py:39
 msgid "Nb zones"
@@ -573,25 +573,29 @@ msgstr "Type de donnée"
 msgid "Celery task id"
 msgstr "Id de tâche Celery"
 
-#: envergo/geodata/models.py:148
+#: envergo/geodata/models.py:145
+msgid "Import error message"
+msgstr "Message d'erreur de l'import"
+
+#: envergo/geodata/models.py:149
 msgid "Maps"
 msgstr "Cartes"
 
-#: envergo/geodata/models.py:163
+#: envergo/geodata/models.py:164
 msgid "Zone"
 msgstr "Zone"
 
-#: envergo/geodata/models.py:164
+#: envergo/geodata/models.py:165
 msgid "Zones"
 msgstr "Zones"
 
-#: envergo/geodata/models.py:171
+#: envergo/geodata/models.py:172 envergo/geodata/models.py:182
 msgid "Department"
 msgstr "Département"
 
-#: envergo/geodata/models.py:180 envergo/geodata/models.py:181
-msgid "Department contact data"
-msgstr "Informations de contact du département"
+#: envergo/geodata/models.py:183
+msgid "Departments"
+msgstr "Départements"
 
 #: envergo/geodata/urls.py:7 envergo/pages/urls.py:32
 msgid "map/"
@@ -708,3 +712,6 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "Department contact data"
+#~ msgstr "Informations de contact du département"
