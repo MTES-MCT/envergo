@@ -1,7 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 
-from envergo.evaluations.models import RESULTS
+from envergo.evaluations.models import CRITERION_RESULTS, RESULTS
 
 register = template.Library()
 
@@ -10,6 +10,7 @@ PROBA_CSS = {
     RESULTS.soumis: 4,
     RESULTS.action_requise: 3,
     RESULTS.non_soumis: 1,
+    CRITERION_RESULTS.non_applicable: 2,
 }
 
 
