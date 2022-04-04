@@ -59,6 +59,7 @@ class MoulinetteHome(FormView):
             context["center_map"] = [lng, lat]
             context["default_zoom"] = 16
         else:
+            # By default, show all metropolitan france in map
             context["display_marker"] = False
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 6
