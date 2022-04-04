@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
 from django.db.models import Count
@@ -16,9 +17,10 @@ class ParcelAdmin(admin.ModelAdmin):
 
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
-    list_display = ["name", "data_type", "created_at", "zone_count"]
-    readonly_fields = ["created_at"]
+    list_display = ["name", "data_type", "created_at", "zone_count", "import_status"]
+    readonly_fields = ["import_status", "created_at", "import_error_msg"]
     actions = ["extract"]
+    exclude = ["task_id"]
 
     @admin.action(description=_("Extract and import a shapefile"))
     def extract(self, request, queryset):
@@ -42,6 +44,17 @@ class MapAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.annotate(nb_zones=Count("zones"))
         return qs
+
+    def import_status(self, obj):
+        if not obj.task_id:
+            return "ND"
+
+        result = AsyncResult(obj.task_id)
+        try:
+            status = result.info["msg"]
+        except (TypeError, AttributeError, IndexError, KeyError):
+            status = "ND"
+        return status
 
 
 @admin.register(Zone)

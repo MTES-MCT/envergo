@@ -139,6 +139,10 @@ class Map(models.Model):
     data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
     description = models.TextField(_("Description"))
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    task_id = models.CharField(
+        _("Celery task id"), max_length=256, null=True, blank=True
+    )
+    import_error_msg = models.TextField(_("Import error message"), blank=True)
 
     class Meta:
         verbose_name = _("Map")
