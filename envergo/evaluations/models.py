@@ -165,6 +165,7 @@ CRITERION_RESULTS = Choices(
     ("soumis", _("Seuil franchi")),
     ("non_soumis", _("Seuil non franchi")),
     ("action_requise", _("Action requise")),
+    ("non_applicable", _("Non concerné")),
 )
 
 
