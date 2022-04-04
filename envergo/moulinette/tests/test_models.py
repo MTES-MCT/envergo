@@ -31,7 +31,7 @@ def test_result_without_contact_data(moulinette_data):
 
     moulinette = Moulinette(moulinette_data)
     moulinette.run()
-    assert moulinette.eval_result == "nd"
+    assert moulinette.eval_result == "non_applicable"
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -61,7 +61,7 @@ def test_3310_small_footprint(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint_inside_wetlands(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² within a wetland."""
+    """Project with 700 < footprint < 1000m² within a wetland."""
 
     # Make sure the project in in a wetland
     monkeypatch.setattr(
@@ -75,7 +75,7 @@ def test_3310_medium_footprint_inside_wetlands(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² close to a wetland."""
+    """Project with 700 < footprint < 1000m² close to a wetland."""
 
     # Make sure the project in close to a wetland
     monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
@@ -90,11 +90,11 @@ def test_3310_medium_footprint(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint_outside_wetlands(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² outside a wetland."""
+    """Project with 700 < footprint < 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data)
     moulinette.run()
-    assert moulinette.eval_result_3310 == "non_soumis"
+    assert moulinette.eval_result_3310 == "non_applicable"
 
 
 @pytest.mark.parametrize("footprint", [1500])

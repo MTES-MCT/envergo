@@ -5,7 +5,7 @@ from model_utils import Choices
 from envergo.geodata.models import Department, Zone
 
 RESULTS = Choices(
-    ("nd", "Non disponible"),
+    ("non_applicable", "Non disponible"),
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
     ("action_requise", "Action requise"),
@@ -125,7 +125,7 @@ class Moulinette:
             },
             "outside": {
                 "big": RESULTS.action_requise,
-                "medium": RESULTS.non_soumis,
+                "medium": RESULTS.non_applicable,
                 "small": RESULTS.non_soumis,
             },
         }
@@ -171,7 +171,7 @@ class Moulinette:
         department = self.result["department"]
         contact_info = getattr(department, "contact_md", None)
         if not contact_info:
-            return RESULTS.nd
+            return RESULTS.non_applicable
 
         result_3310 = self.eval_result_3310
         result_3220 = self.eval_result_3220
