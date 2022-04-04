@@ -5,7 +5,6 @@ import sys
 import zipfile
 from tempfile import TemporaryDirectory
 
-from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
 
 from envergo.geodata.models import Zone
