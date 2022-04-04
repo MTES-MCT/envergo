@@ -58,7 +58,7 @@ def test_3310_small_footprint(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint_inside_wetlands(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² within a wetland."""
+    """Project with 700 < footprint < 1000m² within a wetland."""
 
     # Make sure the project in in a wetland
     monkeypatch.setattr(
@@ -71,7 +71,7 @@ def test_3310_medium_footprint_inside_wetlands(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² close to a wetland."""
+    """Project with 700 < footprint < 1000m² close to a wetland."""
 
     # Make sure the project in close to a wetland
     monkeypatch.setattr(
@@ -87,10 +87,10 @@ def test_3310_medium_footprint(moulinette_data, monkeypatch):
 
 @pytest.mark.parametrize("footprint", [800])
 def test_3310_medium_footprint_outside_wetlands(moulinette_data, monkeypatch):
-    """Project with 750 < footprint < 1000m² outside a wetland."""
+    """Project with 700 < footprint < 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data)
-    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "non_applicable"
 
 
 @pytest.mark.parametrize("footprint", [1500])
