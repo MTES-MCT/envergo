@@ -3,10 +3,12 @@ import logging
 import re
 import sys
 import zipfile
+from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
+from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Zone
 
@@ -50,7 +52,38 @@ class CustomMapping(LayerMapping):
         return kwargs
 
 
-def extract_shapefile(map, file, task=None):
+@contextmanager
+def extract_shapefile(archive):
+    """Extract a shapefile from a zip archive."""
+
+    with TemporaryDirectory() as tmpdir:
+        logger.info("Extracting map zip file")
+        zf = zipfile.ZipFile(archive)
+        zf.extractall(tmpdir)
+
+        logger.info("Find .shp file path")
+        paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
+
+        try:
+            shapefile = paths[0]
+        except IndexError:
+            raise ValueError(_("No .shp file found in archive"))
+
+        yield shapefile
+
+
+def count_features(shapefile):
+    """Count the number of features from a shapefile."""
+
+    with extract_shapefile(shapefile) as file:
+        ds = DataSource(file)
+        layer = ds[0]
+        nb_zones = len(layer)
+
+    return nb_zones
+
+
+def process_shapefile(map, file, task=None):
 
     logger.info("Creating temporary directory")
     with TemporaryDirectory() as tmpdir:

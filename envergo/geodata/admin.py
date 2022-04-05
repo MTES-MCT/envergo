@@ -1,12 +1,14 @@
-from celery.result import AsyncResult
+from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
+from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Map, Parcel, Zone
 from envergo.geodata.tasks import process_shapefile_map
+from envergo.geodata.utils import count_features, extract_shapefile
 
 
 @admin.register(Parcel)
@@ -15,15 +17,50 @@ class ParcelAdmin(admin.ModelAdmin):
     search_fields = ["commune", "prefix", "section", "order"]
 
 
+class MapForm(forms.ModelForm):
+    def clean_file(self):
+        """Check that the given file is a valid shapefile archive.
+
+        The official shapefile format is just a bunch of files with
+        the same name and different extensions.
+
+        To make things easier, we require to pass those files in a zip archive
+        with all the files at the archive root.
+        """
+        file = self.cleaned_data["file"]
+        try:
+            with extract_shapefile(file):
+                pass  # This file is valid, yeah \o/
+        except Exception as e:
+            raise ValidationError(_(f"This file does not seem valid ({e})"))
+
+
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
-    list_display = ["name", "data_type", "created_at", "zone_count", "import_status"]
-    readonly_fields = ["import_status", "created_at", "import_error_msg"]
-    actions = ["extract"]
+    form = MapForm
+    list_display = [
+        "name",
+        "data_type",
+        "created_at",
+        "expected_zones",
+        "zone_count",
+        "import_status",
+    ]
+    readonly_fields = [
+        "created_at",
+        "expected_zones",
+        "import_status",
+        "import_error_msg",
+    ]
+    actions = ["process"]
     exclude = ["task_id"]
 
+    def save_model(self, request, obj, form, change):
+        obj.expected_zones = count_features(obj.file)
+        super().save_model(request, obj, form, change)
+
     @admin.action(description=_("Extract and import a shapefile"))
-    def extract(self, request, queryset):
+    def process(self, request, queryset):
         if queryset.count() > 1:
             error = _("Please only select one map for this action.")
             self.message_user(request, error, level=messages.ERROR)
@@ -44,17 +81,6 @@ class MapAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.annotate(nb_zones=Count("zones"))
         return qs
-
-    def import_status(self, obj):
-        if not obj.task_id:
-            return "ND"
-
-        result = AsyncResult(obj.task_id)
-        try:
-            status = result.info["msg"]
-        except (TypeError, AttributeError, IndexError, KeyError):
-            status = "ND"
-        return status
 
 
 @admin.register(Zone)
