@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
@@ -45,6 +46,7 @@ class MapAdmin(admin.ModelAdmin):
         "expected_zones",
         "zone_count",
         "import_status",
+        "task_status",
     ]
     readonly_fields = [
         "created_at",
@@ -73,7 +75,7 @@ class MapAdmin(admin.ModelAdmin):
         )
         self.message_user(request, msg, level=messages.INFO)
 
-    @admin.display(description=_("Nb zones"))
+    @admin.display(description=_("Extracted zones"))
     def zone_count(self, obj):
         return obj.nb_zones
 
@@ -81,6 +83,17 @@ class MapAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.annotate(nb_zones=Count("zones"))
         return qs
+
+    def task_status(self, obj):
+        if not obj.task_id:
+            return "ND"
+
+        result = AsyncResult(obj.task_id)
+        try:
+            status = result.info["msg"]
+        except (TypeError, AttributeError, IndexError, KeyError):
+            status = "ND"
+        return status
 
 
 @admin.register(Zone)

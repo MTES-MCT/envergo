@@ -23,20 +23,23 @@ class CeleryDebugStream:
     by offering a `stream` argument to the `save` method.
     """
 
-    def __init__(self, task, nb_zones):
+    def __init__(self, task, expected_zones):
         self.task = task
-        self.nb_zones = nb_zones
+        self.expected_zones = expected_zones
 
     def write(self, msg):
 
         # Find the number of processed results from progress message
-        match = re.search(r"\d+", msg)
-        nb_processed = int(match[0])
-        progress = int(nb_processed / self.nb_zones * 100)
+        if msg.startswith("Processed"):
+            match = re.search(r"\d+", msg)
+            nb_saved = int(match[1])
+            progress = int(nb_saved / self.expected_zones * 100)
 
-        # update task statk
-        task_msg = f"{nb_processed} zones importées sur {self.nb_zones} ({progress}%)"
-        self.task.update_state(state="PROGRESS", meta={"msg": task_msg})
+            # update task statk
+            task_msg = (
+                f"{nb_saved} zones importées sur {self.expected_zones} ({progress}%)"
+            )
+            self.task.update_state(state="PROGRESS", meta={"msg": task_msg})
 
         sys.stdout.write(msg)
 
