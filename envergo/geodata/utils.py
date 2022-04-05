@@ -86,23 +86,9 @@ def count_features(shapefile):
 def process_shapefile(map, file, task=None):
 
     logger.info("Creating temporary directory")
-    with TemporaryDirectory() as tmpdir:
-
-        logger.info("Extracting map zip file")
-        zf = zipfile.ZipFile(file)
-        zf.extractall(tmpdir)
-
-        logger.info("Find .shp file path")
-        paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
-        shapefile = paths[0]
-
-        logger.info("Fetching data about the shapefile")
-        ds = DataSource(shapefile)
-        layer = ds[0]
-        nb_zones = len(layer)
-
+    with extract_shapefile(file) as shapefile:
         if task:
-            debug_stream = CeleryDebugStream(task, nb_zones)
+            debug_stream = CeleryDebugStream(task, map.expected_zones)
         else:
             debug_stream = sys.stdout
 
