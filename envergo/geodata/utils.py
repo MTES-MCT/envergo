@@ -29,19 +29,19 @@ class CeleryDebugStream:
 
     def write(self, msg):
 
+        sys.stdout.write(msg)
+
         # Find the number of processed results from progress message
         if msg.startswith("Processed"):
             match = re.search(r"\d+", msg)
             nb_saved = int(match[1])
             progress = int(nb_saved / self.expected_zones * 100)
 
-            # update task statk
+            # update task state
             task_msg = (
                 f"{nb_saved} zones importées sur {self.expected_zones} ({progress}%)"
             )
             self.task.update_state(state="PROGRESS", meta={"msg": task_msg})
-
-        sys.stdout.write(msg)
 
 
 class CustomMapping(LayerMapping):
