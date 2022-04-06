@@ -33,7 +33,7 @@ class CeleryDebugStream:
 
         # Find the number of processed results from progress message
         if msg.startswith("Processed"):
-            match = re.search(r"\d+", msg)
+            match = re.findall(r"\d+", msg)
             nb_saved = int(match[1])
             progress = int(nb_saved / self.expected_zones * 100)
 

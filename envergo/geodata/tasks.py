@@ -26,7 +26,7 @@ def process_shapefile_map(task, map_id):
     except Exception as e:
         map.import_error_msg = f"Erreur d'import ({e})"
 
-    nb_imported_zones = map.nb_zones
+    nb_imported_zones = map.zones.all().count()
     if map.expected_zones == nb_imported_zones:
         map.import_status = STATUSES.success
     elif nb_imported_zones > 0:
