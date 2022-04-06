@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-04 12:41+0000\n"
+"POT-Creation-Date: 2022-04-06 08:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,16 +308,16 @@ msgstr "Résultat"
 msgid "Details"
 msgstr "Détails"
 
-#: envergo/evaluations/models.py:97 envergo/geodata/models.py:178
+#: envergo/evaluations/models.py:97 envergo/geodata/models.py:209
 msgid "Contact"
 msgstr "Contact"
 
-#: envergo/evaluations/models.py:98 envergo/geodata/models.py:179
+#: envergo/evaluations/models.py:98 envergo/geodata/models.py:210
 msgid "Contact (html)"
 msgstr "Contact (html)"
 
 #: envergo/evaluations/models.py:100 envergo/evaluations/models.py:283
-#: envergo/geodata/models.py:141 envergo/geodata/models.py:161
+#: envergo/geodata/models.py:156 envergo/geodata/models.py:192
 msgid "Date created"
 msgstr "Date de création"
 
@@ -349,7 +349,7 @@ msgstr "Seuil non franchi"
 msgid "Action requise"
 msgstr "Action requise"
 
-#: envergo/evaluations/models.py:177 envergo/geodata/models.py:98
+#: envergo/evaluations/models.py:177 envergo/geodata/models.py:106
 #: envergo/stats/models.py:8
 msgid "Order"
 msgstr "Ordre"
@@ -366,7 +366,7 @@ msgstr "Probabilité"
 msgid "Criterion"
 msgstr "Critère"
 
-#: envergo/evaluations/models.py:189 envergo/geodata/models.py:140
+#: envergo/evaluations/models.py:189 envergo/geodata/models.py:155
 #: envergo/stats/models.py:7
 msgid "Description"
 msgstr "Description"
@@ -375,7 +375,7 @@ msgstr "Description"
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:191 envergo/geodata/models.py:148
+#: envergo/evaluations/models.py:191 envergo/geodata/models.py:167
 msgid "Map"
 msgstr "Carte"
 
@@ -391,7 +391,7 @@ msgstr "Légende (html)"
 msgid "Criterions"
 msgstr "Critères"
 
-#: envergo/evaluations/models.py:237 envergo/geodata/models.py:109
+#: envergo/evaluations/models.py:237 envergo/geodata/models.py:117
 msgid "Parcels"
 msgstr "Parcelles"
 
@@ -419,11 +419,11 @@ msgstr "Demande d'évaluation"
 msgid "Evaluation requests"
 msgstr "Demandes d'évaluation"
 
-#: envergo/evaluations/models.py:332 envergo/geodata/models.py:138
+#: envergo/evaluations/models.py:332 envergo/geodata/models.py:153
 msgid "File"
 msgstr "Fichier"
 
-#: envergo/evaluations/models.py:336 envergo/geodata/models.py:137
+#: envergo/evaluations/models.py:336 envergo/geodata/models.py:152
 msgid "Name"
 msgstr "Nom"
 
@@ -473,24 +473,29 @@ msgstr ""
 "Nous n'avons pas pu traiter votre demande. Merci de vérifier les erreurs ci-"
 "après."
 
-#: envergo/geodata/admin.py:25
+#: envergo/geodata/admin.py:36
+#, python-brace-format
+msgid "This file does not seem valid ({e})"
+msgstr "Ce fichier semble invalide ({e})"
+
+#: envergo/geodata/admin.py:64
 msgid "Extract and import a shapefile"
 msgstr "Extraire et importer le fichier shapefile"
 
-#: envergo/geodata/admin.py:28
+#: envergo/geodata/admin.py:67
 msgid "Please only select one map for this action."
 msgstr "Merci de sélectionner une et une seule carte pour cette action."
 
-#: envergo/geodata/admin.py:35
+#: envergo/geodata/admin.py:74
 msgid ""
 "Your shapefile will be processed soon. It might take up to a few minutes."
 msgstr ""
 "Votre shapefile va être traité. La tâche peut nécessiter jusqu'à plusieurs "
 "minutes."
 
-#: envergo/geodata/admin.py:39
-msgid "Nb zones"
-msgstr "Nb zones"
+#: envergo/geodata/admin.py:78
+msgid "Extracted zones"
+msgstr "Zones extraites"
 
 #: envergo/geodata/apps.py:7
 msgid "Geo data"
@@ -512,7 +517,7 @@ msgstr "Section"
 msgid "One or two letters"
 msgstr "1 ou 2 lettres"
 
-#: envergo/geodata/forms.py:20 envergo/geodata/models.py:89
+#: envergo/geodata/forms.py:20 envergo/geodata/models.py:97
 msgid "Prefix"
 msgstr "Préfixe"
 
@@ -520,7 +525,7 @@ msgstr "Préfixe"
 msgid "3 chars long number"
 msgstr "Nombre à 3 chiffres"
 
-#: envergo/geodata/forms.py:25 envergo/geodata/models.py:108
+#: envergo/geodata/forms.py:25 envergo/geodata/models.py:116
 msgid "Parcel"
 msgstr "Parcelle"
 
@@ -532,68 +537,88 @@ msgstr "Un nombre"
 msgid "You must provide at least one parcel."
 msgstr "Vous devez fournir une parcelle"
 
-#: envergo/geodata/models.py:68
+#: envergo/geodata/models.py:76
 msgid "Commune INSEE code"
 msgstr "Commune Code INSEE"
 
-#: envergo/geodata/models.py:72
+#: envergo/geodata/models.py:80
 msgid "The code must be a 5-digit number"
 msgstr "Le code est un nombre à 5 chiffres."
 
-#: envergo/geodata/models.py:77
+#: envergo/geodata/models.py:85
 msgid "Section letter(s)"
 msgstr "Lettre(s) de Section"
 
-#: envergo/geodata/models.py:83
+#: envergo/geodata/models.py:91
 msgid "The section must be one (zero-prefixed) or two uppercase letters."
 msgstr ""
 "La section correspond à une (préfixée par zéro) ou deux lettres en majuscule."
 
-#: envergo/geodata/models.py:93
+#: envergo/geodata/models.py:101
 msgid "The prefix must be a 3-digit number."
 msgstr "Le préfixe est un nombre à trois chiffres."
 
-#: envergo/geodata/models.py:102
+#: envergo/geodata/models.py:110
 msgid "The parcel must be a number between 1 and 9999"
 msgstr "La parcelle est un nombre entre 1 et 9999."
 
-#: envergo/geodata/models.py:129
+#: envergo/geodata/models.py:137
 msgid "Zone humide"
 msgstr "Zone humide"
 
-#: envergo/geodata/models.py:130
+#: envergo/geodata/models.py:138
 msgid "Zone inondable"
 msgstr "Zone inondable"
 
-#: envergo/geodata/models.py:139
+#: envergo/geodata/models.py:143
+msgid "Success"
+msgstr "Succès"
+
+#: envergo/geodata/models.py:144
+msgid "Partial success"
+msgstr "Succès partiel"
+
+#: envergo/geodata/models.py:145
+msgid "Failure"
+msgstr "Échec"
+
+#: envergo/geodata/models.py:154
 msgid "Data type"
 msgstr "Type de donnée"
 
-#: envergo/geodata/models.py:143
+#: envergo/geodata/models.py:157
+msgid "Expected zones"
+msgstr "Nb de zones attendues"
+
+#: envergo/geodata/models.py:159
+msgid "Import status"
+msgstr "Statut d'import"
+
+#: envergo/geodata/models.py:162
 msgid "Celery task id"
 msgstr "Id de tâche Celery"
 
-#: envergo/geodata/models.py:145
+#: envergo/geodata/models.py:164
 msgid "Import error message"
 msgstr "Message d'erreur de l'import"
 
-#: envergo/geodata/models.py:149
+#: envergo/geodata/models.py:168
 msgid "Maps"
 msgstr "Cartes"
 
-#: envergo/geodata/models.py:164
+#: envergo/geodata/models.py:195
 msgid "Zone"
 msgstr "Zone"
 
-#: envergo/geodata/models.py:165
+#: envergo/geodata/models.py:196
 msgid "Zones"
 msgstr "Zones"
 
-#: envergo/geodata/models.py:172 envergo/geodata/models.py:182
+#: envergo/geodata/models.py:203 envergo/geodata/models.py:213
 msgid "Department"
 msgstr "Département"
 
-#: envergo/geodata/models.py:183
+#: envergo/geodata/models.py:214
 msgid "Departments"
 msgstr "Départements"
 
@@ -604,6 +629,10 @@ msgstr "carte/"
 #: envergo/geodata/urls.py:9
 msgid "zone.geojson"
 msgstr "zone.geojson"
+
+#: envergo/geodata/utils.py:73
+msgid "No .shp file found in archive"
+msgstr "Aucun fichier .shp trouvé dans l'archive"
 
 #: envergo/moulinette/forms.py:13
 msgid "Search for the address to center the map"
@@ -712,6 +741,9 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "Nb zones"
+#~ msgstr "Nb zones"
 
 #~ msgid "Department contact data"
 #~ msgstr "Informations de contact du département"
