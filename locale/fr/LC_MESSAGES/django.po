@@ -8,7 +8,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2022-04-06 08:32+0000\n"
+||||||| constructed merge base
+"POT-Creation-Date: 2022-03-23 09:13+0000\n"
+=======
+"POT-Creation-Date: 2022-04-07 09:58+0000\n"
+>>>>>>> Link label translation
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -602,25 +608,25 @@ msgstr "Id de tâche Celery"
 msgid "Import error message"
 msgstr "Message d'erreur de l'import"
 
-#: envergo/geodata/models.py:168
+#: envergo/geodata/models.py:149
 msgid "Maps"
 msgstr "Cartes"
 
-#: envergo/geodata/models.py:195
+#: envergo/geodata/models.py:164
 msgid "Zone"
 msgstr "Zone"
 
-#: envergo/geodata/models.py:196
+#: envergo/geodata/models.py:165
 msgid "Zones"
 msgstr "Zones"
 
-#: envergo/geodata/models.py:203 envergo/geodata/models.py:213
+#: envergo/geodata/models.py:172
 msgid "Department"
 msgstr "Département"
 
-#: envergo/geodata/models.py:214
-msgid "Departments"
-msgstr "Départements"
+#: envergo/geodata/models.py:181 envergo/geodata/models.py:182
+msgid "Department contact data"
+msgstr "Informations de contact du département"
 
 #: envergo/geodata/urls.py:7 envergo/pages/urls.py:32
 msgid "map/"
@@ -681,6 +687,10 @@ msgstr "Stat"
 #: envergo/stats/models.py:12
 msgid "Stats"
 msgstr "Stats"
+
+#: envergo/templates/evaluations/detail/action_requise.html:54
+msgid "See more"
+msgstr "Plus de détails"
 
 #: envergo/templates/pages/legal_mentions.html:3
 #: envergo/templates/pages/legal_mentions.html:14

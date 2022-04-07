@@ -145,11 +145,11 @@ ACTIONS = Choices(
     ("not_in_zh", "ne se situe pas en zone humide"),
     (
         "surface_lt_1000",
-        "a une emprise au sol — y compris travaux et remblais — de moins de 1 000 m²",
+        "a une emprise au sol – y compris travaux et remblais – de moins de 1 000 m²",
     ),
     (
         "surface_lt_400",
-        "a une emprise au sol — y compris travaux et remblais — de moins de 400 m²",
+        "a une emprise au sol – y compris travaux et remblais – de moins de 400 m²",
     ),
     (
         "runoff_lt_10000",
