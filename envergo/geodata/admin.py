@@ -34,6 +34,7 @@ class MapForm(forms.ModelForm):
                 pass  # This file is valid, yeah \o/
         except Exception as e:
             raise ValidationError(_(f"This file does not seem valid ({e})"))
+        return file
 
 
 @admin.register(Map)
