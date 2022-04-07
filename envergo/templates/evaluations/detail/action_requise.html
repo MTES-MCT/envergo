@@ -48,8 +48,11 @@
 
             {% if required_actions %}
               <ul>
-                {% for action in required_actions %}
-                  <li>{{ action }}</li>
+                {% for criterion in required_actions %}
+                  <li>{{ criterion.get_required_action_display }}
+                    –
+                    <a href="#accordion-{{ criterion.criterion }}" aria-expanded="false" aria-controls="accordion-{{ criterion.criterion }}">{{ _('See more') }}</a>
+                  </li>
                 {% endfor %}
               </ul>
             {% endif %}

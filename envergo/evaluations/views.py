@@ -107,7 +107,7 @@ class EvaluationDetail(FormView, DetailView):
             context["criterions"] = criterions
 
             actions = [
-                criterion.get_required_action_display()
+                criterion
                 for criterion in criterions
                 if criterion.result == RESULTS.action_requise
                 and criterion.required_action
