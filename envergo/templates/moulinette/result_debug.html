@@ -13,11 +13,19 @@
       <li>Surface créée: {{ moulinette.data.created_surface }}</li>
     </ul>
 
-    <h2>Données calculées</h2>
+    <h2>Résultat</h2>
     <ul>
       <li>Résultat de l'évaluation : {{ moulinette.eval_result }}</li>
+      <li>Résultat 3.2.2.0 : {{ moulinette.eval_result_3220 }}</li>
+      <li>Résultat 3.3.1.0 : {{ moulinette.eval_result_3310 }}</li>
+    </ul>
+
+
+    <h2>Détails du calcul</h2>
+    <ul>
       <li>Coordonnées du projet : {{ moulinette.coords }}</li>
       <li>Département : {{ moulinette.department }}</li>
+      <li>Infos de contact département : {{ moulinette.result.department.contact_md|yesno:'Oui,Non' }} </li>
       <li>Projet sur zones humides : {{ moulinette.result.wetlands|yesno:"Oui,Non" }}</li>
       <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
       <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
