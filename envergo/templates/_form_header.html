@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% if form.errors or has_errors %}
-  <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
+  <div class="fr-alert fr-alert--error fr-mb-3w">
     <p class="fr-alert__title">
       Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.
     </p>
@@ -12,7 +12,7 @@
 {% endif %}
 
 {% if form.non_field_errors %}
-  <div role="alert" class="fr-alert fr-alert--error fr-mb-3w">
+  <div class="fr-alert fr-alert--error fr-mb-3w">
     <p>{{ form.non_field_errors.0 }}</p>
   </div>
 {% endif %}

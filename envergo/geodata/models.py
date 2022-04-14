@@ -1,3 +1,9 @@
+import glob
+import logging
+import zipfile
+from contextlib import contextmanager
+from tempfile import TemporaryDirectory
+
 from django.contrib.gis.db import models as gis_models
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
@@ -7,6 +13,8 @@ from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from model_utils import Choices
 
 from envergo.utils.markdown import markdown_to_html
+
+logger = logging.getLogger(__name__)
 
 
 class Parcel(models.Model):
@@ -131,6 +139,13 @@ MAP_TYPES = Choices(
 )
 
 
+STATUSES = Choices(
+    ("success", _("Success")),
+    ("partial_success", _("Partial success")),
+    ("failure", _("Failure")),
+)
+
+
 class Map(models.Model):
     """Holds a shapefile map."""
 
@@ -139,6 +154,10 @@ class Map(models.Model):
     data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
     description = models.TextField(_("Description"))
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    expected_zones = models.IntegerField(_("Expected zones"), default=0)
+    import_status = models.CharField(
+        _("Import status"), max_length=32, choices=STATUSES, null=True
+    )
     task_id = models.CharField(
         _("Celery task id"), max_length=256, null=True, blank=True
     )
@@ -150,6 +169,18 @@ class Map(models.Model):
 
     def __str__(self):
         return self.name
+
+    @contextmanager
+    def extract_shapefile(self):
+        with TemporaryDirectory() as tmpdir:
+            logger.info("Extracting map zip file")
+            zf = zipfile.ZipFile(self.file)
+            zf.extractall(tmpdir)
+
+            logger.info("Find .shp file path")
+            paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
+            shapefile = paths[0]
+            yield shapefile
 
 
 class Zone(gis_models.Model):
@@ -165,7 +196,7 @@ class Zone(gis_models.Model):
         verbose_name_plural = _("Zones")
 
 
-class DepartmentContact(models.Model):
+class Department(models.Model):
     """Water law contact data for a departement."""
 
     department = models.CharField(
@@ -174,12 +205,14 @@ class DepartmentContact(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
-    contact_md = models.TextField(_("Contact"), blank=False)
+    geometry = gis_models.MultiPolygonField()
+    contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     class Meta:
-        verbose_name = _("Department contact data")
-        verbose_name_plural = _("Department contact data")
+        verbose_name = _("Department")
+        verbose_name_plural = _("Departments")
+        ordering = ["department"]
 
     def __str__(self):
         return self.get_department_display()

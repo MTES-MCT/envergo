@@ -2,9 +2,10 @@ from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
 from model_utils import Choices
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
 
 RESULTS = Choices(
+    ("nd", "Non disponible"),
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
     ("action_requise", "Action requise"),
@@ -45,14 +46,14 @@ class Moulinette:
         self.data = data
 
     def run(self):
-        """Perform the automatic evaluation."""
-
         project_surface = self.data["existing_surface"] + self.data["created_surface"]
-
-        lat = self.data["lat"]
         lng = self.data["lng"]
+        lat = self.data["lat"]
+        lngLat = Point(float(lng), float(lat), srid=4326)
+        department = Department.objects.filter(geometry__contains=lngLat).first()
+
         # Transform to mercator projection, to get meter units
-        coords = Point(float(lng), float(lat), srid=4326).transform(3857, clone=True)
+        coords = lngLat.transform(3857, clone=True)
 
         # Fetch data for the 3.3.1.0 criteria ("Zones humides")
         wetlands_25 = fetch_wetlands_around_25m(coords)
@@ -68,6 +69,7 @@ class Moulinette:
 
         self.result = {
             "coords": coords,
+            "department": department,
             "project_surface": project_surface,
             "wetlands_25": wetlands_25,
             "wetlands_within_25m": bool(wetlands_25),
@@ -87,6 +89,10 @@ class Moulinette:
     @property
     def lng(self):
         return self.data["lng"]
+
+    @property
+    def department(self):
+        return self.result["department"]
 
     @property
     def eval_result_3310(self):
@@ -161,6 +167,11 @@ class Moulinette:
     @property
     def eval_result(self):
         """Combine results of the different checks to produce a full evaluation."""
+
+        department = self.result["department"]
+        contact_info = getattr(department, "contact_md", None)
+        if not contact_info:
+            return RESULTS.nd
 
         result_3310 = self.eval_result_3310
         result_3220 = self.eval_result_3220

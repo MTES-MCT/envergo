@@ -5,6 +5,11 @@ $pink: #f2dede;
 $dark-pink: #eed3d7;
 $red: #b94a48;
 
+:root {
+  // Bump default font size from 16 to 18px.
+  font-size: 112.5%;
+}
+
 .alert-debug {
   background-color: $white;
   border-color: $mint-green;
@@ -81,7 +86,7 @@ $red: #b94a48;
     }
   }
 
-  @media (min-width: 78em) {
+  @media (min-width: 1248px) {
     padding: 0 3rem;
 
     #form-col {
@@ -91,7 +96,7 @@ $red: #b94a48;
 
     #content-col {
       padding: 0 24px;
-      max-width: 848px;
+      max-width: 723px;
       margin: 0 auto;
     }
   }
