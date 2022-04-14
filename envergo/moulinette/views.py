@@ -80,8 +80,7 @@ class MoulinetteHome(FormView):
         elif is_debug:
             template_name = "moulinette/result_debug.html"
         else:
-            moulinette_result = moulinette.eval_result
-            template_name = f"moulinette/result_{moulinette_result}.html"
+            template_name = f"moulinette/result.html"
 
         return [template_name]
 

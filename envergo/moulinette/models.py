@@ -2,14 +2,8 @@ from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
 from model_utils import Choices
 
+from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
-
-RESULTS = Choices(
-    ("nd", "Non disponible"),
-    ("soumis", "Soumis"),
-    ("non_soumis", "Non soumis"),
-    ("action_requise", "Action requise"),
-)
 
 
 def fetch_zones_around(coords, radius, zone_type):
@@ -177,12 +171,12 @@ class Moulinette:
         result_3220 = self.eval_result_3220
         results = [result_3310, result_3220]
 
-        if "soumis" in results:
-            result = "soumis"
-        elif "action_requise" in results:
-            result = "action_requise"
+        if RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif RESULTS.action_requise in results:
+            result = RESULTS.action_requise
         else:
-            result = "non_soumis"
+            result = RESULTS.non_soumis
 
         return result
 

@@ -47,6 +47,7 @@ RESULTS = Choices(
     (1, "soumis", _("Subject to LSE")),
     (2, "non_soumis", _("Non subject to LSE")),
     (3, "action_requise", _("Action required")),
+    (4, "non_disponible", _("Non disponible")),
 )
 
 

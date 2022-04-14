@@ -1,0 +1,13 @@
+{% extends 'moulinette/base_result.html' %}
+{% load evaluations static %}
+
+{% block result %}
+
+  <h1>Réglementations environnementales : votre évaluation personnalisée</h1>
+
+  <section>
+    <h2>Loi sur l'eau : {% result_tag moulinette.eval_result %}</h2>
+
+  </section>
+
+{% endblock %}
