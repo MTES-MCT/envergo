@@ -43,11 +43,12 @@ PROBABILITIES = Choices(
     (4, "very_likely", _("Very likely")),
 )
 
+
 RESULTS = Choices(
-    (1, "soumis", _("Subject to LSE")),
-    (2, "non_soumis", _("Non subject to LSE")),
-    (3, "action_requise", _("Action required")),
-    (4, "non_disponible", _("Non disponible")),
+    ("soumis", _("Subject to LSE")),
+    ("non_soumis", _("Non subject to LSE")),
+    ("action_requise", _("Action required")),
+    ("non_disponible", _("Non disponible")),
 )
 
 
@@ -92,7 +93,7 @@ class Evaluation(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
-    result = models.IntegerField(_("Result"), choices=RESULTS, null=True)
+    result = models.CharField(_("Result"), max_length=32, choices=RESULTS, null=True)
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=False)
@@ -160,9 +161,9 @@ ACTIONS = Choices(
 
 
 CRITERION_RESULTS = Choices(
-    (1, "soumis", _("Seuil franchi")),
-    (2, "non_soumis", _("Seuil non franchi")),
-    (3, "action_requise", _("Action requise")),
+    ("soumis", _("Seuil franchi")),
+    ("non_soumis", _("Seuil non franchi")),
+    ("action_requise", _("Action requise")),
 )
 
 
@@ -176,7 +177,7 @@ class Criterion(models.Model):
         related_name="criterions",
     )
     order = models.PositiveIntegerField(_("Order"), default=0)
-    result = models.IntegerField(_("Result"), choices=CRITERION_RESULTS)
+    result = models.CharField(_("Result"), max_length=32, choices=CRITERION_RESULTS)
     required_action = models.TextField(
         _("Required action"), choices=ACTIONS, blank=True
     )
