@@ -2,18 +2,19 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
+from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteForm
 from envergo.moulinette.models import Moulinette
 
+BODY_TPL = {
+    RESULTS.soumis: "moulinette/eval_body_soumis.html",
+    RESULTS.action_requise: "moulinette/eval_body_action_requise.html",
+    RESULTS.non_soumis: "moulinette/eval_body_non_soumis.html",
+}
+
 
 class MoulinetteHome(FormView):
-    """Display the moulinette form and results.
-
-    When the form is submitted, we urlencode the form parameters and redirect
-    to the same url with the added GET parameters.
-
-    Also, the "coords" attribute is base64 encoded.
-    """
+    """Display the moulinette form and results."""
 
     form_class = MoulinetteForm
 
@@ -44,11 +45,11 @@ class MoulinetteHome(FormView):
         form = context["form"]
         if form.is_valid():
             moulinette = Moulinette(form.cleaned_data)
-            moulinette.run()
             context["moulinette"] = moulinette
 
-            if moulinette.result_soumis:
-                context["contact_data"] = moulinette.department.contact_html
+            # if moulinette.result_soumis:
+            #     context["contact_data"] = moulinette.department.contact_html
+            # context["body_template_name"] = BODY_TPL[moulinette.eval_result]
 
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
@@ -80,7 +81,7 @@ class MoulinetteHome(FormView):
         elif is_debug:
             template_name = "moulinette/result_debug.html"
         else:
-            template_name = f"moulinette/result.html"
+            template_name = "moulinette/result.html"
 
         return [template_name]
 

@@ -1,9 +1,9 @@
 from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
-from model_utils import Choices
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
+from envergo.moulinette.regulations import WaterLaw
 
 
 def fetch_zones_around(coords, radius, zone_type):
@@ -38,6 +38,7 @@ class Moulinette:
 
     def __init__(self, data):
         self.data = data
+        self.regulations = [WaterLaw()]
 
     def run(self):
         project_surface = self.data["existing_surface"] + self.data["created_surface"]

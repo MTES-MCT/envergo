@@ -5,9 +5,8 @@
 
   <h1>Réglementations environnementales : votre évaluation personnalisée</h1>
 
-  <section>
-    <h2>Loi sur l'eau : {% result_tag moulinette.eval_result %}</h2>
-
-  </section>
+  {% for regulation in moulinette.regulations %}
+    {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+  {% endfor %}
 
 {% endblock %}
