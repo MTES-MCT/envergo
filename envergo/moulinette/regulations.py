@@ -78,6 +78,7 @@ class MoulinetteCriterion:
 class WaterLaw3310(MoulinetteCriterion):
     slug = "zone-humide"
     title = "Construction en zone humide"
+    subtitle = "Seuil de déclaration : 1000 m²"
 
     def get_catalog_data(self):
         catalog = {}
@@ -130,6 +131,7 @@ class WaterLaw3310(MoulinetteCriterion):
 class WaterLaw3220(MoulinetteCriterion):
     slug = "zone-inondable"
     title = "Construction en zone inondable"
+    subtitle = "Seuil de déclaration : 400 m²"
 
     def get_catalog_data(self):
         catalog = {}
@@ -173,6 +175,7 @@ class WaterLaw3220(MoulinetteCriterion):
 class WaterLaw2150(MoulinetteCriterion):
     slug = "ruissellement"
     title = "Imperméabilisation et captation du ruissellement des eaux de pluie"
+    subtitle = "Seuil réglementaire : 1 ha"
 
     @cached_property
     def result(self):
