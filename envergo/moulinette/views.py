@@ -46,6 +46,7 @@ class MoulinetteHome(FormView):
         if form.is_valid():
             moulinette = Moulinette(form.cleaned_data)
             context["moulinette"] = moulinette
+            context.update(moulinette.catalog)
 
             # if moulinette.result_soumis:
             #     context["contact_data"] = moulinette.department.contact_html
