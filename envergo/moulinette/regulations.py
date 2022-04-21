@@ -1,5 +1,7 @@
 from functools import cached_property
 
+from django.contrib.gis.measure import Distance as D
+
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
 
@@ -7,9 +9,8 @@ from envergo.geodata.models import Zone
 def fetch_zones_around(coords, radius, zone_type):
     """Helper method to fetch Zones around a given point."""
 
-    circle = coords.buffer(radius)
     qs = Zone.objects.filter(map__data_type=zone_type).filter(
-        geometry__intersects=circle
+        geometry__dwithin=(coords, D(m=radius))
     )
     return qs
 
