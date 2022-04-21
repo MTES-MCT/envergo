@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.models import Department, Zone
+from envergo.geodata.models import Zone
 
 
 def fetch_zones_around(coords, radius, zone_type):
@@ -182,12 +182,3 @@ class WaterLaw(MoulinetteRegulation):
     slug = "loi-sur-leau"
     title = "Loi sur l'eau"
     criterion_list = [WaterLaw3310, WaterLaw3220, WaterLaw2150]
-
-    @cached_property
-    def result(self):
-        department = self.catalog["department"]
-        contact_info = getattr(department, "contact_md", None)
-        if not contact_info:
-            return RESULTS.non_disponible
-
-        return super().result

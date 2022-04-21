@@ -48,10 +48,6 @@ class MoulinetteHome(FormView):
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
-            # if moulinette.result_soumis:
-            #     context["contact_data"] = moulinette.department.contact_html
-            # context["body_template_name"] = BODY_TPL[moulinette.eval_result]
-
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
@@ -81,6 +77,8 @@ class MoulinetteHome(FormView):
             template_name = "moulinette/home.html"
         elif is_debug:
             template_name = "moulinette/result_debug.html"
+        elif not moulinette.is_evaluation_available():
+            template_name = "moulinette/result_non_disponible.html"
         else:
             template_name = "moulinette/result.html"
 

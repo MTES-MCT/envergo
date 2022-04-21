@@ -1,5 +1,4 @@
 from django.contrib.gis.geos import Point
-from django.core.serializers import serialize
 
 from envergo.geodata.models import Department
 from envergo.moulinette.regulations import WaterLaw
@@ -53,3 +52,12 @@ class Moulinette:
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
         return catalog
+
+    def is_evaluation_available(self):
+        """Moulinette evaluations are only available on some departments.
+
+        When a department is available, we fill it's contact data.
+        """
+        department = self.catalog["department"]
+        contact_info = getattr(department, "contact_md", None)
+        return bool(contact_info)
