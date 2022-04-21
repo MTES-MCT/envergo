@@ -45,10 +45,11 @@ PROBABILITIES = Choices(
 
 
 RESULTS = Choices(
-    ("soumis", _("Subject to LSE")),
-    ("non_soumis", _("Non subject to LSE")),
-    ("action_requise", _("Action required")),
-    ("non_disponible", _("Non disponible")),
+    ("soumis", "Soumis"),
+    ("non_soumis", "Non soumis"),
+    ("action_requise", "Action requise"),
+    ("non_disponible", "Non disponible"),
+    ("non_applicable", "Non applicable"),
 )
 
 

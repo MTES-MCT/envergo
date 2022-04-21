@@ -10,7 +10,8 @@ PROBA_CSS = {
     RESULTS.soumis: 4,
     RESULTS.action_requise: 3,
     RESULTS.non_soumis: 1,
-    RESULTS.non_disponible: 1,
+    RESULTS.non_disponible: 2,
+    RESULTS.non_applicable: 2,
 }
 
 
