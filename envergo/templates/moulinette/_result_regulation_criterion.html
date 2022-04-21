@@ -1,14 +1,14 @@
 {% load evaluations %}
 
 <div class="fr-accordion">
-  <h3 class="fr-accordion__title">
+  <h4 class="fr-accordion__title">
     <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
-      {% result_tag criterion.result %}
       <span>
         {{ criterion.title }}
       </span>
+      {% result_tag criterion.result %}
     </button>
-  </h3>
+  </h4>
 
   <div class="fr-collapse" id="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
     {{ criterion.body|safe }}

@@ -1,13 +1,13 @@
 {% load evaluations %}
 
 <section class="regulation" id="regulation_{{ regulation.slug }}">
-  <h2>{{ regulation.title }} : {% result_tag regulation.result %}</h2>
+  <h2><span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}</h2>
 
-  <div class="alt">
+  <div class="alt fr-p-3w fr-mb-3w">
     {% include regulation.body_template %}
   </div>
 
-  <h3 class="fr-h4">Détail des rubriques</h3>
+  <h3>Détail des rubriques</h3>
 
   {% for criterion in regulation.criterions %}
     {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}

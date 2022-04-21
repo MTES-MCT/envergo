@@ -102,6 +102,36 @@ $red: #b94a48;
   }
 }
 
+section.regulation {
+  h2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    span.content {
+      margin-right: .5rem;
+    }
+  }
+
+  .fr-accordion .fr-accordion__btn {
+    flex-direction: row;
+
+    &::before {
+      margin-left: 0;
+      margin-right: .5rem;
+    }
+
+    &>span {
+      margin-right: .5rem;
+    }
+
+    span.fr-tag {
+      white-space: nowrap;
+      margin-left: auto;
+    }
+  }
+}
+
 
 /**
  * Forms
