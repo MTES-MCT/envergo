@@ -113,6 +113,16 @@ section.regulation {
     }
   }
 
+  button[data-fr-js-collapse-button="true"] {
+    &[aria-expanded="false"] span.expanded-label {
+        display: none;
+    }
+
+    &[aria-expanded="true"] span.concealed-label {
+      display: none;
+    }
+  }
+
   .fr-accordion .fr-accordion__btn {
 
     &::before {

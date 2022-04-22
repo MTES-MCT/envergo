@@ -1,47 +1,56 @@
 <h3>Marche à suivre</h3>
 
-<p>Dossier Loi sur l'eau à déposer à la DDT(M).</p>
+<ul>
+  <li>Dossier Loi sur l'eau à déposer à la DDT(M).</li>
+  <li>Délai d'instruction : 2 mois.</li>
+</ul>
 
-<p>Délai d'instruction : 2 mois.</p>
+{% include 'moulinette/_read_more_btn.html' %}
 
-<h4>Comment déposer un dossier Loi sur l'eau ?</h4>
+<div class="more fr-collapse fr-pt-3w" id="read-more-{{ regulation.slug }}">
 
-<p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
+  <h4>Comment déposer un dossier Loi sur l'eau ?</h4>
 
-<p>Il est chargé de réaliser les études qui conviennent et de rédiger le dossier Loi sur l'eau.</p>
+  <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
 
-<p><strong>2/ Déposer le dossier auprès du service de la DDT(M) en charge de l'instruction.</strong></p>
+  <p>Il est chargé de réaliser les études qui conviennent et de rédiger le dossier Loi sur l'eau.</p>
 
-{% if evaluation.contact_html %}
-  <div class="fr-highlight fr-mb-3w">
-    {{ evaluation.contact_html|safe }}
+  <p><strong>2/ Déposer le dossier auprès du service de la DDT(M) en charge de l'instruction.</strong></p>
+
+  {% if evaluation.contact_html %}
+    <div class="fr-highlight fr-mb-3w">
+      {{ evaluation.contact_html|safe }}
+    </div>
+  {% endif %}
+
+  <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
+
+  <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
+
+  <p>Consultez <a href="https://envergo.beta.gouv.fr/loi-sur-leau/#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
+
+
+  <h4 class="fr-h4">Sanctions en cas d'omission</h4>
+
+  <div class="fr-alert fr-alert--info fr-mt-3w">
+
+    <p>
+      S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
+      administratives et pénales, qui peuvent aller jusqu'à :
+    </p>
+
+    <ul class="fr-mb-0">
+      <li>
+        <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
+          jour ;</strong>
+      </li>
+      <li>
+        un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/" target="_blank" rel="noopener">article L.173-1 du code de
+          l'environnement</a>).
+      </li>
+    </ul>
   </div>
-{% endif %}
 
-<h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
+  {% include 'moulinette/_read_more_btn.html' %}
 
-<p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
-
-<p>Consultez <a href="https://envergo.beta.gouv.fr/loi-sur-leau/#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
-
-
-<h4 class="fr-h4">Sanctions en cas d'omission</h4>
-
-<div class="fr-alert fr-alert--info fr-mt-3w">
-
-  <p>
-    S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
-    administratives et pénales, qui peuvent aller jusqu'à :
-  </p>
-
-  <ul class="fr-mb-0">
-    <li>
-      <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
-        jour ;</strong>
-    </li>
-    <li>
-      un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/" target="_blank" rel="noopener">article L.173-1 du code de
-        l'environnement</a>).
-    </li>
-  </ul>
 </div>
