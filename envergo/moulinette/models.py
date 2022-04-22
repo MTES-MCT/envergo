@@ -61,3 +61,20 @@ class Moulinette:
         department = self.catalog["department"]
         contact_info = getattr(department, "contact_md", None)
         return bool(contact_info)
+
+    def __getattr__(self, attr):
+        """Returs the corresponding regulation.
+
+        Allows to do something like this:
+        moulinette.water_law to fetch the correct regulation.
+        """
+        return self.get_regulation(attr)
+
+    def get_regulation(self, regulation_slug):
+        """Return the regulation with the given slug."""
+
+        def select_regulation(regulation):
+            return regulation.slug == regulation_slug
+
+        regul = next(filter(select_regulation, self.regulations), None)
+        return regul

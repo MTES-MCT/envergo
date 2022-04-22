@@ -30,8 +30,7 @@ def test_result_without_contact_data(moulinette_data):
     """When dept. contact info is not set, we cannot run the eval."""
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result == "nd"
+    assert not moulinette.is_evaluation_available()
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -41,8 +40,7 @@ def test_result_with_contact_data(moulinette_data):
     DepartmentFactory(department=61)
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result == "non_soumis"
+    assert moulinette.is_evaluation_available()
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -51,12 +49,11 @@ def test_3310_small_footprint(moulinette_data, monkeypatch):
 
     # Make sure the project in in a wetland
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", create_zones
+        "envergo.moulinette.regulations.fetch_wetlands_around_25m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [800])
@@ -65,12 +62,11 @@ def test_3310_medium_footprint_inside_wetlands(moulinette_data, monkeypatch):
 
     # Make sure the project in in a wetland
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", create_zones
+        "envergo.moulinette.regulations.fetch_wetlands_around_25m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "action_requise"
+    assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [800])
@@ -78,14 +74,15 @@ def test_3310_medium_footprint(moulinette_data, monkeypatch):
     """Project with 750 < footprint < 1000m² close to a wetland."""
 
     # Make sure the project in close to a wetland
-    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_100m", create_zones
+        "envergo.moulinette.regulations.fetch_wetlands_around_25m", no_zones
+    )
+    monkeypatch.setattr(
+        "envergo.moulinette.regulations.fetch_wetlands_around_100m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [800])
@@ -93,8 +90,7 @@ def test_3310_medium_footprint_outside_wetlands(moulinette_data, monkeypatch):
     """Project with 750 < footprint < 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [1500])
@@ -103,12 +99,11 @@ def test_3310_large_footprint_within_wetlands(moulinette_data, monkeypatch):
 
     # Make sure the project in in a wetland
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", create_zones
+        "envergo.moulinette.regulations.fetch_wetlands_around_25m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
 
 @pytest.mark.parametrize("footprint", [1500])
@@ -116,8 +111,7 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data, monkeypatch):
     """Project with footprint > 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3310 == "action_requise"
+    assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -126,12 +120,11 @@ def test_3220_small_footprint(moulinette_data, monkeypatch):
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_flood_zones_around_12m", create_zones
+        "envergo.moulinette.regulations.fetch_flood_zones_around_12m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3220 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [400])
@@ -140,12 +133,11 @@ def test_3220_medium_footprint_within_flood_zones(moulinette_data, monkeypatch):
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_flood_zones_around_12m", create_zones
+        "envergo.moulinette.regulations.fetch_flood_zones_around_12m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3220 == "action_requise"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [400])
@@ -154,8 +146,7 @@ def test_3220_medium_footprint_outside_flood_zones(moulinette_data, monkeypatch)
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3220 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [650])
@@ -164,12 +155,11 @@ def test_3220_large_footprint_within_flood_zones(moulinette_data, monkeypatch):
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_flood_zones_around_12m", create_zones
+        "envergo.moulinette.regulations.fetch_flood_zones_around_12m", create_zones
     )
 
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3220 == "soumis"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "soumis"
 
 
 @pytest.mark.parametrize("footprint", [650])
@@ -178,5 +168,4 @@ def test_3220_large_footprint_outside_flood_zones(moulinette_data, monkeypatch):
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data)
-    moulinette.run()
-    assert moulinette.eval_result_3220 == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"

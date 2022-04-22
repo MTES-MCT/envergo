@@ -31,12 +31,14 @@ def fetch_flood_zones_around_12m(coords):
 class MoulinetteRegulation:
     """Run the moulinette for a single regulation (e.g Loi sur l'eau)."""
 
-    criterion_list = []
+    criterion_classes = []
 
     def __init__(self, data_catalog):
         self.catalog = data_catalog
         self.catalog.update(self.get_catalog_data())
-        self.criterions = [Criterion(self.catalog) for Criterion in self.criterion_list]
+        self.criterions = [
+            Criterion(self.catalog) for Criterion in self.criterion_classes
+        ]
 
     def get_catalog_data(self):
         return {}
@@ -59,6 +61,23 @@ class MoulinetteRegulation:
     def body_template(self):
         return f"moulinette/_{self.slug}_{self.result}.html"
 
+    def __getattr__(self, attr):
+        """Returs the corresponding criterion.
+
+        Allows to do something like this:
+        moulinette.loi_sur_leau.zones_inondables to fetch the correct criterion.
+        """
+        return self.get_criterion(attr)
+
+    def get_criterion(self, criterion_slug):
+        """Return the regulation with the given slug."""
+
+        def select_criterion(criterion):
+            return criterion.slug == criterion_slug
+
+        criterion = next(filter(select_criterion, self.criterions), None)
+        return criterion
+
 
 class MoulinetteCriterion:
     """Run a single moulinette check."""
@@ -76,7 +95,7 @@ class MoulinetteCriterion:
 
 
 class WaterLaw3310(MoulinetteCriterion):
-    slug = "zone-humide"
+    slug = "zone_humide"
     title = "Construction en zone humide"
     subtitle = "Seuil de déclaration : 1000 m²"
 
@@ -129,7 +148,7 @@ class WaterLaw3310(MoulinetteCriterion):
 
 
 class WaterLaw3220(MoulinetteCriterion):
-    slug = "zone-inondable"
+    slug = "zone_inondable"
     title = "Construction en zone inondable"
     subtitle = "Seuil de déclaration : 400 m²"
 
@@ -183,6 +202,6 @@ class WaterLaw2150(MoulinetteCriterion):
 
 
 class WaterLaw(MoulinetteRegulation):
-    slug = "loi-sur-leau"
+    slug = "loi_sur_leau"
     title = "Loi sur l'eau"
-    criterion_list = [WaterLaw3310, WaterLaw3220, WaterLaw2150]
+    criterion_classes = [WaterLaw3310, WaterLaw3220, WaterLaw2150]
