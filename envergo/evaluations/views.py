@@ -254,6 +254,8 @@ class WizardStepMixin:
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
     pattern_name = "request_eval_wizard_step_1"
 
+    query_string = True
+
     def dispatch(self, request, *args, **kwargs):
         self.reset_data()
         return super().dispatch(request, *args, **kwargs)
