@@ -106,10 +106,12 @@ section.regulation {
   h2 {
     display: flex;
     align-items: center;
-    justify-content: space-between;
 
     span.content {
-      margin-right: .5rem;
+      margin-right: .5em;
+    }
+    span.fr-tag {
+      margin-top: .75em;
     }
   }
 
