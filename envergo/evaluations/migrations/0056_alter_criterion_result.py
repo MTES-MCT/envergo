@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('evaluations', '0055_alter_criterion_legend_md'),
+        ("evaluations", "0055_alter_criterion_legend_md"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='criterion',
-            name='result',
-            field=models.IntegerField(choices=[('soumis', 'Seuil franchi'), ('non_soumis', 'Seuil non franchi'), ('action_requise', 'Action requise'), ('non_applicable', 'Non concerné')], verbose_name='Result'),
+            model_name="criterion",
+            name="result",
+            field=models.CharField(
+                max_length=128,
+                choices=[
+                    ("soumis", "Seuil franchi"),
+                    ("non_soumis", "Seuil non franchi"),
+                    ("action_requise", "Action requise"),
+                    ("non_applicable", "Non concerné"),
+                ],
+                verbose_name="Result",
+            ),
         ),
     ]

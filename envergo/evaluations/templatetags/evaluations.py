@@ -1,17 +1,17 @@
 from django import template
 from django.utils.safestring import mark_safe
 
-from envergo.evaluations.models import CRITERION_RESULTS
+from envergo.evaluations.models import RESULTS
 
 register = template.Library()
 
 
 PROBA_CSS = {
-    CRITERION_RESULTS.soumis: 4,
-    CRITERION_RESULTS.action_requise: 3,
-    CRITERION_RESULTS.non_soumis: 1,
-    CRITERION_RESULTS.non_disponible: 2,
-    CRITERION_RESULTS.non_applicable: 2,
+    RESULTS.soumis: 4,
+    RESULTS.action_requise: 3,
+    RESULTS.non_soumis: 1,
+    RESULTS.non_disponible: 2,
+    RESULTS.non_applicable: 2,
 }
 
 
