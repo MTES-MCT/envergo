@@ -10,6 +10,8 @@ PROBA_CSS = {
     RESULTS.soumis: 4,
     RESULTS.action_requise: 3,
     RESULTS.non_soumis: 1,
+    RESULTS.non_disponible: 2,
+    RESULTS.non_applicable: 2,
 }
 
 
@@ -29,13 +31,11 @@ def probability(criterion):
 
 
 @register.simple_tag
-def result_tag(evaluation):
+def result_tag(result):
 
-    result = evaluation.get_result_display()
-    proba_level = PROBA_CSS.get(evaluation.result)
-    display = (
-        f'<span class="fr-tag probability probability-{proba_level}">{result}</span>'
-    )
+    proba_level = PROBA_CSS.get(result)
+    result_label = RESULTS[result]
+    display = f'<span class="fr-tag probability probability-{proba_level}">{result_label}</span>'
     return mark_safe(display)
 
 

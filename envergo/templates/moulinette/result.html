@@ -1,0 +1,12 @@
+{% extends 'moulinette/base_result.html' %}
+{% load evaluations static %}
+
+{% block result %}
+
+  <h1>Réglementations environnementales : évaluation personnalisée</h1>
+
+  {% for regulation in moulinette.regulations %}
+    {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+  {% endfor %}
+
+{% endblock %}

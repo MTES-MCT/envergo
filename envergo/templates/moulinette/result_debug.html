@@ -1,5 +1,5 @@
 {% extends 'moulinette/base_result.html' %}
-{% load evaluations static %}
+{% load evaluations static moulinette %}
 
 
 {% block result %}
@@ -9,26 +9,32 @@
 
     <h2>Données initiales</h2>
     <ul>
-      <li>Surface existante: {{ moulinette.data.existing_surface }}</li>
-      <li>Surface créée: {{ moulinette.data.created_surface }}</li>
+      <li>Surface existante: {{ existing_surface }} m²</li>
+      <li>Surface créée: {{ created_surface }} m²</li>
     </ul>
 
     <h2>Résultat</h2>
-    <ul>
-      <li>Résultat de l'évaluation : {{ moulinette.eval_result }}</li>
-      <li>Résultat 3.2.2.0 : {{ moulinette.eval_result_3220 }}</li>
-      <li>Résultat 3.3.1.0 : {{ moulinette.eval_result_3310 }}</li>
-    </ul>
+
+    {% for regulation in moulinette.regulations %}
+      <h3>{{ regulation.title }} : {% result_tag regulation.result %}</h3>
+
+      <ul>
+        {% for criterion in regulation.criterions %}
+          <li>{{ criterion.title }} : {% result_tag criterion.result %}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
 
 
     <h2>Détails du calcul</h2>
+
     <ul>
-      <li>Coordonnées du projet : {{ moulinette.coords }}</li>
-      <li>Département : {{ moulinette.department }}</li>
-      <li>Infos de contact département : {{ moulinette.result.department.contact_md|yesno:'Oui,Non' }} </li>
-      <li>Présence de zones humides à 25m du projet : {{ moulinette.result.wetlands_25|yesno:"Oui,Non" }}</li>
-      <li>Présence de zones humides à 100m du projet : {{ moulinette.result.wetlands_100|yesno:"Oui,Non" }}</li>
-      <li>Présence de zones inondables à 12m du projet : {{ moulinette.result.flood_zones_12|yesno:"Oui,Non" }}</li>
+      <li>Coordonnées du projet : {{ coords }}</li>
+      <li>Département : {{ department }}</li>
+      <li>Infos de contact département : {{ department.contact_md|yesno:'Oui,Non' }} </li>
+      <li>Présence de zones humides à 25m du projet : {{ wetlands_25|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides à 100m du projet : {{ wetlands_100|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones inondables à 12m du projet : {{ flood_zones_12|yesno:"Oui,Non" }}</li>
     </ul>
 
     <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
@@ -61,27 +67,27 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
       }).addTo(map);
 
-      var coords = JSON.parse('{{ moulinette.coords.json|safe }}');
+      var coords = JSON.parse('{% to_geojson coords %}');
       var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
       coordsGeoJSON.addTo(map);
 
-      var wetlands = JSON.parse('{{ moulinette.wetlands_json|safe }}');
+      var wetlands = JSON.parse('{% to_geojson wetlands_100 %}');
       var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
       wetlandsGeoJSON.addTo(map);
 
-      var floodZones = JSON.parse('{{ moulinette.flood_zones_json|safe }}');
+      var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
       var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
       floodZonesGeoJSON.addTo(map);
 
-      var circle12 = JSON.parse('{{ moulinette.circle_12_json|safe }}');
+      var circle12 = JSON.parse('{% to_geojson circle_12 %}');
       var circle12GeoJSON = L.geoJSON(circle12, {style: circle12Styles});
       circle12GeoJSON.addTo(map);
 
-      var circle25 = JSON.parse('{{ moulinette.circle_25_json|safe }}');
+      var circle25 = JSON.parse('{% to_geojson circle_25 %}');
       var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
       circle25GeoJSON.addTo(map);
 
-      var circle100 = JSON.parse('{{ moulinette.circle_100_json|safe }}');
+      var circle100 = JSON.parse('{% to_geojson circle_100 %}');
       var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
       circle100GeoJSON.addTo(map);
 
