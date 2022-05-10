@@ -154,7 +154,7 @@ phonenumbers==8.12.40
     # via
     #   -r base.txt
     #   django-phonenumber-field
-pillow==9.0.0
+pillow==9.0.1
     # via -r base.txt
 pip-tools==6.4.0
     # via -r base.txt

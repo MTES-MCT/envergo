@@ -96,7 +96,7 @@ pep517==0.12.0
     # via pip-tools
 phonenumbers==8.12.40
     # via django-phonenumber-field
-pillow==9.0.0
+pillow==9.0.1
     # via -r base.in
 pip-tools==6.4.0
     # via -r base.in
