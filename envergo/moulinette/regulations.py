@@ -181,8 +181,8 @@ class WaterLaw3220(MoulinetteCriterion):
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.non_soumis,
-                "medium": RESULTS.non_soumis,
+                "big": RESULTS.non_applicable,
+                "medium": RESULTS.non_applicable,
                 "small": RESULTS.non_soumis,
             },
         }
