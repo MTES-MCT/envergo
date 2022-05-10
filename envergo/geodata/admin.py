@@ -43,6 +43,7 @@ class MapAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "data_type",
+        "data_certainty",
         "created_at",
         "expected_zones",
         "zone_count",
