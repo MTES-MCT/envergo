@@ -86,7 +86,7 @@ def test_3310_medium_footprint(moulinette_data, monkeypatch):
 
 
 @pytest.mark.parametrize("footprint", [800])
-def test_3310_medium_footprint_outside_wetlands(moulinette_data, monkeypatch):
+def test_3310_medium_footprint_outside_wetlands(moulinette_data):
     """Project with 700 < footprint < 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data)

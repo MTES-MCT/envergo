@@ -139,7 +139,7 @@ class WaterLaw3310(MoulinetteCriterion):
             },
             "outside": {
                 "big": RESULTS.action_requise,
-                "medium": RESULTS.non_soumis,
+                "medium": RESULTS.non_applicable,
                 "small": RESULTS.non_soumis,
             },
         }
