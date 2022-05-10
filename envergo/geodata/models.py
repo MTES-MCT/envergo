@@ -138,6 +138,11 @@ MAP_TYPES = Choices(
     ("zone_inondable", _("Zone inondable")),
 )
 
+# Sometimes, there are map with different certainty values.
+# E.g "this map represents zones that are wetlands for certain.
+# This other map represents zones that are *maybe* wetlands.
+CERTAINTY_LEVELS = Choices(("certain", _("Certain")), ("uncertain", _("Uncertain")))
+
 
 STATUSES = Choices(
     ("success", _("Success")),
@@ -152,6 +157,12 @@ class Map(models.Model):
     name = models.CharField(_("Name"), max_length=256)
     file = models.FileField(_("File"), upload_to="maps/")
     data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
+    data_certainty = models.CharField(
+        _("Data certainty"),
+        max_length=20,
+        choices=CERTAINTY_LEVELS,
+        default=CERTAINTY_LEVELS.certain,
+    )
     description = models.TextField(_("Description"))
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     expected_zones = models.IntegerField(_("Expected zones"), default=0)
