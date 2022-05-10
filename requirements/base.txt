@@ -45,7 +45,7 @@ defusedxml==0.7.1
     # via python3-openid
 deprecated==1.2.13
     # via redis
-django==3.2.12
+django==3.2.13
     # via
     #   -r base.in
     #   django-allauth
