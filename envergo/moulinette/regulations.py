@@ -6,11 +6,13 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
 
 
-def fetch_zones_around(coords, radius, zone_type):
+def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
     """Helper method to fetch Zones around a given point."""
 
-    qs = Zone.objects.filter(map__data_type=zone_type).filter(
-        geometry__dwithin=(coords, D(m=radius))
+    qs = (
+        Zone.objects.filter(map__data_type=zone_type)
+        .filter(geometry__dwithin=(coords, D(m=radius)))
+        .filter(map__data_certainty=data_certainty)
     )
     return qs
 
@@ -22,6 +24,15 @@ def fetch_wetlands_around_25m(coords):
 
 def fetch_wetlands_around_100m(coords):
     return fetch_zones_around(coords, 100, "zone_humide")
+
+
+def fetch_potential_wetlands(coords):
+    qs = (
+        Zone.objects.filter(map__data_type="zone_humide")
+        .filter(map__data_certainty="uncertain")
+        .filter(geometry__dwithin=(coords, D(m=0)))
+    )
+    return qs
 
 
 def fetch_flood_zones_around_12m(coords):
@@ -105,6 +116,8 @@ class WaterLaw3310(MoulinetteCriterion):
         catalog["wetlands_within_25m"] = bool(catalog["wetlands_25"])
         catalog["wetlands_100"] = fetch_wetlands_around_100m(self.catalog["coords"])
         catalog["wetlands_within_100m"] = bool(catalog["wetlands_100"])
+        catalog["potential_wetlands"] = fetch_potential_wetlands(self.catalog["coords"])
+        catalog["within_potential_wetlands"] = bool(catalog["potential_wetlands"])
 
         return catalog
 
@@ -115,13 +128,15 @@ class WaterLaw3310(MoulinetteCriterion):
         if self.catalog["wetlands_within_25m"]:
             wetland_status = "inside"
         elif self.catalog["wetlands_within_100m"]:
-            wetland_status = "unknown"
+            wetland_status = "doubt1"
+        elif self.catalog["within_potential_wetlands"]:
+            wetland_status = "doubt2"
         else:
             wetland_status = "outside"
 
-        if self.catalog["project_surface"] > 1000:
+        if self.catalog["project_surface"] >= 1000:
             project_size = "big"
-        elif self.catalog["project_surface"] > 700:
+        elif self.catalog["project_surface"] >= 700:
             project_size = "medium"
         else:
             project_size = "small"
@@ -132,13 +147,18 @@ class WaterLaw3310(MoulinetteCriterion):
                 "medium": RESULTS.action_requise,
                 "small": RESULTS.non_soumis,
             },
-            "unknown": {
+            "doubt1": {
+                "big": RESULTS.action_requise,
+                "medium": RESULTS.non_soumis,
+                "small": RESULTS.non_soumis,
+            },
+            "doubt2": {
                 "big": RESULTS.action_requise,
                 "medium": RESULTS.non_soumis,
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.action_requise,
+                "big": RESULTS.non_applicable,
                 "medium": RESULTS.non_applicable,
                 "small": RESULTS.non_soumis,
             },
