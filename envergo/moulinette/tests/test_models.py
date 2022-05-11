@@ -191,9 +191,9 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data, monkeypatch):
     assert moulinette.loi_sur_leau.zone_humide.result == "non_applicable"
 
 
-@pytest.mark.parametrize("footprint", [50])
+@pytest.mark.parametrize("footprint", [299])
 def test_3220_small_footprint(moulinette_data, monkeypatch):
-    """Project with footprint < 350m² are not subject to the 3320."""
+    """Project with footprint < 300m² are not subject to the 3320."""
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
@@ -204,9 +204,9 @@ def test_3220_small_footprint(moulinette_data, monkeypatch):
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [400])
+@pytest.mark.parametrize("footprint", [300])
 def test_3220_medium_footprint_within_flood_zones(moulinette_data, monkeypatch):
-    """Project with 500m² < footprint < 350m² within a flood zone."""
+    """Project with 500m² < footprint <= 300m² within a flood zone."""
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
@@ -217,18 +217,18 @@ def test_3220_medium_footprint_within_flood_zones(moulinette_data, monkeypatch):
     assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [400])
+@pytest.mark.parametrize("footprint", [300])
 def test_3220_medium_footprint_outside_flood_zones(moulinette_data, monkeypatch):
-    """Project with 500m² < footprint < 350m² outside a flood zone."""
+    """Project with 500m² < footprint <= 300m² outside a flood zone."""
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data)
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_applicable"
 
 
-@pytest.mark.parametrize("footprint", [650])
+@pytest.mark.parametrize("footprint", [400])
 def test_3220_large_footprint_within_flood_zones(moulinette_data, monkeypatch):
-    """Project with footprint > 500m² within a flood zone."""
+    """Project with footprint >= 400m² within a flood zone."""
 
     # Make sure the project in in a flood zone
     monkeypatch.setattr(
@@ -239,9 +239,9 @@ def test_3220_large_footprint_within_flood_zones(moulinette_data, monkeypatch):
     assert moulinette.loi_sur_leau.zone_inondable.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [650])
-def test_3220_large_footprint_outside_flood_zones(moulinette_data, monkeypatch):
-    """Project with footprint > 500m² outside a flood zone."""
+@pytest.mark.parametrize("footprint", [300])
+def test_3220_large_footprint_outside_flood_zones(moulinette_data):
+    """Project with footprint >= 400m² outside a flood zone."""
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data)

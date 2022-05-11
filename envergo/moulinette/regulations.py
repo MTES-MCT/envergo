@@ -187,9 +187,9 @@ class WaterLaw3220(MoulinetteCriterion):
         else:
             flood_zone_status = "outside"
 
-        if self.catalog["project_surface"] > 400:
+        if self.catalog["project_surface"] >= 400:
             project_size = "big"
-        elif self.catalog["project_surface"] > 350:
+        elif self.catalog["project_surface"] >= 300:
             project_size = "medium"
         else:
             project_size = "small"
