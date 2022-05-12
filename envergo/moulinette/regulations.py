@@ -1,6 +1,7 @@
 from functools import cached_property
 
 from django.contrib.gis.measure import Distance as D
+from model_utils import Choices
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
@@ -104,6 +105,17 @@ class MoulinetteCriterion:
     def result(self):
         raise NotImplementedError("Implement the `result` method in the subclass.")
 
+    @property
+    def result_code(self):
+        """Return a unique code for the criterion result.
+
+        Sometimes, a same criterion can have the same result for different reasons.
+        Because of this, we want unique codes to display custom messages to
+        the user.
+        """
+
+        return self.result
+
 
 class WaterLaw3310(MoulinetteCriterion):
     slug = "zone_humide"
@@ -121,16 +133,19 @@ class WaterLaw3310(MoulinetteCriterion):
 
         return catalog
 
-    @cached_property
-    def result(self):
-        """Run the check for the 3.3.1.0 rule."""
+    def get_result_data(self):
+        """Evaluate the project and return the different parameter results.
+
+        For this criterion, the evaluation results depends on the project size
+        and wether it will impact known wetlands.
+        """
 
         if self.catalog["wetlands_within_25m"]:
             wetland_status = "inside"
         elif self.catalog["wetlands_within_100m"]:
-            wetland_status = "doubt1"
+            wetland_status = "close_to"
         elif self.catalog["within_potential_wetlands"]:
-            wetland_status = "doubt2"
+            wetland_status = "inside_potential"
         else:
             wetland_status = "outside"
 
@@ -141,30 +156,48 @@ class WaterLaw3310(MoulinetteCriterion):
         else:
             project_size = "small"
 
+        return wetland_status, project_size
+
+    @cached_property
+    def result(self):
+        """Run the check for the 3.3.1.0 rule.
+
+        Associate a unique result code with a value from the RESULTS enum.
+        """
+
+        code = self.result_code
         result_matrix = {
-            "inside": {
-                "big": RESULTS.soumis,
-                "medium": RESULTS.action_requise,
-                "small": RESULTS.non_soumis,
-            },
-            "doubt1": {
-                "big": RESULTS.action_requise,
-                "medium": RESULTS.non_soumis,
-                "small": RESULTS.non_soumis,
-            },
-            "doubt2": {
-                "big": RESULTS.action_requise,
-                "medium": RESULTS.non_soumis,
-                "small": RESULTS.non_soumis,
-            },
-            "outside": {
-                "big": RESULTS.non_applicable,
-                "medium": RESULTS.non_applicable,
-                "small": RESULTS.non_soumis,
-            },
+            "soumis": RESULTS.soumis,
+            "non_soumis": RESULTS.non_soumis,
+            "non_applicable": RESULTS.non_applicable,
+            "action_requise_inside": RESULTS.action_requise,
+            "action_requise_close_to": RESULTS.action_requise,
+            "action_requise_inside_potential": RESULTS.action_requise,
         }
-        result = result_matrix[wetland_status][project_size]
+        result = result_matrix[code]
         return result
+
+    @property
+    def result_code(self):
+        """Return the unique result code"""
+
+        wetland_status, project_size = self.get_result_data()
+        code_matrix = {
+            ("inside", "big"): "soumis",
+            ("inside", "medium"): "action_requise_inside",
+            ("inside", "small"): "non_soumis",
+            ("close_to", "big"): "action_requise_close_to",
+            ("close_to", "medium"): "non_soumis",
+            ("close_to", "small"): "non_soumis",
+            ("inside_potential", "big"): "action_requise_inside_potential",
+            ("inside_potential", "medium"): "non_soumis",
+            ("inside_potential", "small"): "non_soumis",
+            ("outside", "big"): "non_applicable",
+            ("outside", "medium"): "non_applicable",
+            ("outside", "small"): "non_soumis",
+        }
+        code = code_matrix[(wetland_status, project_size)]
+        return code
 
 
 class WaterLaw3220(MoulinetteCriterion):
