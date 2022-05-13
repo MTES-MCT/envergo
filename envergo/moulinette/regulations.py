@@ -70,9 +70,6 @@ class MoulinetteRegulation:
 
         return result
 
-    def body_template(self):
-        return f"moulinette/_{self.slug}_{self.result}.html"
-
     def __getattr__(self, attr):
         """Returs the corresponding criterion.
 

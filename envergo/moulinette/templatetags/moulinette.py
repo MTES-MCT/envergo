@@ -36,13 +36,25 @@ def to_geojson(obj, geometry_field="geometry"):
     return mark_safe(geojson)
 
 
+@register.simple_tag(takes_context=True)
+def show_regulation_body(context, regulation):
+    template_name = f"moulinette/{regulation.slug}/result_{regulation.result}.html"
+    try:
+        content = render_to_string(template_name, context=context.flatten())
+    except TemplateDoesNotExist:
+        content = ""
+
+    return content
+
 
 @register.simple_tag
 def show_criterion_body(regulation, criterion):
-    template_name = f"moulinette/{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
+    template_name = (
+        f"moulinette/{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
+    )
     try:
         content = render_to_string(template_name)
     except TemplateDoesNotExist:
-        content = ''
+        content = ""
 
     return content
