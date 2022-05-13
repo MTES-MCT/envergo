@@ -248,7 +248,15 @@ class WaterLaw2150(MoulinetteCriterion):
 
     @cached_property
     def result(self):
-        return RESULTS.non_disponible
+
+        if self.catalog["project_surface"] >= 10000:
+            res = RESULTS.soumis
+        elif self.catalog["project_surface"] >= 8000:
+            res = RESULTS.action_requise
+        else:
+            res = RESULTS.non_soumis
+
+        return res
 
 
 class WaterLaw(MoulinetteRegulation):
