@@ -64,7 +64,7 @@ msgstr "évaluations/"
 
 #: config/urls.py:55
 msgid "moulinette/"
-msgstr "moulinette/"
+msgstr "simulateur/"
 
 #: config/urls.py:56
 msgid "geo/"
