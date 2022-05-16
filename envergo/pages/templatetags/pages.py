@@ -29,28 +29,38 @@ def menu_item(context, route, label):
 
 
 @register.simple_tag(takes_context=True)
-def menu_collapse(context, menu_label, *args):
-    """Generate html for a collapsible  menu item."""
+def evaluation_menu(context):
+    """Generate html for the "Évaluations" collapsible menu."""
 
-    menu_id = "toto"
     try:
         current_route = context.request.resolver_match.url_name
     except AttributeError:
         current_route = ""
 
-    if len(args) % 2 != 0:
-        raise ValueError("Provide a list of urls / label pairs")
-    urls = args[::2]
-    labels = args[1::2]
-    links = list(zip(urls, labels))
+    links = (
+        ("request_evaluation", "Demander une évaluation (48h)"),
+        ("evaluation_search", "Retrouver une évaluation"),
+    )
     links_html = [nav_link(url, label, url == current_route) for url, label in links]
 
-    aria_current = 'aria-current="page"' if current_route in urls else ""
+    # urls for the menu items
+    routes = list(dict(links).keys())
+
+    # Other urls that can be reached from the menu
+    additional_routes = [
+        "request_eval_wizard_step_1",
+        "request_eval_wizard_step_2",
+        "request_eval_wizard_step_files",
+        "request_success",
+    ]
+    all_routes = routes + additional_routes
+
+    aria_current = 'aria-current="page"' if current_route in all_routes else ""
     menu_html = f"""
-        <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-{menu_id}" {aria_current}>
-            {menu_label}
+        <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-evaluations" {aria_current}>
+            Évaluations Loi sur l'eau
         </button>
-        <div class="fr-collapse fr-menu" id="menu-{menu_id}">
+        <div class="fr-collapse fr-menu" id="menu-evaluations">
           <ul class="fr-menu__list">
             <li>
             {'</li><li>'.join(links_html)}
