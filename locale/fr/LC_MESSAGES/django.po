@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-10 09:10+0000\n"
+"POT-Creation-Date: 2022-05-16 12:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -624,7 +624,7 @@ msgstr "Département"
 msgid "Departments"
 msgstr "Départements"
 
-#: envergo/geodata/urls.py:7 envergo/pages/urls.py:32
+#: envergo/geodata/urls.py:7 envergo/pages/urls.py:31
 msgid "map/"
 msgstr "carte/"
 
@@ -656,27 +656,27 @@ msgstr "Longitude"
 msgid "Latitude"
 msgstr "Latitude"
 
-#: envergo/pages/urls.py:10
+#: envergo/pages/urls.py:9
 msgid "stats/"
 msgstr "stats/"
 
-#: envergo/pages/urls.py:12
+#: envergo/pages/urls.py:11
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:17
+#: envergo/pages/urls.py:16
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:22
+#: envergo/pages/urls.py:21
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:27
-msgid "water-law/"
-msgstr "loi-sur-leau/"
+#: envergo/pages/urls.py:26
+msgid "faq/"
+msgstr "foire-aux-questions/"
 
-#: envergo/pages/urls.py:37
+#: envergo/pages/urls.py:36
 msgid "parcels.geojson"
 msgstr "parcels.geojson"
 
@@ -751,6 +751,9 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "water-law/"
+#~ msgstr "loi-sur-leau/"
 
 #~ msgid "Subject to LSE"
 #~ msgstr "Soumis à la LSE"
