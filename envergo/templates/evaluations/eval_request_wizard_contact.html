@@ -37,10 +37,13 @@
         <p>Nous enverrons l'évaluation à ces coordonnées.</p>
       </div>
 
+      {% include '_radio_snippet.html' with field=form.user_type %}
+
       {% include '_field_snippet.html' with field=form.contact_email %}
       {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
       {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
       {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
+
     </fieldset>
 
 
