@@ -200,7 +200,7 @@ msgstr "Personne en charge de l'instruction, boîte générique…"
 
 #: envergo/evaluations/forms.py:78
 msgid "Project sponsor email address(es)"
-msgstr "Adresses(s) e-mail du porteur de projet"
+msgstr "Adresse(s) e-mail du porteur de projet"
 
 #: envergo/evaluations/forms.py:79
 msgid "Petitioner, project manager…"
