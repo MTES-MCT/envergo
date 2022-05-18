@@ -9,29 +9,6 @@ from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactor
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture
-def eval_request_data():
-    data = {
-        "address": "11B rue Barnier 34110 Vic la Gardiole",
-        "parcel-TOTAL_FORMS": "1",
-        "parcel-INITIAL_FORMS": "0",
-        "parcel-MIN_NUM_FORMS": "0",
-        "parcel-MAX_NUM_FORMS": "1000",
-        "parcel-0-commune": "34333",
-        "parcel-0-section": "BV",
-        "parcel-0-prefix": "000",
-        "parcel-0-order": "68",
-        "application_number": "PC04412321D0123",
-        "created_surface": "250",
-        "existing_surface": "100",
-        "contact_email": "toto@tata.com",
-        "project_sponsor_emails": "toto1@tata.com,toto2@tata.com,toto3@tata.com",
-        "project_sponsor_phone_number": "0612345678",
-        "send_eval_to_sponsor": True,
-    }
-    return data
-
-
 def test_searching_inexisting_eval(client):
     """Searching an eval that does not exist returns an error message."""
 
@@ -84,7 +61,31 @@ def test_eval_request_wizard_step_2(client):
     url = reverse("request_eval_wizard_step_2")
     data = {
         "project_description": "Bla bla bla",
+        "user_type": "instructor",
         "contact_email": "contact@example.org",
+        "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_sponsor_phone_number": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    DATA_KEY = "REQUEST_WIZARD_DATA"
+    session = client.session
+    assert DATA_KEY in session
+
+    data = session[DATA_KEY]
+    assert data["project_description"] == ["Bla bla bla"]
+    assert qs.count() == 0
+
+
+def test_eval_request_wizard_step_2_petitioner(client):
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "petitioner",
         "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_sponsor_phone_number": "0612345678",
     }
@@ -117,6 +118,7 @@ def test_eval_wizard_all_steps(
     url = reverse("request_eval_wizard_step_2")
     data = {
         "project_description": "Bla bla bla",
+        "user_type": "instructor",
         "contact_email": "contact@example.org",
         "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_sponsor_phone_number": "0612345678",

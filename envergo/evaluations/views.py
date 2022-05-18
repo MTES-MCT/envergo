@@ -273,6 +273,10 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
 
+    def form_invalid(self, form):
+        print(f"form_invalid {form._errors}")
+        return super().form_invalid(form)
+
     def form_valid(self, form):
         """Since this is the last step, process the whole form."""
         super().form_valid(form)

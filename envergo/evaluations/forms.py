@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from django.forms.utils import ErrorList
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -70,7 +71,10 @@ class WizardContactForm(forms.ModelForm):
         widget=forms.ClearableFileInput(attrs={"multiple": True}),
     )
     user_type = forms.ChoiceField(
-        label=_("Are you?"), required=True, choices=USER_TYPES, widget=forms.RadioSelect
+        label=_("Who are you?"),
+        required=True,
+        choices=USER_TYPES,
+        widget=forms.RadioSelect,
     )
     contact_email = forms.EmailField(
         label=_("Urbanism department email"), help_text=_("Project instructor…")
@@ -114,6 +118,22 @@ class WizardContactForm(forms.ModelForm):
     def clean_project_sponsor_phone_number(self):
         phone = self.cleaned_data["project_sponsor_phone_number"]
         return str(phone)
+
+    def clean(self):
+        """Custom form field validation.
+
+        Some contact fields are removed depending on the user type.
+        """
+        data = super().clean()
+        user_type = data.get("user_type", None)
+        if user_type == USER_TYPES.petitioner:
+            self.fields["contact_email"].required = False
+            if "contact_email" in self._errors:
+                del self._errors["contact_email"]
+            if "contact_email" in data:
+                del data["contact_email"]
+
+        return data
 
 
 class WizardFilesForm(forms.ModelForm):
