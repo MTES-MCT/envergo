@@ -9,4 +9,40 @@
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 
+  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
+    <h2><span class="content">Natura 2000</span> {% result_tag 'non_disponible' %}</h2>
+    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.</p>
+  </section>
+
+  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
+    <h2><span class="content">Risque sismique</span> {% result_tag 'non_disponible' %}</h2>
+    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.</p>
+  </section>
+
+  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
+    <h2><span class="content">Évaluation environnementale</span> {% result_tag 'non_disponible' %}</h2>
+    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.</p>
+  </section>
+
+  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
+    <h2><span class="content">ZNIEFF</span> {% result_tag 'non_disponible' %}</h2>
+    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.</p>
+  </section>
+
+  <section class="fr-my-8w">
+
+    <div class="fr-alert fr-alert--info">
+      <p class="fr-mb-3w">
+        Obtenez une évaluation approfondie de votre projet, réalisée manuellement
+        par l'équipe EnvErgo. Réponse en 2 jours ouvrés.
+      </p>
+      <p>
+        <a class="fr-btn fr-btn--secondary fr-mb-2w" href="{% url "request_evaluation" %}">
+          Demander une évaluation approfondie
+        </a>
+      </p>
+    </div>
+  </section>
+
+
 {% endblock %}
