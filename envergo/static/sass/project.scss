@@ -119,9 +119,17 @@ section.regulation {
 
     span.fr-tag {
       margin-top: .75em;
+      white-space: nowrap;
     }
   }
 
+  &.regulation-disabled {
+
+    h2,
+    p {
+      color: var(--text-disabled-grey);
+    }
+  }
 
   // Increase size contrast for titles hierarchy
   h3 {
