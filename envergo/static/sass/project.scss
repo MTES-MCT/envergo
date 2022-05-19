@@ -124,23 +124,23 @@ section.regulation {
 
 
   // Increase size contrast for titles hierarchy
-  .alt h3 {
+  h3 {
     font-size: 1.375rem;
     line-height: 1.75rem;
   }
 
-  .alt h4 {
+  h4 {
     font-size: 1.25rem;
     line-height: 1.75rem;
   }
 
   @media (min-width: 48em) {
-    .alt h3 {
+    h3 {
       font-size: 1.5rem;
       line-height: 2rem;
     }
 
-    .alt h4 {
+    h4 {
       font-size: 1.375rem;
       line-height: 1.75rem;
     }
