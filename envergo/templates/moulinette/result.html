@@ -9,4 +9,20 @@
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 
+  <section class="fr-my-8w">
+
+    <div class="fr-alert fr-alert--info">
+      <p class="fr-mb-3w">
+        Obtenez une évaluation approfondie de votre projet, réalisée manuellement
+        par l'équipe EnvErgo. Réponse en 2 jours ouvrés.
+      </p>
+      <p>
+        <a class="fr-btn fr-btn--secondary" href="{% url "request_evaluation" %}">
+          Demander une évaluation approfondie
+        </a>
+      </p>
+    </div>
+  </section>
+
+
 {% endblock %}
