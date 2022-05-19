@@ -29,8 +29,9 @@ class MoulinetteHome(FormView):
         }
 
         moulinette_data = None
-        if self.request.method == "GET" and self.request.GET:
-            moulinette_data = self.request.GET
+        GET = self.clean_request_get_parameters()
+        if self.request.method == "GET" and GET:
+            moulinette_data = GET
         elif self.request.method in ("POST", "PUT"):
             moulinette_data = self.request.POST
 
@@ -38,6 +39,21 @@ class MoulinetteHome(FormView):
             kwargs.update({"data": moulinette_data})
 
         return kwargs
+
+    def clean_request_get_parameters(self):
+        """Remove parameters that don't belong to the moulinette form.
+
+        Mainly, we want to ignore parameters set by different analytics systems
+        because they are messing with the moulinette form processing.
+        """
+        ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_"]
+        GET = self.request.GET.copy()
+        keys = GET.keys()
+        for key in list(keys):
+            for prefix in ignore_prefixes:
+                if key.startswith(prefix):
+                    GET.pop(key)
+        return GET
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
