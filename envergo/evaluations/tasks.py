@@ -38,10 +38,16 @@ def confirm_request_to_admin(request_id, host):
 
 
 @app.task
-def confirm_request_to_requester(request_id):
+def confirm_request_to_requester(request_id, host):
     request = Request.objects.filter(id=request_id).first()
     user_email = request.contact_email
-    context = {"application_number": request.application_number}
+    faq_url = reverse("faq")
+    contact_url = reverse("contact_us")
+    context = {
+        "application_number": request.application_number,
+        "faq_url": f"https://{host}{faq_url}",
+        "contact_url": f"https://{host}{contact_url}",
+    }
     txt_body = render_to_string(
         "evaluations/emails/request_confirm_body.txt", context=context
     )

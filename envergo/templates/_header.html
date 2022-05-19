@@ -43,13 +43,11 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">
-          {% menu_item 'home' "Évaluez un projet" %}
+          {% menu_item 'moulinette_home' "Simulateur" %}
         </li>
+        {% evaluation_menu %}
         <li class="fr-nav__item">
-          {% menu_item 'water_law' "Loi sur l'eau" %}
-        </li>
-        <li class="fr-nav__item">
-          {% menu_item 'evaluation_search' "Retrouvez une évaluation" %}
+          {% menu_item 'faq' "Questions fréquentes" %}
         </li>
 
         {% if request.user.is_authenticated %}

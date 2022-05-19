@@ -5,7 +5,7 @@ echo ">>> Starting the first_deploy hook"
 
 # Let's seed the database
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
-PG_EXCLUDE="-N 'information_schema' -N '^pg_*' -T 'geodata_zone' "
+PG_EXCLUDE="-N information_schema -N ^pg_* -T geodata_zone "
 pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
 pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/dump.pgsql
 psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis;'

@@ -297,7 +297,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
         # Send notifications, once data is commited
         def confirm_request():
-            confirm_request_to_requester.delay(request.id)
+            confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
 
         transaction.on_commit(confirm_request)

@@ -69,6 +69,12 @@ $red: #b94a48;
     width: 100%;
   }
 
+  article>img {
+    max-height: 11.25rem;
+    margin: 0 auto 1.5rem auto;
+    display: block;
+  }
+
   @media (min-width: 1144px) {
 
     #form-col {

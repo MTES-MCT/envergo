@@ -34,6 +34,7 @@
       <li>Infos de contact département : {{ department.contact_md|yesno:'Oui,Non' }} </li>
       <li>Présence de zones humides à 25m du projet : {{ wetlands_25|yesno:"Oui,Non" }}</li>
       <li>Présence de zones humides à 100m du projet : {{ wetlands_100|yesno:"Oui,Non" }}</li>
+      <li>Présence de zones humides potentielles (« doute ») : {{ within_potential_wetlands|yesno:"Oui,Non" }}</li>
       <li>Présence de zones inondables à 12m du projet : {{ flood_zones_12|yesno:"Oui,Non" }}</li>
     </ul>
 

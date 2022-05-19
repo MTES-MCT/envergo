@@ -4,16 +4,23 @@
 
 <ul>
 
-  {% if moulinette.result.project_surface > 1000 %}
+  {% if moulinette.loi_sur_leau.zone_humide.result == 'action_requise' %}
     <li>
-      ne se situe pas sur une zone humide.
-    </li>
-  {% else %}
-    <li>
-      a une surface inférieure au seuil légal.
+      n'impacte pas plus de 1000 m² de zone humide.
     </li>
   {% endif %}
 
+  {% if moulinette.loi_sur_leau.zone_inondable.result == 'action_requise' %}
+    <li>
+      n'impacte pas plus de 400 m² de zone inondable.
+    </li>
+  {% endif %}
+
+  {% if moulinette.loi_sur_leau.ruissellement.result == 'action_requise' %}
+    <li>
+      a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha.
+    </li>
+  {% endif %}
 </ul>
 
 <p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
@@ -41,20 +48,18 @@
 
   <p><strong>2/ Se rapprocher du service de la DDT(M) qui instruit les dossiers Loi sur l'eau.</strong></p>
 
-  {% if evaluation.contact_html %}
-    <p>Le dossier Loi sur l'eau, ou le porté à connaissance, sont à adresser à :</p>
 
-    <div class="fr-highlight fr-mb-3w">
-      {{ evaluation.contact_html|safe }}
-    </div>
-  {% endif %}
+  <p>Le dossier Loi sur l'eau, ou le porté à connaissance, sont à adresser à :</p>
 
+  <div class="fr-highlight fr-mb-3w">
+    {{ department.contact_html|safe }}
+  </div>
 
   <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
 
   <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
 
-  <p>Consultez <a href="https://envergo.beta.gouv.fr/loi-sur-leau/#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
+  <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
 
 
   <h4>Sanctions en cas d'omission</h4>

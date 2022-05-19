@@ -8,10 +8,10 @@ Vous recevrez une réponse dans les deux jours ouvrés.
 
 En attendant, vous pouvez consulter notre FAQ sur la Loi sur l'eau.
 
-https://envergo.beta.gouv.fr/loi-sur-leau/
+{{ faq_url }}
 
 Vous pouvez également nous contacter pour apporter des compléments d'information à votre demande.
 
-https://envergo.beta.gouv.fr/contact/
+{{ contact_url }}
 
 {% include 'emails/_email_signature.txt' %}

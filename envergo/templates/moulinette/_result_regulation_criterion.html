@@ -1,4 +1,4 @@
-{% load evaluations %}
+{% load moulinette evaluations %}
 
 <div class="fr-accordion">
   <h4 class="fr-accordion__title">
@@ -12,6 +12,6 @@
   </h4>
 
   <div class="fr-collapse" id="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
-    {{ criterion.body|safe }}
+    {% show_criterion_body regulation criterion %}
   </div>
 </div>
