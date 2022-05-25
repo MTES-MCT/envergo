@@ -275,7 +275,10 @@ class Request(models.Model):
 
     # Petitioner data
     user_type = models.CharField(
-        choices=USER_TYPES, max_length=32, verbose_name=_("Who are you?")
+        choices=USER_TYPES,
+        default=USER_TYPES.instructor,
+        max_length=32,
+        verbose_name=_("Who are you?"),
     )
     contact_email = models.EmailField(_("E-mail"))
     project_sponsor_emails = ArrayField(

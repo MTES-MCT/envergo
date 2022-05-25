@@ -74,6 +74,7 @@ class WizardContactForm(forms.ModelForm):
         label=_("Who are you?"),
         required=True,
         choices=USER_TYPES,
+        initial=USER_TYPES.instructor,
         widget=forms.RadioSelect,
     )
     contact_email = forms.EmailField(

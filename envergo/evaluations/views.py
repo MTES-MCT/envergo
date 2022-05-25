@@ -23,6 +23,7 @@ from envergo.evaluations.forms import (
 )
 from envergo.evaluations.models import (
     RESULTS,
+    USER_TYPES,
     Criterion,
     Evaluation,
     Request,
@@ -196,6 +197,8 @@ class WizardStepMixin:
         return self.request.session.get(FILES_KEY, [])
 
     def get_initial(self):
+        initial = super().get_initial()
+        initial.update(self.get_form_data().dict())
         return self.get_form_data().dict()
 
     def form_valid(self, form):
