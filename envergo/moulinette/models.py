@@ -78,3 +78,17 @@ class Moulinette:
 
         regul = next(filter(select_regulation, self.regulations), None)
         return regul
+
+    def result(self):
+        """Export all results as a dict."""
+
+        result = {}
+        for regulation in self.regulations:
+            result[regulation.slug] = {
+                "result": regulation.result,
+                "criterions": {},
+            }
+            for criterion in regulation.criterions:
+                result[regulation.slug]["criterions"][criterion.slug] = criterion.result
+
+        return result
