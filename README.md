@@ -190,6 +190,25 @@ Le point d'entrée se trouve dans le fichier `Procfile`.
 
 Les scripts utilisés sont dans le répertoire `bin`.
 
+### Installation des dépendances Géo sur Scalingo
+
+EnvErgo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
+externes pour les fonctions géographiques (gdal, geos, proj…).
+
+Pour installer ces dépendances, [Scalingo proposait un buildpack
+dédié](https://github.com/Scalingo/geo-buildpack), qui est tombé en désuétude.
+
+À titre de solution temporaire, les actions suivantes ont été réalisées :
+
+
+1/ Forker le `heroku-geo-buildpack` et [modifier cette ligne](https://github.com/thibault/heroku-geo-buildpack/blob/master/bin/compile#L9) pour obtenir la bonne url.
+
+2/ Remplacer le buildpack scalingo par l'url du buildpack clôné : https://github.com/MTES-MCT/envergo/blob/fix_geo_buildpack/.buildpacks#L3
+
+3/ Configurer la variable d'environnement `DISABLE_COLLECTSTATIC`. (On appelle déjà manuellement collectstatic dans notre build https://github.com/MTES-MCT/envergo/blob/main/bin/build_assets.sh#L35).
+
+4/ Lancer le déploiement. L'app build sans soucis. Je n'ai pas encore noté de bugs sur les fonctions geo.
+
 
 ## Faire un dump de la base de prod
 
