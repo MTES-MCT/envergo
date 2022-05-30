@@ -1,4 +1,5 @@
 {
+    "stack": "scalingo-20",
   "formation": {
     "web": {
       "amount": 1,
