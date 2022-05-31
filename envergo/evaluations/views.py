@@ -310,9 +310,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             "request",
             self.request.session.session_key,
             request_reference=request.reference,
-            request_url=reverse(
-                "admin:evaluations_request_change", args=[request.reference]
-            ),
+            request_url=reverse("admin:evaluations_request_change", args=[request.id]),
         )
         self.reset_data()
         return HttpResponseRedirect(self.get_success_url())
