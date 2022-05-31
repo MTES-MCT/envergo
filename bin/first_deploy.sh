@@ -3,6 +3,9 @@
 
 echo ">>> Starting the first_deploy hook"
 
+# Scalingo requires you to run this script to update postgres' version
+dbclient-fetcher psql
+
 # Let's seed the database
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
 PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table-data geodata_zone "
