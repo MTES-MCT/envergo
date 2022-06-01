@@ -134,6 +134,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "envergo.analytics.middleware.SetVisitorIdCookie",
 ]
 
 # STATIC
@@ -306,3 +307,5 @@ LEAFLET_CONFIG = {
 MATTERMOST_ENDPOINT = ""
 
 ENVERGO_REFERENCE_LENGTH = 6
+
+VISITOR_COOKIE_NAME = "visitorid"

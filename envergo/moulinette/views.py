@@ -116,7 +116,7 @@ class MoulinetteHome(FormView):
             if moulinette.is_evaluation_available():
                 export["result"] = moulinette.result()
 
-            log_event("simulateur", "soumission", request.session.session_key, **export)
+            log_event("simulateur", "soumission", request, **export)
         return res
 
     def form_valid(self, form):

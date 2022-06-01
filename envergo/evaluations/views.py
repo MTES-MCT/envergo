@@ -308,7 +308,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         log_event(
             "evaluation",
             "request",
-            self.request.session.session_key,
+            self.request,
             request_reference=request.reference,
             request_url=reverse("admin:evaluations_request_change", args=[request.id]),
         )
