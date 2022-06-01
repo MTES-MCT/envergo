@@ -112,6 +112,7 @@ class MoulinetteHome(FormView):
                 "existing_surface": data["existing_surface"],
                 "created_surface": data["created_surface"],
                 "is_eval_available": moulinette.is_evaluation_available(),
+                "url": request.build_absolute_uri(),
             }
             if moulinette.is_evaluation_available():
                 export["result"] = moulinette.result()
