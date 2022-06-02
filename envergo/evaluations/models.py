@@ -280,7 +280,7 @@ class Request(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_email = models.EmailField(_("E-mail"))
+    contact_email = models.EmailField(_("E-mail"), blank=True)
     project_sponsor_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),

@@ -167,6 +167,7 @@ class RequestAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "application_number",
+        "user_type",
         "contact_email",
         "project_sponsor_phone_number",
         "evaluation_link",
@@ -204,6 +205,7 @@ class RequestAdmin(admin.ModelAdmin):
             _("Contact info"),
             {
                 "fields": (
+                    "user_type",
                     "contact_email",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
