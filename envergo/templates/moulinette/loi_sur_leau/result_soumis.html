@@ -17,11 +17,10 @@
 
   <p><strong>2/ Déposer le dossier auprès du service de la DDT(M) en charge de l'instruction.</strong></p>
 
-  {% if evaluation.contact_html %}
-    <div class="fr-highlight fr-mb-3w">
-      {{ evaluation.contact_html|safe }}
-    </div>
-  {% endif %}
+  <div class="fr-highlight fr-mb-3w">
+    {{ department.contact_html|safe }}
+  </div>
+
 
   <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
 
