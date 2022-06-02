@@ -2,6 +2,8 @@ from uuid import uuid4
 
 from django.conf import settings
 
+from config.settings.base import VISITOR_COOKIE_NAME
+
 
 class SetVisitorIdCookie:
     """Make sure a unique visitor id cookie is always sent.
@@ -22,12 +24,18 @@ class SetVisitorIdCookie:
 
     def __call__(self, request):
 
+        is_first_visit = settings.VISITOR_COOKIE_NAME not in request.COOKIES
+        visitor_id = None
+        if is_first_visit:
+            visitor_id = uuid4()
+            request.COOKIES[VISITOR_COOKIE_NAME] = visitor_id
+
         response = self.get_response(request)
 
-        if settings.VISITOR_COOKIE_NAME not in request.COOKIES:
+        if is_first_visit:
             response.set_cookie(
                 settings.VISITOR_COOKIE_NAME,
-                uuid4(),
+                visitor_id,
                 domain=settings.SESSION_COOKIE_DOMAIN,
                 path=settings.SESSION_COOKIE_PATH,
                 secure=settings.SESSION_COOKIE_SECURE or None,
