@@ -158,6 +158,7 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "application_number",
             "project_description",
             "additional_files",
+            "user_type",
             "contact_email",
             "project_sponsor_emails",
             "project_sponsor_phone_number",
