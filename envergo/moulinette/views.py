@@ -106,11 +106,14 @@ class MoulinetteHome(FormView):
         moulinette = self.moulinette
         if moulinette:
             data = moulinette.catalog
+            department = data["department"]
+            department_code = department.department if department else ""
             export = {
                 "lat": f'{data["lng"]:.5f}',
                 "lng": f'{data["lng"]:.5f}',
                 "existing_surface": data["existing_surface"],
                 "created_surface": data["created_surface"],
+                "department": department_code,
                 "is_eval_available": moulinette.is_evaluation_available(),
                 "url": request.build_absolute_uri(),
             }
