@@ -78,6 +78,7 @@ LOCAL_APPS = [
     "envergo.geodata",
     "envergo.stats",
     "envergo.moulinette",
+    "envergo.analytics",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -133,6 +134,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "envergo.analytics.middleware.SetVisitorIdCookie",
 ]
 
 # STATIC
@@ -305,3 +307,5 @@ LEAFLET_CONFIG = {
 MATTERMOST_ENDPOINT = ""
 
 ENVERGO_REFERENCE_LENGTH = 6
+
+VISITOR_COOKIE_NAME = "visitorid"

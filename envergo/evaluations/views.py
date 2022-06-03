@@ -13,6 +13,7 @@ from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
 
+from envergo.analytics.utils import log_event
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
     EvaluationShareForm,
@@ -304,6 +305,13 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
         transaction.on_commit(confirm_request)
 
+        log_event(
+            "evaluation",
+            "request",
+            self.request,
+            request_reference=request.reference,
+            request_url=reverse("admin:evaluations_request_change", args=[request.id]),
+        )
         self.reset_data()
         return HttpResponseRedirect(self.get_success_url())
 

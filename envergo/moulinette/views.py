@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
+from envergo.analytics.utils import log_event
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteForm
 from envergo.moulinette.models import Moulinette
@@ -99,6 +100,28 @@ class MoulinetteHome(FormView):
             template_name = "moulinette/result.html"
 
         return [template_name]
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+        moulinette = self.moulinette
+        if moulinette:
+            data = moulinette.catalog
+            department = data["department"]
+            department_code = department.department if department else ""
+            export = {
+                "lat": f'{data["lng"]:.5f}',
+                "lng": f'{data["lng"]:.5f}',
+                "existing_surface": data["existing_surface"],
+                "created_surface": data["created_surface"],
+                "department": department_code,
+                "is_eval_available": moulinette.is_evaluation_available(),
+                "url": request.build_absolute_uri(),
+            }
+            if moulinette.is_evaluation_available():
+                export["result"] = moulinette.result()
+
+            log_event("simulateur", "soumission", request, **export)
+        return res
 
     def form_valid(self, form):
 
