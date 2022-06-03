@@ -3,16 +3,21 @@
 
 {% block result %}
 
-  <h1>Réglementations environnementales : votre évaluation personnalisée</h1>
+  <h1>Réglementations environnementales : évaluation personnalisée</h1>
 
-  <div class="fr-alert fr-alert--info fr-my-8w">
-    <p class="fr-alert__title">Le service EnvErgo n'est pas encore déployé de façon automatique dans votre département.</p>
-    <p>Vous pouvez cependant nous demander une évaluation manuelle de votre projet. Réponse en 48h ouvrables.
-    </div>
+  <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
+    <p class="fr-alert__title">Le simulateur EnvErgo n'est pas encore déployé dans votre département.</p>
+    <p>Il est pour l'instant disponible en Loire-Atlantique (44).</p>
+  </div>
 
-    <a class="fr-btn fr-btn--icon-left fr-fi-arrow-right-line fr-mb-8w" href="{% url 'request_evaluation' %}">
-      Demandez une évaluation approfondie
-    </a>
+  <p>Vous pouvez nous signaler votre intérêt pour le déploiement du simulateur EnvErgo dans votre département.</p>
+
+  <a target="_blank" rel="noopener" class="fr-btn fr-mb-8w" href="https://startupdetat.typeform.com/envergo-dept">
+    Signaler mon intérêt
+  </a>
+
+  <p>Vous pouvez également <a  href="{% url 'request_evaluation' %}"> demander une évaluation manuelle</a>
+    de votre projet, réalisée par l'équipe EnvErgo. Réponse en 2 jours ouvrés.</p>
   </div>
 
 {% endblock %}
