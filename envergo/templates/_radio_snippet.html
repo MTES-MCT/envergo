@@ -1,0 +1,37 @@
+{% load utils %}
+
+<div id="form-group-{{ field.name }}" class="fr-form-group{% if field.field.required %} required{% endif %}">
+  <fieldset class="fr-fieldset{% if field.errors %} fr-fieldset--error{% endif %}" role="group" {% if field.errors %}aria-labelledby="legend-{{ field.name }} error-text-{{ field.name }}"{% endif %} >
+
+    <legend class="fr-fieldset__legend fr-text--regular" id='legend-{{ field.name }}'>
+      {{ field.label }}
+      {% if field.help_text %}
+        <span class="fr-hint-text">{{ field.help_text|safe }}</span>
+      {% endif %}
+    </legend>
+
+    <div class="fr-fieldset__content">
+      {% for radio in field %}
+        <div class="fr-radio-group">
+          {{ radio.tag }}
+          <label class="fr-label" for="{{ radio.id_for_label }}">
+            {{ radio.choice_label }}
+
+            {% if radio.help_text %}
+              <span class="fr-hint-text">{{ radio.help_text }}</span>
+            {% endif %}
+          </label>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if field.errors %}
+      <p id="error-text-{{ field.name }}" class="fr-error-text">
+        ↑
+        {{ field.errors.0 }}
+        ↑
+      </p>
+    {% endif %}
+
+  </fieldset>
+</div>

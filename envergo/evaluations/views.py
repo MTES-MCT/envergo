@@ -24,6 +24,7 @@ from envergo.evaluations.forms import (
 )
 from envergo.evaluations.models import (
     RESULTS,
+    USER_TYPES,
     Criterion,
     Evaluation,
     Request,
@@ -197,6 +198,8 @@ class WizardStepMixin:
         return self.request.session.get(FILES_KEY, [])
 
     def get_initial(self):
+        initial = super().get_initial()
+        initial.update(self.get_form_data().dict())
         return self.get_form_data().dict()
 
     def form_valid(self, form):
@@ -272,6 +275,10 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
+
+    def form_invalid(self, form):
+        print(f"form_invalid {form._errors}")
+        return super().form_invalid(form)
 
     def form_valid(self, form):
         """Since this is the last step, process the whole form."""

@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.sites.models import Site
+from django.db import models
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -150,12 +151,23 @@ class RequestFileInline(admin.TabularInline):
     extra = 0
 
 
+class RequestAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
+                attrs={"rows": 3}
+            )
+        }
+
+
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
+    form = RequestAdminForm
     list_display = [
         "reference",
         "created_at",
         "application_number",
+        "user_type",
         "contact_email",
         "project_sponsor_phone_number",
         "evaluation_link",
@@ -193,6 +205,7 @@ class RequestAdmin(admin.ModelAdmin):
             _("Contact info"),
             {
                 "fields": (
+                    "user_type",
                     "contact_email",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",

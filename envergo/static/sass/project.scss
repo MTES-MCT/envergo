@@ -277,6 +277,11 @@ form {
 }
 
 /**
+ * Custom display of the evaluation request contact form
+ */
+form#request-evaluation-form {}
+
+/**
  * Autocomplete fields
  */
 .fr-label+div>.autocomplete__wrapper {

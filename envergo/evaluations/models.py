@@ -224,6 +224,12 @@ def additional_data_file_format(instance, filename):
     return f"requests/{instance.reference}{extension}"
 
 
+USER_TYPES = Choices(
+    ("instructor", "Un service instruction urbanisme"),
+    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
+)
+
+
 class Request(models.Model):
     """An evaluation request by a petitioner."""
 
@@ -268,7 +274,13 @@ class Request(models.Model):
     )
 
     # Petitioner data
-    contact_email = models.EmailField(_("E-mail"))
+    user_type = models.CharField(
+        choices=USER_TYPES,
+        default=USER_TYPES.instructor,
+        max_length=32,
+        verbose_name=_("Who are you?"),
+    )
+    contact_email = models.EmailField(_("E-mail"), blank=True)
     project_sponsor_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
