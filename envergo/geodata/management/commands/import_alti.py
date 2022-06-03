@@ -158,7 +158,7 @@ class Mnt:
 
     @property
     def cell_area(self):
-        return self.step_size ** 2
+        return self.step_size**2
 
     def coords(self, cell):
         x, y = cell
