@@ -145,18 +145,11 @@ CRITERIONS = Choices(
 
 
 ACTIONS = Choices(
-    ("not_in_zh", "ne se situe pas en zone humide"),
-    (
-        "surface_lt_1000",
-        "a une emprise au sol — y compris travaux et remblais — de moins de 1 000 m²",
-    ),
-    (
-        "surface_lt_400",
-        "a une emprise au sol — y compris travaux et remblais — de moins de 400 m²",
-    ),
+    ("surface_lt_1000", "n'impacte pas plus de 1000 m² de zone humide"),
+    ("surface_lt_400", "n'impacte pas plus de 400 m² de zone inondable"),
     (
         "runoff_lt_10000",
-        "capte une surface de ruissellement d'eau de pluie inférieure à 10 000 m²",
+        "a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha",
     ),
 )
 
