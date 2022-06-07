@@ -109,7 +109,7 @@ class MoulinetteHome(FormView):
             department = data["department"]
             department_code = department.department if department else ""
             export = {
-                "lat": f'{data["lng"]:.5f}',
+                "lat": f'{data["lat"]:.5f}',
                 "lng": f'{data["lng"]:.5f}',
                 "existing_surface": data["existing_surface"],
                 "created_surface": data["created_surface"],
