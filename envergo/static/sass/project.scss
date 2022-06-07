@@ -145,6 +145,10 @@ section.regulation {
     }
   }
 
+  .more.fr-collapse>*:first-child {
+    margin-top: 1.5rem;
+  }
+
   &.regulation-disabled {
 
     h2,
