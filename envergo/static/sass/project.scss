@@ -59,6 +59,17 @@ $red: #b94a48;
 
 #moulinette-container {
 
+  .regulation .alt>ul {
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+    margin-block-start: none;
+    margin-block-end: none;
+  }
+
+  button.read-more-btn {
+    display: block;
+  }
+
   max-width: none;
 
   div.fr-grid-row {
