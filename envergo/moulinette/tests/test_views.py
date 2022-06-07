@@ -5,7 +5,7 @@ pytestmark = pytest.mark.django_db
 
 
 HOME_TITLE = "Évaluez si votre projet de construction est soumis à la Loi sur l'eau"
-RESULT_TITLE = "Réglementations environnementales : votre évaluation personnalisée"
+RESULT_TITLE = "Réglementations environnementales : évaluation personnalisée"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
 )
