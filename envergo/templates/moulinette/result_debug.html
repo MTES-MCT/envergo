@@ -4,7 +4,7 @@
 
 {% block result %}
 
-  <section>
+  <section class="debug">
     <h1>Paramètres de la moulinette</h1>
 
     <h2>Données initiales</h2>
@@ -38,7 +38,7 @@
       <li>Présence de zones inondables à 12m du projet : {{ flood_zones_12|yesno:"Oui,Non" }}</li>
     </ul>
 
-    <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+    <div class="ratio-1x1 fr-mt-1w fr-mb-2w">
       <div class="ratio-content">
         <div class="leaflet-container">
           <div id="debug-map"></div>
@@ -56,7 +56,8 @@
 
       var map = L.map('debug-map', {maxZoom: 21});
       var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
-      var wetlandsStyles = {'color': 'none', 'fillColor': 'blue'};
+      var wetlandsStyles = {'color': 'none', 'fillColor': 'green'};
+      var potentialWetlandsStyles = {'color': 'none', 'fillColor': 'orange'};
       var floodZonesStyles = {'color': 'none', 'fillColor': 'red'};
       var circle12Styles = {'color': 'yellow', 'fillColor': 'yellow'};
       var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
@@ -76,6 +77,10 @@
       var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
       wetlandsGeoJSON.addTo(map);
 
+      var potentialWetlands = JSON.parse('{% to_geojson potential_wetlands %}');
+      var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: wetlandsStyles});
+      potentialWetlandsGeoJSON.addTo(map);
+
       var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
       var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
       floodZonesGeoJSON.addTo(map);
@@ -92,7 +97,17 @@
       var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
       circle100GeoJSON.addTo(map);
 
-      map.fitBounds(circle100GeoJSON.getBounds());
+      map.fitBounds(circle100GeoJSON.getBounds(), {padding: [50, 50]});
+
+      var legend = L.control({position: 'bottomright'});
+      legend.onAdd = function(map) {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML += '<span><i style="background: green"></i> Zones humides</span>';
+        div.innerHTML += '<span><i style="background: orange"></i> ZH (doute)</span>';
+        div.innerHTML += '<span><i style="background: red"></i> Zones inondables</span>';
+        return div;
+      };
+      legend.addTo(map);
     });
   </script>
 {% endblock %}
