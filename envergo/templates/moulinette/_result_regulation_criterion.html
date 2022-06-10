@@ -2,16 +2,18 @@
 
 <div class="fr-accordion">
   <h4 class="fr-accordion__title">
-    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
+    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
       {% result_tag criterion.result %}
       <span>
         <strong>{{ criterion.title }}</strong><br >
         {{ criterion.subtitle }}
       </span>
     </button>
+
+    {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}
   </h4>
 
-  <div class="fr-collapse" id="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
+  <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
     {% if criterion.header %}
       <p class="fr-text--light fr-text--sm">
         {{ criterion.header|safe }}
