@@ -110,17 +110,16 @@ $red: #b94a48;
 
 section.regulation {
 
-  .alt {
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-  }
-
   .alt>ul,
   div.criteria ul {
     margin-top: -1.2rem;
     margin-bottom: 1.5rem;
     margin-block-start: none;
     margin-block-end: none;
+  }
+
+  div.criteria h3 {
+    padding-left: 1.5rem;
   }
 
   button.read-more-btn {
