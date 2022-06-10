@@ -118,16 +118,6 @@ section.regulation {
     margin-block-end: none;
   }
 
-  div.criteria h3 {
-    padding-left: 1.5rem;
-  }
-
-  button.read-more-btn {
-    display: block;
-    text-decoration: underline;
-    padding-left: 0;
-  }
-
   h2 {
     display: flex;
     align-items: center;
@@ -145,6 +135,12 @@ section.regulation {
       margin-top: .75em;
       white-space: nowrap;
     }
+  }
+
+  button.read-more-btn {
+    display: block;
+    text-decoration: underline;
+    padding-left: 0;
   }
 
   .more.fr-collapse>*:first-child {
@@ -192,20 +188,26 @@ section.regulation {
     }
   }
 
-  .fr-accordion .fr-accordion__btn {
 
-    &::before {
-      margin-left: 0;
-      margin-right: .5rem;
+  div.criteria {
+
+    h3 {
+      padding-left: 1.5rem;
     }
 
-    &>span {
-      margin-right: .5rem;
-    }
+    .fr-accordion {
 
-    span.fr-tag {
-      white-space: nowrap;
-      margin-left: auto;
+      .fr-accordion__btn {
+
+        &::before {
+          display: none;
+        }
+
+        span.fr-tag {
+          white-space: nowrap;
+          margin-left: auto;
+        }
+      }
     }
   }
 }
