@@ -115,8 +115,9 @@ section.regulation {
     margin-right: -1.5rem;
   }
 
-  .alt>ul {
-    margin-top: -0.5rem;
+  .alt>ul,
+  div.criteria ul {
+    margin-top: -1.2rem;
     margin-bottom: 1.5rem;
     margin-block-start: none;
     margin-block-end: none;
