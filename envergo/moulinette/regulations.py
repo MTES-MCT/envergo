@@ -117,7 +117,7 @@ class MoulinetteCriterion:
 class WaterLaw3310(MoulinetteCriterion):
     slug = "zone_humide"
     title = "Construction en zone humide"
-    subtitle = "Seuil de déclaration : 1000 m²"
+    subtitle = "Seuil de déclaration : 1 000 m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"
 
     def get_catalog_data(self):
@@ -246,7 +246,7 @@ class WaterLaw3220(MoulinetteCriterion):
 class WaterLaw2150(MoulinetteCriterion):
     slug = "ruissellement"
     title = "Imperméabilisation et captation du ruissellement des eaux de pluie"
-    subtitle = "Seuil réglementaire : 1 ha"
+    subtitle = "Seuil réglementaire : 1 ha"
     header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"
 
     @cached_property
