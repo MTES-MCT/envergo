@@ -178,40 +178,10 @@ section.regulation {
     }
   }
 
-  button[data-fr-js-collapse-button="true"] {
-    &[aria-expanded="false"] span.expanded-label {
-      display: none;
-    }
-
-    &[aria-expanded="true"] span.concealed-label {
-      display: none;
-    }
-  }
-
   div.criteria {
 
     h3 {
       padding-left: 1.5rem;
-    }
-
-    .fr-accordion {
-
-      .fr-accordion__btn {
-
-        &::before {
-          display: none;
-        }
-
-        span.fr-tag {
-          white-space: nowrap;
-          margin-left: auto;
-        }
-      }
-
-      .read-more-btn {
-        padding: 0.75rem 1rem;
-        margin-bottom: .5rem;
-      }
     }
   }
 }
@@ -476,6 +446,39 @@ div.leaflet-container {
 /**
  * Design system issues quickfixes
  **/
+
+
+/**
+ * Custom class for an accordion without a "+" button
+ */
+.fr-accordion {
+  &.fr-accordion--no-icon {
+
+    .fr-accordion__btn::before {
+      display: none;
+    }
+
+    .read-more-btn {
+      padding: 0.75rem 1rem;
+      margin-bottom: .5rem;
+    }
+  }
+
+  .fr-accordion__btn span.fr-tag {
+    white-space: nowrap;
+    margin-left: auto;
+  }
+}
+
+button[data-fr-js-collapse-button="true"] {
+  &[aria-expanded="false"] span.expanded-label {
+    display: none;
+  }
+
+  &[aria-expanded="true"] span.concealed-label {
+    display: none;
+  }
+}
 
 // Don't force a 16:9 ratio on images
 .fr-content-media__img::before {
