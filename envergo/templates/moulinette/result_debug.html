@@ -78,7 +78,7 @@
       wetlandsGeoJSON.addTo(map);
 
       var potentialWetlands = JSON.parse('{% to_geojson potential_wetlands %}');
-      var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: wetlandsStyles});
+      var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: potentialWetlandsStyles});
       potentialWetlandsGeoJSON.addTo(map);
 
       var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
