@@ -51,5 +51,11 @@
     </div>
   </section>
 
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+
+  <script defer src="{% static 'js/libs/moulinette_accordion_maps.js' %}"></script>
 
 {% endblock %}

@@ -47,13 +47,13 @@ def show_regulation_body(context, regulation):
     return content
 
 
-@register.simple_tag
-def show_criterion_body(regulation, criterion):
+@register.simple_tag(takes_context=True)
+def show_criterion_body(context, regulation, criterion):
     template_name = (
         f"moulinette/{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
     )
     try:
-        content = render_to_string(template_name)
+        content = render_to_string(template_name, context.flatten())
     except TemplateDoesNotExist:
         content = ""
 
