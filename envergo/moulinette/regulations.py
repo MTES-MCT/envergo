@@ -1,10 +1,15 @@
+import json
 from functools import cached_property
 
+from django.contrib.gis.db.models import MultiPolygonField, Union
 from django.contrib.gis.measure import Distance as D
+from django.db.models import F
+from django.db.models.functions import Cast
 from model_utils import Choices
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
+from envergo.geodata.utils import to_geojson
 
 
 def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
@@ -16,7 +21,6 @@ def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
         .filter(map__data_certainty=data_certainty)
     )
     return qs
-
 
 # Those dummy methods are useful for unit testing
 def fetch_wetlands_around_25m(coords):
@@ -88,6 +92,22 @@ class MoulinetteRegulation:
         return criterion
 
 
+class CriterionMap:
+    """Data for a map that will be displayed with Leaflet."""
+    def __init__(self, center, polygon, legend):
+        self.center = center
+        self.polygon = polygon
+        self.legend = legend
+
+    def to_json(self):
+        data = json.dumps({
+            'center': to_geojson(self.center),
+            'polygon': to_geojson(self.polygon),
+            'legend': self.legend,
+        })
+        return data
+
+
 class MoulinetteCriterion:
     """Run a single moulinette check."""
 
@@ -112,6 +132,9 @@ class MoulinetteCriterion:
         """
 
         return self.result
+
+    def map(self):
+        return None
 
 
 class WaterLaw3310(MoulinetteCriterion):
@@ -196,6 +219,19 @@ class WaterLaw3310(MoulinetteCriterion):
         }
         code = code_matrix[(wetland_status, project_size)]
         return code
+
+    @cached_property
+    def map(self):
+
+        # Aggregate the several polygons into a single json object
+        geometries = self.catalog['wetlands_25'].annotate(geom=Cast('geometry', MultiPolygonField()))
+        polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
+
+        criterion_map = CriterionMap(
+            center=self.catalog['coords'],
+            polygon=polygon,
+            legend='Coucou')
+        return criterion_map
 
 
 class WaterLaw3220(MoulinetteCriterion):

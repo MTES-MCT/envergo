@@ -17,7 +17,9 @@
 
   MapConfigurator.prototype.initMap = function(mapId) {
     const options = this.maps[mapId];
-    const center = [options.coords.coordinates[1], options.coords.coordinates[0]];
+    const mapData = options.map;
+    const centerJson = mapData.center;
+    const center = [centerJson.coordinates[1], centerJson.coordinates[0]];
     const map = L.map(options['divId'], { maxZoom: 21 }).setView(center, 17);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

@@ -31,6 +31,6 @@
   var CRITERIA_MAPS = CRITERIA_MAPS || {};
   CRITERIA_MAPS['map-zone-humide'] = {
     divId: 'map-zone-humide',
-    coords: JSON.parse('{% to_geojson coords %}')
+    map: {{ criterion.map.to_json|safe }}
   };
 </script>

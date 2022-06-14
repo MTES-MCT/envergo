@@ -1,4 +1,5 @@
 import glob
+import json
 import logging
 import re
 import sys
@@ -8,6 +9,8 @@ from tempfile import TemporaryDirectory
 
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
+from django.core.serializers import serialize
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Zone
@@ -109,3 +112,31 @@ def process_shapefile(map, file, task=None):
         logger.info("Calling layer mapping `save`")
         lm.save(strict=False, progress=True, stream=debug_stream)
         logger.info("Importing is done")
+
+
+
+def to_geojson(obj, geometry_field="geometry"):
+    """Return serialized geojson.
+
+    Convert python objects to geojson, for leaflet display purpose.
+    Two types of objects are supported:
+     - queryset of models holding a geometry fields
+     - GEOS geometry objects
+
+    Leaflet expects geojson objects to have EPSG:WGS84 coordinates, so we
+    make sure to make the conversion if geometries are stored in a different
+    srid.
+    """
+
+    EPSG_WGS84 = 4326
+
+    if isinstance(obj, QuerySet):
+        geojson = serialize("geojson", obj, geometry_field=geometry_field)
+    elif hasattr(obj, "geojson"):
+        if obj.srid != EPSG_WGS84:
+            obj = obj.transform(EPSG_WGS84, clone=True)
+        geojson = obj.geojson
+    else:
+        raise ValueError(f"Cannot geojson serialize the given object {obj}")
+
+    return json.loads(geojson)
