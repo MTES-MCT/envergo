@@ -29,8 +29,5 @@
 
 <script>
   var CRITERIA_MAPS = CRITERIA_MAPS || {};
-  CRITERIA_MAPS['map-zone-humide'] = {
-    divId: 'map-zone-humide',
-    map: {{ criterion.map.to_json|safe }}
-  };
+  CRITERIA_MAPS['map-zone-humide'] = {{ criterion.map.to_json|safe }};
 </script>

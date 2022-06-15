@@ -16,13 +16,12 @@
   };
 
   MapConfigurator.prototype.initMap = function(mapId) {
-    const options = this.maps[mapId];
-    const mapData = options.map;
+    const mapData = this.maps[mapId];
     const center = mapData.center;
 
     // Damn this constant lat and lng order mixing
     const centerCoords = [center.coordinates[1], center.coordinates[0]];
-    const map = L.map(options['divId'], { maxZoom: 21 }).setView(centerCoords, 17);
+    const map = L.map(mapId, { maxZoom: 21 }).setView(centerCoords, 17);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 22,
