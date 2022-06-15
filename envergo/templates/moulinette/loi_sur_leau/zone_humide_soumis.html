@@ -19,13 +19,16 @@
 
 <p>Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles permettent le développement de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et réduisent les impacts des inondations par leur effet « tampon » sur le niveau des rivières.</p>
 
-<div class="ratio-4x3 fr-mt-1w fr-mb-2w">
-  <div class="ratio-content">
-    <div class="leaflet-container">
-      <div id="map-zone-humide"></div>
+<figure class="fr-content-media" role="group">
+  <div class="ratio-4x3">
+    <div class="ratio-content">
+      <div class="leaflet-container">
+        <div id="map-zone-humide"></div>
+      </div>
     </div>
   </div>
-</div>
+  <figcaption class="fr-content-media__caption">{{ criterion.map.legend|safe }}</figcaption>
+</figure>
 
 <script>
   var CRITERIA_MAPS = CRITERIA_MAPS || {};
