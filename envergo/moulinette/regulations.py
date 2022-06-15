@@ -94,16 +94,18 @@ class MoulinetteRegulation:
 
 class CriterionMap:
     """Data for a map that will be displayed with Leaflet."""
-    def __init__(self, center, polygon, legend):
+    def __init__(self, center, polygon, legend, sources):
         self.center = center
         self.polygon = polygon
         self.legend = legend
+        self.sources = sources
 
     def to_json(self):
         data = json.dumps({
             'center': to_geojson(self.center),
             'polygon': to_geojson(self.polygon),
             'legend': self.legend,
+            'sources': [{'name': map.name, 'url': map.source} for map in self.sources]
         })
         return data
 
@@ -224,13 +226,17 @@ class WaterLaw3310(MoulinetteCriterion):
     def map(self):
 
         # Aggregate the several polygons into a single json object
-        geometries = self.catalog['wetlands_25'].annotate(geom=Cast('geometry', MultiPolygonField()))
+        zones_qs = self.catalog['wetlands_25']
+        geometries = zones_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
         polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
+
+        maps = [zone.map for zone in zones_qs.select_related('map')]
 
         criterion_map = CriterionMap(
             center=self.catalog['coords'],
             polygon=polygon,
-            legend='Coucou')
+            legend='Coucou',
+            sources=maps)
         return criterion_map
 
 
