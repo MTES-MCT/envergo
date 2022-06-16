@@ -35,9 +35,10 @@
     const marker = L.marker(centerCoords);
     marker.addTo(map);
 
-    const polygon = mapData.polygon;
-    var polygonJson = L.geoJSON(polygon);
-    polygonJson.addTo(map);
+    for (const polygonId in mapData.polygons) {
+      var polygonJson = L.geoJSON(mapData.polygons[polygonId]);
+      polygonJson.addTo(map);
+    }
 
     return map;
   };
@@ -45,6 +46,7 @@
 })(this, L);
 
 window.addEventListener('load', function() {
+  var CRITERIA_MAPS = window.CRITERIA_MAPS || {};
   var configurator = new MapConfigurator(CRITERIA_MAPS);
   configurator.init();
 });

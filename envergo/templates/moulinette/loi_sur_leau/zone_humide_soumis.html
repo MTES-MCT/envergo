@@ -42,6 +42,7 @@
 </figure>
 
 <script>
-  var CRITERIA_MAPS = CRITERIA_MAPS || {};
-  CRITERIA_MAPS['map-zone-humide'] = {{ criterion.map.to_json|safe }};
+  console.log('CRITERIA_MAPS defined');
+  window.CRITERIA_MAPS = window.CRITERIA_MAPS || {};
+  window.CRITERIA_MAPS['map-zone-humide'] = {{ criterion.map.to_json|safe }};
 </script>
