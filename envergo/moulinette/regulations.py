@@ -225,6 +225,15 @@ class WaterLaw3310(MoulinetteCriterion):
     @cached_property
     def map(self):
 
+        if self.catalog["wetlands_within_25m"]:
+            legend = "Le projet se situe dans une zone humide référencée."
+        elif self.catalog["wetlands_within_100m"] and not self.catalog["within_potential_wetlands"]:
+            legend = "Le projet se situe à proximité d'une zone humide référencée."
+        elif self.catalog["wetlands_within_100m"] and self.catalog["within_potential_wetlands"]:
+            legend = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+        elif self.catalog["within_potential_wetlands"]:
+            legend = "Le projet se situe dans une zone humide potentielle."
+
         # Aggregate the several polygons into a single json object
         zones_qs = self.catalog['wetlands_25']
         geometries = zones_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
