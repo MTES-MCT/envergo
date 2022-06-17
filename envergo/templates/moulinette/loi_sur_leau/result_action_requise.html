@@ -6,7 +6,7 @@
 
   {% if moulinette.loi_sur_leau.zone_humide.result == 'action_requise' %}
     <li>
-      n'impacte pas plus de 1000 m² de zone humide.
+      n'impacte pas plus de 1 000 m² de zone humide.
     </li>
   {% endif %}
 
@@ -29,9 +29,9 @@
   <li>Délai d'instruction : 2 à 6 mois.</li>
 </ul>
 
-{% include 'moulinette/_read_more_btn.html' %}
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
-<div class="more fr-collapse fr-pt-3w" id="read-more-{{ regulation.slug }}">
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
   <p>
     Au vu des caractéristiques du projet, il est fortement conseillé au porteur de
     projet de mener des études sur les points cités précédemment,
@@ -64,7 +64,7 @@
 
   <h4>Sanctions en cas d'omission</h4>
 
-  <div class="fr-alert fr-alert--info fr-mt-5w">
+  <div class="fr-alert fr-alert--info fr-my-3w">
 
     <p>
       S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
@@ -83,5 +83,5 @@
     </ul>
   </div>
 
-  {% include 'moulinette/_read_more_btn.html' %}
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 </div>

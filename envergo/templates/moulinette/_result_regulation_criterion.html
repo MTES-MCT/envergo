@@ -1,17 +1,26 @@
 {% load moulinette evaluations %}
 
-<div class="fr-accordion">
+<div class="fr-accordion fr-accordion--no-icon">
   <h4 class="fr-accordion__title">
-    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
+    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
       {% result_tag criterion.result %}
-      <span>
+      <span class="title">
         <strong>{{ criterion.title }}</strong><br >
         {{ criterion.subtitle }}
       </span>
     </button>
+
   </h4>
 
-  <div class="fr-collapse" id="accordion_{{ regulation.slug }}_{{ criterion.slug }}">
+  <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
+    {% if criterion.header %}
+      <p class="fr-text--light fr-text--sm">
+        {{ criterion.header|safe }}
+      </p>
+    {% endif %}
     {% show_criterion_body regulation criterion %}
   </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}
+
 </div>

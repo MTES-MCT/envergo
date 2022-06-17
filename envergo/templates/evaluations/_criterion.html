@@ -1,17 +1,18 @@
 {% load evaluations %}
 
-<section class="fr-accordion">
+<section class="fr-accordion fr-accordion--no-icon">
 
   <h3 class="fr-accordion__title">
-    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-{{ criterion.criterion }}">
+    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ criterion.criterion }}">
+      {% probability criterion %}
       <span>
-        {{ criterion.get_criterion_display }} —
-        {% probability criterion %}
+        {{ criterion.get_criterion_display }}
       </span>
     </button>
+
   </h3>
 
-  <div class="fr-collapse" id="accordion-{{ criterion.criterion }}">
+  <div class="fr-collapse" id="read-more-{{ criterion.criterion }}">
     <p class="fr-text--light fr-text--sm">Rubrique {{ criterion.get_law_code }} de la nomenclature Loi sur l'eau</p>
 
     {{ criterion.description_html|safe }}
@@ -31,4 +32,6 @@
     {% endif %}
 
   </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.criterion %}
 </section>

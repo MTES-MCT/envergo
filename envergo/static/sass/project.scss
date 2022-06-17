@@ -109,9 +109,22 @@ $red: #b94a48;
 }
 
 section.regulation {
+
+  .alt>ul,
+  div.criteria ul {
+    margin-top: -1.2rem;
+    margin-bottom: 1.5rem;
+    margin-block-start: none;
+    margin-block-end: none;
+  }
+
   h2 {
     display: flex;
     align-items: center;
+
+    &:before {
+      content: "• ";
+    }
 
     span.content {
       margin-right: .5em;
@@ -122,6 +135,16 @@ section.regulation {
       margin-top: .75em;
       white-space: nowrap;
     }
+  }
+
+  button.read-more-btn {
+    display: block;
+    text-decoration: underline;
+    padding-left: 0;
+  }
+
+  .more.fr-collapse>*:first-child {
+    margin-top: 1.5rem;
   }
 
   &.regulation-disabled {
@@ -155,30 +178,45 @@ section.regulation {
     }
   }
 
-  button[data-fr-js-collapse-button="true"] {
-    &[aria-expanded="false"] span.expanded-label {
-      display: none;
-    }
+  div.criteria {
 
-    &[aria-expanded="true"] span.concealed-label {
-      display: none;
+    h3 {
+      padding-left: 1.5rem;
     }
   }
+}
 
-  .fr-accordion .fr-accordion__btn {
-
-    &::before {
-      margin-left: 0;
-      margin-right: .5rem;
+section.debug {
+  div#debug-map {
+    .info {
+      padding: 6px 8px;
+      background: white;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
     }
 
-    &>span {
-      margin-right: .5rem;
+    .info h4 {
+      margin: 0 0 5px;
+      color: #777;
     }
 
-    span.fr-tag {
-      white-space: nowrap;
-      margin-left: auto;
+    .legend {
+      line-height: 18px;
+      color: #555;
+    }
+
+    .legend span {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.7;
     }
   }
 }
@@ -334,6 +372,7 @@ form#request-evaluation-form {}
 
 // Smart little trick to fix the aspect ratio of an element
 // See https://css-tricks.com/aspect-ratio-boxes/
+.ratio-1x1,
 .ratio-4x3,
 .ratio-16x9 {
   width: 100%;
@@ -353,6 +392,12 @@ form#request-evaluation-form {}
     width: 100%;
     height: 100%;
     display: block;
+  }
+}
+
+.ratio-1x1 {
+  &:before {
+    padding-bottom: 100%;
   }
 }
 
@@ -401,6 +446,47 @@ div.leaflet-container {
 /**
  * Design system issues quickfixes
  **/
+
+
+/**
+ * Custom class for an accordion without a "+" button
+ */
+.fr-accordion {
+  &.fr-accordion--no-icon {
+    padding-bottom: .25rem;
+
+    .fr-accordion__btn::before {
+      display: none;
+    }
+
+    .read-more-btn {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .fr-accordion__btn {
+    align-items: baseline;
+  }
+
+  .fr-accordion__btn span.fr-tag {
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  .fr-accordion__title span.title {
+    margin-right: 1rem;
+  }
+}
+
+button[data-fr-js-collapse-button="true"] {
+  &[aria-expanded="false"] span.expanded-label {
+    display: none;
+  }
+
+  &[aria-expanded="true"] span.concealed-label {
+    display: none;
+  }
+}
 
 // Don't force a 16:9 ratio on images
 .fr-content-media__img::before {

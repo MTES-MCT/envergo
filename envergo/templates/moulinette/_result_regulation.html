@@ -7,10 +7,12 @@
     {% show_regulation_body regulation %}
   </div>
 
-  <h3>Détail des rubriques</h3>
+  <div class="criteria">
+    <h3>Détail des rubriques</h3>
 
-  {% for criterion in regulation.criterions %}
-    {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
-  {% endfor %}
+    {% for criterion in regulation.criterions %}
+      {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
+    {% endfor %}
+  </div>
 
 </section>
