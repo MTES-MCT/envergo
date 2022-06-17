@@ -225,47 +225,50 @@ class WaterLaw3310(MoulinetteCriterion):
     @cached_property
     def map(self):
 
-        if self.catalog["wetlands_within_25m"]:
+        inside_qs = self.catalog['wetlands_25'].filter(map__display_for_user=True)
+        close_qs = self.catalog['wetlands_100'].filter(map__display_for_user=True)
+        potential_qs = self.catalog['potential_wetlands'].filter(map__display_for_user=True)
+        polygons = None
+
+        if inside_qs:
             legend = "Le projet se situe dans une zone humide référencée."
-            zones_qs = self.catalog['wetlands_25']
-            geometries = zones_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
+            geometries = inside_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
-            maps = set([zone.map for zone in zones_qs.select_related('map')])
+            maps = set([zone.map for zone in inside_qs.select_related('map')])
 
-        elif self.catalog["wetlands_within_100m"] and not self.catalog["within_potential_wetlands"]:
+        elif close_qs and not potential_qs:
             legend = "Le projet se situe à proximité d'une zone humide référencée."
-            zones_qs = self.catalog['wetlands_100']
-            geometries = zones_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
+            geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
-            maps = set([zone.map for zone in zones_qs.select_related('map')])
+            maps = set([zone.map for zone in close_qs.select_related('map')])
 
-        elif self.catalog["wetlands_within_100m"] and self.catalog["within_potential_wetlands"]:
+        elif close_qs and potential_qs:
             legend = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-            zones_qs = self.catalog['wetlands_100']
-            geometries = zones_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
+            geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             wetlands_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
 
-            potential_qs = self.catalog['potential_wetlands']
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             potentials_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
 
             polygons = [wetlands_polygon, potentials_polygon]
-            wetlands_maps = [zone.map for zone in zones_qs.select_related('map')]
+            wetlands_maps = [zone.map for zone in close_qs.select_related('map')]
             potential_maps = [zone.map for zone in potential_qs.select_related('map')]
             maps = set(wetlands_maps + potential_maps)
 
-        elif self.catalog["within_potential_wetlands"]:
+        elif potential_qs:
             legend = "Le projet se situe dans une zone humide potentielle."
-            potential_qs = self.catalog['potential_wetlands']
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
             maps = set([zone.map for zone in potential_qs.select_related('map')])
 
-        criterion_map = CriterionMap(
-            center=self.catalog['coords'],
-            polygons=polygons,
-            legend=legend,
-            sources=maps)
+        if polygons:
+            criterion_map = CriterionMap(
+                center=self.catalog['coords'],
+                polygons=polygons,
+                legend=legend,
+                sources=maps)
+        else:
+            criterion_map = None
 
         return criterion_map
 
