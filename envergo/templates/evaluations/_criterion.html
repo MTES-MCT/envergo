@@ -10,7 +10,6 @@
       </span>
     </button>
 
-    {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.criterion %}
   </h3>
 
   <div class="fr-collapse" id="read-more-{{ criterion.criterion }}">
@@ -33,4 +32,6 @@
     {% endif %}
 
   </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.criterion %}
 </section>

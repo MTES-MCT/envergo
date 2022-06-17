@@ -10,7 +10,6 @@
       </span>
     </button>
 
-    {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}
   </h4>
 
   <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
@@ -21,4 +20,7 @@
     {% endif %}
     {% show_criterion_body regulation criterion %}
   </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}
+
 </div>
