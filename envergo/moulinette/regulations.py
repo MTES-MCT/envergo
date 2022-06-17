@@ -94,17 +94,17 @@ class MoulinetteRegulation:
 
 class CriterionMap:
     """Data for a map that will be displayed with Leaflet."""
-    def __init__(self, center, polygons, legend, sources):
+    def __init__(self, center, polygons, caption, sources):
         self.center = center
         self.polygons = polygons
-        self.legend = legend
+        self.caption = caption
         self.sources = sources
 
     def to_json(self):
         data = json.dumps({
             'center': to_geojson(self.center),
             'polygons': [to_geojson(polygon) for polygon in self.polygons],
-            'legend': self.legend,
+            'caption': self.caption,
             'sources': [{'name': map.name, 'url': map.source} for map in self.sources]
         })
         return data
@@ -231,19 +231,19 @@ class WaterLaw3310(MoulinetteCriterion):
         polygons = None
 
         if inside_qs:
-            legend = "Le projet se situe dans une zone humide référencée."
+            caption = "Le projet se situe dans une zone humide référencée."
             geometries = inside_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
             maps = set([zone.map for zone in inside_qs.select_related('map')])
 
         elif close_qs and not potential_qs:
-            legend = "Le projet se situe à proximité d'une zone humide référencée."
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
             geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
             maps = set([zone.map for zone in close_qs.select_related('map')])
 
         elif close_qs and potential_qs:
-            legend = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
             geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             wetlands_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
 
@@ -256,7 +256,7 @@ class WaterLaw3310(MoulinetteCriterion):
             maps = set(wetlands_maps + potential_maps)
 
         elif potential_qs:
-            legend = "Le projet se situe dans une zone humide potentielle."
+            caption = "Le projet se situe dans une zone humide potentielle."
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [geometries.aggregate(polygon=Union(F('geom')))['polygon']]
             maps = set([zone.map for zone in potential_qs.select_related('map')])
@@ -265,7 +265,7 @@ class WaterLaw3310(MoulinetteCriterion):
             criterion_map = CriterionMap(
                 center=self.catalog['coords'],
                 polygons=polygons,
-                legend=legend,
+                caption=caption,
                 sources=maps)
         else:
             criterion_map = None
