@@ -15,8 +15,8 @@ register = template.Library()
 
 @register.simple_tag
 def to_geojson(obj, geometry_field="geometry"):
-    json = convert_to_geojson
-    return mark_safe(json.dumps(json))
+    json_obj = convert_to_geojson(obj)
+    return mark_safe(json.dumps(json_obj))
 
 
 @register.simple_tag(takes_context=True)
