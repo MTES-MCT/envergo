@@ -464,9 +464,17 @@ div.leaflet-container {
     }
   }
 
+  .fr-accordion__btn {
+    align-items: baseline;
+  }
+
   .fr-accordion__btn span.fr-tag {
     white-space: nowrap;
     margin-left: auto;
+  }
+
+  .fr-accordion__title span.title {
+    margin-right: 1rem;
   }
 }
 
