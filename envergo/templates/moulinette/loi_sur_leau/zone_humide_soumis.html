@@ -18,31 +18,3 @@
 <p><strong>Quel impact environnemental ?</strong></p>
 
 <p>Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles permettent le développement de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et réduisent les impacts des inondations par leur effet « tampon » sur le niveau des rivières.</p>
-
-<figure class="fr-content-media" role="group">
-  <div class="ratio-4x3">
-    <div class="ratio-content">
-      <div class="leaflet-container">
-        <div id="map-zone-humide"></div>
-      </div>
-    </div>
-  </div>
-  <figcaption class="fr-content-media__caption">
-    {{ criterion.map.legend|safe }}
-    <br />Source :
-    {% for source in criterion.map.sources %}
-      {% if source.url %}
-        <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
-      {% else %}
-        {{ source.display_name }}
-      {% endif %}
-      <br />
-    {% endfor %}
-  </figcaption>
-</figure>
-
-<script>
-  console.log('CRITERIA_MAPS defined');
-  window.CRITERIA_MAPS = window.CRITERIA_MAPS || {};
-  window.CRITERIA_MAPS['map-zone-humide'] = {{ criterion.map.to_json|safe }};
-</script>
