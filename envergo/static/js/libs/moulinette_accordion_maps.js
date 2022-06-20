@@ -47,9 +47,7 @@
       for (const polygonId in mapData.polygons) {
         const polygon = mapData.polygons[polygonId];
 
-        div.innerHTML += '<span><i style="background: ' + polygon.color + '"></i> ';
-        div.innerHTML += polygon.label;
-        div.innerHTML += '</span>';
+        div.innerHTML += '<span><i style="background: ' + polygon.color + '"></i> ' + polygon.label + '</span>';
       }
       return div;
     };
