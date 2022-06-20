@@ -33,8 +33,8 @@
           {{ criterion.map.caption|safe }}
           <br />Source :
           {% for source in criterion.map.sources %}
-            {% if source.url %}
-              <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
+            {% if source.source %}
+              <a href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
             {% else %}
               {{ source.display_name }}
             {% endif %}
