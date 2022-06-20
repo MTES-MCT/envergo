@@ -101,10 +101,15 @@ class CriterionMap:
         self.sources = sources
 
     def to_json(self):
+
+        # Don't display full polygons
+        EPSG_WGS84 = 4326
+        buffer = self.center.buffer(500).transform(EPSG_WGS84, clone=True)
+
         data = json.dumps({
             'center': to_geojson(self.center),
             'polygons': [{
-                'polygon': to_geojson(polygon['polygon']),
+                'polygon': to_geojson(polygon['polygon'].intersection(buffer)),
                 'color': polygon['color'],
                 'label': polygon['label'],
             } for polygon in self.polygons],
