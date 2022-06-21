@@ -348,6 +348,33 @@ class WaterLaw3220(MoulinetteCriterion):
         result = result_matrix[flood_zone_status][project_size]
         return result
 
+    @cached_property
+    def map(self):
+        zone_qs = self.catalog['flood_zones_12'].filter(map__display_for_user=True)
+        polygons = None
+
+        if zone_qs:
+            caption = "Le projet se situe dans une zone inondable."
+            geometries = zone_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
+            polygons = [{
+                'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
+                'color': 'blue',
+                'label': 'Zone inondable'
+            }]
+            maps = set([zone.map for zone in zone_qs.select_related('map')])
+
+        if polygons:
+            criterion_map = CriterionMap(
+                center=self.catalog['coords'],
+                polygons=polygons,
+                caption=caption,
+                sources=maps)
+        else:
+            criterion_map = None
+
+        return criterion_map
+
+
 
 class WaterLaw2150(MoulinetteCriterion):
     slug = "ruissellement"
