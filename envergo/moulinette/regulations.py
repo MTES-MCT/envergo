@@ -244,7 +244,7 @@ class WaterLaw3310(MoulinetteCriterion):
             geometries = inside_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
                 'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
-                'color': 'green',
+                'color': 'blue',
                 'label': 'Zone humide'
             }]
             maps = set([zone.map for zone in inside_qs.select_related('map')])
@@ -254,7 +254,7 @@ class WaterLaw3310(MoulinetteCriterion):
             geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
                 'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
-                'color': 'green',
+                'color': 'blue',
                 'label': 'Zone humide'
             }]
             maps = set([zone.map for zone in close_qs.select_related('map')])
@@ -270,11 +270,11 @@ class WaterLaw3310(MoulinetteCriterion):
             polygons = [
                 {
                     'polygon': wetlands_polygon,
-                    'color': 'green',
+                    'color': 'blue',
                     'label': 'Zone humide'
                 }, {
                     'polygon': potentials_polygon,
-                    'color': 'lightgreen',
+                    'color': 'lightblue',
                     'label': 'ZH potentielle'
                 }
             ]
@@ -287,7 +287,7 @@ class WaterLaw3310(MoulinetteCriterion):
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
                 'polygon': geometries.aggregate(polygon=Union(F('geom')))['polygon'][0],
-                'color': 'lightgreen',
+                'color': 'lightblue',
                 'label': 'Zone humide potentielle'
             }]
             maps = set([zone.map for zone in potential_qs.select_related('map')])
@@ -358,7 +358,7 @@ class WaterLaw3220(MoulinetteCriterion):
             geometries = zone_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
                 'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
-                'color': 'blue',
+                'color': 'red',
                 'label': 'Zone inondable'
             }]
             maps = set([zone.map for zone in zone_qs.select_related('map')])
