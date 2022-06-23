@@ -21,12 +21,22 @@
 
     // Damn this constant lat and lng order mixing
     const centerCoords = [center.coordinates[1], center.coordinates[0]];
-    const map = L.map(mapId, { maxZoom: 21 }).setView(centerCoords, 17);
+    const map = L.map(mapId, {
+      maxZoom: 21,
+      zoomControl: false,
+      dragging: false,
+      doubleClickZoom: false,
+      scrollWheelZoom: false,
+      touchZoom: false,
+      keyboard: false
+    }).setView(centerCoords, 17);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 22,
       maxNativeZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
     }).addTo(map);
+
 
     // Display the project's coordinates as a maker
     const marker = L.marker(centerCoords);
