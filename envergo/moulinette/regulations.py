@@ -243,7 +243,7 @@ class WaterLaw3310(MoulinetteCriterion):
             caption = "Le projet se situe dans une zone humide référencée."
             geometries = inside_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
-                'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
+                'polygon': geometries.aggregate(polygon=Union(F('geom')))['polygon'],
                 'color': 'blue',
                 'label': 'Zone humide'
             }]
@@ -253,7 +253,7 @@ class WaterLaw3310(MoulinetteCriterion):
             caption = "Le projet se situe à proximité d'une zone humide référencée."
             geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
-                'polygon': [geometries.aggregate(polygon=Union(F('geom')))['polygon']][0],
+                'polygon': geometries.aggregate(polygon=Union(F('geom')))['polygon'],
                 'color': 'blue',
                 'label': 'Zone humide'
             }]
@@ -262,10 +262,10 @@ class WaterLaw3310(MoulinetteCriterion):
         elif close_qs and potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
             geometries = close_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
-            wetlands_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon'][0]
+            wetlands_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
 
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
-            potentials_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon'][0]
+            potentials_polygon = geometries.aggregate(polygon=Union(F('geom')))['polygon']
 
             polygons = [
                 {
@@ -286,8 +286,8 @@ class WaterLaw3310(MoulinetteCriterion):
             caption = "Le projet se situe dans une zone humide potentielle."
             geometries = potential_qs.annotate(geom=Cast('geometry', MultiPolygonField()))
             polygons = [{
-                'polygon': geometries.aggregate(polygon=Union(F('geom')))['polygon'][0],
-                'color': 'lightblue',
+                'polygon': geometries.aggregate(polygon=Union(F('geom')))['polygon'],
+                'color': 'dodgerblue',
                 'label': 'Zone humide potentielle'
             }]
             maps = set([zone.map for zone in potential_qs.select_related('map')])
