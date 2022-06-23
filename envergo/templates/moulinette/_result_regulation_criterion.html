@@ -44,7 +44,6 @@
       </figure>
 
       <script>
-        console.log('CRITERIA_MAPS defined');
         window.CRITERIA_MAPS = window.CRITERIA_MAPS || {};
         window.CRITERIA_MAPS['map-{{ criterion.slug }}'] = {{ criterion.map.to_json|safe }};
       </script>
