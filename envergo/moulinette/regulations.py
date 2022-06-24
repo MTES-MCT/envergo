@@ -5,7 +5,6 @@ from django.contrib.gis.db.models import MultiPolygonField, Union
 from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
-from model_utils import Choices
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
@@ -161,7 +160,7 @@ class WaterLaw3310(MoulinetteCriterion):
     slug = "zone_humide"
     title = "Construction en zone humide"
     subtitle = "Seuil de déclaration : 1 000 m²"
-    header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"
+    header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
         catalog = {}
@@ -335,7 +334,7 @@ class WaterLaw3220(MoulinetteCriterion):
     slug = "zone_inondable"
     title = "Construction en zone inondable"
     subtitle = "Seuil de déclaration : 400 m²"
-    header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"
+    header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
         catalog = {}
@@ -411,7 +410,7 @@ class WaterLaw2150(MoulinetteCriterion):
     slug = "ruissellement"
     title = "Imperméabilisation et captation du ruissellement des eaux de pluie"
     subtitle = "Seuil réglementaire : 1 ha"
-    header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"
+    header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     @cached_property
     def result(self):

@@ -2,7 +2,6 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.sites.models import Site
-from django.db import models
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import reverse
