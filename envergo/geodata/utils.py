@@ -114,7 +114,6 @@ def process_shapefile(map, file, task=None):
         logger.info("Importing is done")
 
 
-
 def to_geojson(obj, geometry_field="geometry"):
     """Return serialized geojson.
 

@@ -36,10 +36,7 @@ def show_criterion_body(context, regulation, criterion):
         f"moulinette/{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
     )
     context_data = context.flatten()
-    context_data.update({
-        'regulation': regulation,
-        'criterion': criterion
-    })
+    context_data.update({"regulation": regulation, "criterion": criterion})
     try:
         content = render_to_string(template_name, context_data)
     except TemplateDoesNotExist:
