@@ -24,7 +24,6 @@ from envergo.evaluations.forms import (
 )
 from envergo.evaluations.models import (
     RESULTS,
-    USER_TYPES,
     Criterion,
     Evaluation,
     Request,
