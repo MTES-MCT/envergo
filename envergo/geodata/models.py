@@ -155,6 +155,9 @@ class Map(models.Model):
     """Holds a shapefile map."""
 
     name = models.CharField(_("Name"), max_length=256)
+    display_name = models.CharField(_("Display name"), max_length=256, blank=True)
+    source = models.URLField(_("Source"), blank=True)
+    display_for_user = models.BooleanField(_("Display for user?"), default=True)
     file = models.FileField(_("File"), upload_to="maps/")
     data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
     data_certainty = models.CharField(

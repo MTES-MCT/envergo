@@ -136,7 +136,7 @@
     const latLng = [coordinates[1], coordinates[0]];
 
     // When an address is selected, place a marker and zoom on it
-    moulinetteMap.setMinZoom(19);
     moulinetteMap.setMarkerPosition(latLng);
+    moulinetteMap.setMinZoom(19);
   });
 })();

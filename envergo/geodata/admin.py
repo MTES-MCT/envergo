@@ -44,6 +44,7 @@ class MapAdmin(admin.ModelAdmin):
         "name",
         "data_type",
         "data_certainty",
+        "display_for_user",
         "created_at",
         "expected_zones",
         "zone_count",

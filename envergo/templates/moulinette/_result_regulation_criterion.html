@@ -19,6 +19,36 @@
       </p>
     {% endif %}
     {% show_criterion_body regulation criterion %}
+
+    {% if criterion.map %}
+      <figure class="fr-content-media" role="group">
+        <div class="ratio-4x3">
+          <div class="ratio-content">
+            <div class="leaflet-container">
+              <div id="map-{{ criterion.slug }}"></div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fr-content-media__caption">
+          {{ criterion.map.caption|safe }}
+          <br />Source :
+          {% for source in criterion.map.sources %}
+            {% if source.source %}
+              <a href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
+            {% else %}
+              {{ source.display_name }}
+            {% endif %}
+            <br />
+          {% endfor %}
+        </figcaption>
+      </figure>
+
+      <script>
+        window.CRITERIA_MAPS = window.CRITERIA_MAPS || {};
+        window.CRITERIA_MAPS['map-{{ criterion.slug }}'] = {{ criterion.map.to_json|safe }};
+      </script>
+
+    {% endif %}
   </div>
 
   {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}

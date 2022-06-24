@@ -51,5 +51,17 @@
     </div>
   </section>
 
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script defer src="{% static 'js/libs/moulinette_accordion_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+      const accordion = document.querySelector('div.criteria');
+      new AccordionAnalytics(accordion);
+    });
+  </script>
 
 {% endblock %}
