@@ -1,14 +1,11 @@
 import json
 
 from django import template
-from django.core.serializers import serialize
-from django.db.models import QuerySet
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
-from envergo.moulinette.models import EPSG_WGS84
 
 register = template.Library()
 
