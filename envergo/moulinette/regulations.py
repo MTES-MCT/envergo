@@ -2,6 +2,7 @@ import json
 from functools import cached_property
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
+from django.contrib.gis.db.models.functions import MakeValid
 from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
@@ -385,7 +386,9 @@ class WaterLaw3220(MoulinetteCriterion):
             polygons = [
                 {
                     "polygon": [
-                        geometries.aggregate(polygon=Union(F("geom")))["polygon"]
+                        geometries.aggregate(polygon=MakeValid(Union(F("geom"))))[
+                            "polygon"
+                        ]
                     ][0],
                     "color": "red",
                     "label": "Zone inondable",
