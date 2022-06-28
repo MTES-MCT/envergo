@@ -1,8 +1,8 @@
 import json
 from functools import cached_property
+from sqlite3 import InternalError
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
-from django.contrib.gis.db.models.functions import MakeValid
 from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
@@ -153,7 +153,15 @@ class MoulinetteCriterion:
 
         return self.result
 
+    @cached_property
     def map(self):
+        try:
+            map = self._get_map()
+        except:  # noqa
+            map = None
+        return map
+
+    def _get_map(self):
         return None
 
 
@@ -240,8 +248,7 @@ class WaterLaw3310(MoulinetteCriterion):
         code = code_matrix[(wetland_status, project_size)]
         return code
 
-    @cached_property
-    def map(self):
+    def _get_map(self):
 
         inside_qs = self.catalog["wetlands_25"].filter(map__display_for_user=True)
         close_qs = self.catalog["wetlands_100"].filter(map__display_for_user=True)
@@ -375,8 +382,7 @@ class WaterLaw3220(MoulinetteCriterion):
         result = result_matrix[flood_zone_status][project_size]
         return result
 
-    @cached_property
-    def map(self):
+    def _get_map(self):
         zone_qs = self.catalog["flood_zones_12"].filter(map__display_for_user=True)
         polygons = None
 
@@ -386,9 +392,7 @@ class WaterLaw3220(MoulinetteCriterion):
             polygons = [
                 {
                     "polygon": [
-                        geometries.aggregate(polygon=MakeValid(Union(F("geom"))))[
-                            "polygon"
-                        ]
+                        geometries.aggregate(polygon=Union(F("geom")))["polygon"]
                     ][0],
                     "color": "red",
                     "label": "Zone inondable",
