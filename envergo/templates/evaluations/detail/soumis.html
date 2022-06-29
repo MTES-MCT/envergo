@@ -143,19 +143,7 @@
 
     {% include 'evaluations/_share_by_email.html' %}
 
-    <section class="fr-pt-8w">
-      <div class="fr-container">
-        <div class="fr-grid-row fr-grid-row--center">
-          <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
-
-            <h2>Pour en savoir plus…</h2>
-
-            <p>Consultez notre <a href="{% url 'faq' %}">page d'information sur la Loi sur l'eau</a>
-              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    {% include 'evaluations/_learn_more.html' %}
 
   </article>
 
