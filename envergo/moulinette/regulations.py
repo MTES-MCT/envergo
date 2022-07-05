@@ -415,7 +415,7 @@ class WaterLaw3220(MoulinetteCriterion):
 
 class WaterLaw2150(MoulinetteCriterion):
     slug = "ruissellement"
-    title = "Impact sur l'écoulement des eaux fluviales"
+    title = "Impact sur l'écoulement des eaux pluviales"
     subtitle = "Seuil de déclaration : 1 ha"
     header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
