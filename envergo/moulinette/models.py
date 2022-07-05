@@ -1,6 +1,9 @@
 from django.contrib.gis.geos import Point
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
+from envergo.moulinette.fields import CriterionChoiceField
 from envergo.moulinette.regulations import WaterLaw
 
 # WGS84, geodetic coordinates, units in degrees
@@ -11,6 +14,23 @@ EPSG_WGS84 = 4326
 # Used for displaying tiles in web map systems (OSM, GoogleMaps)
 # Good for working in meters
 EPSG_MERCATOR = 3857
+
+
+class Perimeter(models.Model):
+    """Link a map and regulation criteria."""
+
+    name = models.CharField(_("Name"), max_length=256)
+    map = models.ForeignKey(
+        "geodata.Map",
+        verbose_name=_("Map"),
+        related_name="perimeters",
+        on_delete=models.PROTECT,
+    )
+    criterion = CriterionChoiceField(_("Criterion"))
+
+    class Meta:
+        verbose_name = _("Perimeter")
+        verbose_name_plural = _("Perimeters")
 
 
 class MoulinetteCatalog(dict):

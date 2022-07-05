@@ -1,6 +1,5 @@
 import json
 from functools import cached_property
-from sqlite3 import InternalError
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
 from django.contrib.gis.measure import Distance as D
