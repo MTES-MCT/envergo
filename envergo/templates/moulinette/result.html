@@ -9,6 +9,11 @@
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 
+  <div class="fr-alert fr-alert--info fr-my-5w">
+    <p>EnvErgo est un service du ministère de la transition écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.</p>
+    <p><i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.</p>
+  </div>
+
   <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
     <h2><span class="content">Natura 2000</span> {% result_tag 'non_disponible' %}</h2>
     <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.

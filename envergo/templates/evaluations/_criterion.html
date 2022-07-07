@@ -5,8 +5,8 @@
   <h3 class="fr-accordion__title">
     <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ criterion.criterion }}">
       {% probability criterion %}
-      <span>
-        {{ criterion.get_criterion_display }}
+      <span class="title">
+        {{ criterion.get_criterion_display|safe }}
       </span>
     </button>
 

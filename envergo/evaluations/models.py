@@ -10,6 +10,7 @@ from django.db import models
 from django.http import QueryDict
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
@@ -138,9 +139,18 @@ class Evaluation(models.Model):
 
 
 CRITERIONS = Choices(
-    ("rainwater_runoff", _("Capture of more than 1 ha of rainwater runoff")),
-    ("flood_zone", _("Building of more than 400 m¹ in a flood zone")),
-    ("wetland", _("More than 1000 m² impact on wetlands")),
+    (
+        "rainwater_runoff",
+        "<strong>Impact sur l'écoulement des eaux fluviales</strong><br /> Seuil de déclaration : 1 ha",
+    ),
+    (
+        "flood_zone",
+        "<strong>Impact sur une zone inondable</strong><br /> Seuil de déclaration : 400 m²",
+    ),
+    (
+        "wetland",
+        "<strong>Impact sur une zone humide</strong><br /> Seuil de déclaration : 1 000 m²",
+    ),
 )
 
 
@@ -195,7 +205,7 @@ class Criterion(models.Model):
         unique_together = [("evaluation", "criterion")]
 
     def __str__(self):
-        return self.get_criterion_display()
+        return mark_safe(self.get_criterion_display())
 
     def save(self, *args, **kwargs):
         self.description_html = markdown_to_html(self.description_md)
