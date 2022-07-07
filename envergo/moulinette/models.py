@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
 from envergo.moulinette.fields import CriterionChoiceField
-from envergo.moulinette.regulations import WaterLaw
+from envergo.moulinette.regulations.waterlaw import WaterLaw
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -31,6 +31,9 @@ class Perimeter(models.Model):
     class Meta:
         verbose_name = _("Perimeter")
         verbose_name_plural = _("Perimeters")
+
+    def __str__(self):
+        return self.name
 
 
 class MoulinetteCatalog(dict):

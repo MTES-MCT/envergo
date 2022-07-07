@@ -18,7 +18,7 @@ class PerimeterAdminForm(forms.ModelForm):
         """
 
         value = self.initial.get(field_name, field.initial)
-        if callable(value) and not isinstance(value, MoulinetteCriterion):
+        if callable(value) and not issubclass(value, MoulinetteCriterion):
             value = value()
         return value
 
