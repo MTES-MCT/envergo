@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
 from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.regulations.natura2000 import Natura2000
 from envergo.moulinette.regulations.waterlaw import WaterLaw
 
 # WGS84, geodetic coordinates, units in degrees
@@ -53,7 +54,7 @@ class Moulinette:
     def __init__(self, data):
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
-        self.regulations = [WaterLaw(self.catalog)]
+        self.regulations = [WaterLaw(self.catalog), Natura2000(self.catalog)]
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
