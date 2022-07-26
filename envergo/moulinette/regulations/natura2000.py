@@ -32,7 +32,7 @@ class N2000100m2(MoulinetteCriterion):
         else:
             wetland_status = "outside"
 
-        if self.catalog["project_surface"] >= 100:
+        if self.catalog["created_surface"] >= 100:
             project_size = "big"
         else:
             project_size = "small"
