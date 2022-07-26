@@ -141,7 +141,7 @@ class Evaluation(models.Model):
 CRITERIONS = Choices(
     (
         "rainwater_runoff",
-        "<strong>Impact sur l'écoulement des eaux fluviales</strong><br /> Seuil de déclaration : 1 ha",
+        "<strong>Impact sur l'écoulement des eaux pluviales</strong><br /> Seuil de déclaration : 1 ha",
     ),
     (
         "flood_zone",
