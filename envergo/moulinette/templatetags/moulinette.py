@@ -40,3 +40,8 @@ def show_criterion_body(context, regulation, criterion):
         content = ""
 
     return content
+
+
+@register.simple_tag()
+def debug(stuff):
+    raise 0

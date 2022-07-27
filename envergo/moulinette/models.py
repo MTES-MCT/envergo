@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance as D
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -54,7 +55,8 @@ class Moulinette:
     def __init__(self, data):
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
-        self.regulations = [WaterLaw(self.catalog), Natura2000(self.catalog)]
+        self.criterions = self.get_criterions(self.catalog['coords'])
+        self.regulations = [WaterLaw(self.catalog, self.criterions), Natura2000(self.catalog, self.criterions)]
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
@@ -76,6 +78,16 @@ class Moulinette:
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
         return catalog
+
+    def get_criterions(self, coords):
+        """Find regulation criterions activated by a perimeter.
+
+        Regulation criterions have a geographical component and must only computed in
+        certain zones.
+        """
+        perimeters = Perimeter.objects.filter(map__zones__geometry__dwithin=(coords, D(m=0)))
+        criterions = [perimeter.criterion for perimeter in perimeters]
+        return criterions
 
     def is_evaluation_available(self):
         """Moulinette evaluations are only available on some departments.
