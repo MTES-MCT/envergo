@@ -1,7 +1,6 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
-from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
 
@@ -14,7 +13,6 @@ class N2000100m2(MoulinetteCriterion):
     title = "Impact sur zone humide Natura 2000"
     subtitle = "Seuil de déclaration : 100m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
-
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
