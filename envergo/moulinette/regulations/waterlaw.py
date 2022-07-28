@@ -14,39 +14,6 @@ from envergo.moulinette.regulations import (
 )
 
 
-def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
-    """Helper method to fetch Zones around a given point."""
-
-    qs = (
-        Zone.objects.filter(map__data_type=zone_type)
-        .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_certainty=data_certainty)
-    )
-    return qs
-
-
-# Those dummy methods are useful for unit testing
-def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zone_humide")
-
-
-def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zone_humide")
-
-
-def fetch_potential_wetlands(coords):
-    qs = (
-        Zone.objects.filter(map__data_type="zone_humide")
-        .filter(map__data_certainty="uncertain")
-        .filter(geometry__dwithin=(coords, D(m=0)))
-    )
-    return qs
-
-
-def fetch_flood_zones_around_12m(coords):
-    return fetch_zones_around(coords, 12, "zone_inondable")
-
-
 class WaterLaw3310(MoulinetteCriterion):
     slug = "zone_humide"
     title = "Impact sur une zone humide"
@@ -54,15 +21,12 @@ class WaterLaw3310(MoulinetteCriterion):
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["wetlands_25"] = fetch_wetlands_around_25m(self.catalog["coords"])
-        catalog["wetlands_within_25m"] = bool(catalog["wetlands_25"])
-        catalog["wetlands_100"] = fetch_wetlands_around_100m(self.catalog["coords"])
-        catalog["wetlands_within_100m"] = bool(catalog["wetlands_100"])
-        catalog["potential_wetlands"] = fetch_potential_wetlands(self.catalog["coords"])
-        catalog["within_potential_wetlands"] = bool(catalog["potential_wetlands"])
+        data = {}
+        data["wetlands_within_25m"] = bool(self.catalog["wetlands_25"])
+        data["wetlands_within_100m"] = bool(self.catalog["wetlands_100"])
+        data["within_potential_wetlands"] = bool(self.catalog["potential_wetlands"])
 
-        return catalog
+        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -227,10 +191,9 @@ class WaterLaw3220(MoulinetteCriterion):
     header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["flood_zones_12"] = fetch_flood_zones_around_12m(self.catalog["coords"])
-        catalog["flood_zones_within_12m"] = bool(catalog["flood_zones_12"])
-        return catalog
+        data = {}
+        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        return data
 
     @cached_property
     def result(self):

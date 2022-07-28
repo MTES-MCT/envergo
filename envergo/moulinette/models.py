@@ -3,7 +3,7 @@ from django.contrib.gis.measure import Distance as D
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Department
+from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
 from envergo.moulinette.regulations.natura2000 import Natura2000
 from envergo.moulinette.regulations.waterlaw import WaterLaw
@@ -16,6 +16,39 @@ EPSG_WGS84 = 4326
 # Used for displaying tiles in web map systems (OSM, GoogleMaps)
 # Good for working in meters
 EPSG_MERCATOR = 3857
+
+
+def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
+    """Helper method to fetch Zones around a given point."""
+
+    qs = (
+        Zone.objects.filter(map__data_type=zone_type)
+        .filter(geometry__dwithin=(coords, D(m=radius)))
+        .filter(map__data_certainty=data_certainty)
+    )
+    return qs
+
+
+# Those dummy methods are useful for unit testing
+def fetch_wetlands_around_25m(coords):
+    return fetch_zones_around(coords, 25, "zone_humide")
+
+
+def fetch_wetlands_around_100m(coords):
+    return fetch_zones_around(coords, 100, "zone_humide")
+
+
+def fetch_potential_wetlands(coords):
+    qs = (
+        Zone.objects.filter(map__data_type="zone_humide")
+        .filter(map__data_certainty="uncertain")
+        .filter(geometry__dwithin=(coords, D(m=0)))
+    )
+    return qs
+
+
+def fetch_flood_zones_around_12m(coords):
+    return fetch_zones_around(coords, 12, "zone_inondable")
 
 
 class Perimeter(models.Model):
@@ -39,9 +72,38 @@ class Perimeter(models.Model):
 
 
 class MoulinetteCatalog(dict):
-    """Custom class responsible for fetching data used in regulation evaluations."""
+    """Custom class responsible for fetching data used in regulation evaluations.
 
-    pass
+    The catalog is passed to Regulation and Criterion objects, and those objects
+    can contribute data to the dictionary.
+
+    But some data is used in several criterions, so it must be fetched beforehand.
+    """
+
+    def __missing__(self, key):
+        """If the data is not in the dict, use a method to fetch it."""
+
+        if not hasattr(self, key):
+            raise KeyError()
+
+        method = getattr(self, key)
+        value = method()
+        self[key] = value
+        return value
+
+
+    def wetlands_25(self):
+        return fetch_wetlands_around_25m(self["coords"])
+
+    def wetlands_100(self):
+        return fetch_wetlands_around_100m(self["coords"])
+
+    def potential_wetlands(self):
+        return fetch_potential_wetlands(self["coords"])
+
+    def flood_zones_12(self):
+        return fetch_flood_zones_around_12m(self["coords"])
+
 
 
 class Moulinette:

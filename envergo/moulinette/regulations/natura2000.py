@@ -14,6 +14,13 @@ class N2000100m2(MoulinetteCriterion):
     subtitle = "Seuil de déclaration : 100m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
+    def get_catalog_data(self):
+        data = {}
+        data["wetlands_within_25m"] = bool(self.catalog["wetlands_25"])
+        data["wetlands_within_100m"] = bool(self.catalog["wetlands_100"])
+        data["within_potential_wetlands"] = bool(self.catalog["potential_wetlands"])
+        return data
+
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
 
