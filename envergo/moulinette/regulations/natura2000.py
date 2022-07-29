@@ -80,97 +80,49 @@ class N2000100m2(MoulinetteCriterion):
         result = result_matrix[code]
         return result
 
-    def _get_map(self):
 
-        inside_qs = self.catalog["wetlands_25"].filter(map__display_for_user=True)
-        close_qs = self.catalog["wetlands_100"].filter(map__display_for_user=True)
-        potential_qs = self.catalog["potential_wetlands"].filter(
-            map__display_for_user=True
-        )
-        polygons = None
+class N2000ZI200m2(MoulinetteCriterion):
+    slug = "n2000_zi_200m2"
+    title = "Impact sur zone inondable Natura 2000"
+    subtitle = "Seuil de déclaration : 200m²"
+    header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
-        if inside_qs:
-            caption = "Le projet se situe dans une zone humide référencée."
-            geometries = inside_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
-            polygons = [
-                {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
-                    "color": "blue",
-                    "label": "Zone humide",
-                }
-            ]
-            maps = set([zone.map for zone in inside_qs.select_related("map")])
+    def get_catalog_data(self):
+        data = {}
+        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        return data
 
-        elif close_qs and not potential_qs:
-            caption = "Le projet se situe à proximité d'une zone humide référencée."
-            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
-            polygons = [
-                {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
-                    "color": "blue",
-                    "label": "Zone humide",
-                }
-            ]
-            maps = set([zone.map for zone in close_qs.select_related("map")])
+    @cached_property
+    def result(self):
+        """Run the check for the 3.1.2.0 rule."""
 
-        elif close_qs and potential_qs:
-            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
-            wetlands_polygon = geometries.aggregate(polygon=Union(F("geom")))["polygon"]
-
-            geometries = potential_qs.annotate(
-                geom=Cast("geometry", MultiPolygonField())
-            )
-            potentials_polygon = geometries.aggregate(polygon=Union(F("geom")))[
-                "polygon"
-            ]
-
-            polygons = [
-                {"polygon": wetlands_polygon, "color": "blue", "label": "Zone humide"},
-                {
-                    "polygon": potentials_polygon,
-                    "color": "lightblue",
-                    "label": "ZH potentielle",
-                },
-            ]
-            wetlands_maps = [zone.map for zone in close_qs.select_related("map")]
-            potential_maps = [zone.map for zone in potential_qs.select_related("map")]
-            maps = set(wetlands_maps + potential_maps)
-
-        elif potential_qs:
-            caption = "Le projet se situe dans une zone humide potentielle."
-            geometries = potential_qs.annotate(
-                geom=Cast("geometry", MultiPolygonField())
-            )
-            polygons = [
-                {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
-                    "color": "dodgerblue",
-                    "label": "Zone humide potentielle",
-                }
-            ]
-            maps = set([zone.map for zone in potential_qs.select_related("map")])
-
-        if polygons:
-            criterion_map = CriterionMap(
-                center=self.catalog["coords"],
-                polygons=polygons,
-                caption=caption,
-                sources=maps,
-            )
+        if self.catalog["flood_zones_within_12m"]:
+            flood_zone_status = "inside"
         else:
-            criterion_map = None
+            flood_zone_status = "outside"
 
-        return criterion_map
+        if self.catalog["project_surface"] >= 200:
+            project_size = "big"
+        else:
+            project_size = "small"
+
+        result_matrix = {
+            "inside": {
+                "big": RESULTS.soumis,
+                "small": RESULTS.non_soumis,
+            },
+            "outside": {
+                "big": RESULTS.non_applicable,
+                "small": RESULTS.non_soumis,
+            },
+        }
+
+        result = result_matrix[flood_zone_status][project_size]
+        return result
+
 
 
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [N2000100m2]
+    criterion_classes = [N2000100m2, N2000ZI200m2]
