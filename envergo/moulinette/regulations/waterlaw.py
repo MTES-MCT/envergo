@@ -1,6 +1,4 @@
-import json
 from functools import cached_property
-from sqlite3 import InternalError
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
 from django.contrib.gis.measure import Distance as D
@@ -9,160 +7,11 @@ from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Zone
-from envergo.geodata.utils import to_geojson
-
-
-def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
-    """Helper method to fetch Zones around a given point."""
-
-    qs = (
-        Zone.objects.filter(map__data_type=zone_type)
-        .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_certainty=data_certainty)
-    )
-    return qs
-
-
-# Those dummy methods are useful for unit testing
-def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zone_humide")
-
-
-def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zone_humide")
-
-
-def fetch_potential_wetlands(coords):
-    qs = (
-        Zone.objects.filter(map__data_type="zone_humide")
-        .filter(map__data_certainty="uncertain")
-        .filter(geometry__dwithin=(coords, D(m=0)))
-    )
-    return qs
-
-
-def fetch_flood_zones_around_12m(coords):
-    return fetch_zones_around(coords, 12, "zone_inondable")
-
-
-class MoulinetteRegulation:
-    """Run the moulinette for a single regulation (e.g Loi sur l'eau)."""
-
-    criterion_classes = []
-
-    def __init__(self, data_catalog):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
-        self.criterions = [
-            Criterion(self.catalog) for Criterion in self.criterion_classes
-        ]
-
-    def get_catalog_data(self):
-        return {}
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        else:
-            result = RESULTS.non_soumis
-
-        return result
-
-    def __getattr__(self, attr):
-        """Returs the corresponding criterion.
-
-        Allows to do something like this:
-        moulinette.loi_sur_leau.zones_inondables to fetch the correct criterion.
-        """
-        return self.get_criterion(attr)
-
-    def get_criterion(self, criterion_slug):
-        """Return the regulation with the given slug."""
-
-        def select_criterion(criterion):
-            return criterion.slug == criterion_slug
-
-        criterion = next(filter(select_criterion, self.criterions), None)
-        return criterion
-
-
-class CriterionMap:
-    """Data for a map that will be displayed with Leaflet."""
-
-    def __init__(self, center, polygons, caption, sources):
-        self.center = center
-        self.polygons = polygons
-        self.caption = caption
-        self.sources = sources
-
-    def to_json(self):
-
-        # Don't display full polygons
-        EPSG_WGS84 = 4326
-        buffer = self.center.buffer(500).transform(EPSG_WGS84, clone=True)
-
-        data = json.dumps(
-            {
-                "center": to_geojson(self.center),
-                "polygons": [
-                    {
-                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)),
-                        "color": polygon["color"],
-                        "label": polygon["label"],
-                    }
-                    for polygon in self.polygons
-                ],
-                "caption": self.caption,
-                "sources": [
-                    {"name": map.name, "url": map.source} for map in self.sources
-                ],
-            }
-        )
-        return data
-
-
-class MoulinetteCriterion:
-    """Run a single moulinette check."""
-
-    def __init__(self, data_catalog):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
-
-    def get_catalog_data(self):
-        return {}
-
-    @cached_property
-    def result(self):
-        raise NotImplementedError("Implement the `result` method in the subclass.")
-
-    @property
-    def result_code(self):
-        """Return a unique code for the criterion result.
-
-        Sometimes, a same criterion can have the same result for different reasons.
-        Because of this, we want unique codes to display custom messages to
-        the user.
-        """
-
-        return self.result
-
-    @cached_property
-    def map(self):
-        try:
-            map = self._get_map()
-        except:  # noqa
-            map = None
-        return map
-
-    def _get_map(self):
-        return None
+from envergo.moulinette.regulations import (
+    CriterionMap,
+    MoulinetteCriterion,
+    MoulinetteRegulation,
+)
 
 
 class WaterLaw3310(MoulinetteCriterion):
@@ -172,15 +21,12 @@ class WaterLaw3310(MoulinetteCriterion):
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["wetlands_25"] = fetch_wetlands_around_25m(self.catalog["coords"])
-        catalog["wetlands_within_25m"] = bool(catalog["wetlands_25"])
-        catalog["wetlands_100"] = fetch_wetlands_around_100m(self.catalog["coords"])
-        catalog["wetlands_within_100m"] = bool(catalog["wetlands_100"])
-        catalog["potential_wetlands"] = fetch_potential_wetlands(self.catalog["coords"])
-        catalog["within_potential_wetlands"] = bool(catalog["potential_wetlands"])
+        data = {}
+        data["wetlands_within_25m"] = bool(self.catalog["wetlands_25"])
+        data["wetlands_within_100m"] = bool(self.catalog["wetlands_100"])
+        data["within_potential_wetlands"] = bool(self.catalog["potential_wetlands"])
 
-        return catalog
+        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -345,10 +191,9 @@ class WaterLaw3220(MoulinetteCriterion):
     header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["flood_zones_12"] = fetch_flood_zones_around_12m(self.catalog["coords"])
-        catalog["flood_zones_within_12m"] = bool(catalog["flood_zones_12"])
-        return catalog
+        data = {}
+        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        return data
 
     @cached_property
     def result(self):

@@ -8,9 +8,18 @@
     <h1>Paramètres de la moulinette</h1>
 
     <h2>Données initiales</h2>
+
     <ul>
       <li>Surface existante: {{ existing_surface }} m²</li>
       <li>Surface créée: {{ created_surface }} m²</li>
+    </ul>
+
+    <h2>Critères pris en compte</h2>
+
+    <ul>
+      {% for criterion in moulinette.criterions %}
+        <li>{{ criterion.title }} ({{ criterion.slug }})</li>
+      {% endfor %}
     </ul>
 
     <h2>Résultat</h2>
@@ -73,17 +82,23 @@
       var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
       coordsGeoJSON.addTo(map);
 
-      var wetlands = JSON.parse('{% to_geojson wetlands_100 %}');
-      var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
-      wetlandsGeoJSON.addTo(map);
+      {% if wetlands_100 %}
+        var wetlands = JSON.parse('{% to_geojson wetlands_100 %}');
+        var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
+        wetlandsGeoJSON.addTo(map);
+      {% endif %}
 
-      var potentialWetlands = JSON.parse('{% to_geojson potential_wetlands %}');
-      var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: potentialWetlandsStyles});
-      potentialWetlandsGeoJSON.addTo(map);
+      {% if potential_wetlands %}
+        var potentialWetlands = JSON.parse('{% to_geojson potential_wetlands %}');
+        var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: potentialWetlandsStyles});
+        potentialWetlandsGeoJSON.addTo(map);
+      {% endif %}
 
-      var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
-      var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
-      floodZonesGeoJSON.addTo(map);
+      {% if flood_zones_12 %}
+        var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
+        var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
+        floodZonesGeoJSON.addTo(map);
+      {% endif %}
 
       var circle12 = JSON.parse('{% to_geojson circle_12 %}');
       var circle12GeoJSON = L.geoJSON(circle12, {style: circle12Styles});
