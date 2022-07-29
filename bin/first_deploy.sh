@@ -8,7 +8,6 @@ dbclient-fetcher psql 13
 
 # Let's seed the database
 DB_NAME=$(echo $DATABASE_URL | cut -d"/" -f 4 | cut -d"?" -f 1)
-exit
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
 PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table-data geodata_zone "
 pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
