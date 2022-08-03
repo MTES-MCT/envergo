@@ -10,15 +10,22 @@ class MoulinetteRegulation:
 
     criterion_classes = []
 
-    def __init__(self, data_catalog, criterions):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
+    def __init__(self, moulinette):
+        self.moulinette = moulinette
+        self.moulinette.catalog.update(self.get_catalog_data())
         self.criterions = [
-            Criterion(self.catalog) for Criterion in self.criterion_classes if Criterion in criterions
+            Criterion(moulinette) for Criterion in self.criterion_classes if Criterion in moulinette.criterions
         ]
 
     def get_catalog_data(self):
+        """Get data to inject to the global catalog."""
+
         return {}
+
+    @property
+    def catalog(self):
+        """Is is a simple shortcut for readability purpose."""
+        return self.moulinette.catalog
 
     @cached_property
     def result(self):
@@ -95,12 +102,19 @@ class MoulinetteCriterion:
     # to display the raw type for debug purpose
     do_not_call_in_templates = True
 
-    def __init__(self, data_catalog):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
+    def __init__(self, moulinette):
+        self.moulinette = moulinette
+        self.moulinette.catalog.update(self.get_catalog_data())
 
     def get_catalog_data(self):
+        """Get data to inject to the global catalog."""
+
         return {}
+
+    @property
+    def catalog(self):
+        """Is is a simple shortcut for readability purpose."""
+        return self.moulinette.catalog
 
     @cached_property
     def result(self):

@@ -121,8 +121,19 @@ class N2000ZI200m2(MoulinetteCriterion):
         return result
 
 
+class N2000IOTA(MoulinetteCriterion):
+    slug = "n2000_iota"
+    title = "Projet soumis à la Loi sur l'eau"
+    subtitle = "Je suis un sous-titre"
+    header = "Bla bla bla"
+
+    @cached_property
+    def result(self):
+        return self.moulinette.loi_sur_leau.result
+
+
 
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [N2000100m2, N2000ZI200m2]
+    criterion_classes = [N2000100m2, N2000ZI200m2, N2000IOTA]

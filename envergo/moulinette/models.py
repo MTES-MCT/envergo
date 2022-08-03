@@ -118,7 +118,15 @@ class Moulinette:
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
         self.criterions = self.get_criterions(self.catalog['coords'])
-        self.regulations = [WaterLaw(self.catalog, self.criterions), Natura2000(self.catalog, self.criterions)]
+
+        # This is a clear case of circular references, since the Moulinette
+        # holds references to the regulations its computing, but regulations and
+        # criterions holds a reference to the Moulinette.
+        # That is because the Reality™ is messy and sometimes criterions require
+        # access to other pieces of data from the moulinette.
+        # For example, to compute the "Natura2000" result, there is a criterion
+        # that is just the result of the "Loi sur l'eau" regulation.
+        self.regulations = [WaterLaw(self), Natura2000(self)]
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
@@ -164,7 +172,7 @@ class Moulinette:
         """Returs the corresponding regulation.
 
         Allows to do something like this:
-        moulinette.water_law to fetch the correct regulation.
+        moulinette.loi_sur_leau to fetch the correct regulation.
         """
         return self.get_regulation(attr)
 
