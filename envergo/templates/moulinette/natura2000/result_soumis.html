@@ -1,9 +1,43 @@
+<p>Le projet est soumis à Natura 2000</p>
+
 <h3>Marche à suivre</h3>
 
-<ul>
-  <li>Évaluation des incidences Natura 2000 à déposer à la DDTM, en même temps que le dossier Loi sur l'eau.</li>
-  <li>Délai d'instruction : 2 mois.</li>
-</ul>
+
+{% if moulinette.loi_sur_leau.result == 'soumis' %}
+
+  <ul>
+    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), en même temps que le dossier Loi sur l'eau.</li>
+    <li>Délai d'instruction : 2 mois.</li>
+  </ul>
+
+{% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+
+  <p>Une évaluation des incidences Natura 2000 à déposer à l'administration.</p>
+
+  <p>Si le projet est soumis à la Loi sur l'eau :</p>
+
+  <ul>
+    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), en même temps que le dossier Loi sur l'eau.</li>
+    <li>Délai d'instruction : 2 mois.</li>
+  </ul>
+
+  <p>Si le projet n'est pas soumis à la Loi sur l'eau :</p>
+
+  <ul>
+    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande d'autorisation d'urbanisme (PC ou PA).</li>
+    <li>Délai d'instruction : 3 mois.</li>
+  </ul>
+
+{% else %}
+
+  <ul>
+    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande d'autorisation d'urbanisme (PC ou PA).</li>
+    <li>Délai d'instruction : 3 mois.</li>
+  </ul>
+
+{% endif %}
+
+
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
@@ -15,19 +49,85 @@
 
   <p>Il est chargé de réaliser les études qui conviennent et de rédiger l'évaluation d'incidence Natura 2000.</p>
 
-  <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 avec le dossier Loi sur l'eau auprès du service de la DDTM en charge de l'instruction</strong></p>
+  {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <div class="fr-highlight fr-mb-3w">
-    {{ department.contact_html|safe }}
-  </div>
+    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 avec le dossier Loi sur l'eau auprès du service de la DDT(M) en charge de l'instruction.</strong></p>
+
+    <div class="fr-highlight fr-mb-3w">
+      {{ department.contact_html|safe }}
+    </div>
+
+  {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+
+    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 :</strong></p>
+
+    <p>Si le projet est par ailleurs soumis à la Loi sur l'eau, l'évaluation
+      d'incidence Natura 2000 est à déposer avec le dossier Loi sur l'eau auprès
+      du service de la DDT(M) en charge de l'instruction de ce dernier.</p>
+
+    <div class="fr-highlight fr-mb-3w">
+      {{ department.contact_html|safe }}
+    </div>
+
+    <p>Si le projet n'est par ailleurs pas soumis à la Loi sur l'eau, l'évaluation
+      d'incidence Natura 2000 est à déposer avec l'autorisation d'urbanisme (PC ou PA)
+      en mairie.</p>
+
+  {% else %}
+
+    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 avec l'autorisation
+      d'urbanisme (PC ou PA) en mairie.</strong></p>
+
+  {% endif %}
 
   <h4>Comment l'instruction de l'évaluation d'incidence Natura 2000 se déroule-t-elle ?</h4>
 
-  <p>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant l'instruction du dossier Loi sur l'eau, avec la même procédure et les même délais.</p>
+  {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
+    <p><strong>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant
+      l'instruction du dossier Loi sur l'eau, avec la même procédure et les même délais.</strong></p>
 
-  <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction</a>.</p>
+    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2
+      mois, extensible en cas de demande de compléments.</p>
+
+    <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction</a>.</p>
+
+  {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+
+    <p><strong>Dans le cas ou votre projet est soumis à la Loi sur l'eau,
+      l'évaluation d'incidence Natura 2000 sera considérée comme une pièce
+      obligatoire du dossier Loi sur l'eau. Le dépôt et l'instruction de cette
+      étude se font donc dans le cadre du dossier Loi sur l'eau.</strong></p>
+
+    <p><strong>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant
+      l'instruction du dossier Loi sur l'eau, avec la même procédure et les même délais.</strong></p>
+
+    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2
+      mois, extensible en cas de demande de compléments.</p>
+
+    <p><strong>Dans le cas ou votre projet n'est pas soumis à la Loi sur l'eau,
+      l'évaluation d'incidence Natura 2000 sera considérée comme une pièce
+      obligatoire de l'autorisation d'urbanisme (PC ou PA). Le dépôt et
+      l'instruction de cette étude se font donc dans le cadre de la demande
+      de PC ou de PA.</strong></p>
+
+    <p>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant l'instruction de la demande de PC ou de PA, avec la même procédure et les même délais.</p>
+
+    <p>Le délai d'instruction d'une autorisation d'urbanisme (PC non maison individuelle ou PA) est de 3 mois, extensible en cas de demande de compléments.</p>
+
+  {% else %}
+
+    <p><strong>L'évaluation d'incidence Natura 2000 sera considérée comme une pièce
+      obligatoire de l'autorisation d'urbanisme (PC ou PA). Le dépôt et
+      l'instruction de cette étude se font donc dans le cadre de la demande
+      de PC ou de PA.</strong></p>
+
+    <p>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant l'instruction de la demande de PC ou de PA, avec la même procédure et les même délais.</p>
+
+    <p>Le délai d'instruction d'une autorisation d'urbanisme (PC non maison individuelle ou PA) est de 3 mois, extensible en cas de demande de compléments.</p>
+
+  {% endif %}
+
 
   <h4>Sanctions en cas d'omission</h4>
 
