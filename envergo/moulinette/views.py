@@ -64,7 +64,10 @@ class MoulinetteHome(FormView):
             moulinette = Moulinette(form.cleaned_data)
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
+            context['additional_forms'] = self.get_additional_forms(moulinette)
 
+        # Should we center the map on the given coordinates, or zoom out on
+        # the entire country?
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
@@ -123,12 +126,25 @@ class MoulinetteHome(FormView):
             log_event("simulateur", "soumission", request, **export)
         return res
 
+    def get_additional_forms(self, moulinette):
+        form_classes = moulinette.additional_form_classes()
+        kwargs = self.get_form_kwargs()
+        forms = [Form(**kwargs) for Form in form_classes]
+        return forms
+
     def form_valid(self, form):
 
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
         form_data.pop("address")
         get.update(form_data)
+
+        moulinette = Moulinette(form_data)
+        additional_forms = self.get_additional_forms(moulinette)
+        for form in additional_forms:
+            if form.is_valid():
+                get.update(form.cleaned_data)
+
         url_params = get.urlencode()
         url = reverse("moulinette_home")
         url_with_params = f"{url}?{url_params}"

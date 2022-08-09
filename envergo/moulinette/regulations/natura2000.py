@@ -1,8 +1,10 @@
 from functools import cached_property
 
+from django import forms
 from django.contrib.gis.db.models import MultiPolygonField, Union
 from django.db.models import F
 from django.db.models.functions import Cast
+from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
@@ -132,8 +134,31 @@ class N2000IOTA(MoulinetteCriterion):
         return self.moulinette.loi_sur_leau.result
 
 
+class LotissementForm(forms.Form):
+
+    # I sacrificed a frog to the god of bad translations for the right to use
+    # this variable name. Sorry.
+    is_lotissement = forms.ChoiceField(
+        label=_('Le projet concerne-t-il un lotissement ?'),
+        widget=forms.RadioSelect,
+        choices=(('oui', 'Oui'), ('non', 'Non')),
+        required=True)
+
+
+class N2000Lotissement(MoulinetteCriterion):
+    slug = "n2000_lotissement"
+    title = "Lotissement dans zone Natura 2000"
+    subtitle = "Je suis un sous-titre"
+    header = "Bla bla bla"
+    form_class = LotissementForm
+
+    @cached_property
+    def result(self):
+        return "soumis"
+
+
 
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [N2000100m2, N2000ZI200m2, N2000IOTA]
+    criterion_classes = [N2000100m2, N2000ZI200m2, N2000IOTA, N2000Lotissement]

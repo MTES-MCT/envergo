@@ -198,3 +198,19 @@ class Moulinette:
                 result[regulation.slug]["criterions"][criterion.slug] = criterion.result
 
         return result
+
+    def additional_form_classes(self):
+        """Return the list of forms for additional questions.
+
+        Some criterions need more data to return an answer. Here, we gather all
+        the forms to gather this data.
+        """
+
+        forms = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criterions:
+                if hasattr(criterion, 'form_class'):
+                    forms.append(criterion.form_class)
+
+        return forms
