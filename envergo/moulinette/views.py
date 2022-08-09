@@ -61,7 +61,7 @@ class MoulinetteHome(FormView):
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(form.cleaned_data)
+            moulinette = Moulinette(form.cleaned_data, form.data)
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
             context['additional_forms'] = self.get_additional_forms(moulinette)
@@ -139,7 +139,7 @@ class MoulinetteHome(FormView):
         form_data.pop("address")
         get.update(form_data)
 
-        moulinette = Moulinette(form_data)
+        moulinette = Moulinette(form_data, form.data)
         additional_forms = self.get_additional_forms(moulinette)
         for form in additional_forms:
             if form.is_valid():

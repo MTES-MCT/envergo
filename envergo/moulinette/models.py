@@ -114,7 +114,8 @@ class Moulinette:
     or other regulations.
     """
 
-    def __init__(self, data):
+    def __init__(self, data, raw_data):
+        self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
         self.criterions = self.get_criterions(self.catalog['coords'])
