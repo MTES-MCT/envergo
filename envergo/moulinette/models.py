@@ -169,6 +169,18 @@ class Moulinette:
         contact_info = getattr(department, "contact_md", None)
         return bool(contact_info)
 
+    def has_missing_data(self):
+        """Make sure all the data required to compute the result is provided."""
+
+        form_errors = []
+        for regulation in self.regulations:
+            for criterion in regulation.criterions:
+                form = criterion.get_form()
+                if form:
+                    form_errors.append(not form.is_valid())
+
+        return any(form_errors)
+
     def __getattr__(self, attr):
         """Returs the corresponding regulation.
 

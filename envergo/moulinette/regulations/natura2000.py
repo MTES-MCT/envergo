@@ -155,7 +155,7 @@ class N2000Lotissement(MoulinetteCriterion):
     @cached_property
     def result(self):
 
-        form = self.form_class(self.moulinette.raw_data)
+        form = self.get_form()
         if form.is_valid():
             is_lotissement = form.cleaned_data['is_lotissement'] == 'oui'
             return 'soumis' if is_lotissement else 'non_soumis'

@@ -141,3 +141,10 @@ class MoulinetteCriterion:
 
     def _get_map(self):
         return None
+
+    def get_form(self):
+        if hasattr(self, 'form_class'):
+            form = self.form_class(self.moulinette.raw_data)
+        else:
+            form = None
+        return form

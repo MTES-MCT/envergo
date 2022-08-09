@@ -99,6 +99,8 @@ class MoulinetteHome(FormView):
             template_name = "moulinette/result_debug.html"
         elif not moulinette.is_evaluation_available():
             template_name = "moulinette/result_non_disponible.html"
+        elif moulinette.has_missing_data():
+            template_name = "moulinette/missing_data.html"
         else:
             template_name = "moulinette/result.html"
 
