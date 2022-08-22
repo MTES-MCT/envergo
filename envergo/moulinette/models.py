@@ -91,7 +91,6 @@ class MoulinetteCatalog(dict):
         self[key] = value
         return value
 
-
     def wetlands_25(self):
         return fetch_wetlands_around_25m(self["coords"])
 
@@ -103,7 +102,6 @@ class MoulinetteCatalog(dict):
 
     def flood_zones_12(self):
         return fetch_flood_zones_around_12m(self["coords"])
-
 
 
 class Moulinette:
@@ -118,10 +116,10 @@ class Moulinette:
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
-        self.criterions = self.get_criterions(self.catalog['coords'])
+        self.criterions = self.get_criterions(self.catalog["coords"])
 
         # This is a clear case of circular references, since the Moulinette
-        # holds references to the regulations its computing, but regulations and
+        # holds references to the regulations it's computing, but regulations and
         # criterions holds a reference to the Moulinette.
         # That is because the Reality™ is messy and sometimes criterions require
         # access to other pieces of data from the moulinette.
@@ -156,7 +154,9 @@ class Moulinette:
         Regulation criterions have a geographical component and must only computed in
         certain zones.
         """
-        perimeters = Perimeter.objects.filter(map__zones__geometry__dwithin=(coords, D(m=0)))
+        perimeters = Perimeter.objects.filter(
+            map__zones__geometry__dwithin=(coords, D(m=0))
+        )
         criterions = [perimeter.criterion for perimeter in perimeters]
         return criterions
 
@@ -223,7 +223,7 @@ class Moulinette:
 
         for regulation in self.regulations:
             for criterion in regulation.criterions:
-                if hasattr(criterion, 'form_class'):
+                if hasattr(criterion, "form_class"):
                     forms.append(criterion.form_class)
 
         return forms
