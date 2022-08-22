@@ -132,7 +132,7 @@ class N2000IOTA(MoulinetteCriterion):
     header = "Bla bla bla"
 
     @cached_property
-    def result(self):
+    def result_code(self):
         return self.moulinette.loi_sur_leau.result
 
 
@@ -156,7 +156,7 @@ class N2000Lotissement(MoulinetteCriterion):
     form_class = LotissementForm
 
     @cached_property
-    def result(self):
+    def result_code(self):
 
         form = self.get_form()
         if form.is_valid():

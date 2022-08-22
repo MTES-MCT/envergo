@@ -196,7 +196,7 @@ class WaterLaw3220(MoulinetteCriterion):
         return data
 
     @cached_property
-    def result(self):
+    def result_code(self):
         """Run the check for the 3.1.2.0 rule."""
 
         if self.catalog["flood_zones_within_12m"]:
@@ -265,7 +265,7 @@ class WaterLaw2150(MoulinetteCriterion):
     header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     @cached_property
-    def result(self):
+    def result_code(self):
 
         if self.catalog["project_surface"] >= 10000:
             res = RESULTS.soumis

@@ -14,7 +14,9 @@ class MoulinetteRegulation:
         self.moulinette = moulinette
         self.moulinette.catalog.update(self.get_catalog_data())
         self.criterions = [
-            Criterion(moulinette) for Criterion in self.criterion_classes if Criterion in moulinette.criterions
+            Criterion(moulinette)
+            for Criterion in self.criterion_classes
+            if Criterion in moulinette.criterions
         ]
 
     def get_catalog_data(self):
@@ -118,7 +120,7 @@ class MoulinetteCriterion:
 
     @cached_property
     def result(self):
-        raise NotImplementedError("Implement the `result` method in the subclass.")
+        return self.result_code
 
     @property
     def result_code(self):
@@ -128,8 +130,9 @@ class MoulinetteCriterion:
         Because of this, we want unique codes to display custom messages to
         the user.
         """
-
-        return self.result
+        raise NotImplementedError(
+            f"Implement the `{type(self).__name__}.result_code` method."
+        )
 
     @cached_property
     def map(self):
@@ -143,7 +146,7 @@ class MoulinetteCriterion:
         return None
 
     def get_form(self):
-        if hasattr(self, 'form_class'):
+        if hasattr(self, "form_class"):
             form = self.form_class(self.moulinette.raw_data)
         else:
             form = None
