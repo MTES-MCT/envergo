@@ -139,10 +139,11 @@ class LotissementForm(forms.Form):
     # I sacrificed a frog to the god of bad translations for the right to use
     # this variable name. Sorry.
     is_lotissement = forms.ChoiceField(
-        label=_('Le projet concerne-t-il un lotissement ?'),
+        label=_("Le projet concerne-t-il un lotissement ?"),
         widget=forms.RadioSelect,
-        choices=(('oui', 'Oui'), ('non', 'Non')),
-        required=True)
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
 
 
 class N2000Lotissement(MoulinetteCriterion):
@@ -157,11 +158,10 @@ class N2000Lotissement(MoulinetteCriterion):
 
         form = self.get_form()
         if form.is_valid():
-            is_lotissement = form.cleaned_data['is_lotissement'] == 'oui'
-            return 'soumis' if is_lotissement else 'non_soumis'
+            is_lotissement = form.cleaned_data["is_lotissement"] == "oui"
+            return "soumis" if is_lotissement else "non_soumis"
 
         return "non_disponible"
-
 
 
 class Natura2000(MoulinetteRegulation):
