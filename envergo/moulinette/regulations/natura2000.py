@@ -83,7 +83,7 @@ class N2000100m2(MoulinetteCriterion):
 
 
 class N2000ZI200m2(MoulinetteCriterion):
-    slug = "n2000_zi_200m2"
+    slug = "n2000_zi"
     title = "Impact sur zone inondable Natura 2000"
     subtitle = "Seuil de déclaration : 200m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
@@ -94,7 +94,7 @@ class N2000ZI200m2(MoulinetteCriterion):
         return data
 
     @cached_property
-    def result(self):
+    def result_code(self):
         """Run the check for the 3.1.2.0 rule."""
 
         if self.catalog["flood_zones_within_12m"]:
@@ -114,7 +114,7 @@ class N2000ZI200m2(MoulinetteCriterion):
             },
             "outside": {
                 "big": RESULTS.non_applicable,
-                "small": RESULTS.non_soumis,
+                "small": RESULTS.non_applicable,
             },
         }
 
