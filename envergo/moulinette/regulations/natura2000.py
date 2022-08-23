@@ -1,9 +1,6 @@
 from functools import cached_property
 
 from django import forms
-from django.contrib.gis.db.models import MultiPolygonField, Union
-from django.db.models import F
-from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
