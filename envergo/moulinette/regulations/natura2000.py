@@ -7,7 +7,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
 
 
-class N2000100m2(MoulinetteCriterion):
+class N2000ZH(MoulinetteCriterion):
     slug = "n2000_zh"
     title = "Impact sur zone humide Natura 2000"
     subtitle = "Seuil de déclaration : 100m²"
@@ -82,7 +82,7 @@ class N2000100m2(MoulinetteCriterion):
         return result
 
 
-class N2000ZI200m2(MoulinetteCriterion):
+class N2000ZI(MoulinetteCriterion):
     slug = "n2000_zi"
     title = "Impact sur zone inondable Natura 2000"
     subtitle = "Seuil de déclaration : 200m²"
@@ -166,4 +166,4 @@ class N2000Lotissement(MoulinetteCriterion):
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [N2000100m2, N2000ZI200m2, N2000IOTA, N2000Lotissement]
+    criterion_classes = [N2000ZH, N2000ZI, N2000IOTA, N2000Lotissement]
