@@ -64,7 +64,7 @@ class MoulinetteHome(FormView):
             moulinette = Moulinette(form.cleaned_data, form.data)
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
-            context['additional_forms'] = self.get_additional_forms(moulinette)
+            context["additional_forms"] = self.get_additional_forms(moulinette)
 
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
