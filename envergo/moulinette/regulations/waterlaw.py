@@ -1,12 +1,10 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
-from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.models import Zone
 from envergo.moulinette.regulations import (
     CriterionMap,
     MoulinetteCriterion,
