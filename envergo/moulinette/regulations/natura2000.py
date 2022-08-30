@@ -10,7 +10,7 @@ from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegula
 class N2000ZH(MoulinetteCriterion):
     slug = "n2000_zh"
     title = "Impact sur zone humide Natura 2000"
-    subtitle = "Seuil de déclaration : 100m²"
+    subtitle = "Seuil de déclaration : 100 m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
@@ -85,7 +85,7 @@ class N2000ZH(MoulinetteCriterion):
 class N2000ZI(MoulinetteCriterion):
     slug = "n2000_zi"
     title = "Impact sur zone inondable Natura 2000"
-    subtitle = "Seuil de déclaration : 200m²"
+    subtitle = "Seuil de déclaration : 200 m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
