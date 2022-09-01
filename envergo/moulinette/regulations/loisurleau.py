@@ -63,10 +63,10 @@ class ZoneHumide(MoulinetteCriterion):
         result_matrix = {
             "soumis": RESULTS.soumis,
             "non_soumis": RESULTS.non_soumis,
-            "non_applicable": RESULTS.non_applicable,
-            "action_requise_inside": RESULTS.action_requise,
-            "action_requise_close_to": RESULTS.action_requise,
-            "action_requise_inside_potential": RESULTS.action_requise,
+            "non_concerne": RESULTS.non_concerne,
+            "action_requise": RESULTS.action_requise,
+            "action_requise_proche": RESULTS.action_requise,
+            "action_requise_dans_doute": RESULTS.action_requise,
         }
         result = result_matrix[code]
         return result
@@ -78,17 +78,17 @@ class ZoneHumide(MoulinetteCriterion):
         wetland_status, project_size = self.get_result_data()
         code_matrix = {
             ("inside", "big"): "soumis",
-            ("inside", "medium"): "action_requise_inside",
+            ("inside", "medium"): "action_requise",
             ("inside", "small"): "non_soumis",
-            ("close_to", "big"): "action_requise_close_to",
+            ("close_to", "big"): "action_requise_proche",
             ("close_to", "medium"): "non_soumis",
             ("close_to", "small"): "non_soumis",
-            ("inside_potential", "big"): "action_requise_inside_potential",
+            ("inside_potential", "big"): "action_requise_dans_doute",
             ("inside_potential", "medium"): "non_soumis",
             ("inside_potential", "small"): "non_soumis",
-            ("outside", "big"): "non_applicable",
-            ("outside", "medium"): "non_applicable",
-            ("outside", "small"): "non_soumis",
+            ("outside", "big"): "non_concerne",
+            ("outside", "medium"): "non_concerne",
+            ("outside", "small"): "non_concerne",
         }
         code = code_matrix[(wetland_status, project_size)]
         return code
@@ -218,8 +218,8 @@ class ZoneInondable(MoulinetteCriterion):
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.non_applicable,
-                "medium": RESULTS.non_applicable,
+                "big": RESULTS.non_concerne,
+                "medium": RESULTS.non_concerne,
                 "small": RESULTS.non_soumis,
             },
         }
