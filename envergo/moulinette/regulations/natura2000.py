@@ -9,6 +9,7 @@ from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegula
 
 class N2000ZH(MoulinetteCriterion):
     slug = "n2000_zh"
+    choice_label = "Natura 2000 > 44 - Zone humide"
     title = "Impact sur zone humide Natura 2000"
     subtitle = "Seuil de déclaration : 100 m²"
     header = "« Liste locale 2 » de Loire-Atlantique (item n°10 de <a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>l'arrêté préfectoral du 8 avril 2014</a>)"  # noqa
@@ -84,6 +85,7 @@ class N2000ZH(MoulinetteCriterion):
 
 class N2000ZI(MoulinetteCriterion):
     slug = "n2000_zi"
+    choice_label = "Natura 2000 > 44 - Zone inondable"
     title = "Impact sur zone inondable Natura 2000"
     subtitle = "Seuil de déclaration : 200 m²"
     header = "« Liste locale 2 » de Loire-Atlantique (item n°13 de <a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>l'arrêté préfectoral du 8 avril 2014</a>)"  # noqa
@@ -124,6 +126,7 @@ class N2000ZI(MoulinetteCriterion):
 
 class N2000IOTA(MoulinetteCriterion):
     slug = "n2000_iota"
+    choice_label = "Natura 2000 > IOTA"
     title = "Projet soumis à la Loi sur l'eau"
     header = "« Liste nationale » Natura 2000 (item n°4 de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"
 
@@ -146,6 +149,7 @@ class LotissementForm(forms.Form):
 
 class N2000Lotissement(MoulinetteCriterion):
     slug = "n2000_lotissement"
+    choice_label = "Natura 2000 > 44 - Lotissement"
     title = "Lotissement dans zone Natura 2000"
     header = "« Liste locale 1 » de Loire-Atlantique (au 1° de l'article 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"
     form_class = LotissementForm

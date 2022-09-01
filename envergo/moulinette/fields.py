@@ -32,7 +32,7 @@ class CriterionChoiceField(models.Field):
         """Return the list of all available criteria."""
 
         criteria = [
-            (classpath(s), f"{s.__name__} ({s.slug})")
+            (classpath(s), f"{s.choice_label}")
             for s in MoulinetteCriterion.__subclasses__()
         ]
         return criteria
