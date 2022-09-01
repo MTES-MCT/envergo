@@ -8,7 +8,7 @@ from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegula
 
 
 class ZoneHumide44(MoulinetteCriterion):
-    slug = "n2000_zh"
+    slug = "zone_humide_44"
     choice_label = "Natura 2000 > 44 - Zone humide"
     title = "Impact sur zone humide Natura 2000"
     subtitle = "Seuil de déclaration : 100 m²"
@@ -84,7 +84,7 @@ class ZoneHumide44(MoulinetteCriterion):
 
 
 class ZoneInondable44(MoulinetteCriterion):
-    slug = "n2000_zi"
+    slug = "zone_inondable_44"
     choice_label = "Natura 2000 > 44 - Zone inondable"
     title = "Impact sur zone inondable Natura 2000"
     subtitle = "Seuil de déclaration : 200 m²"
@@ -125,7 +125,7 @@ class ZoneInondable44(MoulinetteCriterion):
 
 
 class IOTA(MoulinetteCriterion):
-    slug = "n2000_iota"
+    slug = "iota"
     choice_label = "Natura 2000 > IOTA"
     title = "Projet soumis à la Loi sur l'eau"
     header = "« Liste nationale » Natura 2000 (item n°4 de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"
@@ -148,7 +148,7 @@ class LotissementForm(forms.Form):
 
 
 class Lotissement44(MoulinetteCriterion):
-    slug = "n2000_lotissement"
+    slug = "lotissement_44"
     choice_label = "Natura 2000 > 44 - Lotissement"
     title = "Lotissement dans zone Natura 2000"
     header = "« Liste locale 1 » de Loire-Atlantique (au 1° de l'article 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"
