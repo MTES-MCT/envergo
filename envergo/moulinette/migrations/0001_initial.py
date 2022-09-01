@@ -34,16 +34,16 @@ class Migration(migrations.Migration):
                     envergo.moulinette.fields.CriterionChoiceField(
                         choices=[
                             (
-                                envergo.moulinette.regulations.waterlaw.WaterLaw3310,
-                                "WaterLaw3310",
+                                envergo.moulinette.regulations.loisurleau.ZoneHumide,
+                                "ZoneHumide",
                             ),
                             (
-                                envergo.moulinette.regulations.waterlaw.WaterLaw3220,
-                                "WaterLaw3220",
+                                envergo.moulinette.regulations.loisurleau.ZoneInondable,
+                                "ZoneInondable",
                             ),
                             (
-                                envergo.moulinette.regulations.waterlaw.WaterLaw2150,
-                                "WaterLaw2150",
+                                envergo.moulinette.regulations.loisurleau.Ruissellement,
+                                "Ruissellement",
                             ),
                         ],
                         max_length=250,

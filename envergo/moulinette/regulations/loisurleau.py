@@ -12,7 +12,7 @@ from envergo.moulinette.regulations import (
 )
 
 
-class WaterLaw3310(MoulinetteCriterion):
+class ZoneHumide(MoulinetteCriterion):
     slug = "zone_humide"
     choice_label = "Loi sur l'eau > Zone humide"
     title = "Impact sur une zone humide"
@@ -183,7 +183,7 @@ class WaterLaw3310(MoulinetteCriterion):
         return criterion_map
 
 
-class WaterLaw3220(MoulinetteCriterion):
+class ZoneInondable(MoulinetteCriterion):
     slug = "zone_inondable"
     choice_label = "Loi sur l'eau > Zone inondable"
     title = "Impact sur une zone inondable"
@@ -258,7 +258,7 @@ class WaterLaw3220(MoulinetteCriterion):
         return criterion_map
 
 
-class WaterLaw2150(MoulinetteCriterion):
+class Ruissellement(MoulinetteCriterion):
     slug = "ruissellement"
     choice_label = "Loi sur l'eau > Ruissellement"
     title = "Impact sur l'écoulement des eaux pluviales"
@@ -278,7 +278,7 @@ class WaterLaw2150(MoulinetteCriterion):
         return res
 
 
-class WaterLaw(MoulinetteRegulation):
+class LoiSurLEau(MoulinetteRegulation):
     slug = "loi_sur_leau"
     title = "Loi sur l'eau"
-    criterion_classes = [WaterLaw3310, WaterLaw3220, WaterLaw2150]
+    criterion_classes = [ZoneHumide, ZoneInondable, Ruissellement]

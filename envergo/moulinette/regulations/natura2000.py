@@ -7,7 +7,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
 
 
-class N2000ZH(MoulinetteCriterion):
+class ZoneHumide44(MoulinetteCriterion):
     slug = "n2000_zh"
     choice_label = "Natura 2000 > 44 - Zone humide"
     title = "Impact sur zone humide Natura 2000"
@@ -83,7 +83,7 @@ class N2000ZH(MoulinetteCriterion):
         return result
 
 
-class N2000ZI(MoulinetteCriterion):
+class ZoneInondable44(MoulinetteCriterion):
     slug = "n2000_zi"
     choice_label = "Natura 2000 > 44 - Zone inondable"
     title = "Impact sur zone inondable Natura 2000"
@@ -124,7 +124,7 @@ class N2000ZI(MoulinetteCriterion):
         return result
 
 
-class N2000IOTA(MoulinetteCriterion):
+class IOTA(MoulinetteCriterion):
     slug = "n2000_iota"
     choice_label = "Natura 2000 > IOTA"
     title = "Projet soumis à la Loi sur l'eau"
@@ -147,7 +147,7 @@ class LotissementForm(forms.Form):
     )
 
 
-class N2000Lotissement(MoulinetteCriterion):
+class Lotissement44(MoulinetteCriterion):
     slug = "n2000_lotissement"
     choice_label = "Natura 2000 > 44 - Lotissement"
     title = "Lotissement dans zone Natura 2000"
@@ -168,4 +168,4 @@ class N2000Lotissement(MoulinetteCriterion):
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [N2000ZH, N2000ZI, N2000IOTA, N2000Lotissement]
+    criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]

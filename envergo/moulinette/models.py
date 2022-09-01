@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
-from envergo.moulinette.regulations.waterlaw import WaterLaw
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -125,7 +125,7 @@ class Moulinette:
         # access to other pieces of data from the moulinette.
         # For example, to compute the "Natura2000" result, there is a criterion
         # that is just the result of the "Loi sur l'eau" regulation.
-        self.regulations = [WaterLaw(self), Natura2000(self)]
+        self.regulations = [LoiSurLEau(self), Natura2000(self)]
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
