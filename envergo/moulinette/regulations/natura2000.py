@@ -50,14 +50,14 @@ class ZoneHumide44(MoulinetteCriterion):
 
         wetland_status, project_size = self.get_result_data()
         code_matrix = {
-            ("inside", "big"): "inside_big",
-            ("inside", "small"): "inside_small",
-            ("close_to", "big"): "close_to_big",
-            ("close_to", "small"): "close_to_small",
-            ("inside_potential", "big"): "inside_potential_big",
-            ("inside_potential", "small"): "inside_potential_small",
-            ("outside", "big"): "outside",
-            ("outside", "small"): "outside",
+            ("inside", "big"): "soumis",
+            ("inside", "small"): "non_soumis",
+            ("close_to", "big"): "action_requise_proche",
+            ("close_to", "small"): "non_soumis_proche",
+            ("inside_potential", "big"): "action_requise_dans_doute",
+            ("inside_potential", "small"): "non_soumis_dans_doute",
+            ("outside", "big"): "non_concerne",
+            ("outside", "small"): "non_concerne",
         }
         code = code_matrix[(wetland_status, project_size)]
         return code
@@ -71,13 +71,13 @@ class ZoneHumide44(MoulinetteCriterion):
 
         code = self.result_code
         result_matrix = {
-            "inside_big": RESULTS.soumis,
-            "inside_small": RESULTS.non_soumis,
-            "close_to_big": RESULTS.action_requise,
-            "close_to_small": RESULTS.non_soumis,
-            "inside_potential_big": RESULTS.action_requise,
-            "inside_potential_small": RESULTS.non_soumis,
-            "outside": RESULTS.non_soumis,
+            "soumis": RESULTS.soumis,
+            "non_soumis": RESULTS.non_soumis,
+            "action_requise_proche": RESULTS.action_requise,
+            "non_soumis_proche": RESULTS.non_soumis,
+            "action_requise_dans_doute": RESULTS.action_requise,
+            "non_soumis_dans_doute": RESULTS.non_soumis,
+            "non_concerne": RESULTS.non_concerne,
         }
         result = result_matrix[code]
         return result
