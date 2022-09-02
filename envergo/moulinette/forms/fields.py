@@ -1,7 +1,6 @@
 import logging
 
 from django import forms
-from django.utils.encoding import force_str
 
 logger = logging.getLogger(__name__)
 
