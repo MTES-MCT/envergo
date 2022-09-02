@@ -2,17 +2,7 @@
 
 <div id="form-group-{{ field.name }}" class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
-  <label class="fr-label" for="{{ field.id_for_label }}">
-    <span class="label-content">
-      {{ field.label }}
-      {% if not field.field.required %}
-        <i class="fr-text--light">– facultatif</i>
-      {% endif %}
-    </span>
-    {% if field.help_text %}
-      <span class="fr-hint-text">{{ field.help_text|safe }}</span>
-    {% endif %}
-  </label>
+  {% include '_label.html' %}
 
   {% if nest_field_class %}
     <div class="{{ nest_field_class }}">
@@ -27,7 +17,6 @@
   {% if nest_field_class %}
     </div>
   {% endif %}
-
 
   {% if field.errors %}
     <p class="fr-error-text">
