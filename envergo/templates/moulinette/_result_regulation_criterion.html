@@ -5,8 +5,10 @@
     <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
       {% result_tag criterion.result %}
       <span class="title">
-        <strong>{{ criterion.title }}</strong><br >
-        {{ criterion.subtitle }}
+        <strong>{{ criterion.title }}</strong>
+        {% if criterion.subtitle %}
+          <br > {{ criterion.subtitle }}
+        {% endif %}
       </span>
     </button>
 

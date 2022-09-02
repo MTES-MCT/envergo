@@ -61,10 +61,13 @@ class MoulinetteHome(FormView):
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(form.cleaned_data)
+            moulinette = Moulinette(form.cleaned_data, form.data)
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
+            context["additional_forms"] = self.get_additional_forms(moulinette)
 
+        # Should we center the map on the given coordinates, or zoom out on
+        # the entire country?
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
@@ -96,6 +99,8 @@ class MoulinetteHome(FormView):
             template_name = "moulinette/result_debug.html"
         elif not moulinette.is_evaluation_available():
             template_name = "moulinette/result_non_disponible.html"
+        elif moulinette.has_missing_data():
+            template_name = "moulinette/missing_data.html"
         else:
             template_name = "moulinette/result.html"
 
@@ -123,12 +128,25 @@ class MoulinetteHome(FormView):
             log_event("simulateur", "soumission", request, **export)
         return res
 
+    def get_additional_forms(self, moulinette):
+        form_classes = moulinette.additional_form_classes()
+        kwargs = self.get_form_kwargs()
+        forms = [Form(**kwargs) for Form in form_classes]
+        return forms
+
     def form_valid(self, form):
 
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
         form_data.pop("address")
         get.update(form_data)
+
+        moulinette = Moulinette(form_data, form.data)
+        additional_forms = self.get_additional_forms(moulinette)
+        for form in additional_forms:
+            if form.is_valid():
+                get.update(form.cleaned_data)
+
         url_params = get.urlencode()
         url = reverse("moulinette_home")
         url_with_params = f"{url}?{url_params}"

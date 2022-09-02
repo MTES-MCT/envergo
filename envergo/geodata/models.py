@@ -159,7 +159,9 @@ class Map(models.Model):
     source = models.URLField(_("Source"), blank=True)
     display_for_user = models.BooleanField(_("Display for user?"), default=True)
     file = models.FileField(_("File"), upload_to="maps/")
-    data_type = models.CharField(_("Data type"), max_length=50, choices=MAP_TYPES)
+    data_type = models.CharField(
+        _("Data type"), max_length=50, choices=MAP_TYPES, blank=True
+    )
     data_certainty = models.CharField(
         _("Data certainty"),
         max_length=20,

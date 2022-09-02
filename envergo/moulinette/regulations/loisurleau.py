@@ -1,186 +1,31 @@
-import json
 from functools import cached_property
-from sqlite3 import InternalError
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
-from django.contrib.gis.measure import Distance as D
 from django.db.models import F
 from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.models import Zone
-from envergo.geodata.utils import to_geojson
+from envergo.moulinette.regulations import (
+    CriterionMap,
+    MoulinetteCriterion,
+    MoulinetteRegulation,
+)
 
 
-def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
-    """Helper method to fetch Zones around a given point."""
-
-    qs = (
-        Zone.objects.filter(map__data_type=zone_type)
-        .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_certainty=data_certainty)
-    )
-    return qs
-
-
-# Those dummy methods are useful for unit testing
-def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zone_humide")
-
-
-def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zone_humide")
-
-
-def fetch_potential_wetlands(coords):
-    qs = (
-        Zone.objects.filter(map__data_type="zone_humide")
-        .filter(map__data_certainty="uncertain")
-        .filter(geometry__dwithin=(coords, D(m=0)))
-    )
-    return qs
-
-
-def fetch_flood_zones_around_12m(coords):
-    return fetch_zones_around(coords, 12, "zone_inondable")
-
-
-class MoulinetteRegulation:
-    """Run the moulinette for a single regulation (e.g Loi sur l'eau)."""
-
-    criterion_classes = []
-
-    def __init__(self, data_catalog):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
-        self.criterions = [
-            Criterion(self.catalog) for Criterion in self.criterion_classes
-        ]
-
-    def get_catalog_data(self):
-        return {}
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        else:
-            result = RESULTS.non_soumis
-
-        return result
-
-    def __getattr__(self, attr):
-        """Returs the corresponding criterion.
-
-        Allows to do something like this:
-        moulinette.loi_sur_leau.zones_inondables to fetch the correct criterion.
-        """
-        return self.get_criterion(attr)
-
-    def get_criterion(self, criterion_slug):
-        """Return the regulation with the given slug."""
-
-        def select_criterion(criterion):
-            return criterion.slug == criterion_slug
-
-        criterion = next(filter(select_criterion, self.criterions), None)
-        return criterion
-
-
-class CriterionMap:
-    """Data for a map that will be displayed with Leaflet."""
-
-    def __init__(self, center, polygons, caption, sources):
-        self.center = center
-        self.polygons = polygons
-        self.caption = caption
-        self.sources = sources
-
-    def to_json(self):
-
-        # Don't display full polygons
-        EPSG_WGS84 = 4326
-        buffer = self.center.buffer(500).transform(EPSG_WGS84, clone=True)
-
-        data = json.dumps(
-            {
-                "center": to_geojson(self.center),
-                "polygons": [
-                    {
-                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)),
-                        "color": polygon["color"],
-                        "label": polygon["label"],
-                    }
-                    for polygon in self.polygons
-                ],
-                "caption": self.caption,
-                "sources": [
-                    {"name": map.name, "url": map.source} for map in self.sources
-                ],
-            }
-        )
-        return data
-
-
-class MoulinetteCriterion:
-    """Run a single moulinette check."""
-
-    def __init__(self, data_catalog):
-        self.catalog = data_catalog
-        self.catalog.update(self.get_catalog_data())
-
-    def get_catalog_data(self):
-        return {}
-
-    @cached_property
-    def result(self):
-        raise NotImplementedError("Implement the `result` method in the subclass.")
-
-    @property
-    def result_code(self):
-        """Return a unique code for the criterion result.
-
-        Sometimes, a same criterion can have the same result for different reasons.
-        Because of this, we want unique codes to display custom messages to
-        the user.
-        """
-
-        return self.result
-
-    @cached_property
-    def map(self):
-        try:
-            map = self._get_map()
-        except:  # noqa
-            map = None
-        return map
-
-    def _get_map(self):
-        return None
-
-
-class WaterLaw3310(MoulinetteCriterion):
+class ZoneHumide(MoulinetteCriterion):
     slug = "zone_humide"
+    choice_label = "Loi sur l'eau > Zone humide"
     title = "Impact sur une zone humide"
     subtitle = "Seuil de déclaration : 1 000 m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["wetlands_25"] = fetch_wetlands_around_25m(self.catalog["coords"])
-        catalog["wetlands_within_25m"] = bool(catalog["wetlands_25"])
-        catalog["wetlands_100"] = fetch_wetlands_around_100m(self.catalog["coords"])
-        catalog["wetlands_within_100m"] = bool(catalog["wetlands_100"])
-        catalog["potential_wetlands"] = fetch_potential_wetlands(self.catalog["coords"])
-        catalog["within_potential_wetlands"] = bool(catalog["potential_wetlands"])
+        data = {}
+        data["wetlands_within_25m"] = bool(self.catalog["wetlands_25"])
+        data["wetlands_within_100m"] = bool(self.catalog["wetlands_100"])
+        data["within_potential_wetlands"] = bool(self.catalog["potential_wetlands"])
 
-        return catalog
+        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -218,10 +63,10 @@ class WaterLaw3310(MoulinetteCriterion):
         result_matrix = {
             "soumis": RESULTS.soumis,
             "non_soumis": RESULTS.non_soumis,
-            "non_applicable": RESULTS.non_applicable,
-            "action_requise_inside": RESULTS.action_requise,
-            "action_requise_close_to": RESULTS.action_requise,
-            "action_requise_inside_potential": RESULTS.action_requise,
+            "non_concerne": RESULTS.non_concerne,
+            "action_requise": RESULTS.action_requise,
+            "action_requise_proche": RESULTS.action_requise,
+            "action_requise_dans_doute": RESULTS.action_requise,
         }
         result = result_matrix[code]
         return result
@@ -233,17 +78,17 @@ class WaterLaw3310(MoulinetteCriterion):
         wetland_status, project_size = self.get_result_data()
         code_matrix = {
             ("inside", "big"): "soumis",
-            ("inside", "medium"): "action_requise_inside",
+            ("inside", "medium"): "action_requise",
             ("inside", "small"): "non_soumis",
-            ("close_to", "big"): "action_requise_close_to",
+            ("close_to", "big"): "action_requise_proche",
             ("close_to", "medium"): "non_soumis",
             ("close_to", "small"): "non_soumis",
-            ("inside_potential", "big"): "action_requise_inside_potential",
+            ("inside_potential", "big"): "action_requise_dans_doute",
             ("inside_potential", "medium"): "non_soumis",
             ("inside_potential", "small"): "non_soumis",
-            ("outside", "big"): "non_applicable",
-            ("outside", "medium"): "non_applicable",
-            ("outside", "small"): "non_soumis",
+            ("outside", "big"): "non_concerne",
+            ("outside", "medium"): "non_concerne",
+            ("outside", "small"): "non_concerne",
         }
         code = code_matrix[(wetland_status, project_size)]
         return code
@@ -338,20 +183,20 @@ class WaterLaw3310(MoulinetteCriterion):
         return criterion_map
 
 
-class WaterLaw3220(MoulinetteCriterion):
+class ZoneInondable(MoulinetteCriterion):
     slug = "zone_inondable"
+    choice_label = "Loi sur l'eau > Zone inondable"
     title = "Impact sur une zone inondable"
     subtitle = "Seuil de déclaration : 400 m²"
     header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     def get_catalog_data(self):
-        catalog = {}
-        catalog["flood_zones_12"] = fetch_flood_zones_around_12m(self.catalog["coords"])
-        catalog["flood_zones_within_12m"] = bool(catalog["flood_zones_12"])
-        return catalog
+        data = {}
+        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        return data
 
     @cached_property
-    def result(self):
+    def result_code(self):
         """Run the check for the 3.1.2.0 rule."""
 
         if self.catalog["flood_zones_within_12m"]:
@@ -373,8 +218,8 @@ class WaterLaw3220(MoulinetteCriterion):
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.non_applicable,
-                "medium": RESULTS.non_applicable,
+                "big": RESULTS.non_concerne,
+                "medium": RESULTS.non_concerne,
                 "small": RESULTS.non_soumis,
             },
         }
@@ -413,14 +258,15 @@ class WaterLaw3220(MoulinetteCriterion):
         return criterion_map
 
 
-class WaterLaw2150(MoulinetteCriterion):
+class Ruissellement(MoulinetteCriterion):
     slug = "ruissellement"
+    choice_label = "Loi sur l'eau > Ruissellement"
     title = "Impact sur l'écoulement des eaux pluviales"
     subtitle = "Seuil de déclaration : 1 ha"
     header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     @cached_property
-    def result(self):
+    def result_code(self):
 
         if self.catalog["project_surface"] >= 10000:
             res = RESULTS.soumis
@@ -432,7 +278,7 @@ class WaterLaw2150(MoulinetteCriterion):
         return res
 
 
-class WaterLaw(MoulinetteRegulation):
+class LoiSurLEau(MoulinetteRegulation):
     slug = "loi_sur_leau"
     title = "Loi sur l'eau"
-    criterion_classes = [WaterLaw3310, WaterLaw3220, WaterLaw2150]
+    criterion_classes = [ZoneHumide, ZoneInondable, Ruissellement]

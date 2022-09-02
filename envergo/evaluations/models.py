@@ -50,7 +50,8 @@ RESULTS = Choices(
     ("non_soumis", "Non soumis"),
     ("action_requise", "Action requise"),
     ("non_disponible", "Non disponible"),
-    ("non_applicable", "Non concerné"),
+    ("non_applicable", "Non applicable"),
+    ("non_concerne", "Non concerné"),
 )
 
 
