@@ -108,6 +108,23 @@ $red: #b94a48;
   }
 }
 
+#moulinette-form {
+
+  counter-reset: steps;
+
+  label.step,
+  label[for=id_address] {
+
+    &::before {
+      counter-increment: steps;
+      content: counter(steps) " ";
+      font-size: 2rem;
+      font-weight: bold;
+      margin-right: .25rem;
+    }
+  }
+}
+
 section.regulation {
 
   .alt>ul,
