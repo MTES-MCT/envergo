@@ -5,6 +5,17 @@
 
   {% include '_form_header.html' with form=form %}
 
+  {% if additional_forms %}
+    <div class="fr-alert fr-alert--warning fr-mb-3w">
+      <p class="fr-alert__title">
+        Question(s) complémentaire(s)
+      </p>
+      <p>
+        À compléter en bas du formulaire 👇
+      </p>
+    </div>
+  {% endif %}
+
   <div id="form-group-coords" class="fr-input-group">
 
     {{ form.lng.as_hidden }}
