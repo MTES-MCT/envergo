@@ -23,36 +23,36 @@
   exports.AccordionAnalytics = AccordionAnalytics;
 
   AccordionAnalytics.prototype.init = function() {
-    const buttons = this.accordionElt.querySelectorAll('.fr-accordion__btn');
-    buttons.forEach(this.observeButton.bind(this));
+    const collapsibles = this.accordionElt.querySelectorAll('.fr-collapse');
+    collapsibles.forEach(this.observeCollapsible.bind(this));
   };
 
   /**
    * Setup the mutation observers to detect sections opening.
    */
-  AccordionAnalytics.prototype.observeButton = function(button) {
+  AccordionAnalytics.prototype.observeCollapsible = function(collapsible) {
 
     // This will be fired whenever the element's dom is mutated
     const callback = function(mutations) {
       mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-expanded') {
-          const expanded = button.getAttribute('aria-expanded') === 'true';
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const expanded = collapsible.classList.contains('fr-collapse--expanded');
 
           if (expanded) {
-            const collapseTitle = button.textContent.trim();
-            const collapseId = button.getAttribute('aria-controls');
-            this.trackAccordionDisplay(collapseId, collapseTitle);
+            this.trackAccordionDisplay(collapsible.id);
+          } else {
+            this.untrackAccordionDisplay();
           }
         }
       }.bind(this));
     };
 
     const observer = new MutationObserver(callback.bind(this));
-    observer.observe(button, { attributes: true });
+    observer.observe(collapsible, { attributes: true });
   };
 
-  AccordionAnalytics.prototype.trackAccordionDisplay = function(id, title) {
-    history.replaceState(null, title, `#${id}`);
+  AccordionAnalytics.prototype.trackAccordionDisplay = function(id) {
+    history.replaceState(null, '', `#${id}`);
     // replaceState does not fire a `hashchange` event so we have to
     // to that manually
     window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -68,6 +68,10 @@
       // Using a slight timeout seems to do the trick.
       window.setTimeout(function() { button.click(); }, 50);
     }
+  };
+
+  AccordionAnalytics.prototype.untrackAccordionDisplay = function() {
+    history.replaceState(null, '', '#');
   };
 
 })(this);
