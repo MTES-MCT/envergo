@@ -5,7 +5,7 @@
 
   {% include '_form_header.html' with form=form %}
 
-  {% if additional_forms %}
+  {% if additional_forms and moulinette.has_missing_data %}
     <div class="fr-alert fr-alert--warning fr-mb-3w">
       <p class="fr-alert__title">
         Question(s) complémentaire(s)
