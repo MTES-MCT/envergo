@@ -229,6 +229,11 @@ form {
     }
   }
 
+  i.optional-tag {
+    font-size: 0.75rem;
+    color: var(--text-mention-grey);
+  }
+
   .formset {
 
     &+.formset {
