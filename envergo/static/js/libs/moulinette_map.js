@@ -130,7 +130,7 @@
     const latLng = [coordinates[1], coordinates[0]];
 
     // When an address is selected, place a marker and zoom on it
-    let minZoomLevel = 15;
-    moulinetteMap.setMarkerPosition(latLng, minZoomLevel);
+    let zoomLevel = 19;
+    moulinetteMap.setMarkerPosition(latLng, zoomLevel);
   });
 })();
