@@ -27,8 +27,8 @@
     <ul>
       {% for zone in moulinette.get_zones %}
         <li><a href="{% url 'admin:geodata_zone_change' zone.id %}">
-          {{ zone.id }}
-          ({{ zone.map.perimeters.all|join:', ' }})
+          {{ zone.map }} ({{ zone.id }}) —
+          {{ zone.map.perimeters.all|join:', ' }}
         </a></li>
       {% endfor %}
     </ul>
