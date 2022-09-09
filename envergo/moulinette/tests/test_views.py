@@ -4,7 +4,7 @@ from django.urls import reverse
 pytestmark = pytest.mark.django_db
 
 
-HOME_TITLE = "Évaluez si votre projet de construction est soumis à la Loi sur l'eau"
+HOME_TITLE = "Évaluez à quelles réglementations votre projet de construction est soumis"
 RESULT_TITLE = "Réglementations environnementales : évaluation personnalisée"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
