@@ -5,24 +5,33 @@
 
   {% include '_form_header.html' with form=form %}
 
+  {% if additional_forms and moulinette.has_missing_data %}
+    <div class="fr-alert fr-alert--warning fr-mb-3w">
+      <p class="fr-alert__title">
+        Question(s) complémentaire(s)
+      </p>
+      <p>
+        À compléter en bas du formulaire 👇
+      </p>
+    </div>
+  {% endif %}
+
   <div id="form-group-coords" class="fr-input-group">
 
     {{ form.lng.as_hidden }}
     {{ form.lat.as_hidden }}
 
-    <label>
-      Saisissez une adresse, déplacez le marqueur ou double-cliquez pour indiquer
-      l'emplacement de votre projet.
+    {% include '_field_snippet.html' with field=form.address %}
+
+    <label class="step">
+      Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+      l'emplacement du projet.
     </label>
 
     <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
       <div class="ratio-content">
         <div class="leaflet-container">
-          <div class="search-control">
-            {{ form.address }}
-          </div>
-          <div id="map">
-          </div>
+          <div id="map"></div>
         </div>
       </div>
     </div>
@@ -36,6 +45,10 @@
 
     {% endif %}
 
+  </div>
+
+  <div class="fr-mb-3w">
+    <label class="step">Complétez les informations décrivant le projet</label>
   </div>
 
   {% include '_field_snippet.html' with field=form.created_surface %}

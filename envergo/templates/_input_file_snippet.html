@@ -2,12 +2,7 @@
 
 <div id="form-group-{{ field.name }}" class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
-  <label class="fr-label" for="{{ field.id_for_label }}">
-    <span class="label-content">{{ field.label }}</span>
-    {% if field.help_text %}
-      <span class="fr-hint-text">{{ field.help_text|safe }}</span>
-    {% endif %}
-  </label>
+  {% include '_label.html' %}
 
   <div class="input-file-box">
 

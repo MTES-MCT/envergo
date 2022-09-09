@@ -12,9 +12,9 @@ pytestmark = pytest.mark.django_db
 def loisurleau_criterions(france_map):
 
     classes = [
-        'envergo.moulinette.regulations.loisurleau.ZoneHumide',
-        'envergo.moulinette.regulations.loisurleau.ZoneInondable',
-        'envergo.moulinette.regulations.loisurleau.Ruissellement',
+        "envergo.moulinette.regulations.loisurleau.ZoneHumide",
+        "envergo.moulinette.regulations.loisurleau.ZoneInondable",
+        "envergo.moulinette.regulations.loisurleau.Ruissellement",
     ]
     perimeters = [PerimeterFactory(map=france_map, criterion=path) for path in classes]
     return perimeters
@@ -62,9 +62,7 @@ def test_3310_small_footprint_outside_wetlands(moulinette_data, monkeypatch):
     """Project with footprint < 700m² are not subject to the 3310."""
 
     # Make sure the project in in a wetland
-    monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", no_zones
-    )
+    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
@@ -111,9 +109,7 @@ def test_3310_medium_footprint_close_to_wetlands(moulinette_data, monkeypatch):
     """Project with 700 <= footprint <= 1000m² close to a wetland."""
 
     # Make sure the project in close to a wetland
-    monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", no_zones
-    )
+    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
     monkeypatch.setattr(
         "envergo.moulinette.models.fetch_wetlands_around_100m", create_zones
     )
@@ -127,9 +123,7 @@ def test_3310_medium_footprint_inside_potential_wetlands(moulinette_data, monkey
     """Project with 700 <= footprint <= 1000m² inside a potential wetland."""
 
     # Make sure the project is in a potential wetland
-    monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", no_zones
-    )
+    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
     monkeypatch.setattr(
         "envergo.moulinette.models.fetch_wetlands_around_100m", no_zones
     )
@@ -167,9 +161,7 @@ def test_3310_large_footprint_close_to_wetlands(moulinette_data, monkeypatch):
     """Project with footprint >= 1000m² close to a wetland."""
 
     # Make sure the project in in a wetland
-    monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", no_zones
-    )
+    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
     monkeypatch.setattr(
         "envergo.moulinette.models.fetch_wetlands_around_100m", create_zones
     )
@@ -183,9 +175,7 @@ def test_3310_large_footprint_inside_potential_wetland(moulinette_data, monkeypa
     """Project with footprint >= 1000m² inside a potential wetland."""
 
     # Make sure the project in in a wetland
-    monkeypatch.setattr(
-        "envergo.moulinette.models.fetch_wetlands_around_25m", no_zones
-    )
+    monkeypatch.setattr("envergo.moulinette.models.fetch_wetlands_around_25m", no_zones)
     monkeypatch.setattr(
         "envergo.moulinette.models.fetch_wetlands_around_100m", no_zones
     )

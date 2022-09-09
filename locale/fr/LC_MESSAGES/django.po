@@ -650,7 +650,7 @@ msgstr "Surface au sol impactée avant le projet"
 
 #: envergo/moulinette/forms.py:19
 msgid "Search for the address to center the map"
-msgstr "Recherchez une adresse pour centrer la carte"
+msgstr "Saisissez l'adresse ou la commune la plus proche du projet"
 
 #: envergo/moulinette/forms.py:24
 msgid "Longitude"

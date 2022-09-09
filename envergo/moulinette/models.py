@@ -160,6 +160,20 @@ class Moulinette:
         criterions = [perimeter.criterion for perimeter in perimeters]
         return criterions
 
+    def get_zones(self):
+        """For debug purpose only.
+
+        Return the Zone objects containing the queried coordinates.
+        """
+        zones = (
+            Zone.objects.filter(geometry__dwithin=(self.catalog["coords"], D(m=0)))
+            .select_related("map")
+            .prefetch_related("map__perimeters")
+            .filter(map__perimeters__isnull=False)
+            .distinct()
+        )
+        return zones
+
     def is_evaluation_available(self):
         """Moulinette evaluations are only available on some departments.
 

@@ -60,14 +60,14 @@
     return marker;
   };
 
-  MoulinetteMap.prototype.setMarkerPosition = function(latLng) {
+  MoulinetteMap.prototype.setMarkerPosition = function(latLng, zoomLevel) {
 
     if (!this.map.hasLayer(this.marker)) {
       this.marker.addTo(this.map);
     }
 
     this.marker.setLatLng(latLng);
-    this.map.panTo(latLng);
+    this.map.setView(latLng, zoomLevel);
   };
 
   MoulinetteMap.prototype.setFieldValue = function(latLng) {
@@ -75,12 +75,6 @@
     latField.value = latLng.lat.toFixed(5);
     var lngField = document.getElementById(this.options.lngFieldId);
     lngField.value = latLng.lng.toFixed(5);
-  };
-
-  MoulinetteMap.prototype.setMinZoom = function(minZoom) {
-    if (this.map.getZoom() < minZoom) {
-      this.map.setZoom(minZoom);
-    }
   };
 
   MoulinetteMap.prototype.registerEvents = function() {
@@ -136,7 +130,7 @@
     const latLng = [coordinates[1], coordinates[0]];
 
     // When an address is selected, place a marker and zoom on it
-    moulinetteMap.setMarkerPosition(latLng);
-    moulinetteMap.setMinZoom(19);
+    let zoomLevel = 19;
+    moulinetteMap.setMarkerPosition(latLng, zoomLevel);
   });
 })();

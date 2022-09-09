@@ -108,6 +108,27 @@ $red: #b94a48;
   }
 }
 
+#moulinette-form {
+
+  counter-reset: steps;
+
+  label.step,
+  label[for=id_address] {
+
+    &::before {
+      counter-increment: steps;
+      content: counter(steps) " ";
+      font-size: 2rem;
+      font-weight: bold;
+      margin-right: .25rem;
+    }
+  }
+
+  #form-group-address .optional-tag {
+    display: none;
+  }
+}
+
 section.regulation {
 
   .alt>ul,
@@ -208,8 +229,9 @@ form {
     }
   }
 
-  .fr-input-group.required>.fr-label .label-content:after {
-    content: " *";
+  i.optional-tag {
+    font-size: 0.75rem;
+    color: var(--text-mention-grey);
   }
 
   .formset {
