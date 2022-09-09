@@ -29,5 +29,5 @@ def is_input_file(field):
 def add_classes(field, classes):
     """Add some classes to the field widget html."""
     css_classes = field.field.widget.attrs.get("class", "").split(" ")
-    all_classes = list(set(classes.split(" ")) | set(css_classes))
+    all_classes = sorted(list(set(classes.split(" ")) | set(css_classes)))
     return field.as_widget(attrs={"class": " ".join(all_classes)})
