@@ -1,4 +1,3 @@
-
 import factory
 from factory.django import DjangoModelFactory
 
@@ -12,4 +11,4 @@ class PerimeterFactory(DjangoModelFactory):
 
     name = "Loi sur l'eau Zone humide"
     map = factory.SubFactory(MapFactory)
-    criterion = 'envergo.moulinette.regulations.loisurleau.ZoneHumide'
+    criterion = "envergo.moulinette.regulations.loisurleau.ZoneHumide"
