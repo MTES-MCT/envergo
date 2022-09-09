@@ -7,6 +7,10 @@
     {% show_regulation_body regulation %}
   </div>
 
+  {% if regulation.map %}
+    {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
+  {% endif %}
+
   <div class="criteria">
     <h3>Détail des rubriques</h3>
 

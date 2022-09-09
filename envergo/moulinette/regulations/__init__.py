@@ -62,7 +62,7 @@ class MoulinetteRegulation:
         return criterion
 
 
-class CriterionMap:
+class Map:
     """Data for a map that will be displayed with Leaflet."""
 
     def __init__(self, center, polygons, caption, sources):
