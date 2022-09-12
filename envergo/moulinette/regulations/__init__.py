@@ -73,7 +73,6 @@ class MoulinetteRegulation:
         return None
 
 
-
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 

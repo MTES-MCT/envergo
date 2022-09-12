@@ -157,7 +157,7 @@ class Moulinette:
         """
         perimeters = Perimeter.objects.filter(
             map__zones__geometry__dwithin=(coords, D(m=0))
-        ).annotate(geometry=models.F('map__zones__geometry'))
+        ).annotate(geometry=models.F("map__zones__geometry"))
         return perimeters
 
     def get_zones(self):

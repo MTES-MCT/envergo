@@ -174,7 +174,6 @@ class Natura2000(MoulinetteRegulation):
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
 
-
     def _get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
 
@@ -185,17 +184,26 @@ class Natura2000(MoulinetteRegulation):
         if len(self.criterions) == 0:
             return None
 
-        geometries = [p.geometry for p in self.moulinette.perimeters if p.criterion in self.criterion_classes]
+        geometries = [
+            p.geometry
+            for p in self.moulinette.perimeters
+            if p.criterion in self.criterion_classes
+        ]
         polygons = [
             {
                 "polygon": geometry,
                 "color": "green",
                 "label": "Site Natura 2000",
             }
-        for geometry in geometries[:1]]
-        maps = [p.map for p in self.moulinette.perimeters if p.criterion in self.criterion_classes]
+            for geometry in geometries[:1]
+        ]
+        maps = [
+            p.map
+            for p in self.moulinette.perimeters
+            if p.criterion in self.criterion_classes
+        ]
 
-        caption = 'Le projet se situe sur un site Natura 2000.'
+        caption = "Le projet se situe sur un site Natura 2000."
         map = Map(
             center=self.catalog["coords"],
             polygons=polygons,
