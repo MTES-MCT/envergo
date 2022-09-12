@@ -4,7 +4,11 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
+from envergo.moulinette.regulations import (
+    Map,
+    MoulinetteCriterion,
+    MoulinetteRegulation,
+)
 
 
 class ZoneHumide44(MoulinetteCriterion):
@@ -169,3 +173,34 @@ class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
+
+
+    def _get_map(self):
+        """Display a Natura 2000 map if a single criterion has been activated.
+
+        Since there is probably a single Natura 2000 map for all Natura 2000
+        criterions, we only display a single polygon and a single map source.
+        """
+
+        if len(self.criterions) == 0:
+            return None
+
+        geometries = [p.geometry for p in self.moulinette.perimeters if p.criterion in self.criterion_classes]
+        polygons = [
+            {
+                "polygon": geometry,
+                "color": "green",
+                "label": "Site Natura 2000",
+            }
+        for geometry in geometries[:1]]
+        maps = [p.map for p in self.moulinette.perimeters if p.criterion in self.criterion_classes]
+
+        caption = 'Le projet se situe sur un site Natura 2000.'
+        map = Map(
+            center=self.catalog["coords"],
+            polygons=polygons,
+            caption=caption,
+            sources=maps[:1],
+        )
+
+        return map

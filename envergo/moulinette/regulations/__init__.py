@@ -61,6 +61,18 @@ class MoulinetteRegulation:
         criterion = next(filter(select_criterion, self.criterions), None)
         return criterion
 
+    @cached_property
+    def map(self):
+        try:
+            map = self._get_map()
+        except:  # noqa
+            map = None
+        return map
+
+    def _get_map(self):
+        return None
+
+
 
 class Map:
     """Data for a map that will be displayed with Leaflet."""
