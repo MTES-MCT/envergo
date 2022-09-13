@@ -54,6 +54,8 @@ urlpatterns = [
     path(_("evaluations/"), include("envergo.evaluations.urls")),
     path(_("moulinette/"), include("envergo.moulinette.urls")),
     path(_("geo/"), include("envergo.geodata.urls")),
+    path(_("analytics/"), include("envergo.analytics.urls")),
+
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

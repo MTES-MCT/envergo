@@ -127,13 +127,21 @@
     Vous pouvez choisir de ne pas transmettre d'informations à Piwik :
   </p>
 
-  <iframe id="stats-optout" style="width: 100%" src="//stats.data.gouv.fr/index.php?module=CoreAdminHome&action=optOut&language=fr"></iframe>
+  <iframe class="fr-mb-3w" id="stats-optout" style="width: 100%" src="//stats.data.gouv.fr/index.php?module=CoreAdminHome&action=optOut&language=fr"></iframe>
 
   <p>
-    Nous utilisons également Hotjar, un outil d'analyse permettant de mieux
-    comprendre la navigation des internautes sur notre site. Hotjar est également
-    conforme aux recommandations de la CNIL.
+    Nous réalisons également un suivi statistique de certaines actions de navigation (e.g. utilisation du simulateur) qui sont stockées localement et de manière anonyme, afin de mieux comprendre l'utilisation du service.
   </p>
+
+  <p>Vous avez la possibilité de refuser que les événements dont vous êtes à
+    l'origine soient pris en compte. Votre refus sera à renouveler tous les 13 mois, durée de vie maximum du cookie.</p>
+
+  <form class="fr-mb-3w" method="post" action="{% url 'disable_visitor_cookie' %}">
+    {% csrf_token %}
+    <button type="submit" class="fr-btn">
+      Désactiver le cookie de suivi local
+    </button>
+  </form>
 
 
   <h3>Je contribue à enrichir vos données, puis-je y accéder ?</h3>
