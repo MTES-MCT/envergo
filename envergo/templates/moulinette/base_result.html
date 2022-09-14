@@ -12,6 +12,7 @@
         <h2>Saisissez les caractéristiques de votre projet</h2>
 
         {% include 'moulinette/_form.html' with form=form %}
+        {% include 'analytics/_feedback_trigger.html' %}
 
       </div>
 
@@ -43,4 +44,8 @@
 
 {% block extra_js %}
   {% include 'moulinette/_form_scripts.html' %}
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'analytics/_feedback_form.html' %}
 {% endblock %}
