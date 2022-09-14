@@ -1,6 +1,7 @@
-from django.views.generic import RedirectView
+from django.views.generic import FormView, RedirectView
 
 from config.settings.base import VISITOR_COOKIE_NAME
+from envergo.analytics.forms import FeedbackForm
 
 
 class DisableVisitorCookie(RedirectView):
@@ -12,3 +13,12 @@ class DisableVisitorCookie(RedirectView):
         response = super().post(request, *args, **kwargs)
         response.set_cookie(VISITOR_COOKIE_NAME, "")
         return response
+
+
+class FeedbackSubmit(FormView):
+    form_class = FeedbackForm
+
+    def get_success_url(self, *args, **kwargs):
+        """Redirect form to the previous page."""
+
+        return self.request.META['HTTP_REFERER']

@@ -11,7 +11,8 @@
           <div class="fr-modal__content">
             <h1 id="fr-modal-title-modal-1" class="fr-modal__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Faire un retour</h1>
             <div class="feedback-form" id="feedback-form">
-              <form action="" method="post">
+              <form action="{% url 'feedback_submit' %}" method="post">
+                {% csrf_token %}
                 <p>N'hésitez pas à contribuer… Vous aidez ainsi à améliorer ce service public et gratuit. Nous répondons à 100% des retours en 24h.</p>
                 {% include '_form_snippet.html' with form=feedback_form %}
                 <button type="submit" class="fr-btn">Envoyer</button>
