@@ -303,7 +303,11 @@ class Natura2000(MoulinetteRegulation):
         criterions, we only display a single polygon and a single map source.
         """
 
-        if len(self.criterions) == 0:
+        # We don't display the map if only the IOTA criterion is activated
+        # because it means the project is submitted to N2000 without being
+        # in a N2000 zone
+        crits = self.criterions
+        if len(crits) == 0 or len(crits) == 1 and isinstance(crits[0], IOTA):
             return None
 
         geometries = [
