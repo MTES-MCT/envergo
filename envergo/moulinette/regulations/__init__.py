@@ -76,11 +76,17 @@ class MoulinetteRegulation:
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    def __init__(self, center, polygons, caption, sources):
+    def __init__(self, center, polygons, caption, sources, truncate=True):
         self.center = center
         self.polygons = polygons
         self.caption = caption
         self.sources = sources
+
+        # Should we display the entire region?
+        # This is used to prevent the ability to fine tune one's project and
+        # get around the law by building a project at the exact limit of a
+        # given zone.
+        self.truncate = truncate
 
     def to_json(self):
 
@@ -93,7 +99,7 @@ class Map:
                 "center": to_geojson(self.center),
                 "polygons": [
                     {
-                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)),
+                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)) if self.truncate else to_geojson(polygon['polygon']),
                         "color": polygon["color"],
                         "label": polygon["label"],
                     }

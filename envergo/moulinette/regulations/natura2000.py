@@ -331,6 +331,7 @@ class Natura2000(MoulinetteRegulation):
             polygons=polygons,
             caption=caption,
             sources=maps[:1],
+            truncate=False,
         )
 
         return map
