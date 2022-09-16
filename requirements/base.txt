@@ -88,7 +88,7 @@ kombu==5.2.3
     # via celery
 markdown==3.3.6
     # via -r base.in
-oauthlib==3.1.1
+oauthlib==3.2.1
     # via requests-oauthlib
 packaging==21.3
     # via redis

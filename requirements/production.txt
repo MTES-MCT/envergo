@@ -138,7 +138,7 @@ kombu==5.2.3
     #   celery
 markdown==3.3.6
     # via -r base.txt
-oauthlib==3.1.1
+oauthlib==3.2.1
     # via
     #   -r base.txt
     #   requests-oauthlib
