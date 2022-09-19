@@ -1,26 +1,30 @@
+<div id="feedback-form">
 
+  <div id="feedback-trigger" class="alt fr-p-3w">
+    <p><strong>Une question sur cette fonctionnalité ? Une remarque ?</strong></p>
+    <p>Notre réponse en 24h.</p>
+    <button class="fr-btn"  data-fr-opened="false" aria-controls="feedback-form-dialog">
+      Faire un retour
+    </button>
+  </div>
 
-<dialog aria-labelledby="fr-modal-title-modal-1" role="dialog" id="feedback-form-modal" class="fr-modal">
-  <div class="fr-container fr-container--fluid fr-container-md">
-    <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-        <div class="fr-modal__body">
-          <div class="fr-modal__header">
-            <button class="fr-link--close fr-link" title="Fermer la fenêtre modale" aria-controls="feedback-form-modal">Fermer</button>
-          </div>
-          <div class="fr-modal__content">
-            <h1 id="fr-modal-title-modal-1" class="fr-modal__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Faire un retour</h1>
-            <div class="feedback-form" id="feedback-form">
-              <form action="{% url 'feedback_submit' %}" method="post">
-                {% csrf_token %}
-                <p>N'hésitez pas à contribuer… Vous aidez ainsi à améliorer ce service public et gratuit. Nous répondons à 100% des retours en 24h.</p>
-                {% include '_form_snippet.html' with form=feedback_form %}
-                <button type="submit" class="fr-btn">Envoyer</button>
-              </form>
-            </div>
-          </div>
+  <dialog aria-labelledby="fr-modal-title-modal-1" role="dialog" id="feedback-form-dialog" class="fr-dialog feedback-dialog">
+    <div class="fr-modal__body fr-dialog__body">
+      <div class="fr-modal__header">
+        <button class="fr-link--close fr-link" title="Fermer la fenêtre modale" aria-controls="feedback-form-dialog">Fermer</button>
+      </div>
+      <div class="fr-modal__content">
+        <h1 id="fr-modal-title-modal-1" class="fr-modal__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Faire un retour</h1>
+        <div class="feedback-form" id="feedback-form">
+          <form action="{% url 'feedback_submit' %}" method="post">
+            {% csrf_token %}
+            <p>N'hésitez pas à contribuer… Vous aidez ainsi à améliorer ce service public et gratuit. Nous répondons à 100% des retours en 24h.</p>
+            {% include '_form_snippet.html' with form=feedback_form %}
+            <button type="submit" class="fr-btn">Envoyer</button>
+          </form>
         </div>
       </div>
     </div>
-  </div>
-</dialog>
+  </dialog>
+
+</div>
