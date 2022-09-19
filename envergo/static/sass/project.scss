@@ -75,6 +75,11 @@ $red: #b94a48;
     display: block;
   }
 
+  #feedback-trigger {
+    position: sticky;
+    top: 1.5rem;
+  }
+
   @media (min-width: 1144px) {
 
     #form-col {
