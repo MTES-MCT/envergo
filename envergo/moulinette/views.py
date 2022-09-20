@@ -149,5 +149,7 @@ class MoulinetteHome(FormView):
 
         url_params = get.urlencode()
         url = reverse("moulinette_home")
-        url_with_params = f"{url}?{url_params}"
+
+        # We add the `#` at the end to reset the accordions' states
+        url_with_params = f"{url}?{url_params}#"
         return HttpResponseRedirect(url_with_params)
