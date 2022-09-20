@@ -1,3 +1,12 @@
+/**
+ * The feedback forms is displayed in a dialog that is toggled by a button.
+ *
+ * I tried to reuse the dsfr's internal api to handle the toggling mechanism.
+ * Modals and Tabs both inherit from the `Disclosure` internal class, so
+ * I tried to reuse that.
+ *
+ * The API is not really documented, though, so I did my best.
+ */
 const api = window['dsfr'];
 
 const DialogSelector = {
