@@ -99,7 +99,9 @@ class Map:
                 "center": to_geojson(self.center),
                 "polygons": [
                     {
-                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)) if self.truncate else to_geojson(polygon['polygon']),
+                        "polygon": to_geojson(polygon["polygon"].intersection(buffer))
+                        if self.truncate
+                        else to_geojson(polygon["polygon"]),
                         "color": polygon["color"],
                         "label": polygon["label"],
                     }

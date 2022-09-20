@@ -35,7 +35,7 @@ class SetVisitorIdCookie:
 
         if is_first_visit:
             # CNIL's recommendation for tracking cookie lifetime = 13 months
-            lifetime = timedelta(days=30*13)
+            lifetime = timedelta(days=30 * 13)
             response.set_cookie(
                 settings.VISITOR_COOKIE_NAME,
                 visitor_id,
