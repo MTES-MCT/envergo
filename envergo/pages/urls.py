@@ -3,15 +3,12 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
 from envergo.geodata.views import ParcelsExport
+from envergo.pages.views import LegalMentionsView
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="moulinette_home"), name="home"),
     path(_("stats/"), include("envergo.stats.urls")),
-    path(
-        _("legal-mentions/"),
-        TemplateView.as_view(template_name="pages/legal_mentions.html"),
-        name="legal_mentions",
-    ),
+    path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(
         _("accessibility/"),
         TemplateView.as_view(template_name="pages/accessibility.html"),
