@@ -92,7 +92,7 @@ class Map:
 
         # Don't display full polygons
         EPSG_WGS84 = 4326
-        buffer = self.center.buffer(850).transform(EPSG_WGS84, clone=True)
+        buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
 
         data = json.dumps(
             {
