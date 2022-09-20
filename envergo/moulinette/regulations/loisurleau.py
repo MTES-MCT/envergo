@@ -6,7 +6,7 @@ from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
-    CriterionMap,
+    Map,
     MoulinetteCriterion,
     MoulinetteRegulation,
 )
@@ -171,7 +171,7 @@ class ZoneHumide(MoulinetteCriterion):
             maps = set([zone.map for zone in potential_qs.select_related("map")])
 
         if polygons:
-            criterion_map = CriterionMap(
+            criterion_map = Map(
                 center=self.catalog["coords"],
                 polygons=polygons,
                 caption=caption,
@@ -246,7 +246,7 @@ class ZoneInondable(MoulinetteCriterion):
             maps = set([zone.map for zone in zone_qs.select_related("map")])
 
         if polygons:
-            criterion_map = CriterionMap(
+            criterion_map = Map(
                 center=self.catalog["coords"],
                 polygons=polygons,
                 caption=caption,

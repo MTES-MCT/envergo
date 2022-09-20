@@ -1,10 +1,17 @@
 from functools import cached_property
 
 from django import forms
+from django.contrib.gis.db.models import MultiPolygonField, Union
+from django.db.models import F
+from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
+from envergo.moulinette.regulations import (
+    Map,
+    MoulinetteCriterion,
+    MoulinetteRegulation,
+)
 
 
 class ZoneHumide44(MoulinetteCriterion):
@@ -82,6 +89,95 @@ class ZoneHumide44(MoulinetteCriterion):
         result = result_matrix[code]
         return result
 
+    def _get_map(self):
+
+        inside_qs = self.catalog["wetlands_25"].filter(map__display_for_user=True)
+        close_qs = self.catalog["wetlands_100"].filter(map__display_for_user=True)
+        potential_qs = self.catalog["potential_wetlands"].filter(
+            map__display_for_user=True
+        )
+        polygons = None
+
+        if inside_qs:
+            caption = "Le projet se situe dans une zone humide référencée."
+            geometries = inside_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            polygons = [
+                {
+                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
+                        "polygon"
+                    ],
+                    "color": "blue",
+                    "label": "Zone humide",
+                }
+            ]
+            maps = set([zone.map for zone in inside_qs.select_related("map")])
+
+        elif close_qs and not potential_qs:
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
+            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            polygons = [
+                {
+                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
+                        "polygon"
+                    ],
+                    "color": "blue",
+                    "label": "Zone humide",
+                }
+            ]
+            maps = set([zone.map for zone in close_qs.select_related("map")])
+
+        elif close_qs and potential_qs:
+            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            wetlands_polygon = geometries.aggregate(polygon=Union(F("geom")))["polygon"]
+
+            geometries = potential_qs.annotate(
+                geom=Cast("geometry", MultiPolygonField())
+            )
+            potentials_polygon = geometries.aggregate(polygon=Union(F("geom")))[
+                "polygon"
+            ]
+
+            polygons = [
+                {"polygon": wetlands_polygon, "color": "blue", "label": "Zone humide"},
+                {
+                    "polygon": potentials_polygon,
+                    "color": "lightblue",
+                    "label": "ZH potentielle",
+                },
+            ]
+            wetlands_maps = [zone.map for zone in close_qs.select_related("map")]
+            potential_maps = [zone.map for zone in potential_qs.select_related("map")]
+            maps = set(wetlands_maps + potential_maps)
+
+        elif potential_qs:
+            caption = "Le projet se situe dans une zone humide potentielle."
+            geometries = potential_qs.annotate(
+                geom=Cast("geometry", MultiPolygonField())
+            )
+            polygons = [
+                {
+                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
+                        "polygon"
+                    ],
+                    "color": "dodgerblue",
+                    "label": "Zone humide potentielle",
+                }
+            ]
+            maps = set([zone.map for zone in potential_qs.select_related("map")])
+
+        if polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                polygons=polygons,
+                caption=caption,
+                sources=maps,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
+
 
 class ZoneInondable44(MoulinetteCriterion):
     slug = "zone_inondable_44"
@@ -122,6 +218,36 @@ class ZoneInondable44(MoulinetteCriterion):
 
         result = result_matrix[flood_zone_status][project_size]
         return result
+
+    def _get_map(self):
+        zone_qs = self.catalog["flood_zones_12"].filter(map__display_for_user=True)
+        polygons = None
+
+        if zone_qs:
+            caption = "Le projet se situe dans une zone inondable."
+            geometries = zone_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            polygons = [
+                {
+                    "polygon": [
+                        geometries.aggregate(polygon=Union(F("geom")))["polygon"]
+                    ][0],
+                    "color": "red",
+                    "label": "Zone inondable",
+                }
+            ]
+            maps = set([zone.map for zone in zone_qs.select_related("map")])
+
+        if polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                polygons=polygons,
+                caption=caption,
+                sources=maps,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
 
 
 class IOTA(MoulinetteCriterion):
@@ -169,3 +295,47 @@ class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
+
+    def _get_map(self):
+        """Display a Natura 2000 map if a single criterion has been activated.
+
+        Since there is probably a single Natura 2000 map for all Natura 2000
+        criterions, we only display a single polygon and a single map source.
+        """
+
+        # We don't display the map if only the IOTA criterion is activated
+        # because it means the project is submitted to N2000 without being
+        # in a N2000 zone
+        crits = self.criterions
+        if len(crits) == 0 or len(crits) == 1 and isinstance(crits[0], IOTA):
+            return None
+
+        geometries = [
+            p.geometry
+            for p in self.moulinette.perimeters
+            if p.criterion in self.criterion_classes
+        ]
+        polygons = [
+            {
+                "polygon": geometry,
+                "color": "green",
+                "label": "Site Natura 2000",
+            }
+            for geometry in geometries[:1]
+        ]
+        maps = [
+            p.map
+            for p in self.moulinette.perimeters
+            if p.criterion in self.criterion_classes
+        ]
+
+        caption = "Le projet se situe sur un site Natura 2000."
+        map = Map(
+            center=self.catalog["coords"],
+            polygons=polygons,
+            caption=caption,
+            sources=maps[:1],
+            truncate=False,
+        )
+
+        return map

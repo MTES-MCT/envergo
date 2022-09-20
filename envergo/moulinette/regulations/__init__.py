@@ -61,28 +61,45 @@ class MoulinetteRegulation:
         criterion = next(filter(select_criterion, self.criterions), None)
         return criterion
 
+    @cached_property
+    def map(self):
+        try:
+            map = self._get_map()
+        except:  # noqa
+            map = None
+        return map
 
-class CriterionMap:
+    def _get_map(self):
+        return None
+
+
+class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    def __init__(self, center, polygons, caption, sources):
+    def __init__(self, center, polygons, caption, sources, truncate=True):
         self.center = center
         self.polygons = polygons
         self.caption = caption
         self.sources = sources
 
+        # Should we display the entire region?
+        # This is used to prevent the ability to fine tune one's project and
+        # get around the law by building a project at the exact limit of a
+        # given zone.
+        self.truncate = truncate
+
     def to_json(self):
 
         # Don't display full polygons
         EPSG_WGS84 = 4326
-        buffer = self.center.buffer(500).transform(EPSG_WGS84, clone=True)
+        buffer = self.center.buffer(850).transform(EPSG_WGS84, clone=True)
 
         data = json.dumps(
             {
                 "center": to_geojson(self.center),
                 "polygons": [
                     {
-                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)),
+                        "polygon": to_geojson(polygon["polygon"].intersection(buffer)) if self.truncate else to_geojson(polygon['polygon']),
                         "color": polygon["color"],
                         "label": polygon["label"],
                     }

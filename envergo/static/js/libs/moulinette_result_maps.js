@@ -2,7 +2,7 @@
   'use strict';
 
   /**
-   * Initialize the leaflet maps for the criteria accordions.
+   * Initialize the leaflet maps for the moulinette result page.
    */
   const MapConfigurator = function(maps) {
     this.maps = maps;
@@ -72,7 +72,7 @@
 })(this, L);
 
 window.addEventListener('load', function() {
-  var CRITERIA_MAPS = window.CRITERIA_MAPS || {};
-  var configurator = new MapConfigurator(CRITERIA_MAPS);
+  var MAPS = window.MAPS || {};
+  var configurator = new MapConfigurator(MAPS);
   configurator.init();
 });

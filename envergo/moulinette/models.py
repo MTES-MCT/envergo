@@ -116,7 +116,8 @@ class Moulinette:
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
-        self.criterions = self.get_criterions(self.catalog["coords"])
+        self.perimeters = self.get_perimeters(self.catalog["coords"])
+        self.criterions = [perimeter.criterion for perimeter in self.perimeters]
 
         # This is a clear case of circular references, since the Moulinette
         # holds references to the regulations it's computing, but regulations and
@@ -148,17 +149,16 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
         return catalog
 
-    def get_criterions(self, coords):
-        """Find regulation criterions activated by a perimeter.
+    def get_perimeters(self, coords):
+        """Find activated perimeters
 
         Regulation criterions have a geographical component and must only computed in
         certain zones.
         """
         perimeters = Perimeter.objects.filter(
             map__zones__geometry__dwithin=(coords, D(m=0))
-        )
-        criterions = [perimeter.criterion for perimeter in perimeters]
-        return criterions
+        ).annotate(geometry=models.F("map__zones__geometry"))
+        return perimeters
 
     def get_zones(self):
         """For debug purpose only.
