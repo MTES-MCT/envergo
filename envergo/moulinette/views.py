@@ -14,7 +14,7 @@ BODY_TPL = {
 }
 
 
-class MoulinetteHome(FormView):
+class MoulinetteMixin:
     """Display the moulinette form and results."""
 
     form_class = MoulinetteForm
@@ -148,8 +148,16 @@ class MoulinetteHome(FormView):
                 get.update(form.cleaned_data)
 
         url_params = get.urlencode()
-        url = reverse("moulinette_home")
+        url = reverse("moulinette_results")
 
         # We add the `#` at the end to reset the accordions' states
         url_with_params = f"{url}?{url_params}#"
         return HttpResponseRedirect(url_with_params)
+
+
+class MoulinetteHome(MoulinetteMixin, FormView):
+    pass
+
+
+class MoulinetteResults(MoulinetteMixin, FormView):
+    pass
