@@ -56,13 +56,6 @@
   {{ block.super }}
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script>
-    window.addEventListener('load', function() {
-      const accordion = document.querySelector('article');
-      new AccordionAnalytics(accordion);
-    });
-  </script>
-
-  <script>
     var _paq = window._paq || [];
 
     // Track an event when a regulation main "read more" btn is clicked
