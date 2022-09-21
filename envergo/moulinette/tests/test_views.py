@@ -21,8 +21,17 @@ def test_moulinette_home(client):
     assert FORM_ERROR not in res.content.decode()
 
 
-def test_moulinette_result(client):
+def test_moulinette_home_with_params_redirects_to_results_page(client):
     url = reverse("moulinette_home")
+    params = "created_surface=10000&existing_surface=10000&lng=0.75006&lat=48.49680"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+    assert res.status_code == 302
+    assert res.url.startswith('/simulateur/r%C3%A9sultat/')
+
+
+def test_moulinette_result(client):
+    url = reverse("moulinette_result")
     params = "created_surface=10000&existing_surface=10000&lng=0.75006&lat=48.49680"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -33,7 +42,24 @@ def test_moulinette_result(client):
     assert FORM_ERROR not in res.content.decode()
 
 
-def test_moulinette_form_error(client):
+def test_moulinette_result_without_params_redirects_to_home(client):
+    url = reverse("moulinette_result")
+    res = client.get(url)
+
+    assert res.status_code == 302
+
+
+def test_moulinette_result_form_error(client):
+    url = reverse("moulinette_result")
+    params = "bad_param=true"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 302
+    assert res.url.endswith('/simulateur/')
+
+
+def test_moulinette_home_form_error(client):
     url = reverse("moulinette_home")
     params = "bad_param=true"
     full_url = f"{url}?{params}"

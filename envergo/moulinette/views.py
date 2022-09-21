@@ -87,6 +87,51 @@ class MoulinetteMixin:
         self.moulinette = context.get("moulinette", None)
         return super().render_to_response(context, **response_kwargs)
 
+    def get_additional_forms(self, moulinette):
+        form_classes = moulinette.additional_form_classes()
+        kwargs = self.get_form_kwargs()
+        forms = [Form(**kwargs) for Form in form_classes]
+        return forms
+
+    def form_valid(self, form):
+        return HttpResponseRedirect(self.get_results_url(form))
+
+    def get_results_url(self, form):
+        """Generates the GET url corresponding to the POST'ed moulinette query."""
+
+        get = QueryDict("", mutable=True)
+        form_data = form.cleaned_data
+        form_data.pop("address")
+        get.update(form_data)
+
+        moulinette = Moulinette(form_data, form.data)
+        additional_forms = self.get_additional_forms(moulinette)
+        for form in additional_forms:
+            if form.is_valid():
+                get.update(form.cleaned_data)
+
+        url_params = get.urlencode()
+        url = reverse("moulinette_result")
+
+        # We add the `#` at the end to reset the accordions' states
+        url_with_params = f"{url}?{url_params}#"
+        return url_with_params
+
+
+class MoulinetteHome(MoulinetteMixin, FormView):
+    template_name = 'moulinette/home.html'
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        res = self.render_to_response(context)
+        if self.moulinette:
+            return HttpResponseRedirect(self.get_results_url(context['form']))
+        else:
+            return res
+
+
+class MoulinetteResult(MoulinetteMixin, FormView):
+
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
@@ -107,8 +152,10 @@ class MoulinetteMixin:
         return [template_name]
 
     def get(self, request, *args, **kwargs):
-        res = super().get(request, *args, **kwargs)
+        context = self.get_context_data()
+        res = self.render_to_response(context)
         moulinette = self.moulinette
+
         if moulinette:
             data = moulinette.catalog
             department = data["department"]
@@ -126,38 +173,6 @@ class MoulinetteMixin:
                 export["result"] = moulinette.result()
 
             log_event("simulateur", "soumission", request, **export)
-        return res
-
-    def get_additional_forms(self, moulinette):
-        form_classes = moulinette.additional_form_classes()
-        kwargs = self.get_form_kwargs()
-        forms = [Form(**kwargs) for Form in form_classes]
-        return forms
-
-    def form_valid(self, form):
-
-        get = QueryDict("", mutable=True)
-        form_data = form.cleaned_data
-        form_data.pop("address")
-        get.update(form_data)
-
-        moulinette = Moulinette(form_data, form.data)
-        additional_forms = self.get_additional_forms(moulinette)
-        for form in additional_forms:
-            if form.is_valid():
-                get.update(form.cleaned_data)
-
-        url_params = get.urlencode()
-        url = reverse("moulinette_results")
-
-        # We add the `#` at the end to reset the accordions' states
-        url_with_params = f"{url}?{url_params}#"
-        return HttpResponseRedirect(url_with_params)
-
-
-class MoulinetteHome(MoulinetteMixin, FormView):
-    pass
-
-
-class MoulinetteResults(MoulinetteMixin, FormView):
-    pass
+            return res
+        else:
+            return HttpResponseRedirect(reverse('moulinette_home'))
