@@ -27,7 +27,7 @@ def test_moulinette_home_with_params_redirects_to_results_page(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 302
-    assert res.url.startswith('/simulateur/r%C3%A9sultat/')
+    assert res.url.startswith("/simulateur/r%C3%A9sultat/")
 
 
 def test_moulinette_result(client):
@@ -56,7 +56,7 @@ def test_moulinette_result_form_error(client):
     res = client.get(full_url)
 
     assert res.status_code == 302
-    assert res.url.endswith('/simulateur/')
+    assert res.url.endswith("/simulateur/")
 
 
 def test_moulinette_home_form_error(client):

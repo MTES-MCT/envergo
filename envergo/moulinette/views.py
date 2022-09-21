@@ -119,19 +119,18 @@ class MoulinetteMixin:
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
-    template_name = 'moulinette/home.html'
+    template_name = "moulinette/home.html"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         res = self.render_to_response(context)
         if self.moulinette:
-            return HttpResponseRedirect(self.get_results_url(context['form']))
+            return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
 
 
 class MoulinetteResult(MoulinetteMixin, FormView):
-
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
@@ -175,4 +174,4 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             log_event("simulateur", "soumission", request, **export)
             return res
         else:
-            return HttpResponseRedirect(reverse('moulinette_home'))
+            return HttpResponseRedirect(reverse("moulinette_home"))
