@@ -705,7 +705,7 @@ msgstr ""
 
 #: envergo/moulinette/urls.py:8
 msgid "result/"
-msgstr "résultat/"
+msgstr "resultat/"
 
 #: envergo/pages/urls.py:10
 msgid "stats/"
