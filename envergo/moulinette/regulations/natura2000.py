@@ -301,33 +301,39 @@ class Natura2000(MoulinetteRegulation):
 
         Since there is probably a single Natura 2000 map for all Natura 2000
         criterions, we only display a single polygon and a single map source.
+
+        The IOTA criterion must not be taken into account, though, because it's
+        perimeter will likely be entire departments, so displaying it will not
+        be relevant.
         """
 
         # We don't display the map if only the IOTA criterion is activated
         # because it means the project is submitted to N2000 without being
         # in a N2000 zone
-        crits = self.criterions
-        if len(crits) == 0 or len(crits) == 1 and isinstance(crits[0], IOTA):
+        criterions = [c for c in self.criterions if not isinstance(c, IOTA)]
+        if len(criterions) == 0:
             return None
 
-        geometries = [
-            p.geometry
-            for p in self.moulinette.perimeters
-            if p.criterion in self.criterion_classes
-        ]
+        # Let's find the first perimeter with a map that we can display
+        perimeter = next(
+            (
+                p
+                for p in self.moulinette.perimeters
+                if p.criterion in self.criterion_classes and not p.criterion == IOTA
+            ),
+            None,
+        )
+        if not perimeter:
+            return None
+
         polygons = [
             {
-                "polygon": geometry,
+                "polygon": perimeter.geometry,
                 "color": "green",
                 "label": "Site Natura 2000",
             }
-            for geometry in geometries[:1]
         ]
-        maps = [
-            p.map
-            for p in self.moulinette.perimeters
-            if p.criterion in self.criterion_classes
-        ]
+        maps = [perimeter.map]
 
         caption = "Le projet se situe sur un site Natura 2000."
         map = Map(
