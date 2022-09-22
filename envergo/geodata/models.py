@@ -156,7 +156,7 @@ class Map(models.Model):
 
     name = models.CharField(_("Name"), max_length=256)
     display_name = models.CharField(_("Display name"), max_length=256, blank=True)
-    source = models.URLField(_("Source"), blank=True)
+    source = models.URLField(_("Source"), max_length=2000, blank=True)
     display_for_user = models.BooleanField(_("Display for user?"), default=True)
     file = models.FileField(_("File"), upload_to="maps/")
     data_type = models.CharField(
