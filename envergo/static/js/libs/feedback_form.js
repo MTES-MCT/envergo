@@ -35,7 +35,6 @@ class Dialog extends api.core.Disclosure {
 
   init() {
     super.init();
-    this.listen('click', this.click.bind(this));
     this.listenKey(api.core.KeyCodes.ESCAPE, this.conceal.bind(this, false, false), true, true);
   }
 
