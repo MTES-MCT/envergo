@@ -1,6 +1,10 @@
 {% extends 'moulinette/base_result.html' %}
 {% load evaluations static %}
 
+{% block extra-form-col %}
+  {% include 'analytics/_feedback_form.html' %}
+{% endblock %}
+
 {% block result %}
 
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
