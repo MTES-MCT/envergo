@@ -21,7 +21,7 @@ class DisableVisitorCookie(RedirectView):
 
 class FeedbackSubmit(SuccessMessageMixin, FormView):
     form_class = FeedbackForm
-    success_message = "Merci de votre retour ! Nous y répondrons dans les 24h."
+    success_message = "✅ Merci de votre retour ! Nous y répondrons dans les 24h."
 
     def form_valid(self, form):
         """Send the feedback as a Mattermost notification."""
