@@ -20,18 +20,18 @@ class DisableVisitorCookie(RedirectView):
 
 class FeedbackSubmit(SuccessMessageMixin, FormView):
     form_class = FeedbackForm
-    success_message = 'Merci de votre retour. Nous y répondrons dans les 24h.'
+    success_message = "Merci de votre retour. Nous y répondrons dans les 24h."
 
     def form_valid(self, form):
         """Send the feedback as a Mattermost notification."""
 
         data = form.cleaned_data
-        feedback_origin = self.request.META['HTTP_REFERER']
+        feedback_origin = self.request.META["HTTP_REFERER"]
         message_body = render_to_string(
             "analytics/feedback_mattermost_notification.txt",
             context={
-                "message": data['message'],
-                "contact": data['contact'],
+                "message": data["message"],
+                "contact": data["contact"],
                 "origin_url": feedback_origin,
             },
         )
@@ -41,4 +41,4 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
     def get_success_url(self, *args, **kwargs):
         """Redirect form to the previous page."""
 
-        return self.request.META['HTTP_REFERER']
+        return self.request.META["HTTP_REFERER"]
