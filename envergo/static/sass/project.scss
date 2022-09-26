@@ -79,6 +79,18 @@ $red: #b94a48;
     position: sticky;
     top: 1.5rem;
 
+    #feedback-trigger {
+
+      .fr-callout__title {
+        margin-bottom: 1.5rem;
+      }
+
+      button {
+        display: block;
+        margin-left: auto;
+      }
+    }
+
     .fr-dialog {
       position: absolute;
       top: 0;

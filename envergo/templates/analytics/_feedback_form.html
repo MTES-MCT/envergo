@@ -1,19 +1,21 @@
 <div id="feedback-form" class="fr-mt-8w">
 
-  <div id="feedback-trigger" class="alt fr-p-3w">
-    <p><strong>Une question sur cette fonctionnalité ? Une remarque ?</strong></p>
-    <p>Notre réponse en 24h.</p>
-    <button class="fr-btn"  data-fr-opened="false" aria-controls="feedback-form-dialog">
+  <div id="feedback-trigger" class="fr-p-3w fr-callout fr-callout--blue-cumulus">
+    <p class="fr-callout__title">💡 <strong>Une question sur cette évaluation ? Une remarque ?</strong></p>
+
+    <p class="fr-callout__text">Notre réponse en 24h.</p>
+
+    <button class="fr-btn fr-btn--tertiary-no-outline"  data-fr-opened="false" aria-controls="feedback-form-dialog">
       Faire un retour
     </button>
   </div>
 
   <dialog aria-labelledby="feedback-form-dialog-title" role="dialog" id="feedback-form-dialog" class="fr-dialog feedback-dialog">
-    <div class="fr-modal__body fr-dialog__body">
-      <div class="fr-modal__header">
+    <div class="fr-callout fr-callout--blue-cumulus fr-dialog__body">
+      <div class="">
         <button class="fr-link--close fr-link" title="Fermer la fenêtre modale" aria-controls="feedback-form-dialog">Fermer</button>
       </div>
-      <div class="fr-modal__content">
+      <div class="">
         <h1 id="feedback-form-dialog-title" class="fr-modal__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Faire un retour</h1>
         <div class="feedback-form" id="feedback-form">
           <form action="{% url 'feedback_submit' %}" method="post">
