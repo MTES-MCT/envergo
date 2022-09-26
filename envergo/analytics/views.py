@@ -4,6 +4,7 @@ from django.views.generic import FormView, RedirectView
 
 from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.forms import FeedbackForm
+from envergo.analytics.utils import log_event
 from envergo.utils.mattermost import notify
 
 
@@ -36,6 +37,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
             },
         )
         notify(message_body)
+        log_event("feedback", "soumission", self.request)
         return super().form_valid(form)
 
     def get_success_url(self, *args, **kwargs):

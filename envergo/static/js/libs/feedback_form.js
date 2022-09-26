@@ -9,6 +9,9 @@
  */
 const api = window['dsfr'];
 
+// Use Matomo API for analytics
+const tracker = window._paq || [];
+
 const DialogSelector = {
   DIALOG: api.internals.ns.selector('dialog'),
   BODY: api.internals.ns.selector('dialog__body')
@@ -42,6 +45,8 @@ class Dialog extends api.core.Disclosure {
     if (!super.disclose(withhold)) return false;
     this.setAttribute('aria-dialog', 'true');
     this.setAttribute('open', 'true');
+
+    tracker.push(['trackEvent', 'feedback', 'disclose']);
     return true;
   }
 
@@ -49,6 +54,8 @@ class Dialog extends api.core.Disclosure {
     if (!super.conceal(withhold, preventFocus)) return false;
     this.removeAttribute('aria-dialog');
     this.removeAttribute('open');
+
+    tracker.push(['trackEvent', 'feedback', 'conceal']);
     return true;
   }
 }
