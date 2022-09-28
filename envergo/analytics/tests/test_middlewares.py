@@ -1,8 +1,6 @@
 import pytest
 from django.urls import reverse
 
-from envergo.analytics.middleware import SetVisitorIdCookie
-
 pytestmark = pytest.mark.django_db
 
 

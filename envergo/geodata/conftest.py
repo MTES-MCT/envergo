@@ -22,6 +22,6 @@ def france_map():
             (2.239523057461999, 51.37848260569899),
         ]
     )
-    zone = ZoneFactory(map=map, geometry=MultiPolygon([pentagon]))
+    ZoneFactory(map=map, geometry=MultiPolygon([pentagon]))
 
     return map

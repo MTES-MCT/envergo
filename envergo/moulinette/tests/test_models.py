@@ -1,6 +1,5 @@
 import pytest
 
-from envergo.geodata.conftest import france_map
 from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import PerimeterFactory
