@@ -81,6 +81,7 @@ class MoulinetteMixin:
             context["default_zoom"] = 6
 
         context['feedback_form'] = FeedbackForm()
+        context['display_feedback_form'] = not self.request.GET.get('feedback', False)
 
         return context
 

@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.contrib.messages.views import SuccessMessageMixin
 from django.template.loader import render_to_string
@@ -47,6 +47,21 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self, *args, **kwargs):
-        """Redirect form to the previous page."""
+        """Redirect form to the previous page.
 
-        return self.request.META["HTTP_REFERER"]
+        We also add a `feedback` GET parameter to prevent displaying the
+        feedback form again.
+        """
+
+        # Is there a better way add a single parameter to an url?
+        # Because otherwise, I'm disappointed in you Python.
+        referer = self.request.META["HTTP_REFERER"]
+        parsed = urlparse(referer)
+        query = parse_qs(parsed.query)
+        query['feedback'] = ['true']
+
+        # I feel weird using what looks like a private method but it's
+        # mentioned in the documentation, so…
+        # see https://docs.python.org/3/library/urllib.parse.html
+        parsed = parsed._replace(query=urlencode(query, doseq=True))
+        return parsed.geturl()

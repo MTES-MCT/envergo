@@ -2,7 +2,9 @@
 {% load evaluations static %}
 
 {% block extra-form-col %}
-  {% include 'analytics/_feedback_form.html' %}
+  {% if display_feedback_form %}
+    {% include 'analytics/_feedback_form.html' %}
+  {% endif %}
 {% endblock %}
 
 {% block result %}
