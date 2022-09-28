@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs
+
 from django.contrib.messages.views import SuccessMessageMixin
 from django.template.loader import render_to_string
 from django.views.generic import FormView, RedirectView
@@ -5,6 +7,7 @@ from django.views.generic import FormView, RedirectView
 from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.forms import FeedbackForm
 from envergo.analytics.utils import log_event
+from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
 
 
@@ -28,10 +31,13 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
 
         data = form.cleaned_data
         feedback_origin = self.request.META["HTTP_REFERER"]
+        parsed = parse_qs(feedback_origin)
+        address = get_address_from_coords(parsed["lng"][0], parsed["lat"][0])
         message_body = render_to_string(
             "analytics/feedback_mattermost_notification.txt",
             context={
                 "message": data["message"],
+                "address": address,
                 "contact": data["contact"],
                 "origin_url": feedback_origin,
             },

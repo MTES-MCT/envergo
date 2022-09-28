@@ -7,6 +7,7 @@ import zipfile
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
+import requests
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
@@ -139,3 +140,23 @@ def to_geojson(obj, geometry_field="geometry"):
         raise ValueError(f"Cannot geojson serialize the given object {obj}")
 
     return json.loads(geojson)
+
+
+def get_address_from_coords(lng, lat, timeout=0.5):
+    """Use ign geocodage api to find address corresponding to coords.
+
+    Returns None in case anything goes wrong with the request.
+    """
+
+    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"
+    address = None
+
+    try:
+        res = requests.get(url, timeout=timeout)
+        if res.status_code == 200:
+            json = res.json()
+            address = json["features"][0]["properties"]["label"]
+    except (requests.exceptions.Timeout, KeyError):
+        pass
+
+    return address
