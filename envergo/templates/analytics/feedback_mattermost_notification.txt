@@ -1,4 +1,5 @@
-Nouveau feedback utilisateur !
+**Nouveau feedback**
+
 {{ origin_url|safe }}
 Contact : {{ contact }}
 Message : {{ message }}
