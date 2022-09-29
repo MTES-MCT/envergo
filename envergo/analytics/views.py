@@ -1,7 +1,9 @@
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.contrib.messages.views import SuccessMessageMixin
+from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.generic import FormView, RedirectView
 
 from config.settings.base import VISITOR_COOKIE_NAME
@@ -25,6 +27,9 @@ class DisableVisitorCookie(RedirectView):
 class FeedbackSubmit(SuccessMessageMixin, FormView):
     form_class = FeedbackForm
     success_message = "Merci de votre retour ! Nous y répondrons dans les 24h."
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseRedirect(reverse('moulinette_home'))
 
     def form_valid(self, form):
         """Send the feedback as a Mattermost notification."""
