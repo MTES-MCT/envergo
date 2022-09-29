@@ -4,27 +4,31 @@
 #
 #    pip-compile base.in
 #
-amqp==5.0.9
+amqp==5.1.1
     # via kombu
 argon2-cffi==21.3.0
     # via -r base.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-asgiref==3.4.1
+asgiref==3.5.2
     # via django
+async-timeout==4.0.2
+    # via redis
 billiard==3.6.4.0
     # via celery
-celery==5.2.3
+build==0.8.0
+    # via pip-tools
+celery==5.2.7
     # via -r base.in
-certifi==2021.10.8
+certifi==2022.9.24
     # via
     #   pyproj
     #   requests
-cffi==1.15.0
+cffi==1.15.1
     # via
     #   argon2-cffi-bindings
     #   cryptography
-charset-normalizer==2.0.10
+charset-normalizer==2.1.1
     # via requests
 click==8.1.3
     # via
@@ -39,13 +43,13 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.2.0
     # via celery
-cryptography==36.0.1
+cryptography==38.0.1
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
 deprecated==1.2.13
     # via redis
-django==3.2.12
+django==3.2.15
     # via
     #   -r base.in
     #   django-allauth
@@ -56,25 +60,25 @@ django==3.2.12
     #   django-model-utils
     #   django-phonenumber-field
     #   django-redis
-django-allauth==0.47.0
+django-allauth==0.51.0
     # via -r base.in
 django-appconf==1.0.5
     # via django-compressor
 django-braces==1.15.0
     # via -r base.in
-django-compressor==3.1
+django-compressor==4.1
     # via -r base.in
-django-crispy-forms==1.13.0
+django-crispy-forms==1.14.0
     # via -r base.in
-django-environ==0.8.1
+django-environ==0.9.0
     # via -r base.in
-django-leaflet==0.28.2
+django-leaflet==0.28.3
     # via -r base.in
 django-localflavor==3.1
     # via -r base.in
 django-model-utils==4.2.0
     # via -r base.in
-django-phonenumber-field[phonenumbers]==6.0.0
+django-phonenumber-field[phonenumbers]==7.0.0
     # via -r base.in
 django-ratelimit==3.0.1
     # via -r base.in
@@ -82,41 +86,43 @@ django-redis==5.2.0
     # via -r base.in
 hiredis==2.0.0
     # via -r base.in
-idna==3.3
+idna==3.4
     # via requests
-kombu==5.2.3
+kombu==5.2.4
     # via celery
-markdown==3.3.6
+markdown==3.4.1
     # via -r base.in
-oauthlib==3.1.1
+oauthlib==3.2.1
     # via requests-oauthlib
 packaging==21.3
-    # via redis
-pep517==0.12.0
-    # via pip-tools
-phonenumbers==8.12.40
+    # via
+    #   build
+    #   redis
+pep517==0.13.0
+    # via build
+phonenumbers==8.12.56
     # via django-phonenumber-field
-pillow==9.0.0
+pillow==9.2.0
     # via -r base.in
-pip-tools==6.4.0
+pip-tools==6.8.0
     # via -r base.in
-prompt-toolkit==3.0.24
+prompt-toolkit==3.0.31
     # via click-repl
 pycparser==2.21
     # via cffi
-pyjwt[crypto]==2.3.0
+pyjwt[crypto]==2.5.0
     # via django-allauth
-pyparsing==3.0.6
+pyparsing==3.0.9
     # via packaging
-pyproj==3.3.0
+pyproj==3.4.0
     # via -r base.in
-python-slugify==5.0.2
+python-slugify==6.1.2
     # via -r base.in
 python-stdnum==1.17
     # via django-localflavor
 python3-openid==3.2.0
     # via django-allauth
-pytz==2021.3
+pytz==2022.2.1
     # via
     #   -r base.in
     #   celery
@@ -125,29 +131,33 @@ rcssmin==1.1.0
     # via
     #   -r base.in
     #   django-compressor
-redis==4.1.0
+redis==4.3.4
     # via
     #   -r base.in
     #   django-redis
-requests==2.27.1
+requests==2.28.1
     # via
     #   django-allauth
     #   requests-oauthlib
-requests-oauthlib==1.3.0
+requests-oauthlib==1.3.1
     # via django-allauth
 rjsmin==1.2.0
     # via django-compressor
-shapely==1.8.0
+shapely==1.8.4
     # via -r base.in
 six==1.16.0
     # via click-repl
-sqlparse==0.4.2
+sqlparse==0.4.3
     # via django
 text-unidecode==1.3
     # via python-slugify
-tomli==1.2.3
-    # via pep517
-urllib3==1.26.8
+tomli==2.0.1
+    # via
+    #   build
+    #   pep517
+types-cryptography==3.3.23
+    # via pyjwt
+urllib3==1.26.12
     # via requests
 vine==5.0.0
     # via
@@ -158,9 +168,9 @@ wcwidth==0.2.5
     # via prompt-toolkit
 wheel==0.37.1
     # via pip-tools
-whitenoise==5.3.0
+whitenoise==6.2.0
     # via -r base.in
-wrapt==1.13.3
+wrapt==1.14.1
     # via deprecated
 
 # The following packages are considered to be unsafe in a requirements file:
