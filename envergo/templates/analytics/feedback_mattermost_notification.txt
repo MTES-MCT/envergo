@@ -1,6 +1,6 @@
 **Nouveau feedback**
 
 {{ origin_url|safe }}
-Contact : {{ contact }}
-Message : {{ message }}
 Adresse (géocodée) : {{ address }}
+Message : {{ message }}
+Contact : {{ contact }}
