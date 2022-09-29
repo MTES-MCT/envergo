@@ -156,7 +156,7 @@ def get_address_from_coords(lng, lat, timeout=0.5):
         if res.status_code == 200:
             json = res.json()
             address = json["features"][0]["properties"]["label"]
-    except (requests.exceptions.Timeout, KeyError):
+    except (requests.exceptions.Timeout, KeyError, IndexError):
         pass
 
     return address
