@@ -148,7 +148,7 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     Returns None in case anything goes wrong with the request.
     """
 
-    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"
+    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"  # noqa
     address = None
 
     try:

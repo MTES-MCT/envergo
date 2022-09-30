@@ -1,5 +1,4 @@
 from django import forms
-from django.utils.translation import gettext_lazy as _
 
 MSG_PLACEHOLDER = "Un élément qui manque de clarté, une information erronée, une proposition d'amélioration…"
 
