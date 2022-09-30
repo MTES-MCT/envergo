@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
-from envergo.analytics.utils import log_event
+from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteForm
 from envergo.moulinette.models import Moulinette
@@ -171,7 +171,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             if moulinette.is_evaluation_available():
                 export["result"] = moulinette.result()
 
-            log_event("simulateur", "soumission", request, **export)
+            if not is_request_from_a_bot(request):
+                log_event("simulateur", "soumission", request, **export)
+
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
