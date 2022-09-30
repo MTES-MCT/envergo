@@ -75,6 +75,32 @@ $red: #b94a48;
     display: block;
   }
 
+  #feedback-form {
+    position: sticky;
+    top: 3rem;
+
+    #feedback-trigger {
+
+      button {
+        display: block;
+        margin-left: auto;
+        text-decoration: underline;
+      }
+    }
+
+    .fr-dialog {
+      position: absolute;
+      top: 0;
+      border: 0;
+      padding: 0;
+      margin: 0;
+
+      textarea {
+        resize: vertical;
+      }
+    }
+  }
+
   @media (min-width: 1144px) {
 
     #form-col {

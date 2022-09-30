@@ -1,0 +1,6 @@
+**Nouveau feedback**
+
+{{ origin_url|safe }}
+Adresse (géocodée) : {{ address }}
+Message : {{ message }}
+Contact : {{ contact }}
