@@ -29,7 +29,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
     success_message = "Merci de votre retour ! Nous y répondrons dans les 24h."
 
     def get(self, request, *args, **kwargs):
-        return HttpResponseRedirect(reverse('moulinette_home'))
+        return HttpResponseRedirect(reverse("moulinette_home"))
 
     def form_valid(self, form):
         """Send the feedback as a Mattermost notification."""
@@ -63,7 +63,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         referer = self.request.META["HTTP_REFERER"]
         parsed = urlparse(referer)
         query = parse_qs(parsed.query)
-        query['feedback'] = ['true']
+        query["feedback"] = ["true"]
 
         # I feel weird using what looks like a private method but it's
         # mentioned in the documentation, so…
