@@ -21,7 +21,7 @@
     "gulp-postcss": "^8.0.0",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^5.0.0",
-    "gulp-uglify-es": "^1.0.4",
+    "gulp-uglify-es": "^3.0.0",
     "pixrem": "^5.0.0",
     "sass": "^1.38.1"
   },
