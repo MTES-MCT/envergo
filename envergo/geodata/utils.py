@@ -142,21 +142,32 @@ def to_geojson(obj, geometry_field="geometry"):
     return json.loads(geojson)
 
 
+def get_data_from_coords(lng, lat, timeout=0.5):
+    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"  # noqa
+
+    data = None
+    try:
+        res = requests.get(url, timeout=timeout)
+        if res.status_code == 200:
+            json = res.json()
+            data = json["features"][0]["properties"]
+    except (requests.exceptions.Timeout, KeyError, IndexError):
+        pass
+
+    return data
+
+
+
 def get_address_from_coords(lng, lat, timeout=0.5):
     """Use ign geocodage api to find address corresponding to coords.
 
     Returns None in case anything goes wrong with the request.
     """
 
-    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"  # noqa
-    address = None
+    data = get_data_from_coords(lng, lat, timeout)
+    return data['label'] if data else None
 
-    try:
-        res = requests.get(url, timeout=timeout)
-        if res.status_code == 200:
-            json = res.json()
-            address = json["features"][0]["properties"]["label"]
-    except (requests.exceptions.Timeout, KeyError, IndexError):
-        pass
 
-    return address
+def get_commune_from_coords(lng, lat, timeout=0.5):
+    data = get_data_from_coords(lng, lat, timeout)
+    return data['city'] if data else None
