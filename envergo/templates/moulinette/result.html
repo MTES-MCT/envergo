@@ -37,7 +37,7 @@
 
     // Track an event when a regulation main "read more" btn is clicked
     window.addEventListener('load', function() {
-      const showMoreBtns = document.querySelectorAll('section.regulation div.alt button.read-more-btn');
+      const showMoreBtns = document.querySelectorAll('.read-more-btn');
       showMoreBtns.forEach(btn => btn.addEventListener('click', function(evt) {
         const btn = evt.currentTarget;
         const target = btn.getAttribute('aria-controls');
@@ -46,6 +46,12 @@
         _paq.push(['trackEvent', 'Content', action, target]);
       }));
     });
+
+    // Track a moulinette result page load
+    window.addEventListener('load', function() {
+      _paq.push(['trackEvent', 'Simulation', 'Result', {{ department.department }}]);
+    });
+
   </script>
 
 {% endblock %}
