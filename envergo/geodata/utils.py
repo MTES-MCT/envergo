@@ -142,8 +142,8 @@ def to_geojson(obj, geometry_field="geometry"):
     return json.loads(geojson)
 
 
-def get_data_from_coords(lng, lat, timeout=0.5):
-    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index=address&limit=1"  # noqa
+def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
+    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index={index}&limit=1"  # noqa
 
     data = None
     try:
@@ -157,7 +157,6 @@ def get_data_from_coords(lng, lat, timeout=0.5):
     return data
 
 
-
 def get_address_from_coords(lng, lat, timeout=0.5):
     """Use ign geocodage api to find address corresponding to coords.
 
@@ -165,9 +164,9 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     """
 
     data = get_data_from_coords(lng, lat, timeout)
-    return data['label'] if data else None
+    return data["label"] if data else None
 
 
-def get_commune_from_coords(lng, lat, timeout=0.5):
+def get_commune_from_coords(lng, lat, timeout=0.5, index="poi"):
     data = get_data_from_coords(lng, lat, timeout)
-    return data['city'] if data else None
+    return data["city"] if data else None
