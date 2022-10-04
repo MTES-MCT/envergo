@@ -116,6 +116,8 @@
           .then((response) => response.json())
           .then(({ features }) => {
             populateResults(features);
+            const event = new CustomEvent('EnvErgo:address_autocomplete_populated', { detail: features });
+            window.dispatchEvent(event);
           })
           .catch((error) => console.log(error));
       }

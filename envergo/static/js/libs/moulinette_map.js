@@ -68,6 +68,9 @@
 
     this.marker.setLatLng(latLng);
     this.map.setView(latLng, zoomLevel);
+
+    const event = new CustomEvent('EnvErgo:map_marker_moved', { detail: latLng });
+    window.dispatchEvent(event);
   };
 
   MoulinetteMap.prototype.setFieldValue = function(latLng) {
@@ -84,9 +87,14 @@
      * (instead of the classic "zooming" behaviour.
      */
     this.map.on('dblclick', function(event) {
+
       L.DomEvent.preventDefault(event);
       const latLng = event.latlng;
       this.setMarkerPosition(latLng);
+
+      const newEvent = new CustomEvent('EnvErgo:map_dbl_clicked', { detail: latLng });
+      window.dispatchEvent(newEvent);
+
     }.bind(this));
 
     /**
