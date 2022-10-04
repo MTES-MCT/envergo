@@ -80,8 +80,9 @@
         </p>
         <p>
           Le dossier de Déclaration Loi sur l'eau est à déposer au guichet unique de l'environnement du département où
-          se situe le projet.
+          se situe le projet. <a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne.</a>
         </p>
+
         <p>
           Ce dossier est traité par le service police de l'eau de la DDT/DDTM (Direction Départementale des Territoires et
           de la Mer).
@@ -291,62 +292,41 @@
       </h3>
 
       <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
+
         <p>
-          Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé de se
+          En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo vous permet en quelques clics vérifier si votre projet est soumis à la Loi sur l'eau</a>.
+          Ce service public numérique est gratuit, et fonctionne pour l'instant en Loire-Atlantique. Il sera prochainement étendu à un territoire plus large.
+        </p>
+
+        <p>
+          Pour approfondir l'analyse et déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé de se
           rapprocher :
         </p>
 
         <ul>
           <li>
+            <p><strong>D'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
+            <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau, et s'il y a lieu de constituer un dossier à déposer à l'administration.</p>
+          </li>
+
+          <li>
             <p><strong>Du service qui instruit les dossiers Loi sur l'eau</strong></p>
             <p>
-              Rapprochez-vous de la <abbr title="Direction Départementale des Territoires et de la Mer">
-                DDTM</abbr> (Direction Départementale des Territoires et de la Mer) de votre département.
+              Contactez la DDT(M) (Direction Départementale des Territoires et de la Mer) de votre département.
             </p>
+          </li>
 
-          </li>
-          <li>
-            <p><strong>D'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
-            <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau, et s'il y a lieu de constituer un dossier et de le déposer aux services de la DDTM (Direction Départementale des Territoires et de la Mer).</p>
-          </li>
           <li>
             <p><strong>De l'équipe EnvErgo</strong></p>
             <p>
-              Vous pouvez également <a href="{% url 'contact_us' %}">contacter l'équipe d'EnvErgo</a> – le présent
-              service public numérique – afin d'obtenir des précisions sur cette évaluation ou sur la procédure à suivre.
+              Vous pouvez également demander <a href="{% url 'request_evaluation' %}">une évaluation de votre projet</a> par l'équipe d'EnvErgo, le présent
+              service public numérique.
             </p>
 
           </li>
         </ul>
       </div>
-    </section><section class="fr-accordion">
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-determiner-presence-zone-humide">
-          <span>
-            Comment déterminer la présence d'une zone humide ?
-          </span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-determiner-presence-zone-humide">
-        <p>
-          La détermination de la présence d'une zone humide se fait sur deux critères :
-        </p>
-
-        <ul>
-          <li>critère relatif à l'hydromorphologie des sols ;</li>
-          <li> critère relatif aux plantes hygrophiles qu'on ne trouve qu'en zone humide.</li>
-        </ul>
-        <p>
-          Seule l'absence de ces deux critères sur toute une année permet de conclure que l'endroit n'est pas une zone humide.
-        </p>
-        <p>
-          Ce travail est généralement confié a un bureau d'étude spécialisé.
-        </p>
-        <p>
-          Pour plus d'informations, vous pouvez consulter <a target="_blank" rel="noopener" href="https://www.legifrance.gouv.fr/loda/id/JORFTEXT000019151510/">l'arrêté du 24 juin 2008 précisant les critères de définition et de délimitation des zones humides</a>.
-        </p>
-      </div>
     </section>
+
   </div>
 {% endblock %}
