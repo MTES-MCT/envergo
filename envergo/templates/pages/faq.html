@@ -73,6 +73,11 @@
       <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
 
         
+        <p>
+          En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics vérifier si votre projet est soumis à la Loi sur l'eau, ainsi qu'à d'autres réglementations environnementales (Natura 2000...).
+          C'est un service public numérique est gratuit, fourni par le Ministère de la Transition Écologique. 
+          Il fonctionne pour l'instant en Loire-Atlantique et sera prochainement étendu à un territoire plus large.
+        </p>
 
         <p>
           Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé :
@@ -86,14 +91,11 @@
           </li>
           
           <li>
-            <p><strong>D'avoir recours au service EnvErgo</strong></p>
-            Il s'agit d'un service numérique public et gratuit, fourni par le Ministère de la Transition Écologique.
-
-            <p>En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si votre projet est soumis à la Loi sur l'eau.
-            Il fonctionne pour l'instant en Loire-Atlantique et sera prochainement étendu à un territoire plus large.</p>
-        
+            <p><strong>De demander une évaluation Loi sur l'eau au service EnvErgo</strong></p>
+            
             <p>
-              Vous pouvez demander <a href="{% url 'request_evaluation' %}">une évaluation de votre projet</a>, réalisée manuellement par l'équipe d'EnvErgo — disponible sur la totalité du territoire français.
+              Vous pouvez demander <a href="{% url 'request_evaluation' %}">une évaluation de votre projet</a>, qui sera réalisée manuellement par l'équipe d'EnvErgo
+            — disponible sur la totalité du territoire français.
             </p>
             
             <p>
@@ -128,19 +130,20 @@
         <p class="fr-highlight">
           <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
           <strong>
-            Vous devez obligatoire déposer un dossier de déclaration Loi sur l'eau, en plus de la demande de permis de
+            Vous devez obligatoirement déposer un dossier de déclaration Loi sur l'eau, en plus de la demande de permis de
             construire.
           </strong>
         </p>
         <p>
-          Le dossier de Déclaration Loi sur l'eau est à déposer au guichet unique de l'environnement du département où
+          Le dossier de déclaration Loi sur l'eau est traité par le service police de l'eau de la DDT(M) (Direction Départementale des Territoires et
+          de la Mer).
+        </p>
+        <p>
+          Il est à déposer au guichet unique de l'environnement du département où
           se situe le projet. <a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne.</a>
         </p>
 
-        <p>
-          Ce dossier est traité par le service police de l'eau de la DDT/DDTM (Direction Départementale des Territoires et
-          de la Mer).
-        </p>
+        
         <p>
           Il suit une procédure d'instruction spécifique, distincte de la demande de permis de construire, avec ses
           délais propres.
@@ -159,7 +162,60 @@
 
           <li>à un refus, sous la forme d'un arrêté d'opposition à la déclaration.</li>
         </ul>
+        
 
+      </div>
+    </section>
+    
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-instruction">
+          <span>
+            Comment se passe l'instruction du dossier Loi sur l'eau ? Quels sont les délais ?
+          </span>
+        </button>
+      </h3>
+      <p>La procédure Loi sur l’eau est distincte de la procédure de permis de construire, et porte ses délais propres.</p>
+      <div class="fr-collapse" id="accordion-instruction">
+        <p class="fr-highlight">
+          <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
+          <strong>
+            Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.
+          </strong>
+        </p>
+        <p><strong>Dans les 15 jours</strong> après dépôt de votre dossier, vous recevez un premier retour :</p>
+        <ul>
+          <li>
+            Si le dossier est complet, un récépissé de déclaration ;
+          </li>
+          <li>
+            Si le dossier est incomplet, une demande de pièces complémentaires.
+          </li>
+        </ul>
+
+        <p>
+          Si des compléments au dossier sont nécessaires, vous avez alors 3 mois pour apporter les pièces
+          complémentaires, sans quoi le projet est rejeté automatiquement.
+        </p>
+        <p>
+          Le délai d'instruction de 2 mois redémarre à la date de réception des compléments par la DDT(M).
+        </p>
+
+        <p><strong>Dans les 2 mois</strong> après réception du récépissé, vous recevez la décision du préfet :</p>
+        <ul>
+          <li>
+            il peut s'opposer à la déclaration ;
+          </li>
+          <li>
+            il peut l'accepter, et peut imposer des prescriptions spécifiques à la réalisation du projet.
+          </li>
+        </ul>
+        <p>Vous ne pouvez pas démarrer les travaux avant d'avoir reçu une réponse de la préfecture.</p>
+        <p>
+          Il est recommandé de se rapprocher du service Police de l'eau de votre département pour obtenir les
+          informations qui doivent figurer dans le dossier Loi sur l'eau, et ainsi éviter de déposer un dossier
+          incomplet et d'allonger les délais d'instruction.
+        </p>
       </div>
     </section>
     <section class="fr-accordion">
@@ -173,13 +229,13 @@
 
       <div class="fr-collapse" id="accordion-permis-construire">
         <p>
-          La déclaration Loi sur l'eau est une procédure spécifique, à effectuer en plus de la demande de permis de
-          construire.
+          Les procédures Loi sur l'eau sont des procédures spécifiques, à effectuer en plus de la demande de permis de
+          construire ou d'aménager.
         </p>
 
         <p class="fr-highlight">
           Si votre projet est soumis à la Loi sur l'eau, <strong>il vous faut donc bien articuler les deux procédures
-            d'instruction</strong> (Permis de construire / Loi sur l'eau) qui peuvent <strong>s'influencer l'une
+            d'instruction</strong> (Permis de construire ou d'aménager / Loi sur l'eau) qui peuvent <strong>s'influencer l'une
               l'autre</strong>.
         </p>
 
@@ -206,67 +262,9 @@
             d'impact plus élevé que celui de la Déclaration.</li>
         </ul>
 
-        <p>Le service urbanisme qui étudie votre demande est en droit de vous demander :</p>
+        <p>Le service urbanisme qui étudie votre demande est en droit de vous demander des pièces complémentaires, pour déterminer si vous avez déposé
+          ou non un dossier Loi sur l'eau pour votre projet.</p>
 
-        <ul>
-          <li>si la case n'est pas cochée, des pièces prouvant que le projet n'est pas
-            soumis à la Loi sur l'eau ;</li>
-
-          <li>si la case est cochée, les pièces prouvant que vous avez déposé un dossier
-            Loi sur l'eau et reçu un accord, et les éventuelles prescriptions
-            préfectorales.</li>
-        </ul>
-      </div>
-    </section>
-    <section class="fr-accordion">
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-instruction">
-          <span>
-            Comment se passe l'instruction du dossier Loi sur l'eau ?
-          </span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-instruction">
-        <p class="fr-highlight">
-          <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
-          <strong>
-            L'instruction d'un dossier de déclaration Loi sur l'eau peut prendre jusqu'à 2 mois, voire près de 6 mois
-            s'il nécessite des demandes de complément.
-          </strong>
-        </p>
-        <p><strong>Dans les 15 jours</strong> après dépôt de votre dossier, vous recevez un premier retour :</p>
-        <ul>
-          <li>
-            Si le dossier est complet, un récépissé de déclaration ;
-          </li>
-          <li>
-            Si le dossier est incomplet, un accusé de réception demandant des pièces et informations complémentaires.
-          </li>
-        </ul>
-
-        <p>
-          Si des compléments au dossier sont nécessaires, vous avez alors 3 mois pour apporter les pièces
-          complémentaires, sans quoi le projet est rejeté automatiquement.
-        </p>
-        <p>
-          Le délai d'instruction de 2 mois redémarre à la date de réception des compléments par la DDT(M).
-        </p>
-
-        <p><strong>Dans les 2 mois</strong> après réception du récépissé, vous recevez la décision du préfet :</p>
-        <ul>
-          <li>
-            il peut s'opposer à la déclaration ;
-          </li>
-          <li>
-            il peut l'accepter, et peut imposer des prescriptions spécifiques à la réalisation du projet.
-          </li>
-        </ul>
-        <p>
-          Nous vous invitons à vous rapprocher du service Police de l'eau de votre département pour obtenir les
-          informations qui doivent figurer dans le dossier Loi sur l'eau, et ainsi éviter de déposer un dossier
-          incomplet et d'allonger les délais d'instruction.
-        </p>
       </div>
     </section>
     <section class="fr-accordion">
@@ -334,6 +332,37 @@
               l'environnement</a>).
           </li>
         </ul>
+      </div>
+    </section>
+    
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-consequences_omission">
+          <span>
+            Que faire si mon projet est soumis à Autorisation Environnementale ?
+          </span>
+        </button>
+      </h3>
+
+      <div class="fr-collapse" id="accordion-consequences_omission">
+        <p class="fr-highlight">
+          <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
+          <strong>
+            Vous devez obligatoirement déposer une demande d'Autorisation Environnementale, en plus de la demande de permis de
+            construire.
+          </strong>
+        </p>
+        <p>
+          Une procédure d’Autorisation Environnementale dure en moyenne de 9 à 12 mois.
+        </p>
+        <p>
+          La demande est à déposer au guichet unique de l'environnement du département où
+          se situe le projet. <a href="https://entreprendre.service-public.fr/vosdroits/R57779" target="_blank" rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne.</a>
+        </p>
+        <p>
+          <a href="https://entreprendre.service-public.fr/vosdroits/F33414" target="_blank" rel="noopener">Retrouvez plus d’informations sur la procédure à ce lien.</a>
+        </p>
+        
       </div>
     </section>
     
