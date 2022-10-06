@@ -41,26 +41,80 @@
         </p>
 
         <ul>
-          <li>modification du ruissellement d'eaux pluviales ;</li>
-          <li>construction en zone inondable ;</li>
-          <li>assèchement de zones humides ou impact sur un cours d'eau, etc.</li>
+          <li>modification du ruissellement d'eaux pluviales ;</li>
+          <li>construction en zone inondable par un cours d'eau ;</li>
+          <li>assèchement ou destruction de zones humides ;</li>
+          <li>impact sur un cours d'eau, en milieu marin, forage, etc.</li>
         </ul>
 
-        <p>Il y a deux seuils d'impact :</p>
+        <p>Pour chaque rubrique il y a deux seuils d'impact :</p>
         <ul>
           <li>
-            Le seuil (D), pour Déclaration, correspond à des impacts moyens → vous devez faire une <strong>Déclaration
-              Loi sur
-              l'eau</strong> ;
+            Le seuil (D), pour Déclaration
           </li>
           <li>
-            Le seuil (A), pour Autorisation, aux impacts les plus importants → vous devez disposer d'une
-            <strong>Autorisation
-              Environnementale</strong>.
+            Le seuil (A), pour Autorisation, aux impacts plus importants
           </li>
+        </ul>
+        <p>Si le projet dépasse le seuil « Autorisation » pour au moins une rubrique, vous devez disposer d'une <strong>Autorisation Environnementale</strong>.</p>
+        <p>Autrement, si le projet dépasse le seuil « Déclaration » pour au moins une rubrique, vous devez déposer une <strong>Déclaration Loi sur l'eau</strong> (également appelée Déclaration IOTA).</p>
+      </div>
+    </section>
+    
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-savoir-si-mon-projet-est-soumis">
+          <span>
+            Comment déterminer si mon projet est soumis à la Loi sur l'eau ?
+          </span>
+        </button>
+      </h3>
+
+      <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
+
+        
+
+        <p>
+          Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé :
+        </p>
+
+        <ul>
+          <li>
+            <p><strong>De se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
+            <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau, 
+              et s'il y a lieu de constituer un dossier à déposer à l'administration.</p>
+          </li>
+          
+          <li>
+            <p><strong>D'avoir recours au service EnvErgo</strong></p>
+            Il s'agit d'un service numérique public et gratuit, fourni par le Ministère de la Transition Écologique.
+
+            <p>En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si votre projet est soumis à la Loi sur l'eau.
+            Il fonctionne pour l'instant en Loire-Atlantique et sera prochainement étendu à un territoire plus large.</p>
+        
+            <p>
+              Vous pouvez demander <a href="{% url 'request_evaluation' %}">une évaluation de votre projet</a>, réalisée manuellement par l'équipe d'EnvErgo — disponible sur la totalité du territoire français.
+            </p>
+            
+            <p>
+              Enfin, n'hésitez pas à <a href="{{ contact_url }}">contacter l'équipe EnvErgo pour toute question complémentaire</a>.
+            </p>
+
+          </li>
+
+          <li>
+            <p><strong>De se rapprocher du service qui instruit les dossiers Loi sur l'eau</strong></p>
+            <p>
+              Pour cela, contactez la DDT(M) (Direction Départementale des Territoires et de la Mer) de votre département.
+            </p>
+          </li>
+
+          
         </ul>
       </div>
     </section>
+    
+    
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-que_faire">
@@ -282,51 +336,7 @@
         </ul>
       </div>
     </section>
-    <section class="fr-accordion">
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-savoir-si-mon-projet-est-soumis">
-          <span>
-            Comment déterminer si mon projet est soumis à la Loi sur l'eau ?
-          </span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
-
-        <p>
-          En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo vous permet en quelques clics vérifier si votre projet est soumis à la Loi sur l'eau</a>.
-          Ce service public numérique est gratuit, et fonctionne pour l'instant en Loire-Atlantique. Il sera prochainement étendu à un territoire plus large.
-        </p>
-
-        <p>
-          Pour approfondir l'analyse et déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé de se
-          rapprocher :
-        </p>
-
-        <ul>
-          <li>
-            <p><strong>D'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
-            <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau, et s'il y a lieu de constituer un dossier à déposer à l'administration.</p>
-          </li>
-
-          <li>
-            <p><strong>Du service qui instruit les dossiers Loi sur l'eau</strong></p>
-            <p>
-              Contactez la DDT(M) (Direction Départementale des Territoires et de la Mer) de votre département.
-            </p>
-          </li>
-
-          <li>
-            <p><strong>De l'équipe EnvErgo</strong></p>
-            <p>
-              Vous pouvez également demander <a href="{% url 'request_evaluation' %}">une évaluation de votre projet</a> par l'équipe d'EnvErgo, le présent
-              service public numérique.
-            </p>
-
-          </li>
-        </ul>
-      </div>
-    </section>
+    
 
   </div>
 {% endblock %}
