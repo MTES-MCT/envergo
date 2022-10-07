@@ -1,37 +1,37 @@
-<p>Le projet est soumis à Natura 2000</p>
+<p>Le projet est soumis à Natura 2000.</p>
 
 <h3>Marche à suivre</h3>
 
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), avec le dossier Loi sur l'eau.</li>
+    <li>Évaluation des incidences Natura 2000 à déposer avec le dossier Loi sur l'eau.</li>
     <li>Délai d'instruction : 2 mois.</li>
   </ul>
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-  <p>Une évaluation des incidences Natura 2000 à déposer à l'administration.</p>
+  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-  <p>Si le projet est soumis à la Loi sur l'eau :</p>
+  <p><em>Si le projet est soumis à la Loi sur l'eau :</em></p>
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), en même temps que le dossier Loi sur l'eau.</li>
-    <li>Délai d'instruction : 2 mois.</li>
+    <li>EIN à déposer avec le dossier Loi sur l'eau.</li>
+    <li>Délai d'instruction inchangé : 2 mois.</li>
   </ul>
 
-  <p>Si le projet n'est pas soumis à la Loi sur l'eau :</p>
+  <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande d'autorisation d'urbanisme (PC ou PA).</li>
-    <li>Délai d'instruction : 3 mois.</li>
+    <li>EIN à déposer en mairie, avec la demande de Permis de Construire ou d'Aménager.</li>
+    <li>Délai d'instruction inchangé : 2 mois pour une maision individuelle, 3 mois pour les autres projets.</li>
   </ul>
 
 {% else %}
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande d'autorisation d'urbanisme (PC ou PA).</li>
-    <li>Délai d'instruction : 3 mois.</li>
+    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande de Permis de Construire ou d'Aménager.</li>
+    <li>Délai d'instruction inchangé : 2 mois pour une maision individuelle, 3 mois pour les autres projets.</li>
   </ul>
 
 {% endif %}
