@@ -5,7 +5,7 @@
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), en même temps que le dossier Loi sur l'eau.</li>
+    <li>Évaluation des incidences Natura 2000 à déposer à la DDT(M), avec le dossier Loi sur l'eau.</li>
     <li>Délai d'instruction : 2 mois.</li>
   </ul>
 
@@ -42,15 +42,20 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <h4>Comment déposer une évaluation d'incidence Natura 2000 ?</h4>
+  <h4>Comment déposer une évaluation des incidences Natura 2000 ?</h4>
 
   <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</strong></p>
 
-  <p>Il est chargé de réaliser les études qui conviennent et de rédiger l'évaluation d'incidence Natura 2000.</p>
+  <p>Il est chargé de réaliser les études qui conviennent et de rédiger l'évaluation des incidences Natura 2000.</p>
 
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 avec le dossier Loi sur l'eau auprès du service de la DDT(M) en charge de l'instruction.</strong></p>
+    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 avec le dossier Loi sur l'eau.</strong></p>
+    
+    <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement, 
+      via une procédure en ligne.</a></p>
+      
+    <p>Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :</p>
 
     <div class="fr-highlight fr-mb-3w">
       {{ department.contact_html|safe }}
@@ -79,15 +84,14 @@
 
   {% endif %}
 
-  <h4>Comment l'instruction de l'évaluation d'incidence Natura 2000 se déroule-t-elle ?</h4>
+  <h4>Comment l'instruction se déroule-t-elle ?</h4>
 
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-    <p><strong>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant
-      l'instruction du dossier Loi sur l'eau, avec la même procédure et les même délais.</strong></p>
+    <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau.
+    Le dépôt et l'instruction de cette étude se font donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.</p>
 
-    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2
-      mois, extensible en cas de demande de compléments.</p>
+    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
 
     <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction</a>.</p>
 
@@ -133,16 +137,10 @@
   <div class="fr-alert fr-alert--info fr-my-3w">
 
     <p>
-      Si le projet fait l'objet d'une mise en demeure de :
-    </p>
-
-    <ul>
-      <li>procéder à la déclaration de l’évaluation des incidences Natura 2000,</li>
-      <li>d'obtenir ou de respecter l’autorisation ou la déclaration délivrée…</li>
-    </ul>
-
-    <p>le responsable s'expose à des sanctions administratives et pénales, qui peuvent aller jusqu'à
-      un an d'emprisonnement et 60 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/" target="_blank" rel="noopener">article L.173-1 du code de
+      S'il s'avère que le projet est réalisé sans avoir déclaré d’évaluation des incidences Natura 2000 
+      ou sans avoir respecté la décision de l’administration,
+      le responsable s'expose à des sanctions administratives et pénales, 
+      qui peuvent aller jusqu'à un an d'emprisonnement et 60 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033031804/2016-08-10" target="_blank" rel="noopener">article L.415-7 du code de
         l'environnement</a>).
     </p>
   </div>
