@@ -44,13 +44,13 @@
 
   <h4>Comment déposer une évaluation des incidences Natura 2000 ?</h4>
 
-  <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</strong></p>
+  <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale</strong></p>
 
   <p>Il est chargé de réaliser les études qui conviennent et de rédiger l'évaluation des incidences Natura 2000.</p>
 
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 avec le dossier Loi sur l'eau.</strong></p>
+    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 avec le dossier Loi sur l'eau</strong></p>
     
     <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement, 
       via une procédure en ligne.</a></p>
@@ -63,24 +63,28 @@
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 :</strong></p>
+    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 (EIN)</strong></p>
 
-    <p>Si le projet est par ailleurs soumis à la Loi sur l'eau, l'évaluation
-      d'incidence Natura 2000 est à déposer avec le dossier Loi sur l'eau auprès
-      du service de la DDT(M) en charge de l'instruction de ce dernier.</p>
+    <p><em>Si le projet est par ailleurs soumis à la Loi sur l'eau</em>, l'EIN est à déposer avec le dossier Loi sur l'eau.</p>
+  
+    <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement, 
+      via une procédure en ligne.</a></p>
+      
+    <p>Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :</p>
 
     <div class="fr-highlight fr-mb-3w">
       {{ department.contact_html|safe }}
     </div>
 
-    <p>Si le projet n'est par ailleurs pas soumis à la Loi sur l'eau, l'évaluation
-      d'incidence Natura 2000 est à déposer avec l'autorisation d'urbanisme (PC ou PA)
-      en mairie.</p>
+    <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M),
+      l'EIN est à déposer en mairie, avec l'autorisation d'urbanisme 
+      (permis de construire ou permis d'aménager).</p>
 
   {% else %}
 
-    <p><strong>2/ Déposer l'évaluation d'incidence Natura 2000 avec l'autorisation
-      d'urbanisme (PC ou PA) en mairie.</strong></p>
+    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 en mairie</strong></p>
+  
+    <p>L'évaluation doit être jointe à l'autorisation d'urbanisme (permis de construire ou permis d'aménager).
 
   {% endif %}
 
@@ -89,45 +93,36 @@
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
     <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau.
-    Le dépôt et l'instruction de cette étude se font donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.</p>
+    Son instruction se fait donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.</p>
 
     <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
 
-    <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction</a>.</p>
+    <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    <p><strong>Dans le cas ou votre projet est soumis à la Loi sur l'eau,
-      l'évaluation d'incidence Natura 2000 sera considérée comme une pièce
-      obligatoire du dossier Loi sur l'eau. Le dépôt et l'instruction de cette
-      étude se font donc dans le cadre du dossier Loi sur l'eau.</strong></p>
+    <p><p><em>Si le projet est par ailleurs soumis à la Loi sur l'eau</em>,
+      l'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau. 
+      Son instruction se fait donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.</p>
 
-    <p><strong>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant
-      l'instruction du dossier Loi sur l'eau, avec la même procédure et les même délais.</strong></p>
+    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
 
-    <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2
-      mois, extensible en cas de demande de compléments.</p>
+    <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>,
+      l'évaluation des incidences Natura 2000 est une pièce
+      obligatoire de l'autorisation d'urbanisme (permis de construire ou permis d'aménager).</p>
 
-    <p><strong>Dans le cas ou votre projet n'est pas soumis à la Loi sur l'eau,
-      l'évaluation d'incidence Natura 2000 sera considérée comme une pièce
-      obligatoire de l'autorisation d'urbanisme (PC ou PA). Le dépôt et
-      l'instruction de cette étude se font donc dans le cadre de la demande
-      de PC ou de PA.</strong></p>
+    <p>Son instruction se fait pendant l'instruction de la demande de permis de construire ou d'aménager, avec la même procédure et le même délai.</p>
 
-    <p>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant l'instruction de la demande de PC ou de PA, avec la même procédure et les même délais.</p>
-
-    <p>Le délai d'instruction d'une autorisation d'urbanisme (PC non maison individuelle ou PA) est de 3 mois, extensible en cas de demande de compléments.</p>
+    <p>Le délai d'instruction est de 2 mois pour une maision individuelle, 3 mois pour les autres projets. Il est extensible en cas de demande de compléments.</p>
 
   {% else %}
 
-    <p><strong>L'évaluation d'incidence Natura 2000 sera considérée comme une pièce
-      obligatoire de l'autorisation d'urbanisme (PC ou PA). Le dépôt et
-      l'instruction de cette étude se font donc dans le cadre de la demande
-      de PC ou de PA.</strong></p>
+    <p><strong>L'évaluation d'incidence Natura 2000 est une pièce
+      obligatoire de l'autorisation d'urbanisme (permis de construire ou permis d'aménager).</p>
 
-    <p>L'instruction de l'évaluation d'incidence Natura 2000 se fera pendant l'instruction de la demande de PC ou de PA, avec la même procédure et les même délais.</p>
+    <p>Son instruction se fait pendant l'instruction de la demande de permis de construire ou d'aménager, avec la même procédure et le même délai.</p>
 
-    <p>Le délai d'instruction d'une autorisation d'urbanisme (PC non maison individuelle ou PA) est de 3 mois, extensible en cas de demande de compléments.</p>
+    <p>Le délai d'instruction est de 2 mois pour une maision individuelle, 3 mois pour les autres projets. Il est extensible en cas de demande de compléments.</p>
 
   {% endif %}
 
