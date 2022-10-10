@@ -167,6 +167,15 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     return data["label"] if data else None
 
 
-def get_commune_from_coords(lng, lat, timeout=0.5, index="poi"):
-    data = get_data_from_coords(lng, lat, timeout)
-    return data["city"] if data else None
+def get_commune_from_coords(lng, lat, timeout=0.5):
+    url = f"https://geo.api.gouv.fr/communes?lon={lng}&lat={lat}&fields=code,nom"
+    data = None
+    try:
+        res = requests.get(url, timeout=timeout)
+        if res.status_code == 200:
+            json = res.json()
+            data = json[0]
+    except (requests.exceptions.Timeout, KeyError, IndexError):
+        pass
+
+    return data["nom"] if data else None
