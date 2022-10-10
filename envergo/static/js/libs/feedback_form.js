@@ -46,7 +46,7 @@ class Dialog extends api.core.Disclosure {
     this.setAttribute('aria-dialog', 'true');
     this.setAttribute('open', 'true');
 
-    _paq.push(['trackEvent', 'feedback', 'disclose']);
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose']);
     return true;
   }
 
@@ -55,7 +55,7 @@ class Dialog extends api.core.Disclosure {
     this.removeAttribute('aria-dialog');
     this.removeAttribute('open');
 
-    _paq.push(['trackEvent', 'feedback', 'conceal']);
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Conceal']);
     return true;
   }
 }
