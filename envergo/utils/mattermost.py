@@ -14,7 +14,10 @@ def notify(msg):
     endpoint = settings.MATTERMOST_ENDPOINT
     if endpoint:
         payload = {"text": msg}
-        requests.post(endpoint, json=payload)
+        r = requests.post(endpoint, json=payload)
+
+        # Make sure we get an error if the notification failed
+        r.raise_for_status()
     else:
         logger.warning(
             f"No mattermost endpoint configured. Doing nothing. Message: {msg}"
