@@ -14,7 +14,7 @@ from envergo.utils.mattermost import notify
 logger = logging.getLogger(__name__)
 
 
-@app.task
+@app.task(autoretry_for=(Exception,))
 def confirm_request_to_admin(request_id, host):
     """Send a Mattermost notification to confirm the evaluation request."""
 
