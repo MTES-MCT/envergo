@@ -1,4 +1,8 @@
-<p>Le projet est soumis à Natura 2000.</p>
+{% if moulinette.natura2000.iota_only %}
+  <p>Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un périmètre Natura 2000</em> — parce qu'il est soumis à la Loi sur l'eau.</p>
+{% else %}
+  <p>Le projet est soumis à Natura 2000.</p>
+{% endif %}
 
 <h3>Marche à suivre</h3>
 
