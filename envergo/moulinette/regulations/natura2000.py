@@ -211,8 +211,8 @@ class ZoneInondable44(MoulinetteCriterion):
                 "small": RESULTS.non_soumis,
             },
             "outside": {
-                "big": RESULTS.non_applicable,
-                "small": RESULTS.non_applicable,
+                "big": RESULTS.non_concerne,
+                "small": RESULTS.non_concerne,
             },
         }
 
