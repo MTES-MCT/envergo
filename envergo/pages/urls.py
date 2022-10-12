@@ -6,7 +6,11 @@ from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import LegalMentionsView
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="moulinette_home"), name="home"),
+    path(
+        "",
+        RedirectView.as_view(pattern_name="moulinette_home", query_string=True),
+        name="home",
+    ),
     path(_("stats/"), include("envergo.stats.urls")),
     path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(
