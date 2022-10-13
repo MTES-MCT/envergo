@@ -1,9 +1,6 @@
 #!/bin/bash
 # This script is ran by scalingo at the end of the build process
 
-# Interrupt script on error
-set -e
-
 compress_enabled() {
 python << END
 import sys
