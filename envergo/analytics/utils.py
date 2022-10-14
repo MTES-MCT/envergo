@@ -1,5 +1,6 @@
 import logging
 import socket
+from datetime import timedelta
 
 from django.conf import settings
 
@@ -54,3 +55,20 @@ def log_event(category, event, request, **kwargs):
         Event.objects.create(
             category=category, event=event, session_key=visitor_id, metadata=kwargs
         )
+
+
+def set_visitor_id_cookie(response, value):
+    """Set the unique visitor id cookie with correct lifetime."""
+
+    # CNIL's recommendation for tracking cookie lifetime = 13 months
+    lifetime = timedelta(days=30 * 13)
+    response.set_cookie(
+        settings.VISITOR_COOKIE_NAME,
+        value,
+        max_age=lifetime.total_seconds(),
+        domain=settings.SESSION_COOKIE_DOMAIN,
+        path=settings.SESSION_COOKIE_PATH,
+        secure=settings.SESSION_COOKIE_SECURE or None,
+        httponly=settings.SESSION_COOKIE_HTTPONLY or None,
+        samesite=settings.SESSION_COOKIE_SAMESITE,
+    )

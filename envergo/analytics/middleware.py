@@ -1,9 +1,9 @@
-from datetime import timedelta
 from uuid import uuid4
 
 from django.conf import settings
 
 from config.settings.base import VISITOR_COOKIE_NAME
+from envergo.analytics.utils import set_visitor_id_cookie
 
 
 class SetVisitorIdCookie:
@@ -34,17 +34,6 @@ class SetVisitorIdCookie:
         response = self.get_response(request)
 
         if is_first_visit:
-            # CNIL's recommendation for tracking cookie lifetime = 13 months
-            lifetime = timedelta(days=30 * 13)
-            response.set_cookie(
-                settings.VISITOR_COOKIE_NAME,
-                visitor_id,
-                max_age=lifetime.total_seconds(),
-                domain=settings.SESSION_COOKIE_DOMAIN,
-                path=settings.SESSION_COOKIE_PATH,
-                secure=settings.SESSION_COOKIE_SECURE or None,
-                httponly=settings.SESSION_COOKIE_HTTPONLY or None,
-                samesite=settings.SESSION_COOKIE_SAMESITE,
-            )
+            set_visitor_id_cookie(response, visitor_id)
 
         return response
