@@ -6,9 +6,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import FormView, RedirectView
 
-from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.forms import FeedbackForm
-from envergo.analytics.utils import log_event
+from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
 
@@ -20,7 +19,7 @@ class DisableVisitorCookie(RedirectView):
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        response.set_cookie(VISITOR_COOKIE_NAME, "")
+        set_visitor_id_cookie(response, "")
         return response
 
 
