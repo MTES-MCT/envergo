@@ -9,7 +9,7 @@
   <p class="fr-text--lead">La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les
     milieux aquatiques.</p>
 
-  <div id="water-law-accordion">
+  <div id="faq-accordion">
 
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
@@ -368,4 +368,16 @@
 
 
   </div>
+{% endblock %}
+
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+      const accordion = document.getElementById('faq-accordion');
+      new AccordionAnalytics(accordion);
+    });
+  </script>
+
 {% endblock %}
