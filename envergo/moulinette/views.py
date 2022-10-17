@@ -191,14 +191,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
 
 class MoulinetteRegulationResult(MoulinetteResult, FormView):
-    def get_template_names(self):
-        return "moulinette/_result_regulation.html"
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         moulinette = context["moulinette"]
 
         regulation_slug = self.kwargs.get("regulation")
-        context["regulation"] = getattr(moulinette, regulation_slug)
+        context["regulations"] = [getattr(moulinette, regulation_slug)]
 
         return context

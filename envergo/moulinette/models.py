@@ -152,6 +152,13 @@ class Moulinette:
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
+
+        zones = (Zone.objects
+        .filter(geometry__dwithin=(catalog['coords'], D(m=100)))
+        .annotate(distance=Distance('geometry', catalog['coords']))
+        .select_related('map')
+        )
+        raise 0
         return catalog
 
     def get_perimeters(self):
