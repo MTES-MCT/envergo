@@ -296,6 +296,15 @@ class Natura2000(MoulinetteRegulation):
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
 
+    def iota_only(self):
+        """Is the IOTA criterion the only valid criterion.
+
+        There is an edge case where projects can be subject to Natura2000 only
+        because they are subject to IOTA, even though they are outsite
+        Natura 2000 zones.
+        """
+        return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
+
     def _get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
 
