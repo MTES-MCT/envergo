@@ -38,7 +38,7 @@ def evaluation_menu(context):
         current_route = ""
 
     links = (
-        ("request_evaluation", "Demander une évaluation (48h)"),
+        ("request_evaluation", "Demander une évaluation (72h)"),
         ("evaluation_search", "Retrouver une évaluation"),
     )
     links_html = [nav_link(url, label, url == current_route) for url, label in links]

@@ -4,7 +4,7 @@ Nous vous confirmons avoir bien enregistré votre demande d'évaluation de votre
 {% if application_number %}
 (Votre numéro de demande de permis : {{ application_number }}).
 {% endif %}
-Vous recevrez une réponse dans les deux jours ouvrés.
+Vous recevrez une réponse dans les trois jours ouvrés.
 
 En attendant, vous pouvez consulter notre FAQ sur la Loi sur l'eau.
 
