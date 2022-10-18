@@ -150,7 +150,7 @@ class ZoneHumide(MoulinetteCriterion):
                 {
                     "polygon": potentials_polygon,
                     "color": LIGHTBLUE,
-                    "label": "ZH potentielle",
+                    "label": "Zone humide potentielle",
                 },
             ]
             wetlands_maps = [zone.map for zone in close_qs.select_related("map")]
