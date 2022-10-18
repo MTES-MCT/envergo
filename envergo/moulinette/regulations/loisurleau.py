@@ -167,7 +167,7 @@ class ZoneHumide(MoulinetteCriterion):
                     "polygon": geometries.aggregate(polygon=Union(F("geom")))[
                         "polygon"
                     ],
-                    "color": "dodgerblue",
+                    "color": LIGHTBLUE,
                     "label": "Zone humide potentielle",
                 }
             ]
