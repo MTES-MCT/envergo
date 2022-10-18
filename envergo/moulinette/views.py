@@ -175,7 +175,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             if moulinette.is_evaluation_available():
                 export["result"] = moulinette.result()
 
-            if not is_request_from_a_bot(request):
+            if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
                 log_event("simulateur", "soumission", request, **export)
 
             return res
