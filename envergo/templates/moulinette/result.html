@@ -11,6 +11,9 @@
 
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
 
+  <button class="fr-btn" data-fr-opened="false" aria-controls="share-modal">Partager par email</button>
+
+
   {% for regulation in moulinette.regulations %}
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
@@ -27,6 +30,10 @@
 
   </section>
 
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'moulinette/_share_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
