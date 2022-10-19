@@ -181,3 +181,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_url"] = self.request.build_absolute_uri()
+        return context
