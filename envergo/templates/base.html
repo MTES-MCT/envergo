@@ -1,6 +1,6 @@
 {% load static i18n compress%}
 <!DOCTYPE html>
-<html lang="fr" data-fr-scheme="system">
+<html lang="fr" data-fr-scheme="system" class="nojs">
 
   <head>
     <meta charset="utf-8">
@@ -31,6 +31,13 @@
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
     {% endblock javascript %}
+    <script>
+      // Add class to indicate that js is available
+      var html = document.documentElement;
+      html.classList.remove('nojs');
+      html.classList.add('js');
+    </script>
+
   </head>
 
   <body>

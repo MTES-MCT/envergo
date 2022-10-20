@@ -10,6 +10,10 @@ $red: #b94a48;
   font-size: 112.5%;
 }
 
+html.nojs .js {
+  display: none !important;
+}
+
 .alert-debug {
   background-color: $white;
   border-color: $mint-green;
