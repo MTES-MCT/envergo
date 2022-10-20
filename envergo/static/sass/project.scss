@@ -99,6 +99,13 @@ $red: #b94a48;
         resize: vertical;
       }
     }
+
+  }
+
+  button.share-btn {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   @media (min-width: 1144px) {
