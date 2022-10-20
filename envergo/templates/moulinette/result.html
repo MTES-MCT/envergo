@@ -14,6 +14,7 @@
 
   {% for regulation in moulinette.regulations %}
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal">Partager cette page par email</button>
+
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 
@@ -29,6 +30,16 @@
 
   </section>
 
+{% endblock %}
+
+
+{% block bottom_alt %}
+  <h2>Besoin de partager cette évaluation à un contact ?</h2>
+
+  <p>
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal">Partager cette page par email</button>
+  </p>
+  <p>Le destinataire pourra consulter cette page Web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.</p>
 {% endblock %}
 
 {% block extra_body %}
