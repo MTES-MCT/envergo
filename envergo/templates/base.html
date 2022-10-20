@@ -18,6 +18,7 @@
     {% block css %}
       {% compress css %}
         <link href="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.css' %}" rel="stylesheet">
+        <link href="{% static '@gouvfr/dsfr/dist/utility/icons/icons.main.css' %}" rel="stylesheet">
         <link href="{% static 'css/project.min.css' %}" rel="stylesheet">
       {% endcompress %}
       {% block extra_css %}{% endblock %}
