@@ -184,5 +184,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["current_url"] = self.request.build_absolute_uri()
+        current_url = self.request.build_absolute_uri()
+        tracked_url = f"{current_url}&mtm_source=shareBtn"
+        context["current_url"] = tracked_url
         return context
