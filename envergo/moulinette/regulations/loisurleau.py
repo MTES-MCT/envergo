@@ -46,9 +46,9 @@ class ZoneHumide(MoulinetteCriterion):
         else:
             wetland_status = "outside"
 
-        if self.catalog["project_surface"] >= 1000:
+        if self.catalog["created_surface"] >= 1000:
             project_size = "big"
-        elif self.catalog["project_surface"] >= 700:
+        elif self.catalog["created_surface"] >= 700:
             project_size = "medium"
         else:
             project_size = "small"
