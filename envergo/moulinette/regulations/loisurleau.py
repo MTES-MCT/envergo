@@ -11,6 +11,9 @@ from envergo.moulinette.regulations import (
     MoulinetteRegulation,
 )
 
+BLUE = "#0000FF"
+LIGHTBLUE = "#00BFFF"
+
 
 class ZoneHumide(MoulinetteCriterion):
     slug = "zone_humide"
@@ -110,7 +113,7 @@ class ZoneHumide(MoulinetteCriterion):
                     "polygon": geometries.aggregate(polygon=Union(F("geom")))[
                         "polygon"
                     ],
-                    "color": "blue",
+                    "color": BLUE,
                     "label": "Zone humide",
                 }
             ]
@@ -124,7 +127,7 @@ class ZoneHumide(MoulinetteCriterion):
                     "polygon": geometries.aggregate(polygon=Union(F("geom")))[
                         "polygon"
                     ],
-                    "color": "blue",
+                    "color": BLUE,
                     "label": "Zone humide",
                 }
             ]
@@ -143,11 +146,11 @@ class ZoneHumide(MoulinetteCriterion):
             ]
 
             polygons = [
-                {"polygon": wetlands_polygon, "color": "blue", "label": "Zone humide"},
+                {"polygon": wetlands_polygon, "color": BLUE, "label": "Zone humide"},
                 {
                     "polygon": potentials_polygon,
-                    "color": "lightblue",
-                    "label": "ZH potentielle",
+                    "color": LIGHTBLUE,
+                    "label": "Zone humide potentielle",
                 },
             ]
             wetlands_maps = [zone.map for zone in close_qs.select_related("map")]
@@ -164,7 +167,7 @@ class ZoneHumide(MoulinetteCriterion):
                     "polygon": geometries.aggregate(polygon=Union(F("geom")))[
                         "polygon"
                     ],
-                    "color": "dodgerblue",
+                    "color": LIGHTBLUE,
                     "label": "Zone humide potentielle",
                 }
             ]
