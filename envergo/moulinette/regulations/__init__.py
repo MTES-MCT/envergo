@@ -94,6 +94,7 @@ class Map:
         EPSG_WGS84 = 4326
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
 
+        raise 0
         data = json.dumps(
             {
                 "center": to_geojson(self.center),

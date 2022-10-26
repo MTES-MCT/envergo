@@ -1,6 +1,7 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import MultiPolygonField, Union
+from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import F
 from django.db.models.functions import Cast
 
@@ -97,7 +98,6 @@ class ZoneHumide(MoulinetteCriterion):
         return code
 
     def _get_map(self):
-
         inside_qs = self.catalog["wetlands_25"].filter(map__display_for_user=True)
         close_qs = self.catalog["wetlands_100"].filter(map__display_for_user=True)
         potential_qs = self.catalog["potential_wetlands"].filter(
@@ -231,22 +231,23 @@ class ZoneInondable(MoulinetteCriterion):
         return result
 
     def _get_map(self):
-        zone_qs = self.catalog["flood_zones_12"].filter(map__display_for_user=True)
+        zone_qs = self.catalog["flood_zones_12"] #.filter(map__display_for_user=True)
         polygons = None
+        polygon = GEOSGeometry('POLYGON EMPTY')
+        for zone in zone_qs:
+            polygon = polygon.union(zone.geom)
 
         if zone_qs:
             caption = "Le projet se situe dans une zone inondable."
-            geometries = zone_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            # geometries = zone_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
             polygons = [
                 {
-                    "polygon": [
-                        geometries.aggregate(polygon=Union(F("geom")))["polygon"]
-                    ][0],
+                    "polygon": polygon,
                     "color": "red",
                     "label": "Zone inondable",
                 }
             ]
-            maps = set([zone.map for zone in zone_qs.select_related("map")])
+            maps = set([zone.map for zone in zone_qs])
 
         if polygons:
             criterion_map = Map(
