@@ -28,10 +28,13 @@
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
 
-          <h2>Pour en savoir plus…</h2>
+          {% block bottom_alt %}
 
-          <p>Consultez notre <a href="{% url 'faq' %}">page d'information sur la Loi sur l'eau</a>
-            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+            <h2>Pour en savoir plus…</h2>
+
+            <p>Consultez notre <a href="{% url 'faq' %}">page d'information sur la Loi sur l'eau</a>
+              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+          {% endblock %}
         </div>
       </div>
     </div>

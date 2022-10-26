@@ -12,6 +12,8 @@
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
 
   {% for regulation in moulinette.regulations %}
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 
@@ -29,9 +31,24 @@
 
 {% endblock %}
 
+
+{% block bottom_alt %}
+  <h2>Besoin de partager cette évaluation à un contact ?</h2>
+
+  <p>
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+  </p>
+  <p>Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.</p>
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'moulinette/_share_modal.html' %}
+{% endblock %}
+
 {% block extra_js %}
   {{ block.super }}
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
   <script>
     var _paq = window._paq || [];
 

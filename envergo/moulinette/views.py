@@ -181,3 +181,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        current_url = self.request.build_absolute_uri()
+        tracked_url = f"{current_url}&mtm_source=shareBtn"
+        context["current_url"] = tracked_url
+        return context
