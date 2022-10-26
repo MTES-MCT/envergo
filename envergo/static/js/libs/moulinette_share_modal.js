@@ -15,11 +15,11 @@
   };
 
   ShareModal.prototype.onModalDisclose = function() {
-    _paq.push(['trackEvent', 'ShareDialog', 'DialogDisclose']);
+    _paq.push(['trackEvent', 'ShareDialog', 'Disclose']);
   };
 
   ShareModal.prototype.onModalConceal = function() {
-    _paq.push(['trackEvent', 'ShareDialog', 'DialogConceal']);
+    _paq.push(['trackEvent', 'ShareDialog', 'Conceal']);
   };
 
   ShareModal.prototype.copyUrlToClipboard = function() {
@@ -31,7 +31,7 @@
     this.shareBtn.classList.add('fr-btn--icon-left');
     this.shareBtn.classList.add('fr-icon-thumb-up-fill');
 
-    _paq.push(['trackEvent', 'ShareDialog', 'URLCopy']);
+    _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
   };
 
 })(this, window._paq || []);
