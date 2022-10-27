@@ -19,7 +19,7 @@ class ZoneHumide44(MoulinetteCriterion):
     choice_label = "Natura 2000 > 44 - Zone humide"
     title = "Impact sur zone humide Natura 2000"
     subtitle = "Seuil réglementaire : 100 m²"
-    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (10° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
+    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
     def get_catalog_data(self):
         data = {}
@@ -184,7 +184,7 @@ class ZoneInondable44(MoulinetteCriterion):
     choice_label = "Natura 2000 > 44 - Zone inondable"
     title = "Impact sur zone inondable Natura 2000"
     subtitle = "Seuil réglementaire : 200 m²"
-    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
+    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (10° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
     def get_catalog_data(self):
         data = {}
