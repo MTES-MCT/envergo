@@ -46,15 +46,25 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <h4>Comment déposer une évaluation des incidences Natura 2000 ?</h4>
+  <h4>Comment réaliser une évaluation des incidences Natura 2000 ?</h4>
 
-  <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale</strong></p>
+  <p><strong>1/ Remplir le formulaire d’évaluation simplifiée</strong></p>
 
-  <p>Il est chargé de réaliser les études qui conviennent et de rédiger l'évaluation des incidences Natura 2000.</p>
+  <p>Ce <a href="google.fr">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>
+  
+  <p>S’il conclut à l’absence d’incidence, il fait office d’évaluation des incidences Natura 2000.</p>
+
+  <p>Dans le cas contraire, une évaluation plus poussée doit être conduite.</p>
+
+  <p><strong>2/ En cas d’incidences possibles ou avérées, se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</p>
+
+  <p>Il est chargé de réaliser les études qui conviennent et de rédiger une évaluation des incidences Natura 2000 complète.</p>
+
+  <h4>Comment déposer l’évaluation des incidences Natura 2000 (EIN) ?</h4>
 
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
-
-    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 avec le dossier Loi sur l'eau</strong></p>
+  
+    <p>L'EIN est à déposer avec le dossier Loi sur l'eau.</p>
 
     <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement,
       via une procédure en ligne.</a></p>
@@ -66,8 +76,6 @@
     </div>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
-
-    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 (EIN)</strong></p>
 
     <p><em>Si le projet est aussi soumis à la Loi sur l'eau</em>, l'EIN est à déposer avec le dossier Loi sur l'eau.</p>
 
@@ -86,9 +94,7 @@
 
   {% else %}
 
-    <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 en mairie</strong></p>
-
-    <p>L'évaluation doit être jointe à l'autorisation d'urbanisme (permis de construire ou permis d'aménager).
+    <p>L’EIN est à déposer en mairie, avec l'autorisation d'urbanisme (permis de construire ou permis d’aménager).</p>
 
   {% endif %}
 
