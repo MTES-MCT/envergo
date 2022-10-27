@@ -6,18 +6,18 @@
 
 <h3>Marche à suivre</h3>
 
+<p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
+
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer en ligne avec le dossier Loi sur l'eau.</li>
+    <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
     <li>Délai d'instruction : 2 mois.</li>
   </ul>
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
-
-  <p><em>Si le projet est soumis à la Loi sur l'eau :</em></p>
+  <p><em>Si le projet est aussi soumis à la Loi sur l'eau :</em></p>
 
   <ul>
     <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
@@ -26,17 +26,31 @@
 
   <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
 
+  {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
   <ul>
-    <li>EIN à déposer en mairie, avec la demande de permis de construire ou d'aménager.</li>
-    <li>Délai d'instruction inchangé : 2 mois pour une maison individuelle, 3 mois pour les autres projets.</li>
+    <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
+    <li>Délai d'instruction inchangé : 3 mois.</li>
   </ul>
+  {% else %}
+  <ul>
+    <li>EIN à déposer à la DDT(M).</li>
+    <li>Délai d'instruction : 2 mois.</li>
+  </ul>
+  {% endif %}
 
 {% else %}
 
+  {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
   <ul>
-    <li>Évaluation des incidences Natura 2000 à déposer en mairie, avec la demande de permis de construire ou d'aménager.</li>
-    <li>Délai d'instruction inchangé : 2 mois pour une maison individuelle, 3 mois pour les autres projets.</li>
+    <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
+    <li>Délai d'instruction inchangé : 3 mois.</li>
   </ul>
+  {% else %}
+  <ul>
+    <li>EIN à déposer à la DDT(M).</li>
+    <li>Délai d'instruction : 2 mois.</li>
+  </ul>
+  {% endif %}
 
 {% endif %}
 
@@ -85,7 +99,9 @@
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    <p><em>Si le projet est aussi soumis à la Loi sur l'eau</em>, l'EIN est à déposer avec le dossier Loi sur l'eau.</p>
+    <p><em>Si le projet est aussi soumis à la Loi sur l'eau :</em></p>
+      
+    <p>L'EIN est à déposer avec le dossier Loi sur l'eau.</p>
 
     <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement,
       via une procédure en ligne.</a></p>
@@ -96,13 +112,42 @@
       {{ department.contact_html|safe }}
     </div>
 
-    <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M),
-      l'EIN est à déposer en mairie, avec l'autorisation d'urbanisme
-      (permis de construire ou permis d'aménager).</p>
+    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+    <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :</p>
+     
+    <p>L'EIN est à déposer en mairie, avec le permis d'aménager.</p>
+  
+    {% else %}
+  
+    <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
+  
+    <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
+  
+    <div class="fr-highlight fr-mb-3w">
+      <p><strong>DDTM de Loire-Atlantique</strong></p>
+      <p>Service eau et environnement</p>
+      <p>Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a></p>
+    </div>
+  
+    {% endif %}
 
   {% else %}
 
-    <p>L’EIN est à déposer en mairie, avec l'autorisation d'urbanisme (permis de construire ou permis d’aménager).</p>
+    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+
+    <p>L’EIN est à déposer en mairie, avec le permis d’aménager.</p>
+  
+    {% else %}
+  
+    <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
+  
+    <div class="fr-highlight fr-mb-3w">
+      <p><strong>DDTM de Loire-Atlantique</strong></p>
+      <p>Service eau et environnement</p>
+      <p>Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a></p>
+    </div>
+  
+    {% endif %}
 
   {% endif %}
 
@@ -118,26 +163,46 @@
     <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+  
+    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+  
+    <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
+  
+    <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
+  
+    <p>Ainsi, <em>si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
+    le délai d'instruction par la DDT(M) est de 2 mois, extensible en cas de demande de compléments.</p>
 
-    <p>Le projet étant soumis à Natura 2000, l'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis
-      à l'administration qui l'instruit.</p>
+    <p><em>S'il n'y a pas de dossier Loi sur l'eau</em>, l'EIN est jointe au permis d'aménager.
+    Le délai d'instruction par le service urbanisme est de 3 mois, extensible en cas de demande de compléments.</p>
 
-    <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai. Ainsi :</p>
-
+    {% else %}
+  
     <p><em>Si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
-      le délai d'instruction par la DDT(M) est de 2 mois, extensible en cas de demande de compléments.</p>
-
-    <p><em>Si l'EIN est jointe à l'autorisation d'urbanisme (permis de construire ou permis d'aménager)</em>,
-      le délai d'instruction par le service urbanisme est de 2 mois pour une maison individuelle, 3 mois pour les autres projets — délai extensible en cas de demande de compléments.</p>
-
+    elle est examinée en même temps que celui-ci. La procédure d'instruction n'en est pas modifiée, et garde le même délai :
+    2 mois, extensible en cas de demande de compléments.</p>
+  
+    <p><em>S’il n’y a pas de dossier Loi sur l’eau</em>,
+    l'EIN est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
+  
+    {% endif %}
+    
+    
   {% else %}
 
-    <p>L'évaluation des incidences Natura 2000 est une pièce
-      obligatoire de l'autorisation d'urbanisme (permis de construire ou permis d'aménager).</p>
+    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+  
+    <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire du permis d'aménager.</p>
 
-    <p>Son instruction se fait pendant l'instruction de la demande de permis de construire ou d'aménager, avec la même procédure et le même délai.</p>
+    <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
 
-    <p>Le délai d'instruction est de 2 mois pour une maison individuelle, 3 mois pour les autres projets — délai extensible en cas de demande de compléments.</p>
+    <p>Le délai d'instruction est donc de 3 mois, extensible en cas de demande de compléments.</p>
+  
+    {% else %}
+
+    <p>L'évaluation des incidences Natura 2000 est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
+  
+    {% endif %}
 
   {% endif %}
 
