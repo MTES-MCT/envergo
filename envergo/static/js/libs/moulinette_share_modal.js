@@ -1,4 +1,6 @@
-(function(exports, _paq) {
+var _paq = window._paq || [];
+
+(function(exports) {
   'use strict';
 
   const ShareModal = function(dialogElt) {
@@ -34,7 +36,7 @@
     _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
   };
 
-})(this, window._paq || []);
+})(this);
 
 window.addEventListener('load', function() {
   const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
