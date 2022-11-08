@@ -85,10 +85,8 @@ html.nojs .js {
 
     #feedback-trigger {
 
-      button {
-        display: block;
-        margin-left: auto;
-        text-decoration: underline;
+      .callout-buttons {
+        text-align: right;
       }
     }
 

@@ -1,13 +1,19 @@
 <div id="feedback-form" class="fr-mt-8w">
 
   <div id="feedback-trigger" class="fr-p-3w fr-callout fr-callout--blue-cumulus">
-    <strong class="fr-callout__text">💡 Une question sur cette évaluation ? Une remarque ? </strong>
+    <p class="fr-callout__text">💡 Nous aimerions savoir :</p>
 
-    <p class="fr-callout__text">Notre réponse en 24h.</p>
+    <p class="fr-callout__text"><strong>Cette évaluation vous est-elle utile ?</strong></p>
 
-    <button class="fr-btn fr-btn--tertiary-no-outline"  data-fr-opened="false" aria-controls="feedback-form-dialog">
-      Faire un retour
-    </button>
+    <div class="callout-buttons">
+      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-thumb-up-fill" data-fr-opened="false" aria-controls="feedback-form-dialog">
+        Oui
+      </button>
+
+      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-thumb-down-fill" data-fr-opened="false" aria-controls="feedback-form-dialog">
+        Non
+      </button>
+    </div>
   </div>
 
   <dialog aria-labelledby="feedback-form-dialog-title" role="dialog" id="feedback-form-dialog" class="fr-dialog feedback-dialog">
