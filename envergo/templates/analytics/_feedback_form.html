@@ -22,11 +22,11 @@
         <button class="fr-link--close fr-link" title="Fermer le formulaire de retour" aria-controls="feedback-form-dialog">Fermer</button>
       </div>
       <div class="">
-        <h1 id="feedback-form-dialog-title" class="fr-callout__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Faire un retour</h1>
+        <h1 id="feedback-form-dialog-title" class="fr-callout__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Merci de votre retour</h1>
         <div class="feedback-form" id="feedback-form">
           <form action="{% url 'feedback_submit' %}" method="post">
             {% csrf_token %}
-            <p class="fr-mb-3w">N'hésitez pas à contribuer… Vous aidez ainsi à améliorer ce service public et gratuit. Nous répondons à 100% des retours en 24h.</p>
+            <p class="fr-mb-3w">Pour contribuer à améliorer ce service public et gratuit, vous pouvez nous en dire plus :</p>
             {% include '_form_snippet.html' with form=feedback_form %}
             <button type="submit" class="fr-btn">Envoyer</button>
           </form>
