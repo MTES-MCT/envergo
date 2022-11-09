@@ -1,5 +1,6 @@
 from urllib.parse import parse_qs, urlencode, urlparse
 
+from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
@@ -43,12 +44,23 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
                 "message": data["message"],
                 "address": address,
                 "contact": data["contact"],
+                "feedback": data["feedback"],
+                "profile": data["you_are"],
                 "origin_url": feedback_origin,
             },
         )
         notify(message_body)
         log_event("feedback", "soumission", self.request)
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # This should not happen, but just in case, let's not display
+        # an ugly 500 error page to the user.
+        messages.error(
+            self.request,
+            "Une erreur technique nous a empêché de réceptionner votre retour. Veuillez nous excuser de ce désagrément.",
+        )
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self, *args, **kwargs):
         """Redirect form to the previous page.

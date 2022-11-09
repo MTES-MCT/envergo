@@ -25,6 +25,11 @@ class DialogButton extends api.core.DisclosureButton {
   static get instanceClassName() {
     return 'DialogButton';
   }
+
+  click(e) {
+    let feedbackValue = this.getAttribute('data-feedback');
+    if (this.registration.creator) this.registration.creator.toggle(this.isPrimary, feedbackValue);
+  }
 }
 
 class Dialog extends api.core.Disclosure {
@@ -41,12 +46,30 @@ class Dialog extends api.core.Disclosure {
     this.listenKey(api.core.KeyCodes.ESCAPE, this.conceal.bind(this, false, false), true, true);
   }
 
-  disclose(withhold) {
+  toggle(isPrimary, feedbackValue) {
+    if (!this.type.canConceal) this.disclose(undefined, feedbackValue);
+    else {
+      switch (true) {
+        case !isPrimary:
+        case this.disclosed:
+          this.conceal();
+          break;
+
+        default:
+          this.disclose(undefined, feedbackValue);
+      }
+    }
+  }
+
+  disclose(withhold, feedbackValue) {
     if (!super.disclose(withhold)) return false;
     this.setAttribute('aria-dialog', 'true');
     this.setAttribute('open', 'true');
 
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose']);
+    let feedbackInput = this.querySelector('input[name=feedback]');
+    feedbackInput.value = feedbackValue;
+
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose', feedbackValue]);
     return true;
   }
 
