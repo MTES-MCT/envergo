@@ -73,9 +73,8 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         # If for some reason, the referer META is missing, let's prevent
         # an error and redirect to home instead.
         referer = self.request.META.get("HTTP_REFERER")
-        home_url = reverse('home')
+        home_url = reverse("home")
         redirect_url = referer or home_url
-
 
         # Is there a better way add a single parameter to an url?
         # Because otherwise, I'm disappointed in you Python.
