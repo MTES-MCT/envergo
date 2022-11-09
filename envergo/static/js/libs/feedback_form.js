@@ -28,7 +28,9 @@ class DialogButton extends api.core.DisclosureButton {
 
   click(e) {
     let feedbackValue = this.getAttribute('data-feedback');
-    if (this.registration.creator) this.registration.creator.toggle(this.isPrimary, feedbackValue);
+    let fieldLabel = this.getAttribute('data-label');
+    let options = { feedbackValue, fieldLabel };
+    if (this.registration.creator) this.registration.creator.toggle(this.isPrimary, options);
   }
 }
 
@@ -46,8 +48,8 @@ class Dialog extends api.core.Disclosure {
     this.listenKey(api.core.KeyCodes.ESCAPE, this.conceal.bind(this, false, false), true, true);
   }
 
-  toggle(isPrimary, feedbackValue) {
-    if (!this.type.canConceal) this.disclose(undefined, feedbackValue);
+  toggle(isPrimary, discloseOptions) {
+    if (!this.type.canConceal) this.disclose(undefined, discloseOptions);
     else {
       switch (true) {
         case !isPrimary:
@@ -56,20 +58,25 @@ class Dialog extends api.core.Disclosure {
           break;
 
         default:
-          this.disclose(undefined, feedbackValue);
+          this.disclose(undefined, discloseOptions);
       }
     }
   }
 
-  disclose(withhold, feedbackValue) {
+  disclose(withhold, options) {
     if (!super.disclose(withhold)) return false;
     this.setAttribute('aria-dialog', 'true');
     this.setAttribute('open', 'true');
 
+    // Set the "feedback value (Oui / Non) hidden input value
     let feedbackInput = this.querySelector('input[name=feedback]');
-    feedbackInput.value = feedbackValue;
+    feedbackInput.value = options.feedbackValue;
 
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose', feedbackValue]);
+    // Update the feedback content label
+    let label = this.querySelector('[for=id_message] span');
+    label.innerHTML = options.fieldLabel;
+
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose', options.feedbackValue]);
     return true;
   }
 
