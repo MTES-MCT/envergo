@@ -12,13 +12,15 @@ YOU_ARE_CHOICES = (
     ("autre", "Autre"),
 )
 
+# The "Oui" and "Non" values are hardcoded in the feedback_form.js file.
+# Do no change, or change both files.
 FEEDBACK_CHOICES = (
     (
-        "oui",
+        "Oui",
         mark_safe('<span class="fr-icon-thumb-up-fill" aria-hidden="true"></span> Oui'),
     ),
     (
-        "non",
+        "Non",
         mark_safe(
             '<span class="fr-icon-thumb-down-fill" aria-hidden="true"></span> Non'
         ),

@@ -35,7 +35,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         """Send the feedback as a Mattermost notification."""
 
         data = form.cleaned_data
-        feedback_origin = self.request.META["HTTP_REFERER"]
+        feedback_origin = self.request.META.get("HTTP_REFERER")
         parsed = parse_qs(feedback_origin)
         address = get_address_from_coords(parsed["lng"][0], parsed["lat"][0])
         message_body = render_to_string(
@@ -69,10 +69,17 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         feedback form again.
         """
 
+        # We want to redirect to the url where the feedback comes from
+        # If for some reason, the referer META is missing, let's prevent
+        # an error and redirect to home instead.
+        referer = self.request.META.get("HTTP_REFERER")
+        home_url = reverse('home')
+        redirect_url = referer or home_url
+
+
         # Is there a better way add a single parameter to an url?
         # Because otherwise, I'm disappointed in you Python.
-        referer = self.request.META["HTTP_REFERER"]
-        parsed = urlparse(referer)
+        parsed = urlparse(redirect_url)
         query = parse_qs(parsed.query)
         query["feedback"] = ["true"]
 
