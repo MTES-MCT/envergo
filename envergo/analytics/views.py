@@ -58,7 +58,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
         # an ugly 500 error page to the user.
         messages.error(
             self.request,
-            "Une erreur technique nous a empêché de réceptionner votre retour. Veuillez nous excuser de ce désagrément.",
+            "Une erreur technique nous a empêché de réceptionner votre retour. Veuillez nous excuser pour ce désagrément.",
         )
         return HttpResponseRedirect(self.get_success_url())
 
