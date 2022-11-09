@@ -1,3 +1,5 @@
+{% load static %}
+
 {% if moulinette.natura2000.iota_only %}
   <p>Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un périmètre Natura 2000</em> — parce qu'il est soumis à la Loi sur l'eau.</p>
 {% else %}
@@ -64,7 +66,7 @@
 
   <p><strong>1/ Remplir le formulaire d’évaluation simplifiée</strong></p>
 
-  <p>Ce <a href="google.fr">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>
+  <p>Ce <a download="Formulaire N2000 DDTM44.pdf" href="{% static 'pdfs/formulaire_eval_n2000_ddtm44.pdf' %}">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>
 
   <p>S’il conclut à l’absence d’incidence, il fait office d’évaluation des incidences Natura 2000.</p>
 
