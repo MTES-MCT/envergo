@@ -88,7 +88,7 @@
   <p>Si les études révèlent que le projet est soumis à Natura 2000, le
     dépôt d'une évaluation des incidences Natura 2000 est obligatoire, sous
     peine de sanctions.</p>
-  
+
   <p>En cas de question, se rapprocher du service de la DDT(M) en charge de Natura 2000 :</p>
   <div class="fr-highlight fr-mb-3w">
     <p>DDTM de Loire-Atlantique</p>
@@ -101,7 +101,7 @@
     <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 (EIN)</strong></p>
 
     <p><em>Si le projet est aussi soumis à la Loi sur l'eau :</em></p>
-      
+
     <p>L'EIN est à déposer avec le dossier Loi sur l'eau.</p>
 
     <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement,
@@ -114,45 +114,45 @@
     </div>
 
     {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
-    
+
     <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :</p>
-     
+
     <p>L'EIN est à déposer en mairie, avec la demande de permis d'aménager.</p>
-  
+
     {% else %}
-  
+
     <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
-  
+
     <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
-  
+
     <div class="fr-highlight fr-mb-3w">
       <p><strong>DDTM de Loire-Atlantique</strong></p>
       <p>Service eau et environnement</p>
       <p>Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a></p>
     </div>
-  
+
     {% endif %}
 
   {% else %}
 
     {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
-  
+
     <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 en mairie</strong></p>
 
     <p>Elle doit être jointe à la demande de permis d'aménager.</p>
-  
+
     {% else %}
-  
+
     <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 à la DDT(M)</strong></p>
 
     <p>Elle doit être adressée à :</p>
-  
+
     <div class="fr-highlight fr-mb-3w">
       <p><strong>DDTM de Loire-Atlantique</strong></p>
       <p>Service eau et environnement</p>
       <p>Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a></p>
     </div>
-  
+
     {% endif %}
 
   {% endif %}
@@ -162,11 +162,11 @@
   {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
     {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
-  
+
     <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
-  
+
     <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
-  
+
     <p>Ainsi, <em>si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
     le délai d'instruction par la DDT(M) est de 2 mois, extensible en cas de demande de compléments.</p>
 
@@ -174,32 +174,32 @@
     Le délai d'instruction par le service urbanisme est de 3 mois, extensible en cas de demande de compléments.</p>
 
     {% else %}
-  
+
     <p><em>Si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
     elle est examinée en même temps que celui-ci. La procédure d'instruction n'en est pas modifiée, et garde le même délai :
     2 mois, extensible en cas de demande de compléments.</p>
-  
+
     <p><em>S’il n’y a pas de dossier Loi sur l’eau</em>,
     l'EIN est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
-  
+
     {% endif %}
 
   {% else %}
 
     {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
-  
+
     <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande de permis d'aménager.</p>
 
     <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
 
     <p>Le délai d'instruction est donc de 3 mois, extensible en cas de demande de compléments.</p>
-  
+
     {% else %}
 
     <p>L'évaluation des incidences Natura 2000 est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
-  
+
     {% endif %}
-  
+
   {% endif %}
 
   <h4>Sanctions en cas d'omission</h4>
