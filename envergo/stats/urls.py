@@ -1,7 +1,10 @@
 from django.urls import path
-
-from envergo.stats.views import StatsView
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("", StatsView.as_view(), name="stats"),
+    path(
+        "",
+        RedirectView.as_view(url="https://sites.google.com/view/stats-envergo/"),
+        name="stats",
+    ),
 ]
