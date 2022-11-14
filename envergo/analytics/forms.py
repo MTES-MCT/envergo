@@ -40,8 +40,9 @@ class FeedbackForm(forms.Form):
         label="Que souhaitez-vous nous demander ou signaler ?",
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": MSG_PLACEHOLDER}),
     )
-    you_are = forms.ChoiceField(
-        required=True, label="Vous êtes…", choices=YOU_ARE_CHOICES
+    you_are = forms.MultipleChoiceField(
+        required=True, label="Vous êtes…", choices=YOU_ARE_CHOICES, widget=forms.CheckboxSelectMultiple
+
     )
     contact = forms.CharField(
         required=False,
@@ -52,5 +53,7 @@ class FeedbackForm(forms.Form):
     def get_you_are_display(self):
         """Get display value for `you_are` field."""
 
-        field_value = self.cleaned_data['you_are']
-        return dict(YOU_ARE_CHOICES)[field_value]
+        choices = dict(YOU_ARE_CHOICES)
+        vals = self.cleaned_data['you_are']
+        labels = [choices[val] for val in vals]
+        return ' / '.join(labels)

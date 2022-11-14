@@ -1,0 +1,37 @@
+{% load utils %}
+
+<div class="fr-form-group" id="form-group-{{ field.name }}">
+
+  <fieldset class="fr-fieldset">
+
+    <legend class="fr-fieldset__legend fr-text--regular" id='{{ field.name }}-legend'>
+      {{ field.label }}
+      {% if field.help_text %}
+        <span class="fr-hint-text">{{ field.help_text|safe }}</span>
+      {% endif %}
+    </legend>
+
+    <div class="fr-fieldset__content">
+      {% for option in field %}
+        <div class="fr-checkbox-group{% if field.errors %} fr-checkbox-group--error{% endif %}">
+
+
+          {{ option.tag }}
+
+          <label class="fr-label" for="{{ option.id_for_label }}">
+            {{ option.choice_label }}
+          </label>
+
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if field.errors %}
+      <p class="fr-error-text">
+        ↑
+        {{ field.errors.0 }}
+        ↑
+      </p>
+    {% endif %}
+  </fieldset>
+</div>
