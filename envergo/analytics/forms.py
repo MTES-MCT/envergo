@@ -6,7 +6,7 @@ MSG_PLACEHOLDER = "Un élément qui manque de clarté, une information erronée,
 YOU_ARE_CHOICES = (
     ("porteur", "Porteur de projet"),
     ("architecte", "Architecte"),
-    ("bureau", "Bureau d'étude / géomètre"),
+    ("bureau", "Bureau d'études / géomètre"),
     ("mairie", "Mairie"),
     ("instructeur", "Service instructeur"),
     ("autre", "Autre"),
@@ -41,10 +41,16 @@ class FeedbackForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": MSG_PLACEHOLDER}),
     )
     you_are = forms.ChoiceField(
-        required=True, label="Vous êtes", choices=YOU_ARE_CHOICES
+        required=True, label="Vous êtes…", choices=YOU_ARE_CHOICES
     )
     contact = forms.CharField(
         required=False,
         label="Email ou téléphone",
         help_text="Pour vous recontacter si vous souhaitez une réponse",
     )
+
+    def get_you_are_display(self):
+        """Get display value for `you_are` field."""
+
+        field_value = self.cleaned_data['you_are']
+        return dict(YOU_ARE_CHOICES)[field_value]

@@ -26,7 +26,7 @@ class DisableVisitorCookie(RedirectView):
 
 class FeedbackSubmit(SuccessMessageMixin, FormView):
     form_class = FeedbackForm
-    success_message = "Merci de votre retour ! Nous y répondrons dans les 24h."
+    success_message = "Merci de votre retour."
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("moulinette_home"))
@@ -45,7 +45,7 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
                 "address": address,
                 "contact": data["contact"],
                 "feedback": data["feedback"],
-                "profile": data["you_are"],
+                "profile": form.get_you_are_display(),
                 "origin_url": feedback_origin,
             },
         )
