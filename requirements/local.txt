@@ -243,7 +243,7 @@ phonenumbers==8.12.56
     #   django-phonenumber-field
 pickleshare==0.7.5
     # via ipython
-pillow==9.2.0
+pillow==9.3.0
     # via -r base.txt
 pip-tools==6.8.0
     # via -r base.txt
@@ -373,13 +373,7 @@ toml==0.10.2
     #   pre-commit
 tomli==2.0.1
     # via
-    #   -r base.txt
-    #   black
-    #   build
     #   django-stubs
-    #   mypy
-    #   pep517
-    #   pylint
     #   pytest
 tomlkit==0.11.5
     # via pylint
