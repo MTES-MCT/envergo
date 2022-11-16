@@ -37,7 +37,7 @@ class FeedbackRespondForm(forms.Form):
     feedback = forms.ChoiceField(
         required=True,
         label="Cette évaluation vous est-elle utile ?",
-        choices=FEEDBACK_CHOICES
+        choices=FEEDBACK_CHOICES,
     )
 
 
@@ -53,9 +53,10 @@ class FeedbackForm(forms.Form):
         label="Que souhaitez-vous nous demander ou signaler ?",
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": MSG_PLACEHOLDER}),
     )
-    you_are = forms.MultipleChoiceField(
-        required=True, label="Vous êtes…", choices=YOU_ARE_CHOICES, widget=forms.CheckboxSelectMultiple
-
+    you_are = forms.ChoiceField(
+        required=True,
+        label="Vous êtes…",
+        choices=YOU_ARE_CHOICES,
     )
     contact = forms.CharField(
         required=False,
@@ -67,6 +68,5 @@ class FeedbackForm(forms.Form):
         """Get display value for `you_are` field."""
 
         choices = dict(YOU_ARE_CHOICES)
-        vals = self.cleaned_data['you_are']
-        labels = [choices[val] for val in vals]
-        return ' / '.join(labels)
+        val = self.cleaned_data["you_are"]
+        return choices[val]
