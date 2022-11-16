@@ -84,21 +84,8 @@ html.nojs .js {
     top: 3rem;
 
     #feedback-trigger {
-
       .callout-buttons {
         text-align: right;
-      }
-    }
-
-    .fr-dialog {
-      position: absolute;
-      top: 0;
-      border: 0;
-      padding: 0;
-      margin: 0;
-
-      textarea {
-        resize: vertical;
       }
     }
 
@@ -507,7 +494,11 @@ div.leaflet-container {
 /**
  * Design system issues quickfixes
  **/
-
+.fr-modal {
+  textarea {
+    resize: vertical;
+  }
+}
 
 /**
  * Custom class for an accordion without a "+" button

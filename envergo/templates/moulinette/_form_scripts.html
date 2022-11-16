@@ -1,6 +1,9 @@
 {% load static l10n %}
 
 <script>
+  window.FEEDBACK_MODAL_DIALOG_ID = 'feedback-form-dialog';
+  window.FEEDBACK_BUTTONS = '.feedback-buttons button';
+
   const ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
 
   const DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};

@@ -1,11 +1,10 @@
 <div id="feedback-form" class="fr-mt-8w">
-
   <div id="feedback-trigger" class="fr-p-3w fr-callout fr-callout--blue-cumulus">
     <p class="fr-callout__text">💡 Nous aimerions savoir :</p>
 
     <p class="fr-callout__text"><strong>Cette évaluation vous est-elle utile ?</strong></p>
 
-    <div class="callout-buttons">
+    <div class="feedback-buttons callout-buttons">
 
       <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-thumb-up-fill" data-fr-opened="false" data-feedback="Oui" data-label="Une chose que vous appréciez particulièrement ?" aria-controls="feedback-form-dialog">
         Oui
@@ -14,26 +13,7 @@
       <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-thumb-down-fill" data-fr-opened="false" data-feedback="Non" data-label="Que pouvons-nous améliorer ?" aria-controls="feedback-form-dialog">
         Non
       </button>
+
     </div>
   </div>
-
-  <dialog aria-labelledby="feedback-form-dialog-title" role="dialog" id="feedback-form-dialog" class="fr-dialog feedback-dialog">
-    <div class="fr-callout fr-callout--blue-cumulus fr-dialog__body">
-      <div class="">
-        <button class="fr-link--close fr-link" title="Fermer le formulaire de retour" aria-controls="feedback-form-dialog">Fermer</button>
-      </div>
-      <div class="">
-        <h1 id="feedback-form-dialog-title" class="fr-callout__title"><span class="fr-fi-arrow-right-line fr-fi--lg"></span>Merci de votre retour</h1>
-        <div class="feedback-form" id="feedback-form">
-          <form action="{% url 'feedback_submit' %}" method="post">
-            {% csrf_token %}
-            <p class="fr-mb-3w">Pour contribuer à améliorer ce service public et gratuit, vous pouvez nous en dire plus :</p>
-            {% include '_form_snippet.html' with form=feedback_form %}
-            <button type="submit" class="fr-btn">Envoyer</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
 </div>

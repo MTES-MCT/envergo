@@ -1,99 +1,53 @@
-/**
- * The feedback forms is displayed in a dialog that is toggled by a button.
- *
- * I tried to reuse the dsfr's internal api to handle the toggling mechanism.
- * Modals and Tabs both inherit from the `Disclosure` internal class, so
- * I tried to reuse that.
- *
- * The API is not really documented, though, so I did my best.
- */
-const api = window['dsfr'];
-
 // Use Matomo API for analytics
 var _paq = window._paq || [];
 
-const DialogSelector = {
-  DIALOG: api.internals.ns.selector('dialog'),
-  BODY: api.internals.ns.selector('dialog__body')
-};
+(function(exports) {
+  'use strict';
 
-class DialogButton extends api.core.DisclosureButton {
-  constructor() {
-    super(api.core.DisclosureType.OPENED);
-  }
+  const FeedbackModal = function(dialogElt) {
+    this.dialogElt = dialogElt;
+  };
+  exports.FeedbackModal = FeedbackModal;
 
-  static get instanceClassName() {
-    return 'DialogButton';
-  }
+  FeedbackModal.prototype.init = function() {
+    this.dialogElt.addEventListener('dsfr.disclose', this.onDisclose.bind(this));
+    this.dialogElt.addEventListener('dsfr.conceal', this.onConceal.bind(this));
+  };
 
-  click(e) {
-    let feedbackValue = this.getAttribute('data-feedback');
-    let fieldLabel = this.getAttribute('data-label');
-    let options = { feedbackValue, fieldLabel };
-    if (this.registration.creator) this.registration.creator.toggle(this.isPrimary, options);
-  }
-}
+  FeedbackModal.prototype.onDisclose = function(e) {
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose']);
+  };
 
-class Dialog extends api.core.Disclosure {
-  constructor() {
-    super(api.core.DisclosureType.OPENED, DialogSelector.DIALOG, DialogButton, 'DialogsGroup');
-  }
+  FeedbackModal.prototype.onConceal = function() {
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Conceal']);
+  };
 
-  static get instanceClassName() {
-    return 'Dialog';
-  }
-
-  init() {
-    super.init();
-    this.listenKey(api.core.KeyCodes.ESCAPE, this.conceal.bind(this, false, false), true, true);
-  }
-
-  toggle(isPrimary, discloseOptions) {
-    if (!this.type.canConceal) this.disclose(undefined, discloseOptions);
-    else {
-      switch (true) {
-        case !isPrimary:
-        case this.disclosed:
-          this.conceal();
-          break;
-
-        default:
-          this.disclose(undefined, discloseOptions);
-      }
-    }
-  }
-
-  disclose(withhold, options) {
-    if (!super.disclose(withhold)) return false;
-    this.setAttribute('aria-dialog', 'true');
-    this.setAttribute('open', 'true');
+  FeedbackModal.prototype.updateFeedbackContent = function(button) {
+    let labelVal = button.getAttribute('data-label');
+    let feedback = button.getAttribute('data-feedback');
 
     // Set the "feedback value (Oui / Non) hidden input value
-    let feedbackInput = this.querySelector('input[name=feedback]');
-    feedbackInput.value = options.feedbackValue;
+    let feedbackInput = this.dialogElt.querySelector('input[name=feedback]');
+    feedbackInput.value = feedback;
 
     // Update the feedback content label
-    let label = this.querySelector('[for=id_message] span');
-    label.innerHTML = options.fieldLabel;
+    let label = this.dialogElt.querySelector('[for=id_message] span');
+    label.innerHTML = labelVal;
+  };
 
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose', options.feedbackValue]);
-    return true;
-  }
 
-  conceal(withhold, preventFocus) {
-    if (!super.conceal(withhold, preventFocus)) return false;
-    this.removeAttribute('aria-dialog');
-    this.removeAttribute('open');
+})(this);
 
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Conceal']);
-    return true;
-  }
-}
+window.addEventListener('load', function() {
+  const dialogElt = document.getElementById(window.FEEDBACK_MODAL_DIALOG_ID);
+  var feedbackModal = new FeedbackModal(dialogElt);
+  feedbackModal.init();
 
-api.dialog = {
-  Dialog: Dialog,
-  DialogButton: DialogButton,
-  DialogSelector: DialogSelector
-};
-
-api.internals.register(api.dialog.DialogSelector.DIALOG, api.dialog.Dialog);
+  // We need to update the modal content depending on the clicked button
+  const buttons = document.querySelectorAll(window.FEEDBACK_BUTTONS);
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      feedbackModal.updateFeedbackContent(button);
+    });
+  });
+});
