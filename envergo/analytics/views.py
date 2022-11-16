@@ -49,17 +49,18 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
     def form_valid(self, form):
         address = self.parse_address()
         feedback_origin = self.request.META.get("HTTP_REFERER")
+        feedback = form.cleaned_data["feedback"]
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
             context={
                 "address": address,
-                "feedback": form.cleaned_data["feedback"],
+                "feedback": feedback,
                 "origin_url": feedback_origin,
             },
         )
         notify(message_body)
-        log_event("feedback", "réponse", self.request)
+        log_event("FeedbackDialog", "Respond", self.request, data=feedback)
         return HttpResponse(message_body)
 
     def form_invalid(self, form):
@@ -95,7 +96,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
             },
         )
         notify(message_body)
-        log_event("feedback", "soumission", self.request)
+        log_event("FeedbackDialog", "FormSubmit", self.request)
         return super().form_valid(form)
 
     def form_invalid(self, form):
