@@ -57,6 +57,7 @@ class FeedbackForm(forms.Form):
         required=True,
         label="Vous êtes…",
         choices=YOU_ARE_CHOICES,
+        widget=forms.RadioSelect,
     )
     contact = forms.CharField(
         required=False,
