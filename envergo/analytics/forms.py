@@ -28,6 +28,19 @@ FEEDBACK_CHOICES = (
 )
 
 
+class FeedbackRespondForm(forms.Form):
+    """Simple form to process the ajax request to log the feedback.
+
+    This is only used in a POST request, this form is never displayed.
+    """
+
+    feedback = forms.ChoiceField(
+        required=True,
+        label="Cette évaluation vous est-elle utile ?",
+        choices=FEEDBACK_CHOICES
+    )
+
+
 class FeedbackForm(forms.Form):
     feedback = forms.ChoiceField(
         required=True,

@@ -22,7 +22,7 @@ var _paq = window._paq || [];
     _paq.push(['trackEvent', 'FeedbackDialog', 'Conceal']);
   };
 
-  FeedbackModal.prototype.updateFeedbackContent = function(button) {
+  FeedbackModal.prototype.onFeedbackRespond = function(button) {
     let labelVal = button.getAttribute('data-label');
     let feedback = button.getAttribute('data-feedback');
 
@@ -33,21 +33,28 @@ var _paq = window._paq || [];
     // Update the feedback content label
     let label = this.dialogElt.querySelector('[for=id_message] span');
     label.innerHTML = labelVal;
+
+    let url = FEEDBACK_RESPOND_URL;
+    let headers = { 'X-CSRFToken': CSRF_TOKEN };
+    let data = new FormData();
+    data.append('feedback', feedback);
+    let init = { method: 'POST', body: data, headers: headers };
+    let response = fetch(FEEDBACK_RESPOND_URL, init);
   };
 
 
 })(this);
 
 window.addEventListener('load', function() {
-  const dialogElt = document.getElementById(window.FEEDBACK_MODAL_DIALOG_ID);
+  const dialogElt = document.getElementById(FEEDBACK_MODAL_DIALOG_ID);
   var feedbackModal = new FeedbackModal(dialogElt);
   feedbackModal.init();
 
   // We need to update the modal content depending on the clicked button
-  const buttons = document.querySelectorAll(window.FEEDBACK_BUTTONS);
+  const buttons = document.querySelectorAll(FEEDBACK_BUTTONS);
   buttons.forEach(button => {
     button.addEventListener('click', () => {
-      feedbackModal.updateFeedbackContent(button);
+      feedbackModal.onFeedbackRespond(button);
     });
   });
 });

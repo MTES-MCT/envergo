@@ -2,12 +2,15 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.generic import FormView, RedirectView
+from django.views.generic.edit import BaseFormView
+from ratelimit.decorators import ratelimit
 
-from envergo.analytics.forms import FeedbackForm
+from envergo.analytics.forms import FeedbackForm, FeedbackRespondForm
 from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
@@ -24,7 +27,50 @@ class DisableVisitorCookie(RedirectView):
         return response
 
 
-class FeedbackSubmit(SuccessMessageMixin, FormView):
+class ParseAddressMixin:
+    """Easily fetch an address from coordinates in the referer url."""
+
+    def parse_address(self):
+        referer_url = self.request.META.get("HTTP_REFERER")
+        parsed = parse_qs(referer_url)
+        try:
+            address = get_address_from_coords(parsed["lng"][0], parsed["lat"][0])
+        except KeyError:
+            address = "NA"
+        return address
+
+
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
+class FeedbackRespond(ParseAddressMixin, BaseFormView):
+    """Sends a Mattermost notification when the feedback form is clicked."""
+
+    form_class = FeedbackRespondForm
+
+    def form_valid(self, form):
+        address = self.parse_address()
+        feedback_origin = self.request.META.get("HTTP_REFERER")
+
+        message_body = render_to_string(
+            "analytics/mattermost_feedback_respond.txt",
+            context={
+                "address": address,
+                "feedback": form.cleaned_data["feedback"],
+                "origin_url": feedback_origin,
+            },
+        )
+        notify(message_body)
+        log_event("feedback", "réponse", self.request)
+        return HttpResponse(message_body)
+
+    def form_invalid(self, form):
+        """Handle invalid requests.
+
+        This should not happen, unless the user tampered with the ajax request.
+        """
+        return HttpResponseBadRequest(f"{form.errors}")
+
+
+class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
     form_class = FeedbackForm
     success_message = "Merci de votre retour."
 
@@ -36,10 +82,9 @@ class FeedbackSubmit(SuccessMessageMixin, FormView):
 
         data = form.cleaned_data
         feedback_origin = self.request.META.get("HTTP_REFERER")
-        parsed = parse_qs(feedback_origin)
-        address = get_address_from_coords(parsed["lng"][0], parsed["lat"][0])
+        address = self.parse_address()
         message_body = render_to_string(
-            "analytics/feedback_mattermost_notification.txt",
+            "analytics/mattermost_feedback_submit.txt",
             context={
                 "message": data["message"],
                 "address": address,
