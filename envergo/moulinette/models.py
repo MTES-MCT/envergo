@@ -62,6 +62,9 @@ class Perimeter(models.Model):
         on_delete=models.PROTECT,
     )
     criterion = CriterionChoiceField(_("Criterion"))
+    activation_distance = models.PositiveIntegerField(
+        _("Activation distance"), default=0
+    )
 
     class Meta:
         verbose_name = _("Perimeter")
