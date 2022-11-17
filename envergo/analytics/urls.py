@@ -1,9 +1,14 @@
 from django.urls import path
 
-from envergo.analytics.views import DisableVisitorCookie, FeedbackSubmit
+from envergo.analytics.views import (
+    DisableVisitorCookie,
+    FeedbackRespond,
+    FeedbackSubmit,
+)
 
 urlpatterns = [
     path("", FeedbackSubmit.as_view(), name="feedback_submit"),
+    path("respond/", FeedbackRespond.as_view(), name="feedback_respond"),
     path(
         "disablecookieview/",
         DisableVisitorCookie.as_view(),

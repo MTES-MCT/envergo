@@ -43,6 +43,11 @@
 
 {% block extra_body %}
   {% include 'moulinette/_share_modal.html' %}
+
+  {% if display_feedback_form %}
+    {% include 'analytics/_feedback_modal.html' %}
+  {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}

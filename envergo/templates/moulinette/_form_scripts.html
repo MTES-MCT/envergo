@@ -1,8 +1,11 @@
 {% load static l10n %}
 
 <script>
+  const FEEDBACK_MODAL_DIALOG_ID = 'feedback-form-dialog';
+  const FEEDBACK_BUTTONS = '.feedback-buttons button';
+  const FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+  const CSRF_TOKEN = '{{ csrf_token }}';
   const ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-
   const DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
   const CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
   const DEFAULT_ZOOM = {{ default_zoom }};
