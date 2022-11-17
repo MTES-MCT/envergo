@@ -5,8 +5,8 @@ MSG_PLACEHOLDER = "Un élément qui manque de clarté, une information erronée,
 
 YOU_ARE_CHOICES = (
     ("porteur", "Porteur de projet"),
-    ("architecte", "Architecte"),
     ("bureau", "Bureau d'études / géomètre"),
+    ("architecte", "Architecte"),
     ("mairie", "Mairie"),
     ("instructeur", "Service instructeur"),
     ("autre", "Autre"),
