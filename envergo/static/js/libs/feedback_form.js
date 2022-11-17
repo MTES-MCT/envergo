@@ -6,12 +6,14 @@ var _paq = window._paq || [];
 
   const FeedbackModal = function(dialogElt) {
     this.dialogElt = dialogElt;
+    this.form = dialogElt.querySelector('form');
   };
   exports.FeedbackModal = FeedbackModal;
 
   FeedbackModal.prototype.init = function() {
     this.dialogElt.addEventListener('dsfr.disclose', this.onDisclose.bind(this));
     this.dialogElt.addEventListener('dsfr.conceal', this.onConceal.bind(this));
+    this.form.addEventListener('submit', this.onFeedbackSubmit.bind(this));
   };
 
   FeedbackModal.prototype.onDisclose = function(e) {
@@ -19,10 +21,12 @@ var _paq = window._paq || [];
   };
 
   FeedbackModal.prototype.onConceal = function() {
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Conceal']);
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Close']);
   };
 
   FeedbackModal.prototype.onFeedbackRespond = function(button) {
+    _paq.push(['trackEvent', 'FeedbackDialog', 'Respond']);
+
     let labelVal = button.getAttribute('data-label');
     let feedback = button.getAttribute('data-feedback');
 
@@ -39,9 +43,12 @@ var _paq = window._paq || [];
     let data = new FormData();
     data.append('feedback', feedback);
     let init = { method: 'POST', body: data, headers: headers };
-    let response = fetch(FEEDBACK_RESPOND_URL, init);
+    let response = fetch(url, init);
   };
 
+  FeedbackModal.prototype.onFeedbackSubmit = function(button) {
+    _paq.push(['trackEvent', 'FeedbackDialog', 'FormSubmit']);
+  };
 
 })(this);
 
