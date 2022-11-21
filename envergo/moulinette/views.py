@@ -83,8 +83,6 @@ class MoulinetteMixin:
         context["feedback_form"] = FeedbackForm()
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
 
-        moulinette.loi_sur_leau.zone_inondable._get_map()
-
         return context
 
     def render_to_response(self, context, **response_kwargs):
