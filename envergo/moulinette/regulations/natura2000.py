@@ -343,6 +343,11 @@ class Natura2000(MoulinetteRegulation):
         """
         return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
 
+    def get_distance_to_n2000(self):
+        perimeters = self.moulinette.perimeters
+        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        return perimeter.distance.m
+
     def _get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
 
@@ -382,7 +387,12 @@ class Natura2000(MoulinetteRegulation):
         ]
         maps = [perimeter.map]
 
-        caption = "Le projet se situe sur un site Natura 2000."
+        if self.get_distance_to_n2000() <= 0.0:
+            caption = "Le projet se situe sur un site Natura 2000."
+        else:
+            caption = "Le projet se situe à proximité immédiate d’un site Natura 2000 "
+            "(moins de 500 m, selon la doctrine de la DDTM de Loire-Atlantique)."
+
         map = Map(
             center=self.catalog["coords"],
             polygons=polygons,
