@@ -291,15 +291,42 @@ class Lotissement44(MoulinetteCriterion):
     header = "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"  # noqa
     form_class = LotissementForm
 
+    def get_distance_to_n2000(self):
+        perimeters = self.moulinette.perimeters
+        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        return perimeter.distance.m
+
     @cached_property
     def result_code(self):
 
         form = self.get_form()
         if form.is_valid():
+            distance_to_n2000 = self.get_distance_to_n2000()
             is_lotissement = form.cleaned_data["is_lotissement"] == "oui"
-            return "soumis" if is_lotissement else "non_soumis"
+
+            if is_lotissement:
+                if distance_to_n2000 < 500:
+                    code = "soumis_dedans"
+                else:
+                    code = "soumis_proximite_immediate"
+            else:
+                code = "non_soumis"
+
+            return code
 
         return "non_disponible"
+
+    @cached_property
+    def result(self):
+        code = self.result_code
+        result_matrix = {
+            "soumis_dedans": RESULTS.soumis,
+            "soumis_proximite_immediate": RESULTS.soumis,
+            "non_soumis": RESULTS.non_soumis,
+            "non_disponible": RESULTS.non_disponible,
+        }
+        result = result_matrix[code]
+        return result
 
 
 class Natura2000(MoulinetteRegulation):
