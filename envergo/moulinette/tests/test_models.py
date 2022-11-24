@@ -68,7 +68,9 @@ def test_result_with_contact_data(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [50])
-def test_moulinette_get_perimeters_distance(bizous_church_data, bizous_town_center):
+def test_moulinette_get_perimeters_distance(
+    bizous_church_data, bizous_town_center  # noqa
+):
     """Check the `activation_distance` Perimeter field.
 
     We check that we activate all perimeters that are within
