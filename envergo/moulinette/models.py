@@ -1,6 +1,8 @@
+from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.db import models
+from django.db.models import F
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
@@ -62,6 +64,9 @@ class Perimeter(models.Model):
         on_delete=models.PROTECT,
     )
     criterion = CriterionChoiceField(_("Criterion"))
+    activation_distance = models.PositiveIntegerField(
+        _("Activation distance"), default=0
+    )
 
     class Meta:
         verbose_name = _("Perimeter")
@@ -116,8 +121,8 @@ class Moulinette:
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
-        self.perimeters = self.get_perimeters(self.catalog["coords"])
-        self.criterions = [perimeter.criterion for perimeter in self.perimeters]
+        self.perimeters = self.get_perimeters()
+        self.criterions = set([perimeter.criterion for perimeter in self.perimeters])
 
         # This is a clear case of circular references, since the Moulinette
         # holds references to the regulations it's computing, but regulations and
@@ -149,15 +154,21 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
         return catalog
 
-    def get_perimeters(self, coords):
+    def get_perimeters(self):
         """Find activated perimeters
 
         Regulation criterions have a geographical component and must only computed in
         certain zones.
         """
-        perimeters = Perimeter.objects.filter(
-            map__zones__geometry__dwithin=(coords, D(m=0))
-        ).annotate(geometry=models.F("map__zones__geometry"))
+        coords = self.catalog["coords"]
+        perimeters = (
+            Perimeter.objects.filter(
+                map__zones__geometry__dwithin=(coords, F("activation_distance"))
+            )
+            .annotate(geometry=F("map__zones__geometry"))
+            .annotate(distance=Distance("map__zones__geometry", coords))
+            .select_related("map")
+        )
         return perimeters
 
     def get_zones(self):

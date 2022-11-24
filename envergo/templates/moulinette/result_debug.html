@@ -14,24 +14,25 @@
       <li>Surface créée: {{ created_surface }} m²</li>
     </ul>
 
-    <h2>Critères pris en compte</h2>
+    <h2>Périmètres et critères activés</h2>
 
-    <ul>
-      {% for criterion in moulinette.criterions %}
-        <li>{{ criterion.title }} ({{ criterion.slug }})</li>
-      {% endfor %}
-    </ul>
+    {% for perimeter in moulinette.perimeters %}
+      <h3>{{ perimeter }}</h3>
 
-    <h2>Zones</h2>
+      <ul>
+        <li>Carte : {{ perimeter.map }}</li>
+        <li>Critère : {{ perimeter.criterion.title }} ({{ perimeter.criterion.slug }})</li>
+        <li>Distance : {{ perimeter.distance }}</li>
+      </ul>
 
-    <ul>
-      {% for zone in moulinette.get_zones %}
-        <li><a href="{% url 'admin:geodata_zone_change' zone.id %}">
-          {{ zone.map }} ({{ zone.id }}) —
-          {{ zone.map.perimeters.all|join:', ' }}
-        </a></li>
-      {% endfor %}
-    </ul>
+      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+        <div class="ratio-content">
+          <div class="leaflet-container">
+            <div id="perimeter-map-{{ forloop.counter0 }}"></div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
 
     <h2>Résultat</h2>
 
@@ -136,4 +137,31 @@
       legend.addTo(map);
     });
   </script>
+
+  {% for perimeter in moulinette.perimeters %}
+    <script>
+      window.addEventListener('load', function() {
+
+        var map = L.map('perimeter-map-{{ forloop.counter0 }}', {maxZoom: 21});
+        var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
+        var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 22,
+          maxNativeZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        }).addTo(map);
+
+        var coords = JSON.parse('{% to_geojson coords %}');
+        var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
+        coordsGeoJSON.addTo(map);
+
+        var polygon = JSON.parse('{% to_geojson perimeter.geometry %}');
+        var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
+        polygonGeoJSON.addTo(map);
+
+        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+      });
+    </script>
+  {% endfor %}
 {% endblock %}
