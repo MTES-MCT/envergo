@@ -110,7 +110,7 @@ class ZoneHumide(MoulinetteCriterion):
 
         if inside_qs:
             caption = "Le projet se situe dans une zone humide référencée."
-            polygon = GEOSGeometry("POLYGON EMPTY", srid=3857)
+            polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
             for zone in inside_qs:
                 polygon = polygon.union(zone.geom)
 
@@ -141,11 +141,11 @@ class ZoneHumide(MoulinetteCriterion):
         elif close_qs and potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
 
-            wetlands_polygon = GEOSGeometry("POLYGON EMPTY", srid=3857)
+            wetlands_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
             for zone in close_qs:
                 wetlands_polygon = wetlands_polygon.union(zone.geom)
 
-            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=3857)
+            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
             for zone in potential_qs:
                 potentials_polygon = potentials_polygon.union(zone.geom)
 
@@ -163,7 +163,7 @@ class ZoneHumide(MoulinetteCriterion):
 
         elif potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
-            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=3857)
+            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
             for zone in potential_qs:
                 potentials_polygon = potentials_polygon.union(zone.geom)
 
@@ -238,7 +238,7 @@ class ZoneInondable(MoulinetteCriterion):
         zone_qs = [
             zone for zone in self.catalog["flood_zones_12"] if zone.map.display_for_user
         ]
-        polygon = GEOSGeometry("POLYGON EMPTY", srid=3857)
+        polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
         for zone in zone_qs:
             polygon = polygon.union(zone.geom)
 
