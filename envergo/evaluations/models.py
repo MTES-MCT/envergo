@@ -102,6 +102,8 @@ class Evaluation(models.Model):
     contact_md = models.TextField(_("Contact"), blank=False)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
+    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
+
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
