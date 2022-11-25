@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -6,12 +7,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
+from django.http.request import QueryDict
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
+from django.views.generic.detail import BaseDetailView
 
 from envergo.analytics.utils import log_event
 from envergo.evaluations.forms import (
@@ -34,6 +37,7 @@ from envergo.evaluations.tasks import (
     confirm_request_to_requester,
     share_evaluation_by_email,
 )
+from envergo.moulinette.views import MoulinetteResult
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +55,44 @@ class EvaluationSearch(FormView):
         return HttpResponseRedirect(success_url)
 
 
-class EvaluationDetail(FormView, DetailView):
-    """The complete evaluation detail."""
+class EvaluationDetailMixin:
+    model = Evaluation
+    slug_url_kwarg = "reference"
+    slug_field = "reference"
+
+    def get_queryset(self):
+        qs = Evaluation.objects.select_related("request").prefetch_related(
+            Prefetch("criterions", queryset=Criterion.objects.order_by("order"))
+        )
+        return qs
+
+
+class EvaluationDetail(EvaluationDetailMixin, DetailView):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.moulinette_url:
+            return EvaluationDetailMoulinette.as_view()(request, *args, **kwargs)
+        else:
+            return EvaluationDetailLegacy.as_view()(request, *args, **kwargs)
+
+
+class EvaluationDetailMoulinette(
+    EvaluationDetailMixin, BaseDetailView, MoulinetteResult
+):
+    def get_initial(self):
+        return self.request.GET
+
+    def get_moulinette_raw_data(self):
+        url = urlparse(self.object.moulinette_url)
+        moulinette_GET = QueryDict(url.query)
+        return moulinette_GET
+
+
+class EvaluationDetailLegacy(FormView, DetailView):
+    """The legacy evaluation detail view.
+
+    This renders an evaluation that was generated manually.
+    """
 
     template_name = "evaluations/detail.html"
     model = Evaluation

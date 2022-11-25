@@ -49,13 +49,16 @@ class MoulinetteMixin:
         because they are messing with the moulinette form processing.
         """
         ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_"]
-        GET = self.request.GET.copy()
+        GET = self.get_moulinette_raw_data()
         keys = GET.keys()
         for key in list(keys):
             for prefix in ignore_prefixes:
                 if key.startswith(prefix):
                     GET.pop(key)
         return GET
+
+    def get_moulinette_raw_data(self):
+        return self.request.GET.copy()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
