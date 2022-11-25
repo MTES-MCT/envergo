@@ -79,6 +79,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "reference",
+                    "moulinette_url",
                     "contact_email",
                     "request",
                     "application_number",
