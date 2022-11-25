@@ -87,6 +87,11 @@ class EvaluationDetailMoulinette(
         moulinette_GET = QueryDict(url.query)
         return moulinette_GET
 
+    def get_template_names(self):
+        """Check wich template to use depending on the moulinette result."""
+
+        return ["evaluations/detail/moulinette.html"]
+
 
 class EvaluationDetailLegacy(FormView, DetailView):
     """The legacy evaluation detail view.
