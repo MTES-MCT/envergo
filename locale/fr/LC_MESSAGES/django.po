@@ -673,11 +673,11 @@ msgstr "Aucun fichier .shp trouvé dans l'archive"
 
 #: envergo/moulinette/forms/__init__.py:7
 msgid "Surface created by the project"
-msgstr "Surface au sol nouvellement impactée par le projet"
+msgstr "Surface au sol nouvellement impactée"
 
 #: envergo/moulinette/forms/__init__.py:13
 msgid "Existing surface before the project"
-msgstr "Surface au sol impactée avant le projet"
+msgstr "Surface au sol déjà impactée par l'existant"
 
 #: envergo/moulinette/forms/__init__.py:19
 msgid "Search for the address to center the map"
@@ -806,11 +806,11 @@ msgstr "connexion/<uidb64>/<token>/"
 #~ msgid "Capture of more than 1 ha of rainwater runoff"
 #~ msgstr "Captation de plus de 1 ha de ruissellement d'eaux de pluie"
 
-#~ msgid "Building of more than 400 m¹ in a flood zone"
+#~ msgid "Building of more than 400 sqm in a flood zone"
 #~ msgstr "Construction de plus de 400 m² en zone inondable"
 
-#~ msgid "More than 1000 m² impact on wetlands"
-#~ msgstr "Impact de plus de 1000 m² sur une zone humide"
+#~ msgid "More than 1,000 sqm impact on wetlands"
+#~ msgstr "Impact de plus de 1 000 m² sur une zone humide"
 
 #~ msgid "water-law/"
 #~ msgstr "loi-sur-leau/"
