@@ -76,11 +76,12 @@ class MoulinetteRegulation:
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    def __init__(self, center, polygons, caption, sources, truncate=True):
+    def __init__(self, center, polygons, caption, sources, truncate=True, zoom=16):
         self.center = center
         self.polygons = polygons
         self.caption = caption
         self.sources = sources
+        self.zoom = zoom
 
         # Should we display the entire region?
         # This is used to prevent the ability to fine tune one's project and
@@ -97,6 +98,7 @@ class Map:
         data = json.dumps(
             {
                 "center": to_geojson(self.center),
+                "zoom": self.zoom,
                 "polygons": [
                     {
                         "polygon": to_geojson(

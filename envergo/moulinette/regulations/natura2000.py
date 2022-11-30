@@ -399,6 +399,7 @@ class Natura2000(MoulinetteRegulation):
             caption=caption,
             sources=maps[:1],
             truncate=False,
+            zoom=15,
         )
 
         return map

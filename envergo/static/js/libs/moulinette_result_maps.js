@@ -29,7 +29,7 @@
       scrollWheelZoom: false,
       touchZoom: false,
       keyboard: false
-    }).setView(centerCoords, 16);
+    }).setView(centerCoords, mapData['zoom']);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 22,
