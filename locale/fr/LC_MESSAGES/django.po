@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-21 09:44+0000\n"
+"POT-Creation-Date: 2022-11-30 10:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,10 @@ msgstr "geo/"
 
 #: config/urls.py:57
 msgid "analytics/"
+msgstr ""
+
+#: config/urls.py:58
+msgid "feedback/"
 msgstr ""
 
 #: envergo/analytics/models.py:11
@@ -373,7 +377,7 @@ msgid "Probability"
 msgstr "Probabilité"
 
 #: envergo/evaluations/models.py:196 envergo/evaluations/models.py:204
-#: envergo/moulinette/models.py:64
+#: envergo/moulinette/models.py:68
 msgid "Criterion"
 msgstr "Critère"
 
@@ -387,7 +391,7 @@ msgid "Description (html)"
 msgstr " Description (html)"
 
 #: envergo/evaluations/models.py:199 envergo/geodata/models.py:183
-#: envergo/moulinette/models.py:60
+#: envergo/moulinette/models.py:64
 msgid "Map"
 msgstr "Carte"
 
@@ -436,7 +440,7 @@ msgid "File"
 msgstr "Fichier"
 
 #: envergo/evaluations/models.py:356 envergo/geodata/models.py:157
-#: envergo/moulinette/models.py:57
+#: envergo/moulinette/models.py:61
 msgid "Name"
 msgstr "Nom"
 
@@ -659,7 +663,7 @@ msgstr "Département"
 msgid "Departments"
 msgstr "Départements"
 
-#: envergo/geodata/urls.py:7 envergo/pages/urls.py:28
+#: envergo/geodata/urls.py:7 envergo/pages/urls.py:32
 msgid "map/"
 msgstr "carte/"
 
@@ -667,7 +671,7 @@ msgstr "carte/"
 msgid "zone.geojson"
 msgstr "zone.geojson"
 
-#: envergo/geodata/utils.py:76
+#: envergo/geodata/utils.py:77
 msgid "No .shp file found in archive"
 msgstr "Aucun fichier .shp trouvé dans l'archive"
 
@@ -691,43 +695,47 @@ msgstr "Longitude"
 msgid "Latitude"
 msgstr "Latitude"
 
-#: envergo/moulinette/models.py:67
+#: envergo/moulinette/models.py:70
+msgid "Activation distance"
+msgstr "Distance d'activation (m)"
+
+#: envergo/moulinette/models.py:74
 msgid "Perimeter"
-msgstr ""
+msgstr "Périmètre"
 
-#: envergo/moulinette/models.py:68
+#: envergo/moulinette/models.py:75
 msgid "Perimeters"
-msgstr ""
+msgstr "Périmètres"
 
-#: envergo/moulinette/regulations/natura2000.py:269
+#: envergo/moulinette/regulations/natura2000.py:280
 msgid "Le projet concerne-t-il un lotissement ?"
 msgstr ""
 
-#: envergo/moulinette/urls.py:8
+#: envergo/moulinette/urls.py:13
 msgid "result/"
 msgstr "resultat/"
 
-#: envergo/pages/urls.py:10
+#: envergo/pages/urls.py:14
 msgid "stats/"
 msgstr "stats/"
 
-#: envergo/pages/urls.py:11
+#: envergo/pages/urls.py:15
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:13
+#: envergo/pages/urls.py:17
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:18
+#: envergo/pages/urls.py:22
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:23
+#: envergo/pages/urls.py:27
 msgid "faq/"
 msgstr "foire-aux-questions/"
 
-#: envergo/pages/urls.py:33
+#: envergo/pages/urls.py:37
 msgid "parcels.geojson"
 msgstr "parcels.geojson"
 
