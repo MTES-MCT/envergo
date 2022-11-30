@@ -305,7 +305,7 @@ class Lotissement44(MoulinetteCriterion):
             is_lotissement = form.cleaned_data["is_lotissement"] == "oui"
 
             if is_lotissement:
-                if distance_to_n2000 < 500:
+                if distance_to_n2000 <= 0.0:
                     code = "soumis_dedans"
                 else:
                     code = "soumis_proximite_immediate"
