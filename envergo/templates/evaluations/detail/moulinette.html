@@ -1,3 +1,44 @@
 {% extends 'moulinette/result.html' %}
 
 {% block form-col %}{% endblock %}
+
+{% block top_result %}
+  <h1>Notification réglementaire</h1>
+  <p class="fr-text--lead">
+    Référence
+    {{ evaluation }}
+  </p>
+  <h3>Projet de construction</h3>
+
+  <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+    <div class="ratio-content">
+      <div class="leaflet-container">
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <ul>
+    <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
+    {% if evaluation.application_number %}
+      <li>
+        Demande de permis n° {{ evaluation.application_number }}
+      </li>
+    {% endif %}
+
+    <li>
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.created_surface }} m²<br />
+      <span class="fr-text--light">
+        Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
+      </span>
+    </li>
+
+    {% if evaluation.existing_surface %}
+      <li>
+        <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.existing_surface }} m²<br />
+        <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+      </li>
+    {% endif %}
+  </ul>
+{% endblock %}

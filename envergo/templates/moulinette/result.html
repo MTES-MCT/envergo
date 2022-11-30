@@ -7,9 +7,11 @@
   {% endif %}
 {% endblock %}
 
-{% block result %}
-
+{% block top_result %}
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
+{% endblock %}
+
+{% block result %}
 
   {% for regulation in moulinette.regulations %}
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
