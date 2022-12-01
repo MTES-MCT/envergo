@@ -28,16 +28,20 @@
     {% endif %}
 
     <li>
-      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.created_surface }} m²<br />
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
       <span class="fr-text--light">
         Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
       </span>
     </li>
 
-    {% if evaluation.existing_surface %}
+    <li>
+      <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
+      <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+    </li>
+
+    {% if evaluation.moulinette_params.is_lotissement %}
       <li>
-        <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.existing_surface }} m²<br />
-        <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+        <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
       </li>
     {% endif %}
   </ul>

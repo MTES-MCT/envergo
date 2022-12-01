@@ -83,9 +83,7 @@ class EvaluationDetailMoulinette(
         return self.request.GET
 
     def get_moulinette_raw_data(self):
-        url = urlparse(self.object.moulinette_url)
-        moulinette_GET = QueryDict(url.query)
-        return moulinette_GET
+        return self.object.moulinette_params
 
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
