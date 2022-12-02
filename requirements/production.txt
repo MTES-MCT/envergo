@@ -73,7 +73,7 @@ click-repl==0.2.0
     # via
     #   -r base.txt
     #   celery
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   -r base.txt
     #   pyjwt
