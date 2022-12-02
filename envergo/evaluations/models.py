@@ -337,7 +337,6 @@ class Request(models.Model):
         """Return the evaluation params as provided in the moulinette url."""
         return params_from_url(self.moulinette_url)
 
-
     def get_parcel_map_url(self):
         """Return an url to a parcel visualization map."""
 
