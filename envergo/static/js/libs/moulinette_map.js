@@ -13,7 +13,12 @@
     if (this.options.displayMarker) {
       this.marker.addTo(this.map);
     }
-    this.registerEvents();
+
+    if (this.options.isStatic) {
+      this.disableHandlers();
+    } else {
+      this.registerEvents();
+    }
   };
   exports.MoulinetteMap = MoulinetteMap;
 
@@ -31,7 +36,10 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function() {
-    const map = L.map('map', { maxZoom: 21, }).setView(this.options.centerMap, this.options.defaultZoom);
+    const map = L.map('map', {
+      maxZoom: 21,
+      scrollWheelZoom: this.options.isStatic ? 'center' : true
+    }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -52,7 +60,7 @@
     L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
 
     const options = {
-      draggable: true,
+      draggable: !this.options.isStatic,
       autoPan: true,
     };
 
@@ -78,6 +86,11 @@
     latField.value = latLng.lat.toFixed(5);
     var lngField = document.getElementById(this.options.lngFieldId);
     lngField.value = latLng.lng.toFixed(5);
+  };
+
+  MoulinetteMap.prototype.disableHandlers = function() {
+    this.map.dragging.disable();
+    this.map.keyboard.disable();
   };
 
   MoulinetteMap.prototype.registerEvents = function() {
@@ -129,6 +142,7 @@
       defaultZoom: DEFAULT_ZOOM,
       latFieldId: LAT_FIELD_ID,
       lngFieldId: LNG_FIELD_ID,
+      isStatic: IS_MAP_STATIC,
     }
     moulinetteMap = new MoulinetteMap(options);
   });

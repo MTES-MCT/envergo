@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load evaluations static %}
+{% load evaluations static l10n %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
@@ -49,5 +49,18 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script>
+    var FEEDBACK_MODAL_DIALOG_ID = 'feedback-form-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+  </script>
   {% include 'moulinette/_form_scripts.html' %}
 {% endblock %}

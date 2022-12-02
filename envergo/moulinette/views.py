@@ -85,6 +85,7 @@ class MoulinetteMixin:
 
         context["feedback_form"] = FeedbackForm()
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
+        context["is_map_static"] = False
 
         return context
 

@@ -90,6 +90,11 @@ class EvaluationDetailMoulinette(
 
         return ["evaluations/detail/moulinette.html"]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_map_static"] = True
+        return context
+
 
 class EvaluationDetailLegacy(FormView, DetailView):
     """The legacy evaluation detail view.
