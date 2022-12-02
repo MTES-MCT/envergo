@@ -390,8 +390,10 @@ class Natura2000(MoulinetteRegulation):
         if self.get_distance_to_n2000() <= 0.0:
             caption = "Le projet se situe sur un site Natura 2000."
         else:
-            caption = "Le projet se situe à proximité immédiate d’un site Natura 2000 " \
-            "(moins de 500 m, selon la doctrine de la DDTM de Loire-Atlantique)."
+            caption = (
+                "Le projet se situe à proximité immédiate d’un site Natura 2000 "
+                "(moins de 500 m, selon la doctrine de la DDTM de Loire-Atlantique)."
+            )
 
         map = Map(
             center=self.catalog["coords"],

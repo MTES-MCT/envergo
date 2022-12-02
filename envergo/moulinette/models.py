@@ -209,7 +209,7 @@ class Moulinette:
             )
             .annotate(geometry=F("map__zones__geometry"))
             .annotate(distance=Distance("map__zones__geometry", coords))
-            .order_by('distance')
+            .order_by("distance")
             .select_related("map")
         )
         return perimeters
