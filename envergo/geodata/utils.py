@@ -130,7 +130,7 @@ def to_geojson(obj, geometry_field="geometry"):
 
     EPSG_WGS84 = 4326
 
-    if isinstance(obj, QuerySet):
+    if isinstance(obj, (QuerySet, list)):
         geojson = serialize("geojson", obj, geometry_field=geometry_field)
     elif hasattr(obj, "geojson"):
         if obj.srid != EPSG_WGS84:

@@ -1,8 +1,10 @@
+from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.db import models
 from django.db.models import F
+from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
@@ -96,18 +98,6 @@ class MoulinetteCatalog(dict):
         self[key] = value
         return value
 
-    def wetlands_25(self):
-        return fetch_wetlands_around_25m(self["coords"])
-
-    def wetlands_100(self):
-        return fetch_wetlands_around_100m(self["coords"])
-
-    def potential_wetlands(self):
-        return fetch_potential_wetlands(self["coords"])
-
-    def flood_zones_12(self):
-        return fetch_flood_zones_around_12m(self["coords"])
-
 
 class Moulinette:
     """Automatic environment law evaluation processing tool.
@@ -152,6 +142,58 @@ class Moulinette:
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
+
+        zones = (
+            Zone.objects.filter(geometry__dwithin=(catalog["coords"], D(m=100)))
+            .annotate(distance=Distance("geometry", catalog["coords"]))
+            .annotate(geom=Cast("geometry", MultiPolygonField()))
+            .select_related("map")
+        )
+
+        def wetlands_25_filter(zone):
+            return all(
+                (
+                    zone.distance <= D(25),
+                    zone.map.data_type == "zone_humide",
+                    zone.map.data_certainty == "certain",
+                )
+            )
+
+        catalog["wetlands_25"] = list(filter(wetlands_25_filter, zones))
+
+        def wetlands_100_filter(zone):
+            return all(
+                (
+                    zone.distance <= D(100),
+                    zone.map.data_type == "zone_humide",
+                    zone.map.data_certainty == "certain",
+                )
+            )
+
+        catalog["wetlands_100"] = list(filter(wetlands_100_filter, zones))
+
+        def potential_wetlands_filter(zone):
+            return all(
+                (
+                    zone.distance <= D(0),
+                    zone.map.data_type == "zone_humide",
+                    zone.map.data_certainty == "uncertain",
+                )
+            )
+
+        catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
+
+        def flood_zones_12_filter(zone):
+            return all(
+                (
+                    zone.distance <= D(12),
+                    zone.map.data_type == "zone_inondable",
+                    zone.map.data_certainty == "certain",
+                )
+            )
+
+        catalog["flood_zones_12"] = list(filter(flood_zones_12_filter, zones))
+
         return catalog
 
     def get_perimeters(self):
@@ -167,6 +209,7 @@ class Moulinette:
             )
             .annotate(geometry=F("map__zones__geometry"))
             .annotate(distance=Distance("map__zones__geometry", coords))
+            .order_by('distance')
             .select_related("map")
         )
         return perimeters

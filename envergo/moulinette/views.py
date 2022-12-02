@@ -188,3 +188,14 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         tracked_url = f"{current_url}&mtm_source=shareBtn"
         context["current_url"] = tracked_url
         return context
+
+
+class MoulinetteRegulationResult(MoulinetteResult, FormView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = context["moulinette"]
+
+        regulation_slug = self.kwargs.get("regulation")
+        context["regulations"] = [getattr(moulinette, regulation_slug)]
+
+        return context

@@ -2,6 +2,7 @@ from functools import cached_property
 
 from django import forms
 from django.contrib.gis.db.models import MultiPolygonField, Union
+from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import F
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +13,9 @@ from envergo.moulinette.regulations import (
     MoulinetteCriterion,
     MoulinetteRegulation,
 )
+
+BLUE = "blue"
+LIGHTBLUE = "lightblue"
 
 
 class ZoneHumide44(MoulinetteCriterion):
@@ -90,81 +94,86 @@ class ZoneHumide44(MoulinetteCriterion):
         return result
 
     def _get_map(self):
-
-        inside_qs = self.catalog["wetlands_25"].filter(map__display_for_user=True)
-        close_qs = self.catalog["wetlands_100"].filter(map__display_for_user=True)
-        potential_qs = self.catalog["potential_wetlands"].filter(
-            map__display_for_user=True
-        )
+        inside_qs = [
+            zone for zone in self.catalog["wetlands_25"] if zone.map.display_for_user
+        ]
+        close_qs = [
+            zone for zone in self.catalog["wetlands_100"] if zone.map.display_for_user
+        ]
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_wetlands"]
+            if zone.map.display_for_user
+        ]
         polygons = None
 
         if inside_qs:
             caption = "Le projet se situe dans une zone humide référencée."
-            geometries = inside_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
+            for zone in inside_qs:
+                polygon = polygon.union(zone.geom)
+
             polygons = [
                 {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
-                    "color": "blue",
+                    "polygon": polygon,
+                    "color": BLUE,
                     "label": "Zone humide",
                 }
             ]
-            maps = set([zone.map for zone in inside_qs.select_related("map")])
+            maps = set([zone.map for zone in inside_qs])
 
         elif close_qs and not potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
+            polygon = GEOSGeometry("POLYGON EMPTY")
+            for zone in close_qs:
+                polygon = polygon.union(zone.geom)
+
             polygons = [
                 {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
-                    "color": "blue",
+                    "polygon": polygon,
+                    "color": BLUE,
                     "label": "Zone humide",
                 }
             ]
-            maps = set([zone.map for zone in close_qs.select_related("map")])
+            maps = set([zone.map for zone in close_qs])
 
         elif close_qs and potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-            geometries = close_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
-            wetlands_polygon = geometries.aggregate(polygon=Union(F("geom")))["polygon"]
 
-            geometries = potential_qs.annotate(
-                geom=Cast("geometry", MultiPolygonField())
-            )
-            potentials_polygon = geometries.aggregate(polygon=Union(F("geom")))[
-                "polygon"
-            ]
+            wetlands_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
+            for zone in close_qs:
+                wetlands_polygon = wetlands_polygon.union(zone.geom)
+
+            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
+            for zone in potential_qs:
+                potentials_polygon = potentials_polygon.union(zone.geom)
 
             polygons = [
-                {"polygon": wetlands_polygon, "color": "blue", "label": "Zone humide"},
+                {"polygon": wetlands_polygon, "color": BLUE, "label": "Zone humide"},
                 {
                     "polygon": potentials_polygon,
-                    "color": "lightblue",
-                    "label": "ZH potentielle",
+                    "color": LIGHTBLUE,
+                    "label": "Zone humide potentielle",
                 },
             ]
-            wetlands_maps = [zone.map for zone in close_qs.select_related("map")]
-            potential_maps = [zone.map for zone in potential_qs.select_related("map")]
+            wetlands_maps = [zone.map for zone in close_qs]
+            potential_maps = [zone.map for zone in potential_qs]
             maps = set(wetlands_maps + potential_maps)
 
         elif potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
-            geometries = potential_qs.annotate(
-                geom=Cast("geometry", MultiPolygonField())
-            )
+            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
+            for zone in potential_qs:
+                potentials_polygon = potentials_polygon.union(zone.geom)
+
             polygons = [
                 {
-                    "polygon": geometries.aggregate(polygon=Union(F("geom")))[
-                        "polygon"
-                    ],
+                    "polygon": potentials_polygon,
                     "color": "dodgerblue",
                     "label": "Zone humide potentielle",
                 }
             ]
-            maps = set([zone.map for zone in potential_qs.select_related("map")])
+            maps = set([zone.map for zone in potential_qs])
 
         if polygons:
             criterion_map = Map(
@@ -220,22 +229,24 @@ class ZoneInondable44(MoulinetteCriterion):
         return result
 
     def _get_map(self):
-        zone_qs = self.catalog["flood_zones_12"].filter(map__display_for_user=True)
         polygons = None
+        zone_qs = [
+            zone for zone in self.catalog["flood_zones_12"] if zone.map.display_for_user
+        ]
+        polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
+        for zone in zone_qs:
+            polygon = polygon.union(zone.geom)
 
         if zone_qs:
             caption = "Le projet se situe dans une zone inondable."
-            geometries = zone_qs.annotate(geom=Cast("geometry", MultiPolygonField()))
             polygons = [
                 {
-                    "polygon": [
-                        geometries.aggregate(polygon=Union(F("geom")))["polygon"]
-                    ][0],
+                    "polygon": polygon,
                     "color": "red",
                     "label": "Zone inondable",
                 }
             ]
-            maps = set([zone.map for zone in zone_qs.select_related("map")])
+            maps = set([zone.map for zone in zone_qs])
 
         if polygons:
             criterion_map = Map(
@@ -280,15 +291,42 @@ class Lotissement44(MoulinetteCriterion):
     header = "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"  # noqa
     form_class = LotissementForm
 
+    def get_distance_to_n2000(self):
+        perimeters = self.moulinette.perimeters
+        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        return perimeter.distance.m
+
     @cached_property
     def result_code(self):
 
         form = self.get_form()
         if form.is_valid():
+            distance_to_n2000 = self.get_distance_to_n2000()
             is_lotissement = form.cleaned_data["is_lotissement"] == "oui"
-            return "soumis" if is_lotissement else "non_soumis"
+
+            if is_lotissement:
+                if distance_to_n2000 <= 0.0:
+                    code = "soumis_dedans"
+                else:
+                    code = "soumis_proximite_immediate"
+            else:
+                code = "non_soumis"
+
+            return code
 
         return "non_disponible"
+
+    @cached_property
+    def result(self):
+        code = self.result_code
+        result_matrix = {
+            "soumis_dedans": RESULTS.soumis,
+            "soumis_proximite_immediate": RESULTS.soumis,
+            "non_soumis": RESULTS.non_soumis,
+            "non_disponible": RESULTS.non_disponible,
+        }
+        result = result_matrix[code]
+        return result
 
 
 class Natura2000(MoulinetteRegulation):
@@ -304,6 +342,11 @@ class Natura2000(MoulinetteRegulation):
         Natura 2000 zones.
         """
         return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
+
+    def get_distance_to_n2000(self):
+        perimeters = self.moulinette.perimeters
+        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        return perimeter.distance.m
 
     def _get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
@@ -344,13 +387,19 @@ class Natura2000(MoulinetteRegulation):
         ]
         maps = [perimeter.map]
 
-        caption = "Le projet se situe sur un site Natura 2000."
+        if self.get_distance_to_n2000() <= 0.0:
+            caption = "Le projet se situe sur un site Natura 2000."
+        else:
+            caption = "Le projet se situe à proximité immédiate d’un site Natura 2000 " \
+            "(moins de 500 m, selon la doctrine de la DDTM de Loire-Atlantique)."
+
         map = Map(
             center=self.catalog["coords"],
             polygons=polygons,
             caption=caption,
             sources=maps[:1],
             truncate=False,
+            zoom=15,
         )
 
         return map
