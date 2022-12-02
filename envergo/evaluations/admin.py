@@ -184,7 +184,7 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = ["reference", "application_number", "contact_email"]
     ordering = ["-created_at"]
     fieldsets = (
-        (None, {"fields": ("reference", "summary")}),
+        (None, {"fields": ("reference", "moulinette_url", "summary")}),
         (
             _("Project localisation"),
             {"fields": ("address", "parcels", "parcels_map", "parcels_geojson")},
@@ -227,6 +227,18 @@ class RequestAdmin(admin.ModelAdmin):
             .prefetch_related("parcels")
         )
         return qs
+
+    def save_model(self, request, obj, form, change):
+        """Update model with data from moulinette url if provided."""
+        params = obj.moulinette_params
+
+        if 'created_surface' in params:
+            obj.created_surface = params['created_surface']
+
+        if 'existing_surface' in params:
+            obj.existing_surface = params['existing_surface']
+
+        super().save_model(request, obj, form, change)
 
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
@@ -316,6 +328,7 @@ class RequestAdmin(admin.ModelAdmin):
         try:
             evaluation = Evaluation.objects.create(
                 reference=req.reference,
+                moulinette_url=req.moulinette_url,
                 contact_email=req.contact_email,
                 request=req,
                 application_number=req.application_number,

@@ -39,6 +39,14 @@ def generate_reference():
     return reference
 
 
+def params_from_url(url):
+    """Extract query string from url and return a dict."""
+
+    url = urlparse(url)
+    params = QueryDict(url.query)
+    return params.dict()
+
+
 PROBABILITIES = Choices(
     (1, "unlikely", _("Unlikely")),
     (2, "possible", _("Possible")),
@@ -145,10 +153,7 @@ class Evaluation(models.Model):
     @cached_property
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
-
-        url = urlparse(self.moulinette_url)
-        params = QueryDict(url.query)
-        return params.dict()
+        return params_from_url(self.moulinette_url)
 
 
 CRITERIONS = Choices(
@@ -260,6 +265,7 @@ class Request(models.Model):
 
     # Project localisation
     address = models.TextField(_("Address"))
+    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
     parcels = models.ManyToManyField("geodata.Parcel", verbose_name=_("Parcels"))
 
     # Project specs
@@ -325,6 +331,12 @@ class Request(models.Model):
             ref = self.reference
 
         return ref
+
+    @cached_property
+    def moulinette_params(self):
+        """Return the evaluation params as provided in the moulinette url."""
+        return params_from_url(self.moulinette_url)
+
 
     def get_parcel_map_url(self):
         """Return an url to a parcel visualization map."""
