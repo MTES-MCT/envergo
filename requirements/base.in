@@ -6,7 +6,6 @@ django-crispy-forms
 django-compressor
 django-redis
 django-phonenumber-field[phonenumbers]
-django-cors-headers
 pytz
 python-slugify
 Pillow

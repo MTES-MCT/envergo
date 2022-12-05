@@ -92,7 +92,6 @@ django==3.2.16
     #   django-anymail
     #   django-appconf
     #   django-braces
-    #   django-cors-headers
     #   django-leaflet
     #   django-localflavor
     #   django-model-utils
@@ -110,8 +109,6 @@ django-appconf==1.0.5
 django-braces==1.15.0
     # via -r base.txt
 django-compressor==4.1
-    # via -r base.txt
-django-cors-headers==3.13.0
     # via -r base.txt
 django-crispy-forms==1.14.0
     # via -r base.txt

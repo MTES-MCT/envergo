@@ -55,7 +55,6 @@ django==3.2.16
     #   django-allauth
     #   django-appconf
     #   django-braces
-    #   django-cors-headers
     #   django-leaflet
     #   django-localflavor
     #   django-model-utils
@@ -68,8 +67,6 @@ django-appconf==1.0.5
 django-braces==1.15.0
     # via -r base.in
 django-compressor==4.1
-    # via -r base.in
-django-cors-headers==3.13.0
     # via -r base.in
 django-crispy-forms==1.14.0
     # via -r base.in

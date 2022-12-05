@@ -109,7 +109,6 @@ django==3.2.16
     #   django-allauth
     #   django-appconf
     #   django-braces
-    #   django-cors-headers
     #   django-debug-toolbar
     #   django-extensions
     #   django-leaflet
@@ -128,8 +127,6 @@ django-appconf==1.0.5
 django-braces==1.15.0
     # via -r base.txt
 django-compressor==4.1
-    # via -r base.txt
-django-cors-headers==3.13.0
     # via -r base.txt
 django-coverage-plugin==2.0.3
     # via -r local.in

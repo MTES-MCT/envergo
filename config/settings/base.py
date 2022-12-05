@@ -69,7 +69,6 @@ THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
     "localflavor",
-    "corsheaders",
 ]
 
 LOCAL_APPS = [
@@ -282,10 +281,6 @@ CELERY_TASK_TRACK_STARTED = True
 
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
-
-CORS_ALLOWED_ORIGINS = [
-    "https://js.sentry-cdn.com",
-]
 
 
 # Your stuff...
