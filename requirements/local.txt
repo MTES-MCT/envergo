@@ -130,7 +130,7 @@ django-braces==1.15.0
 django-compressor==4.1
     # via -r base.txt
 django-cors-headers==3.13.0
-    # via -r local.in
+    # via -r base.txt
 django-coverage-plugin==2.0.3
     # via -r local.in
 django-crispy-forms==1.14.0
