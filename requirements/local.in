@@ -28,5 +28,6 @@ factory-boy
 django-debug-toolbar
 django-extensions
 django-coverage-plugin
+django-cors-headers
 pytest-django
 watchdog
