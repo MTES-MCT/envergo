@@ -54,14 +54,16 @@ var _paq = window._paq || [];
 
 window.addEventListener('load', function() {
   const dialogElt = document.getElementById(FEEDBACK_MODAL_DIALOG_ID);
-  var feedbackModal = new FeedbackModal(dialogElt);
-  feedbackModal.init();
+  if (dialogElt) {
+    let feedbackModal = new FeedbackModal(dialogElt);
+    feedbackModal.init();
 
-  // We need to update the modal content depending on the clicked button
-  const buttons = document.querySelectorAll(FEEDBACK_BUTTONS);
-  buttons.forEach(button => {
-    button.addEventListener('click', () => {
-      feedbackModal.onFeedbackRespond(button);
+    // We need to update the modal content depending on the clicked button
+    const buttons = document.querySelectorAll(FEEDBACK_BUTTONS);
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        feedbackModal.onFeedbackRespond(button);
+      });
     });
-  });
+  }
 });
