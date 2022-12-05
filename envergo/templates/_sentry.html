@@ -1,13 +1,5 @@
 {% load static %}
 
 {% if SENTRY_DSN %}
-  <script defer type="text/javascript" src="{% static '@sentry/browser/build/bundle.js' %}"></script>
-  <script type="text/javascript">
-    window.addEventListener('load', function() {
-      Sentry.init({
-        dsn: "{{ SENTRY_DSN }}",
-        environment: "{{ ENV_NAME }}"
-      });
-    });
-  </script>
+  <script src='https://js.sentry-cdn.com/238aed8c0da24d48b8543973041f2f8c.min.js' crossorigin="anonymous"></script>
 {% endif %}
