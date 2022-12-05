@@ -69,6 +69,7 @@ THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
     "localflavor",
+    "corsheaders",
 ]
 
 LOCAL_APPS = [
@@ -128,6 +129,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -281,6 +283,10 @@ CELERY_TASK_TRACK_STARTED = True
 
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
+
+CORS_ALLOWED_ORIGINS = [
+    "https://js.sentry-cdn.com",
+]
 
 
 # Your stuff...
