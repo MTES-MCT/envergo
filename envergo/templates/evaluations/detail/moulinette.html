@@ -28,14 +28,14 @@
 
     <li>
       <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
-      <span class="fr-text--light">
-        Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
+      <span class="fr-hint-text">
+        Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
       </span>
     </li>
 
     <li>
       <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
-      <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
+      <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
     </li>
 
     {% if evaluation.moulinette_params.is_lotissement %}
