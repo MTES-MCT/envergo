@@ -1,49 +1,88 @@
-{% extends 'moulinette/result.html' %}
+{% extends 'base.html' %}
+{% load evaluations static l10n %}
 
-{% block form-col %}{% endblock %}
+{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
-{% block top_result %}
-  <div class="fr-mb-5w">
-    <h1>Notification réglementaire</h1>
-    <p class="fr-text--lead">
-      Référence
-      {{ evaluation }}
-    </p>
-    <h3>Projet de construction</h3>
+{% block article %}
+  <h1>Notification réglementaire</h1>
+  <p class="fr-text--lead">
+    Référence
+    {{ evaluation }}
+  </p>
+  <h3>Projet de construction</h3>
 
-    <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
-      <div class="ratio-content">
-        <div class="leaflet-container">
-          <div id="map"></div>
-        </div>
+  <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+    <div class="ratio-content">
+      <div class="leaflet-container">
+        <div id="map"></div>
       </div>
     </div>
-
-    <ul>
-      <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
-      {% if evaluation.application_number %}
-        <li>
-          Demande de permis n° {{ evaluation.application_number }}
-        </li>
-      {% endif %}
-
-      <li>
-        <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
-        <span class="fr-hint-text">
-          Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
-        </span>
-      </li>
-
-      <li>
-        <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
-        <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
-      </li>
-
-      {% if evaluation.moulinette_params.is_lotissement %}
-        <li>
-          <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
-        </li>
-      {% endif %}
-    </ul>
   </div>
+
+  <ul class="fr-mb-5w">
+    <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
+    {% if evaluation.application_number %}
+      <li>
+        Demande de permis n° {{ evaluation.application_number }}
+      </li>
+    {% endif %}
+
+    <li>
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
+      <span class="fr-hint-text">
+        Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
+      </span>
+    </li>
+
+    <li>
+      <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
+      <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
+    </li>
+
+    {% if evaluation.moulinette_params.is_lotissement %}
+      <li>
+        <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
+      </li>
+    {% endif %}
+  </ul>
+
+  {% for regulation in moulinette.regulations %}
+    {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+  {% endfor %}
+
+  <div class="fr-alert fr-alert--info fr-my-5w">
+    <p>EnvErgo est un service du ministère de la transition écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.</p>
+    <p><i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.</p>
+  </div>
+
+  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
+    <h2><span class="content">Évaluation environnementale</span> {% result_tag 'non_disponible' %}</h2>
+    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://startupdetat.typeform.com/envergo-regl">voter pour la demander en priorité</a>.</p>
+
+  </section>
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var DEPARTMENT = "{{ department.department }}";
+  </script>
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/map_widget_events.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
 {% endblock %}
