@@ -3,45 +3,47 @@
 {% block form-col %}{% endblock %}
 
 {% block top_result %}
-  <h1>Notification réglementaire</h1>
-  <p class="fr-text--lead">
-    Référence
-    {{ evaluation }}
-  </p>
-  <h3>Projet de construction</h3>
+  <div class="fr-mb-3w">
+    <h1>Notification réglementaire</h1>
+    <p class="fr-text--lead">
+      Référence
+      {{ evaluation }}
+    </p>
+    <h3>Projet de construction</h3>
 
-  <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
-    <div class="ratio-content">
-      <div class="leaflet-container">
-        <div id="map"></div>
+    <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div id="map"></div>
+        </div>
       </div>
     </div>
+
+    <ul>
+      <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
+      {% if evaluation.application_number %}
+        <li>
+          Demande de permis n° {{ evaluation.application_number }}
+        </li>
+      {% endif %}
+
+      <li>
+        <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
+        <span class="fr-hint-text">
+          Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
+        </span>
+      </li>
+
+      <li>
+        <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
+        <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
+      </li>
+
+      {% if evaluation.moulinette_params.is_lotissement %}
+        <li>
+          <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
+        </li>
+      {% endif %}
+    </ul>
   </div>
-
-  <ul>
-    <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
-    {% if evaluation.application_number %}
-      <li>
-        Demande de permis n° {{ evaluation.application_number }}
-      </li>
-    {% endif %}
-
-    <li>
-      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
-      <span class="fr-hint-text">
-        Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
-      </span>
-    </li>
-
-    <li>
-      <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
-      <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
-    </li>
-
-    {% if evaluation.moulinette_params.is_lotissement %}
-      <li>
-        <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
-      </li>
-    {% endif %}
-  </ul>
 {% endblock %}

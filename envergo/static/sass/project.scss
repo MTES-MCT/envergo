@@ -88,8 +88,8 @@ html.nojs .js {
         text-align: right;
       }
     }
-
   }
+
 
   button.share-btn {
     display: block;
@@ -129,6 +129,13 @@ html.nojs .js {
     }
   }
 }
+
+#moulinette-container.evaluation {
+  button.share-btn {
+    display: none;
+  }
+}
+
 
 #moulinette-form {
 
