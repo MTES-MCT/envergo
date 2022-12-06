@@ -1,5 +1,4 @@
 import logging
-from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -7,7 +6,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
-from django.http.request import QueryDict
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
