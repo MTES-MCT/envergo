@@ -8,15 +8,16 @@ from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactor
 
 pytestmark = pytest.mark.django_db
 
+
 @pytest.fixture
 def form_data():
     return {
-        'reference': generate_reference(),
-        'address': 'Sunny side of the street',
-        'created_surface': 20,
-        'existing_surface': 42,
-        'contact_email': 'test@example.org',
-        'contact_md': 'Léotard Tiflette',
+        "reference": generate_reference(),
+        "address": "Sunny side of the street",
+        "created_surface": 20,
+        "existing_surface": 42,
+        "contact_email": "test@example.org",
+        "contact_md": "Léotard Tiflette",
     }
 
 
@@ -78,7 +79,7 @@ def test_form_validation_without_moulinette_url(rf, form_data):
     """The `result` is not required since it's computed."""
 
     admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    request = rf.get('/admin/evaluations/evaluation/add/')
+    request = rf.get("/admin/evaluations/evaluation/add/")
     EvaluationForm = admin.get_form(request=None, obj=None)
     form = EvaluationForm(form_data)
     assert form.is_valid()
@@ -88,14 +89,16 @@ def test_form_validation_with_moulinette_url(rf, form_data):
     """When a moulinette url is set, the `result` field must be set."""
 
     admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    request = rf.get('/admin/evaluations/evaluation/add/')
+    request = rf.get("/admin/evaluations/evaluation/add/")
     EvaluationForm = admin.get_form(request=None, obj=None)
 
-    form_data['moulinette_url'] = 'http://envergo.local:8000/simulateur/resultat/?created_surface=2000&existing_surface=20&lng=-1.30933&lat=47.11971'  # noqa
+    form_data[
+        "moulinette_url"
+    ] = "http://envergo.local:8000/simulateur/resultat/?created_surface=2000&existing_surface=20&lng=-1.30933&lat=47.11971"  # noqa
     form = EvaluationForm(form_data)
     assert not form.is_valid()
-    assert 'result' in form.errors
+    assert "result" in form.errors
 
-    form_data['result'] = 'soumis'
+    form_data["result"] = "soumis"
     form = EvaluationForm(form_data)
     assert form.is_valid()

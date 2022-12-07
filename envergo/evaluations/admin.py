@@ -34,24 +34,27 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
         max_length=64,
     )
     result = forms.ChoiceField(
-        label=_('Result'),
-        choices=[('', '---')] + RESULTS,
+        label=_("Result"),
+        choices=[("", "---")] + RESULTS,
         required=False,
-        help_text=_('If the result can be computed from criterions, this value will be erased.'))
-
+        help_text=_(
+            "If the result can be computed from criterions, this value will be erased."
+        ),
+    )
 
     def clean(self):
         cleaned_data = super().clean()
 
-        if 'moulinette_url' in cleaned_data and 'result' in cleaned_data:
-            moulinette_url = cleaned_data.get('moulinette_url')
-            result = cleaned_data.get('result')
+        if "moulinette_url" in cleaned_data and "result" in cleaned_data:
+            moulinette_url = cleaned_data.get("moulinette_url")
+            result = cleaned_data.get("result")
             if moulinette_url and not result:
-                msg = _('You must provide an evaluation result, since you set a moulinette url.')
-                self.add_error('result', msg)
+                msg = _(
+                    "You must provide an evaluation result, since you set a moulinette url."
+                )
+                self.add_error("result", msg)
 
         return cleaned_data
-
 
 
 class CriterionAdminForm(forms.ModelForm):
