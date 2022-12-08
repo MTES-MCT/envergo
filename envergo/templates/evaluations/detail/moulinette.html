@@ -63,6 +63,28 @@
   </section>
 {% endblock %}
 
+{% block after-content %}
+  <section class="fr-py-8w alt">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+
+          <h2>Besoin de partager cette évaluation à un contact ?</h2>
+
+          <p>
+            <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+          </p>
+          <p>Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'moulinette/_share_modal.html' %}
+{% endblock %}
+
 {% block extra_css %}
   <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
@@ -84,5 +106,6 @@
   <script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>
   <script defer src="{% static 'js/libs/map_widget_events.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
 {% endblock %}
