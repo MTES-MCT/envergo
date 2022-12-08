@@ -34,7 +34,8 @@
 
   <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
 
-  {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+
+  {% if is_lotissement == 'oui' %}
 
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
@@ -52,7 +53,7 @@
 
 {% else %}
 
-  {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+  {% if is_lotissement == 'oui' %}
 
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
@@ -111,7 +112,7 @@
       {{ department.contact_html|safe }}
     </div>
 
-    {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+    {% if is_lotissement == 'oui' %}
 
       <p><em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :</p>
 
@@ -133,7 +134,7 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+    {% if is_lotissement == 'oui' %}
 
       <p><strong>2/ Déposer l'évaluation des incidences Natura 2000 en mairie</strong></p>
 
@@ -159,7 +160,7 @@
 
   {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+    {% if is_lotissement == 'oui' %}
 
       <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
 
@@ -184,7 +185,7 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'action_requise' %}
+    {% if is_lotissement == 'oui' %}
 
       <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande de permis d'aménager.</p>
 
