@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-07 11:13+0000\n"
+"POT-Creation-Date: 2022-12-08 10:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -133,81 +133,85 @@ msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 msgid "Result"
 msgstr "Résultat"
 
-#: envergo/evaluations/admin.py:40
+#: envergo/evaluations/admin.py:41
 msgid ""
 "If the result can be computed from criterions, this value will be erased."
 msgstr ""
 "Si le résultat peut être calculé à partir des rubriques, cette valeur sera "
 "écrasée."
 
-#: envergo/evaluations/admin.py:50
+#: envergo/evaluations/admin.py:54
 msgid "You must provide an evaluation result, since you set a moulinette url."
 msgstr ""
 "Vous devez spécifier le résultat, car le champ « url simulateur » est rempli."
 
-#: envergo/evaluations/admin.py:110 envergo/evaluations/admin.py:214
+#: envergo/evaluations/admin.py:63
+msgid "You must provide contact data."
+msgstr "Vous devez fournir des informations de contact."
+
+#: envergo/evaluations/admin.py:122 envergo/evaluations/admin.py:226
 msgid "Project data"
 msgstr "Données projet"
 
-#: envergo/evaluations/admin.py:120
+#: envergo/evaluations/admin.py:132
 msgid "Evaluation report"
 msgstr "Rapport d'évaluation"
 
-#: envergo/evaluations/admin.py:124
+#: envergo/evaluations/admin.py:136
 msgid "Contact data"
 msgstr "Informations de contact"
 
-#: envergo/evaluations/admin.py:151 envergo/evaluations/models.py:82
+#: envergo/evaluations/admin.py:163 envergo/evaluations/models.py:82
 msgid "Request"
 msgstr "Demande"
 
-#: envergo/evaluations/admin.py:210
+#: envergo/evaluations/admin.py:222
 msgid "Project localisation"
 msgstr "Localisation du projet"
 
-#: envergo/evaluations/admin.py:226
+#: envergo/evaluations/admin.py:238
 msgid "Contact info"
 msgstr "Infos de contact"
 
-#: envergo/evaluations/admin.py:237
+#: envergo/evaluations/admin.py:249
 msgid "Meta info"
 msgstr "Infos meta"
 
-#: envergo/evaluations/admin.py:264
+#: envergo/evaluations/admin.py:276
 msgid "Lien vers la carte des parcelles"
 msgstr "Lien vers la carte des parcelles"
 
-#: envergo/evaluations/admin.py:271
+#: envergo/evaluations/admin.py:283
 msgid "Exporter vers QGis ou autre"
 msgstr "Exporter vers QGis ou autre"
 
-#: envergo/evaluations/admin.py:278 envergo/evaluations/models.py:120
+#: envergo/evaluations/admin.py:290 envergo/evaluations/models.py:120
 #: envergo/evaluations/models.py:199
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/admin.py:290
+#: envergo/evaluations/admin.py:302
 msgid "Résumé"
 msgstr "Résumé"
 
-#: envergo/evaluations/admin.py:329
+#: envergo/evaluations/admin.py:341
 msgid "Create an evaluation from this request"
 msgstr "Créer une évaluation à partir de cette demande"
 
-#: envergo/evaluations/admin.py:334
+#: envergo/evaluations/admin.py:346
 msgid "Please, select one and only one request for this action."
 msgstr "Merci de sélectionner une et une seule demande pour cette action."
 
-#: envergo/evaluations/admin.py:346
+#: envergo/evaluations/admin.py:358
 msgid "There already is an evaluation associated with this request."
 msgstr "Cette demande est déjà associée avec une évaluation existante."
 
-#: envergo/evaluations/admin.py:362
+#: envergo/evaluations/admin.py:374
 #, python-format
 msgid "There was an error creating your evaluation: %(error)s"
 msgstr "Une erreur a empêché la création de l'évaluation : %(error)s"
 
-#: envergo/evaluations/admin.py:371
+#: envergo/evaluations/admin.py:383
 #, python-format
 msgid "<a href=\"%(admin_url)s\">The new evaluation has been created.</a>"
 msgstr "<a href=\"%(admin_url)s\">La nouvelle évaluation a été créée.</a>"
@@ -636,7 +640,7 @@ msgstr ""
 
 #: envergo/geodata/models.py:160
 msgid "Display for user?"
-msgstr ""
+msgstr "Afficher pour l'utilisateur ?"
 
 #: envergo/geodata/models.py:163
 msgid "Data type"
