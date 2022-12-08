@@ -109,7 +109,7 @@ class Evaluation(models.Model):
     result = models.CharField(_("Result"), max_length=32, choices=RESULTS, null=True)
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
-    contact_md = models.TextField(_("Contact"), blank=False)
+    contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     moulinette_url = models.URLField(_("Moulinette url"), blank=True)

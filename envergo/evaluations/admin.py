@@ -45,6 +45,7 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        # If a moulinette url is provided, the evaluation result must by set manually
         if "moulinette_url" in cleaned_data and "result" in cleaned_data:
             moulinette_url = cleaned_data.get("moulinette_url")
             result = cleaned_data.get("result")
@@ -53,6 +54,14 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
                     "You must provide an evaluation result, since you set a moulinette url."
                 )
                 self.add_error("result", msg)
+
+        # If a moulinette url is NOT provided, a contact info is required
+        if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:
+            moulinette_url = cleaned_data.get("moulinette_url")
+            contact_md = cleaned_data.get("contact_md")
+            if not moulinette_url and not contact_md:
+                msg = _("You must provide contact data.")
+                self.add_error("contact_md", msg)
 
         return cleaned_data
 

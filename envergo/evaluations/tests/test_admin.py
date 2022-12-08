@@ -75,21 +75,22 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
     assert qs.count() == 1
 
 
-def test_form_validation_without_moulinette_url(rf, form_data):
+def test_form_validation_result_field_without_moulinette_url(form_data):
     """The `result` is not required since it's computed."""
 
     admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    request = rf.get("/admin/evaluations/evaluation/add/")
     EvaluationForm = admin.get_form(request=None, obj=None)
     form = EvaluationForm(form_data)
+
+    assert "result" not in form_data
+    assert "moulinette_url" not in form_data
     assert form.is_valid()
 
 
-def test_form_validation_with_moulinette_url(rf, form_data):
+def test_form_validation_result_field_with_moulinette_url(form_data):
     """When a moulinette url is set, the `result` field must be set."""
 
     admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    request = rf.get("/admin/evaluations/evaluation/add/")
     EvaluationForm = admin.get_form(request=None, obj=None)
 
     form_data[
@@ -100,5 +101,31 @@ def test_form_validation_with_moulinette_url(rf, form_data):
     assert "result" in form.errors
 
     form_data["result"] = "soumis"
+    form = EvaluationForm(form_data)
+    assert form.is_valid()
+
+
+def test_form_validation_contact_field_without_moulinette_url(form_data):
+    admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
+    EvaluationForm = admin.get_form(request=None, obj=None)
+    form = EvaluationForm(form_data)
+
+    assert "contact_md" in form_data
+    assert "moulinette_url" not in form_data
+    assert form.is_valid()
+
+    del form_data["contact_md"]
+    form = EvaluationForm(form_data)
+    assert not form.is_valid()
+
+
+def test_form_validation_contact_field_with_moulinette_url(form_data):
+    admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
+    EvaluationForm = admin.get_form(request=None, obj=None)
+    form_data[
+        "moulinette_url"
+    ] = "http://envergo.local:8000/simulateur/resultat/?created_surface=2000&existing_surface=20&lng=-1.30933&lat=47.11971"  # noqa
+    form_data["result"] = "soumis"
+    del form_data["contact_md"]
     form = EvaluationForm(form_data)
     assert form.is_valid()
