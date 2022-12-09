@@ -1,6 +1,7 @@
 import secrets
 import uuid
 from os.path import splitext
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -10,6 +11,7 @@ from django.db import models
 from django.http import QueryDict
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
@@ -35,6 +37,14 @@ def generate_reference():
     reference = "".join(secrets.choice(alphabet) for i in range(length))
 
     return reference
+
+
+def params_from_url(url):
+    """Extract query string from url and return a dict."""
+
+    url = urlparse(url)
+    params = QueryDict(url.query)
+    return params.dict()
 
 
 PROBABILITIES = Choices(
@@ -99,8 +109,10 @@ class Evaluation(models.Model):
     result = models.CharField(_("Result"), max_length=32, choices=RESULTS, null=True)
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
-    contact_md = models.TextField(_("Contact"), blank=False)
+    contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
+
+    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -137,6 +149,11 @@ class Evaluation(models.Model):
         an = self.application_number
         # Those are non-breaking spaces
         return f"{an[0:2]} {an[2:5]} {an[5:8]} {an[8:10]} {an[10:]}"
+
+    @cached_property
+    def moulinette_params(self):
+        """Return the evaluation params as provided in the moulinette url."""
+        return params_from_url(self.moulinette_url)
 
 
 CRITERIONS = Choices(
@@ -248,6 +265,7 @@ class Request(models.Model):
 
     # Project localisation
     address = models.TextField(_("Address"))
+    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
     parcels = models.ManyToManyField("geodata.Parcel", verbose_name=_("Parcels"))
 
     # Project specs
@@ -313,6 +331,11 @@ class Request(models.Model):
             ref = self.reference
 
         return ref
+
+    @cached_property
+    def moulinette_params(self):
+        """Return the evaluation params as provided in the moulinette url."""
+        return params_from_url(self.moulinette_url)
 
     def get_parcel_map_url(self):
         """Return an url to a parcel visualization map."""

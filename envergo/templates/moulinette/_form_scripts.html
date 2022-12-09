@@ -1,17 +1,5 @@
 {% load static l10n %}
 
-<script>
-  var FEEDBACK_MODAL_DIALOG_ID = 'feedback-form-dialog';
-  var FEEDBACK_BUTTONS = '.feedback-buttons button';
-  var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
-  var CSRF_TOKEN = '{{ csrf_token }}';
-  var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-  var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
-  var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
-  var DEFAULT_ZOOM = {{ default_zoom }};
-  var LAT_FIELD_ID = 'id_lat';
-  var LNG_FIELD_ID = 'id_lng';
-</script>
 <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
 <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
 <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>

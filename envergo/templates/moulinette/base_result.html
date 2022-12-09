@@ -1,23 +1,25 @@
 {% extends 'base.html' %}
-{% load evaluations static %}
+{% load evaluations static l10n %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
 {% block container %}
 
-  <div id="moulinette-container" class="fr-container fr-mb-5w">
+  <div id="moulinette-container" class="fr-container {{ source }} fr-mb-5w">
     <div class="fr-grid-row fr-grid-row--gutters">
       <div id="form-col" class="">
+        {% block form-col %}
 
-        <h2>Saisissez les caractéristiques de votre projet</h2>
+          <h2>Saisissez les caractéristiques de votre projet</h2>
 
-        {% include 'moulinette/_form.html' with form=form %}
+          {% include 'moulinette/_form.html' with form=form %}
 
-        {% block extra-form-col %}{% endblock %}
-
+          {% block extra-form-col %}{% endblock %}
+        {% endblock %}
       </div>
 
       <article id="content-col" class="">
+        {% block top_result %}{% endblock %}
         {% block result %}{% endblock %}
       </article>
     </div>
@@ -47,5 +49,18 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script>
+    var FEEDBACK_MODAL_DIALOG_ID = 'feedback-form-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+  </script>
   {% include 'moulinette/_form_scripts.html' %}
 {% endblock %}

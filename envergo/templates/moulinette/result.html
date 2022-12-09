@@ -7,9 +7,11 @@
   {% endif %}
 {% endblock %}
 
-{% block result %}
-
+{% block top_result %}
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
+{% endblock %}
+
+{% block result %}
 
   {% for regulation in moulinette.regulations %}
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
@@ -52,28 +54,10 @@
 
 {% block extra_js %}
   {{ block.super }}
+  <script>
+    var DEPARTMENT = "{{ department.department }}";
+  </script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
-  <script>
-    var _paq = window._paq || [];
-
-    // Track an event when a regulation main "read more" btn is clicked
-    window.addEventListener('load', function() {
-      const showMoreBtns = document.querySelectorAll('.read-more-btn');
-      showMoreBtns.forEach(btn => btn.addEventListener('click', function(evt) {
-        const btn = evt.currentTarget;
-        const target = btn.getAttribute('aria-controls');
-        const expanded = btn.getAttribute('aria-expanded');
-        const action = expanded == 'false' ? 'Expand' : 'Conceal';
-        _paq.push(['trackEvent', 'Content', action, target]);
-      }));
-    });
-
-    // Track a moulinette result page load
-    window.addEventListener('load', function() {
-      _paq.push(['trackEvent', 'Simulation', 'Result', {{ department.department }}]);
-    });
-
-  </script>
-
+  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
 {% endblock %}

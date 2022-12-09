@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
+    RESULTS,
     Criterion,
     Evaluation,
     Request,
@@ -32,6 +33,37 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_('A 15 chars value starting with "P"'),
         max_length=64,
     )
+    result = forms.ChoiceField(
+        label=_("Result"),
+        choices=[("", "---")] + RESULTS,
+        required=False,
+        help_text=_(
+            "If the result can be computed from criterions, this value will be erased."
+        ),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # If a moulinette url is provided, the evaluation result must by set manually
+        if "moulinette_url" in cleaned_data and "result" in cleaned_data:
+            moulinette_url = cleaned_data.get("moulinette_url")
+            result = cleaned_data.get("result")
+            if moulinette_url and not result:
+                msg = _(
+                    "You must provide an evaluation result, since you set a moulinette url."
+                )
+                self.add_error("result", msg)
+
+        # If a moulinette url is NOT provided, a contact info is required
+        if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:
+            moulinette_url = cleaned_data.get("moulinette_url")
+            contact_md = cleaned_data.get("contact_md")
+            if not moulinette_url and not contact_md:
+                msg = _("You must provide contact data.")
+                self.add_error("contact_md", msg)
+
+        return cleaned_data
 
 
 class CriterionAdminForm(forms.ModelForm):
@@ -66,7 +98,6 @@ class EvaluationAdmin(admin.ModelAdmin):
     inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
-    readonly_fields = ["result"]
     search_fields = [
         "reference",
         "application_number",
@@ -79,6 +110,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "reference",
+                    "moulinette_url",
                     "contact_email",
                     "request",
                     "application_number",
@@ -110,7 +142,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
-        obj.result = obj.compute_result()
+
+        if not obj.moulinette_url:
+            obj.result = obj.compute_result()
         super().save_model(request, obj, form, change)
 
     def save_related(self, request, form, formsets, change):
@@ -183,7 +217,7 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = ["reference", "application_number", "contact_email"]
     ordering = ["-created_at"]
     fieldsets = (
-        (None, {"fields": ("reference", "summary")}),
+        (None, {"fields": ("reference", "moulinette_url", "summary")}),
         (
             _("Project localisation"),
             {"fields": ("address", "parcels", "parcels_map", "parcels_geojson")},
@@ -226,6 +260,18 @@ class RequestAdmin(admin.ModelAdmin):
             .prefetch_related("parcels")
         )
         return qs
+
+    def save_model(self, request, obj, form, change):
+        """Update model with data from moulinette url if provided."""
+        params = obj.moulinette_params
+
+        if "created_surface" in params:
+            obj.created_surface = params["created_surface"]
+
+        if "existing_surface" in params:
+            obj.existing_surface = params["existing_surface"]
+
+        super().save_model(request, obj, form, change)
 
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
@@ -306,6 +352,7 @@ class RequestAdmin(admin.ModelAdmin):
             req.evaluation
         except Evaluation.DoesNotExist:
             # Good, good…
+            # We can't create an evaluation if one already exists
             pass
         else:
             error = _("There already is an evaluation associated with this request.")
@@ -315,6 +362,7 @@ class RequestAdmin(admin.ModelAdmin):
         try:
             evaluation = Evaluation.objects.create(
                 reference=req.reference,
+                moulinette_url=req.moulinette_url,
                 contact_email=req.contact_email,
                 request=req,
                 application_number=req.application_number,

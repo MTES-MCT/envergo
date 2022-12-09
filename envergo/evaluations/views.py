@@ -12,6 +12,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
+from django.views.generic.detail import BaseDetailView
 
 from envergo.analytics.utils import log_event
 from envergo.evaluations.forms import (
@@ -34,6 +35,7 @@ from envergo.evaluations.tasks import (
     confirm_request_to_requester,
     share_evaluation_by_email,
 )
+from envergo.moulinette.views import MoulinetteResult
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +53,66 @@ class EvaluationSearch(FormView):
         return HttpResponseRedirect(success_url)
 
 
-class EvaluationDetail(FormView, DetailView):
-    """The complete evaluation detail."""
+class EvaluationDetailMixin:
+    model = Evaluation
+    slug_url_kwarg = "reference"
+    slug_field = "reference"
+
+    def get_queryset(self):
+        qs = Evaluation.objects.select_related("request").prefetch_related(
+            Prefetch("criterions", queryset=Criterion.objects.order_by("order"))
+        )
+        return qs
+
+
+class EvaluationDetail(EvaluationDetailMixin, DetailView):
+    """This is just a proxy delegating to the correct class view.
+
+    Depending on the evaluation data, we use two entirely different templates
+    to render an evaluation.
+    """
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except Http404:
+            self.object = None
+
+        if self.object and self.object.moulinette_url:
+            return EvaluationDetailMoulinette.as_view()(request, *args, **kwargs)
+        else:
+            return EvaluationDetailLegacy.as_view()(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
+
+
+class EvaluationDetailMoulinette(
+    EvaluationDetailMixin, BaseDetailView, MoulinetteResult
+):
+    def get_initial(self):
+        return self.request.GET
+
+    def get_moulinette_raw_data(self):
+        return self.object.moulinette_params
+
+    def get_template_names(self):
+        """Check wich template to use depending on the moulinette result."""
+
+        return ["evaluations/detail/moulinette.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_map_static"] = True
+        context["source"] = "evaluation"
+        return context
+
+
+class EvaluationDetailLegacy(FormView, DetailView):
+    """The legacy evaluation detail view.
+
+    This renders an evaluation that was generated manually.
+    """
 
     template_name = "evaluations/detail.html"
     model = Evaluation
