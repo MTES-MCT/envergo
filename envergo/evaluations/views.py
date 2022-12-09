@@ -66,12 +66,25 @@ class EvaluationDetailMixin:
 
 
 class EvaluationDetail(EvaluationDetailMixin, DetailView):
+    """This is just a proxy delegating to the correct class view.
+
+    Depending on the evaluation data, we use two entirely different templates
+    to render an evaluation.
+    """
+
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object.moulinette_url:
+        try:
+            self.object = self.get_object()
+        except Http404:
+            self.object = None
+
+        if self.object and self.object.moulinette_url:
             return EvaluationDetailMoulinette.as_view()(request, *args, **kwargs)
         else:
             return EvaluationDetailLegacy.as_view()(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
 
 class EvaluationDetailMoulinette(
