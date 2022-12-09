@@ -13,6 +13,13 @@ RESULTS = Choices(
 )
 
 
+# Only ask the "emprise" question if created surface is greater or equal than
+EMPRISE_THRESHOLD = 10000
+
+# Only ask the "Zone u" question if created surface is greater or equal than
+ZONE_U_THRESHOLD = 40000
+
+
 class EmpriseForm(forms.Form):
     emprise = forms.IntegerField(
         label="Emprise au sol créée par le projet",
@@ -23,6 +30,17 @@ class EmpriseForm(forms.Form):
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        created_surface = int(self.data['created_surface'])
+
+        if created_surface < ZONE_U_THRESHOLD:
+            del self.fields['zone_u']
+
+        if created_surface < EMPRISE_THRESHOLD:
+            del self.fields['emprise']
 
 
 class Emprise(MoulinetteCriterion):
