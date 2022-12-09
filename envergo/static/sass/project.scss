@@ -46,6 +46,10 @@ html.nojs .js {
   &.probability-4 {
     background-color: #ffb7a5;
   }
+
+  &.probability-missing {
+    background-color: purple;
+  }
 }
 
 #probability-gauge {
