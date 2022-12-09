@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
 from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
 
@@ -121,7 +122,7 @@ class Moulinette:
         # access to other pieces of data from the moulinette.
         # For example, to compute the "Natura2000" result, there is a criterion
         # that is just the result of the "Loi sur l'eau" regulation.
-        self.regulations = [LoiSurLEau(self), Natura2000(self)]
+        self.regulations = [LoiSurLEau(self), Natura2000(self), EvalEnvironnementale(self)]
 
         self.catalog.update(self.cleaned_additional_data())
 
