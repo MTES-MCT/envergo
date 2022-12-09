@@ -1,5 +1,6 @@
 from functools import cached_property
 
+from django import forms
 from model_utils.choices import Choices
 
 from envergo.evaluations.models import RESULTS
@@ -12,12 +13,25 @@ RESULTS = Choices(
 )
 
 
+class EmpriseForm(forms.Form):
+    emprise = forms.IntegerField(
+        label="Emprise au sol créée par le projet",
+        widget=forms.TextInput,
+        required=True)
+    zone_u = forms.ChoiceField(
+        label="Le projet se situe-t-il en Zone U ?",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True)
+
+
 class Emprise(MoulinetteCriterion):
     slug = "emprise"
     title = "Emprise au sol créée"
     choice_label = "Éval Env > Emprise"
-    subtitle = ""
+    subtitle = "Seuil réglementaire : 4 ha (cas par cas : 1 ha)"
     header = ""
+    form_class = EmpriseForm
 
     def get_catalog_data(self):
         data = {}
