@@ -60,7 +60,25 @@ class Emprise(MoulinetteCriterion):
     @property
     def result_code(self):
         """Return the unique result code"""
-        return RESULTS.systematique
+        form = self.get_form()
+        if not form.is_valid():
+            return 'non_disponible'
+
+        emprise = form.cleaned_data.get('emprise', None)
+        if emprise is None or emprise < EMPRISE_THRESHOLD:
+            result = RESULTS.non_soumis
+
+        elif emprise >= EMPRISE_THRESHOLD and emprise < ZONE_U_THRESHOLD:
+            result = RESULTS.cas_par_cas
+
+        else:
+            zone_u = form.cleaned_data['zone_u']
+            if zone_u == 'oui':
+                result = RESULTS.cas_par_cas
+            else:
+                result = RESULTS.systematique
+
+        return result
 
     @cached_property
     def result(self):
@@ -70,11 +88,7 @@ class Emprise(MoulinetteCriterion):
         """
 
         code = self.result_code
-        result_matrix = {
-            "systematique": RESULTS.systematique,
-        }
-        result = result_matrix[code]
-        return result
+        return code
 
 
 class EvalEnvironnementale(MoulinetteRegulation):

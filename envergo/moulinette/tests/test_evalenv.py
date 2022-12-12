@@ -1,7 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
+from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import PerimeterFactory
 
@@ -62,3 +62,39 @@ def test_evalenv_wide_footprint(moulinette_data):
     moulinette_data["zone_u"] = "oui"
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert not moulinette.has_missing_data()
+
+
+@pytest.mark.parametrize("footprint", [9500])
+def test_evalenv_emprise_non_soumis(moulinette_data):
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.eval_env.emprise.result == 'non_soumis'
+
+
+@pytest.mark.parametrize("footprint", [10000])
+def test_evalenv_emprise_non_soumis(moulinette_data):
+    moulinette_data['emprise'] = 5000
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.eval_env.emprise.result == 'non_soumis'
+
+
+@pytest.mark.parametrize("footprint", [10000])
+def test_evalenv_emprise_cas_par_cas(moulinette_data):
+    moulinette_data['emprise'] = 10000
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.eval_env.emprise.result == 'cas_par_cas'
+
+
+@pytest.mark.parametrize("footprint", [40000])
+def test_evalenv_zone_u_cas_par_cas(moulinette_data):
+    moulinette_data['emprise'] = 40000
+    moulinette_data['zone_u'] = 'oui'
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.eval_env.emprise.result == 'cas_par_cas'
+
+
+@pytest.mark.parametrize("footprint", [40000])
+def test_evalenv_zone_u_systematique(moulinette_data):
+    moulinette_data['emprise'] = 40000
+    moulinette_data['zone_u'] = 'non'
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.eval_env.emprise.result == 'systematique'
