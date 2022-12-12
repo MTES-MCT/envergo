@@ -31,20 +31,26 @@ html.nojs .js {
   font-weight: bold;
   color: black;
 
-  &.probability-1 {
-    background-color: #80d5c6;
+  &.probability-non_soumis {
+    background-color: #b1f0bd;
   }
 
-  &.probability-2 {
+  &.probability-non_disponible,
+  &.probability-non_applicable {
     background-color: #d5dbef;
   }
 
-  &.probability-3 {
+  &.probability-action_requise {
     background-color: #fee7a0;
   }
 
-  &.probability-4 {
+  &.probability-soumis,
+  &.probability-systematique {
     background-color: #ffb7a5;
+  }
+
+  &.probability-cas_par_cas {
+    background-color: #ffd3a6;
   }
 
   &.probability-missing {

@@ -82,11 +82,6 @@ class Emprise(MoulinetteCriterion):
 
     @cached_property
     def result(self):
-        """Run the check for the 3.3.1.0 rule.
-
-        Associate a unique result code with a value from the RESULTS enum.
-        """
-
         code = self.result_code
         return code
 
