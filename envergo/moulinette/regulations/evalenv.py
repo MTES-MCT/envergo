@@ -3,7 +3,6 @@ from functools import cached_property
 from django import forms
 from model_utils.choices import Choices
 
-from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
 
 RESULTS = Choices(
@@ -24,23 +23,25 @@ class EmpriseForm(forms.Form):
     emprise = forms.IntegerField(
         label="Emprise au sol créée par le projet",
         widget=forms.TextInput,
-        required=True)
+        required=True,
+    )
     zone_u = forms.ChoiceField(
         label="Le projet se situe-t-il en Zone U ?",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
-        required=True)
+        required=True,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        created_surface = int(self.data['created_surface'])
+        created_surface = int(self.data["created_surface"])
 
         if created_surface < ZONE_U_THRESHOLD:
-            del self.fields['zone_u']
+            del self.fields["zone_u"]
 
         if created_surface < EMPRISE_THRESHOLD:
-            del self.fields['emprise']
+            del self.fields["emprise"]
 
 
 class Emprise(MoulinetteCriterion):

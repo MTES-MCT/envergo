@@ -29,7 +29,6 @@ def moulinette_data(footprint):
     }
 
 
-
 def no_zones(_coords):
     return []
 
@@ -49,17 +48,17 @@ def test_evalenv_medium(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data['emprise'] = 42
+    moulinette_data["emprise"] = 42
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [40500])
 def test_evalenv_wide_footprint(moulinette_data):
-    moulinette_data['emprise'] = 42
+    moulinette_data["emprise"] = 42
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data['zone_u'] = 'oui'
+    moulinette_data["zone_u"] = "oui"
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert not moulinette.has_missing_data()
