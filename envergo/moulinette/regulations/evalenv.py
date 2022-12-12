@@ -1,6 +1,7 @@
 from functools import cached_property
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
@@ -22,7 +23,7 @@ ZONE_U_THRESHOLD = 40000
 class EmpriseForm(forms.Form):
     emprise = forms.IntegerField(
         label="Emprise au sol créée par le projet",
-        widget=forms.TextInput,
+        widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
     zone_u = forms.ChoiceField(
