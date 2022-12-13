@@ -123,6 +123,9 @@ class Moulinette:
         # that is just the result of the "Loi sur l'eau" regulation.
         self.regulations = [LoiSurLEau(self), Natura2000(self)]
 
+        self.catalog.update(self.cleaned_additional_data())
+
+
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
@@ -248,6 +251,19 @@ class Moulinette:
                     form_errors.append(not form.is_valid())
 
         return any(form_errors)
+
+    def cleaned_additional_data(self):
+        """Return combined additional data from custom criterion forms."""
+
+        data = {}
+        for regulation in self.regulations:
+            for criterion in regulation.criterions:
+                form = criterion.get_form()
+                if form and form.is_valid():
+                    data.update(form.cleaned_data)
+
+        return data
+
 
     def __getattr__(self, attr):
         """Returs the corresponding regulation.
