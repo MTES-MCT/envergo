@@ -7,7 +7,7 @@ from model_utils.choices import Choices
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
 
 RESULTS = Choices(
-    ("systematique", "Systématique"),
+    ("systematique", "Soumis"),
     ("cas_par_cas", "Cas par cas"),
     ("non_soumis", "Non soumis"),
 )
