@@ -50,7 +50,7 @@ class Emprise(MoulinetteCriterion):
     slug = "emprise"
     title = "Emprise au sol créée"
     choice_label = "Éval Env > Emprise"
-    subtitle = "Seuil réglementaire : 4 ha (cas par cas : 1 ha)"
+    subtitle = "Seuil réglementaire : 4 ha (cas par cas : 1 ha)"
     header = ""
     form_class = EmpriseForm
 
@@ -87,10 +87,65 @@ class Emprise(MoulinetteCriterion):
         return code
 
 
+SURFACE_PLANCHER_THRESHOLD = 3000
+
+
+class SurfacePlancherForm(forms.Form):
+    surface_plancher_sup_thld = forms.ChoiceField(
+        label="Le projet créé-t-il une surface plancher supérieure à 10 000 m²",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        created_surface = int(self.data["created_surface"])
+
+        if created_surface < SURFACE_PLANCHER_THRESHOLD:
+            del self.fields["surface_plancher_sup_thld"]
+
+
+
+class SurfacePlancher(MoulinetteCriterion):
+    slug = "surface_plancher"
+    title = "Surface de plancher créée"
+    choice_label = "Éval Env > Surface Plancher"
+    subtitle = "Seuil réglementaire : 10 000 m²"
+    header = ""
+    form_class = SurfacePlancherForm
+
+    def get_catalog_data(self):
+        data = {}
+        return data
+
+    @property
+    def result_code(self):
+        """Return the unique result code"""
+        form = self.get_form()
+        if not form.is_valid():
+            return 'non_disponible'
+
+        surface_plancher_sup_thld = form.cleaned_data.get('surface_plancher_sup_thld', None)
+        if surface_plancher_sup_thld is None or not surface_plancher_sup_thld:
+            result = RESULTS.non_soumis
+
+        else:
+            result = RESULTS.cas_par_cas
+
+        return result
+
+    @cached_property
+    def result(self):
+        code = self.result_code
+        return code
+
+
 class EvalEnvironnementale(MoulinetteRegulation):
     slug = "eval_env"
     title = "Évaluation Environnementale"
-    criterion_classes = [Emprise]
+    criterion_classes = [Emprise, SurfacePlancher]
 
     @cached_property
     def result(self):
