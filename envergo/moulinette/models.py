@@ -125,7 +125,6 @@ class Moulinette:
 
         self.catalog.update(self.cleaned_additional_data())
 
-
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
@@ -263,7 +262,6 @@ class Moulinette:
                     data.update(form.cleaned_data)
 
         return data
-
 
     def __getattr__(self, attr):
         """Returs the corresponding regulation.
