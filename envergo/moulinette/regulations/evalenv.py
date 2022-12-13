@@ -1,6 +1,7 @@
 from functools import cached_property
 
 from django import forms
+from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 
@@ -27,7 +28,7 @@ class EmpriseForm(forms.Form):
         required=True,
     )
     zone_u = forms.ChoiceField(
-        label="Le projet se situe-t-il en Zone U ?",
+        label=mark_safe("Le projet se situe-t-il en zone U dans le <abbr title='Plan Local d’Urbanisme'>PLU</abbr> ?"),
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
