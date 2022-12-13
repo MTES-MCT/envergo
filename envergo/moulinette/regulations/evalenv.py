@@ -11,6 +11,7 @@ RESULTS = Choices(
     ("systematique", "Soumis"),
     ("cas_par_cas", "Cas par cas"),
     ("non_soumis", "Non soumis"),
+    ("non_concerne", "Non concerné"),
 )
 
 
@@ -142,10 +143,79 @@ class SurfacePlancher(MoulinetteCriterion):
         return code
 
 
+TERRAIN_ASSIETTE_THRESHOLD = 25000
+
+
+class TerrainAssietteForm(forms.Form):
+    terrain_assiette = forms.IntegerField(
+        label="Quelle est la surface du terrain d'assiette ?",
+        widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
+        required=True,
+    )
+    is_lotissement = forms.ChoiceField(
+        label=_("Le projet concerne-t-il un lotissement ?"),
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        created_surface = int(self.data["created_surface"])
+        existing_surface = int(self.data["existing_surface"])
+        total_surface = created_surface + existing_surface
+
+        if total_surface < TERRAIN_ASSIETTE_THRESHOLD:
+            del self.fields["terrain_assiette"]
+            del self.fields["is_lotissement"]
+
+
+class TerrainAssiette(MoulinetteCriterion):
+    slug = "terrain_assiette"
+    title = "Terrain d'assiette de l'opération"
+    choice_label = "Éval Env > Terrain d'assiette"
+    subtitle = "Seuil réglementaire : 10 ha (cas par cas : 5 ha)"
+    header = ""
+    form_class = TerrainAssietteForm
+
+    def get_catalog_data(self):
+        data = {}
+        return data
+
+    @property
+    def result_code(self):
+        """Return the unique result code"""
+        form = self.get_form()
+        if not form.is_valid():
+            return 'non_disponible'
+
+        is_lotissement = form.cleaned_data.get('is_lotissement')
+        terrain_assiette = form.cleaned_data.get('terrain_assiette')
+
+        if is_lotissement == 'non':
+            result = RESULTS.non_concerne
+        else:
+            if terrain_assiette < 50000:
+                result = RESULTS.non_soumis
+            elif terrain_assiette < 100000:
+                result = RESULTS.cas_par_cas
+            else:
+                result = RESULTS.systematique
+
+        return result
+
+    @cached_property
+    def result(self):
+        code = self.result_code
+        return code
+
+
+
 class EvalEnvironnementale(MoulinetteRegulation):
     slug = "eval_env"
     title = "Évaluation Environnementale"
-    criterion_classes = [Emprise, SurfacePlancher]
+    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette]
 
     @cached_property
     def result(self):
