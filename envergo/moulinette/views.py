@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
@@ -69,6 +71,7 @@ class MoulinetteMixin:
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
             context["additional_forms"] = self.get_additional_forms(moulinette)
+            context["additional_fields"] = self.get_additional_fields(moulinette)
 
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
@@ -101,6 +104,23 @@ class MoulinetteMixin:
         kwargs = self.get_form_kwargs()
         forms = [Form(**kwargs) for Form in form_classes]
         return forms
+
+    def get_additional_fields(self, moulinette):
+        """Return the list of additional criterion fields.
+
+        Sometimes two criterions can ask the same question
+        E.g the "Is this a lotissement project?"
+        We need to make sure we don't display the same field twice though
+        """
+
+        forms = self.get_additional_forms(moulinette)
+        fields = OrderedDict()
+        for form in forms:
+            for field in form:
+                if field.name not in fields:
+                    fields[field.name] = field
+
+        return fields
 
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))

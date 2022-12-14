@@ -60,18 +60,16 @@
 
     <p><strong>Question(s) complémentaire(s)</strong></p>
 
-    {% for additional_form in additional_forms %}
-      {% for field in additional_form %}
-        {% if field|is_checkbox %}
-          {% include '_checkbox_snippet.html' with field=field %}
-        {% elif field|is_radio %}
-          {% include '_radio_snippet.html' with field=field %}
-        {% elif field|is_input_file %}
-          {% include '_input_file_snippet.html' with field=field %}
-        {% else %}
-          {% include '_field_snippet.html' with field=field %}
-        {% endif %}
-      {% endfor %}
+    {% for field_name, field in additional_fields.items %}
+      {% if field|is_checkbox %}
+        {% include '_checkbox_snippet.html' with field=field %}
+      {% elif field|is_radio %}
+        {% include '_radio_snippet.html' with field=field %}
+      {% elif field|is_input_file %}
+        {% include '_input_file_snippet.html' with field=field %}
+      {% else %}
+        {% include '_field_snippet.html' with field=field %}
+      {% endif %}
     {% endfor %}
 
   {% endif %}
