@@ -147,7 +147,7 @@ class SurfacePlancher(MoulinetteCriterion):
         return code
 
 
-TERRAIN_ASSIETTE_THRESHOLD = 25000
+TERRAIN_ASSIETTE_THRESHOLD = 10000
 
 
 class TerrainAssietteForm(forms.Form):
