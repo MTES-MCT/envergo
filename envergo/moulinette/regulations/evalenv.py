@@ -133,7 +133,7 @@ class SurfacePlancher(MoulinetteCriterion):
         surface_plancher_sup_thld = form.cleaned_data.get(
             "surface_plancher_sup_thld", None
         )
-        if surface_plancher_sup_thld is None or surface_plancher_sup_thld == 'non':
+        if surface_plancher_sup_thld is None or surface_plancher_sup_thld == "non":
             result = RESULTS.non_soumis
 
         else:
@@ -198,7 +198,7 @@ class TerrainAssiette(MoulinetteCriterion):
         terrain_assiette = form.cleaned_data.get("terrain_assiette", None)
 
         if is_lotissement is None or terrain_assiette is None:
-            result = RESULTS.non_concerne
+            result = RESULTS.non_soumis
         elif is_lotissement == "non":
             result = RESULTS.non_concerne
         else:
