@@ -133,7 +133,7 @@ class SurfacePlancher(MoulinetteCriterion):
         surface_plancher_sup_thld = form.cleaned_data.get(
             "surface_plancher_sup_thld", None
         )
-        if surface_plancher_sup_thld is None or not surface_plancher_sup_thld:
+        if surface_plancher_sup_thld is None or surface_plancher_sup_thld == 'non':
             result = RESULTS.non_soumis
 
         else:
