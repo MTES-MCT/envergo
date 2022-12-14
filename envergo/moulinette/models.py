@@ -122,7 +122,11 @@ class Moulinette:
         # access to other pieces of data from the moulinette.
         # For example, to compute the "Natura2000" result, there is a criterion
         # that is just the result of the "Loi sur l'eau" regulation.
-        self.regulations = [LoiSurLEau(self), Natura2000(self), EvalEnvironnementale(self)]
+        self.regulations = [
+            LoiSurLEau(self),
+            Natura2000(self),
+            EvalEnvironnementale(self),
+        ]
 
         self.catalog.update(self.cleaned_additional_data())
 

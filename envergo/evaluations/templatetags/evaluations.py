@@ -23,7 +23,7 @@ def probability(criterion):
         label = criterion.get_probability_display()
         css_class = criterion.probability
     else:
-        css_class = PROBA_CSS.get(criterion.result, 'missing')
+        css_class = PROBA_CSS.get(criterion.result, "missing")
         label = criterion.get_result_display()
 
     display = f'<span class="fr-tag probability probability-{css_class}">{label}</span>'

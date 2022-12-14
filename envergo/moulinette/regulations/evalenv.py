@@ -30,7 +30,9 @@ class EmpriseForm(forms.Form):
         required=True,
     )
     zone_u = forms.ChoiceField(
-        label=mark_safe("Le projet se situe-t-il en zone U dans le <abbr title='Plan Local d’Urbanisme'>PLU</abbr> ?"),
+        label=mark_safe(
+            "Le projet se situe-t-il en zone U dans le <abbr title='Plan Local d’Urbanisme'>PLU</abbr> ?"
+        ),
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -65,9 +67,9 @@ class Emprise(MoulinetteCriterion):
         """Return the unique result code"""
         form = self.get_form()
         if not form.is_valid():
-            return 'non_disponible'
+            return "non_disponible"
 
-        emprise = form.cleaned_data.get('emprise', None)
+        emprise = form.cleaned_data.get("emprise", None)
         if emprise is None or emprise < EMPRISE_THRESHOLD:
             result = RESULTS.non_soumis
 
@@ -75,8 +77,8 @@ class Emprise(MoulinetteCriterion):
             result = RESULTS.cas_par_cas
 
         else:
-            zone_u = form.cleaned_data['zone_u']
-            if zone_u == 'oui':
+            zone_u = form.cleaned_data["zone_u"]
+            if zone_u == "oui":
                 result = RESULTS.cas_par_cas
             else:
                 result = RESULTS.systematique
@@ -109,7 +111,6 @@ class SurfacePlancherForm(forms.Form):
             del self.fields["surface_plancher_sup_thld"]
 
 
-
 class SurfacePlancher(MoulinetteCriterion):
     slug = "surface_plancher"
     title = "Surface de plancher créée"
@@ -127,9 +128,11 @@ class SurfacePlancher(MoulinetteCriterion):
         """Return the unique result code"""
         form = self.get_form()
         if not form.is_valid():
-            return 'non_disponible'
+            return "non_disponible"
 
-        surface_plancher_sup_thld = form.cleaned_data.get('surface_plancher_sup_thld', None)
+        surface_plancher_sup_thld = form.cleaned_data.get(
+            "surface_plancher_sup_thld", None
+        )
         if surface_plancher_sup_thld is None or not surface_plancher_sup_thld:
             result = RESULTS.non_soumis
 
@@ -189,12 +192,12 @@ class TerrainAssiette(MoulinetteCriterion):
         """Return the unique result code"""
         form = self.get_form()
         if not form.is_valid():
-            return 'non_disponible'
+            return "non_disponible"
 
-        is_lotissement = form.cleaned_data.get('is_lotissement')
-        terrain_assiette = form.cleaned_data.get('terrain_assiette')
+        is_lotissement = form.cleaned_data.get("is_lotissement")
+        terrain_assiette = form.cleaned_data.get("terrain_assiette")
 
-        if is_lotissement == 'non':
+        if is_lotissement == "non":
             result = RESULTS.non_concerne
         else:
             if terrain_assiette < 50000:
