@@ -190,7 +190,7 @@ def test_evalenv_terrain_assiette_non_concerne(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [25000])
-def test_evalenv_terrain_assiette_non_soumis(moulinette_data):
+def test_evalenv_terrain_assiette_non_soumis_2(moulinette_data):
 
     moulinette_data["is_lotissement"] = "oui"
     moulinette_data["terrain_assiette"] = 45000
