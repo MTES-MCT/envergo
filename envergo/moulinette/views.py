@@ -136,7 +136,7 @@ class MoulinetteMixin:
         moulinette = Moulinette(form_data, form.data)
         additional_forms = self.get_additional_forms(moulinette)
         for form in additional_forms:
-            form.is_valid()  # trigger form validation
+            form.is_valid()  # trigger form validation
             get.update(form.cleaned_data)
 
         url_params = get.urlencode()

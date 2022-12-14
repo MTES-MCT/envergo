@@ -77,7 +77,7 @@ class Emprise(MoulinetteCriterion):
             result = RESULTS.cas_par_cas
 
         else:
-            zone_u = form.cleaned_data["zone_u"]
+            zone_u = form.cleaned_data.get("zone_u")
             if zone_u == "oui":
                 result = RESULTS.cas_par_cas
             else:
@@ -194,10 +194,12 @@ class TerrainAssiette(MoulinetteCriterion):
         if not form.is_valid():
             return "non_disponible"
 
-        is_lotissement = form.cleaned_data.get("is_lotissement")
-        terrain_assiette = form.cleaned_data.get("terrain_assiette")
+        is_lotissement = form.cleaned_data.get("is_lotissement", None)
+        terrain_assiette = form.cleaned_data.get("terrain_assiette", None)
 
-        if is_lotissement == "non":
+        if is_lotissement is None or terrain_assiette is None:
+            result = RESULTS.non_concerne
+        elif is_lotissement == "non":
             result = RESULTS.non_concerne
         else:
             if terrain_assiette < 50000:
