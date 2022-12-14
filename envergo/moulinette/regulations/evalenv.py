@@ -11,6 +11,7 @@ RESULTS = Choices(
     ("systematique", "Soumis"),
     ("cas_par_cas", "Cas par cas"),
     ("non_soumis", "Non soumis"),
+    ("clause_filet", "Clause filet"),
     ("non_concerne", "Non concerné"),
 )
 
@@ -211,11 +212,24 @@ class TerrainAssiette(MoulinetteCriterion):
         return code
 
 
+class ClauseFilet(MoulinetteCriterion):
+    slug = "clause_filet"
+    title = "Clause filet"
+    choice_label = "Éval Env > Clause Filet"
+    subtitle = ""
+    header = ""
+
+    @property
+    def result_code(self):
+        """Return the unique result code"""
+
+        return RESULTS.clause_filet
+
 
 class EvalEnvironnementale(MoulinetteRegulation):
     slug = "eval_env"
     title = "Évaluation Environnementale"
-    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette]
+    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette, ClauseFilet]
 
     @cached_property
     def result(self):
