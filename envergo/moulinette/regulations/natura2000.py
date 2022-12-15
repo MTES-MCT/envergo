@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
     Map,
+    MapPolygon,
     MoulinetteCriterion,
     MoulinetteRegulation,
 )
@@ -364,25 +365,11 @@ class Natura2000(MoulinetteRegulation):
             return None
 
         # Let's find the first perimeter with a map that we can display
-        perimeter = next(
-            (
-                p
-                for p in self.moulinette.perimeters
-                if p.criterion in self.criterion_classes and not p.criterion == IOTA
-            ),
-            None,
-        )
-        if not perimeter:
+        perimeters = [p for p in self.moulinette.perimeters if p.criterion in self.criterion_classes and not p.criterion == IOTA]
+        if not perimeters:
             return None
 
-        polygons = [
-            {
-                "polygon": perimeter.geometry,
-                "color": "green",
-                "label": "Site Natura 2000",
-            }
-        ]
-        maps = [perimeter.map]
+        map_polygons = [MapPolygon(perimeters, 'green', 'Site Natura 2000')]
 
         if self.get_distance_to_n2000() <= 0.0:
             caption = "Le projet se situe sur un site Natura 2000."
@@ -394,9 +381,8 @@ class Natura2000(MoulinetteRegulation):
 
         map = Map(
             center=self.catalog["coords"],
-            polygons=polygons,
+            entries=map_polygons,
             caption=caption,
-            sources=maps[:1],
             truncate=False,
             zoom=15,
         )
