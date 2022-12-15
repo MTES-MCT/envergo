@@ -103,82 +103,33 @@ class ZoneHumide44(MoulinetteCriterion):
             for zone in self.catalog["potential_wetlands"]
             if zone.map.display_for_user
         ]
-        polygons = None
+        map_polygons = None
 
         if inside_qs:
             caption = "Le projet se situe dans une zone humide référencée."
-            polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
-            for zone in inside_qs:
-                polygon = polygon.union(zone.geom)
-
-            polygons = [
-                {
-                    "polygon": polygon,
-                    "color": BLUE,
-                    "label": "Zone humide",
-                }
-            ]
-            maps = set([zone.map for zone in inside_qs])
+            map_polygons = [MapPolygon(inside_qs, BLUE, "Zone humide")]
 
         elif close_qs and not potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-            polygon = GEOSGeometry("POLYGON EMPTY")
-            for zone in close_qs:
-                polygon = polygon.union(zone.geom)
-
-            polygons = [
-                {
-                    "polygon": polygon,
-                    "color": BLUE,
-                    "label": "Zone humide",
-                }
-            ]
-            maps = set([zone.map for zone in close_qs])
+            map_polygons = [MapPolygon(close_qs, BLUE, "Zone humide")]
 
         elif close_qs and potential_qs:
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-
-            wetlands_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
-            for zone in close_qs:
-                wetlands_polygon = wetlands_polygon.union(zone.geom)
-
-            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
-            for zone in potential_qs:
-                potentials_polygon = potentials_polygon.union(zone.geom)
-
-            polygons = [
-                {"polygon": wetlands_polygon, "color": BLUE, "label": "Zone humide"},
-                {
-                    "polygon": potentials_polygon,
-                    "color": LIGHTBLUE,
-                    "label": "Zone humide potentielle",
-                },
+            map_polygons = [
+                MapPolygon(close_qs, BLUE, "Zone humide"),
+                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"),
             ]
-            wetlands_maps = [zone.map for zone in close_qs]
-            potential_maps = [zone.map for zone in potential_qs]
-            maps = set(wetlands_maps + potential_maps)
 
         elif potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
-            potentials_polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
-            for zone in potential_qs:
-                potentials_polygon = potentials_polygon.union(zone.geom)
+            map_polygons = [MapPolygon(potential_qs, "dodgerblue", "Zone humide potentielle")]
 
-            polygons = [
-                {
-                    "polygon": potentials_polygon,
-                    "color": "dodgerblue",
-                    "label": "Zone humide potentielle",
-                }
-            ]
-            maps = set([zone.map for zone in potential_qs])
-
-        if polygons:
-            criterion_map = Map(
+        if map_polygons:
+             criterion_map = Map(
                 center=self.catalog["coords"],
-                polygons=polygons,
+                entries=map_polygons,
                 caption=caption,
-                sources=maps,
+                truncate=False,
             )
         else:
             criterion_map = None
@@ -227,31 +178,18 @@ class ZoneInondable44(MoulinetteCriterion):
         return result
 
     def _get_map(self):
-        polygons = None
         zone_qs = [
             zone for zone in self.catalog["flood_zones_12"] if zone.map.display_for_user
         ]
-        polygon = GEOSGeometry("POLYGON EMPTY", srid=4326)
-        for zone in zone_qs:
-            polygon = polygon.union(zone.geom)
 
         if zone_qs:
             caption = "Le projet se situe dans une zone inondable."
-            polygons = [
-                {
-                    "polygon": polygon,
-                    "color": "red",
-                    "label": "Zone inondable",
-                }
-            ]
-            maps = set([zone.map for zone in zone_qs])
-
-        if polygons:
+            map_polygons = [MapPolygon(zone_qs, "red", "Zone inondable")]
             criterion_map = Map(
                 center=self.catalog["coords"],
-                polygons=polygons,
+                entries=map_polygons,
                 caption=caption,
-                sources=maps,
+                truncate=False,
             )
         else:
             criterion_map = None
