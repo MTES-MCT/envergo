@@ -77,7 +77,8 @@ class MoulinetteRegulation:
 @dataclass
 class MapPolygon:
     """Data that can be displayed and labeled on a leaflet map as a polygon."""
-    perimeters: list  # List of `envergo.geofr.Perimeter` objects
+
+    perimeters: list  # List of `envergo.geofr.Perimeter` objects
     color: str
     label: str
 
@@ -96,6 +97,7 @@ class MapPolygon:
 @dataclass
 class Map:
     """Data for a map that will be displayed with Leaflet."""
+
     center: tuple  # Coordinates to center the map
     entries: list  # List of `MapPolygon` objects
     caption: str  # Legend displayed below the map
