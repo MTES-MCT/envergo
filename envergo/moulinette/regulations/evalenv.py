@@ -96,7 +96,7 @@ SURFACE_PLANCHER_THRESHOLD = 3000
 
 class SurfacePlancherForm(forms.Form):
     surface_plancher_sup_thld = forms.ChoiceField(
-        label="Le projet créé-t-il une surface plancher supérieure à 10 000 m²",
+        label="Le projet crée-t-il une surface plancher supérieure à 10 000 m² ?",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
