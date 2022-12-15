@@ -115,7 +115,7 @@ class Evaluation(models.Model):
     contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
-    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -268,7 +268,7 @@ class Request(models.Model):
 
     # Project localisation
     address = models.TextField(_("Address"))
-    moulinette_url = models.URLField(_("Moulinette url"), blank=True)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
     parcels = models.ManyToManyField("geodata.Parcel", verbose_name=_("Parcels"))
 
     # Project specs
