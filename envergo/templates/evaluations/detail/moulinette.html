@@ -47,13 +47,13 @@
 
     {% if evaluation.moulinette_params.emprise %}
       <li>
-        <strong>Ce projet a une emprise au sol de :</strong> {{ evaluation.moulinette_params.emprise }} m²
+        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise }} m²
       </li>
     {% endif %}
 
     {% if evaluation.moulinette_params.zone_u %}
       <li>
-        <strong>Ce projet se trouve en Zone U dans le <abbr title="Plan Local d'Urbanisme">PLU</abbr> :</strong> {{ evaluation.moulinette_params.zone_u|capfirst }}
+        <strong>Ce projet se trouve en zone U dans le <abbr title="Plan Local d'Urbanisme">PLU</abbr> :</strong> {{ evaluation.moulinette_params.zone_u|capfirst }}
       </li>
     {% endif %}
 
