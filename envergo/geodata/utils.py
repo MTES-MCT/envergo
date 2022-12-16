@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 import requests
 from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db.models import QuerySet
@@ -179,3 +180,13 @@ def get_commune_from_coords(lng, lat, timeout=0.5):
         pass
 
     return data["nom"] if data else None
+
+
+def merge_geometries(polygons):
+    """Return a single polygon that is the fusion of the given polygons."""
+
+    merged = GEOSGeometry("POLYGON EMPTY", srid=4326)
+    for polygon in polygons:
+        merged = merged.union(polygon)
+
+    return merged

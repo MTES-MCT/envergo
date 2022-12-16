@@ -1,8 +1,9 @@
 import json
+from dataclasses import dataclass
 from functools import cached_property
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.utils import to_geojson
+from envergo.geodata.utils import merge_geometries, to_geojson
 
 
 class MoulinetteRegulation:
@@ -73,21 +74,35 @@ class MoulinetteRegulation:
         return None
 
 
+@dataclass
+class MapPolygon:
+    """Data that can be displayed and labeled on a leaflet map as a polygon."""
+
+    perimeters: list  # List of `envergo.geofr.Perimeter` objects
+    color: str
+    label: str
+
+    @property
+    def geometry(self):
+        geometries = [p.geometry for p in self.perimeters]
+        merged_geometry = merge_geometries(geometries)
+        return merged_geometry
+
+    @property
+    def maps(self):
+        perimeter_maps = [p.map for p in self.perimeters]
+        return perimeter_maps
+
+
+@dataclass
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    def __init__(self, center, polygons, caption, sources, truncate=True, zoom=16):
-        self.center = center
-        self.polygons = polygons
-        self.caption = caption
-        self.sources = sources
-        self.zoom = zoom
-
-        # Should we display the entire region?
-        # This is used to prevent the ability to fine tune one's project and
-        # get around the law by building a project at the exact limit of a
-        # given zone.
-        self.truncate = truncate
+    center: tuple  # Coordinates to center the map
+    entries: list  # List of `MapPolygon` objects
+    caption: str  # Legend displayed below the map
+    truncate: bool = True  # Should the displayed polygons be truncated?
+    zoom: int = 16  # the map zoom to pass to leaflet
 
     def to_json(self):
 
@@ -102,14 +117,14 @@ class Map:
                 "polygons": [
                     {
                         "polygon": to_geojson(
-                            polygon["polygon"].buffer(0).intersection(buffer)
+                            entry.geometry.buffer(0).intersection(buffer)
                         )
                         if self.truncate
-                        else to_geojson(polygon["polygon"].buffer(0)),
-                        "color": polygon["color"],
-                        "label": polygon["label"],
+                        else to_geojson(entry.geometry.buffer(0)),
+                        "color": entry.color,
+                        "label": entry.label,
                     }
-                    for polygon in self.polygons
+                    for entry in self.entries
                 ],
                 "caption": self.caption,
                 "sources": [
@@ -118,6 +133,14 @@ class Map:
             }
         )
         return data
+
+    @property
+    def sources(self):
+        maps = set()
+        for entry in self.entries:
+            for map in entry.maps:
+                maps.add(map)
+        return maps
 
 
 class MoulinetteCriterion:
