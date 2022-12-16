@@ -1,7 +1,5 @@
 from functools import cached_property
 
-from django.contrib.gis.geos import GEOSGeometry
-
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
     Map,

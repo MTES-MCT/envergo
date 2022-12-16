@@ -1,7 +1,6 @@
 from functools import cached_property
 
 from django import forms
-from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
