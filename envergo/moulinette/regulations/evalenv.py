@@ -26,12 +26,13 @@ ZONE_U_THRESHOLD = 40000
 class EmpriseForm(forms.Form):
     emprise = forms.IntegerField(
         label="Emprise au sol créée par le projet",
+        help_text="Projection verticale du volume de la construction nouvelle",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
     zone_u = forms.ChoiceField(
         label=mark_safe(
-            "Le projet se situe-t-il en zone U dans le <abbr title='Plan Local d’Urbanisme'>PLU</abbr> ?"
+            "Le projet se situe-t-il en zone U dans le <abbr title='Plan local d’urbanisme'>PLU</abbr> ?"
         ),
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
@@ -96,7 +97,7 @@ SURFACE_PLANCHER_THRESHOLD = 3000
 
 class SurfacePlancherForm(forms.Form):
     surface_plancher_sup_thld = forms.ChoiceField(
-        label="Le projet crée-t-il une surface plancher supérieure à 10 000 m² ?",
+        label="Le projet crée-t-il une surface de plancher supérieure à 10 000 m² ?",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -152,7 +153,8 @@ TERRAIN_ASSIETTE_THRESHOLD = 10000
 
 class TerrainAssietteForm(forms.Form):
     terrain_assiette = forms.IntegerField(
-        label="Quelle est la surface du terrain d'assiette ?",
+        label="Terrain d'assiette du projet",
+        help_text="Ensemble des parcelles cadastrales concernées par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
