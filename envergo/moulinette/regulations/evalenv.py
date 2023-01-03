@@ -236,7 +236,7 @@ class ClauseFilet(MoulinetteCriterion):
 class EvalEnvironnementale(MoulinetteRegulation):
     slug = "eval_env"
     title = "Évaluation Environnementale"
-    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette, ClauseFilet]
+    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette]
 
     @cached_property
     def result(self):
