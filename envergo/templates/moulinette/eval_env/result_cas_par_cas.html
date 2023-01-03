@@ -1,3 +1,5 @@
+{% load static %}
+
 <p>Le projet est soumis à examen au cas par cas.</p>
 
 <h3>Marche à suivre</h3>
@@ -43,10 +45,10 @@
       (rejets nocifs, biodiversité, risques, nuisances, paysages…).</li>
   </ul>
 
-  <p>Le formulaire de demande d’examen au cas par cas doit être rempli (<a href="a-heberger-1.fr" target="_blank" rel="noopener">Cerfa 14734-03</a>),
-    accompagné de <a href="a-heberger-2.fr" target="_blank" rel="noopener">son annexe</a>.</p>
+  <p>Le formulaire de demande d’examen au cas par cas doit être rempli (<a href="{% static 'pdfs/formulaire_cerfa_14734-03.pdf' %}" download>Cerfa 14734-03</a>),
+    accompagné de <a href="{% static 'pdfs/annexe_1_cerfa_14734_3.pdf' %}" download>son annexe</a>.</p>
 
-  <p>Une <a href="a-heberger-3.fr" target="_blank" rel="noopener">notice explicative</a> pour le remplissage du formulaire est disponible.</p>
+  <p>Une <a href="{% static 'pdfs/notice_cerfa_14734_3.pdf' %}" download>notice explicative</a> pour le remplissage du formulaire est disponible.</p>
 
   <p>Tous les dossiers déposés sont rendus publics et mis à disposition <a href="https://www.pays-de-la-loire.developpement-durable.gouv.fr/loire-atlantique-a5865.html"
     target="_blank" rel="noopener">sur le site de la DREAL Pays-de-la-Loire</a>.
