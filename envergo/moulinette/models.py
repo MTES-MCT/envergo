@@ -155,7 +155,7 @@ class Moulinette:
         def wetlands_25_filter(zone):
             return all(
                 (
-                    zone.distance <= D(25),
+                    zone.distance <= D(m=25),
                     zone.map.data_type == "zone_humide",
                     zone.map.data_certainty == "certain",
                 )
@@ -166,7 +166,7 @@ class Moulinette:
         def wetlands_100_filter(zone):
             return all(
                 (
-                    zone.distance <= D(100),
+                    zone.distance <= D(m=100),
                     zone.map.data_type == "zone_humide",
                     zone.map.data_certainty == "certain",
                 )
@@ -177,7 +177,7 @@ class Moulinette:
         def potential_wetlands_filter(zone):
             return all(
                 (
-                    zone.distance <= D(0),
+                    zone.distance <= D(m=0),
                     zone.map.data_type == "zone_humide",
                     zone.map.data_certainty == "uncertain",
                 )
@@ -188,7 +188,7 @@ class Moulinette:
         def flood_zones_12_filter(zone):
             return all(
                 (
-                    zone.distance <= D(12),
+                    zone.distance <= D(m=12),
                     zone.map.data_type == "zone_inondable",
                     zone.map.data_certainty == "certain",
                 )
