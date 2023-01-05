@@ -151,43 +151,29 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         zones = (
-            Zone.objects.filter(geometry__dwithin=(catalog["coords"], D(m=100)))
+            Zone.objects.filter(geometry__dwithin=(catalog["coords"], D(m=500)))
             .annotate(distance=Distance("geometry", catalog["coords"]))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
         )
+        catalog['all_zones'] = zones
 
-        def wetlands_25_filter(zone):
+        def wetlands_filter(zone):
             return all(
                 (
-                    zone.distance <= D(m=25),
                     zone.map.data_type == "zone_humide",
                     zone.map.data_certainty == "certain",
                 )
             )
-
-        catalog["wetlands_25"] = list(filter(wetlands_25_filter, zones))
-
-        def wetlands_100_filter(zone):
-            return all(
-                (
-                    zone.distance <= D(m=100),
-                    zone.map.data_type == "zone_humide",
-                    zone.map.data_certainty == "certain",
-                )
-            )
-
-        catalog["wetlands_100"] = list(filter(wetlands_100_filter, zones))
+        catalog["wetlands"] = list(filter(wetlands_filter, zones))
 
         def potential_wetlands_filter(zone):
             return all(
                 (
-                    zone.distance <= D(m=0),
                     zone.map.data_type == "zone_humide",
                     zone.map.data_certainty == "uncertain",
                 )
             )
-
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
 
         def flood_zones_12_filter(zone):
@@ -198,7 +184,6 @@ class Moulinette:
                     zone.map.data_certainty == "certain",
                 )
             )
-
         catalog["flood_zones_12"] = list(filter(flood_zones_12_filter, zones))
 
         return catalog
