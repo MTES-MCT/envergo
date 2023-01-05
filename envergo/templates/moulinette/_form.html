@@ -54,7 +54,7 @@
   {% include '_field_snippet.html' with field=form.created_surface %}
   {% include '_field_snippet.html' with field=form.existing_surface %}
 
-  {% if additional_forms %}
+  {% if additional_forms and moulinette.has_missing_data %}
 
     <hr />
 
