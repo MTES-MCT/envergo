@@ -156,7 +156,7 @@ class Moulinette:
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
         )
-        catalog['all_zones'] = zones
+        catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
             return all(
@@ -165,6 +165,7 @@ class Moulinette:
                     zone.map.data_certainty == "certain",
                 )
             )
+
         catalog["wetlands"] = list(filter(wetlands_filter, zones))
 
         def potential_wetlands_filter(zone):
@@ -174,6 +175,7 @@ class Moulinette:
                     zone.map.data_certainty == "uncertain",
                 )
             )
+
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
 
         def flood_zones_filter(zone):
@@ -183,6 +185,7 @@ class Moulinette:
                     zone.map.data_certainty == "certain",
                 )
             )
+
         catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
 
         return catalog

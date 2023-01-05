@@ -25,14 +25,16 @@ class ZoneHumide44(MoulinetteCriterion):
     def get_catalog_data(self):
         data = {}
 
-        wetlands = self.catalog['wetlands']
+        wetlands = self.catalog["wetlands"]
         data["wetlands_25"] = [zone for zone in wetlands if zone.distance <= D(m=25)]
         data["wetlands_within_25m"] = bool(data["wetlands_25"])
         data["wetlands_100"] = [zone for zone in wetlands if zone.distance <= D(m=100)]
         data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
-        potential_wetlands = self.catalog['potential_wetlands']
-        data["potential_wetlands_0"] = [zone for zone in potential_wetlands if zone.distance <= D(m=0)]
+        potential_wetlands = self.catalog["potential_wetlands"]
+        data["potential_wetlands_0"] = [
+            zone for zone in potential_wetlands if zone.distance <= D(m=0)
+        ]
         data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
 
         return data
@@ -52,7 +54,6 @@ class ZoneHumide44(MoulinetteCriterion):
             wetland_status = "inside_potential"
         else:
             wetland_status = "outside"
-
 
         if self.catalog["created_surface"] >= 100:
             project_size = "big"
@@ -114,11 +115,17 @@ class ZoneHumide44(MoulinetteCriterion):
             caption = "Le projet se situe dans une zone humide référencée."
             map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
-        elif self.catalog["wetlands_within_100m"] and not self.catalog["potential_wetlands_within_0m"]:
+        elif (
+            self.catalog["wetlands_within_100m"]
+            and not self.catalog["potential_wetlands_within_0m"]
+        ):
             caption = "Le projet se situe à proximité d'une zone humide référencée."
             map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
-        elif self.catalog["wetlands_within_100m"] and self.catalog["potential_wetlands_within_0m"]:
+        elif (
+            self.catalog["wetlands_within_100m"]
+            and self.catalog["potential_wetlands_within_0m"]
+        ):
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
             map_polygons = [
                 MapPolygon(wetlands_qs, BLUE, "Zone humide"),
@@ -144,7 +151,6 @@ class ZoneHumide44(MoulinetteCriterion):
         return criterion_map
 
 
-
 class ZoneInondable44(MoulinetteCriterion):
     slug = "zone_inondable_44"
     choice_label = "Natura 2000 > 44 - Zone inondable"
@@ -154,8 +160,10 @@ class ZoneInondable44(MoulinetteCriterion):
 
     def get_catalog_data(self):
         data = {}
-        flood_zones = self.catalog['flood_zones']
-        data["flood_zones_12"] = [zone for zone in flood_zones if zone.distance <= D(m=12)]
+        flood_zones = self.catalog["flood_zones"]
+        data["flood_zones_12"] = [
+            zone for zone in flood_zones if zone.distance <= D(m=12)
+        ]
         data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
