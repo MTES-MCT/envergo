@@ -176,15 +176,14 @@ class Moulinette:
             )
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
 
-        def flood_zones_12_filter(zone):
+        def flood_zones_filter(zone):
             return all(
                 (
-                    zone.distance <= D(m=12),
                     zone.map.data_type == "zone_inondable",
                     zone.map.data_certainty == "certain",
                 )
             )
-        catalog["flood_zones_12"] = list(filter(flood_zones_12_filter, zones))
+        catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
 
         return catalog
 

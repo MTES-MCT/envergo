@@ -24,9 +24,17 @@ class ZoneHumide44(MoulinetteCriterion):
 
     def get_catalog_data(self):
         data = {}
-        data["wetlands_within_25m"] = bool(self.catalog["wetlands_25"])
-        data["wetlands_within_100m"] = bool(self.catalog["wetlands_100"])
-        data["within_potential_wetlands"] = bool(self.catalog["potential_wetlands"])
+
+        wetlands = self.catalog['wetlands']
+        data["wetlands_25"] = [zone for zone in wetlands if zone.distance <= D(m=25)]
+        data["wetlands_within_25m"] = bool(data["wetlands_25"])
+        data["wetlands_100"] = [zone for zone in wetlands if zone.distance <= D(m=100)]
+        data["wetlands_within_100m"] = bool(data["wetlands_100"])
+
+        potential_wetlands = self.catalog['potential_wetlands']
+        data["potential_wetlands_0"] = [zone for zone in potential_wetlands if zone.distance <= D(m=0)]
+        data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
+
         return data
 
     def get_result_data(self):
@@ -40,10 +48,11 @@ class ZoneHumide44(MoulinetteCriterion):
             wetland_status = "inside"
         elif self.catalog["wetlands_within_100m"]:
             wetland_status = "close_to"
-        elif self.catalog["within_potential_wetlands"]:
+        elif self.catalog["potential_wetlands_within_0m"]:
             wetland_status = "inside_potential"
         else:
             wetland_status = "outside"
+
 
         if self.catalog["created_surface"] >= 100:
             project_size = "big"
@@ -91,11 +100,8 @@ class ZoneHumide44(MoulinetteCriterion):
         return result
 
     def _get_map(self):
-        inside_qs = [
-            zone for zone in self.catalog["wetlands_25"] if zone.map.display_for_user
-        ]
-        close_qs = [
-            zone for zone in self.catalog["wetlands_100"] if zone.map.display_for_user
+        wetlands_qs = [
+            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
         ]
         potential_qs = [
             zone
@@ -104,22 +110,22 @@ class ZoneHumide44(MoulinetteCriterion):
         ]
         map_polygons = None
 
-        if inside_qs:
+        if self.catalog["wetlands_within_25m"]:
             caption = "Le projet se situe dans une zone humide référencée."
-            map_polygons = [MapPolygon(inside_qs, BLUE, "Zone humide")]
+            map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
-        elif close_qs and not potential_qs:
+        elif self.catalog["wetlands_within_100m"] and not self.catalog["potential_wetlands_within_0m"]:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-            map_polygons = [MapPolygon(close_qs, BLUE, "Zone humide")]
+            map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
-        elif close_qs and potential_qs:
+        elif self.catalog["wetlands_within_100m"] and self.catalog["potential_wetlands_within_0m"]:
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
             map_polygons = [
-                MapPolygon(close_qs, BLUE, "Zone humide"),
+                MapPolygon(wetlands_qs, BLUE, "Zone humide"),
                 MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"),
             ]
 
-        elif potential_qs:
+        elif self.catalog["potential_wetlands_within_0m"]:
             caption = "Le projet se situe dans une zone humide potentielle."
             map_polygons = [
                 MapPolygon(potential_qs, "dodgerblue", "Zone humide potentielle")
@@ -138,6 +144,7 @@ class ZoneHumide44(MoulinetteCriterion):
         return criterion_map
 
 
+
 class ZoneInondable44(MoulinetteCriterion):
     slug = "zone_inondable_44"
     choice_label = "Natura 2000 > 44 - Zone inondable"
@@ -147,7 +154,9 @@ class ZoneInondable44(MoulinetteCriterion):
 
     def get_catalog_data(self):
         data = {}
-        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        flood_zones = self.catalog['flood_zones']
+        data["flood_zones_12"] = [zone for zone in flood_zones if zone.distance <= D(m=12)]
+        data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
     @cached_property
@@ -180,7 +189,7 @@ class ZoneInondable44(MoulinetteCriterion):
 
     def _get_map(self):
         zone_qs = [
-            zone for zone in self.catalog["flood_zones_12"] if zone.map.display_for_user
+            zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
 
         if zone_qs:

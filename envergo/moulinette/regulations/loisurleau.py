@@ -156,7 +156,9 @@ class ZoneInondable(MoulinetteCriterion):
 
     def get_catalog_data(self):
         data = {}
-        data["flood_zones_within_12m"] = bool(self.catalog["flood_zones_12"])
+        flood_zones = self.catalog['flood_zones']
+        data["flood_zones_12"] = [zone for zone in flood_zones if zone.distance <= D(m=12)]
+        data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
     @cached_property
@@ -193,7 +195,7 @@ class ZoneInondable(MoulinetteCriterion):
 
     def _get_map(self):
         zone_qs = [
-            zone for zone in self.catalog["flood_zones_12"] if zone.map.display_for_user
+            zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
 
         if zone_qs:
