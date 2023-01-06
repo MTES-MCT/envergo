@@ -133,7 +133,7 @@ class ZoneHumide44(MoulinetteCriterion):
                 MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"),
             ]
 
-        elif self.catalog["potential_wetlands_within_0m"]:
+        elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
             map_polygons = [
                 MapPolygon(potential_qs, "dodgerblue", "Zone humide potentielle")
