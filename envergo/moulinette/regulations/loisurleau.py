@@ -208,7 +208,7 @@ class ZoneInondable(MoulinetteCriterion):
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
 
-        if zone_qs:
+        if self.catalog['flood_zones_within_12m']:
             caption = "Le projet se situe dans une zone inondable."
             map_polygons = [MapPolygon(zone_qs, "red", "Zone inondable")]
             criterion_map = Map(
