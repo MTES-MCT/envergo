@@ -102,7 +102,13 @@ class MoulinetteMixin:
     def get_additional_forms(self, moulinette):
         form_classes = moulinette.additional_form_classes()
         kwargs = self.get_form_kwargs()
-        forms = [Form(**kwargs) for Form in form_classes]
+        forms = []
+        for Form in form_classes:
+            form = Form(**kwargs)
+            if form.fields:
+                form.is_valid()
+                forms.append(form)
+
         return forms
 
     def get_additional_fields(self, moulinette):
