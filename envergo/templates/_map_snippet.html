@@ -8,7 +8,11 @@
   </div>
   <figcaption class="fr-content-media__caption">
     {{ map.caption|safe }}
-    <br />Source :
+
+    {% if map.sources %}
+      <br />Source :
+    {% endif %}
+
     {% for source in map.sources %}
       {% if source.source %}
         <a href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
