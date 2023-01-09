@@ -16,14 +16,6 @@ var _paq = window._paq || [];
     this.form.addEventListener('submit', this.onFeedbackSubmit.bind(this));
   };
 
-  FeedbackModal.prototype.onDisclose = function(e) {
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Disclose']);
-  };
-
-  FeedbackModal.prototype.onConceal = function() {
-    _paq.push(['trackEvent', 'FeedbackDialog', 'Close']);
-  };
-
   FeedbackModal.prototype.onFeedbackRespond = function(button) {
     _paq.push(['trackEvent', 'FeedbackDialog', 'Respond']);
 
