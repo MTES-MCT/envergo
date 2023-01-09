@@ -14,7 +14,9 @@
 {% block result %}
 
   {% for regulation in moulinette.regulations %}
-    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+    <div class="share-btn fr-mt-3w fr-mb-5w">
+      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+    </div>
 
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}

@@ -105,10 +105,8 @@ html.nojs .js {
   }
 
 
-  button.share-btn {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  .share-btn {
+    text-align: center;
   }
 
   @media (min-width: 1144px) {
@@ -521,26 +519,27 @@ div.leaflet-container {
   &.fr-accordion--no-icon {
     padding-bottom: .25rem;
 
-    .fr-accordion__btn::before {
+    .fr-accordion__btn::after {
       display: none;
     }
 
     .read-more-btn {
       padding: 0.75rem 1rem;
     }
-  }
 
-  .fr-accordion__btn {
-    align-items: baseline;
-  }
+    .fr-accordion__btn {
+      align-items: baseline;
+      flex-direction: row-reverse;
+    }
 
-  .fr-accordion__btn span.fr-tag {
-    white-space: nowrap;
-    margin-left: auto;
-  }
+    .fr-accordion__btn span.fr-tag {
+      white-space: nowrap;
+      margin-left: auto;
+    }
 
-  .fr-accordion__title span.title {
-    margin-right: 1rem;
+    .fr-accordion__title span.title {
+      margin-right: 1rem;
+    }
   }
 }
 

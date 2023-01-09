@@ -15,7 +15,7 @@
 
     {% for source in map.sources %}
       {% if source.source %}
-        <a href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
+        <a class="fr-link" href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
       {% else %}
         {{ source.display_name }}
       {% endif %}
