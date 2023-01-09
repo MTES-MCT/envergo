@@ -23,7 +23,7 @@ def probability(criterion):
         label = criterion.get_probability_display()
         css_class = criterion.probability
     else:
-        css_class = PROBA_CSS.get(criterion.result)
+        css_class = PROBA_CSS.get(criterion.result, "missing")
         label = criterion.get_result_display()
 
     display = f'<span class="fr-tag probability probability-{css_class}">{label}</span>'
@@ -33,7 +33,7 @@ def probability(criterion):
 @register.simple_tag
 def result_tag(result):
 
-    proba_level = PROBA_CSS.get(result)
+    proba_level = result
     result_label = RESULTS[result]
     display = f'<span class="fr-tag probability probability-{proba_level}">{result_label}</span>'
     return mark_safe(display)

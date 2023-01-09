@@ -187,6 +187,9 @@ def merge_geometries(polygons):
 
     merged = GEOSGeometry("POLYGON EMPTY", srid=4326)
     for polygon in polygons:
-        merged = merged.union(polygon)
+        try:
+            merged = merged.union(polygon.simplify(preserve_topology=True))
+        except:
+            pass
 
     return merged

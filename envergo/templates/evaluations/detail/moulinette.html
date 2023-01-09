@@ -44,6 +44,19 @@
         <strong>Ce projet concerne un lotissement :</strong> {{ evaluation.moulinette_params.is_lotissement|capfirst }}
       </li>
     {% endif %}
+
+    {% if evaluation.moulinette_params.emprise %}
+      <li>
+        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise }} m²
+      </li>
+    {% endif %}
+
+    {% if evaluation.moulinette_params.zone_u %}
+      <li>
+        <strong>Ce projet se trouve en zone U dans le <abbr title="Plan Local d'Urbanisme">PLU</abbr> :</strong> {{ evaluation.moulinette_params.zone_u|capfirst }}
+      </li>
+    {% endif %}
+
   </ul>
 
   {% for regulation in moulinette.regulations %}
@@ -55,12 +68,6 @@
     <p><i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.</p>
   </div>
 
-  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_natura200">
-    <h2><span class="content">Évaluation environnementale</span> {% result_tag 'non_disponible' %}</h2>
-    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.
-      Vous pouvez <a target="_blank" rel="noopener" href="https://startupdetat.typeform.com/envergo-regl">voter pour la demander en priorité</a>.</p>
-
-  </section>
 {% endblock %}
 
 {% block after-content %}
