@@ -45,7 +45,7 @@ def test_3310_small_footprint_outside_wetlands(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
-    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
+    assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [50])
