@@ -44,7 +44,7 @@ def test_3310_small_footprint_outside_wetlands(moulinette_data):
     """Project with footprint < 700m² are not subject to the 3310."""
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
-    moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.catalog["wetlands_within_25m"] = False
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
