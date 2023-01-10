@@ -177,7 +177,7 @@ class ZoneInondable44(MoulinetteCriterion):
         else:
             flood_zone_status = "outside"
 
-        if self.catalog["created_surface"] >= 200:
+        if self.catalog["project_surface"] >= 200:
             project_size = "big"
         else:
             project_size = "small"
