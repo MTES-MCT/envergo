@@ -4,7 +4,7 @@
   <ul>
     {% for regulation in moulinette.regulations %}
       <li>
-        <a class="summary-link" href="#regulation_{{ regulation.slug }}" data-regulation="{{ regulation.title }}">
+        <a class="summary-link" href="#regulation_{{ regulation.slug }}" data-regulation="{{ regulation.title }}" title="Voir le détail de la réglementation « {{ regulation.title }} »">
           <span>
             {{ regulation.title }}
             <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
