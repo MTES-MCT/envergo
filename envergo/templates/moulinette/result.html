@@ -13,9 +13,13 @@
 
 {% block result %}
 
-  <h2>Résumé de l'évaluation</h2>
+  <div class="share-btn fr-mt-3w fr-mb-5w">
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+  </div>
 
-  <nav id="evaluation-summary">
+  <h2 class="fr-h3">Résumé de l'évaluation</h2>
+
+  <nav id="evaluation-summary" class="fr-mb-5w">
     <ul>
       {% for regulation in moulinette.regulations %}
         <li>
@@ -32,9 +36,12 @@
   </nav>
 
   {% for regulation in moulinette.regulations %}
-    <div class="share-btn fr-mt-3w fr-mb-5w">
-      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
-    </div>
+
+    {% if forloop.counter0 != 0 %}
+      <div class="share-btn fr-mt-3w fr-mb-5w">
+        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+      </div>
+    {% endif %}
 
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
