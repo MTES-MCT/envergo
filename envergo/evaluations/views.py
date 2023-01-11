@@ -87,6 +87,10 @@ class EvaluationDetail(EvaluationDetailMixin, DetailView):
         return self.get(request, *args, **kwargs)
 
 
+# The multiple inheritance here is complicated and confusing.
+# I did not take the time to untangle this mess yet because ultimately,
+# this feature is very likely to evolve and the legacy code will go away.
+# (Or will it? Who am i kidding.)
 class EvaluationDetailMoulinette(
     EvaluationDetailMixin, BaseDetailView, MoulinetteResult
 ):
@@ -112,6 +116,13 @@ class EvaluationDetailMoulinette(
         return context
 
     def get(self, request, *args, **kwargs):
+
+        # The Method Resolution Order (MRO) of python makes sure that
+        # the `get` method is called from the `BaseDetailView` subclass,
+        # not the `MoulinetteResult` subclass.
+        # This is important because the `MoulinetteResult.get` method
+        # also calls the `log_moulinette_event` method with different
+        # arguments.
         res = super().get(request, *args, **kwargs)
         if not is_request_from_a_bot(request):
             self.log_moulinette_event(self.moulinette)
