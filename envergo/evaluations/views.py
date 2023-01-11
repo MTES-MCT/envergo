@@ -90,6 +90,10 @@ class EvaluationDetail(EvaluationDetailMixin, DetailView):
 class EvaluationDetailMoulinette(
     EvaluationDetailMixin, BaseDetailView, MoulinetteResult
 ):
+
+    event_category = "evaluation"
+    event_action = "visit"
+
     def get_initial(self):
         return self.request.GET
 
@@ -106,6 +110,13 @@ class EvaluationDetailMoulinette(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         return context
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+        if not is_request_from_a_bot(request):
+            self.log_moulinette_event(self.moulinette)
+
+        return res
 
 
 class EvaluationDetailLegacy(FormView, DetailView):

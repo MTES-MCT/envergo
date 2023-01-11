@@ -166,6 +166,9 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
 
 class MoulinetteResult(MoulinetteMixin, FormView):
+    event_category = "simulateur"
+    event_action = "soumission"
+
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
@@ -185,29 +188,31 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         return [template_name]
 
+    def log_moulinette_event(self, moulinette):
+        data = moulinette.catalog
+        department = data["department"]
+        department_code = department.department if department else ""
+        export = {
+            "lat": f'{data["lat"]:.5f}',
+            "lng": f'{data["lng"]:.5f}',
+            "existing_surface": data["existing_surface"],
+            "created_surface": data["created_surface"],
+            "department": department_code,
+            "is_eval_available": moulinette.is_evaluation_available(),
+            "url": self.request.build_absolute_uri(),
+        }
+        if moulinette.is_evaluation_available():
+            export["result"] = moulinette.result()
+
+        log_event(self.event_category, self.event_action, self.request, **export)
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         res = self.render_to_response(context)
         moulinette = self.moulinette
-
         if moulinette:
-            data = moulinette.catalog
-            department = data["department"]
-            department_code = department.department if department else ""
-            export = {
-                "lat": f'{data["lat"]:.5f}',
-                "lng": f'{data["lng"]:.5f}',
-                "existing_surface": data["existing_surface"],
-                "created_surface": data["created_surface"],
-                "department": department_code,
-                "is_eval_available": moulinette.is_evaluation_available(),
-                "url": request.build_absolute_uri(),
-            }
-            if moulinette.is_evaluation_available():
-                export["result"] = moulinette.result()
-
             if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
-                log_event("simulateur", "soumission", request, **export)
+                self.log_moulinette_event(moulinette)
 
             return res
         else:
