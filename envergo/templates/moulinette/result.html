@@ -13,6 +13,24 @@
 
 {% block result %}
 
+  <h2>Résumé de l'évaluation</h2>
+
+  <nav id="evaluation-summary">
+    <ul>
+      {% for regulation in moulinette.regulations %}
+        <li>
+          <a href="#regulation_{{ regulation.slug }}">
+            <span>
+              {{ regulation.title }}
+              <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
+            </span>
+            {% result_tag regulation.result %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
   {% for regulation in moulinette.regulations %}
     <div class="share-btn fr-mt-3w fr-mb-5w">
       <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>

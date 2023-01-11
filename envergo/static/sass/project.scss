@@ -140,6 +140,21 @@ html.nojs .js {
       margin: 0 auto;
     }
   }
+
+  nav#evaluation-summary {
+    li a {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      background-image: none;
+      padding: .25rem 0;
+      color: var(--text-action-high-grey);
+
+      &:hover {
+        background-color: var(--hover);
+      }
+    }
+  }
 }
 
 #moulinette-form {
