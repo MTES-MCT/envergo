@@ -56,7 +56,9 @@ class Emprise(MoulinetteCriterion):
     title = "Emprise au sol créée"
     choice_label = "Éval Env > Emprise"
     subtitle = "Seuil réglementaire : 4 ha (cas par cas : 1 ha)"
-    header = "Rubrique 39 a) de l’<a target='_blank' rel='noopener' href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>annexe à l’art. R122-2 du code de l’environnement</a>"
+    header = """Rubrique 39 a) de l’<a target='_blank' rel='noopener'
+                href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>
+                annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = EmpriseForm
 
     def get_catalog_data(self):
@@ -117,7 +119,9 @@ class SurfacePlancher(MoulinetteCriterion):
     title = "Surface de plancher créée"
     choice_label = "Éval Env > Surface Plancher"
     subtitle = "Seuil réglementaire : 10 000 m²"
-    header = "Rubrique 39 a) de l’<a target='_blank' rel='noopener' href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>annexe à l’art. R122-2 du code de l’environnement</a>"
+    header = """Rubrique 39 a) de l’<a target='_blank' rel='noopener'
+                href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>
+                annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = SurfacePlancherForm
 
     def get_catalog_data(self):
@@ -182,7 +186,9 @@ class TerrainAssiette(MoulinetteCriterion):
     title = "Terrain d'assiette de l'opération"
     choice_label = "Éval Env > Terrain d'assiette"
     subtitle = "Seuil réglementaire : 10 ha (cas par cas : 5 ha)"
-    header = "Rubrique 39 b) de l’<a target='_blank' rel='noopener' href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>annexe à l’art. R122-2 du code de l’environnement</a>"
+    header = """Rubrique 39 b) de l’<a target='_blank' rel='noopener'
+                href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>
+                annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = TerrainAssietteForm
 
     def get_catalog_data(self):

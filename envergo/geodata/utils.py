@@ -189,7 +189,7 @@ def merge_geometries(polygons):
     for polygon in polygons:
         try:
             merged = merged.union(polygon.simplify(preserve_topology=True))
-        except:
+        except:  # noqa
             pass
 
     return merged
