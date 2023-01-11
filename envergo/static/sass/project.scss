@@ -141,18 +141,19 @@ html.nojs .js {
     }
   }
 
-  nav#evaluation-summary {
-    li a {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      background-image: none;
-      padding: .25rem 0;
-      color: var(--text-action-high-grey);
+}
 
-      &:hover {
-        background-color: var(--hover);
-      }
+nav#evaluation-summary {
+  li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    background-image: none;
+    padding: .25rem 0;
+    color: var(--text-action-high-grey);
+
+    &:hover {
+      background-color: var(--hover);
     }
   }
 }

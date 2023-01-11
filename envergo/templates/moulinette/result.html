@@ -19,21 +19,7 @@
 
   <h2 class="fr-h3">Résumé de l'évaluation</h2>
 
-  <nav id="evaluation-summary" class="fr-mb-5w">
-    <ul>
-      {% for regulation in moulinette.regulations %}
-        <li>
-          <a href="#regulation_{{ regulation.slug }}">
-            <span>
-              {{ regulation.title }}
-              <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
-            </span>
-            {% result_tag regulation.result %}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </nav>
+  {% include 'moulinette/_evaluation_summary.html' %}
 
   {% for regulation in moulinette.regulations %}
 
