@@ -125,7 +125,9 @@ class EvaluationDetailMoulinette(
         # arguments.
         res = super().get(request, *args, **kwargs)
         if not is_request_from_a_bot(request):
-            self.log_moulinette_event(self.moulinette)
+            self.log_moulinette_event(
+                self.moulinette, request_reference=self.object.reference
+            )
 
         return res
 

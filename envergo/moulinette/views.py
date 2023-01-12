@@ -188,7 +188,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         return [template_name]
 
-    def log_moulinette_event(self, moulinette):
+    def log_moulinette_event(self, moulinette, **kwargs):
         data = moulinette.catalog
         department = data["department"]
         department_code = department.department if department else ""
@@ -201,6 +201,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             "is_eval_available": moulinette.is_evaluation_available(),
             "url": self.request.build_absolute_uri(),
         }
+        export.update(kwargs)
         if moulinette.is_evaluation_available():
             export["result"] = moulinette.result()
 
