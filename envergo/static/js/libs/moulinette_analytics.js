@@ -21,7 +21,17 @@ window.addEventListener('load', function() {
 window.addEventListener('load', function() {
   const summaryLinks = document.querySelectorAll('.summary-link');
   summaryLinks.forEach(link => link.addEventListener('click', function(evt) {
+
+    // Smooth scrolling to the target
     const link = evt.currentTarget;
+    const href = link.getAttribute('href');
+    const target = document.querySelector(href);
+    if (typeof target.scrollIntoView === 'function') {
+      evt.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Log the event
     const title = link.getAttribute('data-regulation');
     _paq.push(['trackEvent', 'Content', 'JumpToAnchor', title]);
   }));
