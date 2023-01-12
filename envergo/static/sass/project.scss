@@ -182,13 +182,14 @@ nav#evaluation-summary {
 section.regulation {
 
   --li-bottom: .5rem;
+  --text-spacing: 0 0 1rem;
 
-  .alt>ul,
-  div.criteria ul {
-    margin-top: -1.2rem;
-    margin-bottom: 1.5rem;
-    margin-block-start: none;
-    margin-block-end: none;
+  ul {
+    margin-bottom: 1rem;
+  }
+
+  li p {
+    margin-bottom: .5rem;
   }
 
   h2 {
@@ -265,14 +266,6 @@ section.regulation {
       margin-bottom: 0;
     }
 
-  }
-
-  ul {
-    margin-bottom: 1.5rem;
-  }
-
-  li p {
-    margin-bottom: .5rem;
   }
 }
 
