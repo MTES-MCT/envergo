@@ -179,7 +179,7 @@ class EvaluationDetailLegacy(FormView, DetailView):
 
             if not is_request_from_a_bot(request):
                 export = {
-                    "reference": self.object.reference,
+                    "request_reference": self.object.reference,
                     "url": request.build_absolute_uri(),
                 }
                 log_event("evaluation", "visit", request, **export)
