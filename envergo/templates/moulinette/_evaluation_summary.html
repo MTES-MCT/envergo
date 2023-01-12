@@ -5,12 +5,28 @@
     {% for regulation in moulinette.regulations %}
       <li>
         <a class="summary-link" href="#regulation_{{ regulation.slug }}" data-regulation="{{ regulation.title }}" title="Voir le détail de la réglementation « {{ regulation.title }} »">
+
           <span>
             {{ regulation.title }}
-            <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
           </span>
-          {% result_tag regulation.result %}
-        </a>
+
+          <span>
+            {% result_tag regulation.result %}
+
+            <span class="fr-link">
+              <span class="fr-hidden-md fr-unhidden-lg fr-hidden-xl">
+                Détail
+              </span>
+
+              <span class="fr-hidden fr-unhidden-xl">
+                Aller au détail
+              </span>
+
+              <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
+            </span>
+          </span>
+        </span>
+      </a>
       </li>
     {% endfor %}
   </ul>
