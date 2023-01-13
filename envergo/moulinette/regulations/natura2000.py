@@ -219,12 +219,20 @@ class ZoneInondable44(MoulinetteCriterion):
 class IOTA(MoulinetteCriterion):
     slug = "iota"
     choice_label = "Natura 2000 > IOTA"
-    title = "Projet soumis à la Loi sur l'eau"
+    title = "Natura 2000 si dossier Loi sur l'eau"
     header = "« Liste nationale » Natura 2000 (4° du I de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"  # noqa
 
     @cached_property
     def result_code(self):
-        return self.moulinette.loi_sur_leau.result
+        iota = self.moulinette.loi_sur_leau.result
+        if iota == RESULTS.soumis:
+            result = RESULTS.soumis
+        elif iota == RESULTS.non_soumis:
+            result = RESULTS.non_soumis
+        else:
+            result = RESULTS.iota_a_verifier
+
+        return result
 
 
 class LotissementForm(forms.Form):

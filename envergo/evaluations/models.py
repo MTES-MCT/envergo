@@ -65,6 +65,7 @@ RESULTS = Choices(
     ("non_applicable", "Non applicable"),
     ("non_concerne", "Non concerné"),
     ("clause_filet", "Clause filet"),
+    ("iota_a_verifier", "Iota à vérifier"),
 )
 
 
