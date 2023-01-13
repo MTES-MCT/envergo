@@ -297,6 +297,23 @@ class Natura2000(MoulinetteRegulation):
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
 
+    @cached_property
+    def result(self):
+        """Compute global result from individual criterions."""
+
+        results = [criterion.result for criterion in self.criterions]
+
+        if RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif RESULTS.action_requise in results:
+            result = RESULTS.action_requise
+        elif RESULTS.iota_a_verifier in results:
+            result = RESULTS.iota_a_verifier
+        else:
+            result = RESULTS.non_soumis
+
+        return result
+
     def iota_only(self):
         """Is the IOTA criterion the only valid criterion.
 
