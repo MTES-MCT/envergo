@@ -13,16 +13,16 @@
           <span>
             {% result_tag regulation.result %}
 
-            <span class="fr-link">
-              <span class="fr-hidden-md fr-unhidden-lg fr-hidden-xl">
-                Détail
-              </span>
+            <span class="action-link">
 
-              <span class="fr-hidden fr-unhidden-xl">
-                Aller au détail
-              </span>
+              {% spaceless %}
+                <span class="fr-link">
+                  <span class="fr-hidden-md fr-unhidden-lg fr-hidden-xl">Détail</span>
+                  <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
+                </span>
+              {% endspaceless %}
 
-              <span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span>
+              <span class="fr-link"><span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span></span>
             </span>
           </span>
         </span>

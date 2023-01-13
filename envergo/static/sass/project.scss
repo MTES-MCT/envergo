@@ -156,10 +156,13 @@ nav#evaluation-summary {
       background-color: var(--hover);
     }
 
-    .fr-link {
-      text-decoration: underline;
+    .action-link {
       margin-left: 1rem;
       white-space: nowrap;
+    }
+
+    .fr-link {
+      text-decoration: underline;
     }
   }
 }
