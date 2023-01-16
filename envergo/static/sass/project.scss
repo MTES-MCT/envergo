@@ -228,6 +228,18 @@ section.regulation {
     padding-left: 0;
   }
 
+  .fr-content-media__caption {
+    ul.source-list {
+      margin: 0;
+      padding: 0;
+
+      li {
+        list-style-type: none;
+        padding-bottom: 0;
+      }
+    }
+  }
+
   .more.fr-collapse>*:first-child {
     margin-top: 1.5rem;
   }
