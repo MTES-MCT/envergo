@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, TemplateView
 from django.views.generic.detail import BaseDetailView
 
-from envergo.analytics.utils import log_event
+from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
     EvaluationShareForm,
@@ -87,9 +87,17 @@ class EvaluationDetail(EvaluationDetailMixin, DetailView):
         return self.get(request, *args, **kwargs)
 
 
+# The multiple inheritance here is complicated and confusing.
+# I did not take the time to untangle this mess yet because ultimately,
+# this feature is very likely to evolve and the legacy code will go away.
+# (Or will it? Who am i kidding.)
 class EvaluationDetailMoulinette(
     EvaluationDetailMixin, BaseDetailView, MoulinetteResult
 ):
+
+    event_category = "evaluation"
+    event_action = "visit"
+
     def get_initial(self):
         return self.request.GET
 
@@ -106,6 +114,22 @@ class EvaluationDetailMoulinette(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         return context
+
+    def get(self, request, *args, **kwargs):
+
+        # The Method Resolution Order (MRO) of python makes sure that
+        # the `get` method is called from the `BaseDetailView` subclass,
+        # not the `MoulinetteResult` subclass.
+        # This is important because the `MoulinetteResult.get` method
+        # also calls the `log_moulinette_event` method with different
+        # arguments.
+        res = super().get(request, *args, **kwargs)
+        if not is_request_from_a_bot(request):
+            self.log_moulinette_event(
+                self.moulinette, request_reference=self.object.reference
+            )
+
+        return res
 
 
 class EvaluationDetailLegacy(FormView, DetailView):
@@ -154,6 +178,13 @@ class EvaluationDetailLegacy(FormView, DetailView):
         context = self.get_context_data(object=self.object)
         if self.object:
             res = self.render_to_response(context)
+
+            if not is_request_from_a_bot(request):
+                export = {
+                    "request_reference": self.object.reference,
+                    "url": request.build_absolute_uri(),
+                }
+                log_event("evaluation", "visit", request, **export)
         else:
             context.update({"reference": kwargs.get("reference")})
             res = render(request, "evaluations/not_found.html", context, status=404)
