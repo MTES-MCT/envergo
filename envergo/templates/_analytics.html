@@ -17,10 +17,5 @@
       g.src = u + 'piwik.js';
       s.parentNode.insertBefore(g, s);
     })();
-
-    window.addEventListener('hashchange', function() {
-      _paq.push(['setCustomUrl', window.location.href]);
-      _paq.push(['trackPageView']);
-    });
   </script>
 {% endif %}
