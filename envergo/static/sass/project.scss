@@ -8,6 +8,7 @@ $red: #b94a48;
 :root {
   // Bump default font size from 16 to 18px.
   font-size: 112.5%;
+  scroll-behavior: smooth;
 }
 
 html.nojs .js {
@@ -105,10 +106,8 @@ html.nojs .js {
   }
 
 
-  button.share-btn {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  .share-btn {
+    text-align: center;
   }
 
   @media (min-width: 1144px) {
@@ -142,6 +141,32 @@ html.nojs .js {
       margin: 0 auto;
     }
   }
+
+}
+
+nav#evaluation-summary {
+  li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    background-image: none;
+    padding: .25rem 0;
+    color: var(--text-action-high-grey);
+
+    &:hover {
+      background-color: var(--hover);
+    }
+
+    .action-link {
+      margin-left: 1.5rem;
+      white-space: nowrap;
+    }
+
+    .fr-link {
+      text-decoration: underline;
+      font-weight: 500;
+    }
+  }
 }
 
 #moulinette-form {
@@ -167,12 +192,15 @@ html.nojs .js {
 
 section.regulation {
 
-  .alt>ul,
-  div.criteria ul {
-    margin-top: -1.2rem;
-    margin-bottom: 1.5rem;
-    margin-block-start: none;
-    margin-block-end: none;
+  --li-bottom: .5rem;
+  --text-spacing: 0 0 1rem;
+
+  ul {
+    margin-bottom: 1rem;
+  }
+
+  li p {
+    margin-bottom: .5rem;
   }
 
   h2 {
@@ -198,6 +226,18 @@ section.regulation {
     display: block;
     text-decoration: underline;
     padding-left: 0;
+  }
+
+  .fr-content-media__caption {
+    ul.source-list {
+      margin: 0;
+      padding: 0;
+
+      li {
+        list-style-type: none;
+        padding-bottom: 0;
+      }
+    }
   }
 
   .more.fr-collapse>*:first-child {
@@ -521,26 +561,27 @@ div.leaflet-container {
   &.fr-accordion--no-icon {
     padding-bottom: .25rem;
 
-    .fr-accordion__btn::before {
+    .fr-accordion__btn::after {
       display: none;
     }
 
     .read-more-btn {
       padding: 0.75rem 1rem;
     }
-  }
 
-  .fr-accordion__btn {
-    align-items: baseline;
-  }
+    .fr-accordion__btn {
+      align-items: baseline;
+      flex-direction: row-reverse;
+    }
 
-  .fr-accordion__btn span.fr-tag {
-    white-space: nowrap;
-    margin-left: auto;
-  }
+    .fr-accordion__btn span.fr-tag {
+      white-space: nowrap;
+      margin-left: auto;
+    }
 
-  .fr-accordion__title span.title {
-    margin-right: 1rem;
+    .fr-accordion__title span.title {
+      margin-right: 1rem;
+    }
   }
 }
 

@@ -11,8 +11,6 @@ var _paq = window._paq || [];
   exports.FeedbackModal = FeedbackModal;
 
   FeedbackModal.prototype.init = function() {
-    this.dialogElt.addEventListener('dsfr.disclose', this.onDisclose.bind(this));
-    this.dialogElt.addEventListener('dsfr.conceal', this.onConceal.bind(this));
     this.form.addEventListener('submit', this.onFeedbackSubmit.bind(this));
   };
 

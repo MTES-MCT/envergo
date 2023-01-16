@@ -9,7 +9,8 @@
     Référence
     {{ evaluation }}
   </p>
-  <h3>Projet de construction</h3>
+
+  <h2 class="fr-h3">Caractéristiques du projet</h2>
 
   <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
     <div class="ratio-content">
@@ -58,6 +59,10 @@
     {% endif %}
 
   </ul>
+
+  <h2 class="fr-h3">Réglementations environnementales</h2>
+
+  {% include 'moulinette/_evaluation_summary.html' %}
 
   {% for regulation in moulinette.regulations %}
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}

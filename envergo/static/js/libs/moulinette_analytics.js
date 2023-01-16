@@ -16,3 +16,14 @@ window.addEventListener('load', function() {
 window.addEventListener('load', function() {
   _paq.push(['trackEvent', 'Simulation', 'Result', DEPARTMENT]);
 });
+
+// Track when a summary link is clicked
+window.addEventListener('load', function() {
+  const summaryLinks = document.querySelectorAll('.summary-link');
+  summaryLinks.forEach(link => link.addEventListener('click', function(evt) {
+    // Log the event
+    const link = evt.currentTarget;
+    const title = link.getAttribute('data-regulation');
+    _paq.push(['trackEvent', 'Content', 'JumpToAnchor', title]);
+  }));
+});

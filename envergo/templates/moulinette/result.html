@@ -13,8 +13,21 @@
 
 {% block result %}
 
+  <div class="share-btn fr-mt-3w fr-mb-5w">
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+  </div>
+
+  <h2 class="fr-h3">Résumé de l'évaluation</h2>
+
+  {% include 'moulinette/_evaluation_summary.html' %}
+
   {% for regulation in moulinette.regulations %}
-    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill fr-mt-3w fr-mb-5w share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+
+    {% if forloop.counter0 != 0 %}
+      <div class="share-btn fr-mt-3w fr-mb-5w">
+        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+      </div>
+    {% endif %}
 
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
