@@ -1,6 +1,7 @@
 // Use Matomo API for analytics
 var _paq = window._paq || [];
 
+// This module handles the "Is this evaluation useful" feedback form
 (function(exports) {
   'use strict';
 
@@ -28,12 +29,15 @@ var _paq = window._paq || [];
     let label = this.dialogElt.querySelector('[for=id_message] span');
     label.innerHTML = labelVal;
 
-    let url = FEEDBACK_RESPOND_URL;
-    let headers = { 'X-CSRFToken': CSRF_TOKEN };
-    let data = new FormData();
-    data.append('feedback', feedback);
-    let init = { method: 'POST', body: data, headers: headers };
-    let response = fetch(url, init);
+    // Send event to Matomo
+    if (VISITOR_ID) {
+      let url = FEEDBACK_RESPOND_URL;
+      let headers = { 'X-CSRFToken': CSRF_TOKEN };
+      let data = new FormData();
+      data.append('feedback', feedback);
+      let init = { method: 'POST', body: data, headers: headers };
+      let response = fetch(url, init);
+    }
   };
 
   FeedbackModal.prototype.onFeedbackSubmit = function(button) {
