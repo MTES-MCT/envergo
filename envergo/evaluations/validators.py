@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 # fmt: off
 PERMIT_NUMBER_RE = (
     r"^"
-    r"(PC|PA)"
+    r"(PC|PA|DP|CU)"
     r"(?P<department>\d{3})"
     r"(?P<commune>\d{3})"
     r"(?P<year>\d{2})"

@@ -14,7 +14,7 @@ class EvaluationFormMixin(forms.Form):
     # values with spaces
     application_number = forms.CharField(
         label=_("Application number"),
-        help_text=_('A 15 chars value starting with "P"'),
+        help_text="15 caractères commençant par « PA », « PC », « DP » ou « CU »",
         max_length=64,
     )
 
@@ -61,7 +61,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["application_number"].required = False
         self.fields["application_number"].widget.attrs["placeholder"] = _(
-            'A 15 chars value starting with "P"'
+            "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
         )
 
     def clean(self):

@@ -10,6 +10,8 @@ def test_application_number_validator():
         "PA05412621D1029",
         "PA05412621A1029",
         "pc05412621d1029",
+        "DP05412621d1029",
+        "CU05412621d1029",
     ]
 
     # Test will succeed if no exceptions are raised
