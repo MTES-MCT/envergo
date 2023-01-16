@@ -71,3 +71,7 @@ class FeedbackForm(forms.Form):
         choices = dict(YOU_ARE_CHOICES)
         val = self.cleaned_data["you_are"]
         return choices[val]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["you_are"].widget.fieldset_class = "fr-fieldset--inline"
