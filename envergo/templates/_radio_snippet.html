@@ -1,6 +1,5 @@
 {% load utils %}
 
-toto{{ field.field.widget.fieldset_class }}tata
 <div id="form-group-{{ field.name }}" class="fr-form-group{% if field.field.required %} required{% endif %}">
   <fieldset class="fr-fieldset {{ field.field.widget.fieldset_class }} {% if field.errors %} fr-fieldset--error{% endif %}" role="group" {% if field.errors %}aria-labelledby="legend-{{ field.name }} error-text-{{ field.name }}"{% endif %} >
 
