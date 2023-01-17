@@ -33,9 +33,29 @@
     {% endblock javascript %}
     <script>
       // Add class to indicate that js is available
-      var html = document.documentElement;
+      let html = document.documentElement;
       html.classList.remove('nojs');
       html.classList.add('js');
+    </script>
+
+    <script>
+      // Quick and stupid fix for this DSFR issue:
+      // https://github.com/GouvernementFR/dsfr/issues/515
+      window.addEventListener('load', function() {
+        let modals = document.querySelectorAll('.fr-modal');
+        let root = document.documentElement;
+
+        modals.forEach(function(modal) {
+          modal.addEventListener('dsfr.disclose', function() {
+            root.style.scrollBehavior = 'auto';
+          });
+          modal.addEventListener('dsfr.conceal', function() {
+            setTimeout(function() {
+              root.style.removeProperty('scroll-behavior');
+            }, 300);
+          });
+        });
+      });
     </script>
 
   </head>
