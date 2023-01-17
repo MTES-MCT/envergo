@@ -64,8 +64,8 @@ RESULTS = Choices(
     ("systematique", "Soumis"),
     ("non_applicable", "Non applicable"),
     ("non_concerne", "Non concerné"),
-    ("clause_filet", "Clause filet"),
-    ("iota_a_verifier", "Iota à vérifier"),
+    ("a_verifier", "À vérifier"),
+    ("iota_a_verifier", "En cas de dossier Loi sur l'eau"),
 )
 
 

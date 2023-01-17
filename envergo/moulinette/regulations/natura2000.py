@@ -230,7 +230,7 @@ class IOTA(MoulinetteCriterion):
         elif iota == RESULTS.non_soumis:
             result = RESULTS.non_soumis
         else:
-            result = RESULTS.iota_a_verifier
+            result = RESULTS.a_verifier
 
         return result
 
@@ -307,7 +307,7 @@ class Natura2000(MoulinetteRegulation):
             result = RESULTS.soumis
         elif RESULTS.action_requise in results:
             result = RESULTS.action_requise
-        elif RESULTS.iota_a_verifier in results:
+        elif RESULTS.a_verifier in results:
             result = RESULTS.iota_a_verifier
         else:
             result = RESULTS.non_soumis
