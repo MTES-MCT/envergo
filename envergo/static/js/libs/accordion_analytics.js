@@ -62,12 +62,8 @@
    * Trigger one accordion section's opening
    */
   AccordionAnalytics.prototype.openSection = function(sectionId) {
-    const button = this.accordionElt.querySelector(`[aria-controls=${sectionId}]`);
-    if (button) {
-      // Directly clicking on the button randomly does not work
-      // Using a slight timeout seems to do the trick.
-      window.setTimeout(function() { button.click(); }, 50);
-    }
+    let element = document.getElementById(sectionId);
+    dsfr(element).collapse.disclose();
   };
 
   AccordionAnalytics.prototype.untrackAccordionDisplay = function() {
