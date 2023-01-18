@@ -1,3 +1,5 @@
+var _paq = _paq || [];
+
 /**
  * Make the accordion-organized content analytics friendly.
  *
@@ -31,31 +33,12 @@
    * Setup the mutation observers to detect sections opening.
    */
   AccordionAnalytics.prototype.observeCollapsible = function(collapsible) {
-
-    // This will be fired whenever the element's dom is mutated
-    const callback = function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          const expanded = collapsible.classList.contains('fr-collapse--expanded');
-
-          if (expanded) {
-            this.trackAccordionDisplay(collapsible.id);
-          } else {
-            this.untrackAccordionDisplay();
-          }
-        }
-      }.bind(this));
-    };
-
-    const observer = new MutationObserver(callback.bind(this));
-    observer.observe(collapsible, { attributes: true });
+    collapsible.addEventListener('dsfr.disclose', this.trackAccordionDisplay.bind(this, collapsible));
+    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this));
   };
 
-  AccordionAnalytics.prototype.trackAccordionDisplay = function(id) {
-    history.replaceState(null, '', `#${id}`);
-    // replaceState does not fire a `hashchange` event so we have to
-    // to that manually
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  AccordionAnalytics.prototype.trackAccordionDisplay = function(collapsible) {
+    history.replaceState(null, '', `#${collapsible.id}`);
   };
 
   /**
