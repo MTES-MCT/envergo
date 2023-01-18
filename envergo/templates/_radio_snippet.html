@@ -1,7 +1,7 @@
 {% load utils %}
 
 <div id="form-group-{{ field.name }}" class="fr-form-group{% if field.field.required %} required{% endif %}">
-  <fieldset class="fr-fieldset fr-fieldset--inline{% if field.errors %} fr-fieldset--error{% endif %}" role="group" {% if field.errors %}aria-labelledby="legend-{{ field.name }} error-text-{{ field.name }}"{% endif %} >
+  <fieldset class="fr-fieldset {{ field.field.widget.fieldset_class }} {% if field.errors %} fr-fieldset--error{% endif %}" role="group" {% if field.errors %}aria-labelledby="legend-{{ field.name }} error-text-{{ field.name }}"{% endif %} >
 
     <legend class="fr-fieldset__legend fr-text--regular" id='legend-{{ field.name }}'>
       {{ field.label }}

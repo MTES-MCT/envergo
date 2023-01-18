@@ -14,7 +14,7 @@ class EvaluationFormMixin(forms.Form):
     # values with spaces
     application_number = forms.CharField(
         label=_("Application number"),
-        help_text=_('A 15 chars value starting with "P"'),
+        help_text="15 caractères commençant par « PA », « PC », « DP » ou « CU »",
         max_length=64,
     )
 
@@ -43,6 +43,10 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
     )
+    no_address = forms.BooleanField(
+        label=_("This project is not linked to an address"),
+        required=False,
+    )
     application_number = forms.CharField(
         label=_("Application number"),
         help_text=_("If an application number was already submitted."),
@@ -57,8 +61,18 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["application_number"].required = False
         self.fields["application_number"].widget.attrs["placeholder"] = _(
-            'A 15 chars value starting with "P"'
+            "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
         )
+
+    def clean(self):
+        data = super().clean()
+        no_address = data.get("no_address", False)
+        if no_address:
+            self.fields["address"].required = False
+            if "address" in self._errors:
+                del self._errors["address"]
+
+        return data
 
 
 class WizardContactForm(forms.ModelForm):
