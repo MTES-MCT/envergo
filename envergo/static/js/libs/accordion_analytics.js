@@ -39,6 +39,8 @@ var _paq = _paq || [];
 
   AccordionAnalytics.prototype.trackAccordionDisplay = function(collapsible) {
     history.replaceState(null, '', `#${collapsible.id}`);
+    _paq.push(['setCustomUrl', window.location.href]);
+    _paq.push(['trackPageView']);
   };
 
   /**
