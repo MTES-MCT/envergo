@@ -243,7 +243,17 @@ class Ruissellement(MoulinetteCriterion):
         return res
 
 
+class OtherCriteria(MoulinetteCriterion):
+    slug = "autres_rubriques"
+    choice_label = "Loi sur l'eau > Autres rubriques"
+    title = "Autres rubriques"
+
+    @cached_property
+    def result_code(self):
+        return RESULTS.non_disponible
+
+
 class LoiSurLEau(MoulinetteRegulation):
     slug = "loi_sur_leau"
     title = "Loi sur l'eau"
-    criterion_classes = [ZoneHumide, ZoneInondable, Ruissellement]
+    criterion_classes = [ZoneHumide, ZoneInondable, Ruissellement, OtherCriteria]

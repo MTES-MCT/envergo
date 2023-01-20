@@ -166,6 +166,7 @@ class MoulinetteCriterion:
 
     @cached_property
     def result(self):
+        """The result will be displayed to the user with a fancy label."""
         return self.result_code
 
     @property

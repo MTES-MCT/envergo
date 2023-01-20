@@ -219,12 +219,20 @@ class ZoneInondable44(MoulinetteCriterion):
 class IOTA(MoulinetteCriterion):
     slug = "iota"
     choice_label = "Natura 2000 > IOTA"
-    title = "Projet soumis à la Loi sur l'eau"
+    title = "Natura 2000 si dossier Loi sur l'eau"
     header = "« Liste nationale » Natura 2000 (4° du I de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"  # noqa
 
     @cached_property
     def result_code(self):
-        return self.moulinette.loi_sur_leau.result
+        iota = self.moulinette.loi_sur_leau.result
+        if iota == RESULTS.soumis:
+            result = RESULTS.soumis
+        elif iota == RESULTS.non_soumis:
+            result = RESULTS.non_soumis
+        else:
+            result = RESULTS.a_verifier
+
+        return result
 
 
 class LotissementForm(forms.Form):
@@ -288,6 +296,23 @@ class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
     criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
+
+    @cached_property
+    def result(self):
+        """Compute global result from individual criterions."""
+
+        results = [criterion.result for criterion in self.criterions]
+
+        if RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif RESULTS.action_requise in results:
+            result = RESULTS.action_requise
+        elif RESULTS.a_verifier in results:
+            result = RESULTS.iota_a_verifier
+        else:
+            result = RESULTS.non_soumis
+
+        return result
 
     def iota_only(self):
         """Is the IOTA criterion the only valid criterion.
