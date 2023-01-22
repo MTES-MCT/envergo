@@ -8,16 +8,13 @@
 
 <h3>Marche à suivre</h3>
 
-<p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
-
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <ul>
-    <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
-    <li>Délai d'instruction : 2 mois.</li>
-  </ul>
+  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée et incluse dans le dossier Loi sur l’eau.</p>
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+
+  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
   <p><em>Si le projet est aussi soumis à la Loi sur l'eau :</em></p>
 
@@ -41,6 +38,8 @@
   {% endif %}
 
 {% else %}
+
+  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
   {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
     <ul>

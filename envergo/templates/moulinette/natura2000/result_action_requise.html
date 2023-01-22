@@ -1,4 +1,16 @@
-<p>Une action du porteur de projet est requise.</p>
+{% if moulinette.loi_sur_leau.result == 'action_requise' %}
+
+  <p>Si le projet s’avère soumis à la Loi sur l’eau, il est automatiquement soumis à Natura 2000 ;
+    une étude des incidences Natura 2000 (EIN) doit être réalisée et jointe au dossier Loi sur l’eau.</p>
+
+  <p>Si le projet n’est pas soumis à la Loi sur l’eau, il peut tout de même être soumis à Natura 2000 ;
+    une action du porteur de projet est requise.</p>
+    
+{% else %}
+
+  <p>Une action du porteur de projet est requise.</p>
+
+{% endif %}  
 
 <h3>Marche à suivre</h3>
 
@@ -34,19 +46,18 @@
 
   <p><em>Si le projet n'est pas soumis à la Loi sur l'eau :</em></p>
 
-
   {% if is_lotissement == 'oui' %}
 
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
+      <li>Délai d'instruction inchangé : 3 mois.</li>
     </ul>
 
   {% else %}
 
     <ul>
       <li>EIN à déposer à la DDT(M).</li>
-      <li>Délai d'instruction : 2 mois.</li>
+      <li>Délai d'instruction : 2 mois.</li>
     </ul>
 
   {% endif %}
@@ -57,14 +68,14 @@
 
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
+      <li>Délai d'instruction inchangé : 3 mois.</li>
     </ul>
 
   {% else %}
 
     <ul>
       <li>EIN à déposer à la DDT(M).</li>
-      <li>Délai d'instruction : 2 mois.</li>
+      <li>Délai d'instruction : 2 mois.</li>
     </ul>
 
   {% endif %}
@@ -75,8 +86,8 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <p>Au vu des caractéristiques du projet, il est fortement conseillé au porteur
-    de projet de mener des études sur les points cités ci-dessus, afin d'évaluer
+  <p>Au vu des caractéristiques du projet, le porteur
+    doit mener des études sur les points cités ci-dessus, afin de déterminer
     si le projet est soumis à Natura 2000.</p>
 
   <p>Ainsi il convient de :</p>
