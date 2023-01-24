@@ -29,14 +29,14 @@
     {% endif %}
 
     <li>
-      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²<br />
       <span class="fr-hint-text">
         Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
       </span>
     </li>
 
     <li>
-      <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
+      <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²<br />
       <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
     </li>
 
@@ -48,7 +48,7 @@
 
     {% if evaluation.moulinette_params.emprise %}
       <li>
-        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise }} m²
+        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise|localize }} m²
       </li>
     {% endif %}
 
