@@ -102,42 +102,40 @@ class ZoneHumide44(MoulinetteCriterion):
         return result
 
     def _get_map(self):
+        map_polygons = []
+
         wetlands_qs = [
             zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
         ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
+
         potential_qs = [
             zone
             for zone in self.catalog["potential_wetlands"]
             if zone.map.display_for_user
         ]
-        map_polygons = None
+        if potential_qs:
+            map_polygons.append(MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"))
 
         if self.catalog["wetlands_within_25m"]:
             caption = "Le projet se situe dans une zone humide référencée."
-            map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
         elif (
             self.catalog["wetlands_within_100m"]
             and not self.catalog["potential_wetlands_within_0m"]
         ):
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-            map_polygons = [MapPolygon(wetlands_qs, BLUE, "Zone humide")]
 
         elif (
             self.catalog["wetlands_within_100m"]
             and self.catalog["potential_wetlands_within_0m"]
         ):
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-            map_polygons = [
-                MapPolygon(wetlands_qs, BLUE, "Zone humide"),
-                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"),
-            ]
-
         elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
-            map_polygons = [
-                MapPolygon(potential_qs, "dodgerblue", "Zone humide potentielle")
-            ]
+        else:
+            caption = "Le projet ne se situe pas dans zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
@@ -201,8 +199,12 @@ class ZoneInondable44(MoulinetteCriterion):
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
 
-        if self.catalog["flood_zones_within_12m"]:
-            caption = "Le projet se situe dans une zone inondable."
+        if zone_qs:
+            if self.catalog["flood_zones_within_12m"]:
+                caption = "Le projet se situe dans une zone inondable."
+            else:
+                caption = "Le projet ne se situe pas en zone inondable."
+
             map_polygons = [MapPolygon(zone_qs, "red", "Zone inondable")]
             criterion_map = Map(
                 center=self.catalog["coords"],

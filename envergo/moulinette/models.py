@@ -151,7 +151,7 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         zones = (
-            Zone.objects.filter(geometry__dwithin=(catalog["coords"], D(m=100)))
+            Zone.objects.filter(geometry__dwithin=(catalog["coords"], D(m=200)))
             .annotate(distance=Distance("geometry", catalog["coords"]))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
