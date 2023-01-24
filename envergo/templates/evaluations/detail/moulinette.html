@@ -29,14 +29,14 @@
     {% endif %}
 
     <li>
-      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface }} m²<br />
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²<br />
       <span class="fr-hint-text">
         Construction, voirie, remblais et bassins, autres imperméabilisations — temporaires et définitives
       </span>
     </li>
 
     <li>
-      <strong>Surface déjà impactée  avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface }} m²<br />
+      <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²<br />
       <span class="fr-hint-text">Construction, voirie, remblais et bassins, autres imperméabilisations</span>
     </li>
 
@@ -48,13 +48,27 @@
 
     {% if evaluation.moulinette_params.emprise %}
       <li>
-        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise }} m²
+        <strong>Emprise au sol créée : </strong>{{ evaluation.moulinette_params.emprise|localize }} m²
       </li>
     {% endif %}
 
     {% if evaluation.moulinette_params.zone_u %}
       <li>
         <strong>Ce projet se trouve en zone U dans le <abbr title="Plan Local d'Urbanisme">PLU</abbr> :</strong> {{ evaluation.moulinette_params.zone_u|capfirst }}
+      </li>
+    {% endif %}
+
+    {% if evaluation.moulinette_params.surface_plancher_sup_thld %}
+      <li>
+        <strong>Ce projet créé une surface plancher supérieure à 10 000 m² :</strong>
+        {{ evaluation.moulinette_params.surface_plancher_sup_thld|capfirst }}
+      </li>
+    {% endif %}
+
+    {% if evaluation.moulinette_params.terrain_assiette %}
+      <li>
+        <strong>Terrain d'assiette du projet :</strong>
+        {{ evaluation.moulinette_params.terrain_assiette|localize }} m²
       </li>
     {% endif %}
 
