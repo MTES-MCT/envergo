@@ -323,11 +323,6 @@ class Natura2000(MoulinetteRegulation):
         """
         return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
 
-    def get_distance_to_n2000(self):
-        perimeters = self.moulinette.perimeters
-        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
-        return perimeter.distance.m
-
     def _get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
 
@@ -339,25 +334,23 @@ class Natura2000(MoulinetteRegulation):
         be relevant.
         """
 
-        # We don't display the map if only the IOTA criterion is activated
-        # because it means the project is submitted to N2000 without being
-        # in a N2000 zone
-        criterions = [c for c in self.criterions if not isinstance(c, IOTA)]
-        if len(criterions) == 0:
-            return None
-
         # Let's find the first perimeter with a map that we can display
-        perimeters = [
-            p
-            for p in self.moulinette.perimeters
-            if p.criterion in self.criterion_classes and not p.criterion == IOTA
-        ]
-        if not perimeters:
+        perimeter = next(
+            (
+                p
+                for p in self.moulinette.perimeters
+                if p.criterion in self.criterion_classes
+                and not p.criterion == IOTA
+                and p.map.display_for_user
+            ),
+            None,
+        )
+        if not perimeter:
             return None
 
-        map_polygons = [MapPolygon(perimeters, "green", "Site Natura 2000")]
+        map_polygons = [MapPolygon([perimeter], "green", "Site Natura 2000")]
 
-        if self.get_distance_to_n2000() <= 0.0:
+        if perimeter.distance.m <= 0.0:
             caption = "Le projet se situe sur un site Natura 2000."
         else:
             caption = (
