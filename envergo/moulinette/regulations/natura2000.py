@@ -116,7 +116,9 @@ class ZoneHumide44(MoulinetteCriterion):
             if zone.map.display_for_user
         ]
         if potential_qs:
-            map_polygons.append(MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle"))
+            map_polygons.append(
+                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
+            )
 
         if self.catalog["wetlands_within_25m"]:
             caption = "Le projet se situe dans une zone humide référencée."
