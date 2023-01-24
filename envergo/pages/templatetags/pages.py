@@ -50,7 +50,7 @@ def evaluation_menu(context):
     additional_routes = [
         "request_eval_wizard_step_1",
         "request_eval_wizard_step_2",
-        "request_eval_wizard_step_files",
+        "request_eval_wizard_step_3",
         "request_success",
     ]
     all_routes = routes + additional_routes

@@ -6,12 +6,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
-from django.http.response import Http404, HttpResponseRedirect, JsonResponse
+from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, FormView, RedirectView, TemplateView
+from django.views.generic import (
+    DetailView,
+    FormView,
+    RedirectView,
+    TemplateView,
+    UpdateView,
+)
 from django.views.generic.detail import BaseDetailView
 
 from envergo.analytics.utils import is_request_from_a_bot, log_event
@@ -347,7 +353,6 @@ class WizardStepMixin:
 
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
     pattern_name = "request_eval_wizard_step_1"
-
     query_string = True
 
     def dispatch(self, request, *args, **kwargs):
@@ -365,10 +370,6 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
-
-    def form_invalid(self, form):
-        print(f"form_invalid {form._errors}")
-        return super().form_invalid(form)
 
     def form_valid(self, form):
         """Since this is the last step, process the whole form."""
@@ -410,20 +411,21 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             request_url=reverse("admin:evaluations_request_change", args=[request.id]),
         )
         self.reset_data()
-        return HttpResponseRedirect(self.get_success_url())
+
+        success_url = reverse('request_eval_wizard_step_3', args=[request.reference])
+        return HttpResponseRedirect(success_url)
 
     def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
 
 
-class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
+class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     template_name = "evaluations/eval_request_wizard_files.html"
+    model = Request
     form_class = WizardFilesForm
-    success_url = reverse_lazy("request_eval_wizard_step_2")
-
-    def form_valid(self, form):
-        super().form_valid(form)
-        return JsonResponse({})
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    success_url = reverse_lazy("request_success")
 
 
 class RequestSuccess(TemplateView):

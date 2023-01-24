@@ -14,38 +14,46 @@
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
     {% csrf_token %}
 
-    <p>Étape {{ wizard.steps.step1 }} sur {{ wizard.steps.count }}</p>
+    <p>Étape 3 sur 3</p>
 
     {% include '_form_header.html' with form=form %}
-    {{ wizard.management_form }}
 
     <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Caractéristiques du projet</legend>
+      <legend class="fr-h2">Documents complémentaires</legend>
 
       <div class="fr-mb-3w fr-alert fr-alert--info">
         <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
       </div>
 
-      {% include '_field_snippet.html' with field=form.additional_files %}
+      {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
     </fieldset>
 
-    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--right fr-btns-group--icon-left fr-mt-4w">
-      {% comment %} {% if wizard.steps.prev %}
-        <li>
-          <button class="fr-btn fr-btn--secondary fr-fi-arrow-left-line" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">
-            {{ _("prev step") }}
-          </button>
-        </li>
-      {% endif %} {% endcomment %}
-
-      <li>
-        <button type="submit" class="fr-btn fr-fi-checkbox-circle-line">
-          Soumettre votre évaluation
-        </button>
-      </li>
-    </ul>
+    <button type="submit" class="fr-mt-4w fr-btn">
+      <span class="fr-fi-checkbox-circle-line fr-fi--sm">
+        Envoyer votre demande d'évaluation
+      </span>
+    </button>
 
   </form>
+
+{% endblock %}
+
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    FORM_ID = 'request-evaluation-form';
+    CONTACT_SECTION_ID = 'contact-section';
+    DROPZONE_FORM = 'request-evaluation-form';
+    DROPZONE_FIELD = 'id-additional_files-dropzone';
+    DROPZONE_UPLOAD_URL = '';
+  </script>
+  {{ uploaded_files|json_script:'uploaded-files' }}
+  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
+  <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
 
 {% endblock %}
