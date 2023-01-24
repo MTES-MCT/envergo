@@ -58,6 +58,20 @@
       </li>
     {% endif %}
 
+    {% if evaluation.moulinette_params.surface_plancher_sup_thld %}
+      <li>
+        <strong>Ce projet créé une surface plancher supérieure à 10 000 m² :</strong>
+        {{ evaluation.moulinette_params.surface_plancher_sup_thld|capfirst }}
+      </li>
+    {% endif %}
+
+    {% if evaluation.moulinette_params.terrain_assiette %}
+      <li>
+        <strong>Terrain d'assiette du projet :</strong>
+        {{ evaluation.moulinette_params.terrain_assiette|localize }} m²
+      </li>
+    {% endif %}
+
   </ul>
 
   <h2 class="fr-h3">Réglementations environnementales</h2>
