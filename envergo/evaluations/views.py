@@ -352,6 +352,8 @@ class WizardStepMixin:
 
 
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
+    """Resets all wizard data then redirects to first step."""
+
     pattern_name = "request_eval_wizard_step_1"
     query_string = True
 
@@ -367,12 +369,24 @@ class RequestEvalWizardStep1(WizardStepMixin, FormView):
 
 
 class RequestEvalWizardStep2(WizardStepMixin, FormView):
+    """Second step of the wizard.
+
+    Even though this is a 3 steps wizard, we actually save the object at the
+    end of this step.
+
+    That is because the third step only features the file upload widget, and
+    we need an existing object in the db to attach the files to.
+    """
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
 
     def form_valid(self, form):
-        """Since this is the last step, process the whole form."""
+        """Process the whole form and save object to the db.
+
+        This `form_valid` is called when the current step form
+        (WizardContactForm) is valid.
+        """
         super().form_valid(form)
 
         form_kwargs = self.get_form_kwargs()
@@ -384,6 +398,8 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             return self.request_form_invalid(request_form)
 
     def request_form_valid(self, form):
+        """This is called when all the combined step forms are valid."""
+
         request = form.save()
         file_storage = self.get_file_storage()
         filedicts = self.get_files_data()
@@ -397,6 +413,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             )
 
         # Send notifications, once data is commited
+        # TODO move the confirmation and logs after the last step
         def confirm_request():
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
