@@ -443,6 +443,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     success_url = reverse_lazy("request_success")
+    context_object_name = "evalreq"
 
 
 class RequestSuccess(TemplateView):
