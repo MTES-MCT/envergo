@@ -50,7 +50,7 @@
     CONTACT_SECTION_ID = 'contact-section';
     DROPZONE_FORM = 'request-evaluation-form';
     DROPZONE_FIELD = 'id-additional_files-dropzone';
-    DROPZONE_UPLOAD_URL = '';
+    DROPZONE_UPLOAD_URL = '{{ request.get_full_path }}';
   </script>
   {{ uploaded_files|json_script:'uploaded-files' }}
   <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
