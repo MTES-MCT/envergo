@@ -389,4 +389,4 @@ class RequestAdmin(admin.ModelAdmin):
 
 @admin.register(RequestFile)
 class RequestFileAdmin(admin.ModelAdmin):
-    list_display = ["file", "name", "request"]
+    list_display = ["name", "file", "request"]
