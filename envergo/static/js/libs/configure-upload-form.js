@@ -34,25 +34,50 @@ window.addEventListener('load', function() {
 
     init: function() {
 
-      // Process the upload queue before submiting the form
+      // Disable the form while files are being uploaded
+      this.on("addedfiles", function(files) {
+        this.disableForm();
+      }.bind(this));
+
+      // Re-enable the form when all files have been uploaded
+      this.on("queuecomplete", function(files, response, evt) {
+        this.enableForm();
+      }.bind(this));
+
+      // Make sure the form cannot be submitted while files are being uploaded
       form.addEventListener('submit', function(evt) {
         if (this.getQueuedFiles().length > 0) {
           evt.preventDefault();
           evt.stopPropagation();
-
-          // Disable form submit
-          submitBtn.setAttribute("disabled", "");
-
-          // Update button message
-          btnIcon.classList.remove("fr-fi-checkbox-circle-line");
-          btnIcon.classList.add("fr-fi-refresh-line");
-          btnIcon.classList.add("spinner");
-          btnIcon.textContent = "Veuillez patienter, envoi en cours";
-          btnIcon.setAttribute("role", "alert");
-
-          this.processQueue();
         }
       }.bind(this));
+
+      this.on("removedfile", function(file) {}.bind(this));
     }
   });
+
+  // Disable the confirmation form while files are being uploaded
+  Dropzone.prototype.disableForm = function() {
+    // Disable form submit
+    submitBtn.setAttribute("disabled", "");
+
+    // Update button message
+    btnIcon.classList.remove("fr-fi-checkbox-circle-line");
+    btnIcon.classList.add("fr-fi-refresh-line");
+    btnIcon.classList.add("spinner");
+    btnIcon.textContent = "Veuillez patienter pendant le chargement de vos fichiers";
+    btnIcon.setAttribute("role", "alert");
+  };
+
+  // Reactivate the confirmation form
+  Dropzone.prototype.enableForm = function() {
+    submitBtn.removeAttribute("disabled");
+
+    // Update button message
+    btnIcon.classList.add("fr-fi-checkbox-circle-line");
+    btnIcon.classList.remove("fr-fi-refresh-line");
+    btnIcon.classList.remove("spinner");
+    btnIcon.textContent = "Envoyer votre demande d'évaluation";
+    btnIcon.removeAttribute("role");
+  };
 });
