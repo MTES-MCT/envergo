@@ -474,6 +474,12 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
 
         return JsonResponse({})
 
+    def form_invalid(self, form):
+        return JsonResponse(
+            {"error": "Une erreur nous a empeché de prendre en compte ce fichier."},
+            status=400,
+        )
+
 
 class RequestSuccess(TemplateView):
     template_name = "evaluations/request_success.html"
