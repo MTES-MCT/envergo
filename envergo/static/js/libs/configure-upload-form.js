@@ -14,7 +14,7 @@ window.addEventListener('load', function() {
     url: DROPZONE_UPLOAD_URL,
     paramName: function() { return 'additional_files'; },
     maxFilesize: 20,
-    maxFiles: 10,
+    maxFiles: DROPZONE_MAX_FILES,
     acceptedFiles: 'image/*,application/pdf,application/zip',
     autoProcessQueue: true,
     uploadMultiple: true,
@@ -33,6 +33,12 @@ window.addEventListener('load', function() {
     dictMaxFilesExceeded: "Vous ne pouvez pas envoyer plus de fichiers.",
 
     init: function() {
+
+      // Display previously uploaded files in the upload preview
+      uploadedData.forEach(function(data) {
+        this.options.addedfile.call(this, data);
+      }.bind(this));
+      this.options.maxFiles -= uploadedData.length;
 
       // Disable the form while files are being uploaded
       this.on("addedfiles", function(files) {

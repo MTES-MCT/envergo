@@ -350,7 +350,10 @@ class WizardStepMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         files_qs = RequestFile.objects.filter(request=self.object)
-        files = [{"name": file.name, "size": file.file.size} for file in files_qs]
+        files = [
+            {"id": file.id, "name": file.name, "size": file.file.size}
+            for file in files_qs
+        ]
         context["uploaded_files"] = files
         return context
 
@@ -450,6 +453,11 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     success_url = reverse_lazy("request_success")
     context_object_name = "evalreq"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["max_files"] = settings.MAX_EVALREQ_FILES
+        return context
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
@@ -465,6 +473,16 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
         context["uploaded_files"] = self.get_files_data()
 
     def form_valid(self, form):
+        files_qs = RequestFile.objects.filter(request=self.object)
+        current_files = files_qs.count()
+        new_files = len(self.request.FILES.getlist(FILES_FIELD))
+        max_files = settings.MAX_EVALREQ_FILES
+        if current_files + new_files > max_files:
+            return JsonResponse(
+                {"error": f"Vous ne pouvez pas envoyer plus de {max_files}."},
+                status=400,
+            )
+
         # Save uploaded files using the file storage
         if FILES_FIELD in self.request.FILES:
             file_storage = self.get_file_storage()
