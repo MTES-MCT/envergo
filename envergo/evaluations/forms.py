@@ -77,12 +77,6 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
 class WizardContactForm(forms.ModelForm):
 
-    additional_files = forms.FileField(
-        label=_("Additional files you might deem useful for the evaluation"),
-        help_text=_("Avalaible formats: pdf, zip."),
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"multiple": True}),
-    )
     user_type = forms.ChoiceField(
         label=_("Who are you?"),
         required=True,
@@ -114,7 +108,6 @@ class WizardContactForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            "additional_files",
             "project_description",
             "user_type",
             "contact_email",
@@ -153,9 +146,13 @@ class WizardContactForm(forms.ModelForm):
 class WizardFilesForm(forms.ModelForm):
     additional_files = forms.FileField(
         label=_("Additional files you might deem useful for the evaluation"),
-        help_text=_("Avalaible formats: pdf, zip."),
         required=False,
         widget=forms.ClearableFileInput(attrs={"multiple": True}),
+        help_text="""
+            Formats autorisés : images, pdf, zip. <br>
+            Maximum 10 fichiers. <br>
+            Maximum 20 Mo par fichier. <br>
+        """,
     )
 
     class Meta:
@@ -170,7 +167,6 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "address",
             "application_number",
             "project_description",
-            "additional_files",
             "user_type",
             "contact_email",
             "project_sponsor_emails",

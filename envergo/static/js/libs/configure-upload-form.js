@@ -16,10 +16,9 @@ window.addEventListener('load', function() {
     maxFilesize: 20,
     maxFiles: 10,
     acceptedFiles: 'image/*,application/pdf,application/zip',
-    autoProcessQueue: false,
+    autoProcessQueue: true,
     uploadMultiple: true,
     parallelUploads: 100,
-    maxFiles: 100,
     addRemoveLinks: true,
     previewsContainer: previewElt,
     clickable: previewElt,
@@ -54,18 +53,6 @@ window.addEventListener('load', function() {
           this.processQueue();
         }
       }.bind(this));
-
-      // Display previously uploaded files in the upload preview
-      uploadedData.forEach(function(data) {
-        this.options.addedfile.call(this, data);
-      }.bind(this));
-
-
-      // Whatever happens with the upload, we need to submit the form
-      // to display success or error validation
-      this.on("successmultiple", function(files, response, evt) {
-        form.submit();
-      });
     }
   });
 });

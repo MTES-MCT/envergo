@@ -6,11 +6,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import get_storage_class
 from django.db import transaction
 from django.db.models.query import Prefetch
-from django.http.response import Http404, HttpResponseRedirect
+from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     DetailView,
     FormView,
@@ -377,6 +379,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
     That is because the third step only features the file upload widget, and
     we need an existing object in the db to attach the files to.
     """
+
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
@@ -429,7 +432,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         )
         self.reset_data()
 
-        success_url = reverse('request_eval_wizard_step_3', args=[request.reference])
+        success_url = reverse("request_eval_wizard_step_3", args=[request.reference])
         return HttpResponseRedirect(success_url)
 
     def request_form_invalid(self, form):
@@ -444,6 +447,32 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     slug_url_kwarg = "reference"
     success_url = reverse_lazy("request_success")
     context_object_name = "evalreq"
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
+    template_name = "evaluations/eval_request_wizard_files.html"
+    model = Request
+    form_class = WizardFilesForm
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    context_object_name = "evalreq"
+
+    def form_valid(self, form):
+        # Save uploaded files using the file storage
+        if FILES_FIELD in self.request.FILES:
+            file_storage = self.get_file_storage()
+            files = self.request.FILES.getlist(FILES_FIELD)
+
+            for file in files:
+                file_storage.save(file.name, file)
+                RequestFile.objects.create(
+                    request=self.object,
+                    file=file,
+                    name=file.name,
+                )
+
+        return JsonResponse({})
 
 
 class RequestSuccess(TemplateView):
