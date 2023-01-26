@@ -349,7 +349,9 @@ class WizardStepMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["uploaded_files"] = self.get_files_data()
+        files_qs = RequestFile.objects.filter(request=self.object)
+        files = [{"name": file.name, "size": file.file.size} for file in files_qs]
+        context["uploaded_files"] = files
         return context
 
 
@@ -457,6 +459,10 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["uploaded_files"] = self.get_files_data()
 
     def form_valid(self, form):
         # Save uploaded files using the file storage
