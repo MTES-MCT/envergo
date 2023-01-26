@@ -58,7 +58,18 @@ window.addEventListener('load', function() {
         }
       }.bind(this));
 
-      this.on("removedfile", function(file) {}.bind(this));
+      this.on("removedfile", function(file) {
+        if (file.id) {
+          // Remove the file from the server
+          fetch(`${DROPZONE_UPLOAD_URL}?file_id=${file.id}`, { method: 'DELETE' })
+            .then(function(response) {
+              if (!response.ok) {
+                this.options.addedfile.call(this, file);
+                this.options.error.call(this, file, "Ce fichier n'as pas pu être supprimé. Veuillez réessayer.");
+              }
+            }.bind(this));
+        }
+      }.bind(this));
     }
   });
 

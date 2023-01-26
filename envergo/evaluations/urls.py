@@ -42,7 +42,7 @@ urlpatterns = [
                     name="request_eval_wizard_step_3",
                 ),
                 path(
-                    _("step-3/<slug:reference>/upload/"),
+                    _("step-3/<slug:reference>/files/"),
                     RequestEvalWizardStep3Upload.as_view(),
                     name="request_eval_wizard_step_3_upload",
                 ),

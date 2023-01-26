@@ -350,10 +350,15 @@ class WizardStepMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         files_qs = RequestFile.objects.filter(request=self.object)
-        files = [
-            {"id": file.id, "name": file.name, "size": file.file.size}
-            for file in files_qs
-        ]
+        files = []
+        for file in files_qs:
+            try:
+                file_obj = {"id": file.id, "name": file.name, "size": file.file.size}
+                files.append(file_obj)
+            except FileNotFoundError:
+                # This means the EvaluationFile object exists in db but the
+                # actual file is missing from storage.
+                pass
         context["uploaded_files"] = files
         return context
 
@@ -503,6 +508,21 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             {"error": "Une erreur nous a empeché de prendre en compte ce fichier."},
             status=400,
         )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            files_qs = RequestFile.objects.filter(request=self.object)
+            file_id = self.request.GET.get("file_id")
+            file_obj = files_qs.get(id=file_id)
+            file_storage = self.get_file_storage()
+            file_storage.delete(file_obj.file.name)
+            file_obj.delete()
+            return JsonResponse({})
+        except RequestFile.DoesNotExist:
+            return JsonResponse(
+                {"error": "Ce fichier n'existe pas."}, status=400,
+            )
 
 
 class RequestSuccess(TemplateView):
