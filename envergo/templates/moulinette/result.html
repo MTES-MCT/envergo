@@ -15,6 +15,8 @@
 
   <div class="share-btn fr-mt-3w fr-mb-5w">
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-add-circle-fill share-btn" data-fr-opened="false" aria-controls="save-modal">Enregistrer cette évaluation</button>
   </div>
 
   <h2 class="fr-h3">Résumé de l'évaluation</h2>
@@ -62,6 +64,7 @@
 
 {% block extra_body %}
   {% include 'moulinette/_share_modal.html' %}
+  {% include 'moulinette/_save_modal.html' %}
 
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal.html' %}
