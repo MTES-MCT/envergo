@@ -642,8 +642,16 @@ form.dropzone {
     border: 2px dashed red;
   }
 
+  .dz-preview .dz-error-message {
+    top: 150px !important;
+  }
+
   .dz-preview .dz-remove {
     background-image: none;
+  }
+
+  .dz-preview .dz-progress {
+    top: 70%;
   }
 
   .dz-clickable .dz-button .fr-link {
