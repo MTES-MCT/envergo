@@ -459,13 +459,13 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
 
             for file in files:
                 file_storage.save(file.name, file)
-                RequestFile.objects.create(
+                evalreq = RequestFile.objects.create(
                     request=self.object,
                     file=file,
                     name=file.name,
                 )
 
-        return JsonResponse({})
+        return JsonResponse({'id': evalreq.id})
 
     def form_invalid(self, form):
         return JsonResponse(

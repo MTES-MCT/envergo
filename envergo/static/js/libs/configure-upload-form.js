@@ -58,6 +58,13 @@ window.addEventListener('load', function() {
         }
       }.bind(this));
 
+      // Attach the uploaded file saved object id to the js object
+      // This way, we can make sure the "remove file" button will work
+      this.on("success", function(file, response) {
+        file.id = response.id;
+      });
+
+      // Send a request to the server to request the file deletion
       this.on("removedfile", function(file) {
         if (file.id) {
           // Remove the file from the server
