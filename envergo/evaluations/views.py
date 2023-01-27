@@ -453,7 +453,6 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
                 )
 
             # Save uploaded files using the file storage
-            file_storage = self.get_file_storage()
             file = self.request.FILES.get(FILES_FIELD)
             if not file:
                 return JsonResponse(
@@ -461,7 +460,6 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
                     status=400,
                 )
 
-            file_storage.save(file.name, file)
             evalreq = RequestFile.objects.create(
                 request=self.object,
                 file=file,
