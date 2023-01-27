@@ -427,7 +427,6 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         return context
 
 
-
 @method_decorator(csrf_exempt, name="dispatch")
 class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
     """Handle ajax file uploads and deletions."""
@@ -448,7 +447,9 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             max_files = settings.MAX_EVALREQ_FILES
             if current_files >= max_files:
                 return JsonResponse(
-                    {"error": f"Vous ne pouvez pas envoyer plus de {max_files} fichiers."},
+                    {
+                        "error": f"Vous ne pouvez pas envoyer plus de {max_files} fichiers."
+                    },
                     status=400,
                 )
 
@@ -465,11 +466,13 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
                 file=file,
                 name=file.name,
             )
-            return JsonResponse({'id': evalreq.id})
+            return JsonResponse({"id": evalreq.id})
 
         except Exception as e:
             return JsonResponse(
-                {"error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."},
+                {
+                    "error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."
+                },
                 status=500,
             )
 
@@ -496,7 +499,8 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
 
         except RequestFile.DoesNotExist:
             return JsonResponse(
-                {"error": "Ce fichier n'existe pas."}, status=400,
+                {"error": "Ce fichier n'existe pas."},
+                status=400,
             )
 
 
