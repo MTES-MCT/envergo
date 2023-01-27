@@ -645,6 +645,14 @@ form.dropzone {
   .dz-preview .dz-remove {
     background-image: none;
   }
+
+  .dz-clickable .dz-button .fr-link {
+    text-decoration: underline;
+  }
+
+  .dz-clickable .dz-button .fr-link:hover {
+    font-weight: bold;
+  }
 }
 
 @keyframes spinner {
