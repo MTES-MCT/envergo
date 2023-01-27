@@ -641,6 +641,10 @@ form.dropzone {
   div.dz-error .dz-image {
     border: 2px dashed red;
   }
+
+  .dz-preview .dz-remove {
+    background-image: none;
+  }
 }
 
 @keyframes spinner {
