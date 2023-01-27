@@ -272,7 +272,6 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
 
 DATA_KEY = "REQUEST_WIZARD_DATA"
-FILES_KEY = "REQUEST_WIZARD_FILES"
 FILES_FIELD = "additional_files"
 
 
@@ -292,9 +291,6 @@ class WizardStepMixin:
         data = MultiValueDict(self.request.session.get(DATA_KEY, {}))
         return data
 
-    def get_files_data(self):
-        return self.request.session.get(FILES_KEY, [])
-
     def get_initial(self):
         initial = super().get_initial()
         initial.update(self.get_form_data().dict())
@@ -306,26 +302,12 @@ class WizardStepMixin:
         if DATA_KEY not in self.request.session:
             self.request.session[DATA_KEY] = MultiValueDict({})
 
-        if FILES_KEY not in self.request.session:
-            self.request.session[FILES_KEY] = []
-
         # Save form data to session
         data = self.get_form_data()
         data.update(form.data)
         self.request.session[DATA_KEY] = dict(data.lists())
 
-        # Save uploaded files using the file storage
-        if FILES_FIELD in self.request.FILES:
-            file_storage = self.get_file_storage()
-            files = self.request.FILES.getlist(FILES_FIELD)
-            filedicts = []
-            for file in files:
-                saved_name = file_storage.save(file.name, file)
-                filedicts.append(
-                    {"name": file.name, "saved_name": saved_name, "size": file.size}
-                )
-            self.request.session[FILES_KEY] += filedicts
-
+        # Make sure django updates session data
         self.request.session.modified = True
         return super().form_valid(form)
 
@@ -334,33 +316,10 @@ class WizardStepMixin:
         return file_storage
 
     def reset_data(self):
-        """Clear tmp form data stored in session, and uploaded files."""
+        """Clear tmp form data stored in session."""
 
         self.request.session.pop(DATA_KEY, None)
-
-        file_storage = self.get_file_storage()
-        filedicts = self.request.session.get(FILES_KEY, [])
-        for filedict in filedicts:
-            saved_name = filedict["saved_name"]
-            file_storage.delete(saved_name)
-
-        self.request.session.pop(FILES_KEY, None)
         self.request.session.modified = True
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        files_qs = RequestFile.objects.filter(request=self.object)
-        files = []
-        for file in files_qs:
-            try:
-                file_obj = {"id": file.id, "name": file.name, "size": file.file.size}
-                files.append(file_obj)
-            except FileNotFoundError:
-                # This means the EvaluationFile object exists in db but the
-                # actual file is missing from storage.
-                pass
-        context["uploaded_files"] = files
-        return context
 
 
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
@@ -414,16 +373,6 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         """This is called when all the combined step forms are valid."""
 
         request = form.save()
-        file_storage = self.get_file_storage()
-        filedicts = self.get_files_data()
-        logger.warning(f"Saving files: {filedicts}")
-
-        for filedict in filedicts:
-            RequestFile.objects.create(
-                request=request,
-                file=file_storage.open(filedict["saved_name"]),
-                name=filedict["name"],
-            )
 
         # Send notifications, once data is commited
         # TODO move the confirmation and logs after the last step
@@ -459,32 +408,47 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     context_object_name = "evalreq"
 
     def get_context_data(self, **kwargs):
+
+        files_qs = RequestFile.objects.filter(request=self.object)
+        files = []
+        for file in files_qs:
+            try:
+                file_obj = {"id": file.id, "name": file.name, "size": file.file.size}
+            except FileNotFoundError:
+                # This means the EvaluationFile object exists in db but the
+                # actual file is missing from storage.
+                file_obj = {"id": file.id, "name": file.name, "size": 0}
+
+            files.append(file_obj)
+
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
+        context["uploaded_files"] = files
         return context
+
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
-    template_name = "evaluations/eval_request_wizard_files.html"
+    """Handle ajax file uploads and deletions."""
+
     model = Request
     form_class = WizardFilesForm
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["uploaded_files"] = self.get_files_data()
-
     def form_valid(self, form):
+        """This is called when a file is uploaded with dropzone."""
+
+        # Make sure that the file limit is respected
         files_qs = RequestFile.objects.filter(request=self.object)
         current_files = files_qs.count()
         new_files = len(self.request.FILES.getlist(FILES_FIELD))
         max_files = settings.MAX_EVALREQ_FILES
         if current_files + new_files > max_files:
             return JsonResponse(
-                {"error": f"Vous ne pouvez pas envoyer plus de {max_files}."},
+                {"error": f"Vous ne pouvez pas envoyer plus de {max_files} fichiers."},
                 status=400,
             )
 
@@ -510,15 +474,20 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
         )
 
     def delete(self, request, *args, **kwargs):
+        """This is called when a file is removed with dropzone."""
+
         try:
             self.object = self.get_object()
-            files_qs = RequestFile.objects.filter(request=self.object)
+
             file_id = self.request.GET.get("file_id")
+            files_qs = RequestFile.objects.filter(request=self.object)
             file_obj = files_qs.get(id=file_id)
+
             file_storage = self.get_file_storage()
             file_storage.delete(file_obj.file.name)
             file_obj.delete()
             return JsonResponse({})
+
         except RequestFile.DoesNotExist:
             return JsonResponse(
                 {"error": "Ce fichier n'existe pas."}, status=400,
