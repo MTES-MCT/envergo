@@ -21,10 +21,6 @@
     <fieldset class="fr-mb-6w">
       <legend class="fr-h2">Documents complémentaires</legend>
 
-      <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
-      </div>
-
       {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
     </fieldset>
@@ -38,7 +34,6 @@
   </form>
 
 {% endblock %}
-
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />

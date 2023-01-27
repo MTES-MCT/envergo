@@ -54,7 +54,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     )
 
     class Meta:
-        fields = ["application_number", "address"]
+        fields = ["application_number", "address", "project_description"]
         model = Request
 
     def __init__(self, *args, **kwargs):
@@ -63,6 +63,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["application_number"].widget.attrs["placeholder"] = _(
             "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
         )
+        self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean(self):
         data = super().clean()
@@ -108,7 +109,6 @@ class WizardContactForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            "project_description",
             "user_type",
             "contact_email",
             "project_sponsor_emails",
@@ -120,7 +120,6 @@ class WizardContactForm(forms.ModelForm):
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-        self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean_project_sponsor_phone_number(self):
         phone = self.cleaned_data["project_sponsor_phone_number"]
