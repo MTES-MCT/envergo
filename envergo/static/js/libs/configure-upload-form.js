@@ -37,6 +37,7 @@ window.addEventListener('load', function() {
       // Display previously uploaded files in the upload preview
       uploadedData.forEach(function(data) {
         this.options.addedfile.call(this, data);
+        this.emit('complete', data);
       }.bind(this));
       this.options.maxFiles -= uploadedData.length;
 
