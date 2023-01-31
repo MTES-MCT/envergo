@@ -638,6 +638,55 @@ form.dropzone {
     border-style: none;
   }
 
+  #max-files-exceeded-alert {
+    display: none;
+  }
+
+  &.dz-max-files-reached {
+
+    #max-files-exceeded-alert {
+      display: inherit;
+    }
+
+    .dz-message {
+      color: var(--text-disabled-grey);
+    }
+
+    .dropzone {
+      pointer-events: none;
+      cursor: default;
+      border-color: var(--border-disabled-grey);
+
+      .dz-preview {
+        pointer-events: auto;
+        cursor: auto;
+      }
+    }
+  }
+
+  .dz-preview.dz-error {
+    opacity: 0;
+    animation: fadeAway 4s linear;
+  }
+
+  @keyframes fadeAway {
+    0% {
+      opacity: 1;
+    }
+
+    70% {
+      opacity: 1;
+    }
+
+    80% {
+      opacity: 0.8;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
   div.dz-error .dz-image {
     border: 2px dashed red;
   }

@@ -22,6 +22,7 @@ window.addEventListener('load', function() {
     addRemoveLinks: true,
     previewsContainer: previewElt,
     clickable: previewElt,
+    createImageThumbnails: false,
 
     dictDefaultMessage: "Cliquez ou glissez-déposez vos fichiers ici.",
     dictRemoveFile: "Supprimer",
@@ -40,6 +41,7 @@ window.addEventListener('load', function() {
         this.emit('complete', data);
       }.bind(this));
       this.options.maxFiles -= uploadedData.length;
+      this._updateMaxFilesReachedClass();
 
       // Disable the form while files are being uploaded
       this.on("addedfiles", function(files) {
@@ -65,6 +67,19 @@ window.addEventListener('load', function() {
         file.id = response.id;
       });
 
+      this.on("error", function(file, message) {
+        // When there was an error processing the file, we want to hide the
+        // preview, so the user understands it's file was not uploaded.
+        // But we also set a timer, to they have the time to read the error
+        setTimeout(function() {
+          this.removeFile(file);
+        }.bind(this), 4000);
+      }.bind(this));
+
+      this.on('maxfilesreached', function() {}.bind(this));
+
+      this.on('maxfilesexceeded', function(file) {}.bind(this));
+
       // Send a request to the server to request the file deletion
       this.on("removedfile", function(file) {
         if (file.id) {
@@ -77,6 +92,8 @@ window.addEventListener('load', function() {
               }
             }.bind(this));
         }
+
+        this._updateMaxFilesReachedClass();
       }.bind(this));
     }
   });
