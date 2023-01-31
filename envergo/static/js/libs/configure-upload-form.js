@@ -25,7 +25,7 @@ window.addEventListener('load', function() {
 
     dictDefaultMessage: "Cliquez ou glissez-déposez vos fichiers ici.",
     dictRemoveFile: "Supprimer",
-    dictFileTooBig: "Ce fichier est tros gros ({{filesize}}mo). Taille max : {{maxFilesize}}mo.",
+    dictFileTooBig: "Ce fichier est tros volumineux ({{filesize}} Mo). Maximum : {{maxFilesize}} Mo.",
     dictInvalidFileType: "Ce type de fichier n'est pas autorisé.",
     dictResponseError: "Erreur du serveur {{statusCode}}.",
     dictCancelUpload: "Annuler l'envoi",
