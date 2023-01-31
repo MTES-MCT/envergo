@@ -79,7 +79,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 class WizardContactForm(forms.ModelForm):
 
     user_type = forms.ChoiceField(
-        label=_("Who are you?"),
+        label="Vous êtes :",
         required=True,
         choices=USER_TYPES,
         initial=USER_TYPES.instructor,

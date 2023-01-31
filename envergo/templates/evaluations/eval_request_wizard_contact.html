@@ -21,14 +21,15 @@
     <fieldset class="fr-mb-6w">
       <legend class="fr-h2">Informations de contact</legend>
 
-      <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
-      </div>
-
       {% include '_radio_snippet.html' with field=form.user_type %}
 
       <div id="contact-section">
         {% include '_field_snippet.html' with field=form.contact_email %}
+
+        <div class="fr-mb-3w fr-alert fr-alert--info">
+          <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+        </div>
+
         {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
         {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
         {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
