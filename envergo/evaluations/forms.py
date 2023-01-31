@@ -148,7 +148,7 @@ class WizardFilesForm(forms.ModelForm):
         required=False,
         widget=forms.ClearableFileInput(attrs={"multiple": True}),
         help_text="""
-            Formats autorisés : images, pdf, zip. <br>
+            Formats autorisés : images (png, jpg), pdf, zip. <br>
             Maximum 10 fichiers. <br>
             Maximum 20 Mo par fichier. <br>
         """,
