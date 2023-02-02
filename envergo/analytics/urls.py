@@ -15,5 +15,5 @@ urlpatterns = [
         DisableVisitorCookie.as_view(),
         name="disable_visitor_cookie",
     ),
-    path("events", Events.as_view(), name="events"),
+    path("events/", Events.as_view(), name="events"),
 ]

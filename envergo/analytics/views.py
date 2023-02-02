@@ -142,8 +142,10 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         return parsed.geturl()
 
 
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
 class Events(FormView):
     form_class = EventForm
+    http_method_names = ["post"]
 
     def form_valid(self, form):
         data = form.cleaned_data
