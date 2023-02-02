@@ -62,6 +62,8 @@
     var LAT_FIELD_ID = 'id_lat';
     var LNG_FIELD_ID = 'id_lng';
     var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var EVENTS_URL = "{% url 'events' %}";
+    var CSRF_TOKEN = "{{ csrf_token }}";
   </script>
   {% include 'moulinette/_form_scripts.html' %}
 {% endblock %}
