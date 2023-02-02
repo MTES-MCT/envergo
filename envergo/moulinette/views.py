@@ -76,7 +76,6 @@ class MoulinetteMixin:
             context["additional_fields"] = self.get_additional_fields(moulinette)
             context["moulinette_summary"] = json.dumps(moulinette.summary())
 
-
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
@@ -198,7 +197,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
     def log_moulinette_event(self, moulinette, **kwargs):
         export = moulinette.summary()
         export.update(kwargs)
-        export['url'] = self.request.build_absolute_uri()
+        export["url"] = self.request.build_absolute_uri()
         log_event(self.event_category, self.event_action, self.request, **export)
 
     def get(self, request, *args, **kwargs):
