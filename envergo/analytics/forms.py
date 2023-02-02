@@ -75,3 +75,9 @@ class FeedbackForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["you_are"].widget.fieldset_class = "fr-fieldset--inline"
+
+
+class EventForm(forms.Form):
+    category = forms.CharField(max_length=64)
+    action = forms.CharField(max_length=64)
+    metadata = forms.JSONField(required=False)
