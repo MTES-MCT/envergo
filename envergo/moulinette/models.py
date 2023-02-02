@@ -316,5 +316,9 @@ class Moulinette:
             "department": department_code,
             "is_eval_available": self.is_evaluation_available(),
         }
+        summary.update(self.cleaned_additional_data())
+
+        if self.is_evaluation_available():
+            summary["result"] = self.result()
 
         return summary

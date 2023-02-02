@@ -15,7 +15,10 @@
     let data = new FormData();
     data.append("category", "save");
     data.append("action", "click");
-    data.append("metadata", JSON.stringify(MOULINETTE_DATA));
+
+    let metadata = MOULINETTE_DATA;
+    metadata['url'] = document.URL;
+    data.append("metadata", JSON.stringify(metadata));
 
     let token = CSRF_TOKEN;
     let headers = { "X-CSRFToken": token };
