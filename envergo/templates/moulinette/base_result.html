@@ -63,7 +63,9 @@
     var LNG_FIELD_ID = 'id_lng';
     var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
     var EVENTS_URL = "{% url 'events' %}";
-    var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
   </script>
   {% include 'moulinette/_form_scripts.html' %}
 {% endblock %}
