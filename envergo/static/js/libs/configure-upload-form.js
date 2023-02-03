@@ -35,6 +35,8 @@ window.addEventListener('load', function() {
 
     init: function() {
 
+      this.errors = {};
+
       // Display previously uploaded files in the upload preview
       uploadedData.forEach(function(data) {
         this.options.addedfile.call(this, data);
@@ -68,12 +70,8 @@ window.addEventListener('load', function() {
       });
 
       this.on("error", function(file, message) {
-        // When there was an error processing the file, we want to hide the
-        // preview, so the user understands it's file was not uploaded.
-        // But we also set a timer, to they have the time to read the error
-        setTimeout(function() {
-          this.removeFile(file);
-        }.bind(this), 4000);
+        this.errors[file.upload.uuid] = file;
+        form.classList.add('has-errors');
       }.bind(this));
 
       this.on('maxfilesreached', function() {}.bind(this));
@@ -82,6 +80,18 @@ window.addEventListener('load', function() {
 
       // Send a request to the server to request the file deletion
       this.on("removedfile", function(file) {
+
+        // If the file had failed to upload, remove it from the errors list
+        if (file.upload) {
+          let uuid = file.upload.uuid;
+          if (uuid in this.errors) {
+            delete this.errors[uuid];
+            if (Object.keys(this.errors).length == 0) {
+              form.classList.remove('has-errors');
+            }
+          }
+        }
+
         if (file.id) {
           // Remove the file from the server
           fetch(`${DROPZONE_UPLOAD_URL}?file_id=${file.id}`, { method: 'DELETE' })

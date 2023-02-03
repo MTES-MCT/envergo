@@ -638,6 +638,16 @@ form.dropzone {
     border-style: none;
   }
 
+  div#has-errors-warning {
+    display: none;
+  }
+
+  &.has-errors {
+    div#has-errors-warning {
+      display: inherit;
+    }
+  }
+
   #max-files-exceeded-alert {
     display: none;
   }
@@ -661,29 +671,6 @@ form.dropzone {
         pointer-events: auto;
         cursor: auto;
       }
-    }
-  }
-
-  .dz-preview.dz-error {
-    opacity: 0;
-    animation: fadeAway 4s linear;
-  }
-
-  @keyframes fadeAway {
-    0% {
-      opacity: 1;
-    }
-
-    70% {
-      opacity: 1;
-    }
-
-    80% {
-      opacity: 0.8;
-    }
-
-    100% {
-      opacity: 0;
     }
   }
 
