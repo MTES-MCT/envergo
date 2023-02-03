@@ -17,7 +17,7 @@ window.addEventListener('load', function() {
     maxFiles: DROPZONE_MAX_FILES,
     acceptedFiles: 'image/*,application/pdf,application/zip',
     autoProcessQueue: true,
-    uploadMultiple: true,
+    uploadMultiple: false,
     parallelUploads: 100,
     addRemoveLinks: true,
     previewsContainer: previewElt,
