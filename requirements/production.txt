@@ -85,7 +85,7 @@ deprecated==1.2.13
     # via
     #   -r base.txt
     #   redis
-django==3.2.16
+django==3.2.17
     # via
     #   -r base.txt
     #   django-allauth
@@ -245,11 +245,6 @@ text-unidecode==1.3
     # via
     #   -r base.txt
     #   python-slugify
-tomli==2.0.1
-    # via
-    #   -r base.txt
-    #   build
-    #   pep517
 types-cryptography==3.3.23
     # via
     #   -r base.txt
