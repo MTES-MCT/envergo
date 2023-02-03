@@ -468,7 +468,7 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             )
             return JsonResponse({"id": evalreq.id})
 
-        except Exception as e:
+        except Exception:
             return JsonResponse(
                 {
                     "error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."
