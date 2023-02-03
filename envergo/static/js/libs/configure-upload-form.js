@@ -13,7 +13,7 @@ window.addEventListener('load', function() {
   var dropzone = new Dropzone(form, {
     url: DROPZONE_UPLOAD_URL,
     paramName: function() { return 'additional_files'; },
-    maxFilesize: 1,
+    maxFilesize: 20,
     maxFiles: DROPZONE_MAX_FILES,
     acceptedFiles: 'image/*,application/pdf,application/zip',
     autoProcessQueue: true,
