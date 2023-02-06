@@ -5,16 +5,22 @@ from envergo.confs.models import TopBar
 register = template.Library()
 
 
-@register.inclusion_tag("confs/top_bar.html")
-def top_bar():
+@register.inclusion_tag("confs/top_bar.html", takes_context=True)
+def top_bar(context):
+
+    # Check if the top bar hiding cookie is set
+    cookies = context["request"].COOKIES
+    if "hide_top_bar" in cookies:
+        return {"is_active": False}
+
     # Display the most recent of the top bar messages that is active
-    context = {"is_active": False}
+    data = {"is_active": False}
     top_bar = TopBar.objects.filter(is_active=True).order_by("-updated_at").first()
     if top_bar:
-        context.update(
+        data.update(
             {
                 "message": top_bar.message_html,
                 "is_active": top_bar.is_active,
             }
         )
-    return context
+    return data

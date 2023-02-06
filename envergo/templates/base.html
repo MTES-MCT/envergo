@@ -58,6 +58,20 @@
       });
     </script>
 
+    <script>
+      function hideTopBar() {
+        // Remove the top bar message, and set a cookie to not display it again
+        let topBar = document.getElementById('top-bar');
+        if (topBar) {
+          let parent = topBar.parentNode;
+          parent.removeChild(topBar);
+
+          let maxAge = 60 * 60 * 24 * 7 * 3; // Three weeks
+          document.cookie = `hide_top_bar=true; path=/; samesite=lax; max-age=${maxAge};`;
+        }
+      }
+    </script>
+
   </head>
 
   <body>
