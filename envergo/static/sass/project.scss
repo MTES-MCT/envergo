@@ -638,8 +638,64 @@ form.dropzone {
     border-style: none;
   }
 
+  div#has-errors-warning {
+    display: none;
+  }
+
+  &.has-errors {
+    div#has-errors-warning {
+      display: inherit;
+    }
+  }
+
+  #max-files-exceeded-alert {
+    display: none;
+  }
+
+  &.dz-max-files-reached {
+
+    #max-files-exceeded-alert {
+      display: inherit;
+    }
+
+    .dz-button {
+      display: none;
+    }
+
+    .dropzone {
+      pointer-events: none;
+      cursor: default;
+      border-color: var(--border-disabled-grey);
+
+      .dz-preview {
+        pointer-events: auto;
+        cursor: auto;
+      }
+    }
+  }
+
   div.dz-error .dz-image {
     border: 2px dashed red;
+  }
+
+  .dz-preview .dz-error-message {
+    top: 150px !important;
+  }
+
+  .dz-preview .dz-remove {
+    background-image: none;
+  }
+
+  .dz-preview .dz-progress {
+    top: 70%;
+  }
+
+  .dz-clickable .dz-button .fr-link {
+    text-decoration: underline;
+  }
+
+  .dz-clickable .dz-button .fr-link:hover {
+    font-weight: bold;
   }
 }
 

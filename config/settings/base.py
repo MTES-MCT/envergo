@@ -309,3 +309,6 @@ MATTERMOST_ENDPOINT = ""
 ENVERGO_REFERENCE_LENGTH = 6
 
 VISITOR_COOKIE_NAME = "visitorid"
+
+# The max number of files that can be uploaded with a single evaluation request
+MAX_EVALREQ_FILES = 10

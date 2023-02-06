@@ -10,8 +10,16 @@ from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, FormView, RedirectView, TemplateView
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import (
+    DetailView,
+    FormView,
+    RedirectView,
+    TemplateView,
+    UpdateView,
+)
 from django.views.generic.detail import BaseDetailView
 
 from envergo.analytics.utils import is_request_from_a_bot, log_event
@@ -264,7 +272,6 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
 
 DATA_KEY = "REQUEST_WIZARD_DATA"
-FILES_KEY = "REQUEST_WIZARD_FILES"
 FILES_FIELD = "additional_files"
 
 
@@ -284,9 +291,6 @@ class WizardStepMixin:
         data = MultiValueDict(self.request.session.get(DATA_KEY, {}))
         return data
 
-    def get_files_data(self):
-        return self.request.session.get(FILES_KEY, [])
-
     def get_initial(self):
         initial = super().get_initial()
         initial.update(self.get_form_data().dict())
@@ -298,26 +302,12 @@ class WizardStepMixin:
         if DATA_KEY not in self.request.session:
             self.request.session[DATA_KEY] = MultiValueDict({})
 
-        if FILES_KEY not in self.request.session:
-            self.request.session[FILES_KEY] = []
-
         # Save form data to session
         data = self.get_form_data()
         data.update(form.data)
         self.request.session[DATA_KEY] = dict(data.lists())
 
-        # Save uploaded files using the file storage
-        if FILES_FIELD in self.request.FILES:
-            file_storage = self.get_file_storage()
-            files = self.request.FILES.getlist(FILES_FIELD)
-            filedicts = []
-            for file in files:
-                saved_name = file_storage.save(file.name, file)
-                filedicts.append(
-                    {"name": file.name, "saved_name": saved_name, "size": file.size}
-                )
-            self.request.session[FILES_KEY] += filedicts
-
+        # Make sure django updates session data
         self.request.session.modified = True
         return super().form_valid(form)
 
@@ -326,28 +316,16 @@ class WizardStepMixin:
         return file_storage
 
     def reset_data(self):
-        """Clear tmp form data stored in session, and uploaded files."""
+        """Clear tmp form data stored in session."""
 
         self.request.session.pop(DATA_KEY, None)
-
-        file_storage = self.get_file_storage()
-        filedicts = self.request.session.get(FILES_KEY, [])
-        for filedict in filedicts:
-            saved_name = filedict["saved_name"]
-            file_storage.delete(saved_name)
-
-        self.request.session.pop(FILES_KEY, None)
         self.request.session.modified = True
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["uploaded_files"] = self.get_files_data()
-        return context
 
 
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
-    pattern_name = "request_eval_wizard_step_1"
+    """Resets all wizard data then redirects to first step."""
 
+    pattern_name = "request_eval_wizard_step_1"
     query_string = True
 
     def dispatch(self, request, *args, **kwargs):
@@ -362,16 +340,25 @@ class RequestEvalWizardStep1(WizardStepMixin, FormView):
 
 
 class RequestEvalWizardStep2(WizardStepMixin, FormView):
+    """Second step of the wizard.
+
+    Even though this is a 3 steps wizard, we actually save the object at the
+    end of this step.
+
+    That is because the third step only features the file upload widget, and
+    we need an existing object in the db to attach the files to.
+    """
+
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
     success_url = reverse_lazy("request_success")
 
-    def form_invalid(self, form):
-        print(f"form_invalid {form._errors}")
-        return super().form_invalid(form)
-
     def form_valid(self, form):
-        """Since this is the last step, process the whole form."""
+        """Process the whole form and save object to the db.
+
+        This `form_valid` is called when the current step form
+        (WizardContactForm) is valid.
+        """
         super().form_valid(form)
 
         form_kwargs = self.get_form_kwargs()
@@ -383,19 +370,12 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             return self.request_form_invalid(request_form)
 
     def request_form_valid(self, form):
-        request = form.save()
-        file_storage = self.get_file_storage()
-        filedicts = self.get_files_data()
-        logger.warning(f"Saving files: {filedicts}")
+        """This is called when all the combined step forms are valid."""
 
-        for filedict in filedicts:
-            RequestFile.objects.create(
-                request=request,
-                file=file_storage.open(filedict["saved_name"]),
-                name=filedict["name"],
-            )
+        request = form.save()
 
         # Send notifications, once data is commited
+        # TODO move the confirmation and logs after the last step
         def confirm_request():
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
@@ -410,20 +390,118 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             request_url=reverse("admin:evaluations_request_change", args=[request.id]),
         )
         self.reset_data()
-        return HttpResponseRedirect(self.get_success_url())
+
+        success_url = reverse("request_eval_wizard_step_3", args=[request.reference])
+        return HttpResponseRedirect(success_url)
 
     def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
 
 
-class RequestEvalWizardStepFiles(WizardStepMixin, FormView):
+class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     template_name = "evaluations/eval_request_wizard_files.html"
+    model = Request
     form_class = WizardFilesForm
-    success_url = reverse_lazy("request_eval_wizard_step_2")
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    success_url = reverse_lazy("request_success")
+    context_object_name = "evalreq"
+
+    def get_context_data(self, **kwargs):
+
+        files_qs = RequestFile.objects.filter(request=self.object)
+        files = []
+        for file in files_qs:
+            try:
+                file_obj = {"id": file.id, "name": file.name, "size": file.file.size}
+            except FileNotFoundError:
+                # This means the EvaluationFile object exists in db but the
+                # actual file is missing from storage.
+                file_obj = {"id": file.id, "name": file.name, "size": 0}
+
+            files.append(file_obj)
+
+        context = super().get_context_data(**kwargs)
+        context["max_files"] = settings.MAX_EVALREQ_FILES
+        context["uploaded_files"] = files
+        return context
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
+    """Handle ajax file uploads and deletions."""
+
+    model = Request
+    form_class = WizardFilesForm
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    context_object_name = "evalreq"
 
     def form_valid(self, form):
-        super().form_valid(form)
-        return JsonResponse({})
+        """This is called when a file is uploaded with dropzone."""
+
+        try:
+            # Make sure that the file limit is respected
+            files_qs = RequestFile.objects.filter(request=self.object)
+            current_files = files_qs.count()
+            max_files = settings.MAX_EVALREQ_FILES
+            if current_files >= max_files:
+                return JsonResponse(
+                    {
+                        "error": f"Vous ne pouvez pas envoyer plus de {max_files} fichiers."
+                    },
+                    status=400,
+                )
+
+            # Save uploaded files using the file storage
+            file = self.request.FILES.get(FILES_FIELD)
+            if not file:
+                return JsonResponse(
+                    {"error": "Aucun fichier n'a été reçu."},
+                    status=400,
+                )
+
+            evalreq = RequestFile.objects.create(
+                request=self.object,
+                file=file,
+                name=file.name,
+            )
+            return JsonResponse({"id": evalreq.id})
+
+        except Exception:
+            return JsonResponse(
+                {
+                    "error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."
+                },
+                status=500,
+            )
+
+    def form_invalid(self, form):
+        return JsonResponse(
+            {"error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."},
+            status=400,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        """This is called when a file is removed with dropzone."""
+
+        try:
+            self.object = self.get_object()
+
+            file_id = self.request.GET.get("file_id")
+            files_qs = RequestFile.objects.filter(request=self.object)
+            file_obj = files_qs.get(id=file_id)
+
+            file_storage = self.get_file_storage()
+            file_storage.delete(file_obj.file.name)
+            file_obj.delete()
+            return JsonResponse({})
+
+        except RequestFile.DoesNotExist:
+            return JsonResponse(
+                {"error": "Ce fichier n'existe pas."},
+                status=400,
+            )
 
 
 class RequestSuccess(TemplateView):

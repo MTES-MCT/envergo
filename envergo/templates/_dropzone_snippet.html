@@ -7,8 +7,11 @@
   <div id="dropzone-previews" class="dropzone-previews">
     <div class="dz-default dz-message">
       <button class="dz-button" type="button">
-        Cliquez ou glissez-déposez vos fichiers ici.
+        <span class="fr-link">Cliquez</span> ou glissez-déposez vos fichiers ici.
       </button>
+      <div id="max-files-exceeded-alert" class="fr-alert fr-alert--sm fr-alert--warning fr-mt-2w">
+        <p>Vous avez atteint le nombre maximum de fichiers autorisés.</p>
+      </div>
     </div>
   </div>
   <div id="{{ field.id_for_label }}-dropzone">
@@ -38,4 +41,6 @@
       ↑
     </p>
   {% endif %}
+
+
 </div>

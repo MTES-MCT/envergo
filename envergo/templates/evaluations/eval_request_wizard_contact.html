@@ -11,32 +11,25 @@
     est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
   </p>
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
+  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
     {% csrf_token %}
 
-    <p>Étape 2 sur 2</p>
+    <p>Étape 2 sur 3</p>
 
     {% include '_form_header.html' with form=form %}
 
     <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Caractéristiques du projet</legend>
-
-      {% include '_field_snippet.html' with field=form.project_description %}
-      {% include '_dropzone_snippet.html' with field=form.additional_files %}
-
-    </fieldset>
-
-    <fieldset class="fr-mb-6w">
       <legend class="fr-h2">Informations de contact</legend>
-
-      <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
-      </div>
 
       {% include '_radio_snippet.html' with field=form.user_type %}
 
       <div id="contact-section">
         {% include '_field_snippet.html' with field=form.contact_email %}
+
+        <div class="fr-mb-3w fr-alert fr-alert--info">
+          <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+        </div>
+
         {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
         {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
         {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
@@ -44,32 +37,18 @@
 
     </fieldset>
 
-    <button type="submit" class="fr-mt-4w fr-btn">
-      <span class="fr-fi-checkbox-circle-line fr-fi--sm">
-        Envoyer votre demande d'évaluation
-      </span>
+    <button type="submit" class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+      Poursuivre votre demande d'évaluation
     </button>
-
 
   </form>
 
-{% endblock %}
-
-{% block extra_css %}
-  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
   <script>
     FORM_ID = 'request-evaluation-form';
     CONTACT_SECTION_ID = 'contact-section';
-    DROPZONE_FORM = 'request-evaluation-form';
-    DROPZONE_FIELD = 'id-additional_files-dropzone';
-    DROPZONE_UPLOAD_URL = '{% url "request_eval_wizard_step_files" %}';
   </script>
-  {{ uploaded_files|json_script:'uploaded-files' }}
-  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
-  <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
   <script defer src="{% static 'js/libs/configure-contact-form.js' %}"></script>
-
 {% endblock %}

@@ -54,7 +54,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     )
 
     class Meta:
-        fields = ["application_number", "address"]
+        fields = ["application_number", "address", "project_description"]
         model = Request
 
     def __init__(self, *args, **kwargs):
@@ -63,6 +63,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["application_number"].widget.attrs["placeholder"] = _(
             "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
         )
+        self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean(self):
         data = super().clean()
@@ -77,14 +78,8 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
 class WizardContactForm(forms.ModelForm):
 
-    additional_files = forms.FileField(
-        label=_("Additional files you might deem useful for the evaluation"),
-        help_text=_("Avalaible formats: pdf, zip."),
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"multiple": True}),
-    )
     user_type = forms.ChoiceField(
-        label=_("Who are you?"),
+        label="Vous êtes :",
         required=True,
         choices=USER_TYPES,
         initial=USER_TYPES.instructor,
@@ -114,8 +109,6 @@ class WizardContactForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            "additional_files",
-            "project_description",
             "user_type",
             "contact_email",
             "project_sponsor_emails",
@@ -127,7 +120,6 @@ class WizardContactForm(forms.ModelForm):
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-        self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean_project_sponsor_phone_number(self):
         phone = self.cleaned_data["project_sponsor_phone_number"]
@@ -153,9 +145,13 @@ class WizardContactForm(forms.ModelForm):
 class WizardFilesForm(forms.ModelForm):
     additional_files = forms.FileField(
         label=_("Additional files you might deem useful for the evaluation"),
-        help_text=_("Avalaible formats: pdf, zip."),
         required=False,
         widget=forms.ClearableFileInput(attrs={"multiple": True}),
+        help_text="""
+            Formats autorisés : images (png, jpg), pdf, zip. <br>
+            Maximum 10 fichiers. <br>
+            Maximum 20 Mo par fichier. <br>
+        """,
     )
 
     class Meta:
@@ -170,7 +166,6 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "address",
             "application_number",
             "project_description",
-            "additional_files",
             "user_type",
             "contact_email",
             "project_sponsor_emails",
