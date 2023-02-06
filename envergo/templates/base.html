@@ -68,6 +68,9 @@
 
           let maxAge = 60 * 60 * 24 * 7 * 3; // Three weeks
           document.cookie = `hide_top_bar=true; path=/; samesite=lax; max-age=${maxAge};`;
+
+          var _paq = _paq || [];
+          _paq.push(['trackEvent', 'AnnouncementBar', 'Close']);
         }
       }
     </script>
