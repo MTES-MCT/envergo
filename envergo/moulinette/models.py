@@ -301,3 +301,24 @@ class Moulinette:
                     forms.append(criterion.form_class)
 
         return forms
+
+    def summary(self):
+        """Build a data summary, for analytics purpose."""
+
+        department = self.catalog["department"]
+        department_code = department.department if department else ""
+
+        summary = {
+            "lat": f'{self.catalog["lat"]:.5f}',
+            "lng": f'{self.catalog["lng"]:.5f}',
+            "existing_surface": self.catalog["existing_surface"],
+            "created_surface": self.catalog["created_surface"],
+            "department": department_code,
+            "is_eval_available": self.is_evaluation_available(),
+        }
+        summary.update(self.cleaned_additional_data())
+
+        if self.is_evaluation_available():
+            summary["result"] = self.result()
+
+        return summary

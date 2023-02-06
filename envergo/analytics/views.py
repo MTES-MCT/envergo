@@ -1,8 +1,14 @@
 from urllib.parse import parse_qs, urlencode, urlparse
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -10,7 +16,7 @@ from django.views.generic import FormView, RedirectView
 from django.views.generic.edit import BaseFormView
 from ratelimit.decorators import ratelimit
 
-from envergo.analytics.forms import FeedbackForm, FeedbackRespondForm
+from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
 from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
@@ -134,3 +140,22 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         # see https://docs.python.org/3/library/urllib.parse.html
         parsed = parsed._replace(query=urlencode(query, doseq=True))
         return parsed.geturl()
+
+
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
+class Events(FormView):
+    form_class = EventForm
+    http_method_names = ["post"]
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        log_event(
+            data["category"],
+            data["action"],
+            self.request,
+            **data["metadata"],
+        )
+        return JsonResponse({"status": "ok"})
+
+    def form_invalid(self, form):
+        return JsonResponse({"status": "error", "errors": form.errors})

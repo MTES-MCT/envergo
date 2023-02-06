@@ -1,3 +1,4 @@
+import json
 from collections import OrderedDict
 
 from django.conf import settings
@@ -73,6 +74,7 @@ class MoulinetteMixin:
             context.update(moulinette.catalog)
             context["additional_forms"] = self.get_additional_forms(moulinette)
             context["additional_fields"] = self.get_additional_fields(moulinette)
+            context["moulinette_summary"] = json.dumps(moulinette.summary())
 
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
@@ -193,22 +195,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         return [template_name]
 
     def log_moulinette_event(self, moulinette, **kwargs):
-        data = moulinette.catalog
-        department = data["department"]
-        department_code = department.department if department else ""
-        export = {
-            "lat": f'{data["lat"]:.5f}',
-            "lng": f'{data["lng"]:.5f}',
-            "existing_surface": data["existing_surface"],
-            "created_surface": data["created_surface"],
-            "department": department_code,
-            "is_eval_available": moulinette.is_evaluation_available(),
-            "url": self.request.build_absolute_uri(),
-        }
+        export = moulinette.summary()
         export.update(kwargs)
-        if moulinette.is_evaluation_available():
-            export["result"] = moulinette.result()
-
+        export["url"] = self.request.build_absolute_uri()
         log_event(self.event_category, self.event_action, self.request, **export)
 
     def get(self, request, *args, **kwargs):
