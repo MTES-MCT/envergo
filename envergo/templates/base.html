@@ -1,4 +1,4 @@
-{% load static i18n compress%}
+{% load static i18n compress confs %}
 <!DOCTYPE html>
 <html lang="fr" data-fr-scheme="system" class="nojs">
 
@@ -73,16 +73,7 @@
     <main role="main" id="contenu">
       {% block main %}
 
-        <div class="fr-notice fr-notice--info">
-          <div class="fr-container">
-            <div class="fr-notice__body">
-              <p class="fr-notice__title">Vous souhaitez en savoir plus sur EnvErgo ? <a href='#' rel='noopener' target='_blank'>Inscrivez-vous à notre webinaire</a></p>
-              <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="const notice = this.parentNode.parentNode.parentNode; notice.parentNode.removeChild(notice)">
-                Masquer le message
-              </button>
-            </div>
-          </div>
-        </div>
+        {% block top-bar %}{% top_bar %}{% endblock %}
 
         {% block before-content %}
           <div id="before-content" class="fr-container fr-mt-5w">
