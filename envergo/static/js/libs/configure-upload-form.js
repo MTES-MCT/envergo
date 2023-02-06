@@ -3,7 +3,6 @@ window.addEventListener('load', function() {
   var form = document.getElementById(DROPZONE_FORM);
   var field = document.getElementById(DROPZONE_FIELD);
   var submitBtn = form.querySelector('button[type=submit]');
-  var btnIcon = submitBtn.querySelector('span[class^="fr-fi-"]');
   var previewElt = document.getElementById('dropzone-previews');
   var uploadedData = JSON.parse(document.getElementById('uploaded-files').textContent);
 
@@ -114,11 +113,11 @@ window.addEventListener('load', function() {
     submitBtn.setAttribute("disabled", "");
 
     // Update button message
-    btnIcon.classList.remove("fr-fi-checkbox-circle-line");
-    btnIcon.classList.add("fr-fi-refresh-line");
-    btnIcon.classList.add("spinner");
-    btnIcon.textContent = "Veuillez patienter pendant le chargement de vos fichiers";
-    btnIcon.setAttribute("role", "alert");
+    submitBtn.classList.remove("fr-fi-checkbox-circle-line");
+    submitBtn.classList.add("fr-fi-refresh-line");
+    submitBtn.classList.add("spinner");
+    submitBtn.textContent = "Veuillez patienter pendant le chargement de vos fichiers";
+    submitBtn.setAttribute("role", "alert");
   };
 
   // Reactivate the confirmation form
@@ -126,10 +125,10 @@ window.addEventListener('load', function() {
     submitBtn.removeAttribute("disabled");
 
     // Update button message
-    btnIcon.classList.add("fr-fi-checkbox-circle-line");
-    btnIcon.classList.remove("fr-fi-refresh-line");
-    btnIcon.classList.remove("spinner");
-    btnIcon.textContent = "Envoyer votre demande d'évaluation";
-    btnIcon.removeAttribute("role");
+    submitBtn.classList.add("fr-fi-checkbox-circle-line");
+    submitBtn.classList.remove("fr-fi-refresh-line");
+    submitBtn.classList.remove("spinner");
+    submitBtn.textContent = "Envoyer votre demande d'évaluation";
+    submitBtn.removeAttribute("role");
   };
 });
