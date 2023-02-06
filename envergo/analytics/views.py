@@ -1,6 +1,5 @@
 from urllib.parse import parse_qs, urlencode, urlparse
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import (
