@@ -1,6 +1,8 @@
 #!/bin/bash
 # This script is ran by scalingo upon creating new review apps
 
+set -e
+
 echo ">>> Starting the first_deploy hook"
 
 # Scalingo requires you to run this script to update postgres' version
