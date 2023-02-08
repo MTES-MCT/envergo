@@ -59,8 +59,8 @@
     </script>
 
     <script>
+      // Remove the top bar message, and set a cookie to not display it again
       function hideTopBar() {
-        // Remove the top bar message, and set a cookie to not display it again
         let topBar = document.getElementById('top-bar');
         if (topBar) {
           let parent = topBar.parentNode;
@@ -75,6 +75,20 @@
       }
     </script>
 
+    <script>
+      // Track Top bar link clicks to Matomo
+      function trackTopBarLinkClicks() {
+        let topBar = document.getElementById('top-bar');
+        let links = topBar.querySelectorAll('a');
+        links.forEach(function(link) {
+          link.addEventListener('click', function() {
+            var _paq = _paq || [];
+            _paq.push(['trackEvent', 'AnnouncementBar', 'Click', link.href]);
+          });
+        });
+      }
+      window.addEventListener('load', trackTopBarLinkClicks);
+    </script>
   </head>
 
   <body>
