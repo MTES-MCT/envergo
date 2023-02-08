@@ -15,6 +15,13 @@ class TopBarAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["message_md"].widget.attrs["rows"] = 5
 
+    def clean_message_md(self):
+        """Join the message in a single line."""
+        message_md = self.cleaned_data["message_md"]
+        lines = filter(None, message_md.splitlines())
+        message_md = " ".join(lines)
+        return message_md
+
 
 @admin.register(TopBar)
 class TopBarAdmin(admin.ModelAdmin):

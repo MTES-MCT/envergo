@@ -17,5 +17,7 @@ class TopBar(models.Model):
         return "TopBar"
 
     def save(self, *args, **kwargs):
-        self.message_html = markdown_to_html(self.message_md)
+        paragraph = markdown_to_html(self.message_md)
+        striped = paragraph.removeprefix("<p>").removesuffix("</p>")
+        self.message_html = striped
         super().save(*args, **kwargs)
