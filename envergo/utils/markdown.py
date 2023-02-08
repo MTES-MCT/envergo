@@ -1,5 +1,5 @@
 import markdown
 
 
-def markdown_to_html(md):
-    return markdown.markdown(md)
+def markdown_to_html(md, *extensions):
+    return markdown.markdown(md, extensions=extensions)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-03 08:58+0000\n"
+"POT-Creation-Date: 2023-02-07 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -80,11 +80,11 @@ msgstr ""
 
 #: envergo/analytics/models.py:11
 msgid "Category"
-msgstr ""
+msgstr "Catégorie"
 
 #: envergo/analytics/models.py:12 envergo/analytics/models.py:23
 msgid "Event"
-msgstr ""
+msgstr "Évent"
 
 #: envergo/analytics/models.py:15
 msgid "Session key"
@@ -104,7 +104,23 @@ msgstr "Date de création"
 
 #: envergo/analytics/models.py:24
 msgid "Events"
-msgstr ""
+msgstr "Évents"
+
+#: envergo/confs/models.py:11
+msgid "Message"
+msgstr "Message"
+
+#: envergo/confs/models.py:12
+msgid "Message (html)"
+msgstr "Message (html)"
+
+#: envergo/confs/models.py:13
+msgid "Is active"
+msgstr "Est actif"
+
+#: envergo/confs/models.py:14
+msgid "Updated at"
+msgstr "Mis à jour le"
 
 #: envergo/evaluations/admin.py:24 envergo/evaluations/models.py:77
 #: envergo/evaluations/models.py:262
@@ -785,12 +801,12 @@ msgid "Stats"
 msgstr "Stats"
 
 #: envergo/templates/pages/legal_mentions.html:3
-#: envergo/templates/pages/legal_mentions.html:14
-#: envergo/templates/pages/legal_mentions.html:22
+#: envergo/templates/pages/legal_mentions.html:16
+#: envergo/templates/pages/legal_mentions.html:24
 msgid "Legal mentions"
 msgstr "Mentions légales"
 
-#: envergo/templates/pages/legal_mentions.html:11
+#: envergo/templates/pages/legal_mentions.html:13
 msgid "Home"
 msgstr "Accueil"
 

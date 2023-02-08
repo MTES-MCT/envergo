@@ -559,6 +559,20 @@ div.leaflet-container {
   }
 }
 
+main>.fr-notice {
+  .fr-notice__body {
+    &:before {
+      display: none;
+    }
+
+    text-align: center;
+
+    .fr-notice__title {
+      font-weight: normal;
+    }
+  }
+}
+
 /**
  * Custom class for an accordion without a "+" button
  */

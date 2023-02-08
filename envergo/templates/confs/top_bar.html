@@ -1,0 +1,12 @@
+{% if is_active %}
+  <div id="top-bar" class="fr-notice fr-notice--info fr-hidden fr-unhidden-lg">
+    <div class="fr-container">
+      <div class="fr-notice__body">
+        <p class="fr-notice__title">{{ message|safe }}</p>
+        <button class="fr-btn--close fr-btn" title="Masquer le message" onclick="hideTopBar()">
+          Masquer le message
+        </button>
+      </div>
+    </div>
+  </div>
+{% endif %}
