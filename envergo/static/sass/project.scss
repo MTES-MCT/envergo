@@ -559,7 +559,15 @@ div.leaflet-container {
   }
 }
 
-main>.fr-notice {}
+main>.fr-notice {
+  .fr-notice__body {
+    &:before {
+      display: none;
+    }
+
+    text-align: center;
+  }
+}
 
 /**
  * Custom class for an accordion without a "+" button
