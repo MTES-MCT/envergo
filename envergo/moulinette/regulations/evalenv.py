@@ -5,16 +5,8 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 
+from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import MoulinetteCriterion, MoulinetteRegulation
-
-RESULTS = Choices(
-    ("systematique", "Soumis"),
-    ("cas_par_cas", "Cas par cas"),
-    ("non_soumis", "Non soumis"),
-    ("clause_filet", "Clause filet"),
-    ("non_concerne", "Non concerné"),
-)
-
 
 # Only ask the "emprise" question if created surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
@@ -239,10 +231,20 @@ class ClauseFilet(MoulinetteCriterion):
         return RESULTS.clause_filet
 
 
+class OtherCriteria(MoulinetteCriterion):
+    slug = "autres_rubriques"
+    choice_label = "Éval Env > Autres rubriques"
+    title = "Autres rubriques"
+
+    @cached_property
+    def result_code(self):
+        return RESULTS.non_disponible
+
+
 class EvalEnvironnementale(MoulinetteRegulation):
     slug = "eval_env"
     title = "Évaluation Environnementale"
-    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette]
+    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette, OtherCriteria]
 
     @cached_property
     def result(self):
