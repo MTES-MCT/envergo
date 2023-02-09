@@ -1,4 +1,4 @@
-var _paq = _paq || [];
+var _paq = window._paq || [];
 
 /**
  * Make the accordion-organized content analytics friendly.
