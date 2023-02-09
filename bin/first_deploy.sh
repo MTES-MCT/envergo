@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script is ran by scalingo upon creating new review apps
 
-set -e
+set -exv
 
 echo ">>> Starting the first_deploy hook"
 
@@ -9,11 +9,8 @@ echo ">>> Starting the first_deploy hook"
 dbclient-fetcher psql 13
 
 # Let's seed the database
-DB_NAME=$(echo $DATABASE_URL | cut -d"/" -f 4 | cut -d"?" -f 1)
-echo "DB_NAME=$DB_NAME"
-echo "DATABASE_URL=$DATABASE_URL"
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
-PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table-data geodata_zone "
+PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table=spatial_ref_sys --exclude-table-data geodata_zone "
 
 # Note: dbclient-fetcher installs binary in $HOME/bin
 $HOME/bin/pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
