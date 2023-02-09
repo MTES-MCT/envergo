@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script is ran by scalingo upon creating new review apps
 
-set -exv
+set -e
 
 echo ">>> Starting the first_deploy hook"
 
@@ -14,9 +14,11 @@ echo "DB_NAME=$DB_NAME"
 echo "DATABASE_URL=$DATABASE_URL"
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
 PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table-data geodata_zone "
-pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
-pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/dump.pgsql
-psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
+
+# Note: dbclient-fetcher installs binary in $HOME/bin
+$HOME/bin/pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
+$HOME/bin/pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/dump.pgsql
+$HOME/bin/psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
 # psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS unaccent;'
 
 # Clean dump file
