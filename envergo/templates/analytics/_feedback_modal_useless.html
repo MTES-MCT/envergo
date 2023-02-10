@@ -1,4 +1,4 @@
-<dialog aria-labelledby="feedback-form-dialog-title" role="dialog" id="feedback-form-dialog" class="fr-modal feedback-dialog">
+<dialog aria-labelledby="feedback-form-dialog-title" role="dialog" id="feedback-form-useless-dialog" class="fr-modal feedback-dialog">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
@@ -11,11 +11,11 @@
             </div>
 
             <div class="fr-modal__content">
-              <h1 id="feedback-form-dialog-title" class="fr-modal__title">Merci de votre retour.</h1>
+              <h1 id="feedback-form-dialog-title" class="fr-modal__title">Que pouvons-nous améliorer ?</h1>
 
               <div class="feedback-form" id="feedback-form">
                 <p class="fr-mb-3w">Pour contribuer à améliorer ce service public et gratuit, vous pouvez nous en dire plus :</p>
-                {% include '_form_snippet.html' with form=feedback_form %}
+                {% include '_form_snippet.html' with form=feedback_form_useless %}
               </div>
             </div>
 

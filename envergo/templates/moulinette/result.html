@@ -67,7 +67,8 @@
   {% include 'moulinette/_save_modal.html' %}
 
   {% if display_feedback_form %}
-    {% include 'analytics/_feedback_modal.html' %}
+    {% include 'analytics/_feedback_modal_useful.html' %}
+    {% include 'analytics/_feedback_modal_useless.html' %}
   {% endif %}
 
 {% endblock %}

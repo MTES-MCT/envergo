@@ -12,22 +12,12 @@ var _paq = window._paq || [];
   exports.FeedbackModal = FeedbackModal;
 
   FeedbackModal.prototype.init = function() {
+    this.dialogElt.addEventListener('dsfr.disclose', this.onModalDisclose.bind(this));
     this.form.addEventListener('submit', this.onFeedbackSubmit.bind(this));
   };
 
-  FeedbackModal.prototype.onFeedbackRespond = function(button) {
+  FeedbackModal.prototype.onModalDisclose = function(button) {
     _paq.push(['trackEvent', 'FeedbackDialog', 'Respond']);
-
-    let labelVal = button.getAttribute('data-label');
-    let feedback = button.getAttribute('data-feedback');
-
-    // Set the "feedback value (Oui / Non) hidden input value
-    let feedbackInput = this.dialogElt.querySelector('input[name=feedback]');
-    feedbackInput.value = feedback;
-
-    // Update the feedback content label
-    let label = this.dialogElt.querySelector('[for=id_message] span');
-    label.innerHTML = labelVal;
 
     // Send event to Matomo
     if (VISITOR_ID) {
@@ -47,17 +37,9 @@ var _paq = window._paq || [];
 })(this);
 
 window.addEventListener('load', function() {
-  const dialogElt = document.getElementById(FEEDBACK_MODAL_DIALOG_ID);
-  if (dialogElt) {
+  const dialogs = document.querySelectorAll(FEEDBACK_MODAL_DIALOGS);
+  dialogs.forEach(dialog => {
     let feedbackModal = new FeedbackModal(dialogElt);
     feedbackModal.init();
-
-    // We need to update the modal content depending on the clicked button
-    const buttons = document.querySelectorAll(FEEDBACK_BUTTONS);
-    buttons.forEach(button => {
-      button.addEventListener('click', () => {
-        feedbackModal.onFeedbackRespond(button);
-      });
-    });
-  }
+  });
 });
