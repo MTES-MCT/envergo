@@ -9,7 +9,7 @@ echo ">>> Copying polygons from parent database"
 dbclient-fetcher psql 13
 
 # Let's seed the database
-PG_OPTIONS="--data-only"
+PG_OPTIONS="--data-only --format=c --compress=9 --no-owner --no-privileges --no-comments"
 PG_TABLE="--table=geodata_zone"
 
 # Note: dbclient-fetcher installs binary in $HOME/bin
