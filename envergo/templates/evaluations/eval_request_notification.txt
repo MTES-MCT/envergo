@@ -4,7 +4,7 @@
 —
 Adresse : {{ request.address }}
 Numéro de demande de permis : {{ request.application_number }}
-Description: {{ request.description_md }}
+Description: {{ request.project_description }}
 —
 E-mail du service d'urbanisme : {{ request.contact_email }}
 E-mail(s) du porteur : {{ request.project_sponsor_emails|join:", " }}
