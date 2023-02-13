@@ -23,6 +23,5 @@ rm /tmp/dump.pgsql
 
 # Warning! This hook replaces the `post_deploy` hook that we still want to run
 bash $HOME/bin/post_deploy.sh
-bash $HOME/bin/copy_polygons.sh
 
 echo ">>> Leaving the first_deploy hook"
