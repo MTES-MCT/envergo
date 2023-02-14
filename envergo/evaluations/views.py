@@ -322,6 +322,10 @@ class WizardStepMixin:
         self.request.session.modified = True
 
 
+class RequestEvalWizardHome(TemplateView):
+    template_name = "evaluations/eval_request_wizard_home.html"
+
+
 class RequestEvalWizardReset(WizardStepMixin, RedirectView):
     """Resets all wizard data then redirects to first step."""
 

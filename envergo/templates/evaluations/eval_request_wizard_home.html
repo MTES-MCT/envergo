@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+  <h1>Demandez une évaluation pour un projet</h1>
+
+  <div class="fr-alert fr-alert--info fr-my-5w">
+    <h2 class=" fr-alert__title">Une évaluation manuelle, pour quoi faire ?</h2>
+  </div>
+
+  <ul class="fr-mb-3w">
+    <li><strong>Le projet est examiné manuellement par un chargé d’études</strong> EnvErgo, au sein du Ministère de la Transition Écologique</li>
+
+    <li><strong>L’évaluation est envoyée directement par EnvErgo au porteur de projet</strong>, ainsi informé de ses obligations réglementaires</li>
+
+    <li><strong>L’équipe EnvErgo accompagne le porteur de projet dans la compréhension de l’évaluation</strong> et des démarches à engager</li>
+  </ul>
+
+  <h2>Comment se déroule la demande ?</h2>
+
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 1 sur 4</span>
+      Vous remplissez le formulaire en 1m30
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="1" data-fr-steps="4"></div>
+    <p class="fr-stepper__details">
+      Description du projet (localisation et documents), informations de contact.
+    </p>
+  </div>
+
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 2 sur 4</span>
+      Nous réalisons l'évaluation
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="2" data-fr-steps="4"></div>
+    <p class="fr-stepper__details">
+      Dans les trois jours, un membre de l’équipe EnvErgo réalise l’évaluation.
+    </p>
+  </div>
+
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 3 sur 4</span>
+      Un rappel réglementaire est envoyé au porteur de projet
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="4"></div>
+    <p class="fr-stepper__details">
+      Si le projet est soumis à une réglementation environnementale, un rappel réglementaire est envoyé au porteur de projet.
+    </p>
+  </div>
+
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 4 sur 4</span>
+      Nous contactons le porteur
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="4" data-fr-steps="4"></div>
+    <p class="fr-stepper__details">
+      Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l’évaluation.
+    </p>
+  </div>
+
+
+
+{% endblock %}
