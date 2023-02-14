@@ -29,8 +29,31 @@ def menu_item(context, route, label):
 
 
 @register.simple_tag(takes_context=True)
+def evalreq_menu(context):
+    """Generate html for the "Demander une évaluation" collapsible menu."""
+
+    link_route = "request_evaluation"
+    link_label = "Demander une évaluation manuelle"
+
+    try:
+        current_route = context.request.resolver_match.url_name
+    except AttributeError:
+        current_route = ""
+
+    routes = [
+        "request_eval_wizard_step_1",
+        "request_eval_wizard_step_2",
+        "request_eval_wizard_step_3",
+        "request_success",
+    ]
+
+    aria_current = 'aria-current="page"' if current_route in routes else ""
+    return nav_link(link_route, link_label, aria_current)
+
+
+@register.simple_tag(takes_context=True)
 def evaluation_menu(context):
-    """Generate html for the "Évaluations" collapsible menu."""
+    """Generate html for the "Mes évaluations" collapsible menu."""
 
     try:
         current_route = context.request.resolver_match.url_name
@@ -38,8 +61,8 @@ def evaluation_menu(context):
         current_route = ""
 
     links = (
-        ("request_evaluation", "Demander une évaluation (72h)"),
         ("evaluation_search", "Retrouver une évaluation"),
+        ("dashboard", "Tableau de bord"),
     )
     links_html = [nav_link(url, label, url == current_route) for url, label in links]
 
@@ -48,17 +71,14 @@ def evaluation_menu(context):
 
     # Other urls that can be reached from the menu
     additional_routes = [
-        "request_eval_wizard_step_1",
-        "request_eval_wizard_step_2",
-        "request_eval_wizard_step_3",
-        "request_success",
+        "evaluation_detail"
     ]
     all_routes = routes + additional_routes
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
     menu_html = f"""
         <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-evaluations" {aria_current}>
-            Évaluations Loi sur l'eau
+            Mes évaluations
         </button>
         <div class="fr-collapse fr-menu" id="menu-evaluations">
           <ul class="fr-menu__list">
