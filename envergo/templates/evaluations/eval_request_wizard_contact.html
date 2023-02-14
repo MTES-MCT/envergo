@@ -6,20 +6,23 @@
 {% block article %}
   <h1>Demandez une évaluation pour un projet</h1>
 
-  <p class="fr-text--lead">
-    EnvErgo vous aide à déterminer si un projet de construction
-    est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
-  </p>
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 2 sur 3</span>
+      Informations de contact
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="2" data-fr-steps="3"></div>
+    <p class="fr-stepper__details">
+      <span class="fr-text--bold">Étape suivante :</span> documents complémentaires
+    </p>
+  </div>
 
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
     {% csrf_token %}
 
-    <p>Étape 2 sur 3</p>
-
     {% include '_form_header.html' with form=form %}
 
     <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Informations de contact</legend>
 
       {% include '_radio_snippet.html' with field=form.user_type %}
 
