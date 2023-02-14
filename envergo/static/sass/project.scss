@@ -730,3 +730,16 @@ form.dropzone {
   display: inline-block;
   animation: spinner 2s linear infinite;
 }
+
+div.card-steps {
+  .fr-card__content {
+    position: relative;
+    padding-bottom: 4rem;
+  }
+
+  span[class^="fr-icon-"] {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+  }
+}
