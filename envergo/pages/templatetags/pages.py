@@ -70,9 +70,7 @@ def evaluation_menu(context):
     routes = list(dict(links).keys())
 
     # Other urls that can be reached from the menu
-    additional_routes = [
-        "evaluation_detail"
-    ]
+    additional_routes = ["evaluation_detail"]
     all_routes = routes + additional_routes
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
