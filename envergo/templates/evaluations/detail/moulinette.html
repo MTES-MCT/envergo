@@ -80,6 +80,15 @@
 
   {% include 'moulinette/_evaluation_summary.html' %}
 
+  {% if evaluation.details_html %}
+    <div class="fr-callout fr-mb-5w">
+      <h3 class="fr-callout__title">Commentaire de l'équipe EnvErgo</h3>
+      <div class="fr-callout__text">
+        {{ evaluation.details_html|safe }}
+      </div>
+    </div>
+  {% endif %}
+
   {% for regulation in moulinette.regulations %}
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
