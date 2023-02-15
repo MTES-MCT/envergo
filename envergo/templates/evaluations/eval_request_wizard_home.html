@@ -6,19 +6,16 @@
 {% block article %}
   <h1>Demander une évaluation pour un projet</h1>
 
-  <div class="fr-alert fr-alert--info fr-my-5w">
-    <h2 class=" fr-alert__title">Une évaluation manuelle, pour quoi faire ?</h2>
+  <div class="alt fr-p-3w fr-mb-5w">
+    <h2 classs="fr-h3">Une évaluation manuelle, pour quoi faire ?</h2>
+    <ul class="roomy">
+      <li><strong>Le projet est examiné manuellement par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique</li>
+      <li><strong>L’évaluation est envoyée directement par EnvErgo au porteur de projet</strong>, ainsi informé de ses obligations réglementaires</li>
+      <li><strong>L’équipe EnvErgo accompagne le porteur de projet dans la compréhension de l’évaluation</strong> et des démarches à engager</li>
+    </ul>
   </div>
 
-  <ul class="fr-mb-5w">
-    <li><strong>Le projet est examiné manuellement par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique</li>
-
-    <li><strong>L’évaluation est envoyée directement par EnvErgo au porteur de projet</strong>, ainsi informé de ses obligations réglementaires</li>
-
-    <li><strong>L’équipe EnvErgo accompagne le porteur de projet dans la compréhension de l’évaluation</strong> et des démarches à engager</li>
-  </ul>
-
-  <h2>Comment se déroule la demande ?</h2>
+  <h2 class="fr-h3">Comment se déroule la demande ?</h2>
 
   <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w card-steps">
 
@@ -26,12 +23,8 @@
       <div class="fr-card fr-card--shadow fr-card--no-arrow">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <div class="fr-card__start">
-              <p class="fr-card__detail">Étape 1</p>
-            </div>
-            <p class="fr-card__desc">Vous remplissez le formulaire en 1m30 : description du projet (localisation et documents), informations de contact.
+            <p class="fr-card__desc">1. Vous remplissez le formulaire en 1 min 30 : description du projet (localisation et documents), informations de contact.
             </p>
-            <span class="fr-icon-ball-pen-fill" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -41,12 +34,8 @@
       <div class="fr-card fr-card--shadow fr-card--no-arrow">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <div class="fr-card__start">
-              <p class="fr-card__detail">Étape 2</p>
-            </div>
-            <p class="fr-card__desc">Dans les trois jours, un membre de l’équipe EnvErgo réalise l’évaluation.
+            <p class="fr-card__desc">2. Dans les trois jours, un membre de l’équipe EnvErgo réalise l’évaluation.
             </p>
-            <span class="fr-icon-time-fill" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -56,12 +45,8 @@
       <div class="fr-card fr-card--shadow fr-card--no-arrow">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <div class="fr-card__start">
-              <p class="fr-card__detail">Étape 3</p>
-            </div>
-            <p class="fr-card__desc">Si le projet est soumis à une réglementation environnementale, un rappel réglementaire est envoyé au porteur de projet.
+            <p class="fr-card__desc">3. Si le projet est soumis à une réglementation environnementale, un rappel réglementaire est envoyé au porteur de projet.
             </p>
-            <span class="fr-icon-mail-fill" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -71,18 +56,20 @@
       <div class="fr-card fr-card--shadow fr-card--no-arrow">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <div class="fr-card__start">
-              <p class="fr-card__detail">Étape 4</p>
-            </div>
-            <p class="fr-card__desc">Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l’évaluation.
+            <p class="fr-card__desc">4. Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l’évaluation.
             </p>
-            <span class="fr-icon-feedback-fill" aria-hidden="true"></span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <a class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left" href="{% url 'request_eval_wizard_reset' %}">Commencer la demande</a>
+  <a class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left" href="{% url 'request_eval_wizard_reset' %}">
+    <span>
+      Commencer la demande
+      <br />
+      <small>Durée : 1 min 30</small>
+    </span>
+  </a>
 
 {% endblock %}
