@@ -738,3 +738,9 @@ form.dropzone {
   display: inline-block;
   animation: spinner 2s linear infinite;
 }
+
+.card-steps {
+  .fr-card__desc {
+    margin-top: 0;
+  }
+}
