@@ -18,13 +18,9 @@
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
     {% csrf_token %}
 
-    <fieldset class="fr-mb-6w">
+    {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
-      {% include '_dropzone_snippet.html' with field=form.additional_files %}
-
-    </fieldset>
-
-    <div id="has-errors-warning" class="fr-alert fr-alert--error">
+    <div id="has-errors-warning" class="fr-mt-6w fr-alert fr-alert--error">
       <p class="fr-alert__title">Les fichiers marqués d'une croix ne seront pas envoyés</p>
       <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
     </div>

@@ -22,15 +22,12 @@
 
     {% include '_form_header.html' with form=form %}
 
-    <fieldset class="fr-mb-6w">
+    {% include '_field_snippet.html' with field=form.address %}
+    {% include '_checkbox_snippet.html' with field=form.no_address %}
+    {% include '_field_snippet.html' with field=form.application_number %}
+    {% include '_field_snippet.html' with field=form.project_description %}
 
-      {% include '_field_snippet.html' with field=form.address %}
-      {% include '_checkbox_snippet.html' with field=form.no_address %}
-      {% include '_field_snippet.html' with field=form.application_number %}
-      {% include '_field_snippet.html' with field=form.project_description %}
-    </fieldset>
-
-    <div class="fr-mb-3w fr-alert fr-alert--info">
+    <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">
       <p>L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.</p>
     </div>
 
