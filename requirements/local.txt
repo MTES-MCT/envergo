@@ -374,12 +374,7 @@ toml==0.10.2
 tomli==2.0.1
     # via
     #   -r base.txt
-    #   black
-    #   build
     #   django-stubs
-    #   mypy
-    #   pep517
-    #   pylint
     #   pytest
 tomlkit==0.11.5
     # via pylint
@@ -418,7 +413,7 @@ wcwidth==0.2.5
     # via
     #   -r base.txt
     #   prompt-toolkit
-werkzeug==2.2.2
+werkzeug==2.2.3
     # via -r local.in
 wheel==0.37.1
     # via
