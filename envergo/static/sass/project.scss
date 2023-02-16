@@ -550,6 +550,10 @@ div.leaflet-container {
   background-color: var(--background-alt-blue-france);
 }
 
+ul.roomy {
+  --li-bottom: 1rem;
+}
+
 /**
  * Design system issues quickfixes
  **/
@@ -637,6 +641,10 @@ p:last-child {
 
 .fr-alert--warning {
   box-shadow: inset 0 0 0 1px #fcc63a, inset 2.5rem 0 0 0 #FFCA00;
+}
+
+.fr-stepper {
+  margin-bottom: 3rem;
 }
 
 /**
@@ -729,4 +737,16 @@ form.dropzone {
 .spinner::before {
   display: inline-block;
   animation: spinner 2s linear infinite;
+}
+
+.card-steps {
+  .fr-card__desc {
+    margin-top: 0;
+  }
+}
+
+div.hero-alt {
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  padding: 1.5rem;
 }

@@ -1,31 +1,26 @@
 {% extends 'base.html' %}
 {% load evaluations leaflet_tags static %}
 
-{% block title %}Demandez une évaluation pour un projet{% endblock %}
+{% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
 
 {% block article %}
-  <h1>Demandez une évaluation pour un projet</h1>
+  <h1>Demander l’évaluation manuelle d’un projet</h1>
 
-  <p class="fr-text--lead">
-    EnvErgo vous aide à déterminer si un projet de construction
-    est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
-  </p>
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 3 sur 3</span>
+      Documents complémentaires
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
+  </div>
+
 
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
     {% csrf_token %}
 
-    <p>Étape 3 sur 3</p>
+    {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
-    {% include '_form_header.html' with form=form %}
-
-    <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Documents complémentaires</legend>
-
-      {% include '_dropzone_snippet.html' with field=form.additional_files %}
-
-    </fieldset>
-
-    <div id="has-errors-warning" class="fr-alert fr-alert--error">
+    <div id="has-errors-warning" class="fr-mt-6w fr-alert fr-alert--error">
       <p class="fr-alert__title">Les fichiers marqués d'une croix ne seront pas envoyés</p>
       <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
     </div>

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
+
+{% block content %}
+  <article>
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+
+        <h1>Demander l’évaluation manuelle d’un projet</h1>
+
+        <div class="alt hero-alt fr-py-3w fr-mb-5w">
+          <h2 class="fr-h3">Une évaluation manuelle, pour quoi faire ?</h2>
+          <ul class="roomy">
+            <li><strong>Le projet est examiné manuellement par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique</li>
+            <li><strong>L’évaluation est envoyée directement par EnvErgo au porteur de projet</strong>, ainsi informé de ses obligations réglementaires</li>
+            <li><strong>L’équipe EnvErgo accompagne le porteur de projet dans la compréhension de l’évaluation</strong> et des démarches à engager</li>
+          </ul>
+        </div>
+
+        <h2 class="fr-h3">Comment se déroule la demande ?</h2>
+      </div>
+    </div>
+
+    <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w card-steps">
+
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+        <div class="fr-card fr-card--shadow fr-card--no-arrow">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <p class="fr-card__desc">1. Vous remplissez le formulaire en 1 min 30 : description du projet (localisation et documents), informations de contact.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+        <div class="fr-card fr-card--shadow fr-card--no-arrow">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <p class="fr-card__desc">2. Dans les trois jours, un membre de l’équipe EnvErgo réalise l’évaluation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+        <div class="fr-card fr-card--shadow fr-card--no-arrow">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <p class="fr-card__desc">3. Si le projet est soumis à une réglementation environnementale, un rappel réglementaire est envoyé au porteur de projet.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+        <div class="fr-card fr-card--shadow fr-card--no-arrow">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <p class="fr-card__desc">4. Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l’évaluation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+
+
+        <a class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left" href="{% url 'request_eval_wizard_reset' %}">
+          Commencer la demande
+        </a> <br />
+        <small><i>Durée : 1 min 30</i></small>
+      </div>
+    </div>
+
+{% endblock %}

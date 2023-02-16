@@ -1,33 +1,33 @@
 {% extends 'base.html' %}
 {% load evaluations leaflet_tags static %}
 
-{% block title %}Demandez une évaluation pour un projet{% endblock %}
+{% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
 
 {% block article %}
-  <h1>Demandez une évaluation pour un projet</h1>
+  <h1>Demander l’évaluation manuelle d’un projet</h1>
 
-  <p class="fr-text--lead">
-    EnvErgo vous aide à déterminer si un projet de construction
-    est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
-  </p>
+  <div class="fr-stepper">
+    <h2 class="fr-stepper__title">
+      <span class="fr-stepper__state">Étape 1 sur 3</span>
+      Caractéristiques du projet
+    </h2>
+    <div class="fr-stepper__steps" data-fr-current-step="1" data-fr-steps="3"></div>
+    <p class="fr-stepper__details">
+      <span class="fr-text--bold">Étape suivante :</span> informations de contact
+    </p>
+  </div>
 
   <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
     {% csrf_token %}
 
-    <p>Étape 1 sur 3</p>
-
     {% include '_form_header.html' with form=form %}
 
-    <fieldset class="fr-mb-6w">
-      <legend class="fr-h2">Caractéristiques du projet</legend>
+    {% include '_field_snippet.html' with field=form.address %}
+    {% include '_checkbox_snippet.html' with field=form.no_address %}
+    {% include '_field_snippet.html' with field=form.application_number %}
+    {% include '_field_snippet.html' with field=form.project_description %}
 
-      {% include '_field_snippet.html' with field=form.address %}
-      {% include '_checkbox_snippet.html' with field=form.no_address %}
-      {% include '_field_snippet.html' with field=form.application_number %}
-      {% include '_field_snippet.html' with field=form.project_description %}
-    </fieldset>
-
-    <div class="fr-mb-3w fr-alert fr-alert--info">
+    <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">
       <p>L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.</p>
     </div>
 

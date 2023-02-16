@@ -45,16 +45,18 @@
         <li class="fr-nav__item">
           {% menu_item 'moulinette_home' "Simulateur" %}
         </li>
-        {% evaluation_menu %}
+
+        <li class="fr-nav__item">
+          {% evalreq_menu %}
+        </li>
+
         <li class="fr-nav__item">
           {% menu_item 'faq' "Questions fréquentes" %}
         </li>
 
-        {% if request.user.is_authenticated %}
-          <li class="fr-nav__item">
-            {% menu_item 'dashboard' "Tableau de bord" %}
-          </li>
-        {% endif %}
+        <li class="fr-nav__item">
+          {% evaluation_menu %}
+        </li>
       </ul>
     </nav>
   </div>
