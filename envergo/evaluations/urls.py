@@ -28,19 +28,34 @@ urlpatterns = [
                     RequestEvalWizardReset.as_view(),
                     name="request_eval_wizard_reset",
                 ),
-                path("étape-1/", RedirectView.as_view(pattern_name="request_eval_wizard_step_1", permanent=True)),
+                path(
+                    "étape-1/",
+                    RedirectView.as_view(
+                        pattern_name="request_eval_wizard_step_1", permanent=True
+                    ),
+                ),
                 path(
                     "etape-1/",
                     RequestEvalWizardStep1.as_view(),
                     name="request_eval_wizard_step_1",
                 ),
-                path("étape-1/", RedirectView.as_view(pattern_name="request_eval_wizard_step_2", permanent=True)),
+                path(
+                    "étape-1/",
+                    RedirectView.as_view(
+                        pattern_name="request_eval_wizard_step_2", permanent=True
+                    ),
+                ),
                 path(
                     "etape-2/",
                     RequestEvalWizardStep2.as_view(),
                     name="request_eval_wizard_step_2",
                 ),
-                path("étape-3/<slug:reference>", RedirectView.as_view(pattern_name="request_eval_wizard_step_3", permanent=True)),
+                path(
+                    "étape-3/<slug:reference>",
+                    RedirectView.as_view(
+                        pattern_name="request_eval_wizard_step_3", permanent=True
+                    ),
+                ),
                 path(
                     "etape-3/<slug:reference>/",
                     RequestEvalWizardStep3.as_view(),
