@@ -11,7 +11,6 @@ from django.http import (
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView, RedirectView
 from django.views.generic.edit import BaseFormView
 from ratelimit.decorators import ratelimit
