@@ -48,7 +48,11 @@ class ParseAddressMixin:
 
 @method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
 class FeedbackRespond(ParseAddressMixin, BaseFormView):
-    """Sends a Mattermost notification when the feedback form is clicked."""
+    """Sends a Mattermost notification when the feedback form is clicked.
+
+    Note: this view is called via ajax when the feedback form modal is opened.
+
+    """
 
     form_class = FeedbackRespondForm
 
@@ -80,6 +84,8 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
 
 
 class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
+    """Process the feedback modal form."""
+
     form_class = FeedbackForm
     success_message = "Merci de votre retour."
 
@@ -90,6 +96,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         """Send the feedback as a Mattermost notification."""
 
         data = form.cleaned_data
+        moulinette_data = data.get("moulinette_data", {})
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()
         message_body = render_to_string(
@@ -104,7 +111,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
             },
         )
         notify(message_body)
-        log_event("FeedbackDialog", "FormSubmit", self.request)
+        log_event("FeedbackDialog", "FormSubmit", self.request, **moulinette_data)
         return super().form_valid(form)
 
     def form_invalid(self, form):
