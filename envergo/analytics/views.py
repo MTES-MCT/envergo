@@ -96,7 +96,9 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         """Send the feedback as a Mattermost notification."""
 
         data = form.cleaned_data
-        moulinette_data = data.get("moulinette_data", {})
+        metadata = {}
+        metadata.update(data)
+        metadata.update(form.cleaned_data.get("moulinette_data", {}))
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()
         message_body = render_to_string(
@@ -111,7 +113,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
             },
         )
         notify(message_body)
-        log_event("FeedbackDialog", "FormSubmit", self.request, **moulinette_data)
+        log_event("FeedbackDialog", "FormSubmit", self.request, **metadata)
         return super().form_valid(form)
 
     def form_invalid(self, form):
