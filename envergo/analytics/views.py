@@ -61,7 +61,7 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         feedback_origin = self.request.META.get("HTTP_REFERER")
         feedback = form.cleaned_data["feedback"]
         metadata = form.cleaned_data.get("moulinette_data", {})
-        metadata['feedback'] = feedback
+        metadata["feedback"] = feedback
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
