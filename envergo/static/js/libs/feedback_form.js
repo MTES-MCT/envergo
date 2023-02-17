@@ -25,6 +25,7 @@ var _paq = window._paq || [];
       let headers = { 'X-CSRFToken': CSRF_TOKEN };
       let data = new FormData();
       data.append('feedback', feedback);
+      data.append('moulinette_data', JSON.stringify(MOULINETTE_DATA));
       let init = { method: 'POST', body: data, headers: headers };
       let response = fetch(url, init);
     }

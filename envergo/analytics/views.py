@@ -11,6 +11,7 @@ from django.http import (
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView, RedirectView
 from django.views.generic.edit import BaseFormView
 from ratelimit.decorators import ratelimit
@@ -55,6 +56,8 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         address = self.parse_address()
         feedback_origin = self.request.META.get("HTTP_REFERER")
         feedback = form.cleaned_data["feedback"]
+        metadata = form.cleaned_data.get("moulinette_data", {})
+        metadata['feedback'] = feedback
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
@@ -65,7 +68,7 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
             },
         )
         notify(message_body)
-        log_event("FeedbackDialog", "Respond", self.request, data=feedback)
+        log_event("FeedbackDialog", "Respond", self.request, **metadata)
         return HttpResponse(message_body)
 
     def form_invalid(self, form):

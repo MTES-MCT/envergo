@@ -39,6 +39,9 @@ class FeedbackRespondForm(forms.Form):
         label="Cette évaluation vous est-elle utile ?",
         choices=FEEDBACK_CHOICES,
     )
+    moulinette_data = forms.JSONField(
+        required=False,
+        widget=forms.HiddenInput)
 
 
 class FeedbackForm(forms.Form):
