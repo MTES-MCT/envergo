@@ -31,7 +31,7 @@ def post_request(request, host):
             "Résultat": {
                 "multi_select": [
                     {
-                        "name": "",
+                        "name": "À compléter",
                     }
                 ],
             },
