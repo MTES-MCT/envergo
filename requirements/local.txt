@@ -216,7 +216,7 @@ mypy-extensions==0.4.3
     #   mypy
 nodeenv==1.7.0
     # via pre-commit
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via
     #   -r base.txt
     #   requests-oauthlib
@@ -373,13 +373,7 @@ toml==0.10.2
     #   pre-commit
 tomli==2.0.1
     # via
-    #   -r base.txt
-    #   black
-    #   build
     #   django-stubs
-    #   mypy
-    #   pep517
-    #   pylint
     #   pytest
 tomlkit==0.11.5
     # via pylint
