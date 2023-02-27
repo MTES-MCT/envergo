@@ -13,6 +13,10 @@ def post_request(request, host):
 
     secret = settings.NOTION_SECRET
     database_id = settings.NOTION_DATABASE_ID
+
+    if not secret:
+        return
+
     headers = {
         "Accept": "application/json",
         "Notion-Version": "2022-06-28",

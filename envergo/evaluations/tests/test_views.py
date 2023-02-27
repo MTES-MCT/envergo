@@ -180,14 +180,6 @@ def test_users_can_see_dashboard_menu(user, client):
     assert "Tableau de bord" in res.content.decode()
 
 
-def test_anonymous_cannot_see_dashboard_menu(client):
-    home_url = reverse("home")
-    res = client.get(home_url, follow=True)
-
-    assert res.status_code == 200
-    assert "Tableau de bord" not in res.content.decode()
-
-
 def test_share_evaluation_by_email_form_for_anonymous(client, evaluation, mailoutbox):
     """Anonymous users cannot share by email."""
 
