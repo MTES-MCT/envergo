@@ -21,7 +21,6 @@ def post_request(request, host):
 
     request_url = reverse("admin:evaluations_request_change", args=[request.id])
     full_url = f"https://{host}{request_url}"
-    one_line_addr = " ".join(filter(None, request.address.splitlines()))
     now = timezone.now()
 
     data = {
@@ -81,7 +80,7 @@ def post_request(request, host):
             "Name": {
                 "title": [
                     {
-                        "text": {"content": f"{request.id} - {one_line_addr}"},
+                        "text": {"content": f"{request.id} - [nom à compléter]"},
                     }
                 ],
             },
