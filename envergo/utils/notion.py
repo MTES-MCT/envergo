@@ -28,13 +28,6 @@ def post_request(request, host):
         "properties": {
             "URL admin": {"url": full_url},
             "À envoyer au porteur": {"checkbox": request.send_eval_to_sponsor},
-            "Résultat": {
-                "multi_select": [
-                    {
-                        "name": "À compléter",
-                    }
-                ],
-            },
             "Statut": {
                 "select": {
                     "name": "1. À évaluer",
