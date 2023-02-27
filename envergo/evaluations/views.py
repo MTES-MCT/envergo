@@ -41,6 +41,7 @@ from envergo.evaluations.models import (
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
+    post_request_to_notion,
     share_evaluation_by_email,
 )
 from envergo.moulinette.views import MoulinetteResult
@@ -383,6 +384,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         def confirm_request():
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
+            post_request_to_notion.delay(request.id, self.request.get_host())
 
         transaction.on_commit(confirm_request)
 

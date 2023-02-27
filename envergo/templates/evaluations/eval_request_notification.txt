@@ -1,12 +1,11 @@
-**Nouvelle demande d'évaluation**
+### Nouvelle demande d'évaluation
 
 {{ request_url }}
-Adresse : {{ request.address }}
-Parcelles : {{ parcel_map_url }}
-
-Numéro de demande de permis : {{ request.application_number }}
-
+—
+Adresse : {{ request.address }}
+Numéro de demande de permis : {{ request.application_number }}
+Description : {{ request.project_description }}
+—
 E-mail du service d'urbanisme : {{ request.contact_email }}
 E-mail(s) du porteur : {{ request.project_sponsor_emails|join:", " }}
-Téléphone du porteur : {{ request.project_sponsor_phone_number }}
-Envoyer au porteur : {{ request.send_eval_to_sponsor|yesno:"Oui,Non" }}
+Envoyer au porteur : {{ request.send_eval_to_sponsor|yesno:"Oui,Non" }}
