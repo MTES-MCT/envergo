@@ -182,7 +182,7 @@ iniconfig==1.1.1
     # via pytest
 ipdb==0.13.9
     # via -r local.in
-ipython==8.5.0
+ipython==8.10.0
     # via ipdb
 isort==5.10.1
     # via
@@ -374,12 +374,7 @@ toml==0.10.2
 tomli==2.0.1
     # via
     #   -r base.txt
-    #   black
-    #   build
     #   django-stubs
-    #   mypy
-    #   pep517
-    #   pylint
     #   pytest
 tomlkit==0.11.5
     # via pylint
