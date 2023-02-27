@@ -3,15 +3,16 @@
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
         <div class="fr-modal__body">
+
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link" title="Fermer le formulaire de retour" aria-controls="feedback-form-useless-dialog">Fermer</button>
+          </div>
+
           <form action="{% url 'feedback_submit' %}" method="post">
             {% csrf_token %}
 
-            <div class="fr-modal__header">
-              <button class="fr-link--close fr-link" title="Fermer le formulaire de retour" aria-controls="feedback-form-dialog">Fermer</button>
-            </div>
-
             <div class="fr-modal__content">
-              <h1 id="feedback-form-dialog-title" class="fr-modal__title">Que pouvons-nous améliorer ?</h1>
+              <h1 id="feedback-form-dialog-title" class="fr-modal__title">Merci de votre retour</h1>
 
               <div class="feedback-form" id="feedback-form">
                 <p class="fr-mb-3w">Pour contribuer à améliorer ce service public et gratuit, vous pouvez nous en dire plus :</p>

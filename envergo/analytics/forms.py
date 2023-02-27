@@ -80,7 +80,7 @@ class FeedbackForm(forms.Form):
 class FeedbackFormUseful(FeedbackForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["message"].label = "Une chose que vous appréciez particulièrement ?"
+        self.fields["message"].label = "En quoi cette évaluation vous est-elle utile ?"
         self.fields["message"].widget.attrs[
             "placeholder"
         ] = "Une information nouvelle ? Une procédure clarifiée ? Une décision facilitée ?"
