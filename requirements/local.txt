@@ -103,7 +103,7 @@ dill==0.3.5.1
     # via pylint
 distlib==0.3.6
     # via virtualenv
-django==3.2.16
+django==3.2.18
     # via
     #   -r base.txt
     #   django-allauth
@@ -373,13 +373,7 @@ toml==0.10.2
     #   pre-commit
 tomli==2.0.1
     # via
-    #   -r base.txt
-    #   black
-    #   build
     #   django-stubs
-    #   mypy
-    #   pep517
-    #   pylint
     #   pytest
 tomlkit==0.11.5
     # via pylint
