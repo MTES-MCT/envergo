@@ -1,5 +1,5 @@
 {
-    "stack": "scalingo-20",
+  "stack": "scalingo-20",
   "formation": {
     "web": {
       "amount": 1,
@@ -34,6 +34,12 @@
     },
     "DJANGO_AWS_UPLOAD_BUCKET_NAME": {
       "value": "envergo-upload-stage"
+    },
+    "DJANGO_NOTION_SECRET": {
+      "value": ""
+    },
+    "DJANGO_NOTION_DATABASE_ID": {
+      "value": ""
     }
   },
   "scripts": {
