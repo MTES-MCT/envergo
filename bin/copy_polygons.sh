@@ -1,5 +1,8 @@
 #!/bin/bash
 # This script is called by the first_deploy hook
+# This script is used to copy polygons from the parent database to the staging database
+# We need to do this using dummy sql queries — and not pg_dump/pg_restore — because
+# not filtering the data we copy uses too much resources and makes the process crash
 
 set -exv
 
