@@ -36,10 +36,10 @@
       "value": "envergo-upload-stage"
     },
     "DJANGO_NOTION_SECRET": {
-      "value": ""
+      "value": " "
     },
     "DJANGO_NOTION_DATABASE_ID": {
-      "value": ""
+      "value": " "
     }
   },
   "scripts": {
