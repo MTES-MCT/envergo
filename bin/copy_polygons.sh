@@ -6,27 +6,26 @@ set -exv
 echo ">>> Copying polygons from parent database"
 
 # Scalingo requires you to run this script to update postgres' version
-
+# Note: dbclient-fetcher installs binary in $HOME/bin
 dbclient-fetcher psql 13
 
-# Let's seed the database
-PG_OPTIONS="--data-only --format=c --no-owner --no-privileges --no-comments"
-PG_TABLE="--table=geodata_zone"
+# Clear existing polygons in staging database
+# Watch out! Don't empyt $PARENT_DATABASE_URL, it's the production database
+$HOME/bin/psql -d $DATABASE_URL -c "DELETE FROM geodata_zone;"
 
-# Note: dbclient-fetcher installs binary in $HOME/bin
-# $HOME/bin/pg_dump $PG_OPTIONS --compress=9 $PG_TABLE --dbname $PARENT_DATABASE_URL --format c --file /tmp/polygons.pgsql
-# $HOME/bin/pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/polygons.pgsql
+nb_zones=$($HOME/bin/psql -d $PARENT_DATABASE_URL -t -c "SELECT COUNT(*) FROM geodata_zone;")
+page_size=1000
+nb_steps=$((nb_zones/page_size+1))
 
-# Clean dump file
-# rm /tmp/polygons.pgsql
+i=0
+while [ $i -lt $nb_steps ]; do
+    echo ">>> Copying polygons from parent database: step $i / $nb_steps"
+    offset=$((i*page_size))
+    query="COPY (SELECT * from geodata_zone ORDER BY id LIMIT $page_size OFFSET $offset) TO stdout"
+    echo "$query"
+    $HOME/bin/psql -d $PARENT_DATABASE_URL -c "$query" | $HOME/bin/psql -d $DATABASE_URL -c "COPY geodata_zone FROM stdin;"
 
-# export PARENT_DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
-
-count=$($HOME/bin/psql -d $PARENT_DATABASE_URL -t -c "SELECT COUNT(*) FROM geodata_zone;")
-$HOME/bin/psql -d $PARENT_DATABASE_URL -c "COPY (SELECT * from geodata_zone ORDER BY id limit 100) TO stdout" | $HOME/bin/psql -d $DATABASE_URL -c "COPY geodata_zone FROM stdin;"
-
-
-
-
+    i=$((i+1))
+done
 
 echo ">>> Leaving the copy polygons script"
