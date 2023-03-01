@@ -647,6 +647,15 @@ p:last-child {
   margin-bottom: 3rem;
 }
 
+// Sometimes, you cannot set the `fr-callout__text` class on a `p` tag
+// so you have to wrap it around a `div` tag.
+div.fr-callout__text {
+  p {
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
+
 /**
  * Dropzone bad css design fixes
  *
