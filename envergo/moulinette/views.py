@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
-from envergo.analytics.forms import FeedbackForm
+from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteForm
@@ -89,7 +89,8 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 6
 
-        context["feedback_form"] = FeedbackForm()
+        context["feedback_form_useful"] = FeedbackFormUseful()
+        context["feedback_form_useless"] = FeedbackFormUseless()
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["source"] = "moulinette"

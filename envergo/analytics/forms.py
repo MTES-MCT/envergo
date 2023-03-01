@@ -77,6 +77,24 @@ class FeedbackForm(forms.Form):
         self.fields["you_are"].widget.fieldset_class = "fr-fieldset--inline"
 
 
+class FeedbackFormUseful(FeedbackForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["message"].label = "En quoi cette évaluation vous est-elle utile ?"
+        self.fields["message"].widget.attrs[
+            "placeholder"
+        ] = "Une information nouvelle ? Une procédure clarifiée ? Une décision facilitée ?"
+
+
+class FeedbackFormUseless(FeedbackForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["message"].label = "Que pouvons-nous améliorer ?"
+        self.fields["message"].widget.attrs[
+            "placeholder"
+        ] = "Un élément qui manque de clarté, une information erronée, une proposition d'amélioration…"
+
+
 class EventForm(forms.Form):
     category = forms.CharField(max_length=64)
     action = forms.CharField(max_length=64)
