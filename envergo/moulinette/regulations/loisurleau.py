@@ -148,6 +148,7 @@ class ZoneHumide(MoulinetteCriterion):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
+                zoom=18,
             )
         else:
             criterion_map = None
@@ -220,6 +221,7 @@ class ZoneInondable(MoulinetteCriterion):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
+                zoom=18,
             )
         else:
             criterion_map = None
