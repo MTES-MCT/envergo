@@ -178,6 +178,7 @@ class Map(models.Model):
         _("Celery task id"), max_length=256, null=True, blank=True
     )
     import_error_msg = models.TextField(_("Import error message"), blank=True)
+    copy_to_staging = models.BooleanField(_("Copy to staging?"), default=False)
 
     class Meta:
         verbose_name = _("Map")

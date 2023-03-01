@@ -11,12 +11,11 @@ logger = logging.getLogger(__name__)
 def post_request(request, host):
     """Post a request to Notion."""
 
-    secret = settings.NOTION_SECRET
-    database_id = settings.NOTION_DATABASE_ID
-
-    if not secret:
+    if settings.ENV_NAME != "production":
         return
 
+    secret = settings.NOTION_SECRET
+    database_id = settings.NOTION_DATABASE_ID
     headers = {
         "Accept": "application/json",
         "Notion-Version": "2022-06-28",
