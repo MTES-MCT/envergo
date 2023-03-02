@@ -88,6 +88,13 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
     form_class = FeedbackForm
     success_message = "Merci de votre retour."
 
+    def get_prefix(self):
+        if 'useful-feedback' in self.request.POST:
+            prefix = 'useful'
+        else:
+            prefix = 'useless'
+        return prefix
+
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("moulinette_home"))
 
