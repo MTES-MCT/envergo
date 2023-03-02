@@ -78,10 +78,10 @@ class MoulinetteMixin:
             moulinette_data = moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
             context["feedback_form_useful"] = FeedbackFormUseful(
-                initial={"moulinette_data": moulinette.summary()}
+                prefix="useful", initial={"moulinette_data": moulinette_data}
             )
             context["feedback_form_useless"] = FeedbackFormUseless(
-                initial={"moulinette_data": moulinette.summary()}
+                prefix="useless", initial={"moulinette_data": moulinette_data}
             )
 
         # Should we center the map on the given coordinates, or zoom out on
@@ -97,8 +97,6 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 6
 
-        context["feedback_form_useful"] = FeedbackFormUseful()
-        context["feedback_form_useless"] = FeedbackFormUseless()
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["source"] = "moulinette"

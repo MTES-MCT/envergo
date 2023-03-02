@@ -40,7 +40,7 @@ var _paq = window._paq || [];
 window.addEventListener('load', function() {
   const dialogs = document.querySelectorAll(FEEDBACK_MODAL_DIALOGS);
   dialogs.forEach(dialog => {
-    let feedbackModal = new FeedbackModal(dialogElt);
+    let feedbackModal = new FeedbackModal(dialog);
     feedbackModal.init();
   });
 });
