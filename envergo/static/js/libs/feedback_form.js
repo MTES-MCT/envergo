@@ -19,6 +19,9 @@ var _paq = window._paq || [];
   FeedbackModal.prototype.onModalDisclose = function(button) {
     _paq.push(['trackEvent', 'FeedbackDialog', 'Respond']);
 
+    let feedbackInput = this.dialogElt.querySelector('input[name$=-feedback]');
+    let feedback = feedbackInput.value;
+
     // Send event to Matomo
     if (VISITOR_ID) {
       let url = FEEDBACK_RESPOND_URL;
