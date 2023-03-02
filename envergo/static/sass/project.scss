@@ -231,13 +231,23 @@ section.regulation {
   }
 
   .fr-content-media__caption {
+    div.sources {
+      display: inline;
+    }
+
     ul.source-list {
       margin: 0;
       padding: 0;
+      display: inline;
 
       li {
+        display: inline;
         list-style-type: none;
         padding-bottom: 0;
+      }
+
+      li+li::before {
+        content: ", ";
       }
     }
   }
@@ -487,6 +497,10 @@ form#request-evaluation-form {}
   &:before {
     padding-bottom: 56.25%;
   }
+}
+
+figcaption.fr-content-media__caption .fr-link[target=_blank]::after {
+  margin-left: .25rem;
 }
 
 div.leaflet-container {
