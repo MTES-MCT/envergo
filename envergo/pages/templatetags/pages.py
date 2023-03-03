@@ -71,7 +71,7 @@ def faq_menu(context):
     routes = list(dict(links).keys())
 
     # Other urls that can be reached from the menu
-    additional_routes = ['faq']
+    additional_routes = ["faq"]
     all_routes = routes + additional_routes
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
@@ -88,6 +88,7 @@ def faq_menu(context):
         </div>
     """
     return mark_safe(menu_html)
+
 
 @register.simple_tag(takes_context=True)
 def evaluation_menu(context):

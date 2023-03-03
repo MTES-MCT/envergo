@@ -27,7 +27,11 @@ urlpatterns = [
         _("faq/"),
         include(
             [
-                path("", TemplateView.as_view(template_name="pages/faq/index.html"), name="faq"),
+                path(
+                    "",
+                    TemplateView.as_view(template_name="pages/faq/index.html"),
+                    name="faq",
+                ),
                 path(
                     _("loi-sur-leau/"),
                     TemplateView.as_view(template_name="pages/faq/loi_sur_leau.html"),
