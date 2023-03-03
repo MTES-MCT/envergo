@@ -117,6 +117,7 @@ class Evaluation(models.Model):
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
+    moulinette_data = models.JSONField(_("Moulinette metadata"), null=True, blank=True)
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -133,6 +134,7 @@ class Evaluation(models.Model):
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
+        self.moulinette_data = params_from_url(self.moulinette_url)
         super().save(*args, **kwargs)
 
     def compute_result(self):
