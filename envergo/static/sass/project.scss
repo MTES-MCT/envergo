@@ -687,14 +687,10 @@ button[data-fr-js-collapse-button="true"] {
 }
 
 // Don't force a 16:9 ratio on images
-.fr-content-media__img::before {
-  content: none;
-}
-
-.fr-content-media__img img,
-.fr-content-media__img svg {
-  position: unset;
-  object-fit: unset;
+.fr-content-media {
+  .fr-responsive-img {
+    aspect-ratio: unset;
+  }
 }
 
 // Remove double margins below images with captions
