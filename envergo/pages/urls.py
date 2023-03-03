@@ -27,7 +27,7 @@ urlpatterns = [
         _("faq/"),
         include(
             [
-                path("", RedirectView.as_view(pattern_name="faq_loi_sur_leau"), name="faq"),
+                path("", TemplateView.as_view(template_name="pages/faq/index.html"), name="faq"),
                 path(
                     _("loi-sur-leau/"),
                     TemplateView.as_view(template_name="pages/faq/loi_sur_leau.html"),
