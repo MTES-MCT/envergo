@@ -71,13 +71,13 @@ def faq_menu(context):
     routes = list(dict(links).keys())
 
     # Other urls that can be reached from the menu
-    additional_routes = []
+    additional_routes = ['faq']
     all_routes = routes + additional_routes
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
     menu_html = f"""
         <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-faq" {aria_current}>
-            Foire aux questions
+            Questions fréquentes
         </button>
         <div class="fr-collapse fr-menu" id="menu-faq">
           <ul class="fr-menu__list">
