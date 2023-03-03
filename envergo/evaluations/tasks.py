@@ -52,6 +52,7 @@ def confirm_request_to_requester(request_id, host):
     contact_url = reverse("contact_us")
     context = {
         "application_number": request.application_number,
+        "reference": request.reference,
         "faq_url": f"https://{host}{faq_url}",
         "contact_url": f"https://{host}{contact_url}",
     }
