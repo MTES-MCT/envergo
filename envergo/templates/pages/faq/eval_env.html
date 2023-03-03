@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Questions fréquentes : Évaluation environnementale{% endblock %}
+
+{% block article %}
+  <h1>Questions fréquentes : Évaluation environnementale</h1>
+
+  <p class="fr-text--lead">Évaluation environnementale</p>
+
+  <div id="faq-accordion">
+
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-eval_env">
+          <span>
+            Qu'est-ce que l'Évaluation environnementale ?
+          </span>
+        </button>
+      </h3>
+
+      <div class="fr-collapse" id="accordion-eval_env">
+        <p>
+          Bla bla bla
+        </p>
+      </div>
+    </section>
+
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+      const accordion = document.getElementById('faq-accordion');
+      new AccordionAnalytics(accordion);
+    });
+  </script>
+
+{% endblock %}

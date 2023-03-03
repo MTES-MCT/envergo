@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Questions fréquentes : Natura 2000{% endblock %}
+
+{% block article %}
+  <h1>Questions fréquentes : Natura 2000</h1>
+
+  <p class="fr-text--lead">Natura 2000</p>
+
+  <div id="faq-accordion">
+
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-natura_2000">
+          <span>
+            Qu'est-ce que Natura 2000 ?
+          </span>
+        </button>
+      </h3>
+
+      <div class="fr-collapse" id="accordion-natura_2000">
+        <p>
+          Bla bla bla
+        </p>
+      </div>
+    </section>
+
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script>
+    window.addEventListener('load', function() {
+      const accordion = document.getElementById('faq-accordion');
+      new AccordionAnalytics(accordion);
+    });
+  </script>
+
+{% endblock %}

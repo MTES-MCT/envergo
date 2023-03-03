@@ -25,8 +25,26 @@ urlpatterns = [
     ),
     path(
         _("faq/"),
-        TemplateView.as_view(template_name="pages/faq.html"),
-        name="faq",
+        include(
+            [
+                path("", RedirectView.as_view(pattern_name="faq_loi_sur_leau"), name="faq"),
+                path(
+                    _("loi-sur-leau/"),
+                    TemplateView.as_view(template_name="pages/faq/loi_sur_leau.html"),
+                    name="faq_loi_sur_leau",
+                ),
+                path(
+                    _("natura-2000/"),
+                    TemplateView.as_view(template_name="pages/faq/natura_2000.html"),
+                    name="faq_natura_2000",
+                ),
+                path(
+                    _("eval-env/"),
+                    TemplateView.as_view(template_name="pages/faq/eval_env.html"),
+                    name="faq_eval_env",
+                ),
+            ]
+        ),
     ),
     path(
         _("map/"),
