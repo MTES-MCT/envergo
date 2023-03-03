@@ -3,7 +3,6 @@ import statistics
 from functools import lru_cache
 from queue import Queue
 
-import matplotlib.pyplot as plt
 import numpy as np
 import requests
 from django.contrib.gis.geos import Point
@@ -68,7 +67,8 @@ class RgeAltiClient:
 class Alti:
     """Data wrapper for getting coordinates altitude.
 
-    Get data efficiently by fetching blocks of values at once.
+    Get data efficiently by fetching blocks of values at once, avoiding calling
+    the API too often.
     """
 
     def __init__(self, step_size, page_size=PAGE_SIZE):
@@ -161,6 +161,8 @@ class Mnt:
         return self.step_size**2
 
     def coords(self, cell):
+        """Returns the Lambert coordinates of a cell."""
+
         x, y = cell
         return (
             int(self.center.x + x * self.step_size),
@@ -194,6 +196,8 @@ class Mnt:
         return reached_surface
 
     def neighbours(self, cell):
+        """Returns all the cells surrounding a given cell."""
+
         x, y = cell
         for dx in range(-1, 2):
             for dy in range(-1, 2):
@@ -212,10 +216,16 @@ class Mnt:
         return self.lowest_alti_around(from_cell) == self.alti(to_cell)
 
     def lowest_alti_around(self, cell):
+        """Returns the lowest altitude from the cells surrounding a given cell."""
+
         altis = [self.alti(n) for n in self.neighbours(cell)]
         return min(altis)
 
     def alti(self, cell):
+        """Returns the altitude of a given cell.
+
+        We slightly randomize the value to see if it can change the results."""
+
         val = self.attributes["alti"].get(self.coords(cell))
         return self.randomize(val)
 
@@ -229,9 +239,17 @@ class Command(BaseCommand):
     """Calcule la surface dont l'eau ruisselle jusqu'à un point."""
 
     def add_arguments(self, parser):
+
+        # Coordinates in the lambert93 format
+        # Use https://epsg.io/map#srs=2154-1671&x=356760.259277&y=6688364.311073&z=14&layer=streets
         parser.add_argument("x", nargs=1, type=int)
         parser.add_argument("y", nargs=1, type=int)
+
+        # Size of the grid, in meters
         parser.add_argument("--step_size", nargs="?", type=int, default=10)
+
+        # We run the same simulation with a slight randomization of the altitudes
+        # to try to avoid limit cases
         parser.add_argument("--iterations", nargs="?", type=int, default=1)
 
     def handle(self, *args, **options):
@@ -242,12 +260,11 @@ class Command(BaseCommand):
         iterations = options["iterations"]
         mnt = Mnt(x, y, step_size=step_size)
 
+
         surfaces = sorted(
             [mnt.compute_runoff_surface(MAX_SURFACE) for _ in range(iterations)]
         )
         print(surfaces)
-        plt.hist(surfaces)
-        plt.show()
 
         surface = statistics.mean(surfaces)
         self.stdout.write(f"Surface de ruissellement = {surface}m²")
