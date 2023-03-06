@@ -1,11 +1,6 @@
 Bonjour,
 
-Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo pour le projet suivant :
-{% if application_number %}
-(Votre numéro de demande de permis : {{ application_number }}).{% else %} (Numéro de demande de permis non communiqué).
-{% endif %}
-
-sous la référence {{ reference }}.
+Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
 
 Vous recevrez une réponse dans les trois jours ouvrés.
 

@@ -5,15 +5,13 @@
 {% block content %}
   <p>Bonjour,</p>
 
-  <p>Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo pour le projet suivant :</p>
-
-  {% if application_number %}
-    <p>(Votre numéro de demande de permis : {{ application_number }}).</p>
-  {% else %}
-    <p>(Numéro de demande de permis non communiqué).</p>
-  {% endif %}
-
-  <p>sous la référence {{ reference }}.</p>
+  <p>
+    Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo
+    {% if application_number %}
+      (numéro de demande de permis : {{ application_number }})
+    {% endif %}
+    sous la référence {{ reference }}.
+  </p>
 
   <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
 
