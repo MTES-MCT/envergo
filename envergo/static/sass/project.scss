@@ -780,6 +780,18 @@ div.hero-alt {
  */
 @media print {
 
+  // Reduce font size to a more compact print
+  :root {
+    font-size: 85%;
+  }
+
+  // Use the entire page width
+  #main-container article {
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+  }
+
   body>header,
   body>footer,
   .hide-print {
