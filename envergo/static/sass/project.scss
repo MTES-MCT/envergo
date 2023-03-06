@@ -773,3 +773,41 @@ div.hero-alt {
   margin-right: -1.5rem;
   padding: 1.5rem;
 }
+
+
+/**
+ * Impression
+ */
+@media print {
+
+  body>header,
+  body>footer,
+  .hide-print {
+    display: none;
+  }
+
+  .fr-accordion__title .fr-accordion__btn {
+    font-weight: bold;
+  }
+
+  .fr-collapse {
+    --collapse-max-height: 0;
+    --collapse: auto;
+    --collapser: "";
+    overflow: auto;
+    max-height: auto;
+    max-height: inherit;
+  }
+
+  .fr-collapse::before {
+    display: none;
+  }
+
+  .fr-collapse:not(.fr-collapse--expanded) {
+    visibility: visible;
+  }
+
+  .fr-collapse:not(.fr-collapse--expanded)::before {
+    margin-top: 0;
+  }
+}

@@ -16,7 +16,7 @@
     </div>
   {% endif %}
 
-  <div id="form-group-coords" class="fr-input-group">
+  <div id="form-group-coords" class="fr-input-group hide-print">
 
     {{ form.lng.as_hidden }}
     {{ form.lat.as_hidden }}
@@ -73,11 +73,13 @@
 
   {% endif %}
 
-  {% if moulinette and moulinette.has_missing_data %}
-    <button type="submit" class="fr-btn">Compléter l'évaluation</button>
-  {% elif moulinette %}
-    <button type="submit" class="fr-btn">Renouveler l'évaluation</button>
-  {% else %}
-    <button type="submit" class="fr-btn">Démarrer l'évaluation</button>
-  {% endif %}
+  <div class="hide-print">
+    {% if moulinette and moulinette.has_missing_data %}
+      <button type="submit" class="fr-btn">Compléter l'évaluation</button>
+    {% elif moulinette %}
+      <button type="submit" class="fr-btn">Renouveler l'évaluation</button>
+    {% else %}
+      <button type="submit" class="fr-btn">Démarrer l'évaluation</button>
+    {% endif %}
+  </div>
 </form>
