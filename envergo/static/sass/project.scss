@@ -792,12 +792,15 @@ div.hero-alt {
     flex: 1;
   }
 
+  // Hide common template elements
   body>header,
   body>footer,
   .hide-print {
     display: none;
   }
 
+
+  // Make sure accordion content is visible
   .fr-accordion__title .fr-accordion__btn {
     font-weight: bold;
   }
@@ -822,4 +825,10 @@ div.hero-alt {
   .fr-collapse:not(.fr-collapse--expanded)::before {
     margin-top: 0;
   }
+
+  // Some little quirks
+  section.regulation button.read-more-btn {
+    display: none;
+  }
+
 }
