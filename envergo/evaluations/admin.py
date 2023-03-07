@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
-    RESULTS,
+    EVAL_RESULTS,
     Criterion,
     Evaluation,
     Request,
@@ -35,7 +35,7 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
     )
     result = forms.ChoiceField(
         label=_("Result"),
-        choices=[("", "---")] + RESULTS,
+        choices=[("", "---")] + EVAL_RESULTS,
         required=False,
         help_text=_(
             "If the result can be computed from criterions, this value will be erased."
