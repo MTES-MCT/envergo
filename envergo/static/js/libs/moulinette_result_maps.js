@@ -66,6 +66,15 @@
     // Bypass an issue with leaflet detecting a bad icon url, caused by
     // assets versioning
     L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
+
+    // Upon page printing, the map container width is reduced, so we need to
+    // make sure the map displays correctly with the new size.
+    window.matchMedia('print').addEventListener("change", function(query) {
+      if (query.matches) {
+        map.invalidateSize();
+      }
+    });
+
     return map;
   };
 
