@@ -839,4 +839,9 @@ div.hero-alt {
     margin-left: auto;
     margin-right: auto;
   }
+
+  // Hide the useless arrow icon for external links
+  .fr-link[target="_blank"]::after {
+    display: none;
+  }
 }
