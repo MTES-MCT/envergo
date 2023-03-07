@@ -833,4 +833,10 @@ div.hero-alt {
     display: none;
   }
 
+  // Prevent map and images to take up the entire page
+  .fr-content-media {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
