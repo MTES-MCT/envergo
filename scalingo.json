@@ -15,10 +15,13 @@
       "value": "True"
     },
     "DJANGO_TRACKER_ENABLED": {
-      "value": "False"
+      "value": "True"
+    },
+    "DJANGO_TRACKER_URL": {
+      "value": "https://stats.beta.gouv.fr/"
     },
     "DJANGO_SITE_ID": {
-      "value": "0"
+      "value": "12"
     },
     "ENV_NAME": {
       "value": "staging"

@@ -1,23 +1,25 @@
 {% extends 'emails/_base.html' %}
 
-{% block email_title %}Votre demande d'évaluation{% endblock %}
+{% block email_title %}Votre demande d'évaluation manuelle{% endblock %}
 
 {% block content %}
   <p>Bonjour,</p>
 
-  <p>Nous vous confirmons avoir bien enregistré votre demande d'évaluation de votre projet au titre de la Loi sur l'eau.</p>
-
-  {% if application_number %}
-    <p>(Votre numéro de demande de permis : {{ application_number }}).</p>
-  {% endif %}
+  <p>
+    Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo
+    {% if application_number %}
+      (numéro de demande de permis : {{ application_number }})
+    {% endif %}
+    sous la référence {{ reference }}.
+  </p>
 
   <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
 
-  <p>En attendant, vous pouvez consulter notre FAQ sur la Loi sur l'eau.</p>
+  <p>En attendant, vous pouvez consulter notre page d'information :</p>
 
   <p><a href="{{ faq_url }}">{{ faq_url }}</a></p>
 
-  <p>Vous pouvez également nous contacter pour apporter des compléments d'information à votre demande.</p>
+  <p>N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.</p>
 
   <p><a href="{{ contact_url }}">{{ contact_url }}</a></p>
 

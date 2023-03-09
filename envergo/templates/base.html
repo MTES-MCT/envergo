@@ -91,6 +91,14 @@
       }
       window.addEventListener('load', trackTopBarLinkClicks);
     </script>
+
+    <script>
+      // Detect print events
+      window.addEventListener('beforeprint', function() {
+        var _paq = window._paq || [];
+        _paq.push(['trackEvent', 'Print', 'Before']);
+      });
+    </script>
   </head>
 
   <body>

@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
-    RESULTS,
+    EVAL_RESULTS,
     Criterion,
     Evaluation,
     Request,
@@ -35,7 +35,7 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
     )
     result = forms.ChoiceField(
         label=_("Result"),
-        choices=[("", "---")] + RESULTS,
+        choices=[("", "---")] + EVAL_RESULTS,
         required=False,
         help_text=_(
             "If the result can be computed from criterions, this value will be erased."
@@ -142,9 +142,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
-
-        if not obj.moulinette_url:
-            obj.result = obj.compute_result()
         super().save_model(request, obj, form, change)
 
     def save_related(self, request, form, formsets, change):
@@ -152,9 +149,11 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         # The evaluation result depends on all the criterions, that's why
         # we have to save them before.
+        # If the moulinette_url is set, thought, the result must be set manually.
         evaluation = form.instance
-        evaluation.result = evaluation.compute_result()
-        evaluation.save()
+        if not evaluation.moulinette_url and not evaluation.result:
+            evaluation.result = evaluation.compute_result()
+            evaluation.save()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("request")

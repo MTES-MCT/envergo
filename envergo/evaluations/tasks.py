@@ -52,6 +52,7 @@ def confirm_request_to_requester(request_id, host):
     contact_url = reverse("contact_us")
     context = {
         "application_number": request.application_number,
+        "reference": request.reference,
         "faq_url": f"https://{host}{faq_url}",
         "contact_url": f"https://{host}{contact_url}",
     }
@@ -63,7 +64,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'évaluation Loi sur l'Eau",
+        subject="[EnvErgo] Votre demande d'évaluation manuelle",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email],

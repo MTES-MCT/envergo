@@ -54,7 +54,7 @@ PROBABILITIES = Choices(
     (4, "very_likely", _("Very likely")),
 )
 
-
+# All possible result codes for evaluation criteria
 RESULTS = Choices(
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
@@ -66,6 +66,13 @@ RESULTS = Choices(
     ("non_concerne", "Non concerné"),
     ("a_verifier", "À vérifier"),
     ("iota_a_verifier", "En cas de dossier Loi sur l'eau"),
+)
+
+# All possible result codes for a single evaluation
+EVAL_RESULTS = Choices(
+    ("soumis", "Soumis"),
+    ("non_soumis", "Non soumis"),
+    ("action_requise", "Action requise"),
 )
 
 
@@ -110,7 +117,9 @@ class Evaluation(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
-    result = models.CharField(_("Result"), max_length=32, choices=RESULTS, null=True)
+    result = models.CharField(
+        _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
+    )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=True)

@@ -1,16 +1,14 @@
 Bonjour,
 
-Nous vous confirmons avoir bien enregistré votre demande d'évaluation de votre projet au titre de la Loi sur l'eau.
-{% if application_number %}
-(Votre numéro de demande de permis : {{ application_number }}).
-{% endif %}
+Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
+
 Vous recevrez une réponse dans les trois jours ouvrés.
 
-En attendant, vous pouvez consulter notre FAQ sur la Loi sur l'eau.
+En attendant, vous pouvez consulter notre page d'information :
 
 {{ faq_url }}
 
-Vous pouvez également nous contacter pour apporter des compléments d'information à votre demande.
+N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.
 
 {{ contact_url }}
 

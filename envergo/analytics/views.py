@@ -89,10 +89,10 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
     success_message = "Merci de votre retour."
 
     def get_prefix(self):
-        if 'useful-feedback' in self.request.POST:
-            prefix = 'useful'
+        if "useful-feedback" in self.request.POST:
+            prefix = "useful"
         else:
-            prefix = 'useless'
+            prefix = "useless"
         return prefix
 
     def get(self, request, *args, **kwargs):

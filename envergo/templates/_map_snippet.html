@@ -10,19 +10,19 @@
     {{ map.caption|safe }}
 
     {% if map.sources %}
-      <br />Source(s) :
-
-      <ul class="source-list">
-        {% for source in map.sources %}
-          <li>
-            {% if source.source %}
-              <a class="fr-link" href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
-            {% else %}
-              {{ source.display_name }}
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
+      <div class="sources">
+        Sources : <ul class="source-list">
+          {% for source in map.sources %}
+            <li>
+              {% if source.source %}
+                <a class="fr-link" href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
+              {% else %}
+                {{ source.display_name }}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
     {% endif %}
   </figcaption>
 </figure>

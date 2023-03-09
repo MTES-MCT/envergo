@@ -231,13 +231,23 @@ section.regulation {
   }
 
   .fr-content-media__caption {
+    div.sources {
+      display: inline;
+    }
+
     ul.source-list {
       margin: 0;
       padding: 0;
+      display: inline;
 
       li {
+        display: inline;
         list-style-type: none;
         padding-bottom: 0;
+      }
+
+      li+li::before {
+        content: ", ";
       }
     }
   }
@@ -487,6 +497,10 @@ form#request-evaluation-form {}
   &:before {
     padding-bottom: 56.25%;
   }
+}
+
+figcaption.fr-content-media__caption .fr-link[target=_blank]::after {
+  margin-left: .25rem;
 }
 
 div.leaflet-container {
@@ -758,4 +772,77 @@ div.hero-alt {
   margin-left: -1.5rem;
   margin-right: -1.5rem;
   padding: 1.5rem;
+}
+
+
+/**
+ * Impression
+ */
+@media print {
+
+  // Reduce font size to a more compact print
+  :root {
+    font-size: 85%;
+  }
+
+  // Use the entire page width
+  #main-container article {
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+  }
+
+  // Hide common template elements
+  body>header,
+  body>footer,
+  #top-bar,
+  .hide-print {
+    display: none;
+  }
+
+
+  // Make sure accordion content is visible
+  .fr-accordion__title .fr-accordion__btn {
+    font-weight: bold;
+  }
+
+  .fr-collapse {
+    --collapse-max-height: 0;
+    --collapse: auto;
+    --collapser: "";
+    overflow: auto;
+    max-height: auto;
+    max-height: inherit;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .fr-collapse::before {
+    display: none;
+  }
+
+  .fr-collapse:not(.fr-collapse--expanded) {
+    visibility: visible;
+  }
+
+  .fr-collapse:not(.fr-collapse--expanded)::before {
+    margin-top: 0;
+  }
+
+  // Some little quirks
+  section.regulation button.read-more-btn {
+    display: none;
+  }
+
+  // Prevent map and images to take up the entire page
+  .fr-content-media {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // Hide the useless arrow icon for external links
+  .fr-link[target="_blank"]::after {
+    display: none;
+  }
 }

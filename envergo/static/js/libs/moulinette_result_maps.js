@@ -57,7 +57,10 @@
       for (const polygonId in mapData.polygons) {
         const polygon = mapData.polygons[polygonId];
 
-        div.innerHTML += '<span><i style="background: ' + polygon.color + '"></i> ' + polygon.label + '</span>';
+        // Add a colored square with the polygon's color
+        // The "box-shadow" style is used to prevent a print css issue:
+        // browsers often don't render colored background upon printing
+        div.innerHTML += '<span><i style="box-shadow: inset 0 0 0 50px ' + polygon.color + '; background: ' + polygon.color + '"></i> ' + polygon.label + '</span>';
       }
       return div;
     };
@@ -66,6 +69,15 @@
     // Bypass an issue with leaflet detecting a bad icon url, caused by
     // assets versioning
     L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
+
+    // Upon page printing, the map container width is reduced, so we need to
+    // make sure the map displays correctly with the new size.
+    window.matchMedia('print').addEventListener("change", function(query) {
+      if (query.matches) {
+        map.invalidateSize();
+      }
+    });
+
     return map;
   };
 
