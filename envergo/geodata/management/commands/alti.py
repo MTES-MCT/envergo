@@ -260,7 +260,6 @@ class Command(BaseCommand):
         iterations = options["iterations"]
         mnt = Mnt(x, y, step_size=step_size)
 
-
         surfaces = sorted(
             [mnt.compute_runoff_surface(MAX_SURFACE) for _ in range(iterations)]
         )

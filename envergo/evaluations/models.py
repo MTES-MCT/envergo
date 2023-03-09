@@ -117,7 +117,9 @@ class Evaluation(models.Model):
     existing_surface = models.IntegerField(
         _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
-    result = models.CharField(_("Result"), max_length=32, choices=EVAL_RESULTS, null=True)
+    result = models.CharField(
+        _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
+    )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=True)

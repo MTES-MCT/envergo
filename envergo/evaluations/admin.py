@@ -155,7 +155,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             evaluation.result = evaluation.compute_result()
             evaluation.save()
 
-
     def get_queryset(self, request):
         qs = super().get_queryset(request).select_related("request")
         return qs
