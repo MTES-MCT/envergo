@@ -47,7 +47,11 @@ class ParseAddressMixin:
 
 @method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
 class FeedbackRespond(ParseAddressMixin, BaseFormView):
-    """Sends a Mattermost notification when the feedback form is clicked."""
+    """Sends a Mattermost notification when the feedback form is clicked.
+
+    Note: this view is called via ajax when the feedback form modal is opened.
+
+    """
 
     form_class = FeedbackRespondForm
 
@@ -55,6 +59,8 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         address = self.parse_address()
         feedback_origin = self.request.META.get("HTTP_REFERER")
         feedback = form.cleaned_data["feedback"]
+        metadata = form.cleaned_data.get("moulinette_data", {})
+        metadata["feedback"] = feedback
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
@@ -65,7 +71,7 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
             },
         )
         notify(message_body)
-        log_event("FeedbackDialog", "Respond", self.request, data=feedback)
+        log_event("FeedbackDialog", "Respond", self.request, **metadata)
         return HttpResponse(message_body)
 
     def form_invalid(self, form):
@@ -77,8 +83,17 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
 
 
 class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
+    """Process the feedback modal form."""
+
     form_class = FeedbackForm
     success_message = "Merci de votre retour."
+
+    def get_prefix(self):
+        if 'useful-feedback' in self.request.POST:
+            prefix = 'useful'
+        else:
+            prefix = 'useless'
+        return prefix
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(reverse("moulinette_home"))
@@ -87,6 +102,9 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         """Send the feedback as a Mattermost notification."""
 
         data = form.cleaned_data
+        metadata = {}
+        metadata.update(data)
+        metadata.update(form.cleaned_data.get("moulinette_data", {}))
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()
         message_body = render_to_string(
@@ -101,7 +119,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
             },
         )
         notify(message_body)
-        log_event("FeedbackDialog", "FormSubmit", self.request)
+        log_event("FeedbackDialog", "FormSubmit", self.request, **metadata)
         return super().form_valid(form)
 
     def form_invalid(self, form):

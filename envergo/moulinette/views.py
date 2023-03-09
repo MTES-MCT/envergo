@@ -74,7 +74,21 @@ class MoulinetteMixin:
             context.update(moulinette.catalog)
             context["additional_forms"] = self.get_additional_forms(moulinette)
             context["additional_fields"] = self.get_additional_fields(moulinette)
-            context["moulinette_summary"] = json.dumps(moulinette.summary())
+
+            moulinette_data = moulinette.summary()
+            context["moulinette_summary"] = json.dumps(moulinette_data)
+            context["feedback_form_useful"] = FeedbackFormUseful(
+                prefix="useful", initial={
+                    "feedback": "Oui",
+                    "moulinette_data": moulinette_data
+                }
+            )
+            context["feedback_form_useless"] = FeedbackFormUseless(
+                prefix="useless", initial={
+                    "feedback": "Non",
+                    "moulinette_data": moulinette_data
+                }
+            )
 
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
@@ -89,8 +103,6 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 6
 
-        context["feedback_form_useful"] = FeedbackFormUseful()
-        context["feedback_form_useless"] = FeedbackFormUseless()
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["source"] = "moulinette"
