@@ -60,7 +60,6 @@ def post_request(request, host):
                     }
                 ],
             },
-            "Collectivité instructrice": {"select": None},
             "ID base SQL": {"number": request.id},
             "Date de réception": {
                 "date": {"start": f"{now:%Y-%m-%d}", "end": None, "time_zone": None},
