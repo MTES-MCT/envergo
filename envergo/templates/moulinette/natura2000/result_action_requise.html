@@ -134,11 +134,7 @@
       <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
 
       <div class="fr-highlight fr-mb-3w">
-        <address>
-          <strong>DDTM de Loire-Atlantique</strong><br />
-          Service eau et environnement<br />
-          Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a>
-        </address>
+        {{ config.n2000_contact_ddtm_instruction|safe }}
       </div>
 
     {% endif %}
@@ -158,11 +154,7 @@
       <p>Elle doit être adressée à :</p>
 
       <div class="fr-highlight fr-mb-3w">
-        <address>
-          <strong>DDTM de Loire-Atlantique</strong><br />
-          Service eau et environnement<br />
-          Email : <a href="mailto:ddtm-see@loire-atlantique.gouv.fr">ddtm-see@loire-atlantique.gouv.fr</a>
-        </address>
+        {{ config.n2000_contact_ddtm_instruction|safe }}
       </div>
 
     {% endif %}
