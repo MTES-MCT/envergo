@@ -23,6 +23,16 @@ class ZoneHumide44(MoulinetteCriterion):
     subtitle = "Seuil réglementaire : 100 m²"
     header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
+    CODES = [
+        "soumis",
+        "non_soumis",
+        "action_requise_proche",
+        "non_soumis_proche",
+        "action_requise_dans_doute",
+        "non_soumis_dans_doute",
+        "non_concerne",
+    ]
+
     def get_catalog_data(self):
         data = {}
 
@@ -159,6 +169,8 @@ class ZoneInondable44(MoulinetteCriterion):
     subtitle = "Seuil réglementaire : 200 m²"
     header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (10° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
+    CODES = ["soumis", "non_soumis", "non_concerne"]
+
     def get_catalog_data(self):
         data = {}
         flood_zones = self.catalog["flood_zones"]
@@ -226,6 +238,8 @@ class IOTA(MoulinetteCriterion):
     title = "Natura 2000 si dossier Loi sur l'eau"
     header = "« Liste nationale » Natura 2000 (4° du I de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"  # noqa
 
+    CODES = ["soumis", "non_soumis", "a_verifier"]
+
     @cached_property
     def result_code(self):
         iota = self.moulinette.loi_sur_leau.result
@@ -257,6 +271,13 @@ class Lotissement44(MoulinetteCriterion):
     title = "Lotissement dans zone Natura 2000"
     header = "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"  # noqa
     form_class = LotissementForm
+
+    CODES = [
+        "soumis_dedans",
+        "soumis_proximite_immediate",
+        "non_soumis",
+        "non_disponible",
+    ]
 
     def get_distance_to_n2000(self):
         perimeters = self.moulinette.perimeters

@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.regulations import MoulinetteCriterion
 from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
 from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
@@ -113,7 +114,7 @@ class Moulinette:
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
         self.perimeters = self.get_perimeters()
-        self.criterions = set([perimeter.criterion for perimeter in self.perimeters])
+        self.criterions = self.get_criterions()
 
         # This is a clear case of circular references, since the Moulinette
         # holds references to the regulations it's computing, but regulations and
@@ -206,6 +207,10 @@ class Moulinette:
             .select_related("map")
         )
         return perimeters
+
+    def get_criterions(self):
+        criterions = set([perimeter.criterion for perimeter in self.perimeters])
+        return criterions
 
     def get_zones(self):
         """For debug purpose only.
@@ -321,3 +326,53 @@ class Moulinette:
             summary["result"] = self.result()
 
         return summary
+
+
+class FakeMoulinette(Moulinette):
+    """This is a custom Moulinette subclass used for debugging purpose.
+
+    A single moulinette simulation tests many criteria, each criterion can
+    have a different result code, resulting in specific regulation results.
+
+    Every single criterion unique result is displayed with a dedicated template.
+    Moreover, some data may change depending on the department the simulation
+    is ran.
+
+    For this reason, it can be very cumbersome for the EnvErgo team members
+    to review and test each and every possibility.
+
+    That's why a custom page was created, allowing to manually select the exact
+    Moulinette result combination we want to display.
+
+    This `FakeMoulinette` is a utility class that must be initialized with a
+    dict of data where each key is a single criterion slug and the associated
+    value is the `result_code` we want the criterion to return.
+    """
+
+    def __init__(self, fake_data):
+        dummy_data = {
+            "lat": 1.7,
+            "lng": 47,
+            "created_surface": 50,
+            "existing_surface": 50,
+        }
+        dummy_data.update(fake_data)
+        super().__init__(dummy_data, dummy_data)
+
+        # Override the `result_code` for each criterion
+        # Since `result_code` is a property, we cannot directly monkeypatch the
+        # property.
+        # Hence, we have to override the value at the class level
+        for regulation in self.regulations:
+            for criterion in regulation.criterions:
+                setattr(
+                    criterion.__class__, "result_code", self.catalog[criterion.slug]
+                )
+
+    def get_criterions(self):
+        criteria = [
+            criterion
+            for criterion in MoulinetteCriterion.__subclasses__()
+            if self.catalog[criterion.slug]
+        ]
+        return criteria

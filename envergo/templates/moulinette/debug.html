@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Demandez une évaluation pour un projet{% endblock %}
+
+{% block article %}
+
+  <form method="GET" action="">
+    {% include '_form_snippet.html' with form=form %}
+    <button type="submit" class="fr-btn fr-btn--primary">
+      Lancer le debug
+    </button>
+  </form>
+
+{% endblock %}

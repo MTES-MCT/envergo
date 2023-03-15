@@ -9,8 +9,8 @@ from django.views.generic import FormView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.forms import MoulinetteForm
-from envergo.moulinette.models import Moulinette
+from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
+from envergo.moulinette.models import FakeMoulinette, Moulinette
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -228,6 +228,47 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         tracked_url = f"{current_url}&mtm_source=shareBtn"
         context["current_url"] = tracked_url
         return context
+
+
+class MoulinetteDebug(FormView):
+    """Visualize the moulinette result for a specific criteria result combination.
+
+    See `envergo.moulinette.models.FakeMoulinette` for more details.
+    """
+
+    form_class = MoulinetteDebugForm
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+        }
+
+        # This form is submitted with GET, not POST
+        GET = self.request.GET
+        if GET:
+            kwargs.update({"data": GET})
+
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context["form"]
+        if form.is_valid():
+            context["moulinette"] = self.moulinette = FakeMoulinette(form.cleaned_data)
+
+        return context
+
+    def get_template_names(self):
+        """Check wich template to use depending on the moulinette result."""
+
+        if hasattr(self, "moulinette"):
+            template_name = "moulinette/debug_result.html"
+        else:
+            template_name = "moulinette/debug.html"
+
+        return [template_name]
 
 
 class MoulinetteRegulationResult(MoulinetteResult, FormView):

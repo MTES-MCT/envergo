@@ -150,6 +150,12 @@ class MoulinetteCriterion:
     # to display the raw type for debug purpose
     do_not_call_in_templates = True
 
+    # This is the list of all unique result codes the criterion can return.
+    # This is onlyy used for debugging purpose in the `envergo.moulinette.forms.MoulinetteDebug` form.
+    # Every subclass should override this property to match the
+    # "Nomenclature réglementations & critères" document.
+    CODES = ["soumis", "non_soumis", "action_requise", "non_concerne"]
+
     def __init__(self, moulinette):
         self.moulinette = moulinette
         self.moulinette.catalog.update(self.get_catalog_data())

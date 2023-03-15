@@ -52,6 +52,8 @@ class Emprise(MoulinetteCriterion):
                 annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = EmpriseForm
 
+    CODES = ["systematique", "cas_par_cas", "non_soumis"]
+
     def get_catalog_data(self):
         data = {}
         return data
@@ -114,6 +116,8 @@ class SurfacePlancher(MoulinetteCriterion):
                 href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>
                 annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = SurfacePlancherForm
+
+    CODES = ["cas_par_cas", "non_soumis", "non_disponible"]
 
     def get_catalog_data(self):
         data = {}
@@ -185,6 +189,8 @@ class TerrainAssiette(MoulinetteCriterion):
                 annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = TerrainAssietteForm
 
+    CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
+
     def get_catalog_data(self):
         data = {}
         return data
@@ -237,6 +243,8 @@ class OtherCriteria(MoulinetteCriterion):
     slug = "autres_rubriques"
     choice_label = "Éval Env > Autres rubriques"
     title = "Autres rubriques"
+
+    CODES = ["non_disponible"]
 
     @cached_property
     def result_code(self):
