@@ -257,14 +257,19 @@ class MoulinetteDebug(FormView):
         form = context["form"]
         if form.is_valid():
             context["moulinette"] = self.moulinette = FakeMoulinette(form.cleaned_data)
+            context.update(self.moulinette.catalog)
 
         return context
 
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
-        if hasattr(self, "moulinette"):
+        moulinette = getattr(self, "moulinette", None)
+
+        if moulinette and moulinette.is_evaluation_available():
             template_name = "moulinette/debug_result.html"
+        elif moulinette:
+            template_name = "moulinette/debug_result_non_disponible.html"
         else:
             template_name = "moulinette/debug.html"
 
