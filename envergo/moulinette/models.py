@@ -131,6 +131,10 @@ class Moulinette:
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
+        self.department = self.get_department()
+        if hasattr(self.department, "moulinette_config"):
+            self.catalog["config"] = self.department.moulinette_config
+
         self.perimeters = self.get_perimeters()
         self.criterions = self.get_criterions()
 
@@ -149,6 +153,11 @@ class Moulinette:
 
         self.catalog.update(self.cleaned_additional_data())
 
+    def get_department(self):
+        lng_lat = self.catalog["lng_lat"]
+        department = Department.objects.filter(geometry__contains=lng_lat).first()
+        return department
+
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
@@ -156,11 +165,8 @@ class Moulinette:
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
-        lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        catalog["coords"] = lng_lat.transform(EPSG_MERCATOR, clone=True)
-        catalog["department"] = Department.objects.filter(
-            geometry__contains=lng_lat
-        ).first()
+        catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
@@ -249,9 +255,7 @@ class Moulinette:
 
         When a department is available, we fill it's contact data.
         """
-        department = self.catalog["department"]
-        contact_info = getattr(department, "contact_md", None)
-        return bool(contact_info)
+        return hasattr(self.department, "moulinette_config")
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
@@ -394,3 +398,6 @@ class FakeMoulinette(Moulinette):
             if self.catalog[criterion.slug]
         ]
         return criteria
+
+    def get_department(self):
+        return self.catalog["department"]
