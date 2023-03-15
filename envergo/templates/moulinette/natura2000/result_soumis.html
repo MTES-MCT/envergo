@@ -61,13 +61,7 @@
 
   <h4>Comment réaliser une évaluation des incidences Natura 2000 ?</h4>
 
-  <p><strong>1/ Remplir le formulaire d’évaluation simplifiée</strong></p>
-
-  <p>Ce <a download="Formulaire N2000 DDTM44.pdf" href="{% static 'pdfs/formulaire_eval_n2000_ddtm44.pdf' %}">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>
-
-  <p>S’il conclut à l’absence d’incidence, il fait office d’évaluation des incidences Natura 2000.</p>
-
-  <p>Dans le cas contraire, une évaluation plus poussée doit être conduite.</p>
+  {{ config.n2000_procedure_ein|safe }}
 
   <p><strong>2/ En cas d’incidences possibles ou avérées, se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</strong></p>
 
