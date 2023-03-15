@@ -223,8 +223,6 @@ class Department(models.Model):
         unique=True,
     )
     geometry = gis_models.MultiPolygonField()
-    contact_md = models.TextField(_("Contact"), blank=True)
-    contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     class Meta:
         verbose_name = _("Department")
@@ -233,7 +231,3 @@ class Department(models.Model):
 
     def __str__(self):
         return self.get_department_display()
-
-    def save(self, *args, **kwargs):
-        self.contact_html = markdown_to_html(self.contact_md)
-        super().save(*args, **kwargs)
