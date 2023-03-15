@@ -80,6 +80,24 @@ class Perimeter(models.Model):
         return self.name
 
 
+class MoulinetteConfig(models.Model):
+    """Some moulinette content depends on the department."""
+
+    department = models.OneToOneField(
+        "geodata.Department",
+        verbose_name=_("Department"),
+        on_delete=models.PROTECT,
+        related_name="moulinette_config",
+    )
+    lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
+    n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
+    n2000_contact_ddtm_instruction = models.TextField(
+        "N2000 > Contact DDTM instruction"
+    )
+    n2000_procedure_ein = models.TextField("N2000 > Procédure EIN")
+    evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
+
+
 class MoulinetteCatalog(dict):
     """Custom class responsible for fetching data used in regulation evaluations.
 
