@@ -34,50 +34,7 @@
 
   <h4>Comment déposer une demande d’examen au cas par cas ?</h4>
 
-  <p><strong>1/ Faire établir un pré-diagnostic environnemental et remplir le formulaire
-    de demande d’examen au cas par cas</strong></p>
-
-  <p>Ce travail doit être confié à un bureau d’études spécialisé.</p>
-
-  <p>Un pré-diagnostic environnemental est réalisé, afin d’évaluer :</p>
-  <ul>
-    <li>la sensibilité environnementale de la zone d'implantation envisagée ;</li>
-    <li>les impacts potentiels du projet sur l’environnement et la santé humaine
-      (rejets nocifs, biodiversité, risques, nuisances, paysages…).</li>
-  </ul>
-
-  <p>Le formulaire de demande d’examen au cas par cas doit être rempli (<a href="{% static 'pdfs/formulaire_cerfa_14734-04.pdf' %}" download>Cerfa 14734-04</a>),
-    accompagné de <a href="{% static 'pdfs/annexe_1_cerfa_14734_3.pdf' %}" download>son annexe</a>.</p>
-
-  <p>Une <a href="{% static 'pdfs/notice_51656_05.pdf' %}" download>notice explicative</a> pour le remplissage du formulaire est disponible.</p>
-
-  <p>Tous les dossiers déposés sont rendus publics et mis à disposition <a href="https://www.pays-de-la-loire.developpement-durable.gouv.fr/loire-atlantique-a5865.html"
-    target="_blank" rel="noopener">sur le site de la DREAL Pays-de-la-Loire</a>.
-    Il est intéressant de les consulter à titre de comparaison et d’analyse des bonnes pratiques.
-  </p>
-
-  <p><strong>2/ Déposer la demande en ligne ou par courrier</strong></p>
-
-  <p>Le formulaire et ses annexes doivent être déposés à la DREAL (Direction régionale de l’environnement,
-    de l’aménagement et du logement) :</p>
-
-  <ul>
-    <li>soit par messagerie électronique à l’adresse suivante : <a href="mailto:evaluation-env-projets@developpement-durable.gouv.fr">
-      evaluation-env-projets@developpement-durable.gouv.fr</a>
-      <br>(si les fichiers sont volumineux (> 5 Mo), utiliser la plate-forme <a href="https://melanissimo-ng.din.developpement-durable.gouv.fr/" target="_blank" rel="noopener">
-        Melanissimo</a> en indiquant comme destinataire l'adresse email ci-dessus)
-    </li>
-    <li>soit par courrier :
-      <br>DREAL Pays de la Loire
-      <br>SCTE/DEE
-      <br>5 rue Françoise Giroud - CS 16326
-      <br>44263 Nantes Cédex 2
-    </li>
-  </ul>
-
-  <p>Les modalités pratiques de ce dépôt sont détaillées
-    <a href="https://www.pays-de-la-loire.developpement-durable.gouv.fr/modalites-pratiques-du-cas-par-cas-a1738.html"
-      target="_blank" rel="noopener">sur le site de la DREAL.</a></p>
+  {{ config.evalenv_procedure_casparcas|safe }}
 
   <h4>Comment l'instruction d'une demande d’examen au cas par cas se déroule-t-elle ?</h4>
 
