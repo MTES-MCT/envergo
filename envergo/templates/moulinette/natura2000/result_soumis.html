@@ -95,7 +95,7 @@
     <p>Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :</p>
 
     <div class="fr-highlight fr-mb-3w">
-      {{ department.contact_html|safe }}
+      {{ config.lse_contact_ddtm|safe }}
     </div>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
@@ -110,7 +110,7 @@
     <p>Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :</p>
 
     <div class="fr-highlight fr-mb-3w">
-      {{ department.contact_html|safe }}
+      {{ config.lse_contact_ddtm|safe }}
     </div>
 
     {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
