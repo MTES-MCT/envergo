@@ -6,7 +6,7 @@ class MoulinetteForm(forms.Form):
     created_surface = forms.IntegerField(
         label=_("Surface created by the project"),
         required=True,
-        help_text="Construction, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
+        help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
     )
     existing_surface = forms.IntegerField(
@@ -18,7 +18,7 @@ class MoulinetteForm(forms.Form):
     project_surface = forms.IntegerField(
         label=_("Total surface at the end of the project"),
         required=False,
-        help_text="Construction, voirie, espaces verts, remblais et bassins",
+        help_text="Surface au sol impactée totale, y compris l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
     )
     address = forms.CharField(
