@@ -133,15 +133,11 @@ class Moulinette:
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
+        catalog = {}
+
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-
-        catalog = {}
-        catalog["project_surface"] = (
-            self.catalog["existing_surface"] + self.catalog["created_surface"]
-        )
-
         catalog["coords"] = lng_lat.transform(EPSG_MERCATOR, clone=True)
         catalog["department"] = Department.objects.filter(
             geometry__contains=lng_lat
