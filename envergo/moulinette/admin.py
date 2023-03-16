@@ -30,4 +30,4 @@ class PerimeterAdmin(admin.ModelAdmin):
 
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["department"]

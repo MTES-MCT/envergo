@@ -97,6 +97,13 @@ class MoulinetteConfig(models.Model):
     n2000_procedure_ein = models.TextField("N2000 > Procédure EIN")
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
 
+    class Meta:
+        verbose_name = _("Moulinette config")
+        verbose_name_plural = _("Moulinette configs")
+
+    def __str__(self):
+        return self.department.get_department_display()
+
 
 class MoulinetteCatalog(dict):
     """Custom class responsible for fetching data used in regulation evaluations.
