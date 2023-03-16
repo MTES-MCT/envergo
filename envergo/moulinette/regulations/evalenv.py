@@ -163,7 +163,7 @@ class TerrainAssietteForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if "project_surface" in self.data:
+        if self.data.get("project_surface", None):
             project_surface = int(self.data["project_surface"])
         else:
             created_surface = int(self.data["created_surface"])
