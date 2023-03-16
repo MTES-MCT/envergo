@@ -152,6 +152,7 @@ class MoulinetteMixin:
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
         form_data.pop("address")
+        form_data.pop("existing_surface")
         get.update(form_data)
 
         moulinette = Moulinette(form_data, form.data)
