@@ -57,6 +57,12 @@
   </p>
 
   {% include '_field_snippet.html' with field=form.created_surface %}
+
+  <div class="fr-alert fr-alert--warning fr-alert--sm fr-mb-1w">
+    <p><strong>Interface modifiée !</strong><br/>
+      Le champ « surface existante » est remplacé par « état final ».</p>
+  </div>
+
   {% include '_field_snippet.html' with field=form.project_surface %}
 
   {% if additional_forms %}
