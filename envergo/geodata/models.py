@@ -12,8 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from model_utils import Choices
 
-from envergo.utils.markdown import markdown_to_html
-
 logger = logging.getLogger(__name__)
 
 
