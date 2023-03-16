@@ -66,12 +66,4 @@ class MoulinetteForm(forms.Form):
             else:
                 if existing_surface is None:
                     data["existing_surface"] = project_surface - created_surface
-                else:
-                    if existing_surface != project_surface - created_surface:
-                        self.add_error(
-                            "project_surface",
-                            _(
-                                "The existing surface must be the total surface minus the created surface"
-                            ),
-                        )
         return data
