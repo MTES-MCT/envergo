@@ -749,7 +749,7 @@ msgstr ""
 
 #: envergo/moulinette/forms/__init__.py:64
 msgid "The total surface must be greater than the created surface"
-msgstr ""
+msgstr "La surface impactée totale doit être supérieure à celle des impacts nouveaux"
 
 #: envergo/moulinette/forms/__init__.py:74
 msgid ""

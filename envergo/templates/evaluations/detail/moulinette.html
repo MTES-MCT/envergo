@@ -31,14 +31,24 @@
     <li>
       <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²<br />
       <span class="fr-hint-text">
-        Construction, voirie, espaces verts, remblais et bassins — temporaires et définitifs
+        Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs
       </span>
     </li>
 
-    <li>
-      <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²<br />
-      <span class="fr-hint-text">Construction, voirie, espaces verts, remblais et bassins</span>
-    </li>
+    {% if evaluation.moulinette_params.existing_surface %}
+      <li>
+        <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²<br />
+        <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
+      </li>
+    {% endif %}
+
+    {% if evaluation.moulinette_params.project_surface %}
+      <li>
+        <strong>Surface impactée totale, y compris l'existant :</strong> {{ evaluation.moulinette_params.project_surface|localize }} m²<br />
+        <span class="fr-hint-text">
+          Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
+      </li>
+    {% endif %}
 
     {% if evaluation.moulinette_params.is_lotissement %}
       <li>
