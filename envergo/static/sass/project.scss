@@ -187,6 +187,10 @@ nav#evaluation-summary {
     }
   }
 
+  p.hint-header {
+    color: var(--text-mention-grey);
+  }
+
   label[for=id_project_surface] {
 
     i.optional-tag {
