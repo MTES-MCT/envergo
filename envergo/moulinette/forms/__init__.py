@@ -6,18 +6,21 @@ class MoulinetteForm(forms.Form):
     created_surface = forms.IntegerField(
         label=_("Surface created by the project"),
         required=True,
+        min_value=0,
         help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
     )
     existing_surface = forms.IntegerField(
         label=_("Existing surface before the project"),
         required=False,
+        min_value=0,
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
     )
     project_surface = forms.IntegerField(
         label=_("Total surface at the end of the project"),
         required=False,
+        min_value=0,
         help_text="Surface au sol impactée totale, y compris l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
     )
@@ -35,6 +38,10 @@ class MoulinetteForm(forms.Form):
 
     def clean(self):
         data = super().clean()
+
+        if self.errors:
+            return data
+
         created_surface = data.get("created_surface")
         existing_surface = data.get("existing_surface")
         project_surface = data.get("project_surface")
