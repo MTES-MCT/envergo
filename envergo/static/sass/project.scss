@@ -187,6 +187,13 @@ nav#evaluation-summary {
     }
   }
 
+  label[for=id_project_surface] {
+
+    i.optional-tag {
+      display: none;
+    }
+  }
+
   #form-group-address .optional-tag {
     display: none;
   }
