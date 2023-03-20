@@ -8,6 +8,9 @@ register = template.Library()
 @register.inclusion_tag("confs/top_bar.html", takes_context=True)
 def top_bar(context):
 
+    if "request" not in context:
+        return ""
+
     # Check if the top bar hiding cookie is set
     cookies = context["request"].COOKIES
     if "hide_top_bar" in cookies:
