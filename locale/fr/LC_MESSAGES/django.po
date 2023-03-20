@@ -721,7 +721,7 @@ msgstr "Aucun fichier .shp trouvé dans l'archive"
 
 #: envergo/moulinette/forms/__init__.py:7
 msgid "Surface created by the project"
-msgstr "Impacts nouveaux"
+msgstr "Nouveaux impacts"
 
 #: envergo/moulinette/forms/__init__.py:13
 msgid "Existing surface before the project"
@@ -745,11 +745,11 @@ msgstr "Latitude"
 
 #: envergo/moulinette/forms/__init__.py:51
 msgid "This field is required"
-msgstr ""
+msgstr "Ce champ est obligatoire"
 
 #: envergo/moulinette/forms/__init__.py:64
 msgid "The total surface must be greater than the created surface"
-msgstr "La surface impactée totale doit être supérieure à celle des impacts nouveaux"
+msgstr "La surface impactée totale doit être au moins égale à celle des nouveaux impacts"
 
 #: envergo/moulinette/forms/__init__.py:74
 msgid ""
