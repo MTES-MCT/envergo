@@ -191,6 +191,23 @@ nav#evaluation-summary {
     color: var(--text-mention-grey);
   }
 
+  .fr-input-group>label {
+    font-weight: 600;
+
+    .fr-hint-text {
+      font-weight: initial;
+      font-size: 1rem;
+      color: inherit;
+    }
+  }
+
+  #ui-change-warning p {
+    font-size: 0.85rem;
+    line-height: 1.5rem;
+    color: var(--text-mention-grey);
+    margin-bottom: .25rem;
+  }
+
   label[for=id_project_surface] {
 
     i.optional-tag {
