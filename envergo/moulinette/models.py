@@ -338,7 +338,7 @@ class Moulinette:
     def summary(self):
         """Build a data summary, for analytics purpose."""
 
-        department = self.catalog["department"]
+        department = self.department
         department_code = department.department if department else ""
 
         summary = {
