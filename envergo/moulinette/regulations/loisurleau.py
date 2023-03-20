@@ -181,9 +181,9 @@ class ZoneInondable(MoulinetteCriterion):
         else:
             flood_zone_status = "outside"
 
-        if self.catalog["project_surface"] >= 400:
+        if self.catalog["final_surface"] >= 400:
             project_size = "big"
-        elif self.catalog["project_surface"] >= 300:
+        elif self.catalog["final_surface"] >= 300:
             project_size = "medium"
         else:
             project_size = "small"
@@ -239,9 +239,9 @@ class Ruissellement(MoulinetteCriterion):
     @cached_property
     def result_code(self):
 
-        if self.catalog["project_surface"] >= 10000:
+        if self.catalog["final_surface"] >= 10000:
             res = RESULTS.soumis
-        elif self.catalog["project_surface"] >= 8000:
+        elif self.catalog["final_surface"] >= 8000:
             res = RESULTS.action_requise
         else:
             res = RESULTS.non_soumis

@@ -14,14 +14,14 @@ def test_total_surface_is_inferred():
     assert form.is_valid()
 
     data = form.cleaned_data
-    assert "project_surface" in data
-    assert data["project_surface"] == 100
+    assert "final_surface" in data
+    assert data["final_surface"] == 100
 
 
 def test_existing_surface_is_inferred():
     data = {
         "created_surface": 50,
-        "project_surface": 100,
+        "final_surface": 100,
         "address": "Rue bidon",
         "lng": 1.234567,
         "lat": 1.234567,
@@ -35,7 +35,7 @@ def test_existing_surface_is_inferred():
     assert data["existing_surface"] == 50
 
 
-def test_existing_surface_or_project_surface_is_required():
+def test_existing_surface_or_final_surface_is_required():
     data = {
         "created_surface": 50,
         "address": "Rue bidon",
@@ -45,7 +45,7 @@ def test_existing_surface_or_project_surface_is_required():
 
     form = MoulinetteForm(data)
     assert not form.is_valid()
-    assert "project_surface" in form.errors
+    assert "final_surface" in form.errors
 
 
 def test_existing_surface_can_be_zero():
@@ -61,15 +61,15 @@ def test_existing_surface_can_be_zero():
     assert form.is_valid()
 
     data = form.cleaned_data
-    assert "project_surface" in data
-    assert data["project_surface"] == 50
+    assert "final_surface" in data
+    assert data["final_surface"] == 50
 
 
 def test_total_surface_must_be_correct():
     data = {
         "created_surface": 50,
         "existing_surface": 60,
-        "project_surface": 110,
+        "final_surface": 110,
         "address": "Rue bidon",
         "lng": 1.234567,
         "lat": 1.234567,
@@ -77,16 +77,16 @@ def test_total_surface_must_be_correct():
     form = MoulinetteForm(data)
     assert form.is_valid()
 
-    data["project_surface"] = 100
+    data["final_surface"] = 100
     form = MoulinetteForm(data)
     assert not form.is_valid()
-    assert "project_surface" in form.errors
+    assert "final_surface" in form.errors
 
 
 def test_existing_surface_cannot_be_negative():
     data = {
         "created_surface": 50,
-        "project_surface": 40,
+        "final_surface": 40,
         "address": "Rue bidon",
         "lng": 1.234567,
         "lat": 1.234567,
@@ -94,4 +94,4 @@ def test_existing_surface_cannot_be_negative():
 
     form = MoulinetteForm(data)
     assert not form.is_valid()
-    assert "project_surface" in form.errors
+    assert "final_surface" in form.errors

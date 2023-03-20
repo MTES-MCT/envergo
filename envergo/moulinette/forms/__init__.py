@@ -17,7 +17,7 @@ class MoulinetteForm(forms.Form):
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
     )
-    project_surface = forms.IntegerField(
+    final_surface = forms.IntegerField(
         label=_("Total surface at the end of the project"),
         required=False,
         min_value=0,
@@ -44,7 +44,7 @@ class MoulinetteForm(forms.Form):
 
         created_surface = data.get("created_surface")
         existing_surface = data.get("existing_surface")
-        project_surface = data.get("project_surface")
+        final_surface = data.get("final_surface")
 
         # The user MUST provide the total final surface
         # However, in a previous version of the form, the user
@@ -54,23 +54,23 @@ class MoulinetteForm(forms.Form):
         # data format
 
         # Both are missing
-        if existing_surface is None and project_surface is None:
-            self.add_error("project_surface", _("This field is required"))
+        if existing_surface is None and final_surface is None:
+            self.add_error("final_surface", _("This field is required"))
 
         # Old version, project surface is missing
-        elif project_surface is None:
-            data["project_surface"] = created_surface + existing_surface
+        elif final_surface is None:
+            data["final_surface"] = created_surface + existing_surface
 
         # New version, project surface is provided
         # If existing_surface is missing, we compute it
         # If both values are somehow provided, we check that they are consistent
         else:
-            if project_surface < created_surface:
+            if final_surface < created_surface:
                 self.add_error(
-                    "project_surface",
+                    "final_surface",
                     _("The total surface must be greater than the created surface"),
                 )
             else:
                 if existing_surface is None:
-                    data["existing_surface"] = project_surface - created_surface
+                    data["existing_surface"] = final_surface - created_surface
         return data
