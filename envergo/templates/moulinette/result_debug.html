@@ -12,18 +12,14 @@
     <ul>
       <li>Surface existante: {{ existing_surface }} m²</li>
       <li>Surface créée: {{ created_surface }} m²</li>
+      <li>Surface finale: {{ final_surface }} m²</li>
     </ul>
 
     <h2>Périmètres et critères activés</h2>
 
-    {% for perimeter in moulinette.perimeters %}
-      <h3>{{ perimeter }}</h3>
-
-      <ul>
-        <li>Carte : {{ perimeter.map }}</li>
-        <li>Critère : {{ perimeter.criterion.title }} ({{ perimeter.criterion.slug }})</li>
-        <li>Distance : {{ perimeter.distance }}</li>
-      </ul>
+    {% regroup moulinette.perimeters by map as map_list %}
+    {% for map in map_list %}
+      <h3>{{ map.grouper }}</h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -32,7 +28,45 @@
           </div>
         </div>
       </div>
+
+      <dl class="fr-mb-5w">
+        <dt>Distance :</dt>
+        <dd>{{ map.list.0.distance }}</dd>
+
+        <dt>Critères :</dt>
+        <dd>
+          <ul>
+            {% for perimeter in map.list %}
+              <li><strong>{{ perimeter.criterion.title }} ({{ perimeter.criterion.slug }})</strong>
+            {% endfor %}
+          </ul>
+        </dd>
+      </dl>
     {% endfor %}
+
+    <h2>Polygones</h2>
+
+    {% for zone in all_zones %}
+      <h3>{{ zone.map.display_name|default:zone.map.name }}</h3>
+
+      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+        <div class="ratio-content">
+          <div class="leaflet-container">
+            <div id="zone-map-{{ forloop.counter0 }}"></div>
+          </div>
+        </div>
+      </div>
+
+      <dl class="fr-mb-5w">
+        <dt>Distance :</dt>
+        <dd>{{ zone.distance }}</dd>
+        <dt>Carte :</dt>
+        <dd>{{ zone.map }}</dd>
+        <dt>Type de carte :</dt>
+        <dd>{{ zone.map.get_data_type_display }} ({{ zone.map.get_data_certainty_display }})</dd>
+      </dl>
+    {% endfor %}
+
 
     <h2>Résultat</h2>
 
@@ -46,99 +80,22 @@
       </ul>
     {% endfor %}
 
+    <h2>Catalogue de données</h2>
 
-    <h2>Détails du calcul</h2>
-
-    <ul>
-      <li>Coordonnées du projet : {{ coords }}</li>
-      <li>Département : {{ department }}</li>
-      <li>Infos de contact département : {{ department.contact_md|yesno:'Oui,Non' }} </li>
-      <li>Présence de zones humides à 25m du projet : {{ wetlands_25|yesno:"Oui,Non" }}</li>
-      <li>Présence de zones humides à 100m du projet : {{ wetlands_100|yesno:"Oui,Non" }}</li>
-      <li>Présence de zones humides potentielles (« doute ») : {{ within_potential_wetlands|yesno:"Oui,Non" }}</li>
-      <li>Présence de zones inondables à 12m du projet : {{ flood_zones_12|yesno:"Oui,Non" }}</li>
-    </ul>
-
-    <div class="ratio-1x1 fr-mt-1w fr-mb-2w">
-      <div class="ratio-content">
-        <div class="leaflet-container">
-          <div id="debug-map"></div>
-        </div>
-      </div>
-    </div>
-  </section>
+    <dd>
+      {% for key, value in moulinette.catalog.items %}
+        <dt>{{ key }}</dt>
+        <dd>{{ value|truncatechars:150 }}</dd>
+      {% endfor %}
+    </dd>
 
 {% endblock %}
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    window.addEventListener('load', function() {
 
-      var map = L.map('debug-map', {maxZoom: 21});
-      var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
-      var wetlandsStyles = {'color': 'none', 'fillColor': 'green'};
-      var potentialWetlandsStyles = {'color': 'none', 'fillColor': 'orange'};
-      var floodZonesStyles = {'color': 'none', 'fillColor': 'red'};
-      var circle12Styles = {'color': 'yellow', 'fillColor': 'yellow'};
-      var circle25Styles = {'color': 'yellow', 'fillColor': 'yellow'};
-      var circle100Styles = {'color': 'yellow', 'fillColor': 'yellow'};
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 22,
-        maxNativeZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-      }).addTo(map);
-
-      var coords = JSON.parse('{% to_geojson coords %}');
-      var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
-      coordsGeoJSON.addTo(map);
-
-      {% if wetlands_100 %}
-        var wetlands = JSON.parse('{% to_geojson wetlands_100 %}');
-        var wetlandsGeoJSON = L.geoJSON(wetlands, {style: wetlandsStyles});
-        wetlandsGeoJSON.addTo(map);
-      {% endif %}
-
-      {% if potential_wetlands %}
-        var potentialWetlands = JSON.parse('{% to_geojson potential_wetlands %}');
-        var potentialWetlandsGeoJSON = L.geoJSON(potentialWetlands, {style: potentialWetlandsStyles});
-        potentialWetlandsGeoJSON.addTo(map);
-      {% endif %}
-
-      {% if flood_zones_12 %}
-        var floodZones = JSON.parse('{% to_geojson flood_zones_12 %}');
-        var floodZonesGeoJSON = L.geoJSON(floodZones, {style: floodZonesStyles});
-        floodZonesGeoJSON.addTo(map);
-      {% endif %}
-
-      var circle12 = JSON.parse('{% to_geojson circle_12 %}');
-      var circle12GeoJSON = L.geoJSON(circle12, {style: circle12Styles});
-      circle12GeoJSON.addTo(map);
-
-      var circle25 = JSON.parse('{% to_geojson circle_25 %}');
-      var circle25GeoJSON = L.geoJSON(circle25, {style: circle25Styles});
-      circle25GeoJSON.addTo(map);
-
-      var circle100 = JSON.parse('{% to_geojson circle_100 %}');
-      var circle100GeoJSON = L.geoJSON(circle100, {style: circle100Styles});
-      circle100GeoJSON.addTo(map);
-
-      map.fitBounds(circle100GeoJSON.getBounds(), {padding: [50, 50]});
-
-      var legend = L.control({position: 'bottomright'});
-      legend.onAdd = function(map) {
-        var div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML += '<span><i style="background: green"></i> Zones humides</span>';
-        div.innerHTML += '<span><i style="background: orange"></i> ZH (doute)</span>';
-        div.innerHTML += '<span><i style="background: red"></i> Zones inondables</span>';
-        return div;
-      };
-      legend.addTo(map);
-    });
-  </script>
-
-  {% for perimeter in moulinette.perimeters %}
+  {% regroup moulinette.perimeters by map as map_list %}
+  {% for map in map_list %}
     <script>
       window.addEventListener('load', function() {
 
@@ -156,7 +113,7 @@
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 
-        var polygon = JSON.parse('{% to_geojson perimeter.geometry %}');
+        var polygon = JSON.parse('{% to_geojson map.list.0.geometry %}');
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
@@ -164,4 +121,32 @@
       });
     </script>
   {% endfor %}
+
+  {% for zone in all_zones %}
+    <script>
+      window.addEventListener('load', function() {
+
+        var map = L.map('zone-map-{{ forloop.counter0 }}', {maxZoom: 21});
+        var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
+        var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 22,
+          maxNativeZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        }).addTo(map);
+
+        var coords = JSON.parse('{% to_geojson coords %}');
+        var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
+        coordsGeoJSON.addTo(map);
+
+        var polygon = JSON.parse('{% to_geojson zone.geom %}');
+        var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
+        polygonGeoJSON.addTo(map);
+
+        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+      });
+    </script>
+  {% endfor %}
+
 {% endblock %}
