@@ -191,15 +191,6 @@ nav#evaluation-summary {
     color: var(--text-mention-grey);
   }
 
-  .fr-input-group>label {
-    font-weight: 600;
-
-    .fr-hint-text {
-      font-weight: initial;
-      font-size: 1rem;
-      color: inherit;
-    }
-  }
 
   #ui-change-warning p {
     font-size: 0.85rem;
@@ -208,14 +199,21 @@ nav#evaluation-summary {
     margin-bottom: .25rem;
   }
 
-  label[for=id_final_surface] {
+  #form-group-created_surface,
+  #form-group-final_surface {
+    &>label {
+      font-weight: 600;
 
-    i.optional-tag {
-      display: none;
+      .fr-hint-text {
+        font-weight: initial;
+        font-size: 1rem;
+        color: inherit;
+      }
     }
   }
 
-  #form-group-address .optional-tag {
+  #form-group-address .optional-tag,
+  #form-group-final_surface .optional-tag {
     display: none;
   }
 }
