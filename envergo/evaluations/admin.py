@@ -1,8 +1,10 @@
+from urllib.parse import urlparse
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.sites.models import Site
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import linebreaks, mark_safe
@@ -17,6 +19,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
+from envergo.moulinette.forms import MoulinetteForm
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
@@ -55,6 +58,17 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
                 )
                 self.add_error("result", msg)
 
+            parsed_url = urlparse(moulinette_url)
+            query = QueryDict(parsed_url.query)
+            moulinette_form = MoulinetteForm(data=query)
+            if not moulinette_form.is_valid():
+                self.add_error("moulinette_url", _("The moulinette url is invalid."))
+                for field, errors in moulinette_form.errors.items():
+                    for error in errors:
+                        self.add_error(
+                            "moulinette_url", mark_safe(f"{field} : {error}")
+                        )
+
         # If a moulinette url is NOT provided, a contact info is required
         if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:
             moulinette_url = cleaned_data.get("moulinette_url")
@@ -89,6 +103,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
+        "has_moulinette_url",
         "application_number",
         "result",
         "contact_email",
@@ -171,6 +186,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         link = f'<a href="{request_admin_url}">{request}</a>'
         return mark_safe(link)
 
+    @admin.display(description=_("Url"), boolean=True)
+    def has_moulinette_url(self, obj):
+        return bool(obj.moulinette_url)
+
 
 class ParcelInline(admin.TabularInline):
     model = Request.parcels.through
@@ -198,6 +217,7 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
+        "has_moulinette_url",
         "application_number",
         "user_type",
         "contact_email",
@@ -297,6 +317,10 @@ class RequestAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{eval_admin_url}">{obj.evaluation}</a>'
         return mark_safe(link)
+
+    @admin.display(description=_("Url"), boolean=True)
+    def has_moulinette_url(self, obj):
+        return bool(obj.moulinette_url)
 
     @admin.display(description=_("Résumé"))
     def summary(self, obj):

@@ -163,11 +163,14 @@ class TerrainAssietteForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        created_surface = int(self.data["created_surface"])
-        existing_surface = int(self.data["existing_surface"])
-        total_surface = created_surface + existing_surface
+        if self.data.get("final_surface", None):
+            final_surface = int(self.data["final_surface"])
+        else:
+            created_surface = int(self.data["created_surface"])
+            existing_surface = int(self.data["existing_surface"])
+            final_surface = created_surface + existing_surface
 
-        if total_surface < TERRAIN_ASSIETTE_THRESHOLD:
+        if final_surface < TERRAIN_ASSIETTE_THRESHOLD:
             del self.fields["terrain_assiette"]
             del self.fields["is_lotissement"]
 
