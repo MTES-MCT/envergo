@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
@@ -147,9 +148,9 @@ class WizardFilesForm(forms.ModelForm):
         label=_("Additional files you might deem useful for the evaluation"),
         required=False,
         widget=forms.ClearableFileInput(attrs={"multiple": True}),
-        help_text="""
+        help_text=f"""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
-            Maximum 10 fichiers. <br>
+            Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
             Maximum 20 Mo par fichier. <br>
         """,
     )
