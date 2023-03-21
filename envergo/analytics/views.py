@@ -104,7 +104,11 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         data = form.cleaned_data
         metadata = {}
         metadata.update(data)
-        metadata.update(form.cleaned_data.get("moulinette_data", {}))
+
+        moulinette_data = form.cleaned_data.get("moulinette_data", {})
+        if moulinette_data:
+            metadata.update(moulinette_data)
+
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()
         message_body = render_to_string(
