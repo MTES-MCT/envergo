@@ -40,7 +40,7 @@ class Outlinks(TemplateView):
     def check_links(self):
         token = settings.MATOMO_SECURITY_TOKEN
         today = date.today()
-        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=month&date={today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"
+        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=month&date={today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"  # noqa
         data = requests.get(data_url).json()
 
         links = []
