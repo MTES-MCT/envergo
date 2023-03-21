@@ -12,14 +12,19 @@ def params_from_url(url):
     params = QueryDict(url.query)
     return params.dict()
 
+
 def migrate_events(apps, schema_editor):
     Event = apps.get_model("analytics", "Event")
-    events = Event.objects.filter(category="evaluation", event="visit").filter(metadata__lat__isnull=True).filter(metadata__reference__isnull=False)
+    events = (
+        Event.objects.filter(category="evaluation", event="visit")
+        .filter(metadata__lat__isnull=True)
+        .filter(metadata__reference__isnull=False)
+    )
 
     Evaluation = apps.get_model("evaluations", "Evaluation")
 
     for event in events:
-        reference = event.metadata['reference']
+        reference = event.metadata["reference"]
         evaluation = Evaluation.objects.get(reference=reference)
         if evaluation.moulinette_url:
             params = params_from_url(evaluation.moulinette_url)
@@ -30,7 +35,7 @@ def migrate_events(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('analytics', '0002_migrate_formsubmit_metadata'),
+        ("analytics", "0002_migrate_formsubmit_metadata"),
     ]
 
     operations = [

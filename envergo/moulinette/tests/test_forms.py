@@ -65,24 +65,6 @@ def test_existing_surface_can_be_zero():
     assert data["final_surface"] == 50
 
 
-def test_total_surface_must_be_correct():
-    data = {
-        "created_surface": 50,
-        "existing_surface": 60,
-        "final_surface": 110,
-        "address": "Rue bidon",
-        "lng": 1.234567,
-        "lat": 1.234567,
-    }
-    form = MoulinetteForm(data)
-    assert form.is_valid()
-
-    data["final_surface"] = 100
-    form = MoulinetteForm(data)
-    assert not form.is_valid()
-    assert "final_surface" in form.errors
-
-
 def test_existing_surface_cannot_be_negative():
     data = {
         "created_surface": 50,

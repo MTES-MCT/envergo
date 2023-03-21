@@ -28,6 +28,7 @@ def moulinette_data(footprint):
         "lng": 0.7504093,
         "existing_surface": 0,
         "created_surface": footprint,
+        "final_surface": footprint,
         "emprise": 20000,
         "zone_u": "oui",
         "surface_plancher_sup_thld": "oui",

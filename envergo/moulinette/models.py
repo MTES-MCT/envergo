@@ -346,6 +346,7 @@ class Moulinette:
             "lng": f'{self.catalog["lng"]:.5f}',
             "existing_surface": self.catalog["existing_surface"],
             "created_surface": self.catalog["created_surface"],
+            "final_surface": self.catalog["final_surface"],
             "department": department_code,
             "is_eval_available": self.is_evaluation_available(),
         }
