@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Vérificateur de liens morts{% endblock %}
+
+{% block content %}
+  <form action="" method="post">
+    {% csrf_token %}
+
+    <button type="submit" class="fr-btn fr-btn-primary">Vérifier</button>
+  </form>
+
+  {% if links %}
+    <div class="fr-table fr-table--bordered">
+      <table>
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+            <tr class="fr-highlight--{% if link.status == 200 %}green-emeraude{% else %}orange-terre-battue{% endif %}">
+              <td><a target="_blank" rel="noopener" href="{{ link.url }}">{{ link.label }}</a></td>
+              <td>{{ link.status }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endblock %}
