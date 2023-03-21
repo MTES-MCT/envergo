@@ -110,5 +110,5 @@ class ZoneAdmin(gis_admin.OSMGeoAdmin):
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ["department"]
     readonly_fields = ["department"]
-    fields = ["department", "contact_md"]
+    fields = ["department"]
     form = DepartmentForm

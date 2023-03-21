@@ -95,5 +95,3 @@ class DepartmentFactory(DjangoModelFactory):
 
     department = 61  # Orne
     geometry = FuzzyMultiPolygon()
-    contact_md = "Bla bla bla"
-    contact_html = "<p>Bla bla bla</p>"

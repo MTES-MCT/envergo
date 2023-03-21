@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.regulations import MoulinetteCriterion
 from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
 from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
@@ -79,6 +80,31 @@ class Perimeter(models.Model):
         return self.name
 
 
+class MoulinetteConfig(models.Model):
+    """Some moulinette content depends on the department."""
+
+    department = models.OneToOneField(
+        "geodata.Department",
+        verbose_name=_("Department"),
+        on_delete=models.PROTECT,
+        related_name="moulinette_config",
+    )
+    lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
+    n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
+    n2000_contact_ddtm_instruction = models.TextField(
+        "N2000 > Contact DDTM instruction"
+    )
+    n2000_procedure_ein = models.TextField("N2000 > Procédure EIN")
+    evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
+
+    class Meta:
+        verbose_name = _("Moulinette config")
+        verbose_name_plural = _("Moulinette configs")
+
+    def __str__(self):
+        return self.department.get_department_display()
+
+
 class MoulinetteCatalog(dict):
     """Custom class responsible for fetching data used in regulation evaluations.
 
@@ -112,8 +138,12 @@ class Moulinette:
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
+        self.department = self.get_department()
+        if hasattr(self.department, "moulinette_config"):
+            self.catalog["config"] = self.department.moulinette_config
+
         self.perimeters = self.get_perimeters()
-        self.criterions = set([perimeter.criterion for perimeter in self.perimeters])
+        self.criterions = self.get_criterions()
 
         # This is a clear case of circular references, since the Moulinette
         # holds references to the regulations it's computing, but regulations and
@@ -130,6 +160,11 @@ class Moulinette:
 
         self.catalog.update(self.cleaned_additional_data())
 
+    def get_department(self):
+        lng_lat = self.catalog["lng_lat"]
+        department = Department.objects.filter(geometry__contains=lng_lat).first()
+        return department
+
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
@@ -137,11 +172,8 @@ class Moulinette:
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
-        lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        catalog["coords"] = lng_lat.transform(EPSG_MERCATOR, clone=True)
-        catalog["department"] = Department.objects.filter(
-            geometry__contains=lng_lat
-        ).first()
+        catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
@@ -207,6 +239,10 @@ class Moulinette:
         )
         return perimeters
 
+    def get_criterions(self):
+        criterions = set([perimeter.criterion for perimeter in self.perimeters])
+        return criterions
+
     def get_zones(self):
         """For debug purpose only.
 
@@ -226,9 +262,7 @@ class Moulinette:
 
         When a department is available, we fill it's contact data.
         """
-        department = self.catalog["department"]
-        contact_info = getattr(department, "contact_md", None)
-        return bool(contact_info)
+        return hasattr(self.department, "moulinette_config")
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
@@ -304,7 +338,7 @@ class Moulinette:
     def summary(self):
         """Build a data summary, for analytics purpose."""
 
-        department = self.catalog["department"]
+        department = self.department
         department_code = department.department if department else ""
 
         summary = {
@@ -321,3 +355,56 @@ class Moulinette:
             summary["result"] = self.result()
 
         return summary
+
+
+class FakeMoulinette(Moulinette):
+    """This is a custom Moulinette subclass used for debugging purpose.
+
+    A single moulinette simulation tests many criteria, each criterion can
+    have a different result code, resulting in specific regulation results.
+
+    Every single criterion unique result is displayed with a dedicated template.
+    Moreover, some data may change depending on the department the simulation
+    is ran.
+
+    For this reason, it can be very cumbersome for the EnvErgo team members
+    to review and test each and every possibility.
+
+    That's why a custom page was created, allowing to manually select the exact
+    Moulinette result combination we want to display.
+
+    This `FakeMoulinette` is a utility class that must be initialized with a
+    dict of data where each key is a single criterion slug and the associated
+    value is the `result_code` we want the criterion to return.
+    """
+
+    def __init__(self, fake_data):
+        dummy_data = {
+            "lat": 1.7,
+            "lng": 47,
+            "created_surface": 50,
+            "existing_surface": 50,
+        }
+        dummy_data.update(fake_data)
+        super().__init__(dummy_data, dummy_data)
+
+        # Override the `result_code` for each criterion
+        # Since `result_code` is a property, we cannot directly monkeypatch the
+        # property.
+        # Hence, we have to override the value at the class level
+        for regulation in self.regulations:
+            for criterion in regulation.criterions:
+                setattr(
+                    criterion.__class__, "result_code", self.catalog[criterion.slug]
+                )
+
+    def get_criterions(self):
+        criteria = [
+            criterion
+            for criterion in MoulinetteCriterion.__subclasses__()
+            if self.catalog[criterion.slug]
+        ]
+        return criteria
+
+    def get_department(self):
+        return self.catalog["department"]

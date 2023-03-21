@@ -1,6 +1,9 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from envergo.geodata.models import Department
+from envergo.moulinette.regulations import MoulinetteCriterion
+
 
 class MoulinetteForm(forms.Form):
     created_surface = forms.IntegerField(
@@ -74,3 +77,33 @@ class MoulinetteForm(forms.Form):
                 if existing_surface is None:
                     data["existing_surface"] = final_surface - created_surface
         return data
+
+
+EMPTY_CHOICE = ("", "---------")
+
+
+class MoulinetteDebugForm(forms.Form):
+    """For debugging purpose.
+
+    This form dynamically creates a field for every `MoulinetteCriterion` subclass.
+    """
+
+    department = forms.ModelChoiceField(
+        label=_("Department"),
+        required=True,
+        queryset=Department.objects.all(),
+        to_field_name="department",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        criteria = [criterion for criterion in MoulinetteCriterion.__subclasses__()]
+        for criterion in criteria:
+            field_name = f"{criterion.slug}"
+            choices = [EMPTY_CHOICE] + list(zip(criterion.CODES, criterion.CODES))
+            self.fields[field_name] = forms.ChoiceField(
+                label=criterion.choice_label,
+                choices=choices,
+                required=False,
+            )

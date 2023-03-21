@@ -84,4 +84,4 @@ class DepartmentForm(forms.ModelForm):
 
     class Meta:
         model = Department
-        fields = ["department", "contact_md"]
+        fields = ["department"]

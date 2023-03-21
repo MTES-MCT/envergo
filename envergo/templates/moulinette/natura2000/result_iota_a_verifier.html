@@ -15,25 +15,16 @@
 
   <h4>Comment réaliser une évaluation des incidences Natura 2000 ?</h4>
 
-  <p><strong>1/ Remplir le formulaire d’évaluation simplifiée</strong></p>
-
-  <p>Ce <a download="Formulaire N2000 DDTM44.pdf" href="{% static 'pdfs/formulaire_eval_n2000_ddtm44.pdf' %}">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>
-
-  <p>S’il conclut à l’absence d’incidence, il fait office d’évaluation des incidences Natura 2000.</p>
-
-  <p>Dans le cas contraire, une évaluation plus poussée doit être conduite.</p>
+  {{ config.n2000_procedure_ein|safe }}
 
   <p><strong>2/ En cas d’incidences possibles ou avérées, se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</strong></p>
 
   <p>Il est chargé de réaliser les études qui conviennent et de rédiger une évaluation des incidences Natura 2000 complète.</p>
 
   <p>En cas de question, se rapprocher du service de la DDT(M) en charge de Natura 2000 :</p>
+
   <div class="fr-highlight fr-mb-3w">
-    <address>
-      <strong>DDTM de Loire-Atlantique</strong><br />
-      Unité Biodiversité<br />
-      Email : <a href="mailto:ddtm-see-biodiv@loire-atlantique.gouv.fr">ddtm-see-biodiv@loire-atlantique.gouv.fr</a>
-    </address>
+    {{ config.n2000_contact_ddtm_info|safe }}
   </div>
 
   <h4>Comment l'instruction de l'évaluation des incidences Natura 2000 se déroule-t-elle ?</h4>

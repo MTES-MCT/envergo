@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from envergo.moulinette.models import Perimeter
+from envergo.moulinette.models import MoulinetteConfig, Perimeter
 from envergo.moulinette.regulations import MoulinetteCriterion
 
 
@@ -26,3 +26,8 @@ class PerimeterAdminForm(forms.ModelForm):
 @admin.register(Perimeter)
 class PerimeterAdmin(admin.ModelAdmin):
     form = PerimeterAdminForm
+
+
+@admin.register(MoulinetteConfig)
+class MoulinetteConfigAdmin(admin.ModelAdmin):
+    list_display = ["department"]

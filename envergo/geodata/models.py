@@ -12,8 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from model_utils import Choices
 
-from envergo.utils.markdown import markdown_to_html
-
 logger = logging.getLogger(__name__)
 
 
@@ -223,8 +221,6 @@ class Department(models.Model):
         unique=True,
     )
     geometry = gis_models.MultiPolygonField()
-    contact_md = models.TextField(_("Contact"), blank=True)
-    contact_html = models.TextField(_("Contact (html)"), blank=True)
 
     class Meta:
         verbose_name = _("Department")
@@ -233,7 +229,3 @@ class Department(models.Model):
 
     def __str__(self):
         return self.get_department_display()
-
-    def save(self, *args, **kwargs):
-        self.contact_html = markdown_to_html(self.contact_md)
-        super().save(*args, **kwargs)

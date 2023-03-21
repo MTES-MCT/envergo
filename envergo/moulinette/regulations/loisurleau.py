@@ -21,6 +21,15 @@ class ZoneHumide(MoulinetteCriterion):
     subtitle = "Seuil de déclaration : 1 000 m²"
     header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
+    CODES = [
+        "soumis",
+        "non_soumis",
+        "non_concerne",
+        "action_requise",
+        "action_requise_proche",
+        "action_requise_dans_doute",
+    ]
+
     def get_catalog_data(self):
         data = {}
 
@@ -236,6 +245,8 @@ class Ruissellement(MoulinetteCriterion):
     subtitle = "Seuil de déclaration : 1 ha"
     header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
+    CODES = ["soumis", "action_requise", "non_soumis"]
+
     @cached_property
     def result_code(self):
 
@@ -253,6 +264,8 @@ class OtherCriteria(MoulinetteCriterion):
     slug = "autres_rubriques"
     choice_label = "Loi sur l'eau > Autres rubriques"
     title = "Autres rubriques"
+
+    CODES = ["non_disponible"]
 
     @cached_property
     def result_code(self):
