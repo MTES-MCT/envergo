@@ -312,7 +312,9 @@ ENVERGO_REFERENCE_LENGTH = 6
 VISITOR_COOKIE_NAME = "visitorid"
 
 # The max number of files that can be uploaded with a single evaluation request
-MAX_EVALREQ_FILES = 10
+MAX_EVALREQ_FILES = 25
 
 NOTION_SECRET = ""
 NOTION_DATABASE_ID = ""
+
+MATOMO_SECURITY_TOKEN = env("MATOMO_SECURITY_TOKEN", default="")

@@ -58,16 +58,19 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
                 )
                 self.add_error("result", msg)
 
-            parsed_url = urlparse(moulinette_url)
-            query = QueryDict(parsed_url.query)
-            moulinette_form = MoulinetteForm(data=query)
-            if not moulinette_form.is_valid():
-                self.add_error("moulinette_url", _("The moulinette url is invalid."))
-                for field, errors in moulinette_form.errors.items():
-                    for error in errors:
-                        self.add_error(
-                            "moulinette_url", mark_safe(f"{field} : {error}")
-                        )
+            if moulinette_url:
+                parsed_url = urlparse(moulinette_url)
+                query = QueryDict(parsed_url.query)
+                moulinette_form = MoulinetteForm(data=query)
+                if not moulinette_form.is_valid():
+                    self.add_error(
+                        "moulinette_url", _("The moulinette url is invalid.")
+                    )
+                    for field, errors in moulinette_form.errors.items():
+                        for error in errors:
+                            self.add_error(
+                                "moulinette_url", mark_safe(f"{field} : {error}")
+                            )
 
         # If a moulinette url is NOT provided, a contact info is required
         if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:

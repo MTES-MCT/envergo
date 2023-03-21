@@ -1,9 +1,9 @@
 import pytest
 
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
-from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
+from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.models import Moulinette
-from envergo.moulinette.tests.factories import PerimeterFactory
+from envergo.moulinette.tests.factories import MoulinetteConfigFactory, PerimeterFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -38,6 +38,7 @@ def bizous_church_data(footprint):
         "lng": 0.442846,
         "existing_surface": 0,
         "created_surface": footprint,
+        "final_surface": footprint,
     }
 
 
@@ -61,7 +62,7 @@ def test_result_without_contact_data(moulinette_data):
 def test_result_with_contact_data(moulinette_data):
     """Dept contact info is not set, we can run the eval."""
 
-    DepartmentFactory(department=61)
+    MoulinetteConfigFactory()
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
@@ -77,7 +78,7 @@ def test_moulinette_get_perimeters_distance(
     `activation_distance` of the evaluation coordinates.
     """
 
-    DepartmentFactory(department=61)
+    MoulinetteConfigFactory()
 
     # We create a project that has the shape of Bizous's church…
     moulinette = Moulinette(bizous_church_data, bizous_church_data)

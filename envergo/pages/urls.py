@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
 from envergo.geodata.views import ParcelsExport
-from envergo.pages.views import LegalMentionsView
+from envergo.pages.views import LegalMentionsView, Outlinks
 
 urlpatterns = [
     path(
@@ -38,4 +38,5 @@ urlpatterns = [
         ParcelsExport.as_view(),
         name="parcels_export",
     ),
+    path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
 ]
