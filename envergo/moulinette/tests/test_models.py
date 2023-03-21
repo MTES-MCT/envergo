@@ -1,7 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
-from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
+from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import MoulinetteConfigFactory, PerimeterFactory
 
