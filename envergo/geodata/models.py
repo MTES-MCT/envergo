@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
 from django.contrib.gis.db import models as gis_models
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
@@ -167,6 +168,17 @@ class Map(models.Model):
         default=CERTAINTY_LEVELS.certain,
     )
     description = models.TextField(_("Description"))
+    departments = ArrayField(
+        verbose_name=_("Departments"),
+        help_text=_("Select departments ids separated by commas"),
+        null=True,
+        blank=True,
+        base_field=models.CharField(
+            max_length=3,
+            choices=DEPARTMENT_CHOICES,
+        ),
+    )
+
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     expected_zones = models.IntegerField(_("Expected zones"), default=0)
     import_status = models.CharField(
