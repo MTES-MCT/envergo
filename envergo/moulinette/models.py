@@ -191,6 +191,7 @@ class Moulinette:
             .annotate(distance=Distance("geometry", catalog["coords"]))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
+            .order_by("distance", "map__name")
         )
         catalog["all_zones"] = zones
 

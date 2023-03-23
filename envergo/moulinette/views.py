@@ -2,6 +2,8 @@ import json
 from collections import OrderedDict
 
 from django.conf import settings
+from django.db.models import Value as V
+from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
@@ -230,6 +232,23 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         current_url = self.request.build_absolute_uri()
         tracked_url = f"{current_url}&mtm_source=shareBtn"
         context["current_url"] = tracked_url
+
+        moulinette = context.get("moulinette", None)
+        is_debug = bool(self.request.GET.get("debug", False))
+        if moulinette and is_debug:
+            # In the debug page, we want to factorize the maps we display, so we order them
+            # by map first
+            context["grouped_perimeters"] = moulinette.perimeters.order_by(
+                "map__name", "distance"
+            )
+            context["grouped_zones"] = (
+                moulinette.catalog["all_zones"]
+                .annotate(
+                    map_type=Concat("map__data_type", V("-"), "map__data_certainty")
+                )
+                .order_by("map_type", "map__name", "distance")
+            )
+
         return context
 
 

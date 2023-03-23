@@ -17,9 +17,12 @@
 
     <h2>Périmètres et critères activés</h2>
 
-    {% regroup moulinette.perimeters by map as map_list %}
+    {% regroup grouped_perimeters by map as map_list %}
     {% for map in map_list %}
-      <h3>{{ map.grouper }}</h3>
+      <h3>
+        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}<br />
+        <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
+      </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -33,6 +36,8 @@
         <dt>Distance :</dt>
         <dd>{{ map.list.0.distance }}</dd>
 
+        <dt>Distance d'activation</dt>
+        <dd>{{ map.list.0.activation_distance }} m</dd>
         <dt>Critères :</dt>
         <dd>
           <ul>
@@ -44,10 +49,18 @@
       </dl>
     {% endfor %}
 
-    <h2>Polygones</h2>
+    <h2>Type de cartes</h2>
 
-    {% for zone in all_zones %}
-      <h3>{{ zone.map.display_name|default:zone.map.name }}</h3>
+    <div class="fr-alert fr-alert--info fr-alert--sm fr-mb-3w">
+      <p>Seul le plus proche polygone est affiché pour chaque type de carto (e.g zone humide > dedans)</p>
+    </div>
+
+    {% regroup grouped_zones by map_type as map_list %}
+    {% for map_type in map_list %}
+      <h3>
+        {{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}<br />
+        <small>{{ map_type.list.0.map.name }} (id={{ map_type.list.0.map.id }})</small>
+      </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -58,12 +71,10 @@
       </div>
 
       <dl class="fr-mb-5w">
-        <dt>Distance :</dt>
-        <dd>{{ zone.distance }}</dd>
-        <dt>Carte :</dt>
-        <dd>{{ zone.map }}</dd>
         <dt>Type de carte :</dt>
-        <dd>{{ zone.map.get_data_type_display }} ({{ zone.map.get_data_certainty_display }})</dd>
+        <dd>{{ map_type.list.0.map.get_data_type_display }} ({{ map_type.list.0.map.get_data_certainty_display }})</dd>
+        <dt>Distance :</dt>
+        <dd>{{ map_type.list.0.distance }}</dd>
       </dl>
     {% endfor %}
 
@@ -94,7 +105,7 @@
 {% block extra_js %}
   {{ block.super }}
 
-  {% regroup moulinette.perimeters by map as map_list %}
+  {% regroup grouped_perimeters by map as map_list %}
   {% for map in map_list %}
     <script>
       window.addEventListener('load', function() {
