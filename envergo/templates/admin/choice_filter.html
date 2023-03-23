@@ -1,0 +1,12 @@
+{% load i18n %}
+<h3>{% blocktranslate with filter_title=title %} By {{ filter_title }} {% endblocktranslate %}</h3>
+<div  style="padding: 15px;">
+  <select onchange="window.location=this.value">
+    {% for choice in choices %}
+      <option{% if choice.selected %} selected{% endif %}
+        value="{{ choice.query_string|iriencode }}">
+        {{ choice.display }}
+      </option>
+    {% endfor %}
+  </select>
+</div>

@@ -5,6 +5,7 @@ from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
+from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Map, Parcel, Zone
@@ -37,6 +38,21 @@ class MapForm(forms.ModelForm):
         return file
 
 
+class DepartmentsListFilter(admin.SimpleListFilter):
+    title = _("Departments")
+    parameter_name = "departments"
+    template = "admin/choice_filter.html"
+
+    def lookups(self, request, model_admin):
+        return DEPARTMENT_CHOICES
+
+    def queryset(self, request, queryset):
+        lookup_value = self.value()
+        if lookup_value:
+            queryset = queryset.filter(departments__contains=[lookup_value])
+        return queryset
+
+
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
     form = MapForm
@@ -44,9 +60,8 @@ class MapAdmin(admin.ModelAdmin):
         "name",
         "data_type",
         "data_certainty",
+        "departments",
         "display_for_user",
-        "copy_to_staging",
-        "created_at",
         "expected_zones",
         "zone_count",
         "import_status",
@@ -60,6 +75,8 @@ class MapAdmin(admin.ModelAdmin):
     ]
     actions = ["process"]
     exclude = ["task_id"]
+    search_fields = ["name", "display_name"]
+    list_filter = ["data_type", "data_certainty", DepartmentsListFilter]
 
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
