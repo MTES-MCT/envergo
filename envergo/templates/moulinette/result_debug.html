@@ -138,7 +138,8 @@
     </script>
   {% endfor %}
 
-  {% for zone in all_zones %}
+  {% regroup grouped_zones by map_type as map_list %}
+  {% for map_type in map_list %}
     <script>
       window.addEventListener('load', function() {
 
@@ -156,7 +157,7 @@
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 
-        var polygon = JSON.parse('{% to_geojson zone.geom %}');
+        var polygon = JSON.parse('{% to_geojson map_type.list.0.geom %}');
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
