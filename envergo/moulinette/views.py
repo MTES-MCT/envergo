@@ -239,7 +239,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             # In the debug page, we want to factorize the maps we display, so we order them
             # by map first
             context["grouped_perimeters"] = moulinette.perimeters.order_by(
-                "map__name", "distance"
+                "map__name",
+                "distance",
             )
             context["grouped_zones"] = (
                 moulinette.catalog["all_zones"]

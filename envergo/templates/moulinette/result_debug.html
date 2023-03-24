@@ -42,7 +42,7 @@
         <dd>
           <ul>
             {% for perimeter in map.list %}
-              <li><strong>{{ perimeter.criterion.title }} ({{ perimeter.criterion.slug }})</strong>
+              <li>{{ perimeter.criterion.choice_label }}</li>
             {% endfor %}
           </ul>
         </dd>
