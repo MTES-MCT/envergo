@@ -41,8 +41,9 @@
         <dt>Critères :</dt>
         <dd>
           <ul>
-            {% for perimeter in map.list %}
-              <li>{{ perimeter.criterion.choice_label }}</li>
+            {% regroup map.list by criterion as criterion_list %}
+            {% for criterion in criterion_list %}
+              <li>{{ criterion.grouper.choice_label }}</li>
             {% endfor %}
           </ul>
         </dd>
