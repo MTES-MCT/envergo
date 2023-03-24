@@ -1,0 +1,27 @@
+{% load pages static %}
+<div class="fr-header__body header-slim">
+  <div class="fr-container">
+    {% spaceless %}
+      <div class="fr-header__body-row">
+        <div class="fr-header__brand fr-enlarge-link">
+          <div class="fr-header__brand-top">
+            <div class="fr-header__logo"><img src="{% static 'images/marianne.svg' %}" alt="République française"></div>
+          </div>
+          <div class="fr-header__service">
+            <a href="/">
+              <p class="fr-header__service-title">
+                EnvErgo
+              </p>
+            </a>
+          </div>
+        </div>
+
+        {% if user.is_authenticated %}
+          {% include '_user_menu.html' %}
+        {% else %}
+          {% include '_anonymous_menu.html' %}
+        {% endif %}
+      </div>
+    {% endspaceless %}
+  </div>
+</div>

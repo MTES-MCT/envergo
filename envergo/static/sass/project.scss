@@ -903,4 +903,22 @@ div.hero-alt {
   .fr-link[target="_blank"]::after {
     display: none;
   }
+
+}
+
+.header-slim {
+
+  .fr-header__body-row {
+    padding: 1rem 0;
+  }
+
+  .fr-header__logo {
+    padding: 0;
+    margin: 0;
+    line-height: 0;
+
+    img {
+      max-height: 2rem;
+    }
+  }
 }
