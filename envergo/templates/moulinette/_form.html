@@ -68,25 +68,32 @@
   {% if additional_forms %}
     <hr />
 
-    <p><strong>Question(s) complémentaire(s)</strong></p>
+    <div id="additional-forms" class="{{ additional_forms_bound|yesno:"bound,unbound" }}">
 
-    {% for field_name, field in additional_fields.items %}
-      {% if field|is_checkbox %}
-        {% include '_checkbox_snippet.html' with field=field %}
-      {% elif field|is_radio %}
-        {% include '_radio_snippet.html' with field=field %}
-      {% elif field|is_input_file %}
-        {% include '_input_file_snippet.html' with field=field %}
-      {% else %}
-        {% include '_field_snippet.html' with field=field %}
+      <p><strong>Question(s) complémentaire(s)</strong></p>
+
+      {% for field_name, field in additional_fields.items %}
+        {% if field|is_checkbox %}
+          {% include '_checkbox_snippet.html' with field=field %}
+        {% elif field|is_radio %}
+          {% include '_radio_snippet.html' with field=field %}
+        {% elif field|is_input_file %}
+          {% include '_input_file_snippet.html' with field=field %}
+        {% else %}
+          {% include '_field_snippet.html' with field=field %}
+        {% endif %}
+      {% endfor %}
+
+      {% if moulinette and moulinette.has_missing_data %}
+        <button type="submit" class="fr-btn">Compléter l'évaluation</button>
       {% endif %}
-    {% endfor %}
+
+    </div>
 
   {% endif %}
 
   <div class="hide-print">
     {% if moulinette and moulinette.has_missing_data %}
-      <button type="submit" class="fr-btn">Compléter l'évaluation</button>
     {% elif moulinette %}
       <button type="submit" class="fr-btn">Renouveler l'évaluation</button>
     {% else %}

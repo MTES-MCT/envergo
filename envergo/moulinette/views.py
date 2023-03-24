@@ -77,6 +77,18 @@ class MoulinetteMixin:
             context["additional_forms"] = self.get_additional_forms(moulinette)
             context["additional_fields"] = self.get_additional_fields(moulinette)
 
+            # We need to display a different form style when the "additional forms"
+            # first appears, but the way this feature is designed, said forms
+            # are always "bound" when they appear. So we have to check for the
+            # presence of field keys in the GET parameters.
+            additional_forms_bound = False
+            field_keys = context["additional_fields"].keys()
+            for key in field_keys:
+                if key in self.request.GET:
+                    additional_forms_bound = True
+                    break
+            context["additional_forms_bound"] = additional_forms_bound
+
             moulinette_data = moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
             context["feedback_form_useful"] = FeedbackFormUseful(
