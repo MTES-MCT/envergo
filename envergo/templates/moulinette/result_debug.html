@@ -50,7 +50,7 @@
       </dl>
     {% endfor %}
 
-    <h2>Type de cartes</h2>
+    <h2>Types de cartes</h2>
 
     <div class="fr-alert fr-alert--info fr-alert--sm fr-mb-3w">
       <p>Seul le plus proche polygone est affiché pour chaque type de carto (e.g zone humide > dedans)</p>
@@ -59,8 +59,7 @@
     {% regroup grouped_zones by map_type as map_list %}
     {% for map_type in map_list %}
       <h3>
-        {{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}<br />
-        <small>{{ map_type.list.0.map.name }} (id={{ map_type.list.0.map.id }})</small>
+        {{ map_type.list.0.map.get_data_type_display }} ({{ map_type.list.0.map.get_data_certainty_display }})
       </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
@@ -72,8 +71,15 @@
       </div>
 
       <dl class="fr-mb-5w">
-        <dt>Type de carte :</dt>
-        <dd>{{ map_type.list.0.map.get_data_type_display }} ({{ map_type.list.0.map.get_data_certainty_display }})</dd>
+        <dt>Carte</dt>
+        <dd>
+          <strong>{{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}</strong> <br />
+          <a href="{% url 'admin:geodata_map_change' map_type.list.0.map.id %}">
+            {{ map_type.list.0.map.name }}
+          </a>
+        </dd>
+        <dt>Id carte</dt>
+        <dd>{{ map_type.list.0.map.id }}</dd>
         <dt>Distance :</dt>
         <dd>{{ map_type.list.0.distance }}</dd>
       </dl>
@@ -134,7 +140,11 @@
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
-        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+        var bounds = L.latLngBounds();
+        bounds.extend(polygonGeoJSON.getBounds());
+        bounds.extend(coordsGeoJSON.getBounds());
+
+        map.fitBounds(bounds);
       });
     </script>
   {% endfor %}
@@ -162,7 +172,11 @@
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
-        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+        var bounds = L.latLngBounds();
+        bounds.extend(polygonGeoJSON.getBounds());
+        bounds.extend(coordsGeoJSON.getBounds());
+
+        map.fitBounds(bounds);
       });
     </script>
   {% endfor %}
