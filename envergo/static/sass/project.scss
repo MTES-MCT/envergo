@@ -909,7 +909,7 @@ div.hero-alt {
 .header-slim {
   position: sticky;
   top: -1px;
-  z-index: 100;
+  z-index: 2000;
   display: none;
 
   &.displayed {
