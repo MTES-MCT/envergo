@@ -99,11 +99,32 @@
         _paq.push(['trackEvent', 'Print', 'Before']);
       });
     </script>
+
+    <script>
+      // Setup the sticky slim header
+      window.addEventListener("load", function() {
+        const header = document.querySelector('.fr-header.header-legacy')
+        const slimHeader = document.querySelector('.fr-header.header-slim');
+        const options = {threshold: 0};
+
+        const callback = ([entry], observer) => {
+          const ratio = entry.intersectionRatio;
+          slimHeader.classList.toggle('displayed', ratio <= 0);
+        };
+
+        const observer = new IntersectionObserver(callback, options);
+        observer.observe(header)
+      });
+    </script>
   </head>
 
   <body>
 
     {% include '_skiplinks.html' %}
+    <header role="banner" class="fr-header header-legacy">
+      {% include '_header.html' %}
+    </header>
+
     <header role="banner" class="fr-header header-slim">
       {% block header %}
         {% include '_slim_header.html' %}

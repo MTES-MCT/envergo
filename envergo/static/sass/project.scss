@@ -908,7 +908,13 @@ div.hero-alt {
 
 .header-slim {
   position: sticky;
-  top: 0;
+  top: -1px;
+  z-index: 100;
+  display: none;
+
+  &.displayed {
+    display: block;
+  }
 
   .fr-header__body-row {
     padding: 1rem 0;
