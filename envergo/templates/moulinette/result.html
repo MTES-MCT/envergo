@@ -9,7 +9,7 @@
 
 {% block top_result %}
 
-  {% if not config.is_activated %}
+  {% if config and not config.is_activated %}
     <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez cette page grâce à votre statut d'admin.
     </div>
   {% endif %}

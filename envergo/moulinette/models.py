@@ -262,6 +262,10 @@ class Moulinette:
         )
         return zones
 
+    def has_config(self):
+        config = getattr(self.department, "moulinette_config", None)
+        return bool(config)
+
     def is_evaluation_available(self):
         """Moulinette evaluations are only available on some departments.
 

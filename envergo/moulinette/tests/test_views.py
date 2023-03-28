@@ -47,6 +47,19 @@ def test_moulinette_result_without_config(client):
     assertTemplateUsed(res, "moulinette/result_non_disponible.html")
 
 
+def test_moulinette_result_without_config_admin_access(client, admin_user):
+    """When dept. contact info is not set, eval is unavailable, even for admins."""
+    client.force_login(admin_user)
+
+    url = reverse("moulinette_result")
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result_non_disponible.html")
+
+
 def test_moulinette_result_with_deactivated_config(client):
     MoulinetteConfigFactory(is_activated=False)
 
