@@ -69,7 +69,7 @@ def test_moulinette_result_with_deactivated_config(client):
     res = client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result_non_disponible.html")
+    assertTemplateUsed(res, "moulinette/result_available_soon.html")
 
 
 def test_moulinette_result_with_deactivated_config_admin_access(client, admin_user):

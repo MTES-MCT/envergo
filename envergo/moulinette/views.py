@@ -199,7 +199,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/result_non_disponible.html"
+            template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
             template_name = "moulinette/missing_data.html"
         else:
