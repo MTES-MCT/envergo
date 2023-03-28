@@ -8,10 +8,17 @@
 {% endblock %}
 
 {% block top_result %}
+
+  {% if not config.is_activated %}
+    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez cette page grâce à votre statut d'admin.
+    </div>
+  {% endif %}
+
   <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
 {% endblock %}
 
 {% block result %}
+
 
   <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
