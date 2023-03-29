@@ -17,9 +17,12 @@
 
     <h2>Périmètres et critères activés</h2>
 
-    {% regroup moulinette.perimeters by map as map_list %}
+    {% regroup grouped_perimeters by map as map_list %}
     {% for map in map_list %}
-      <h3>{{ map.grouper }}</h3>
+      <h3>
+        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}<br />
+        <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
+      </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -33,21 +36,31 @@
         <dt>Distance :</dt>
         <dd>{{ map.list.0.distance }}</dd>
 
+        <dt>Distance d'activation</dt>
+        <dd>{{ map.list.0.activation_distance }} m</dd>
         <dt>Critères :</dt>
         <dd>
           <ul>
-            {% for perimeter in map.list %}
-              <li><strong>{{ perimeter.criterion.title }} ({{ perimeter.criterion.slug }})</strong>
+            {% regroup map.list by criterion as criterion_list %}
+            {% for criterion in criterion_list %}
+              <li>{{ criterion.grouper.choice_label }}</li>
             {% endfor %}
           </ul>
         </dd>
       </dl>
     {% endfor %}
 
-    <h2>Polygones</h2>
+    <h2>Types de cartes</h2>
 
-    {% for zone in all_zones %}
-      <h3>{{ zone.map.display_name|default:zone.map.name }}</h3>
+    <div class="fr-alert fr-alert--info fr-alert--sm fr-mb-3w">
+      <p>Seul le plus proche polygone est affiché pour chaque type de carto (e.g zone humide > dedans)</p>
+    </div>
+
+    {% regroup grouped_zones by map_type as map_list %}
+    {% for map_type in map_list %}
+      <h3>
+        {{ map_type.list.0.map.get_data_type_display }} ({{ map_type.list.0.map.get_data_certainty_display }})
+      </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -58,12 +71,17 @@
       </div>
 
       <dl class="fr-mb-5w">
+        <dt>Carte</dt>
+        <dd>
+          <strong>{{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}</strong> <br />
+          <a href="{% url 'admin:geodata_map_change' map_type.list.0.map.id %}">
+            {{ map_type.list.0.map.name }}
+          </a>
+        </dd>
+        <dt>Id carte</dt>
+        <dd>{{ map_type.list.0.map.id }}</dd>
         <dt>Distance :</dt>
-        <dd>{{ zone.distance }}</dd>
-        <dt>Carte :</dt>
-        <dd>{{ zone.map }}</dd>
-        <dt>Type de carte :</dt>
-        <dd>{{ zone.map.get_data_type_display }} ({{ zone.map.get_data_certainty_display }})</dd>
+        <dd>{{ map_type.list.0.distance }}</dd>
       </dl>
     {% endfor %}
 
@@ -93,8 +111,13 @@
 
 {% block extra_js %}
   {{ block.super }}
+  <script>
+    window.addEventListener('load', function() {
+      L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
+    });
+  </script>
 
-  {% regroup moulinette.perimeters by map as map_list %}
+  {% regroup grouped_perimeters by map as map_list %}
   {% for map in map_list %}
     <script>
       window.addEventListener('load', function() {
@@ -117,12 +140,17 @@
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
-        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+        var bounds = L.latLngBounds();
+        bounds.extend(polygonGeoJSON.getBounds());
+        bounds.extend(coordsGeoJSON.getBounds());
+
+        map.fitBounds(bounds);
       });
     </script>
   {% endfor %}
 
-  {% for zone in all_zones %}
+  {% regroup grouped_zones by map_type as map_list %}
+  {% for map_type in map_list %}
     <script>
       window.addEventListener('load', function() {
 
@@ -140,11 +168,15 @@
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 
-        var polygon = JSON.parse('{% to_geojson zone.geom %}');
+        var polygon = JSON.parse('{% to_geojson map_type.list.0.geom %}');
         var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
         polygonGeoJSON.addTo(map);
 
-        map.fitBounds(polygonGeoJSON.getBounds(), {padding: [30, 30]});
+        var bounds = L.latLngBounds();
+        bounds.extend(polygonGeoJSON.getBounds());
+        bounds.extend(coordsGeoJSON.getBounds());
+
+        map.fitBounds(bounds);
       });
     </script>
   {% endfor %}

@@ -216,6 +216,29 @@ nav#evaluation-summary {
   #form-group-final_surface .optional-tag {
     display: none;
   }
+
+  #additional-forms.unbound {
+    background-color: #fef7da;
+    padding: 1rem;
+
+    .fr-input-group--error {
+
+      .fr-fieldset--error,
+      .fr-fieldset__legend,
+      .fr-label {
+        background-image: none;
+        color: var(--text-default-grey);
+      }
+
+      .fr-error-text {
+        display: none;
+      }
+
+      .fr-input {
+        box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+      }
+    }
+  }
 }
 
 section.regulation {

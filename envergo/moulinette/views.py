@@ -2,6 +2,8 @@ import json
 from collections import OrderedDict
 
 from django.conf import settings
+from django.db.models import Value as V
+from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
@@ -74,6 +76,18 @@ class MoulinetteMixin:
             context.update(moulinette.catalog)
             context["additional_forms"] = self.get_additional_forms(moulinette)
             context["additional_fields"] = self.get_additional_fields(moulinette)
+
+            # We need to display a different form style when the "additional forms"
+            # first appears, but the way this feature is designed, said forms
+            # are always "bound" when they appear. So we have to check for the
+            # presence of field keys in the GET parameters.
+            additional_forms_bound = False
+            field_keys = context["additional_fields"].keys()
+            for key in field_keys:
+                if key in self.request.GET:
+                    additional_forms_bound = True
+                    break
+            context["additional_forms_bound"] = additional_forms_bound
 
             moulinette_data = moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
@@ -230,6 +244,24 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         current_url = self.request.build_absolute_uri()
         tracked_url = f"{current_url}&mtm_source=shareBtn"
         context["current_url"] = tracked_url
+
+        moulinette = context.get("moulinette", None)
+        is_debug = bool(self.request.GET.get("debug", False))
+        if moulinette and is_debug:
+            # In the debug page, we want to factorize the maps we display, so we order them
+            # by map first
+            context["grouped_perimeters"] = moulinette.perimeters.order_by(
+                "map__name",
+                "distance",
+            )
+            context["grouped_zones"] = (
+                moulinette.catalog["all_zones"]
+                .annotate(
+                    map_type=Concat("map__data_type", V("-"), "map__data_certainty")
+                )
+                .order_by("map_type", "map__name", "distance")
+            )
+
         return context
 
 

@@ -1,6 +1,6 @@
 {% load utils %}
 
-<div id="form-group-{{ field.name }}" class="fr-input-group fr-checkbox-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-checkbox-group--error{% endif %}">
+<div id="form-group-{{ field.name }}" class="fr-input-group fr-checkbox-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-checkbox-group--error fr-input-group--error{% endif %}">
 
   {% if nest_field_class %}
     <div class="{{ nest_field_class }}">
