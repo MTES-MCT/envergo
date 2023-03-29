@@ -89,6 +89,11 @@ class MoulinetteConfig(models.Model):
         on_delete=models.PROTECT,
         related_name="moulinette_config",
     )
+    is_activated = models.BooleanField(
+        _("Is activated"),
+        help_text=_("Is the moulinette available for this department?"),
+        default=False,
+    )
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
     n2000_contact_ddtm_instruction = models.TextField(
@@ -257,12 +262,17 @@ class Moulinette:
         )
         return zones
 
+    def has_config(self):
+        config = getattr(self.department, "moulinette_config", None)
+        return bool(config)
+
     def is_evaluation_available(self):
         """Moulinette evaluations are only available on some departments.
 
         When a department is available, we fill it's contact data.
         """
-        return hasattr(self.department, "moulinette_config")
+        config = getattr(self.department, "moulinette_config", None)
+        return config and config.is_activated
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""

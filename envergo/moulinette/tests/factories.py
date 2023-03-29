@@ -19,3 +19,4 @@ class MoulinetteConfigFactory(DjangoModelFactory):
         model = MoulinetteConfig
 
     department = factory.SubFactory(DepartmentFactory)
+    is_activated = True

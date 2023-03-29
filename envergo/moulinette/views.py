@@ -190,13 +190,16 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
+        is_admin = self.request.user.is_superuser
 
         if moulinette is None:
             template_name = "moulinette/home.html"
         elif is_debug:
             template_name = "moulinette/result_debug.html"
-        elif not moulinette.is_evaluation_available():
+        elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
+        elif not (moulinette.is_evaluation_available() or is_admin):
+            template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
             template_name = "moulinette/missing_data.html"
         else:
