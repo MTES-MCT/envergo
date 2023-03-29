@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-23 15:37+0000\n"
+"POT-Creation-Date: 2023-03-29 14:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -682,7 +682,8 @@ msgstr "Valeur carto"
 
 #: envergo/geodata/models.py:173
 msgid "Select departments ids separated by commas"
-msgstr "Saisissez des numéros de départements séparés par des virgules, e.g « 44,56 »"
+msgstr ""
+"Saisissez des numéros de départements séparés par des virgules, e.g « 44,56 »"
 
 #: envergo/geodata/models.py:183
 msgid "Expected zones"
@@ -783,17 +784,21 @@ msgstr "Périmètre"
 msgid "Perimeters"
 msgstr "Périmètres"
 
-#: envergo/moulinette/models.py:101
-#, fuzzy
-#| msgid "moulinette/"
-msgid "Moulinette config"
-msgstr "simulateur/"
+#: envergo/moulinette/models.py:93
+msgid "Is activated"
+msgstr "Est actif"
 
-#: envergo/moulinette/models.py:102
-#, fuzzy
-#| msgid "moulinette/"
+#: envergo/moulinette/models.py:94
+msgid "Is the moulinette available for this department?"
+msgstr "Le simulateur est-il activé pour ce départemnent ?"
+
+#: envergo/moulinette/models.py:106
+msgid "Moulinette config"
+msgstr "Config moulinette"
+
+#: envergo/moulinette/models.py:107
 msgid "Moulinette configs"
-msgstr "simulateur/"
+msgstr "Configs moulinette"
 
 #: envergo/moulinette/regulations/evalenv.py:161
 #: envergo/moulinette/regulations/natura2000.py:261
@@ -841,6 +846,7 @@ msgid "Stats"
 msgstr "Stats"
 
 #: envergo/templates/admin/choice_filter.html:2
+#, python-format
 msgid "By %(filter_title)s"
 msgstr "Par %(filter_title)s"
 
