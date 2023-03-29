@@ -272,7 +272,71 @@ class OtherCriteria(MoulinetteCriterion):
         return RESULTS.non_disponible
 
 
+class ZoneHumideVieJaunay85(ZoneHumide):
+    slug = "zone_humide_vie_jaunay_85"
+    choice_label = "Loi sur l'eau > 85 — Zone humide Vie & Jaunay"
+    title = "Impact sur une zone humide (SAGE Vie & Jaunay)"
+    header = "Destruction de plus de 1000 m² interdite dans les zones humides référencées du SAGE Vie & Jaunay"
+
+    CODES = [
+        "interdit",
+        "action_requise_interdit",
+        "action_requise_proche_interdit",
+        "non_soumis",
+        "non_concerne",
+    ]
+
+    @property
+    def result_code(self):
+        """Return the unique result code.
+
+        Note : potential wetlands are not legally irrelevant on this perimeter.
+        """
+
+        wetland_status, project_size = self.get_result_data()
+        code_matrix = {
+            ("inside", "big"): "interdit",
+            ("inside", "medium"): "action_requise_interdit",
+            ("inside", "small"): "non_soumis",
+            ("close_to", "big"): "action_requise_proche_interdit",
+            ("close_to", "medium"): "non_soumis",
+            ("close_to", "small"): "non_soumis",
+            ("inside_potential", "big"): "non_concerne",
+            ("inside_potential", "medium"): "non_concerne",
+            ("inside_potential", "small"): "non_concerne",
+            ("outside", "big"): "non_concerne",
+            ("outside", "medium"): "non_concerne",
+            ("outside", "small"): "non_concerne",
+        }
+        code = code_matrix[(wetland_status, project_size)]
+        return code
+
+    @cached_property
+    def result(self):
+        """Run the check for the 3.3.1.0 rule.
+
+        Associate a unique result code with a value from the RESULTS enum.
+        """
+
+        code = self.result_code
+        result_matrix = {
+            "interdit": RESULTS.soumis,
+            "action_requise_interdit": RESULTS.action_requise,
+            "action_requise_proche_interdit": RESULTS.action_requise,
+            "non_soumis": RESULTS.non_soumis,
+            "non_concerne": RESULTS.non_concerne,
+        }
+        result = result_matrix[code]
+        return result
+
+
 class LoiSurLEau(MoulinetteRegulation):
     slug = "loi_sur_leau"
     title = "Loi sur l'eau"
-    criterion_classes = [ZoneHumide, ZoneInondable, Ruissellement, OtherCriteria]
+    criterion_classes = [
+        ZoneHumide,
+        ZoneInondable,
+        Ruissellement,
+        ZoneHumideVieJaunay85,
+        OtherCriteria,
+    ]
