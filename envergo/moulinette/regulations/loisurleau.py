@@ -274,7 +274,7 @@ class OtherCriteria(MoulinetteCriterion):
 
 class ZoneHumideVieJaunay85(ZoneHumide):
     slug = "zone_humide_vie_jaunay_85"
-    choice_label = "Loi sur l'eau > 85 — Zone humide Vie & Jaunay"
+    choice_label = "Loi sur l'eau > 85 - Zone humide Vie & Jaunay"
     title = "Impact sur une zone humide (SAGE Vie & Jaunay)"
     header = "Destruction de plus de 1000 m² interdite dans les zones humides référencées du SAGE Vie & Jaunay"
 
