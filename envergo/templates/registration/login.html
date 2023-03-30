@@ -5,16 +5,27 @@
 {% block article %}
   <h1>Connectez-vous pour accéder à votre espace EnvErgo</h1>
 
+
   <form method="post" action="" novalidate class="fr-mb-3w">
     {% csrf_token %}
     {% include '_form_snippet.html' with form=form %}
     <button type="submit" class="fr-btn">Se connecter</button>
   </form>
 
-  <p class="fr-alert fr-alert--info">
-    Vous avez perdu votre mot de passe ?
-    <a href="{% url 'password_reset' %}">Vous pouvez en demander un nouveau.</a>
-  </p>
+  <div class="fr-alert fr-alert--info fr-mb-3w">
+    <ul>
+      <li>
+        Vous n'avez pas encore de compte ?
+        <a href="{% url 'register' %}">Vous pouvez vous inscrire.</a>
+      </li>
+
+      <li>
+        Vous avez perdu votre mot de passe ?
+        <a href="{% url 'password_reset' %}">Vous pouvez en demander un nouveau.</a>
+      </li>
+    </ul>
+  </div>
+
 
 
 {% endblock %}
