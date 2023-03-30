@@ -928,13 +928,16 @@ div.hero-alt {
   }
 
   &.header-slim {
-    position: sticky;
-    top: -1px;
-    z-index: 2000;
     display: none;
 
     &.displayed {
       display: block;
     }
+  }
+
+  &.header-sticky {
+    position: sticky;
+    top: -1px;
+    z-index: 2000;
   }
 }

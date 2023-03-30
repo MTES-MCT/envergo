@@ -1,6 +1,12 @@
 {% extends 'moulinette/base_result.html' %}
 {% load evaluations static %}
 
+{% block header %}
+  <header role="banner" class="fr-header header-sticky">
+    {% include '_slim_header.html' %}
+  </header>
+{% endblock %}
+
 {% block extra-form-col %}
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_form.html' %}
