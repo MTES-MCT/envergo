@@ -66,6 +66,7 @@ RESULTS = Choices(
     ("non_concerne", "Non concerné"),
     ("a_verifier", "À vérifier"),
     ("iota_a_verifier", "En cas de dossier Loi sur l'eau"),
+    ("interdit", "Interdit"),
 )
 
 # All possible result codes for a single evaluation

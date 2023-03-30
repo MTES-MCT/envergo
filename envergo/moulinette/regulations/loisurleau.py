@@ -282,16 +282,14 @@ class ZoneHumideVieJaunay85(ZoneHumide):
         "interdit",
         "action_requise_interdit",
         "action_requise_proche_interdit",
+        "action_requise_dans_doute",
         "non_soumis",
         "non_concerne",
     ]
 
     @property
     def result_code(self):
-        """Return the unique result code.
-
-        Note : potential wetlands are not legally irrelevant on this perimeter.
-        """
+        """Return the unique result code."""
 
         wetland_status, project_size = self.get_result_data()
         code_matrix = {
@@ -301,9 +299,9 @@ class ZoneHumideVieJaunay85(ZoneHumide):
             ("close_to", "big"): "action_requise_proche_interdit",
             ("close_to", "medium"): "non_soumis",
             ("close_to", "small"): "non_soumis",
-            ("inside_potential", "big"): "non_concerne",
-            ("inside_potential", "medium"): "non_concerne",
-            ("inside_potential", "small"): "non_concerne",
+            ("inside_potential", "big"): "action_requise_dans_doute",
+            ("inside_potential", "medium"): "non_soumis",
+            ("inside_potential", "small"): "non_soumis",
             ("outside", "big"): "non_concerne",
             ("outside", "medium"): "non_concerne",
             ("outside", "small"): "non_concerne",
@@ -320,9 +318,10 @@ class ZoneHumideVieJaunay85(ZoneHumide):
 
         code = self.result_code
         result_matrix = {
-            "interdit": RESULTS.soumis,
+            "interdit": RESULTS.interdit,
             "action_requise_interdit": RESULTS.action_requise,
             "action_requise_proche_interdit": RESULTS.action_requise,
+            "action_requise_dans_doute": RESULTS.action_requise,
             "non_soumis": RESULTS.non_soumis,
             "non_concerne": RESULTS.non_concerne,
         }
@@ -340,3 +339,22 @@ class LoiSurLEau(MoulinetteRegulation):
         Ruissellement,
         OtherCriteria,
     ]
+
+    @cached_property
+    def result(self):
+        """Compute global result from individual criterions."""
+
+        results = [criterion.result for criterion in self.criterions]
+
+        if RESULTS.interdit in results:
+            result = RESULTS.interdit
+        elif RESULTS.soumis in results:
+            result = RESULTS.soumis
+        elif RESULTS.action_requise in results:
+            result = RESULTS.action_requise
+        elif RESULTS.a_verifier in results:
+            result = RESULTS.iota_a_verifier
+        else:
+            result = RESULTS.non_soumis
+
+        return result
