@@ -906,16 +906,7 @@ div.hero-alt {
 
 }
 
-.header-slim {
-  position: sticky;
-  top: -1px;
-  z-index: 2000;
-  display: none;
-
-  &.displayed {
-    display: block;
-  }
-
+.fr-header {
   .fr-header__body-row {
     padding: .85rem 0;
   }
@@ -928,5 +919,22 @@ div.hero-alt {
     img {
       max-height: 2rem;
     }
+  }
+
+  .fr-nav__link,
+  .fr-nav__btn {
+    padding: 0.75rem 1rem;
+    min-height: 2rem;
+  }
+}
+
+.header-slim {
+  position: sticky;
+  top: -1px;
+  z-index: 2000;
+  display: none;
+
+  &.displayed {
+    display: block;
   }
 }
