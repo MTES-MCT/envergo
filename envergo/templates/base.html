@@ -112,8 +112,10 @@
           slimHeader.classList.toggle('displayed', ratio <= 0);
         };
 
-        const observer = new IntersectionObserver(callback, options);
-        observer.observe(header)
+        if (header && slimHeader) {
+          const observer = new IntersectionObserver(callback, options);
+          observer.observe(header)
+        }
       });
     </script>
   </head>
@@ -121,15 +123,16 @@
   <body>
 
     {% include '_skiplinks.html' %}
-    <header role="banner" class="fr-header header-legacy">
-      {% include '_header.html' %}
-    </header>
 
-    <header role="banner" class="fr-header header-slim">
-      {% block header %}
+    {% block header %}
+      <header role="banner" class="fr-header header-legacy">
+        {% include '_header.html' %}
+      </header>
+
+      <header role="banner" class="fr-header header-slim header-sticky">
         {% include '_slim_header.html' %}
-      {% endblock %}
-    </header>
+      </header>
+    {% endblock %}
 
     <main role="main" id="contenu">
       {% block main %}
