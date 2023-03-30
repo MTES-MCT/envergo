@@ -335,8 +335,8 @@ class LoiSurLEau(MoulinetteRegulation):
     title = "Loi sur l'eau"
     criterion_classes = [
         ZoneHumide,
+        ZoneHumideVieJaunay85,
         ZoneInondable,
         Ruissellement,
-        ZoneHumideVieJaunay85,
         OtherCriteria,
     ]
