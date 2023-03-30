@@ -243,7 +243,7 @@ class IOTA(MoulinetteCriterion):
     @cached_property
     def result_code(self):
         iota = self.moulinette.loi_sur_leau.result
-        if iota == RESULTS.soumis:
+        if iota in (RESULTS.soumis, RESULTS.interdit):
             result = RESULTS.soumis
         elif iota == RESULTS.non_soumis:
             result = RESULTS.non_soumis
