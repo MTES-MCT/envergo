@@ -28,6 +28,16 @@
               <li>
                 <a class="fr-link" href="{% url 'faq' %}">Questions fréquentes</a>
               </li>
+
+              {% if user.is_authenticated %}
+                <li>
+                  <a class="fr-link fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                </li>
+              {% else %}
+                <li>
+                  <a class="fr-link fr-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
+                </li>
+              {% endif %}
             </ul>
           </div>
         </div>
