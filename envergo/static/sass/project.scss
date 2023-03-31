@@ -907,18 +907,11 @@ div.hero-alt {
 }
 
 .fr-header {
-  .fr-header__body-row {
-    padding: .75rem 0;
-  }
+  .fr-header__body-row {}
 
   .fr-header__logo {
-    padding: 0;
-    margin: 0;
-    line-height: 0;
-
-    img {
-      max-height: 2rem;
-    }
+    padding-top: .25rem;
+    padding-bottom: .25rem;
   }
 
   .fr-nav__link,
@@ -929,6 +922,15 @@ div.hero-alt {
 
   &.header-slim {
     display: none;
+
+    .fr-header__body-row {
+      padding: .75rem 0;
+
+      img {
+        max-height: 2rem;
+      }
+    }
+
 
     &.displayed {
       display: block;
