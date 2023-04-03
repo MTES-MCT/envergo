@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 {% load evaluations static l10n %}
 
+{% block header %}
+  <header role="banner" class="fr-header header-sticky header-slim">
+    {% include '_slim_header.html' %}
+  </header>
+{% endblock %}
+
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
 {% block article %}
