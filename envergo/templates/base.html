@@ -104,7 +104,7 @@
       // Setup the sticky slim header
       window.addEventListener("load", function() {
         const header = document.querySelector('.fr-header.header-legacy')
-        const slimHeader = document.querySelector('.fr-header.header-slim');
+        const slimHeader = document.querySelector('.fr-header.header-popup');
         const options = {threshold: 0};
 
         const callback = ([entry], observer) => {
@@ -129,7 +129,7 @@
         {% include '_header.html' %}
       </header>
 
-      <header role="banner" class="fr-header header-slim header-sticky">
+      <header role="banner" class="fr-header header-slim header-sticky header-popup">
         {% include '_slim_header.html' %}
       </header>
     {% endblock %}

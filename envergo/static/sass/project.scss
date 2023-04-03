@@ -907,8 +907,6 @@ div.hero-alt {
 }
 
 .fr-header {
-  .fr-header__body-row {}
-
   .fr-header__logo {
     padding-top: .25rem;
     padding-bottom: .25rem;
@@ -921,25 +919,33 @@ div.hero-alt {
   }
 
   &.header-slim {
-    display: none;
 
     .fr-header__body-row {
       padding: .75rem 0;
+      line-height: 1rem;
 
       img {
         max-height: 2rem;
       }
     }
 
-
-    &.displayed {
-      display: block;
+    .fr-header__service {
+      padding: .75rem 1rem;
     }
   }
 
   &.header-sticky {
     position: sticky;
-    top: -1px;
+    top: 0px;
     z-index: 2000;
+
+  }
+
+  &.header-popup {
+    display: none;
+
+    &.displayed {
+      display: block;
+    }
   }
 }
