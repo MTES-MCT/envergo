@@ -281,7 +281,7 @@ class Lotissement(MoulinetteCriterion):
 
     def get_distance_to_n2000(self):
         perimeters = self.moulinette.perimeters
-        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        perimeter = next((p for p in perimeters if p.criterion == type(self)), None)
         return perimeter.distance.m
 
     @cached_property
@@ -321,7 +321,8 @@ class Lotissement44(Lotissement):
     # Note : this is the legacy name of the criterion.
     # It was renamed "Lotissement", but we keep the old name to avoid breaking
     # existing perimeters.
-    pass
+    slug = "lotissement_44"
+    choice_label = "Natura 2000 > 44 - Lotissement (obsolète)"
 
 
 class Natura2000(MoulinetteRegulation):
