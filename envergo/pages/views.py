@@ -40,7 +40,9 @@ class Outlinks(TemplateView):
             except Exception as e:
                 messages.error(
                     self.request,
-                    f"Impossible de générer le rapport. Allez embêter les devs avec ce message d'erreur (c'est leur job) : {e}",
+                    f"""Impossible de générer le rapport.
+                    Allez embêter les devs avec ce message d'erreur (c'est leur job) : {e}
+                    """,
                 )
         return context
 
