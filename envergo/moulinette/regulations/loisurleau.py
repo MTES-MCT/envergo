@@ -320,7 +320,6 @@ class ZoneHumideVieJaunay85(ZoneHumide):
             "interdit": RESULTS.interdit,
             "action_requise_interdit": RESULTS.action_requise,
             "action_requise_proche_interdit": RESULTS.action_requise,
-            "action_requise_dans_doute": RESULTS.action_requise,
             "non_soumis": RESULTS.non_soumis,
             "non_concerne": RESULTS.non_concerne,
         }
