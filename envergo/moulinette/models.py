@@ -101,6 +101,9 @@ class MoulinetteConfig(models.Model):
     )
     n2000_procedure_ein = models.TextField("N2000 > Procédure EIN")
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
+    criteria_values = models.JSONField(
+        "Valeurs des critères", default=dict, null=True, blank=True
+    )
 
     class Meta:
         verbose_name = _("Moulinette config")

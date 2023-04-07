@@ -17,7 +17,7 @@
   <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
     {% if criterion.header %}
       <p class="fr-text--light fr-text--sm">
-        {{ criterion.header|safe }}
+        {% criterion_value config criterion 'header' %}
       </p>
     {% endif %}
     {% show_criterion_body regulation criterion %}
