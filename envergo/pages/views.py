@@ -2,6 +2,7 @@ from datetime import date
 
 import requests
 from django.conf import settings
+from django.contrib import messages
 from django.views.generic import TemplateView
 
 
@@ -33,8 +34,16 @@ class Outlinks(TemplateView):
         context = super().get_context_data(**kwargs)
 
         if self.request.POST:
-            links_report = self.check_links()
-            context["links"] = links_report
+            try:
+                links_report = self.check_links()
+                context["links"] = links_report
+            except Exception as e:
+                messages.error(
+                    self.request,
+                    f"""Impossible de générer le rapport.
+                    Allez embêter les devs avec ce message d'erreur (c'est leur job) : {e}
+                    """,
+                )
         return context
 
     def check_links(self):

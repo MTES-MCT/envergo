@@ -60,6 +60,11 @@ html.nojs .js {
     background-color: #ffd3a6;
   }
 
+  &.probability-interdit {
+    background-color: #ff5150;
+    color: white;
+  }
+
   &.probability-missing {
     background-color: purple;
   }

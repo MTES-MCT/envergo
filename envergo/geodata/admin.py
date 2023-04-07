@@ -119,8 +119,17 @@ class MapAdmin(admin.ModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.OSMGeoAdmin):
-    list_display = ["id", "map", "created_at"]
+    list_display = ["id", "map", "created_at", "data_type", "data_certainty"]
     readonly_fields = ["map", "created_at"]
+    list_filter = ["map__data_type", "map__data_certainty"]
+
+    @admin.display(description=_("Data type"))
+    def data_type(self, obj):
+        return obj.map.get_data_type_display()
+
+    @admin.display(description=_("Data certainty"))
+    def data_certainty(self, obj):
+        return obj.map.get_data_certainty_display()
 
 
 @admin.register(Department)

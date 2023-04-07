@@ -10,6 +10,15 @@ def classpath(klass):
     return "{}.{}".format(klass.__module__, klass.__name__)
 
 
+# Shamelessly stolen from StackOverflow
+# https://stackoverflow.com/a/3862310/1062495
+def get_subclasses(cls):
+    """Recursively get all subclasses and sub-subclasses of a class."""
+    for subclass in cls.__subclasses__():
+        yield from get_subclasses(subclass)
+        yield subclass
+
+
 class CriterionChoiceField(models.Field):
     """Custom model field to select a `MoulinetteCriterion` subclass.
 
@@ -33,7 +42,7 @@ class CriterionChoiceField(models.Field):
 
         criteria = [
             (classpath(s), f"{s.choice_label}")
-            for s in MoulinetteCriterion.__subclasses__()
+            for s in get_subclasses(MoulinetteCriterion)
         ]
         return criteria
 
