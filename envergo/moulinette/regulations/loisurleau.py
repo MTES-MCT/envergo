@@ -277,7 +277,7 @@ class ZoneHumideVieJaunay85(ZoneHumide):
     choice_label = "Loi sur l'eau > 85 - Zone humide Vie & Jaunay"
     title = "Impact sur une zone humide (SAGE Vie et Jaunay)"
     subtitle = "Seuil d'interdiction : 1 000 m²"
-    header = "Article 5 du <a target='_blank' rel='noopener' href='https://www.gesteau.fr/document/reglement-du-sage-de-la-vie-et-du-jaunay'>règlement du SAGE Vie et Jaunay</a>"
+    header = "Article 5 du <a target='_blank' rel='noopener' href='https://www.gesteau.fr/document/reglement-du-sage-de-la-vie-et-du-jaunay'>règlement du SAGE Vie et Jaunay</a>"  # noqa
 
     CODES = [
         "interdit",
