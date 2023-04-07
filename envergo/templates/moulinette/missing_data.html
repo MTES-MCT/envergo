@@ -1,6 +1,12 @@
 {% extends 'moulinette/base_result.html' %}
 {% load evaluations static %}
 
+{% block header %}
+  <header role="banner" class="fr-header header-sticky header-slim">
+    {% include '_slim_header.html' %}
+  </header>
+{% endblock %}
+
 {% block result %}
 
   <h1 class="fr-mb-5w fr-h2">L'évaluation nécessite des informations complémentaires</h1>
