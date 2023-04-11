@@ -121,7 +121,7 @@ class MapAdmin(admin.ModelAdmin):
 class ZoneAdmin(gis_admin.OSMGeoAdmin):
     list_display = ["id", "map", "created_at", "map_type", "data_type"]
     readonly_fields = ["map", "created_at"]
-    list_filter = ["map__map_type", "map__data_type"]
+    list_filter = ["map__map_type", "map__data_type", "map"]
 
     @admin.display(description=_("Data type"))
     def map_type(self, obj):
