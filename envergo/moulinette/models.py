@@ -24,13 +24,13 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 
-def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
+def fetch_zones_around(coords, radius, zone_type, data_type="certain"):
     """Helper method to fetch Zones around a given point."""
 
     qs = (
         Zone.objects.filter(map__map_type=zone_type)
         .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_certainty=data_certainty)
+        .filter(map__data_type=data_type)
     )
     return qs
 
@@ -47,7 +47,7 @@ def fetch_wetlands_around_100m(coords):
 def fetch_potential_wetlands(coords):
     qs = (
         Zone.objects.filter(map__map_type="zone_humide")
-        .filter(map__data_certainty="uncertain")
+        .filter(map__data_type="uncertain")
         .filter(geometry__dwithin=(coords, D(m=0)))
     )
     return qs
@@ -202,7 +202,7 @@ class Moulinette:
             return all(
                 (
                     zone.map.map_type == "zone_humide",
-                    zone.map.data_certainty == "certain",
+                    zone.map.data_type == "certain",
                 )
             )
 
@@ -212,7 +212,7 @@ class Moulinette:
             return all(
                 (
                     zone.map.map_type == "zone_humide",
-                    zone.map.data_certainty == "uncertain",
+                    zone.map.data_type == "uncertain",
                 )
             )
 
@@ -222,7 +222,7 @@ class Moulinette:
             return all(
                 (
                     zone.map.map_type == "zone_inondable",
-                    zone.map.data_certainty == "certain",
+                    zone.map.data_type == "certain",
                 )
             )
 
