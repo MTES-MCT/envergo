@@ -218,6 +218,16 @@ class Moulinette:
 
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
 
+        def forbidden_wetlands_filter(zone):
+            return all(
+                (
+                    zone.map.map_type == "zone_humide",
+                    zone.map.data_type == "forbidden",
+                )
+            )
+
+        catalog["forbidden_wetlands"] = list(filter(forbidden_wetlands_filter, zones))
+
         def flood_zones_filter(zone):
             return all(
                 (
