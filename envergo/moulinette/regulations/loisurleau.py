@@ -8,6 +8,8 @@ from envergo.moulinette.regulations import (
     MapPolygon,
     MoulinetteCriterion,
     MoulinetteRegulation,
+    RequiredAction,
+    Stake,
 )
 
 BLUE = "#0000FF"
@@ -165,6 +167,15 @@ class ZoneHumide(MoulinetteCriterion):
 
         return criterion_map
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 1 000 m² de zone humide",
+            )
+        return action
+
 
 class ZoneInondable(MoulinetteCriterion):
     slug = "zone_inondable"
@@ -238,6 +249,15 @@ class ZoneInondable(MoulinetteCriterion):
 
         return criterion_map
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 400m² de zone inondable",
+            )
+        return action
+
 
 class Ruissellement(MoulinetteCriterion):
     slug = "ruissellement"
@@ -259,6 +279,15 @@ class Ruissellement(MoulinetteCriterion):
             res = RESULTS.non_soumis
 
         return res
+
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha",
+            )
+        return action
 
 
 class OtherCriteria(MoulinetteCriterion):
@@ -394,6 +423,15 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
             criterion_map = None
 
         return criterion_map
+
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.INTERDIT,
+                text="n’impacte pas plus 1 000 m2 de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
+            )
+        return action
 
 
 class LoiSurLEau(MoulinetteRegulation):
