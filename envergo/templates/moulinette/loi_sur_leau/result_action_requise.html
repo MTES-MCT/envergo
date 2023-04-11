@@ -1,29 +1,31 @@
+{% if regulation.required_actions_interdit %}
+  <p>Le projet <strong>est susceptible d'être interdit</strong>.</p>
+{% endif %}
+
 <p>Une action du porteur de projet est requise.</p>
 
 <h3>Marche à suivre</h3>
 
-<p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
+{% if regulation.required_actions_interdit %}
+  <p>Pour être certain que son projet n’est pas interdit, le porteur de projet doit s’assurer que celui-ci : </p>
+  <ul>
+    {% for action in regulation.required_actions_interdit %}
+      <li>{{ action }}</li>
+    {% endfor %}
+  </ul>
 
-<ul>
+  <p>Si le projet est autorisé, il reste potentiellement soumis à la Loi sur l'eau.</p>
+{% endif %}
 
-  {% if moulinette.loi_sur_leau.zone_humide.result == 'action_requise' %}
-    <li>
-      n'impacte pas plus de 1 000 m² de zone humide.
-    </li>
-  {% endif %}
+{% if regulation.required_actions_soumis %}
+  <p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
 
-  {% if moulinette.loi_sur_leau.zone_inondable.result == 'action_requise' %}
-    <li>
-      n'impacte pas plus de 400 m² de zone inondable.
-    </li>
-  {% endif %}
-
-  {% if moulinette.loi_sur_leau.ruissellement.result == 'action_requise' %}
-    <li>
-      a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha.
-    </li>
-  {% endif %}
-</ul>
+  <ul>
+    {% for action in moulinette.loi_sur_leau.required_actions_soumis %}
+      <li>{{ action }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
 <p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
 <ul>

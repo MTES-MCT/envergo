@@ -1,6 +1,20 @@
 <p>Le projet est soumis à déclaration Loi sur l'eau.</p>
 
-<h3>Marche à suivre</h3>
+{% if regulation.required_actions_interdit %}
+  <p>En outre, <strong>le projet est susceptible d'être interdit</strong>.</p>
+
+  <h3>Marche à suivre</h3>
+
+  <p>Pour être certain que son projet n'est pas interdit, le porteur doit s'assurer que celui-ci :</p>
+
+  {% for action in regulation.required_actions_interdit %}
+    <ul>
+      <li> {{ action }} </li>
+    </ul>
+  {% endfor %}
+
+  <p>Si le projet est autorisé, il reste soumis à la Loi sur l'eau.</p>
+{% endif %}
 
 <p>Un dossier de déclaration Loi sur l’eau (également nommé « déclaration IOTA ») doit être constitué et
   <a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">déposé en ligne</a>.
