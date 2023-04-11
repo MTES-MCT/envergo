@@ -259,7 +259,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context["grouped_zones"] = (
                 moulinette.catalog["all_zones"]
                 .annotate(
-                    map_type=Concat("map__data_type", V("-"), "map__data_certainty")
+                    map_type=Concat("map__map_type", V("-"), "map__data_certainty")
                 )
                 .order_by("map_type", "map__name", "distance")
             )

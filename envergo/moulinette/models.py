@@ -28,7 +28,7 @@ def fetch_zones_around(coords, radius, zone_type, data_certainty="certain"):
     """Helper method to fetch Zones around a given point."""
 
     qs = (
-        Zone.objects.filter(map__data_type=zone_type)
+        Zone.objects.filter(map__map_type=zone_type)
         .filter(geometry__dwithin=(coords, D(m=radius)))
         .filter(map__data_certainty=data_certainty)
     )
@@ -46,7 +46,7 @@ def fetch_wetlands_around_100m(coords):
 
 def fetch_potential_wetlands(coords):
     qs = (
-        Zone.objects.filter(map__data_type="zone_humide")
+        Zone.objects.filter(map__map_type="zone_humide")
         .filter(map__data_certainty="uncertain")
         .filter(geometry__dwithin=(coords, D(m=0)))
     )
@@ -201,7 +201,7 @@ class Moulinette:
         def wetlands_filter(zone):
             return all(
                 (
-                    zone.map.data_type == "zone_humide",
+                    zone.map.map_type == "zone_humide",
                     zone.map.data_certainty == "certain",
                 )
             )
@@ -211,7 +211,7 @@ class Moulinette:
         def potential_wetlands_filter(zone):
             return all(
                 (
-                    zone.map.data_type == "zone_humide",
+                    zone.map.map_type == "zone_humide",
                     zone.map.data_certainty == "uncertain",
                 )
             )
@@ -221,7 +221,7 @@ class Moulinette:
         def flood_zones_filter(zone):
             return all(
                 (
-                    zone.map.data_type == "zone_inondable",
+                    zone.map.map_type == "zone_inondable",
                     zone.map.data_certainty == "certain",
                 )
             )

@@ -58,7 +58,7 @@ class MapAdmin(admin.ModelAdmin):
     form = MapForm
     list_display = [
         "name",
-        "data_type",
+        "map_type",
         "data_certainty",
         "departments",
         "display_for_user",
@@ -76,7 +76,7 @@ class MapAdmin(admin.ModelAdmin):
     actions = ["process"]
     exclude = ["task_id"]
     search_fields = ["name", "display_name"]
-    list_filter = ["data_type", "data_certainty", DepartmentsListFilter]
+    list_filter = ["map_type", "data_certainty", DepartmentsListFilter]
 
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
@@ -119,13 +119,13 @@ class MapAdmin(admin.ModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.OSMGeoAdmin):
-    list_display = ["id", "map", "created_at", "data_type", "data_certainty"]
+    list_display = ["id", "map", "created_at", "map_type", "data_certainty"]
     readonly_fields = ["map", "created_at"]
-    list_filter = ["map__data_type", "map__data_certainty"]
+    list_filter = ["map__map_type", "map__data_certainty"]
 
     @admin.display(description=_("Data type"))
-    def data_type(self, obj):
-        return obj.map.get_data_type_display()
+    def map_type(self, obj):
+        return obj.map.get_map_type_display()
 
     @admin.display(description=_("Data certainty"))
     def data_certainty(self, obj):
