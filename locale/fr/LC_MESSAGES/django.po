@@ -569,7 +569,7 @@ msgstr "Zones extraites"
 
 #: envergo/geodata/admin.py:126 envergo/geodata/models.py:167
 msgid "Data type"
-msgstr "Type de donnée"
+msgstr "Valeur carto"
 
 #: envergo/geodata/admin.py:130
 msgid "Data certainty"
