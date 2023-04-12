@@ -2,9 +2,11 @@
 
 {% if regulation.required_actions_interdit %}
   <p>En outre, <strong>le projet est susceptible d'être interdit</strong>.</p>
+{% endif %}
 
-  <h3>Marche à suivre</h3>
+<h3>Marche à suivre</h3>
 
+{% if regulation.required_actions_interdit %}
   <p>Pour être certain que son projet n'est pas interdit, le porteur doit s'assurer que celui-ci :</p>
 
   {% for action in regulation.required_actions_interdit %}
@@ -25,11 +27,17 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <h4>Comment déposer un dossier Loi sur l'eau ?</h4>
+  {% if regulation.required_actions_interdit %}
+    <p>Le porteur de projet doit mener des études sur les points cités ci-dessus, afin d'évaluer si le projet est autorisé.</p>
+
+    <p>Ainsi, il convient de :</p>
+  {% else %}
+    <h4>Comment déposer un dossier Loi sur l'eau ?</h4>
+  {% endif %}
 
   <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
 
-  <p>Il est chargé de réaliser les études qui conviennent et de rédiger le dossier Loi sur l'eau.</p>
+  <p>Il est chargé de réaliser les études qui conviennent {% if regulation.required_actions_interdit %}afin de déterminer si le projet est autorisé{% endif %} et de rédiger le dossier Loi sur l'eau.</p>
 
   <p><strong>2/ Déposer le dossier</strong></p>
 
