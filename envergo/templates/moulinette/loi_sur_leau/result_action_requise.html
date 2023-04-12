@@ -14,20 +14,25 @@
     {% endfor %}
   </ul>
 
-  <p>Si le projet est autorisé, il reste potentiellement soumis à la Loi sur l'eau.</p>
+  <p>Si le projet est autorisé, il reste soumis à la Loi sur l'eau.</p>
 {% endif %}
 
 {% if regulation.required_actions_soumis %}
   <p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
 
   <ul>
-    {% for action in moulinette.loi_sur_leau.required_actions_soumis %}
+    {% for action in regulation.required_actions_soumis %}
       <li>{{ action }}</li>
     {% endfor %}
   </ul>
 {% endif %}
 
-<p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
+{% if regulation.required_actions_interdit %}
+  <p>Si le projet s'avère autorisé et soumis à la Loi sur l'eau :</p>
+{% else %}
+  <p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
+{% endif %}
+
 <ul>
   <li>Un dossier de déclaration Loi sur l’eau (également nommé « déclaration IOTA ») doit être constitué et <a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">déposé en ligne</a>.
   </li>
@@ -37,10 +42,17 @@
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
-  <p>
-    Le porteur de projet doit mener des études sur les points cités précédemment,
-    afin d'évaluer si le projet est soumis à la Loi sur l'eau.
-  </p>
+
+  {% if regulation.required_actions_interdit %}
+    <p>
+      Le porteur de projet doit mener des études sur les points cités précédemment, afin d'évaluer si le projet est autorisé et / ou soumis à la Loi sur l'eau.
+    </p>
+  {% else %}
+    <p>
+      Le porteur de projet doit mener des études sur les points cités précédemment, afin d'évaluer si le projet est soumis à la Loi sur l'eau.
+    </p>
+
+  {% endif %}
 
   <p>Ainsi, il convient de :</p>
 
