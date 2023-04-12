@@ -63,12 +63,12 @@ class MapAdmin(admin.ModelAdmin):
         "departments",
         "display_for_user",
         "expected_zones",
-        "zone_count",
         "import_status",
         "task_status",
     ]
     readonly_fields = [
         "created_at",
+        "zone_count",
         "expected_zones",
         "import_status",
         "import_error_msg",
@@ -98,12 +98,8 @@ class MapAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Extracted zones"))
     def zone_count(self, obj):
-        return obj.nb_zones
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.annotate(nb_zones=Count("zones"))
-        return qs
+        count = Zone.objects.filter(map=obj).count()
+        return count
 
     def task_status(self, obj):
         if not obj.task_id:
