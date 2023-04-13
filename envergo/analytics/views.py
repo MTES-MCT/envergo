@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView, RedirectView
 from django.views.generic.edit import BaseFormView
-from ratelimit.decorators import ratelimit
+from django_ratelimit.decorators import ratelimit
 
 from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
 from envergo.analytics.utils import log_event, set_visitor_id_cookie
