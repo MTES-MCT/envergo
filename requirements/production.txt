@@ -167,8 +167,10 @@ prompt-toolkit==3.0.38
     # via
     #   -r base.txt
     #   click-repl
-psycopg2==2.9.6
+psycopg[binary]==3.1.8
     # via -r production.in
+psycopg-binary==3.1.8
+    # via psycopg
 pycparser==2.21
     # via
     #   -r base.txt
@@ -245,6 +247,8 @@ tomli==2.0.1
     #   -r base.txt
     #   build
     #   pyproject-hooks
+typing-extensions==4.5.0
+    # via psycopg
 urllib3==1.26.15
     # via
     #   -r base.txt
