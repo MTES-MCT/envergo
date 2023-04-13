@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 
+from envergo.geodata.models import Map
 from envergo.moulinette.models import MoulinetteConfig, Perimeter
 from envergo.moulinette.regulations import MoulinetteCriterion
 
@@ -26,6 +27,18 @@ class PerimeterAdminForm(forms.ModelForm):
 @admin.register(Perimeter)
 class PerimeterAdmin(admin.ModelAdmin):
     form = PerimeterAdminForm
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Limit map choices to those with empty "map type".
+
+        Maps for wetlands or flood zones are not used for perimeters.
+
+        Also, I find it weird that there is no better way to filter foreign key
+        choices.
+        """
+        if db_field.name == "map":
+            kwargs["queryset"] = Map.objects.filter(map_type="")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(MoulinetteConfig)
