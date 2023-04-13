@@ -402,7 +402,7 @@ vine==5.0.0
     #   kombu
 virtualenv==20.21.0
     # via pre-commit
-watchdog==3.0.0
+watchdog==2.2.1
     # via -r local.in
 wcwidth==0.2.6
     # via
