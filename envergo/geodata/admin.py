@@ -113,7 +113,7 @@ class MapAdmin(admin.ModelAdmin):
 
 
 @admin.register(Zone)
-class ZoneAdmin(gis_admin.OSMGeoAdmin):
+class ZoneAdmin(gis_admin.GISModelAdmin):
     list_display = ["id", "map", "created_at", "map_type", "data_type"]
     readonly_fields = ["map", "created_at"]
     list_filter = ["map__map_type", "map__data_type", "map"]
