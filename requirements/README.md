@@ -8,8 +8,8 @@ existing packages.
 
 DO NOT MANUALLY edit the .txt files, only the .in files.
 
-## How to install a new package
 
+## How to install a new package
 
 ```bash
 cd requirements
