@@ -300,8 +300,9 @@ class MoulinetteDebug(FormView):
         """Check wich template to use depending on the moulinette result."""
 
         moulinette = getattr(self, "moulinette", None)
+        is_superuser = self.request.user.is_superuser
 
-        if moulinette and moulinette.is_evaluation_available():
+        if moulinette and (moulinette.is_evaluation_available() or is_superuser):
             template_name = "moulinette/debug_result.html"
         elif moulinette:
             template_name = "moulinette/debug_result_non_disponible.html"
