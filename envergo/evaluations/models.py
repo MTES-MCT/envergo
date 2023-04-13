@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core.files.storage import get_storage_class
+from django.core.files.storage import storages
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
@@ -390,7 +390,7 @@ class RequestFile(models.Model):
     file = models.FileField(
         _("File"),
         upload_to=request_file_format,
-        storage=get_storage_class(settings.UPLOAD_FILE_STORAGE),
+        storage=lambda: storages["upload"],
     )
     name = models.CharField(_("Name"), blank=True, max_length=1024)
 
