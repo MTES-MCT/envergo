@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.files.storage import get_storage_class
+from django.core.files.storage import storages
 from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
@@ -313,7 +313,7 @@ class WizardStepMixin:
         return super().form_valid(form)
 
     def get_file_storage(self):
-        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+        file_storage = storages["upload"]
         return file_storage
 
     def reset_data(self):
