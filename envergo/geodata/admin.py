@@ -3,7 +3,6 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
-from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 

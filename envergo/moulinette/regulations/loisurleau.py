@@ -285,7 +285,8 @@ class Ruissellement(MoulinetteCriterion):
         if self.result == RESULTS.action_requise:
             action = RequiredAction(
                 stake=Stake.SOUMIS,
-                text="a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha",
+                text="a une surface totale, augmentée de l'aire d'écoulement d'eaux de "
+                "pluie interceptée, inférieure à 1 ha",
             )
         return action
 
