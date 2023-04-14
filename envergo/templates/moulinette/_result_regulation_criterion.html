@@ -15,9 +15,10 @@
   </h4>
 
   <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
-    {% if criterion.header %}
+    {% criterion_value config criterion 'header' as criterion_header %}
+    {% if criterion_header %}
       <p class="fr-text--light fr-text--sm">
-        {% criterion_value config criterion 'header' %}
+        {{ criterion_header }}
       </p>
     {% endif %}
     {% show_criterion_body regulation criterion %}

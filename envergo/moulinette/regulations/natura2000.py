@@ -269,7 +269,6 @@ class Lotissement(MoulinetteCriterion):
     slug = "lotissement"
     choice_label = "Natura 2000 > Lotissement"
     title = "Lotissement dans zone Natura 2000"
-    header = "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"  # noqa
     form_class = LotissementForm
 
     CODES = [
