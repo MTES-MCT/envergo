@@ -3,7 +3,6 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
-from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
@@ -58,17 +57,17 @@ class MapAdmin(admin.ModelAdmin):
     form = MapForm
     list_display = [
         "name",
+        "map_type",
         "data_type",
-        "data_certainty",
         "departments",
         "display_for_user",
         "expected_zones",
-        "zone_count",
         "import_status",
         "task_status",
     ]
     readonly_fields = [
         "created_at",
+        "zone_count",
         "expected_zones",
         "import_status",
         "import_error_msg",
@@ -76,7 +75,7 @@ class MapAdmin(admin.ModelAdmin):
     actions = ["process"]
     exclude = ["task_id"]
     search_fields = ["name", "display_name"]
-    list_filter = ["data_type", "data_certainty", DepartmentsListFilter]
+    list_filter = ["map_type", "data_type", DepartmentsListFilter]
 
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
@@ -98,12 +97,8 @@ class MapAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Extracted zones"))
     def zone_count(self, obj):
-        return obj.nb_zones
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.annotate(nb_zones=Count("zones"))
-        return qs
+        count = Zone.objects.filter(map=obj).count()
+        return count
 
     def task_status(self, obj):
         if not obj.task_id:
@@ -119,17 +114,17 @@ class MapAdmin(admin.ModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.OSMGeoAdmin):
-    list_display = ["id", "map", "created_at", "data_type", "data_certainty"]
+    list_display = ["id", "map", "created_at", "map_type", "data_type"]
     readonly_fields = ["map", "created_at"]
-    list_filter = ["map__data_type", "map__data_certainty"]
+    list_filter = ["map__map_type", "map__data_type", "map"]
 
     @admin.display(description=_("Data type"))
-    def data_type(self, obj):
-        return obj.map.get_data_type_display()
+    def map_type(self, obj):
+        return obj.map.get_map_type_display()
 
     @admin.display(description=_("Data certainty"))
-    def data_certainty(self, obj):
-        return obj.map.get_data_certainty_display()
+    def data_type(self, obj):
+        return obj.map.get_data_type_display()
 
 
 @admin.register(Department)

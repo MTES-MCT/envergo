@@ -77,7 +77,7 @@ class MapFactory(DjangoModelFactory):
 
     name = factory_Faker("name")
     # file = Faker("file", locale="fr")
-    data_type = "zone_humide"
+    map_type = "zone_humide"
     description = "Lorem ipsum"
 
 
@@ -93,5 +93,5 @@ class DepartmentFactory(DjangoModelFactory):
     class Meta:
         model = Department
 
-    department = 61  # Orne
+    department = 44
     geometry = FuzzyMultiPolygon()

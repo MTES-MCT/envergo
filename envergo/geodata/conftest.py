@@ -8,7 +8,7 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory
 def france_map():
     """Fixture for a map containing mainland France territory."""
 
-    map = MapFactory(name="France map", data_type="")
+    map = MapFactory(name="France map", map_type="")
 
     # This is a rough pentagon that I manually drew on geoportail and that contains
     # France's mainland.
@@ -31,7 +31,7 @@ def france_map():
 def bizous_town_center():
     """A map with only Bizous's town center."""
 
-    map = MapFactory(name="Bizou town center", data_type="")
+    map = MapFactory(name="Bizou town center", map_type="")
     polygon = Polygon(
         [
             (0.4421436860179369, 43.06930871579473),

@@ -42,6 +42,19 @@ def show_criterion_body(context, regulation, criterion):
     return content
 
 
+@register.simple_tag
+def criterion_value(config, criterion, field):
+    """Display a criterion static value.
+
+    If this value is overriden in the MoulinetteConfig instance,
+    display the config value instead.
+    """
+    values = config.criteria_values
+    key = f"{criterion.slug}__{field}"
+    default = getattr(criterion, field, "")
+    return mark_safe(values.get(key, default))
+
+
 @register.simple_tag()
 def debug(stuff):
     raise 0

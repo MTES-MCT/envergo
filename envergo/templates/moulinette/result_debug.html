@@ -59,7 +59,7 @@
     {% regroup grouped_zones by map_type as map_list %}
     {% for map_type in map_list %}
       <h3>
-        {{ map_type.list.0.map.get_data_type_display }} ({{ map_type.list.0.map.get_data_certainty_display }})
+        {{ map_type.list.0.map.get_map_type_display }} ({{ map_type.list.0.map.get_data_type_display }})
       </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">

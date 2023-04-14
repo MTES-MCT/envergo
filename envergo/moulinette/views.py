@@ -258,10 +258,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
             context["grouped_zones"] = (
                 moulinette.catalog["all_zones"]
-                .annotate(
-                    map_type=Concat("map__data_type", V("-"), "map__data_certainty")
-                )
-                .order_by("map_type", "map__name", "distance")
+                .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
+                .order_by("type", "map__name", "distance")
             )
 
         return context
@@ -302,8 +300,9 @@ class MoulinetteDebug(FormView):
         """Check wich template to use depending on the moulinette result."""
 
         moulinette = getattr(self, "moulinette", None)
+        is_superuser = self.request.user.is_superuser
 
-        if moulinette and moulinette.is_evaluation_available():
+        if moulinette and (moulinette.is_evaluation_available() or is_superuser):
             template_name = "moulinette/debug_result.html"
         elif moulinette:
             template_name = "moulinette/debug_result_non_disponible.html"

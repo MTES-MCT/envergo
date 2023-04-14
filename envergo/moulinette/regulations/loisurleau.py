@@ -8,10 +8,13 @@ from envergo.moulinette.regulations import (
     MapPolygon,
     MoulinetteCriterion,
     MoulinetteRegulation,
+    RequiredAction,
+    Stake,
 )
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
+BLACK = "#000000"
 
 
 class ZoneHumide(MoulinetteCriterion):
@@ -164,6 +167,15 @@ class ZoneHumide(MoulinetteCriterion):
 
         return criterion_map
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 1 000 m² de zone humide",
+            )
+        return action
+
 
 class ZoneInondable(MoulinetteCriterion):
     slug = "zone_inondable"
@@ -237,6 +249,15 @@ class ZoneInondable(MoulinetteCriterion):
 
         return criterion_map
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 400m² de zone inondable",
+            )
+        return action
+
 
 class Ruissellement(MoulinetteCriterion):
     slug = "ruissellement"
@@ -259,6 +280,16 @@ class Ruissellement(MoulinetteCriterion):
 
         return res
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="a une surface totale, augmentée de l'aire d'écoulement d'eaux de "
+                "pluie interceptée, inférieure à 1 ha",
+            )
+        return action
+
 
 class OtherCriteria(MoulinetteCriterion):
     slug = "autres_rubriques"
@@ -272,7 +303,7 @@ class OtherCriteria(MoulinetteCriterion):
         return RESULTS.non_disponible
 
 
-class ZoneHumideVieJaunay85(ZoneHumide):
+class ZoneHumideVieJaunay85(MoulinetteCriterion):
     slug = "zone_humide_vie_jaunay_85"
     choice_label = "Loi sur l'eau > 85 - Zone humide Vie & Jaunay"
     title = "Impact sur une zone humide (SAGE Vie et Jaunay)"
@@ -287,6 +318,44 @@ class ZoneHumideVieJaunay85(ZoneHumide):
         "non_concerne",
     ]
 
+    def get_catalog_data(self):
+        data = {}
+
+        wetlands = self.catalog["forbidden_wetlands"]
+        data["forbidden_wetlands_25"] = [
+            zone for zone in wetlands if zone.distance <= D(m=25)
+        ]
+        data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
+        data["forbidden_wetlands_100"] = [
+            zone for zone in wetlands if zone.distance <= D(m=100)
+        ]
+        data["forbidden_wetlands_within_100m"] = bool(data["forbidden_wetlands_100"])
+
+        return data
+
+    def get_result_data(self):
+        """Evaluate the project and return the different parameter results.
+
+        For this criterion, the evaluation results depends on the project size
+        and wether it will impact known wetlands.
+        """
+
+        if self.catalog["forbidden_wetlands_within_25m"]:
+            wetland_status = "inside"
+        elif self.catalog["forbidden_wetlands_within_100m"]:
+            wetland_status = "close_to"
+        else:
+            wetland_status = "outside"
+
+        if self.catalog["created_surface"] >= 1000:
+            project_size = "big"
+        elif self.catalog["created_surface"] >= 700:
+            project_size = "medium"
+        else:
+            project_size = "small"
+
+        return wetland_status, project_size
+
     @property
     def result_code(self):
         """Return the unique result code."""
@@ -299,9 +368,6 @@ class ZoneHumideVieJaunay85(ZoneHumide):
             ("close_to", "big"): "action_requise_proche_interdit",
             ("close_to", "medium"): "non_soumis",
             ("close_to", "small"): "non_soumis",
-            ("inside_potential", "big"): "non_concerne",
-            ("inside_potential", "medium"): "non_concerne",
-            ("inside_potential", "small"): "non_concerne",
             ("outside", "big"): "non_concerne",
             ("outside", "medium"): "non_concerne",
             ("outside", "small"): "non_concerne",
@@ -326,6 +392,47 @@ class ZoneHumideVieJaunay85(ZoneHumide):
         }
         result = result_matrix[code]
         return result
+
+    def _get_map(self):
+        map_polygons = []
+
+        wetlands_qs = [
+            zone
+            for zone in self.catalog["forbidden_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLACK, "Zone humide"))
+
+        if self.catalog["forbidden_wetlands_within_25m"]:
+            caption = "Le projet se situe dans une zone humide référencée."
+
+        elif self.catalog["forbidden_wetlands_within_100m"]:
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
+        else:
+            caption = "Le projet ne se situe pas dans zone humide référencée."
+
+        if map_polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                entries=map_polygons,
+                caption=caption,
+                truncate=False,
+                zoom=18,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
+
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.INTERDIT,
+                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
+            )
+        return action
 
 
 class LoiSurLEau(MoulinetteRegulation):

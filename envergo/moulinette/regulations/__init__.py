@@ -1,9 +1,24 @@
 import json
 from dataclasses import dataclass
+from enum import Enum
 from functools import cached_property
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import merge_geometries, to_geojson
+
+
+class Stake(Enum):
+    SOUMIS = "Soumis"
+    INTERDIT = "Interdit"
+
+
+@dataclass
+class RequiredAction:
+    stake: Stake
+    text: str
+
+    def __str__(self):
+        return self.text
 
 
 class MoulinetteRegulation:
@@ -44,6 +59,24 @@ class MoulinetteRegulation:
             result = RESULTS.non_soumis
 
         return result
+
+    def required_actions(self):
+        actions = [c.required_action() for c in self.criterions if c.required_action()]
+        return actions
+
+    def required_actions_soumis(self):
+        actions = [
+            action for action in self.required_actions() if action.stake == Stake.SOUMIS
+        ]
+        return actions
+
+    def required_actions_interdit(self):
+        actions = [
+            action
+            for action in self.required_actions()
+            if action.stake == Stake.INTERDIT
+        ]
+        return actions
 
     def __getattr__(self, attr):
         """Returs the corresponding criterion.
@@ -204,3 +237,6 @@ class MoulinetteCriterion:
         else:
             form = None
         return form
+
+    def required_action(self):
+        return None

@@ -265,11 +265,10 @@ class LotissementForm(forms.Form):
     )
 
 
-class Lotissement44(MoulinetteCriterion):
-    slug = "lotissement_44"
-    choice_label = "Natura 2000 > 44 - Lotissement"
+class Lotissement(MoulinetteCriterion):
+    slug = "lotissement"
+    choice_label = "Natura 2000 > Lotissement"
     title = "Lotissement dans zone Natura 2000"
-    header = "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)"  # noqa
     form_class = LotissementForm
 
     CODES = [
@@ -281,7 +280,7 @@ class Lotissement44(MoulinetteCriterion):
 
     def get_distance_to_n2000(self):
         perimeters = self.moulinette.perimeters
-        perimeter = next((p for p in perimeters if p.criterion == Lotissement44), None)
+        perimeter = next((p for p in perimeters if p.criterion == type(self)), None)
         return perimeter.distance.m
 
     @cached_property
@@ -317,10 +316,18 @@ class Lotissement44(MoulinetteCriterion):
         return result
 
 
+class Lotissement44(Lotissement):
+    # Note : this is the legacy name of the criterion.
+    # It was renamed "Lotissement", but we keep the old name to avoid breaking
+    # existing perimeters.
+    slug = "lotissement_44"
+    choice_label = "Natura 2000 > 44 - Lotissement (obsolète)"
+
+
 class Natura2000(MoulinetteRegulation):
     slug = "natura2000"
     title = "Natura 2000"
-    criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement44]
+    criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement]
 
     @cached_property
     def result(self):
@@ -378,10 +385,7 @@ class Natura2000(MoulinetteRegulation):
         if perimeter.distance.m <= 0.0:
             caption = "Le projet se situe sur un site Natura 2000."
         else:
-            caption = (
-                "Le projet se situe à proximité immédiate d’un site Natura 2000 "
-                "(moins de 500 m, selon la doctrine de la DDTM de Loire-Atlantique)."
-            )
+            caption = "Le projet se situe à proximité immédiate d’un site Natura 2000."
 
         map = Map(
             center=self.catalog["coords"],

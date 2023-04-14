@@ -140,7 +140,9 @@ MAP_TYPES = Choices(
 # Sometimes, there are map with different certainty values.
 # E.g "this map represents zones that are wetlands for certain.
 # This other map represents zones that are *maybe* wetlands.
-CERTAINTY_LEVELS = Choices(("certain", _("Certain")), ("uncertain", _("Uncertain")))
+DATA_TYPES = Choices(
+    ("certain", _("Certain")), ("uncertain", _("Uncertain")), ("forbidden", "Interdit")
+)
 
 
 STATUSES = Choices(
@@ -158,14 +160,14 @@ class Map(models.Model):
     source = models.URLField(_("Source"), max_length=2000, blank=True)
     display_for_user = models.BooleanField(_("Display for user?"), default=True)
     file = models.FileField(_("File"), upload_to="maps/")
-    data_type = models.CharField(
-        _("Data type"), max_length=50, choices=MAP_TYPES, blank=True
+    map_type = models.CharField(
+        _("Map type"), max_length=50, choices=MAP_TYPES, blank=True
     )
-    data_certainty = models.CharField(
-        _("Data certainty"),
+    data_type = models.CharField(
+        _("Data type"),
         max_length=20,
-        choices=CERTAINTY_LEVELS,
-        default=CERTAINTY_LEVELS.certain,
+        choices=DATA_TYPES,
+        default=DATA_TYPES.certain,
     )
     description = models.TextField(_("Description"))
     departments = ArrayField(

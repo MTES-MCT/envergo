@@ -1,31 +1,36 @@
+{% if regulation.required_actions_interdit %}
+  <p>Le projet est <strong>susceptible d'être interdit</strong>.</p>
+{% endif %}
+
 <p>Une action du porteur de projet est requise.</p>
 
 <h3>Marche à suivre</h3>
 
-<p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
+{% if regulation.required_actions_interdit %}
+  <p>Pour être certain que son projet n’est pas interdit, le porteur doit s’assurer que celui-ci : </p>
+  <ul>
+    {% for action in regulation.required_actions_interdit %}
+      <li>{{ action }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
-<ul>
+{% if regulation.required_actions_soumis %}
+  <p>Pour être certain que son projet n’est pas soumis à la Loi sur l'eau, le porteur doit s’assurer que celui-ci :</p>
 
-  {% if moulinette.loi_sur_leau.zone_humide.result == 'action_requise' %}
-    <li>
-      n'impacte pas plus de 1 000 m² de zone humide.
-    </li>
-  {% endif %}
+  <ul>
+    {% for action in regulation.required_actions_soumis %}
+      <li>{{ action }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
-  {% if moulinette.loi_sur_leau.zone_inondable.result == 'action_requise' %}
-    <li>
-      n'impacte pas plus de 400 m² de zone inondable.
-    </li>
-  {% endif %}
+{% if regulation.required_actions_interdit %}
+  <p><em>Si le projet s'avère autorisé et soumis à la Loi sur l'eau :</em></p>
+{% else %}
+  <p><em>Si le projet s'avère soumis à la Loi sur l'eau :</em></p>
+{% endif %}
 
-  {% if moulinette.loi_sur_leau.ruissellement.result == 'action_requise' %}
-    <li>
-      a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha.
-    </li>
-  {% endif %}
-</ul>
-
-<p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
 <ul>
   <li>Un dossier de déclaration Loi sur l’eau (également nommé « déclaration IOTA ») doit être constitué et <a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">déposé en ligne</a>.
   </li>
@@ -35,14 +40,21 @@
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
-  <p>
-    Le porteur de projet doit mener des études sur les points cités précédemment,
-    afin d'évaluer si le projet est soumis à la Loi sur l'eau.
-  </p>
+
+  {% if regulation.required_actions_interdit %}
+    <p>
+      Le porteur de projet doit mener des études sur les points cités précédemment, afin d'évaluer si le projet est autorisé et / ou soumis à la Loi sur l'eau.
+    </p>
+  {% else %}
+    <p>
+      Le porteur de projet doit mener des études sur les points cités précédemment, afin d'évaluer si le projet est soumis à la Loi sur l'eau.
+    </p>
+
+  {% endif %}
 
   <p>Ainsi, il convient de :</p>
 
-  <p><strong>1/ Prendre contact avec un bureau d'études spécialisé « Loi sur l'eau » et lui communiquer ces éléments</strong> </p>
+  <p><strong>1/ Prendre contact avec un bureau d'études disposant d'une expertise « Loi sur l'eau » et lui communiquer ces éléments</strong> </p>
 
   <p>Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dépôt d'un dossier Loi sur l'eau est obligatoire, sous peine de sanctions.</p>
 
