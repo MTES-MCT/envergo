@@ -19,3 +19,20 @@ pip-compile local.in
 pip-compile production.in
 pip-sync (local.txt|production.txt)
 ```
+
+## How to upgrade ALL packages
+
+```bash
+rm *.txt
+pip-compile base.txt
+
+
+## How to upgrade ALL packages
+
+```bash
+rm *.txt
+pip-compile base.txt
+./compile.sh
+```
+
+Then run pip-sync / dc build
