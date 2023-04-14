@@ -7,18 +7,16 @@
 <h3>Marche à suivre</h3>
 
 {% if regulation.required_actions_interdit %}
-  <p>Pour être certain que son projet n’est pas interdit, le porteur de projet doit s’assurer que celui-ci : </p>
+  <p>Pour être certain que son projet n’est pas interdit, le porteur doit s’assurer que celui-ci : </p>
   <ul>
     {% for action in regulation.required_actions_interdit %}
       <li>{{ action }}</li>
     {% endfor %}
   </ul>
-
-  <p>Si le projet est autorisé, il reste soumis à la Loi sur l'eau.</p>
 {% endif %}
 
 {% if regulation.required_actions_soumis %}
-  <p>Pour être certain que son projet n'est pas soumis à la Loi sur l'eau, le porteur doit s'assurer que celui-ci :</p>
+  <p>Pour être certain que son projet n’est pas soumis à la Loi sur l'eau, le porteur doit s’assurer que celui-ci :</p>
 
   <ul>
     {% for action in regulation.required_actions_soumis %}
@@ -28,9 +26,9 @@
 {% endif %}
 
 {% if regulation.required_actions_interdit %}
-  <p>Si le projet s'avère autorisé et soumis à la Loi sur l'eau :</p>
+  <p><em>Si le projet s'avère autorisé et soumis à la Loi sur l'eau :</em></p>
 {% else %}
-  <p>Si le projet s'avère soumis à la Loi sur l'eau :</p>
+  <p><em>Si le projet s'avère soumis à la Loi sur l'eau :</em></p>
 {% endif %}
 
 <ul>
@@ -56,7 +54,7 @@
 
   <p>Ainsi, il convient de :</p>
 
-  <p><strong>1/ Prendre contact avec un bureau d'études spécialisé « Loi sur l'eau » et lui communiquer ces éléments</strong> </p>
+  <p><strong>1/ Prendre contact avec un bureau d'études disposant d'une expertise « Loi sur l'eau » et lui communiquer ces éléments</strong> </p>
 
   <p>Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dépôt d'un dossier Loi sur l'eau est obligatoire, sous peine de sanctions.</p>
 

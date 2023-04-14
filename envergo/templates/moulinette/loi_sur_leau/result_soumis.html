@@ -37,20 +37,38 @@
 
   <p><strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau »</strong> </p>
 
-  <p>Il est chargé de réaliser les études qui conviennent {% if regulation.required_actions_interdit %}afin de déterminer si le projet est autorisé{% endif %} et de rédiger le dossier Loi sur l'eau.</p>
+  <p>Il pourra réaliser les études qui conviennent
+    {% if regulation.required_actions_interdit %}afin de déterminer si le projet est autorisé{% endif %}
+    et rédiger le dossier Loi sur l'eau.</p>
 
   <p><strong>2/ Déposer le dossier</strong></p>
 
   <p><a href="https://entreprendre.service-public.fr/vosdroits/R62929" target="_blank" rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne</a>.</p>
 
-  <p>Si besoin, se rapprocher du service de la DDT(M) en charge de l'instruction.</p>
-  <div class="fr-highlight fr-mb-3w">
-    {{ config.lse_contact_ddtm|safe }}
-  </div>
+  <p>Si besoin, le porteur peut se rapprocher :</p>
+  <ul>
+    <li>du service de la DDT(M) en charge de la Loi sur l’eau :
+      <div class="fr-highlight fr-mt-1w fr-mb-2w fr-ml-0">
+        {{ config.lse_contact_ddtm|safe }}
+      </div>
+    </li>
+    
+    {% if regulation.required_actions_interdit %}
+    <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
+      <div class="fr-highlight fr-mt-1w fr-mb-2w fr-ml-0">
+        <address>
+          <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
+          Téléphone : 02 51 54 28 18<br />
+          Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
+        </address>
+      </div>
+    </li>
+    {% endif %}
+  </ul>
 
   <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
 
-  <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
+  <p>Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.</p>
 
   <p>Consultez <a href="{% url 'faq' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.</p>
 
