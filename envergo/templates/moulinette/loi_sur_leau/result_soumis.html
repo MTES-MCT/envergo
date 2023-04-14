@@ -52,7 +52,8 @@
         {{ config.lse_contact_ddtm|safe }}
       </div>
     </li>
-
+    
+    {% if regulation.required_actions_interdit %}
     <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
       <div class="fr-highlight fr-mt-1w fr-mb-2w fr-ml-0">
         <address>
@@ -62,6 +63,7 @@
         </address>
       </div>
     </li>
+    {% endif %}
   </ul>
 
   <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>
