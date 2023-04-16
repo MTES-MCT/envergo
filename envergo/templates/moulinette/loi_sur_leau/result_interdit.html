@@ -6,6 +6,8 @@
   <li>impacte plus de 1 000 m² de l’une des zones humides référencées dans le règlement du SAGE Vie et Jaunay.</p></li>
 </ul>
 
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
 <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
 
 <p>Le porteur de projet peut se rapprocher :</p>
@@ -26,8 +28,6 @@
     </div>
   </li>
 </ul>
-
-{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
