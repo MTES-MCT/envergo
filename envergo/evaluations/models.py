@@ -381,6 +381,14 @@ def request_file_format(instance, filename):
     return f"requests/{instance.request_id}{extension}"
 
 
+def get_upload_storage():
+    """Return the correct storage.
+
+    We cannot use a simple lambda because django migrations cannot serialize them.
+    """
+    return storages["upload"]
+
+
 class RequestFile(models.Model):
     """Store additional files for a single request."""
 
@@ -390,7 +398,7 @@ class RequestFile(models.Model):
     file = models.FileField(
         _("File"),
         upload_to=request_file_format,
-        storage=lambda: storages["upload"],
+        storage=get_upload_storage,
     )
     name = models.CharField(_("Name"), blank=True, max_length=1024)
 
