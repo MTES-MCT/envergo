@@ -101,7 +101,8 @@ class MoulinetteConfig(models.Model):
     )
     n2000_procedure_ein = models.TextField("N2000 > Procédure EIN")
     n2000_lotissement_proximite = models.TextField(
-        "N2000 > Précision proximité immédiate", default=""
+        "N2000 > Précision proximité immédiate",
+        blank=True,
     )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
     criteria_values = models.JSONField(
