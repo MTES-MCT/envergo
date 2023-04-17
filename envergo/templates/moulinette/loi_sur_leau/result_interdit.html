@@ -8,28 +8,28 @@
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
-<h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
-
-<p>Le porteur de projet peut se rapprocher :</p>
-<ul>
-  <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
-    <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-      <address>
-        <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
-        Téléphone : 02 51 54 28 18<br />
-        Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
-      </address>
-    </div>
-  </li>
-
-  <li>du service de la DDT(M) en charge de la Loi sur l’eau :
-    <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-      {{ config.lse_contact_ddtm|safe }}
-    </div>
-  </li>
-</ul>
-
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+  <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
+
+  <p>Le porteur de projet peut se rapprocher :</p>
+  <ul>
+    <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
+      <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+        <address>
+          <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
+          Téléphone : 02 51 54 28 18<br />
+          Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
+        </address>
+      </div>
+    </li>
+
+    <li>du service de la DDT(M) en charge de la Loi sur l’eau :
+      <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+        {{ config.lse_contact_ddtm|safe }}
+      </div>
+    </li>
+  </ul>
 
   <h4 class="fr-h4">Sanctions en cas d'omission</h4>
 
