@@ -2,7 +2,7 @@
 
 Werkzeug
 ipdb
-psycopg2
+psycopg[binary]
 
 # Testing
 # ------------------------------------------------------------------------------
@@ -29,4 +29,4 @@ django-debug-toolbar
 django-extensions
 django-coverage-plugin
 pytest-django
-watchdog
+watchdog<2.3

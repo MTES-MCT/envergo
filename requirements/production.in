@@ -3,7 +3,7 @@
 -r base.txt
 
 gunicorn
-psycopg2
+psycopg[binary]
 sentry-sdk
 
 # Django

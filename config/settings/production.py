@@ -80,15 +80,16 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_S3_CUSTOM_DOMAIN = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
 aws_s3_domain = AWS_S3_ENDPOINT_URL
 
-
-# STATIC
-# ------------------------
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-# MEDIA
-# ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "envergo.utils.storages.MediaRootS3Boto3Storage"
-UPLOAD_FILE_STORAGE = "envergo.utils.storages.UploadS3Boto3Storage"
 MEDIA_URL = f"https://{aws_s3_domain}/media/"
+
+STORAGES = {
+    "default": {"BACKEND": "envergo.utils.storages.MediaRootS3Boto3Storage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+}
+
 
 # TEMPLATES
 # ------------------------------------------------------------------------------

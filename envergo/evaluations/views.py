@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.files.storage import get_storage_class
+from django.core.files.storage import storages
 from django.db import transaction
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
@@ -56,7 +56,6 @@ class EvaluationSearch(FormView):
     form_class = EvaluationSearchForm
 
     def form_valid(self, form):
-
         reference = form.cleaned_data.get("reference")
         success_url = reverse("evaluation_detail", args=[reference])
         return HttpResponseRedirect(success_url)
@@ -103,7 +102,6 @@ class EvaluationDetail(EvaluationDetailMixin, DetailView):
 class EvaluationDetailMoulinette(
     EvaluationDetailMixin, BaseDetailView, MoulinetteResult
 ):
-
     event_category = "evaluation"
     event_action = "visit"
 
@@ -125,7 +123,6 @@ class EvaluationDetailMoulinette(
         return context
 
     def get(self, request, *args, **kwargs):
-
         # The Method Resolution Order (MRO) of python makes sure that
         # the `get` method is called from the `BaseDetailView` subclass,
         # not the `MoulinetteResult` subclass.
@@ -313,7 +310,7 @@ class WizardStepMixin:
         return super().form_valid(form)
 
     def get_file_storage(self):
-        file_storage = get_storage_class(settings.UPLOAD_FILE_STORAGE)()
+        file_storage = storages["upload"]
         return file_storage
 
     def reset_data(self):
@@ -414,7 +411,6 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     context_object_name = "evalreq"
 
     def get_context_data(self, **kwargs):
-
         files_qs = RequestFile.objects.filter(request=self.object)
         files = []
         for file in files_qs:

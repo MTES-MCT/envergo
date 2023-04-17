@@ -30,8 +30,6 @@ LANGUAGE_CODE = "fr-fr"
 SITE_ID = 1
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
-# https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
-USE_L10N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
@@ -266,7 +264,15 @@ INSTALLED_APPS += ["compressor"]
 STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 
 # Handle file uploads
-UPLOAD_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+}
 
 # CELERY
 if USE_TZ:
