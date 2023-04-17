@@ -56,7 +56,7 @@
       <p>Seul le plus proche polygone est affiché pour chaque type de carto (e.g zone humide > dedans)</p>
     </div>
 
-    {% regroup grouped_zones by map_type as map_list %}
+    {% regroup grouped_zones by type as map_list %}
     {% for map_type in map_list %}
       <h3>
         {{ map_type.list.0.map.get_map_type_display }} ({{ map_type.list.0.map.get_data_type_display }})
@@ -149,7 +149,7 @@
     </script>
   {% endfor %}
 
-  {% regroup grouped_zones by map_type as map_list %}
+  {% regroup grouped_zones by type as map_list %}
   {% for map_type in map_list %}
     <script>
       window.addEventListener('load', function() {
