@@ -75,7 +75,7 @@ class MoulinetteMixin:
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
-            if moulinette.is_evaluation_available():
+            if moulinette.is_evaluation_available() or self.request.user.is_superuser:
                 context["additional_forms"] = self.get_additional_forms(moulinette)
                 context["additional_fields"] = self.get_additional_fields(moulinette)
 
