@@ -3,6 +3,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
+from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
@@ -52,34 +53,69 @@ class DepartmentsListFilter(admin.SimpleListFilter):
         return queryset
 
 
+SHORT_MAP_TYPES = {
+    "zone_humide": "ZH",
+    "zone_inondable": "ZI",
+}
+
+
 @admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
     form = MapForm
     list_display = [
         "name",
-        "map_type",
+        "col_map_type",
         "data_type",
-        "departments",
-        "display_for_user",
-        "expected_zones",
-        "import_status",
-        "task_status",
+        "col_departments",
+        "col_display_for_user",
+        "col_expected_zones",
     ]
     readonly_fields = [
         "created_at",
         "zone_count",
         "expected_zones",
         "import_status",
+        "task_status",
         "import_error_msg",
     ]
     actions = ["process"]
     exclude = ["task_id"]
     search_fields = ["name", "display_name"]
     list_filter = ["map_type", "data_type", DepartmentsListFilter]
+    enable_nav_sidebar = False
 
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
         super().save_model(request, obj, form, change)
+
+    @admin.display(ordering="map_type", description=_("Type"))
+    def col_map_type(self, obj):
+        short_map_type = SHORT_MAP_TYPES.get(obj.map_type, obj.get_map_type_display())
+        return short_map_type
+
+    @admin.display(
+        ordering="departments",
+        description=mark_safe("<abbr title='Départments'>Depts.</abbr>"),
+    )
+    def col_departments(self, obj):
+        return obj.departments
+
+    @admin.display(
+        ordering="display_for_user",
+        description=mark_safe(
+            "<abbr title='Afficher pour l’utilisateur ?'>Aff.</abbr>"
+        ),
+        boolean=True,
+    )
+    def col_display_for_user(self, obj):
+        return obj.display_for_user
+
+    @admin.display(
+        ordering="expected_zones",
+        description=mark_safe("<abbr title='Nb de zones attendues'>Zones</abbr>"),
+    )
+    def col_expected_zones(self, obj):
+        return obj.expected_zones
 
     @admin.action(description=_("Extract and import a shapefile"))
     def process(self, request, queryset):
