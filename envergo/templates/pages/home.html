@@ -2,30 +2,125 @@
 
 {% load static %}
 
-{% block title %}Accueil{% endblock %}
+{% block title %}
+  EnvErgo : évaluez à quelles réglementations environnementales est soumis un projet de construction
+{% endblock %}
 
-{% block article %}
-  <h1>Demandez un avis réglementaire pour un projet</h1>
+{% block main-classes %}home{% endblock %}
 
-  <p class="fr-text--lead">
-    EnvErgo vous aide à déterminer si un projet de construction
-    est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
-  </p>
+{% block container %}
 
-  <p>
-    Faites-nous parvenir le Cerfa et les pièces complémentaires utiles à l'évaluation (plan de masse, autres documents…) à l'adresse suivante :
-  </p>
+  <div class="hero">
 
-  <p class="fr-grid-row fr-grid-row--center">
-    <a class="fr-btn fr-btn--info fr-my-4w"
-       href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
-  </p>
+    <div class="fr-container fr-py-8w">
 
-  <div class="fr-alert fr-alert--info fr-mt-6w">
-    <p class="fr-alert__title">Vous connaissez déjà votre référence EnvErgo ?</p>
-    <p>
-      <a href="{% url 'evaluation_search' %}">Retrouvez votre avis réglementaire.</a>
-    </p>
+      <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col fr-col-md-7">
+          <h1 class="fr-h2">Évaluez à quelles réglementations environnementales est soumis un projet de construction</h1>
+
+          <p class="fr-text--lead">
+            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
+          </p>
+
+          <ul class="fr-badge-group">
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+            </li>
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+            </li>
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+            </li>
+          </ul>
+        </div>
+        <div class="fr-col-md-5">
+          <img src="{% static 'images/home_screenshot.png' %}"
+               alt="Capture d'écran du résultat du simulateur EnvErgo"
+               class="home-illustration">
+        </div>
+      </div>
+    </div>
   </div>
 
+
+  <div class="fr-container fr-py-8w">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-md-10 fr-col-offset-1">
+
+        <h2 class="fr-h3">Déterminez en quelques clics…</h2>
+
+        <div class="fr-grid-row fr-grid-row--gutters">
+
+          <div class="fr-col-md-4">
+            <div class="fr-card fr-card--shadow fr-card--no-arrow">
+              <div class="fr-card__body fr-pb-0">
+                <h3 class="fr-card__title">Les réglementations environnementales</h3>
+                <p class="fr-card__desc fr-text--sm fr-mb-3w">…auxquelles un projet est soumis</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="fr-col-md-4">
+            <div class="fr-card fr-card--shadow fr-card--no-arrow">
+              <div class="fr-card__body fr-pb-0">
+                <h3 class="fr-card__title">Les études à mener</h3>
+                <p class="fr-card__desc fr-text--sm fr-mb-3w">…le cas échéant</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="fr-col-md-4">
+            <div class="fr-card fr-card--shadow fr-card--no-arrow">
+              <div class="fr-card__body fr-pb-0">
+                <h3 class="fr-card__title">Les procédures administratives à suivre</h3>
+                <p class="fr-card__desc fr-text--sm fr-mb-3w">…en plus du dépôt de permis de construire ou d'aménager</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="fr-container">
+
+    <div class="fr-grid-row fr-grid-row--gutters fr-py-8w">
+
+      <div class="fr-col-md-6">
+        <div class="fr-card fr-card--grey">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <h3 class="fr-card__title">Testez votre projet</h3>
+              <p class="fr-card__desc">Obtenez une évaluation rapide grâce à notre simulateur</p>
+            </div>
+
+            <div class="fr-card__footer">
+              <a href="{% url 'moulinette_home' %}"
+                 class="fr-btn fr-fi-arrow-right-line fr-btn--icon-left">Découvrir le simulateur</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-col-md-6">
+        <div class="fr-card fr-card--grey">
+          <div class="fr-card__body">
+            <div class="fr-card__content">
+              <h3 class="fr-card__title">Vous êtes un service ADS ?</h3>
+              <p class="fr-card__desc">EnvErgo vous accompagne grâce à l'évaluation manuelle de votre projet</p>
+            </div>
+
+            <div class="fr-card__footer">
+              <a class="fr-btn fr-fi-arrow-right-line fr-btn--icon-left"
+                 href="{% url 'request_eval_wizard_reset' %}">Commencer la demande</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 {% endblock %}
