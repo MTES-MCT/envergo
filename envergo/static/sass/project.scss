@@ -1029,3 +1029,24 @@ div.hero-alt {
     line-height: inherit;
   }
 }
+
+main.home {
+  div#before-content.fr-mt-5w {
+    margin-top: 0 !important;
+  }
+
+  div.hero {
+    background-color: var(--background-alt-grey);
+
+    .fr-grid-row {
+      align-items: center;
+    }
+  }
+
+  img.home-illustration {
+    box-shadow: -1px 2px 5px 1px rgba(0, 0, 0, 0.7), -1px 2px 20px rgba(255, 255, 255, 0.6) inset;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #bbb;
+  }
+}
