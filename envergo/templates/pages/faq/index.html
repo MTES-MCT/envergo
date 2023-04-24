@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load static %}
+{% load static pages %}
 
 {% block title %}Questions fréquentes{% endblock %}
 
@@ -19,15 +19,9 @@
             <div class="fr-sidemenu__title" id="fr-sidemenu-title">Questions fréquentes</div>
 
             <ul class="fr-sidemenu__list">
-              <li class="fr-sidemenu__item">
-                <a class="fr-sidemenu__link" href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
-              </li>
-              <li class="fr-sidemenu__item">
-                <a class="fr-sidemenu__link" href="{% url 'faq_natura_2000' %}">Natura 2000</a>
-              </li>
-              <li class="fr-sidemenu__item">
-                <a class="fr-sidemenu__link" href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
-              </li>
+              {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
+              {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
+              {% sidemenu_item 'faq_eval_env' "Évaluation environnementale" %}
             </ul>
           </div>
         </div>

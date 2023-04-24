@@ -17,7 +17,11 @@ def nav_link(route, label, aria_current=False):
 
 @register.simple_tag(takes_context=True)
 def menu_item(context, route, label, subroutes=[]):
-    """Generate html for a main menu item."""
+    """Generate html for a main menu item.
+
+    If you pass a list of subroutes, the menu item will be highlighted
+    if the current url is any on the main route or subroutes.
+    """
 
     try:
         current_route = context.request.resolver_match.url_name
@@ -26,6 +30,28 @@ def menu_item(context, route, label, subroutes=[]):
 
     aria_current = route == current_route or current_route in subroutes
     return nav_link(route, label, aria_current)
+
+
+@register.simple_tag(takes_context=True)
+def sidemenu_item(context, route, label):
+    try:
+        current_route = context.request.resolver_match.url_name
+    except AttributeError:
+        current_route = ""
+
+    aria_current = route == current_route
+    url = reverse(route)
+    sidemenu_class = "fr-sidemenu__item--current" if aria_current else ""
+    aria_attr = 'aria-current="page"' if aria_current else ""
+    return mark_safe(
+        f"""
+        <li class="fr-sidemenu__item {sidemenu_class}">
+            <a class="fr-sidemenu__link" href="{url}" {aria_attr}>
+                {label}
+            </a>
+        </li>
+        """
+    )
 
 
 @register.simple_tag(takes_context=True)
