@@ -65,7 +65,7 @@ class MapAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "col_map_type",
-        "data_type",
+        "col_data_type",
         "col_departments",
         "col_display_for_user",
         "col_expected_zones",
@@ -92,6 +92,10 @@ class MapAdmin(admin.ModelAdmin):
     def col_map_type(self, obj):
         short_map_type = SHORT_MAP_TYPES.get(obj.map_type, obj.get_map_type_display())
         return short_map_type
+
+    @admin.display(ordering="data_type", description=mark_safe("<abbr title='Valeur carto'>Val.</abbr>"))
+    def col_data_type(self, obj):
+        return obj.get_data_type_display()
 
     @admin.display(
         ordering="departments",
