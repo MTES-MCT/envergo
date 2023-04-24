@@ -16,7 +16,7 @@ def nav_link(route, label, aria_current=False):
 
 
 @register.simple_tag(takes_context=True)
-def menu_item(context, route, label):
+def menu_item(context, route, label, subroutes=[]):
     """Generate html for a main menu item."""
 
     try:
@@ -24,7 +24,7 @@ def menu_item(context, route, label):
     except AttributeError:
         current_route = ""
 
-    aria_current = route == current_route
+    aria_current = route == current_route or current_route in subroutes
     return nav_link(route, label, aria_current)
 
 
@@ -34,60 +34,27 @@ def evalreq_menu(context):
 
     link_route = "request_evaluation"
     link_label = "Demander une évaluation manuelle"
-
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
-
-    routes = [
+    subroutes = [
         "request_eval_wizard_step_1",
         "request_eval_wizard_step_2",
         "request_eval_wizard_step_3",
         "request_success",
     ]
-
-    aria_current = 'aria-current="page"' if current_route in routes else ""
-    return nav_link(link_route, link_label, aria_current)
+    return menu_item(context, link_route, link_label, subroutes)
 
 
 @register.simple_tag(takes_context=True)
 def faq_menu(context):
     """Generate html for the "Faq" collapsible menu."""
 
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
-
-    links = (
-        ("faq_loi_sur_leau", "Loi sur l'eau"),
-        ("faq_natura_2000", "Natura 2000"),
-        ("faq_eval_env", "Évaluation environnementale"),
-    )
-    links_html = [nav_link(url, label, url == current_route) for url, label in links]
-
-    # urls for the menu items
-    routes = list(dict(links).keys())
-
-    # Other urls that can be reached from the menu
-    additional_routes = ["faq"]
-    all_routes = routes + additional_routes
-
-    aria_current = 'aria-current="page"' if current_route in all_routes else ""
-    menu_html = f"""
-        <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-faq" {aria_current}>
-            Questions fréquentes
-        </button>
-        <div class="fr-collapse fr-menu" id="menu-faq">
-          <ul class="fr-menu__list">
-            <li>
-            {'</li><li>'.join(links_html)}
-            </li>
-          </ul>
-        </div>
-    """
-    return mark_safe(menu_html)
+    link_route = "faq"
+    link_label = "Questions fréquentes"
+    subroutes = [
+        "faq_loi_sur_leau",
+        "faq_natura_2000",
+        "faq_eval_env",
+    ]
+    return menu_item(context, link_route, link_label, subroutes)
 
 
 @register.simple_tag(takes_context=True)
