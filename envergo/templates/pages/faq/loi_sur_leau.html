@@ -1,28 +1,9 @@
-{% extends "base.html" %}
+{% extends "pages/faq/index.html" %}
 {% load static %}
 
 {% block title %}Questions fréquentes : Loi sur l'eau{% endblock %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" href="{% url 'faq' %}">Questions fréquentes</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Loi sur l'eau</a>
-        </li>
-      </ol>
-    </div>
-  </nav>
-{% endblock %}
-
-{% block article %}
+{% block faq_content %}
   <h1 id="questcequelaloisurleau">Questions fréquentes : Loi sur l'eau</h1>
 
   <p class="fr-text--lead">La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les

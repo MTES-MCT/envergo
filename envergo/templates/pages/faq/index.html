@@ -3,112 +3,83 @@
 
 {% block title %}Questions fréquentes{% endblock %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Questions fréquentes</a>
-        </li>
-      </ol>
-    </div>
-  </nav>
-{% endblock %}
-
-{% block article %}
-  <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
-
-  <p class="fr-text--lead">Retrouvez toutes nos informations concernant les réglementations environnementales prises en compte par Envergo.</p>
-
+{% block content %}
   <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12 fr-col-md-4">
+      <nav class="fr-sidemenu" aria-labelledby="fr-sidemenu-title">
+        <div class="fr-sidemenu__inner">
+          <button
+            class="fr-sidemenu__btn"
+            hidden
+            aria-controls="fr-sidemenu-wrapper"
+            aria-expanded="false"
+          >
+            Dans cette rubrique
+          </button>
+          <div class="fr-collapse" id="fr-sidemenu-wrapper">
+            <div class="fr-sidemenu__title" id="fr-sidemenu-title">Questions fréquentes</div>
 
+            <ul class="fr-sidemenu__list">
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_loi_sur_leau' %}"
+                  >Loi sur l'eau</a
+                >
+              </li>
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_natura_2000' %}"
+                  >Natura 2000</a
+                >
+              </li>
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_eval_env' %}"
+                  >Évaluation environnementale</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
 
-    <div class="fr-col fr-col-12 fr-col-md-6">
-      <div class="fr-card fr-card--shadow fr-enlarge-link">
-        <div class="fr-card__body">
-          <div class="fr-card__content">
-            <h2 class="fr-card__title">
-              <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
-            </h2>
-            <p class="fr-card__desc">La loi sur l'eau encadre tous les projets
-              qui risquent d'impacter l'eau et les milieux aquatiques.</p>
+    <div class="fr-col-12 fr-col-md-8">
+
+      {% block faq_content %}
+      <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
+
+      <p class="fr-text--lead">Retrouvez toutes nos informations concernant les réglementations environnementales prises en compte par Envergo.</p>
+
+      <div class="fr-grid-row fr-grid-row--gutters">
+
+        <div class="fr-col fr-col-12 fr-col-md-6">
+          <div class="fr-card fr-card--shadow fr-enlarge-link">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <h2 class="fr-card__title">
+                  <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
+                </h2>
+                <p class="fr-card__desc">La loi sur l'eau encadre tous les projets
+                  qui risquent d'impacter l'eau et les milieux aquatiques.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fr-col fr-col-12 fr-col-md-6">
+          <div class="fr-card fr-card--shadow fr-enlarge-link">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <h2 class="fr-card__title">
+                  <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
+                </h2>
+                <p class="fr-card__desc">Évaluation environnementale bla bla bla</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {% endblock %}
     </div>
-
-    <section class="fr-accordion">
-      <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn" aria-expanded="false" aria-controls="accordion-savoir-si-mon-projet-est-soumis">
-          <span>
-            Comment déterminer si mon projet est soumis à la Loi sur l'eau ?
-          </span>
-        </button>
-      </h3>
-
-      <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
-
-
-        <p>
-          En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si votre projet est soumis à la Loi sur l'eau, ainsi qu'à d'autres réglementations environnementales (Natura 2000…).
-          C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
-          Il fonctionne pour l'instant en Loire-Atlantique, dans le Morbihan et en Vendée, et sera prochainement étendu à un territoire plus large.
-        </p>
-
-        <p>
-          Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé :
-        </p>
-
-        <ul>
-          <li>
-            <p><strong>De se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong> </p>
-            <p>Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau,
-              et s'il y a lieu de constituer un dossier à déposer à l'administration.</p>
-          </li>
-
-          <li>
-            <p><strong>De demander une évaluation Loi sur l'eau au service EnvErgo</strong></p>
-
-            <p>
-              Vous pouvez <a href="{% url 'request_evaluation' %}">demander une évaluation de votre projet</a>, qui sera réalisée manuellement par l'équipe d'EnvErgo
-              — disponible sur la totalité du territoire français.
-            </p>
-
-            <p>
-              Enfin, n'hésitez pas à <a href="{% url 'contact_us' %}">contacter l'équipe EnvErgo pour toute question complémentaire</a>.
-            </p>
-
-          </li>
-
-          <li>
-            <p><strong>De se rapprocher du service qui instruit les dossiers Loi sur l'eau</strong></p>
-            <p>
-              Pour cela, contactez la DDT(M) (Direction Départementale des Territoires et de la Mer) de votre département.
-            </p>
-          </li>
-
-
-        </ul>
-      </div>
-    </div>
-
-    <div class="fr-col fr-col-12 fr-col-md-6">
-      <div class="fr-card fr-card--shadow fr-enlarge-link">
-        <div class="fr-card__body">
-          <div class="fr-card__content">
-            <h2 class="fr-card__title">
-              <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
-            </h2>
-            <p class="fr-card__desc">Évaluation environnementale bla bla bla</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
 
