@@ -4,60 +4,79 @@
 
 {% block title %}Questions fréquentes{% endblock %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Questions fréquentes</a>
-        </li>
-      </ol>
-    </div>
-  </nav>
-{% endblock %}
-
-{% block article %}
-  <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
-
-  <p class="fr-text--lead">
-    Retrouvez toutes nos informations concernant les réglementations environnementales prises en compte par Envergo.
-  </p>
-
+{% block content %}
   <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12 fr-col-md-4">
+      <nav class="fr-sidemenu" aria-labelledby="fr-sidemenu-title">
+        <div class="fr-sidemenu__inner">
+          <button class="fr-sidemenu__btn"
+                  hidden
+                  aria-controls="fr-sidemenu-wrapper"
+                  aria-expanded="false">
+            Dans cette rubrique
+          </button>
+          <div class="fr-collapse" id="fr-sidemenu-wrapper">
+            <div class="fr-sidemenu__title" id="fr-sidemenu-title">Questions fréquentes</div>
 
-    <div class="fr-col fr-col-12 fr-col-md-6">
-      <div class="fr-card fr-card--shadow fr-enlarge-link">
-        <div class="fr-card__body">
-          <div class="fr-card__content">
-            <h2 class="fr-card__title">
-              <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
-            </h2>
-            <p class="fr-card__desc">
-              La loi sur l'eau encadre tous les projets
-              qui risquent d'impacter l'eau et les milieux aquatiques.
-            </p>
+            <ul class="fr-sidemenu__list">
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
+              </li>
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_natura_2000' %}">Natura 2000</a>
+              </li>
+              <li class="fr-sidemenu__item">
+                <a class="fr-sidemenu__link" href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
+      </nav>
     </div>
 
-    <div class="fr-col fr-col-12 fr-col-md-6">
-      <div class="fr-card fr-card--shadow fr-enlarge-link">
-        <div class="fr-card__body">
-          <div class="fr-card__content">
-            <h2 class="fr-card__title">
-              <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
-            </h2>
-            <p class="fr-card__desc">Évaluation environnementale bla bla bla</p>
+    <div class="fr-col-12 fr-col-md-8">
+
+      {% block faq_content %}
+        <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
+
+        <p class="fr-text--lead">
+          Retrouvez toutes nos informations concernant les réglementations environnementales prises en compte par Envergo.
+        </p>
+
+        <div class="fr-grid-row fr-grid-row--gutters">
+
+          <div class="fr-col fr-col-12 fr-col-md-6">
+            <div class="fr-card fr-card--shadow fr-enlarge-link">
+              <div class="fr-card__body">
+                <div class="fr-card__content">
+                  <h2 class="fr-card__title">
+                    <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
+                  </h2>
+                  <p class="fr-card__desc">
+                    La loi sur l'eau encadre tous les projets
+                    qui risquent d'impacter l'eau et les milieux aquatiques.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fr-col fr-col-12 fr-col-md-6">
+            <div class="fr-card fr-card--shadow fr-enlarge-link">
+              <div class="fr-card__body">
+                <div class="fr-card__content">
+                  <h2 class="fr-card__title">
+                    <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
+                  </h2>
+                  <p class="fr-card__desc">Évaluation environnementale bla bla bla</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
+      {% endblock %}
+    </div>
   </div>
 
 {% endblock %}
