@@ -41,6 +41,13 @@ class PerimeterAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class MoulinetteConfigForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["n2000_lotissement_proximite"].strip = False
+
+
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated"]
+    form = MoulinetteConfigForm
