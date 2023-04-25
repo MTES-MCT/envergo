@@ -93,7 +93,10 @@ class MapAdmin(admin.ModelAdmin):
         short_map_type = SHORT_MAP_TYPES.get(obj.map_type, obj.get_map_type_display())
         return short_map_type
 
-    @admin.display(ordering="data_type", description=mark_safe("<abbr title='Valeur carto'>Val.</abbr>"))
+    @admin.display(
+        ordering="data_type",
+        description=mark_safe("<abbr title='Valeur carto'>Val.</abbr>"),
+    )
     def col_data_type(self, obj):
         return obj.get_data_type_display()
 
