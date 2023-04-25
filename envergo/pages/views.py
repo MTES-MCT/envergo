@@ -3,7 +3,13 @@ from datetime import date
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.views.generic import TemplateView
+from django.contrib.syndication.views import Feed
+from django.urls import reverse
+from django.utils.formats import date_format
+from django.utils.html import mark_safe
+from django.views.generic import ListView, TemplateView
+
+from envergo.pages.models import NewsItem
 
 
 class HomeView(TemplateView):
@@ -60,3 +66,31 @@ class Outlinks(TemplateView):
             links.append({"label": label, "url": url, "status": req.status_code})
 
         return links
+
+
+class NewsView(ListView):
+    template_name = "pages/faq/news.html"
+    context_object_name = "news_items"
+
+    def get_queryset(self):
+        return NewsItem.objects.all().order_by("-created_at")
+
+
+class NewsFeed(Feed):
+    title = "Les actualités d'EnvErgo"
+    link = "/foire-aux-questions/envergo-news/feed/"
+    description = "Les nouveautés du projet EnvErgo"
+
+    def items(self):
+        return NewsItem.objects.order_by('-created_at')[:10]
+
+    def item_title(self, item):
+        return date_format(item.created_at, "DATE_FORMAT")
+
+    def item_description(self, item):
+        return mark_safe(item.content_html)
+
+    def item_link(self, item):
+        base_url = reverse('faq_news')
+        item_url = f"{base_url}#news-item-{item.id}"
+        return item_url

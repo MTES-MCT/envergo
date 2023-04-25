@@ -19,9 +19,26 @@
             <div class="fr-sidemenu__title" id="fr-sidemenu-title">Questions fréquentes</div>
 
             <ul class="fr-sidemenu__list">
-              {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
-              {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
-              {% sidemenu_item 'faq_eval_env' "Évaluation environnementale" %}
+              <li class="fr-sidemenu__item">
+                <button class="fr-sidemenu__btn">
+                  Évaluations environnementales
+                </button>
+                <ul class="fr-sidemenu__list">
+                  {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
+                  {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
+                  {% sidemenu_item 'faq_eval_env' "Évaluation environnementale" %}
+                </ul>
+              </li>
+
+              <li class="fr-sidemenu__item">
+                <button class="fr-sidemenu__btn">
+                  Le projet EnvErgo
+                </button>
+                <ul class="fr-sidemenu__list">
+                  {% sidemenu_item 'faq_news' "Historique des nouveautés" %}
+                </ul>
+              </li>
+
             </ul>
           </div>
         </div>
