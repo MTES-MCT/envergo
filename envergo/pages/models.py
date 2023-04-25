@@ -8,8 +8,8 @@ from envergo.utils.markdown import markdown_to_html
 class NewsItem(models.Model):
     """A news item to be displayed on the FAQ page."""
 
-    content_md = models.TextField(_('Content'))
-    content_html = models.TextField(_('Content HTML'))
+    content_md = models.TextField(_("Content"))
+    content_html = models.TextField(_("Content HTML"))
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:

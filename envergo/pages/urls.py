@@ -57,7 +57,6 @@ urlpatterns = [
                     NewsFeed(),
                     name="news_feed",
                 ),
-
             ]
         ),
     ),

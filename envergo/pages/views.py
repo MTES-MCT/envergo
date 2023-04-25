@@ -82,7 +82,7 @@ class NewsFeed(Feed):
     description = "Les nouveautés du projet EnvErgo"
 
     def items(self):
-        return NewsItem.objects.order_by('-created_at')[:10]
+        return NewsItem.objects.order_by("-created_at")[:10]
 
     def item_title(self, item):
         return date_format(item.created_at, "DATE_FORMAT")
@@ -91,6 +91,6 @@ class NewsFeed(Feed):
         return mark_safe(item.content_html)
 
     def item_link(self, item):
-        base_url = reverse('faq_news')
+        base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
