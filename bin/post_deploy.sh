@@ -6,6 +6,6 @@ set -e
 
 echo ">>> Starting the post_deploy hook"
 
-# python manage.py migrate
+python manage.py migrate
 
 echo ">>> Leaving the post_deploy hook"
