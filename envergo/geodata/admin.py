@@ -118,9 +118,7 @@ class MapAdmin(admin.ModelAdmin):
     def col_display_for_user(self, obj):
         return obj.display_for_user
 
-    @admin.display(
-        ordering="import_status",
-        description="Import")
+    @admin.display(ordering="import_status", description="Import")
     def col_import_status(self, obj):
         if not obj.import_status:
             return ""
