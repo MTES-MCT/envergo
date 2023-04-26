@@ -69,6 +69,7 @@ class MapAdmin(admin.ModelAdmin):
         "col_departments",
         "col_display_for_user",
         "col_expected_zones",
+        "col_import_status",
     ]
     readonly_fields = [
         "created_at",
@@ -116,6 +117,22 @@ class MapAdmin(admin.ModelAdmin):
     )
     def col_display_for_user(self, obj):
         return obj.display_for_user
+
+    @admin.display(
+        ordering="import_status",
+        description="Import")
+    def col_import_status(self, obj):
+        if not obj.import_status:
+            return ""
+
+        icons = {
+            "success": "/static/admin/img/icon-yes.svg",
+            "failure": "/static/admin/img/icon-no.svg",
+            "partial_success": "/static/admin/img/icon-alert.svg",
+        }
+        icon = icons.get(obj.import_status)
+        html = f"<img src='{icon}' title='{obj.get_import_status_display()}' alt='{obj.get_import_status_display()}'/>"
+        return mark_safe(html)
 
     @admin.display(
         ordering="expected_zones",
