@@ -87,7 +87,7 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
-    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "upload": {"BACKEND": "envergo.utils.storages.UploadS3Boto3Storage"},
 }
 
 
