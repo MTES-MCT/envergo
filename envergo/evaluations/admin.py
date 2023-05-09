@@ -3,10 +3,12 @@ from urllib.parse import urlparse
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.contrib.sites.models import Site
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -192,6 +194,28 @@ class EvaluationAdmin(admin.ModelAdmin):
     @admin.display(description=_("Url"), boolean=True)
     def has_moulinette_url(self, obj):
         return bool(obj.moulinette_url)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/rappel-reglementaire/",
+                self.admin_site.admin_view(self.rappel_reglementaire),
+                name="evaluations_evaluation_rr",
+            ),
+        ]
+        return custom_urls + urls
+
+    def rappel_reglementaire(self, request, object_id):
+        evaluation = self.get_object(request, unquote(object_id))
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Rappel réglementaire",
+            "subtitle": str(evaluation),
+            "object_id": object_id,
+        }
+
+        return TemplateResponse(request, "evaluations/admin/rappel_reglementaire.html", context)
 
 
 class ParcelInline(admin.TabularInline):
