@@ -105,6 +105,10 @@ class CriterionInline(admin.StackedInline):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ["css/project_admin.css"],
+        }
     list_display = [
         "reference",
         "created_at",
@@ -213,6 +217,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             "title": "Rappel réglementaire",
             "subtitle": str(evaluation),
             "object_id": object_id,
+            "media": self.media,
         }
         email_content = render_to_string('evaluations/admin/rr_email.html', context)
         context["email_content"] = email_content

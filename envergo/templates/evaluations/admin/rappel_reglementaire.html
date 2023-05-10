@@ -1,16 +1,25 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}{{ block.super }}
+  <script src="{% url 'admin:jsi18n' %}"></script>
+  {{ media }}
+{% endblock %}
+
 {% block content %}
 
-<dl>
-  <dt>To (destinataires) :</dt>
-  <dd></dd>
-  <dt>BC (en copie) :</dt>
-  <dd></dd>
-  <dt>BCC (copie cachée) :</dt>
-  <dd></dd>
-</dl>
-<strong>Contenu :</strong>
-<div id="rr-content">
-  {{ email_content|safe }}
-</div>
+  <dl>
+    <dt>To (destinataires) :</dt>
+    <dd></dd>
+    <dt>BC (en copie) :</dt>
+    <dd></dd>
+    <dt>BCC (copie cachée) :</dt>
+    <dd></dd>
+  </dl>
+  <strong>Contenu :</strong>
+  <div id="rr-content">
+    <div id="mail-content">
+      {{ email_content|safe }}
+    </div>
+  </div>
 {% endblock %}
