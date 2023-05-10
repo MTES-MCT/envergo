@@ -20,3 +20,17 @@ def test_petitioner_to_field():
     email = eval.get_regulatory_reminder_email()
 
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+
+
+def test_instructor_cc_field():
+    req = RequestFactory(user_type=USER_TYPES.instructor, send_eval_to_sponsor=True)
+    eval = req.create_evaluation()
+    email = eval.get_regulatory_reminder_email()
+
+    assert email.cc == ["sponsor1@example.org", "sponsor2@example.org"]
+
+    req = RequestFactory(user_type=USER_TYPES.instructor, send_eval_to_sponsor=False)
+    eval = req.create_evaluation()
+    email = eval.get_regulatory_reminder_email()
+
+    assert email.cc == []

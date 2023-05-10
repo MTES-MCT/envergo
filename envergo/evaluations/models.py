@@ -186,10 +186,14 @@ class Evaluation(models.Model):
 
         if request.user_type == USER_TYPES.instructor:
             recipients = [request.contact_email]
+            if request.send_eval_to_sponsor:
+                cc_recipients = request.project_sponsor_emails
+            else:
+                cc_recipients = []
         else:
             recipients = request.project_sponsor_emails
+            cc_recipients = []
 
-        cc_recipients = ["cc_to_1@example.com"]
         bcc_recipients = ["bcc_to_1@exampl.com"]
         email = EmailMessage(
             subject="[EnvErgo] Rappel réglementaire Loi sur l'eau",
