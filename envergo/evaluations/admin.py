@@ -410,27 +410,7 @@ class RequestAdmin(admin.ModelAdmin):
 
         req = queryset[0]
         try:
-            req.evaluation
-        except Evaluation.DoesNotExist:
-            # Good, good…
-            # We can't create an evaluation if one already exists
-            pass
-        else:
-            error = _("There already is an evaluation associated with this request.")
-            self.message_user(request, error, level=messages.ERROR)
-            return
-
-        try:
-            evaluation = Evaluation.objects.create(
-                reference=req.reference,
-                moulinette_url=req.moulinette_url,
-                contact_email=req.contact_email,
-                request=req,
-                application_number=req.application_number,
-                address=req.address,
-                created_surface=req.created_surface,
-                existing_surface=req.existing_surface,
-            )
+            evaluation = req.create_evaluation()
         except Exception as e:
             error = _("There was an error creating your evaluation: %(error)s") % {
                 "error": e

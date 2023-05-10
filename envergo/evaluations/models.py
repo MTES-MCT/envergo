@@ -182,7 +182,7 @@ class Evaluation(models.Model):
         cc_recipients = ["cc_to_1@example.com"]
         bcc_recipients = ["bcc_to_1@exampl.com"]
         email = EmailMessage(
-            subject="[EnvErgo] Rappel réglementaire",
+            subject="[EnvErgo] Rappel réglementaire Loi sur l'eau",
             body=body,
             to=recipients,
             cc=cc_recipients,
@@ -398,6 +398,31 @@ class Request(models.Model):
 
         url = f"{map_url}?{qd.urlencode()}"
         return url
+
+    def create_evaluation(self):
+        """Create an evaluation from this evaluation request."""
+
+        # Let's make sure there is not already an
+        # evaluation associated with this request
+        try:
+            self.evaluation
+        except Evaluation.DoesNotExist:
+            # We're good
+            pass
+        else:
+            error = _("There already is an evaluation associated with this request.")
+            raise ValueError(error)
+
+        evaluation = Evaluation.objects.create(
+            reference=self.reference,
+            moulinette_url=self.moulinette_url,
+            contact_email=self.contact_email,
+            request=self,
+            application_number=self.application_number,
+            address=self.address,
+            created_surface=self.created_surface,
+            existing_surface=self.existing_surface)
+        return evaluation
 
 
 def request_file_format(instance, filename):
