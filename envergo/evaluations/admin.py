@@ -109,6 +109,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         css = {
             "all": ["css/project_admin.css"],
         }
+
     list_display = [
         "reference",
         "created_at",
@@ -212,17 +213,20 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def rappel_reglementaire(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
+        rr_email = evaluation.get_regulatory_reminder_email()
         context = {
             **self.admin_site.each_context(request),
             "title": "Rappel réglementaire",
             "subtitle": str(evaluation),
             "object_id": object_id,
+            "evaluation": evaluation,
+            "email": rr_email,
             "media": self.media,
         }
-        email_content = render_to_string('evaluations/admin/rr_email.html', context)
-        context["email_content"] = email_content
 
-        return TemplateResponse(request, "evaluations/admin/rappel_reglementaire.html", context)
+        return TemplateResponse(
+            request, "evaluations/admin/rappel_reglementaire.html", context
+        )
 
 
 class ParcelInline(admin.TabularInline):

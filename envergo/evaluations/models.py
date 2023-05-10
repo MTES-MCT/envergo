@@ -6,9 +6,11 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
+from django.core.mail import EmailMessage
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -170,6 +172,24 @@ class Evaluation(models.Model):
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
         return params_from_url(self.moulinette_url)
+
+    def get_regulatory_reminder_email(self):
+        """Generates a "rappel réglementaire" email for this evaluation."""
+
+        context = {}
+        body = render_to_string("evaluations/admin/rr_email.html", context)
+        recipients = ["to@example.com"]
+        cc_recipients = ["cc_to_1@example.com"]
+        bcc_recipients = ["bcc_to_1@exampl.com"]
+        email = EmailMessage(
+            subject="[EnvErgo] Rappel réglementaire",
+            body=body,
+            to=recipients,
+            cc=cc_recipients,
+            bcc=bcc_recipients,
+        )
+
+        return email
 
 
 CRITERIONS = Choices(

@@ -10,16 +10,16 @@
 
   <dl>
     <dt>To (destinataires) :</dt>
-    <dd></dd>
-    <dt>BC (en copie) :</dt>
-    <dd></dd>
+    <dd>{{ email.to|join:", " }}</dd>
+    <dt>CC (en copie) :</dt>
+    <dd>{{ email.cc|join:", " }}</dd>
     <dt>BCC (copie cachée) :</dt>
-    <dd></dd>
+    <dd>{{ email.bcc|join:", " }}</dd>
   </dl>
   <strong>Contenu :</strong>
   <div id="rr-content">
     <div id="mail-content">
-      {{ email_content|safe }}
+      {{ email.body|safe }}
     </div>
   </div>
 {% endblock %}
