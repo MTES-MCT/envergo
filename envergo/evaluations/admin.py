@@ -214,6 +214,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             "subtitle": str(evaluation),
             "object_id": object_id,
         }
+        email_content = render_to_string('evaluations/admin/rr_email.html', context)
+        context["email_content"] = email_content
 
         return TemplateResponse(request, "evaluations/admin/rappel_reglementaire.html", context)
 

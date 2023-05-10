@@ -1,4 +1,16 @@
 {% extends "admin/base_site.html" %}
 {% block content %}
-Cocou
+
+<dl>
+  <dt>To (destinataires) :</dt>
+  <dd></dd>
+  <dt>BC (en copie) :</dt>
+  <dd></dd>
+  <dt>BCC (copie cachée) :</dt>
+  <dd></dd>
+</dl>
+<strong>Contenu :</strong>
+<div id="rr-content">
+  {{ email_content|safe }}
+</div>
 {% endblock %}

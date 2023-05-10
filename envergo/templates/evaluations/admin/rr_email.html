@@ -1,0 +1,18 @@
+{% extends 'emails/_base.html' %}
+
+{% block content %}
+<p>Bonjour,</p>
+
+<p>Ceci est un rappel réglementaire du Ministère de la Transition Écologique.</p>
+
+<p>Au vu des informations qui nous ont été transmises, il apparaît que  ce projet est soumis à la Loi sur l'eau.</p>
+
+<p>Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.</p>
+
+<p>Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.</p>
+
+<p>Plus de détails sur cette évaluation et sur la procédure à suivre :</p>
+
+<p>{{ evaluation_link }}</p>
+
+{% endblock %}
