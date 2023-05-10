@@ -176,9 +176,19 @@ class Evaluation(models.Model):
     def get_regulatory_reminder_email(self):
         """Generates a "rappel réglementaire" email for this evaluation."""
 
+        try:
+            request = self.request
+        except Request.DoesNotExist:
+            raise ValueError("Impossible de générer un rappel reglementaire sans demande")
+
         context = {}
         body = render_to_string("evaluations/admin/rr_email.html", context)
-        recipients = ["to@example.com"]
+
+        if request.user_type == USER_TYPES.instructor:
+            recipients = [request.contact_email]
+        else:
+            recipients = request.project_sponsor_emails
+
         cc_recipients = ["cc_to_1@example.com"]
         bcc_recipients = ["bcc_to_1@exampl.com"]
         email = EmailMessage(
@@ -339,6 +349,8 @@ class Request(models.Model):
         verbose_name=_("Who are you?"),
     )
     contact_email = models.EmailField(_("E-mail"), blank=True)
+
+    # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
