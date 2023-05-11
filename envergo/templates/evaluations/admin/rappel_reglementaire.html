@@ -6,20 +6,34 @@
   {{ media }}
 {% endblock %}
 
-{% block content %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
 
-  <dl>
-    <dt>To (destinataires) :</dt>
-    <dd>{{ email.to|join:", " }}</dd>
-    <dt>CC (en copie) :</dt>
-    <dd>{{ email.cc|join:", " }}</dd>
-    <dt>BCC (copie cachée) :</dt>
-    <dd>{{ email.bcc|join:", " }}</dd>
-  </dl>
-  <strong>Contenu :</strong>
-  <div id="rr-content">
-    <div id="mail-content">
-      {{ email.body|safe }}
+{% block content %}
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <fieldset class="module">
+      <dl>
+        <dt>To (destinataires) :</dt>
+        <dd>{{ email.to|join:", " }}</dd>
+        <dt>CC (en copie) :</dt>
+        <dd>{{ email.cc|join:", " }}</dd>
+        <dt>BCC (copie cachée) :</dt>
+        <dd>{{ email.bcc|join:", " }}</dd>
+        <dt>Contenu :</dt>
+        <dd>
+          <div id="rr-content">
+            <div id="mail-content">
+              {{ email.body|safe }}
+            </div>
+          </div>
+        </dd>
+      </dl>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="Envoyer le rappel réglementaire par email" class="default" name="_save">
     </div>
-  </div>
+  </form>
+
 {% endblock %}

@@ -214,19 +214,28 @@ class EvaluationAdmin(admin.ModelAdmin):
     def rappel_reglementaire(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
         rr_email = evaluation.get_regulatory_reminder_email()
-        context = {
-            **self.admin_site.each_context(request),
-            "title": "Rappel réglementaire",
-            "subtitle": str(evaluation),
-            "object_id": object_id,
-            "evaluation": evaluation,
-            "email": rr_email,
-            "media": self.media,
-        }
 
-        return TemplateResponse(
-            request, "evaluations/admin/rappel_reglementaire.html", context
-        )
+        if request.method == "POST":
+            rr_email.send()
+            self.message_user(request, "Le rappel réglementaire a été envoyé.")
+            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
+            response = HttpResponseRedirect(url)
+        else:
+            context = {
+                **self.admin_site.each_context(request),
+                "title": "Rappel réglementaire",
+                "subtitle": str(evaluation),
+                "object_id": object_id,
+                "evaluation": evaluation,
+                "email": rr_email,
+                "media": self.media,
+            }
+
+            response = TemplateResponse(
+                request, "evaluations/admin/rappel_reglementaire.html", context
+            )
+
+        return response
 
 
 class ParcelInline(admin.TabularInline):
