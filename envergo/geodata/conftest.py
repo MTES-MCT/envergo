@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
-from envergo.geodata.tests.factories import MapFactory, ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, MapFactory, ZoneFactory
 
 
 @pytest.fixture
@@ -43,3 +43,24 @@ def bizous_town_center():
     )
     ZoneFactory(map=map, geometry=MultiPolygon([polygon]))
     return map
+
+
+@pytest.fixture
+def loire_atlantique_department():
+    # A very rough polygon of Loire-Atlantique department.
+    polygon = Polygon(
+        [
+            (-2.318813217788111, 47.11172939002415),
+            (-1.8093222509912361, 46.85878309487171),
+            (-1.0224264990381111, 47.06497777827326),
+            (-1.336910141616236, 47.267582403961455),
+            (-0.8782309423974862, 47.364409358656644),
+            (-1.272365463881861, 47.826525823757436),
+            (-2.679988754897486, 47.46013043348137),
+            (-2.550899399428736, 47.13508980827845),
+            (-2.215816391616236, 47.213505682461204),
+            (-2.318813217788111, 47.11172939002415),
+        ]
+    )
+    loire_atlantique = DepartmentFactory(department=44, geometry=MultiPolygon([polygon]))
+    return loire_atlantique

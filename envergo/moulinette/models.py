@@ -94,6 +94,7 @@ class MoulinetteConfig(models.Model):
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
     n2000_contact_ddtm_instruction = models.TextField(

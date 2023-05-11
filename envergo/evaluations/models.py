@@ -4,6 +4,7 @@ from os.path import splitext
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMessage
@@ -20,7 +21,17 @@ from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
+from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+
+# WGS84, geodetic coordinates, units in degrees
+# Good for storing data and working wordwide
+EPSG_WGS84 = 4326
+
+# Projected coordinates
+# Used for displaying tiles in web map systems (OSM, GoogleMaps)
+# Good for working in meters
+EPSG_MERCATOR = 3857
 
 
 def evaluation_file_format(instance, filename):
@@ -173,6 +184,16 @@ class Evaluation(models.Model):
         """Return the evaluation params as provided in the moulinette url."""
         return params_from_url(self.moulinette_url)
 
+    def get_moulinette_config(self):
+        params = self.moulinette_params
+        if "lng" not in params or "lat" not in params:
+            return None
+
+        lng, lat = params["lng"], params["lat"]
+        coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        department = Department.objects.filter(geometry__contains=coords).first()
+        return department.moulinette_config if department else None
+
     def get_regulatory_reminder_email(self):
         """Generates a "rappel réglementaire" email for this evaluation."""
 
@@ -180,6 +201,7 @@ class Evaluation(models.Model):
             request = self.request
         except Request.DoesNotExist:
             raise ValueError("Impossible de générer un rappel reglementaire sans demande")
+        config = self.get_moulinette_config()
 
         context = {}
         body = render_to_string("evaluations/admin/rr_email.html", context)
@@ -194,7 +216,10 @@ class Evaluation(models.Model):
             recipients = request.project_sponsor_emails
             cc_recipients = []
 
-        bcc_recipients = ["bcc_to_1@exampl.com"]
+        bcc_recipients = [settings.DEFAULT_FROM_EMAIL]
+        if config and config.ddtm_contact_email:
+            bcc_recipients.append(config.ddtm_contact_email)
+
         email = EmailMessage(
             subject="[EnvErgo] Rappel réglementaire Loi sur l'eau",
             body=body,
