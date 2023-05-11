@@ -191,15 +191,7 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
-        zones = (
-            Zone.objects.filter(
-                geometry__dwithin=(catalog["coords"], D(m=fetching_radius))
-            )
-            .annotate(distance=Distance("geometry", catalog["coords"]))
-            .annotate(geom=Cast("geometry", MultiPolygonField()))
-            .select_related("map")
-            .order_by("distance", "map__name")
-        )
+        zones = self.get_zones(catalog['coords'], fetching_radius)
         catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
@@ -266,17 +258,17 @@ class Moulinette:
         criterions = set([perimeter.criterion for perimeter in self.perimeters])
         return criterions
 
-    def get_zones(self):
-        """For debug purpose only.
+    def get_zones(self, coords, radius=200):
+        """Return the Zone objects containing the queried coordinates."""
 
-        Return the Zone objects containing the queried coordinates.
-        """
         zones = (
-            Zone.objects.filter(geometry__dwithin=(self.catalog["coords"], D(m=0)))
+            Zone.objects.filter(
+                geometry__dwithin=(coords, D(m=radius))
+            )
+            .annotate(distance=Distance("geometry", coords))
+            .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
-            .prefetch_related("map__perimeters")
-            .filter(map__perimeters__isnull=False)
-            .distinct()
+            .order_by("distance", "map__name")
         )
         return zones
 
