@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:evaluations_evaluation_rr' original.pk %}" class="">
+      Envoyer un rappel réglementaire
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}
