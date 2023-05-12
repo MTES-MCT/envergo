@@ -25,9 +25,8 @@
         <dt>Contenu :</dt>
         <dd>
           <div id="rr-content">
-            <div id="mail-content">
-              {{ email.body|safe }}
-            </div>
+            <iframe id="mail-content" width="800px" height="1200px" srcdoc="{{ email.body|safe|force_escape }}">
+            </iframe>
           </div>
         </dd>
       </dl>
