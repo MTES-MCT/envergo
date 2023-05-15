@@ -7,6 +7,11 @@
           <div class="fr-header__brand-top">
             <div class="fr-header__logo"><img src="{% static 'images/marianne.svg' %}" alt="République française"></div>
           </div>
+          <div class="fr-header__navbar">
+            <button class="fr-btn--menu fr-btn" data-fr-opened="false" aria-controls="modal-menu-slim" aria-haspopup="menu" title="Menu">
+              Menu
+            </button>
+          </div>
           <div class="fr-header__service">
             <a href="/">
               <p class="fr-header__service-title">
@@ -47,5 +52,12 @@
   </div>
 </div>
 
-<!-- Leave this to prevent a dsfr js bug -->
-<div class="fr-header__menu-links"></div>
+<div class="fr-header__menu fr-modal" id="modal-menu-slim">
+  <div class="fr-container">
+    <button class="fr-btn--close fr-btn" aria-controls="modal-menu-slim" title="Fermer">
+      Fermer
+    </button>
+    <div class="fr-header__menu-links">
+    </div>
+  </div>
+</div>
