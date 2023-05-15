@@ -223,7 +223,7 @@ class Evaluation(models.Model):
             bcc_recipients.append(config.ddtm_contact_email)
 
         email = EmailMessage(
-            subject="[EnvErgo] Rappel réglementaire Loi sur l'eau",
+            subject="Rappel réglementaire Loi sur l'eau",
             body=body,
             to=recipients,
             cc=cc_recipients,
