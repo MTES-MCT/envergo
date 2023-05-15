@@ -50,7 +50,9 @@ class ZoneHumide(MoulinetteCriterion):
 
         if "potential_wetlands_0" not in data:
             data["potential_wetlands_0"] = [
-                zone for zone in self.catalog["potential_wetlands"] if zone.distance <= D(m=0)
+                zone
+                for zone in self.catalog["potential_wetlands"]
+                if zone.distance <= D(m=0)
             ]
             data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
 
@@ -193,9 +195,9 @@ class ZoneInondable(MoulinetteCriterion):
     def get_catalog_data(self):
         data = {}
 
-        if 'flood_zones_12' not in self.catalog:
+        if "flood_zones_12" not in self.catalog:
             data["flood_zones_12"] = [
-                zone for zone in self.catalog['flood_zones'] if zone.distance <= D(m=12)
+                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
             ]
             data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
@@ -476,7 +478,9 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
 
         if "potential_wetlands_0" not in data:
             data["potential_wetlands_0"] = [
-                zone for zone in self.catalog["potential_wetlands"] if zone.distance <= D(m=0)
+                zone
+                for zone in self.catalog["potential_wetlands"]
+                if zone.distance <= D(m=0)
             ]
             data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
 
@@ -502,10 +506,10 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
 
         wetland_status = self.get_result_data()
         results = {
-            'inside': 'interdit',
-            'close_to': 'action_requise_proche_interdit',
-            'inside_potential': 'action_requise_dans_doute_interdit',
-            'outside': 'non_concerne'
+            "inside": "interdit",
+            "close_to": "action_requise_proche_interdit",
+            "inside_potential": "action_requise_dans_doute_interdit",
+            "outside": "non_concerne",
         }
         code = results[wetland_status]
         return code
