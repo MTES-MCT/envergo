@@ -936,7 +936,7 @@ div.hero-alt {
   &.header-popup {
     display: none;
 
-    @media (min-width: $breakpoint-md) {
+    @media (min-width: 62em) {
       &.displayed {
         display: block;
       }
