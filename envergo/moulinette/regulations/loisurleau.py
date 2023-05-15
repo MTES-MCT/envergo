@@ -50,7 +50,7 @@ class ZoneHumide(MoulinetteCriterion):
 
         if "potential_wetlands_0" not in data:
             data["potential_wetlands_0"] = [
-                zone for zone in data["potential_wetlands"] if zone.distance <= D(m=0)
+                zone for zone in self.catalog["potential_wetlands"] if zone.distance <= D(m=0)
             ]
             data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
 
