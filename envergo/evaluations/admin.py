@@ -213,7 +213,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def rappel_reglementaire(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
-        rr_email = evaluation.get_regulatory_reminder_email()
+        rr_email = evaluation.get_regulatory_reminder_email(request)
 
         if request.method == "POST":
             rr_email.send()

@@ -194,26 +194,28 @@ class Evaluation(models.Model):
         department = Department.objects.filter(geometry__contains=coords).first()
         return department.moulinette_config if department else None
 
-    def get_regulatory_reminder_email(self):
+    def get_regulatory_reminder_email(self, request):
         """Generates a "rappel réglementaire" email for this evaluation."""
 
         try:
-            request = self.request
+            evalreq = self.request
         except Request.DoesNotExist:
             raise ValueError("Impossible de générer un rappel reglementaire sans demande")
         config = self.get_moulinette_config()
 
-        context = {}
+        context = {
+            "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
+        }
         body = render_to_string("evaluations/admin/rr_email.html", context)
 
-        if request.user_type == USER_TYPES.instructor:
-            recipients = [request.contact_email]
-            if request.send_eval_to_sponsor:
-                cc_recipients = request.project_sponsor_emails
+        if evalreq.user_type == USER_TYPES.instructor:
+            recipients = [evalreq.contact_email]
+            if evalreq.send_eval_to_sponsor:
+                cc_recipients = evalreq.project_sponsor_emails
             else:
                 cc_recipients = []
         else:
-            recipients = request.project_sponsor_emails
+            recipients = evalreq.project_sponsor_emails
             cc_recipients = []
 
         bcc_recipients = [settings.DEFAULT_FROM_EMAIL]
