@@ -446,12 +446,155 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
         return action
 
 
+class ZoneHumideGMRE56(MoulinetteCriterion):
+    slug = "zone_humide_gmre_56"
+    choice_label = "Loi sur l'eau > 56 - Zone humide GMRE"
+    title = "Impact sur une zone humide (SAGE GMRE)"
+    header = "Destruction de tout m² de zone humide interdite dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel"  # noqa
+
+    CODES = [
+        "interdit",
+        "action_requise_proche_interdit",
+        "action_requise_dans_doute_interdit",
+        "non_concerne",
+    ]
+
+    def get_catalog_data(self):
+        data = {}
+
+        if "wetlands_25" not in data:
+            data["wetlands_25"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
+            ]
+            data["wetlands_within_25m"] = bool(data["wetlands_25"])
+
+        if "wetlands_100" not in data:
+            data["wetlands_100"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
+            ]
+            data["wetlands_within_100m"] = bool(data["wetlands_100"])
+
+        if "potential_wetlands_0" not in data:
+            data["potential_wetlands_0"] = [
+                zone for zone in self.catalog["potential_wetlands"] if zone.distance <= D(m=0)
+            ]
+            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
+
+        return data
+
+    def get_result_data(self):
+        """Evaluate the project and return the different parameter results."""
+
+        if self.catalog["wetlands_within_25m"]:
+            wetland_status = "inside"
+        elif self.catalog["wetlands_within_100m"]:
+            wetland_status = "close_to"
+        elif self.catalog["potential_wetlands_within_0m"]:
+            wetland_status = "inside_potential"
+        else:
+            wetland_status = "outside"
+
+        return wetland_status
+
+    @property
+    def result_code(self):
+        """Return the unique result code."""
+
+        wetland_status = self.get_result_data()
+        results = {
+            'inside': 'interdit',
+            'close_to': 'action_requise_proche_interdit',
+            'inside_potential': 'action_requise_dans_doute_interdit',
+            'outside': 'non_concerne'
+        }
+        code = results[wetland_status]
+        return code
+
+    @cached_property
+    def result(self):
+        """Run the check for the 3.3.1.0 rule.
+
+        Associate a unique result code with a value from the RESULTS enum.
+        """
+
+        code = self.result_code
+        result_matrix = {
+            "interdit": RESULTS.interdit,
+            "action_requise_proche_interdit": RESULTS.action_requise,
+            "action_requise_dans_doute_interdit": RESULTS.action_requise,
+            "non_concerne": RESULTS.non_concerne,
+        }
+        result = result_matrix[code]
+        return result
+
+    def _get_map(self):
+        map_polygons = []
+
+        wetlands_qs = [
+            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
+
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if potential_qs:
+            map_polygons.append(
+                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
+            )
+
+        if self.catalog["wetlands_within_25m"]:
+            caption = "Le projet se situe dans une zone humide référencée."
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            and not self.catalog["potential_wetlands_within_0m"]
+        ):
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            and self.catalog["potential_wetlands_within_0m"]
+        ):
+            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+        elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
+            caption = "Le projet se situe dans une zone humide potentielle."
+        else:
+            caption = "Le projet ne se situe pas dans zone humide référencée."
+
+        if map_polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                entries=map_polygons,
+                caption=caption,
+                truncate=False,
+                zoom=18,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
+
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.INTERDIT,
+                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
+            )
+        return action
+
+
 class LoiSurLEau(MoulinetteRegulation):
     slug = "loi_sur_leau"
     title = "Loi sur l'eau"
     criterion_classes = [
         ZoneHumide,
         ZoneHumideVieJaunay85,
+        ZoneHumideGMRE56,
         ZoneInondable,
         Ruissellement,
         OtherCriteria,
