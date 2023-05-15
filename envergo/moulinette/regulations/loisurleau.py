@@ -583,7 +583,7 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
         if self.result == RESULTS.action_requise:
             action = RequiredAction(
                 stake=Stake.INTERDIT,
-                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
+                text="n’impacte aucun m² de zone humide",
             )
         return action
 
