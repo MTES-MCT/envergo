@@ -24,7 +24,7 @@ msgstr "connexion/"
 
 #: config/urls.py:13
 msgid "logout/"
-msgstr "déconnexion/"
+msgstr "deconnexion/"
 
 #: config/urls.py:15
 msgid "password_change/"
