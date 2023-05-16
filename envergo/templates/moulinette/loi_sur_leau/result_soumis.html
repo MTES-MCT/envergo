@@ -9,11 +9,11 @@
 {% if regulation.required_actions_interdit %}
   <p>Pour être certain que son projet n'est pas interdit, le porteur doit s'assurer que celui-ci :</p>
 
-  {% for action in regulation.required_actions_interdit %}
-    <ul>
+  <ul>
+    {% for action in regulation.required_actions_interdit %}
       <li> {{ action }} </li>
-    </ul>
-  {% endfor %}
+    {% endfor %}
+  </ul>
 
   <p>Si le projet est autorisé, il reste soumis à la Loi sur l'eau.</p>
 {% endif %}
