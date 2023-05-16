@@ -423,7 +423,7 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
         elif self.catalog["forbidden_wetlands_within_100m"]:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
         else:
-            caption = "Le projet ne se situe pas dans zone humide référencée."
+            caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
@@ -567,7 +567,7 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
         elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
-            caption = "Le projet ne se situe pas dans zone humide référencée."
+            caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
