@@ -335,9 +335,7 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
             data["forbidden_wetlands_25"] = [
                 zone for zone in wetlands if zone.distance <= D(m=25)
             ]
-            data["forbidden_wetlands_within_25m"] = bool(
-                data["forbidden_wetlands_25"]
-            )
+            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
 
         if "forbidden_wetlands_100" not in data:
             data["forbidden_wetlands_100"] = [

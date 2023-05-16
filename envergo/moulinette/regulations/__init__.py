@@ -83,7 +83,9 @@ class MoulinetteRegulation:
         return impacts
 
     def discussion_contacts(self):
-        contacts = [c.discussion_contact() for c in self.criterions if c.discussion_contact()]
+        contacts = [
+            c.discussion_contact() for c in self.criterions if c.discussion_contact()
+        ]
         return contacts
 
     def __getattr__(self, attr):
