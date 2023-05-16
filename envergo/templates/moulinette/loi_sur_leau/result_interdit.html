@@ -3,7 +3,9 @@
 <p>En effet, au vu des informations saisies, le projet :</p>
 
 <ul>
-  <li>impacte plus de 1 000 m² de l’une des zones humides référencées dans le règlement du SAGE Vie et Jaunay.</p></li>
+  {% for impact in regulation.project_impacts %}
+    <li>{{ impact|safe }}</li>
+  {% endfor %}
 </ul>
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
@@ -14,15 +16,10 @@
 
   <p>Le porteur de projet peut se rapprocher :</p>
   <ul>
-    <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
-      <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-        <address>
-          <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
-          Téléphone : 02 51 54 28 18<br />
-          Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
-        </address>
-      </div>
-    </li>
+
+    {% for contact in regulation.discussion_contacts %}
+      <li>{{ contact|safe }}</li>
+    {% endfor %}
 
     <li>du service de la DDT(M) en charge de la Loi sur l’eau :
       <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">

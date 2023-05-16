@@ -335,6 +335,9 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
             data["forbidden_wetlands_25"] = [
                 zone for zone in wetlands if zone.distance <= D(m=25)
             ]
+            data["forbidden_wetlands_within_25m"] = bool(
+                data["forbidden_wetlands_25"]
+            )
 
         if "forbidden_wetlands_100" not in data:
             data["forbidden_wetlands_100"] = [
@@ -446,6 +449,27 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
                 text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
             )
         return action
+
+    def project_impact(self):
+        impact = None
+        if self.result == RESULTS.interdit:
+            impact = "impacte plus de 1 000 m² de l’une des zones humides référencées dans le règlement du SAGE Vie et Jaunay."
+        return impact
+
+    def discussion_contact(self):
+        contact = None
+        if self.result in (RESULTS.action_requise, RESULTS.interdit):
+            contact = """
+            de la structure en charge de l’animation du SAGE Vie et Jaunay :
+            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+                <address>
+                <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
+                Téléphone : 02 51 54 28 18<br />
+                Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
+                </address>
+            </div>
+            """
+        return contact
 
 
 class ZoneHumideGMRE56(MoulinetteCriterion):
@@ -590,6 +614,27 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
                 text="n’impacte aucun m² de zone humide",
             )
         return action
+
+    def project_impact(self):
+        impact = None
+        if self.result == RESULTS.interdit:
+            impact = "impacte une des zones humides référencées dans le règlement du SAGE GMRE."
+        return impact
+
+    def discussion_contact(self):
+        contact = None
+        if self.result in (RESULTS.action_requise, RESULTS.interdit):
+            contact = """
+            de la structure en charge de l’animation du SAGE Golfe du Morbihan et Ria d'Etel :
+            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+                <address>
+                <strong>Syndicat Mixte du SAGE Golfe du Morbihan et Ria d’Etel</strong><br />
+                Téléphone : 02 97 52 47 60<br />
+                Site internet : <a href="https://www.sagegmre.fr/contact,pa12.html" target="_blank" rel="noopener">https://www.sagegmre.fr</a>
+                </address>
+            </div>
+            """
+        return contact
 
 
 class LoiSurLEau(MoulinetteRegulation):
