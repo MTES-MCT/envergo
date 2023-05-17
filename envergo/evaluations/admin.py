@@ -228,6 +228,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "object_id": object_id,
                 "evaluation": evaluation,
                 "email": rr_email,
+                "email_html": rr_email.alternatives[0][0],
                 "media": self.media,
             }
 
