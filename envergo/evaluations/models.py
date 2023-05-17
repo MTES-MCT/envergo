@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
@@ -222,14 +222,14 @@ class Evaluation(models.Model):
         if config and config.ddtm_contact_email:
             bcc_recipients.append(config.ddtm_contact_email)
 
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             subject="Rappel réglementaire Loi sur l'eau",
-            body=body,
+            text_content='TODO',
             to=recipients,
             cc=cc_recipients,
             bcc=bcc_recipients,
         )
-
+        email.attach_alternative(body, "text/html")
         return email
 
 
