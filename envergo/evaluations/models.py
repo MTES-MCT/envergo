@@ -353,6 +353,10 @@ class Request(models.Model):
         """Return the evaluation params as provided in the moulinette url."""
         return params_from_url(self.moulinette_url)
 
+    def is_from_instructor(self):
+        """Shortcut property"""
+        return self.user_type == USER_TYPES.instructor
+
     def get_parcel_map_url(self):
         """Return an url to a parcel visualization map."""
 
