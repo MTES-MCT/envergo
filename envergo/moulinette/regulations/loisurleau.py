@@ -474,7 +474,9 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
     slug = "zone_humide_gmre_56"
     choice_label = "Loi sur l'eau > 56 - Zone humide GMRE"
     title = "Impact sur une zone humide (SAGE GMRE)"
-    header = "Destruction de tout m² de zone humide interdite dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel"  # noqa
+    subtitle = "Seuil d'interdiction : dès le premier m²"
+    header = "Règle 4 du règlement du SAGE Golfe du Morbihan & Ria d’Etel <a target='_blank' rel='noopener' href='https://www.gesteau.fr/document/sage-golfe-du-morbihan-et-ria-detel-reglement'>règlement du SAGE Golfe du Morbihan & Ria d’Etel</a>"  # noqa
+
 
     CODES = [
         "interdit",
