@@ -224,7 +224,7 @@ class Evaluation(models.Model):
 
         email = EmailMultiAlternatives(
             subject="Rappel réglementaire Loi sur l'eau",
-            text_content='TODO',
+            body='TODO',
             to=recipients,
             cc=cc_recipients,
             bcc=bcc_recipients,
