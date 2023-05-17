@@ -618,7 +618,7 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
     def project_impact(self):
         impact = None
         if self.result == RESULTS.interdit:
-            impact = "impacte une des zones humides référencées dans le règlement du SAGE GMRE."
+            impact = "impacte une zone humide dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel."
         return impact
 
     def discussion_contact(self):
