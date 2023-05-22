@@ -83,7 +83,7 @@ def post_request(request, host):
                 "select": {
                     "name": "Oui" if request.is_from_instructor() else "Non",
                 }
-            }
+            },
         },
     }
 
