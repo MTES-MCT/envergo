@@ -9,11 +9,11 @@
 {% if regulation.required_actions_interdit %}
   <p>Pour être certain que son projet n'est pas interdit, le porteur doit s'assurer que celui-ci :</p>
 
-  {% for action in regulation.required_actions_interdit %}
-    <ul>
+  <ul>
+    {% for action in regulation.required_actions_interdit %}
       <li> {{ action }} </li>
-    </ul>
-  {% endfor %}
+    {% endfor %}
+  </ul>
 
   <p>Si le projet est autorisé, il reste soumis à la Loi sur l'eau.</p>
 {% endif %}
@@ -53,18 +53,9 @@
       </div>
     </li>
 
-    {% if regulation.required_actions_interdit %}
-      <li>de la structure en charge de l’animation du SAGE Vie et Jaunay :
-        <div class="fr-highlight fr-mt-1w fr-mb-2w fr-ml-0">
-          <address>
-            <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du
-              Jaunay</strong><br />
-            Téléphone : 02 51 54 28 18<br />
-            Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
-          </address>
-        </div>
-      </li>
-    {% endif %}
+    {% for contact in regulation.discussion_contacts %}
+      <li>{{ contact }}</li>
+    {% endfor %}
   </ul>
 
   <h4>Comment l'instruction du dossier Loi sur l'eau se déroule-t-elle ?</h4>

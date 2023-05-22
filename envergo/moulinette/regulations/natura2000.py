@@ -36,17 +36,25 @@ class ZoneHumide44(MoulinetteCriterion):
     def get_catalog_data(self):
         data = {}
 
-        wetlands = self.catalog["wetlands"]
-        data["wetlands_25"] = [zone for zone in wetlands if zone.distance <= D(m=25)]
-        data["wetlands_within_25m"] = bool(data["wetlands_25"])
-        data["wetlands_100"] = [zone for zone in wetlands if zone.distance <= D(m=100)]
-        data["wetlands_within_100m"] = bool(data["wetlands_100"])
+        if "wetlands_25" not in data:
+            data["wetlands_25"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
+            ]
+            data["wetlands_within_25m"] = bool(data["wetlands_25"])
 
-        potential_wetlands = self.catalog["potential_wetlands"]
-        data["potential_wetlands_0"] = [
-            zone for zone in potential_wetlands if zone.distance <= D(m=0)
-        ]
-        data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
+        if "wetlands_100" not in data:
+            data["wetlands_100"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
+            ]
+            data["wetlands_within_100m"] = bool(data["wetlands_100"])
+
+        if "potential_wetlands_0" not in data:
+            data["potential_wetlands_0"] = [
+                zone
+                for zone in self.catalog["potential_wetlands"]
+                if zone.distance <= D(m=0)
+            ]
+            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
 
         return data
 
@@ -173,11 +181,12 @@ class ZoneInondable44(MoulinetteCriterion):
 
     def get_catalog_data(self):
         data = {}
-        flood_zones = self.catalog["flood_zones"]
-        data["flood_zones_12"] = [
-            zone for zone in flood_zones if zone.distance <= D(m=12)
-        ]
-        data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
+
+        if "flood_zones_12" not in self.catalog:
+            data["flood_zones_12"] = [
+                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
+            ]
+            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
     @cached_property

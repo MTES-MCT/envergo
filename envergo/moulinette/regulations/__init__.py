@@ -78,6 +78,16 @@ class MoulinetteRegulation:
         ]
         return actions
 
+    def project_impacts(self):
+        impacts = [c.project_impact() for c in self.criterions if c.project_impact()]
+        return impacts
+
+    def discussion_contacts(self):
+        contacts = [
+            c.discussion_contact() for c in self.criterions if c.discussion_contact()
+        ]
+        return contacts
+
     def __getattr__(self, attr):
         """Returs the corresponding criterion.
 
@@ -239,4 +249,10 @@ class MoulinetteCriterion:
         return form
 
     def required_action(self):
+        return None
+
+    def project_impact(self):
+        return None
+
+    def discussion_contact(self):
         return None
