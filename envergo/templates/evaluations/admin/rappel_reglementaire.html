@@ -9,6 +9,14 @@
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
 
 {% block content %}
+  <ul class="object-tools">
+    <li>
+      <a href="{% url 'admin:evaluations_evaluation_change' object_id %}" class="">
+        Revenir à l'évaluation
+      </a>
+    </li>
+  </ul>
+
   <form method="post" action="">
     {% csrf_token %}
 
