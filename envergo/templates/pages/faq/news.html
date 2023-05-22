@@ -9,8 +9,10 @@
 
   {% for item in news_items %}
 
-    <div class="news-item fr-mb-3w" id="news-item-{{ item.id }}">
-      <h2>{{ item.created_at|date:"DATE_FORMAT" }}</h2>
+    <div class="news-item fr-mb-5w" id="news-item-{{ item.id }}">
+      <h2 class="fr-h4">
+        {{ item.title }} – <small class="fr-text--light">{{ item.created_at|date:"DATE_FORMAT" }}</small>
+      </h2>
       {{ item.content_html|safe }}
     </div>
   {% endfor %}
