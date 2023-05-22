@@ -79,6 +79,11 @@ def post_request(request, host):
                     }
                 ],
             },
+            "Demandeur service ADS": {
+                "select": {
+                    "name": "Oui" if request.is_from_instructor() else "Non",
+                }
+            }
         },
     }
 
