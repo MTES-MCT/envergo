@@ -374,8 +374,9 @@
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
   <script>
     window.addEventListener('load', function() {
-      const accordion = document.getElementById('faq-accordion');
-      new AccordionAnalytics(accordion);
+      const elt = document.getElementById('faq-accordion');
+      const accordion = new AccordionAnalytics(elt);
+      accordion.init();
     });
   </script>
 
