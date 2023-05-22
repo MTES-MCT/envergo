@@ -451,7 +451,10 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
     def project_impact(self):
         impact = None
         if self.result == RESULTS.interdit:
-            impact = "impacte plus de 1 000 m² de l’une des zones humides référencées dans le règlement du SAGE Vie et Jaunay."
+            impact = """
+                impacte plus de 1 000 m² de l’une des zones humides référencées
+                dans le règlement du SAGE Vie et Jaunay.
+            """
         return impact
 
     def discussion_contact(self):
@@ -629,7 +632,8 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
                 <address>
                 <strong>Syndicat Mixte du SAGE Golfe du Morbihan et Ria d’Etel</strong><br />
                 Téléphone : 02 97 52 47 60<br />
-                Site internet : <a href="https://www.sagegmre.fr/contact,pa12.html" target="_blank" rel="noopener">https://www.sagegmre.fr</a>
+                Site internet : <a href="https://www.sagegmre.fr/contact,pa12.html" target="_blank" rel="noopener">
+                https://www.sagegmre.fr</a>
                 </address>
             </div>
             """
