@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Votre évaluation n'est pas encore disponible{% endblock %}
+{% block title %}Cette évaluation n'est pas encore disponible{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
@@ -25,12 +25,12 @@
   <h1>Référence {{ reference }}</h1>
   <p class="fr-text--lead">
     <span class="fr-fi-alert-fill" aria-hidden="true"></span>
-    Hélas, l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet.
+    Hélas, l'évaluation EnvErgo n'est pas encore disponible pour ce projet.
   </p>
 
-  <p>Le service étant en phase de test, nous vous invitons
+  <p>Nous faisons le maximum pour répondre dans les 72 h ouvrables. N'hésitez pas 
     <a href="{% url 'contact_us' %}">à nous contacter directement</a>
-    pour nous transmettre votre demande.
+    pour toute demande ou en cas d'urgence.
   </p>
 
 {% endblock %}
