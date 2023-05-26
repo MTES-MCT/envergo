@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
@@ -17,15 +18,22 @@
     </p>
   </div>
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="request-evaluation-form"
+        novalidate>
     {% csrf_token %}
 
     {% include '_form_header.html' with form=form %}
 
+
     {% include '_radio_snippet.html' with field=form.user_type %}
+
 
     <div id="contact-section">
       {% include '_field_snippet.html' with field=form.contact_email %}
+
 
       <div class="fr-mb-3w fr-alert fr-alert--info">
         <p>Nous enverrons l'évaluation à ces coordonnées.</p>
@@ -34,9 +42,11 @@
       {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
       {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
       {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
+
     </div>
 
-    <button type="submit" class="fr-mt-6w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+    <button type="submit"
+            class="fr-mt-6w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
       Poursuivre votre demande d'évaluation
     </button>
 

@@ -5,16 +5,16 @@
 {% block content %}
 
   <h1>Vérification les liens morts</h1>
-  <p class="fr-text--lead">
-    Cet outil vérifie la validité des liens externes connus par Matomo.
-  </p>
+  <p class="fr-text--lead">Cet outil vérifie la validité des liens externes connus par Matomo.</p>
 
   <form action="" method="post">
     {% csrf_token %}
 
     <div class="fr-alert fr-alert--info fr-mb-3w">
       <h3 class="fr-alert__title">Soyez patient·e</h3>
-      <p>La vérification nécessite de génerer une requête http vers chaque url du rapport. Quelques secondes de patience seront nécessaires.</p>
+      <p>
+        La vérification nécessite de génerer une requête http vers chaque url du rapport. Quelques secondes de patience seront nécessaires.
+      </p>
     </div>
 
     <button type="submit" class="fr-btn fr-btn-primary">Lancer la vérification</button>
@@ -32,7 +32,9 @@
         <tbody>
           {% for link in links %}
             <tr class="fr-highlight--{% if link.status == 200 %}green-emeraude{% else %}orange-terre-battue{% endif %}">
-              <td><a target="_blank" rel="noopener" href="{{ link.url }}">{{ link.label }}</a></td>
+              <td>
+                <a target="_blank" rel="noopener" href="{{ link.url }}">{{ link.label }}</a>
+              </td>
               <td>{{ link.status }}</td>
             </tr>
           {% endfor %}

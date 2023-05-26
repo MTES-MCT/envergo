@@ -1,19 +1,23 @@
 {% extends "admin/base_site.html" %}
+
 {% load static %}
 
-{% block extrahead %}{{ block.super }}
+{% block extrahead %}
+  {{ block.super }}
   <script src="{% url 'admin:jsi18n' %}"></script>
   {{ media }}
 {% endblock %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
 
 {% block content %}
   <ul class="object-tools">
     <li>
-      <a href="{% url 'admin:evaluations_evaluation_change' object_id %}" class="">
-        Revenir à l'évaluation
-      </a>
+      <a href="{% url 'admin:evaluations_evaluation_change' object_id %}"
+         class="">Revenir à l'évaluation</a>
     </li>
   </ul>
 
@@ -23,17 +27,28 @@
     <fieldset class="module">
       <dl>
         <dt>From (expéditeur) :</dt>
-        <dd>{{ email.from_email }}</dd>
+        <dd>
+          {{ email.from_email }}
+        </dd>
         <dt>To (destinataires) :</dt>
-        <dd>{{ email.to|join:", " }}</dd>
+        <dd>
+          {{ email.to|join:", " }}
+        </dd>
         <dt>CC (en copie) :</dt>
-        <dd>{{ email.cc|join:", " }}</dd>
+        <dd>
+          {{ email.cc|join:", " }}
+        </dd>
         <dt>BCC (copie cachée) :</dt>
-        <dd>{{ email.bcc|join:", " }}</dd>
+        <dd>
+          {{ email.bcc|join:", " }}
+        </dd>
         <dt>Contenu :</dt>
         <dd>
           <div id="rr-content">
-            <iframe id="mail-content" width="800px" height="1200px" srcdoc="{{ email_html|safe|force_escape }}">
+            <iframe id="mail-content"
+                    width="800px"
+                    height="1200px"
+                    srcdoc="{{ email_html|safe|force_escape }}">
             </iframe>
           </div>
         </dd>
@@ -41,7 +56,10 @@
     </fieldset>
 
     <div class="submit-row">
-      <input type="submit" value="Envoyer le rappel réglementaire par email" class="default" name="_save">
+      <input type="submit"
+             value="Envoyer le rappel réglementaire par email"
+             class="default"
+             name="_save">
     </div>
   </form>
 

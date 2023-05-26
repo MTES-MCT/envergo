@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
@@ -17,21 +18,30 @@
     </p>
   </div>
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate>
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="request-evaluation-form"
+        novalidate>
     {% csrf_token %}
 
     {% include '_form_header.html' with form=form %}
+
 
     {% include '_field_snippet.html' with field=form.address %}
     {% include '_checkbox_snippet.html' with field=form.no_address %}
     {% include '_field_snippet.html' with field=form.application_number %}
     {% include '_field_snippet.html' with field=form.project_description %}
 
+
     <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">
-      <p>L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.</p>
+      <p>
+        L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.
+      </p>
     </div>
 
-    <button type="submit" class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+    <button type="submit"
+            class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
       Poursuivre votre demande d'évaluation
     </button>
 
@@ -41,14 +51,14 @@
 
 {% block extra_css %}
   {% leaflet_css %}
-  <link rel="stylesheet" href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
   {% leaflet_js %}
-  <script>
-    ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-  </script>
-  <script defer src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script>ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
   <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 {% endblock %}

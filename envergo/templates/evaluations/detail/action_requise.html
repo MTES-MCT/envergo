@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+
 {% load evaluations static %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">
+      Voir le fil d'Ariane
+    </button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
@@ -36,11 +41,7 @@
           <h3>Projet de construction</h3>
           <ul>
             <li>Adresse : {{ evaluation.address }}</li>
-            {% if evaluation.application_number %}
-              <li>
-                Demande de permis n° {{ evaluation.application_number }}
-              </li>
-            {% endif %}
+            {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
           </ul>
           <div class="fr-alert fr-alert--warning fr-my-8w">
             <p class="fr-alert__title">Une action du porteur de projet est requise.</p>
@@ -48,9 +49,7 @@
 
             {% if required_actions %}
               <ul>
-                {% for action in required_actions %}
-                  <li>{{ action }}</li>
-                {% endfor %}
+                {% for action in required_actions %}<li>{{ action }}</li>{% endfor %}
               </ul>
             {% endif %}
           </div>
@@ -63,21 +62,28 @@
         <div class="fr-grid-row fr-grid-row--center">
           <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
             <h2>Marche à suivre recommandée</h2>
-            <p>Au vu des caractéristiques du projet, il est fortement conseillé au porteur
+            <p>
+              Au vu des caractéristiques du projet, il est fortement conseillé au porteur
               de projet de mener des études sur les points cités ci-dessus, afin d'évaluer
-              si le projet est soumis à la Loi sur l'eau.</p>
+              si le projet est soumis à la Loi sur l'eau.
+            </p>
             <p>Ainsi il convient de :</p>
-            <p><strong>1/ Prendre contact avec un bureau d'études spécialisé Loi sur l'eau et lui communiquer ces éléments.</strong></p>
+            <p>
+              <strong>1/ Prendre contact avec un bureau d'études spécialisé Loi sur l'eau et lui communiquer ces éléments.</strong>
+            </p>
 
-            <p>Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dépôt d'un dossier Loi sur l'eau est obligatoire, sous peine de sanctions. </p>
-            <p>Si les études révèlent que le projet n'est pas soumis à la Loi sur l'eau, le porteur peut choisir de les transmettre à l'administration en lui adressant un porté à connaissance. Cela réduira les risques de sanctions en cas de contrôle. </p>
-            <p><strong>2/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong> </p>
+            <p>
+              Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dépôt d'un dossier Loi sur l'eau est obligatoire, sous peine de sanctions.
+            </p>
+            <p>
+              Si les études révèlent que le projet n'est pas soumis à la Loi sur l'eau, le porteur peut choisir de les transmettre à l'administration en lui adressant un porté à connaissance. Cela réduira les risques de sanctions en cas de contrôle.
+            </p>
+            <p>
+              <strong>2/ Se rapprocher du service qui instruit les dossiers Loi sur l'eau.</strong>
+            </p>
             {% if evaluation.contact_html %}
-              <p>Le dossier Loi sur l'eau, ou le porté à connaissance, sont à adresser à :
-              </p>
-              <div class="fr-highlight fr-mb-3w">
-                {{ evaluation.contact_html|safe }}
-              </div>
+              <p>Le dossier Loi sur l'eau, ou le porté à connaissance, sont à adresser à :</p>
+              <div class="fr-highlight fr-mb-3w">{{ evaluation.contact_html|safe }}</div>
             {% endif %}
           </div>
         </div>
@@ -99,11 +105,13 @@
             <ul class="fr-mb-0">
               <li>
                 <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
-                  jour ;</strong>
+                jour ;</strong>
               </li>
               <li>
-                un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/" target="_blank" rel="noopener">article L.173-1 du code de
-                  l'environnement</a>).
+                un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/"
+   target="_blank"
+   rel="noopener">article L.173-1 du code de
+                l'environnement</a>).
               </li>
             </ul>
           </div>
@@ -121,7 +129,8 @@
 
           <ul>
             <li>
-              Surface créée : {{ evaluation.created_surface }} m²<br />
+              Surface créée : {{ evaluation.created_surface }} m²
+              <br />
               <span class="fr-text--light">
                 Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
               </span>
@@ -129,27 +138,31 @@
 
             {% if evaluation.existing_surface %}
               <li>
-                Surface existante : {{ evaluation.existing_surface }} m²<br />
+                Surface existante : {{ evaluation.existing_surface }} m²
+                <br />
                 <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
               </li>
             {% endif %}
 
             {% if evaluation.request %}
-              <li>Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a></li>
+              <li>
+                Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a>
+              </li>
             {% endif %}
           </ul>
 
-          <p>Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :</p>
+          <p>
+            Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :
+          </p>
 
           <div id="evaluation-accordion" class="fr-mb-3w">
             {% for criterion in criterions %}
               {% include 'evaluations/_criterion.html' with criterion=criterion %}
+
             {% endfor %}
           </div>
 
-          {% if evaluation.details_html %}
-            {{ evaluation.details_html|safe }}
-          {% endif %}
+          {% if evaluation.details_html %}{{ evaluation.details_html|safe }}{% endif %}
 
         </div>
       </div>
@@ -157,7 +170,9 @@
 
     {% include 'evaluations/_share_by_email.html' %}
 
+
     {% include 'evaluations/_learn_more.html' %}
+
 
   </article>
 

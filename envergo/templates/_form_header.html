@@ -2,12 +2,8 @@
 
 {% if form.errors or has_errors %}
   <div class="fr-alert fr-alert--error fr-mb-3w">
-    <p class="fr-alert__title">
-      Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.
-    </p>
-    <p>
-      Merci de vérifier votre saisie ci-dessous avant de réessayer.
-    </p>
+    <p class="fr-alert__title">Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.</p>
+    <p>Merci de vérifier votre saisie ci-dessous avant de réessayer.</p>
   </div>
 {% endif %}
 
@@ -17,6 +13,4 @@
   </div>
 {% endif %}
 
-{% for field in form.hidden_fields %}
-  {{ field }}
-{% endfor %}
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}

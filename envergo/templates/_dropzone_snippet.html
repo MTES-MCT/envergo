@@ -1,6 +1,7 @@
 {% load utils %}
 
-<div id="form-group-{{ field.name }}" class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
+<div id="form-group-{{ field.name }}"
+     class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
   {% include '_label.html' %}
 
@@ -9,28 +10,25 @@
       <button class="dz-button" type="button">
         <span class="fr-link">Cliquez</span> ou glissez-déposez vos fichiers ici.
       </button>
-      <div id="max-files-exceeded-alert" class="fr-alert fr-alert--sm fr-alert--warning fr-mt-2w">
+      <div id="max-files-exceeded-alert"
+           class="fr-alert fr-alert--sm fr-alert--warning fr-mt-2w">
         <p>Vous avez atteint le nombre maximum de fichiers autorisés.</p>
       </div>
     </div>
   </div>
   <div id="{{ field.id_for_label }}-dropzone">
 
-    {% if nest_field_class %}
-      <div class="{{ nest_field_class }}">
-    {% endif %}
+    {% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
 
-    <div class="fallback">
-      {% if field.errors %}
-        {{ field }}
-      {% else %}
-        {{ field }}
-      {% endif %}
-    </div>
-
-    {% if nest_field_class %}
+      <div class="fallback">
+        {% if field.errors %}
+          {{ field }}
+        {% else %}
+          {{ field }}
+        {% endif %}
       </div>
-    {% endif %}
+
+      {% if nest_field_class %}</div>{% endif %}
 
   </div>
 

@@ -2,29 +2,30 @@
 
 <div class="fr-accordion fr-accordion--no-icon">
   <h4 class="fr-accordion__title">
-    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
+    <button class="fr-accordion__btn"
+            aria-expanded="false"
+            aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
       {% result_tag criterion.result %}
       <span class="title">
         <strong>{{ criterion.title }}</strong>
         {% if criterion.subtitle %}
-          <br > {{ criterion.subtitle }}
+          <br>
+          {{ criterion.subtitle }}
         {% endif %}
       </span>
     </button>
 
   </h4>
 
-  <div class="fr-collapse" id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
+  <div class="fr-collapse"
+       id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
     {% criterion_value config criterion 'header' as criterion_header %}
-    {% if criterion_header %}
-      <p class="fr-text--light fr-text--sm">
-        {{ criterion_header }}
-      </p>
-    {% endif %}
+    {% if criterion_header %}<p class="fr-text--light fr-text--sm">{{ criterion_header }}</p>{% endif %}
     {% show_criterion_body regulation criterion %}
 
     {% if criterion.map %}
       {% include '_map_snippet.html' with map=criterion.map map_id=criterion.slug %}
+
     {% endif %}
   </div>
 

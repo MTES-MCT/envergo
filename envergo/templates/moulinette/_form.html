@@ -1,18 +1,19 @@
 {% load utils %}
 
-<form class="fr-mb-3w" method="post" novalidate autocomplete="off" action="" id="moulinette-form">
+<form class="fr-mb-3w"
+      method="post"
+      novalidate
+      autocomplete="off"
+      action=""
+      id="moulinette-form">
   {% csrf_token %}
 
   {% include '_form_header.html' with form=form %}
 
   {% if additional_forms and moulinette.has_missing_data %}
     <div class="fr-alert fr-alert--warning fr-mb-3w">
-      <p class="fr-alert__title">
-        Question(s) complémentaire(s)
-      </p>
-      <p>
-        À compléter en bas du formulaire 👇
-      </p>
+      <p class="fr-alert__title">Question(s) complémentaire(s)</p>
+      <p>À compléter en bas du formulaire 👇</p>
     </div>
   {% endif %}
 
@@ -62,19 +63,26 @@
   {% if additional_forms %}
     <hr />
 
-    <div id="additional-forms" class="{{ additional_forms_bound|yesno:"bound,unbound" }}">
+    <div id="additional-forms"
+         class="{{ additional_forms_bound|yesno:"bound,unbound" }}">
 
-      <p><strong>Question(s) complémentaire(s)</strong></p>
+      <p>
+        <strong>Question(s) complémentaire(s)</strong>
+      </p>
 
       {% for field_name, field in additional_fields.items %}
         {% if field|is_checkbox %}
           {% include '_checkbox_snippet.html' with field=field %}
+
         {% elif field|is_radio %}
           {% include '_radio_snippet.html' with field=field %}
+
         {% elif field|is_input_file %}
           {% include '_input_file_snippet.html' with field=field %}
+
         {% else %}
           {% include '_field_snippet.html' with field=field %}
+
         {% endif %}
       {% endfor %}
 

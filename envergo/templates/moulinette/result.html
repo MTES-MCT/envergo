@@ -1,22 +1,26 @@
 {% extends 'moulinette/base_result.html' %}
+
 {% load evaluations static %}
 
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
     {% include '_slim_header.html' %}
+
   </header>
 {% endblock %}
 
 {% block extra-form-col %}
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_form.html' %}
+
   {% endif %}
 {% endblock %}
 
 {% block top_result %}
 
   {% if config and not config.is_activated %}
-    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez cette page grâce à votre statut d'admin.
+    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
+      Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez cette page grâce à votre statut d'admin.
     </div>
   {% endif %}
 
@@ -27,39 +31,65 @@
 
 
   <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
-    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+            data-fr-opened="false"
+            aria-controls="share-modal"
+            data-btn="bottom">
+      Partager cette page par email
+    </button>
   </div>
 
   <h2 class="fr-h3">Résumé de l'évaluation</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
 
+
   {% for regulation in moulinette.regulations %}
 
     {% if forloop.counter0 != 0 %}
       <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
-        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill " data-fr-opened="false" aria-controls="share-modal" data-btn="{{ regulation.slug }}">Partager cette page par email</button>
+        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill "
+                data-fr-opened="false"
+                aria-controls="share-modal"
+                data-btn="{{ regulation.slug }}">
+          Partager cette page par email
+        </button>
       </div>
     {% endif %}
 
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+
   {% endfor %}
 
   <div class="fr-alert fr-alert--info fr-my-5w">
-    <p>EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.</p>
-    <p><i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.</p>
+    <p>
+      EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
+    </p>
+    <p>
+      <i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.
+    </p>
   </div>
 
-  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_loi_littoral">
-    <h2><span class="content">Loi Littoral</span> {% result_tag 'non_disponible' %}</h2>
-    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.
-      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.</p>
+  <section class="regulation regulation-disabled fr-mb-5w"
+           id="regulation_loi_littoral">
+    <h2>
+      <span class="content">Loi Littoral</span> {% result_tag 'non_disponible' %}
+    </h2>
+    <p>
+      Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.
+    </p>
   </section>
 
-  <section class="regulation regulation-disabled fr-mb-5w" id="regulation_especes_protegees">
-    <h2><span class="content">Espèces protégées</span> {% result_tag 'non_disponible' %}</h2>
-    <p>Cette réglementation sera prochainement prise en compte dans EnvErgo.
-      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.</p>
+  <section class="regulation regulation-disabled fr-mb-5w"
+           id="regulation_especes_protegees">
+    <h2>
+      <span class="content">Espèces protégées</span> {% result_tag 'non_disponible' %}
+    </h2>
+    <p>
+      Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.
+    </p>
   </section>
 
 {% endblock %}
@@ -68,26 +98,33 @@
   <h2>Besoin de partager cette évaluation à un contact ?</h2>
 
   <p>
-    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+            data-fr-opened="false"
+            aria-controls="share-modal"
+            data-btn="bottom">
+      Partager cette page par email
+    </button>
   </p>
-  <p>Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.</p>
+  <p>
+    Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.
+  </p>
 {% endblock %}
 
 {% block extra_body %}
   {% include 'moulinette/_share_modal.html' %}
 
+
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal_useful.html' %}
     {% include 'analytics/_feedback_modal_useless.html' %}
+
   {% endif %}
 
 {% endblock %}
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    var DEPARTMENT = "{{ department.department }}";
-  </script>
+  <script>var DEPARTMENT = "{{ department.department }}";</script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>

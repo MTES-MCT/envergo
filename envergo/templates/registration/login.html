@@ -9,6 +9,7 @@
   <form method="post" action="" novalidate class="fr-mb-3w">
     {% csrf_token %}
     {% include '_form_snippet.html' with form=form %}
+
     <button type="submit" class="fr-btn">Se connecter</button>
   </form>
 

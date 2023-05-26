@@ -9,10 +9,12 @@
 
   <ul>
     <li>Adresse du projet : {{ address }}</li>
-    {% if application_number %}<li>N° de permis d'urbanisme : {{ application_number}}</li>{% endif %}
+    {% if application_number %}<li>N° de permis d'urbanisme : {{ application_number }}</li>{% endif %}
   </ul>
 
-  <p><a href="{{ evaluation_url }}">L'évaluation est disponible à cette adresse.</a></p>
+  <p>
+    <a href="{{ evaluation_url }}">L'évaluation est disponible à cette adresse.</a>
+  </p>
 
   <p>Pour toute question, vous pouvez répondre directement à ce mail.</p>
 

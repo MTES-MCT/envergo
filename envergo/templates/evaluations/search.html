@@ -11,10 +11,13 @@
   <form method="post" action="" novalidate>
     {% csrf_token %}
     {% include '_form_snippet.html' with form=form %}
+
     <button type="submit" class="fr-btn">Consulter l'évaluation</button>
 
-    <p class="fr-mt-3w">Vous n'avez pas de référence EnvErgo ?
-      <a href="{% url 'home' %}">Demandez l'évaluation d'un projet.</a></p>
+    <p class="fr-mt-3w">
+      Vous n'avez pas de référence EnvErgo ?
+      <a href="{% url 'home' %}">Demandez l'évaluation d'un projet.</a>
+    </p>
   </form>
 
 

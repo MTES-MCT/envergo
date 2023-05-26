@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
@@ -15,10 +16,16 @@
   </div>
 
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="request-evaluation-form"
+        novalidate
+        enctype="multipart/form-data">
     {% csrf_token %}
 
     {% include '_dropzone_snippet.html' with field=form.additional_files %}
+
 
     <div id="has-errors-warning" class="fr-mt-6w fr-alert fr-alert--error">
       <p class="fr-alert__title">Les fichiers marqués d'une croix ne seront pas envoyés</p>
@@ -26,7 +33,8 @@
     </div>
 
 
-    <button type="submit" class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
+    <button type="submit"
+            class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
       Envoyer votre demande d'évaluation
     </button>
 

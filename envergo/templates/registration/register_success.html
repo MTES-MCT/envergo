@@ -3,9 +3,7 @@
 {% block title %}Succès{% endblock %}
 
 {% block article %}
-  <h1>
-    Nous vous avons envoyé un e-mail d'activation de votre espace EnvErgo
-  </h1>
+  <h1>Nous vous avons envoyé un e-mail d'activation de votre espace EnvErgo</h1>
 
   <p class="fr-text fr-text--lead">
     <span class="fr-fi-mail-fill" aria-hidden="true"></span>
@@ -17,10 +15,15 @@
   <ul>
     <li>vérifier dans vos spams ;</li>
     <li>retenter de créer un espace en vérifiant bien la validité de l'adresse saisie ;</li>
-    <li><a href="{% url 'contact_us' %}">nous contacter</a>.</li>
+    <li>
+      <a href="{% url 'contact_us' %}">nous contacter</a>.
+    </li>
   </ul>
 
-  <p>Merci de votre intérêt,<br />
-    l'équipe EnvErgo.</p>
+  <p>
+    Merci de votre intérêt,
+    <br />
+    l'équipe EnvErgo.
+  </p>
 
 {% endblock %}

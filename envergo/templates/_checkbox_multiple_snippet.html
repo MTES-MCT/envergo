@@ -4,11 +4,10 @@
 
   <fieldset class="fr-fieldset fr-fieldset--inline">
 
-    <legend class="fr-fieldset__legend fr-text--regular" id='{{ field.name }}-legend'>
+    <legend class="fr-fieldset__legend fr-text--regular"
+            id='{{ field.name }}-legend'>
       {{ field.label }}
-      {% if field.help_text %}
-        <span class="fr-hint-text">{{ field.help_text|safe }}</span>
-      {% endif %}
+      {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
     </legend>
 
     <div class="fr-fieldset__content">
@@ -18,9 +17,7 @@
 
           {{ option.tag }}
 
-          <label class="fr-label" for="{{ option.id_for_label }}">
-            {{ option.choice_label }}
-          </label>
+          <label class="fr-label" for="{{ option.id_for_label }}">{{ option.choice_label }}</label>
 
         </div>
       {% endfor %}

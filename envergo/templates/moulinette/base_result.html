@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations static l10n %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
@@ -13,6 +14,7 @@
           <h2>Saisissez les caractéristiques de votre projet</h2>
 
           {% include 'moulinette/_form.html' with form=form %}
+
 
           {% block extra-form-col %}{% endblock %}
         {% endblock %}
@@ -34,8 +36,10 @@
 
             <h2>Pour en savoir plus…</h2>
 
-            <p>Consultez notre <a href="{% url 'faq' %}">page d'information sur la Loi sur l'eau</a>
-              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.</p>
+            <p>
+              Consultez notre <a href="{% url 'faq' %}">page d'information sur la Loi sur l'eau</a>
+              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
+            </p>
           {% endblock %}
         </div>
       </div>
@@ -46,6 +50,7 @@
 
 {% block extra_css %}
   {% include 'moulinette/_form_styles.html' %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -68,4 +73,5 @@
     {% endif %}
   </script>
   {% include 'moulinette/_form_scripts.html' %}
+
 {% endblock %}

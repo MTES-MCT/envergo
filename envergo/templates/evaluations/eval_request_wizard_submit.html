@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block title %}Demandez une évaluation pour un projet{% endblock %}
@@ -6,12 +7,19 @@
 {% block article %}
   <h1>Confirmez votre demande d'évaluation</h1>
 
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="request-evaluation-form"
+        novalidate
+        enctype="multipart/form-data">
     {% csrf_token %}
 
     {% include '_form_header.html' with form=form %}
 
-    <button type="submit" class="fr-mt-4w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
+
+    <button type="submit"
+            class="fr-mt-4w fr-btn fr-fi-checkbox-circle-line fr-btn--icon-left">
       Confirmer votre demande d'évaluation
     </button>
 

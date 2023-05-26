@@ -1,4 +1,5 @@
 {% extends 'moulinette/base_result.html' %}
+
 {% load evaluations static %}
 
 {% block result %}
@@ -8,12 +9,14 @@
 
     <div class="fr-alert fr-alert--info fr-my-8w">
       <p class="fr-alert__title">Le service EnvErgo n'est pas encore déployé de façon automatique dans votre département.</p>
-      <p>Vous pouvez cependant nous demander une évaluation manuelle de votre projet. Réponse en trois jours ouvrés.
+      <p>
+        Vous pouvez cependant nous demander une évaluation manuelle de votre projet. Réponse en trois jours ouvrés.
       </div>
 
-      <a class="fr-btn fr-btn--icon-left fr-fi-arrow-right-line fr-mb-8w" href="{% url 'request_evaluation' %}">
+      <a class="fr-btn fr-btn--icon-left fr-fi-arrow-right-line fr-mb-8w"
+         href="{% url 'request_evaluation' %}">
         Demandez une évaluation approfondie
       </a>
     </section>
 
-{% endblock %}
+  {% endblock %}

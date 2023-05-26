@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+
 {% load static evaluations leaflet_tags %}
 
 {% block title %}Carte cadastrale{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">
+      Voir le fil d'Ariane
+    </button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
@@ -27,7 +32,8 @@
 
     <template id="error-msg-tpl">
       <div class="fr-alert fr-alert--error fr-alert--sm">
-        <p class="fr-alert__title">Impossible de récupérer des informations sur la parcelle
+        <p class="fr-alert__title">
+          Impossible de récupérer des informations sur la parcelle
           <i></i>
         </p>
         <p class="error-msg"></p>
@@ -35,9 +41,7 @@
     </template>
 
     <div class="ratio-4x3">
-      <div class="ratio-content">
-        {% leaflet_map 'cadastre_map' callback="window.mapInit" %}
-      </div>
+      <div class="ratio-content">{% leaflet_map 'cadastre_map' callback="window.mapInit" %}</div>
     </div>
   </article>
 {% endblock %}
