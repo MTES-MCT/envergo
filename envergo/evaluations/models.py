@@ -206,6 +206,7 @@ class Evaluation(models.Model):
         config = self.get_moulinette_config()
 
         context = {
+            "evaluation": self,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
         }
         body = render_to_string("evaluations/admin/rr_email.html", context)
