@@ -3,7 +3,13 @@
 {% block detail %}
   <p>Au vu des informations qui nous ont été transmises, il apparaît qu'une action du porteur de projet est requise.</p>
 
-  <p>Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.</p>
+  <p>Le porteur doit mener les études pour s'assurer que le projet :</p>
+
+  {% if moulinette.loi_sur_leau.required_actions %}
+    <ul>
+      {% for action in moulinette.loi_sur_leau.required_actions %}<li>{{ action }}</li>{% endfor %}
+    </ul>
+  {% endif %}
 
   {% if additional_information %}{{ additional_information|linebreaks }}{% endif %}
 
