@@ -192,7 +192,7 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
-        zones = self.get_zones(catalog['coords'], fetching_radius)
+        zones = self.get_zones(catalog["coords"], fetching_radius)
         catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
@@ -263,9 +263,7 @@ class Moulinette:
         """Return the Zone objects containing the queried coordinates."""
 
         zones = (
-            Zone.objects.filter(
-                geometry__dwithin=(coords, D(m=radius))
-            )
+            Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
             .annotate(distance=Distance("geometry", coords))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")

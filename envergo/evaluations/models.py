@@ -200,7 +200,9 @@ class Evaluation(models.Model):
         try:
             evalreq = self.request
         except Request.DoesNotExist:
-            raise ValueError("Impossible de générer un rappel reglementaire sans demande")
+            raise ValueError(
+                "Impossible de générer un rappel reglementaire sans demande"
+            )
         config = self.get_moulinette_config()
 
         context = {
@@ -224,7 +226,7 @@ class Evaluation(models.Model):
 
         email = EmailMultiAlternatives(
             subject="Rappel réglementaire Loi sur l'eau",
-            body='TODO',
+            body="TODO",
             to=recipients,
             cc=cc_recipients,
             bcc=bcc_recipients,
@@ -464,7 +466,8 @@ class Request(models.Model):
             application_number=self.application_number,
             address=self.address,
             created_surface=self.created_surface,
-            existing_surface=self.existing_surface)
+            existing_surface=self.existing_surface,
+        )
         return evaluation
 
 

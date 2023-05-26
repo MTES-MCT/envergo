@@ -62,5 +62,7 @@ def loire_atlantique_department():
             (-2.318813217788111, 47.11172939002415),
         ]
     )
-    loire_atlantique = DepartmentFactory(department=44, geometry=MultiPolygon([polygon]))
+    loire_atlantique = DepartmentFactory(
+        department=44, geometry=MultiPolygon([polygon])
+    )
     return loire_atlantique

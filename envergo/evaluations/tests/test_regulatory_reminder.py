@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def override_settings(settings):
-    settings.DEFAULT_FROM_EMAIL = 'envergo-test@example.org'
+    settings.DEFAULT_FROM_EMAIL = "envergo-test@example.org"
 
 
 def test_instructor_to_field(rf):
@@ -39,7 +39,9 @@ def test_instructor_cc_field(rf):
 
     assert email.cc == ["sponsor1@example.org", "sponsor2@example.org"]
 
-    evalreq = RequestFactory(user_type=USER_TYPES.instructor, send_eval_to_sponsor=False)
+    evalreq = RequestFactory(
+        user_type=USER_TYPES.instructor, send_eval_to_sponsor=False
+    )
     eval = evalreq.create_evaluation()
     email = eval.get_regulatory_reminder_email(req)
 
@@ -52,11 +54,14 @@ def test_bcc_field(rf, loire_atlantique_department):  # noqa
     req = rf.get("/")
     email = eval.get_regulatory_reminder_email(req)
     # Default bcc field is our own address
-    assert email.bcc == ['envergo-test@example.org']
+    assert email.bcc == ["envergo-test@example.org"]
 
-    MoulinetteConfigFactory(department=loire_atlantique_department, ddtm_contact_email='ddtm_email_test@example.org')
+    MoulinetteConfigFactory(
+        department=loire_atlantique_department,
+        ddtm_contact_email="ddtm_email_test@example.org",
+    )
     url = "https://example.org?lng=-2.08555&lat=47.31051"  # Somewhere in Loire-Atlantique (44), France
     evalreq = RequestFactory(moulinette_url=url)
     eval = evalreq.create_evaluation()
     email = eval.get_regulatory_reminder_email(req)
-    assert email.bcc == ['envergo-test@example.org', "ddtm_email_test@example.org"]
+    assert email.bcc == ["envergo-test@example.org", "ddtm_email_test@example.org"]
