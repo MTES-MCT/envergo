@@ -194,6 +194,18 @@ class Evaluation(models.Model):
         department = Department.objects.filter(geometry__contains=coords).first()
         return department.moulinette_config if department else None
 
+    def get_moulinette(self):
+        """Return the moulinette instance for this evaluation."""
+        from envergo.moulinette.forms import MoulinetteForm
+        from envergo.moulinette.models import Moulinette
+
+        raw_params = self.moulinette_params
+        form = MoulinetteForm(raw_params)
+        form.is_valid()
+        params = form.cleaned_data
+        moulinette = Moulinette(params, raw_params)
+        return moulinette
+
     def get_regulatory_reminder_email(self, request):
         """Generates a "rappel réglementaire" email for this evaluation."""
 
@@ -204,12 +216,17 @@ class Evaluation(models.Model):
                 "Impossible de générer un rappel reglementaire sans demande"
             )
         config = self.get_moulinette_config()
+        moulinette = self.get_moulinette()
+        mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
+        )
 
         context = {
             "evaluation": self,
+            "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
         }
-        body = render_to_string("evaluations/admin/rr_email.html", context)
+        body = render_to_string(mail_template, context)
 
         if evalreq.user_type == USER_TYPES.instructor:
             recipients = [evalreq.contact_email]
