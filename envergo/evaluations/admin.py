@@ -355,14 +355,12 @@ class RequestAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
-
         parcel_map_url = obj.get_parcel_map_url()
         link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
         return mark_safe(link)
 
     @admin.display(description=_("Exporter vers QGis ou autre"))
     def parcels_geojson(self, obj):
-
         parcel_export_url = obj.get_parcel_geojson_export_url()
         link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
         return mark_safe(link)

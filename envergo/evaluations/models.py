@@ -235,6 +235,7 @@ class Evaluation(models.Model):
 
         context = {
             "evaluation": self,
+            "rr_mention": self.rr_mention,
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
         }
