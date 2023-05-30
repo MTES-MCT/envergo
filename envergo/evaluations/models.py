@@ -255,8 +255,12 @@ class Evaluation(models.Model):
         if config and config.ddtm_contact_email:
             bcc_recipients.append(config.ddtm_contact_email)
 
+        subject = "Rappel réglementaire Loi sur l'eau"
+        if self.address:
+            subject += f" / {self.address}"
+
         email = EmailMultiAlternatives(
-            subject="Rappel réglementaire Loi sur l'eau",
+            subject=subject,
             body="TODO",
             to=recipients,
             cc=cc_recipients,
