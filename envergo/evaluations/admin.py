@@ -155,7 +155,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("result", "details_md")},
+            {"fields": ("result", "details_md", "rr_mention")},
         ),
         (
             _("Contact data"),

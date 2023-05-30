@@ -136,6 +136,13 @@ class Evaluation(models.Model):
     )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
+    rr_mention = models.TextField(
+        _("Regulatory reminder mention"),
+        blank=True,
+        help_text=_(
+            "Will be included in the RR email. Only use blank text with eventual new lines."
+        ),
+    )
     contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
