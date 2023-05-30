@@ -1,6 +1,13 @@
 {% extends 'emails/base_inlined.html' %}
 
 {% block content %}
+
+  {% if to_be_transmitted %}
+    <p>
+      <strong>À transmettre au porteur de projet</strong>
+    </p>
+  {% endif %}
+
   <p>Bonjour,</p>
 
   <p>Ceci est un rappel réglementaire du Ministère de la Transition Écologique.</p>

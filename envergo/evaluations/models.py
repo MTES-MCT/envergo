@@ -229,7 +229,10 @@ class Evaluation(models.Model):
             )
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
-        mail_template = (
+        txt_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
+        )
+        html_mail_template = (
             f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
         )
 
@@ -239,7 +242,8 @@ class Evaluation(models.Model):
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
         }
-        body = render_to_string(mail_template, context)
+        txt_body = render_to_string(txt_mail_template, context)
+        html_body = render_to_string(html_mail_template, context)
 
         if evalreq.user_type == USER_TYPES.instructor:
             recipients = [evalreq.contact_email]
@@ -261,12 +265,12 @@ class Evaluation(models.Model):
 
         email = EmailMultiAlternatives(
             subject=subject,
-            body="TODO",
+            body=txt_body,
             to=recipients,
             cc=cc_recipients,
             bcc=bcc_recipients,
         )
-        email.attach_alternative(body, "text/html")
+        email.attach_alternative(html_body, "text/html")
         return email
 
 

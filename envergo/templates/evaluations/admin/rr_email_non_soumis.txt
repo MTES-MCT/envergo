@@ -1,0 +1,17 @@
+{% extends 'evaluations/admin/base_rr_email.txt' %}
+
+{% block detail %}
+  Il apparaît que ce projet ne semble pas soumis :
+
+  - ni à la Loi sur l'eau au titre des impacts suivants :
+      - impact sur une zone humide ;
+      - construction en zone inondable ;
+      - interception de ruissellement d'eaux pluviales.
+
+  - ni à Natura 2000 ;
+
+  - ni à évaluation environnementale au titre de la rubrique 39 (construction et aménagement).
+  {% if rr_mention %}{{ rr_mention|linebreaks }}{% endif %}
+
+  Plus de détails sur cette évaluation :
+{% endblock %}

@@ -56,13 +56,23 @@
         <dd>
           {{ email.subject }}
         </dd>
-        <dt>Contenu :</dt>
+        <dt>Contenu (html) :</dt>
         <dd>
           <div id="rr-content">
             <iframe id="mail-content"
                     width="800px"
                     height="1200px"
                     srcdoc="{{ email_html|safe|force_escape }}">
+            </iframe>
+          </div>
+        </dd>
+        <dt>Contenu (txt) :</dt>
+        <dd>
+          <div id="rr-content">
+            <iframe id="mail-content-txt"
+                    width="800px"
+                    height="1200px"
+                    srcdoc="{{ email_txt|linebreaksbr }}">
             </iframe>
           </div>
         </dd>
