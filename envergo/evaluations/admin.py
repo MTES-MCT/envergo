@@ -242,6 +242,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "email": rr_email,
                 "email_html": rr_email.alternatives[0][0],
                 "media": self.media,
+                "opts": self.opts,
             }
 
             response = TemplateResponse(
