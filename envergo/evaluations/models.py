@@ -206,6 +206,11 @@ class Evaluation(models.Model):
         moulinette = Moulinette(params, raw_params)
         return moulinette
 
+    def can_send_regulatory_reminder(self):
+        """Return True if a regulatory reminder can be sent for this evaluation."""
+
+        return self.request and self.moulinette_url
+
     def get_regulatory_reminder_email(self, request):
         """Generates a "rappel réglementaire" email for this evaluation."""
 

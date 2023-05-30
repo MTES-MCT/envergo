@@ -213,7 +213,19 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def rappel_reglementaire(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
-        rr_email = evaluation.get_regulatory_reminder_email(request)
+
+        try:
+            rr_email = evaluation.get_regulatory_reminder_email(request)
+        except Exception as error:  # noqa
+            # There was an error generating the email
+            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
+            response = HttpResponseRedirect(url)
+            self.message_user(
+                request,
+                f"Impossible de générer le rappel réglementaire -> {error}",
+                messages.ERROR,
+            )
+            return response
 
         if request.method == "POST":
             rr_email.send()

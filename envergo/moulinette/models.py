@@ -131,7 +131,7 @@ class MoulinetteCatalog(dict):
         """If the data is not in the dict, use a method to fetch it."""
 
         if not hasattr(self, key):
-            raise KeyError()
+            raise KeyError(f"Donnée manquante : {key}")
 
         method = getattr(self, key)
         value = method()
