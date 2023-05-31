@@ -1,7 +1,17 @@
-#rr-content {
-  margin-top: 3rem;
+#rr-preview {
+  margin: 0;
+  padding: 0;
 
-  #mail-content {
+  li {
+    list-style-type: none;
+    margin: 0;
+  }
+}
+
+.rr-content {
+  margin-top: .5rem;
+
+  .mail-content {
     width: 800px;
     max-width: 800px;
     margin: auto;

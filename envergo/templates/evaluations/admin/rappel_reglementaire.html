@@ -35,48 +35,48 @@
     {% csrf_token %}
 
     <fieldset class="module">
-      <dl>
-        <dt>From (expéditeur) :</dt>
-        <dd>
-          {{ email.from_email }}
-        </dd>
-        <dt>To (destinataires) :</dt>
-        <dd>
-          {{ email.to|join:", " }}
-        </dd>
-        <dt>CC (en copie) :</dt>
-        <dd>
-          {{ email.cc|join:", " }}
-        </dd>
-        <dt>BCC (copie cachée) :</dt>
-        <dd>
-          {{ email.bcc|join:", " }}
-        </dd>
-        <dt>Objet :</dt>
-        <dd>
+      <ul id="rr-preview">
+        <li>
+          <strong>Objet :</strong>
           {{ email.subject }}
-        </dd>
-        <dt>Contenu (html) :</dt>
-        <dd>
-          <div id="rr-content">
-            <iframe id="mail-content"
+        </li>
+        <li>
+          <strong>De :</strong>
+          {{ email.from_email }}
+        </li>
+        <li>
+          <strong>À :</strong>
+          {{ email.to|join:", " }}
+        </li>
+        <li>
+          <strong>Copie :</strong>
+          {{ email.cc|join:", " }}
+        </li>
+        <li>
+          <strong>Copie cachée :</strong>
+          {{ email.bcc|join:", " }}
+        </li>
+        <li>
+          <strong>Contenu (html) :</strong>
+          <div class="rr-content">
+            <iframe class="mail-content"
                     width="800px"
                     height="1200px"
                     srcdoc="{{ email_html|safe|force_escape }}">
             </iframe>
           </div>
-        </dd>
-        <dt>Contenu (txt) :</dt>
-        <dd>
-          <div id="rr-content">
-            <iframe id="mail-content-txt"
+        </li>
+        <li>
+          <strong>Contenu (txt) :</strong>
+          <div class="rr-content">
+            <iframe class="mail-content"
                     width="800px"
                     height="1200px"
                     srcdoc="{{ email_txt|linebreaksbr }}">
             </iframe>
           </div>
-        </dd>
-      </dl>
+        </li>
+      </ul>
     </fieldset>
 
     <div class="submit-row">
