@@ -18,9 +18,11 @@
     <li>
       <strong>Adresse :</strong> {{ evaluation.address|default:"Non communiqué" }}
     </li>
-    <li>
-      <strong>N° de demande de permis :</strong> {{ evaluation.application_number|default:"Non communiqué" }}
-    </li>
+    {% if evaluation.application_number %}
+      <li>
+        <strong>N° de demande de permis :</strong> {{ evaluation.application_number }}
+      </li>
+    {% endif %}
   </ul>
 
   {% block detail %}{% endblock %}
