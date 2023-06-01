@@ -5,7 +5,7 @@ Au vu des informations qui nous ont été transmises, il apparaît que ce projet
 
 Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.
 
-{% if rr_mention %}{{ rr_mention|linebreaks }}{% endif %}
+{% if rr_mention %}{{ rr_mention }}{% endif %}
 
 Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.
 
