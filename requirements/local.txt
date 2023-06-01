@@ -81,7 +81,7 @@ coverage==7.2.3
     # via
     #   -r local.in
     #   django-coverage-plugin
-cryptography==40.0.1
+cryptography==41.0.0
     # via
     #   -r base.txt
     #   pyjwt
