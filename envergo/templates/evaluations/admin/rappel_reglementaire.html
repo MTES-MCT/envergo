@@ -37,10 +37,6 @@
     <fieldset class="module">
       <ul id="rr-preview">
         <li>
-          <strong>Objet :</strong>
-          {{ email.subject }}
-        </li>
-        <li>
           <strong>De :</strong>
           {{ email.from_email }}
         </li>
@@ -55,6 +51,13 @@
         <li>
           <strong>Copie cachée :</strong>
           {{ email.bcc|join:", " }}
+        </li>
+        <li>
+          <strong>Gabarits : <a href="{{ github_prefix }}{{ html_mail_template }}">{{ html_mail_template }}</a> / <a href="{{ github_prefix }}{{ txt_mail_template }}">{{ txt_mail_template }}</a></strong>
+        </li>
+        <li style="font-size: 120%">
+          <strong>Objet :</strong>
+          {{ email.subject }}
         </li>
         <li>
           <strong>Contenu (html) :</strong>

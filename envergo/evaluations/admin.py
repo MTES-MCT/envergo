@@ -227,6 +227,14 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
             return response
 
+        moulinette = evaluation.get_moulinette()
+        txt_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
+        )
+        html_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
+        )
+
         if request.method == "POST":
             rr_email.send()
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
@@ -244,6 +252,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "email_txt": rr_email.body,
                 "media": self.media,
                 "opts": self.opts,
+                "txt_mail_template": txt_mail_template,
+                "html_mail_template": html_mail_template,
+                "github_prefix": "https://github.com/MTES-MCT/envergo/blob/rappel_reglementaire/envergo/templates/",
             }
 
             response = TemplateResponse(
