@@ -813,7 +813,7 @@ msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
 #: envergo/moulinette/models.py:97
 msgid "DDT(M) contact email"
-msgstr ""
+msgstr "E-mail DDT(M) (rappel réglementaire)"
 
 #: envergo/moulinette/models.py:114
 msgid "Moulinette config"
