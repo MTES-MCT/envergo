@@ -129,6 +129,39 @@ def test_eval_wizard_all_steps(
     assert len(mailoutbox) == 1
 
 
+@patch("envergo.utils.mattermost.requests.post")
+def test_eval_wizard_all_steps_with_test_email(
+    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+):
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.TEST_EMAIL = "test@test.org"
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_email": settings.TEST_EMAIL,
+        "project_sponsor_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_sponsor_phone_number": "0612345678",
+    }
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
+
+    assert res.status_code == 302
+    assert len(callbacks) == 0
+    assert qs.count() == 1
+    mock_post.assert_not_called()
+    assert len(mailoutbox) == 0
+
+
 def test_dashboard_displays_empty_messages(user, client):
     dashboard_url = reverse("dashboard")
     client.force_login(user)
