@@ -5,6 +5,7 @@
 {% block extrahead %}
   {{ block.super }}
   <script src="{% url 'admin:jsi18n' %}"></script>
+  <script src="{% static 'admin/js/collapse.js' %}"></script>
   {{ media }}
 {% endblock %}
 
@@ -34,7 +35,7 @@
   <form method="post" action="">
     {% csrf_token %}
 
-    <fieldset class="module">
+    <fieldset class="module aligned">
       <ul id="rr-preview">
         <li>
           <strong>De :</strong>
@@ -69,7 +70,13 @@
             </iframe>
           </div>
         </li>
-        <li>
+      </ul>
+    </fieldset>
+
+    <fieldset class="module aligned collapse">
+      <h2>Contenu texte</h2>
+      <ul>
+        <li class="collapse">
           <strong>Contenu (txt) :</strong>
           <div class="rr-content">
             <iframe class="mail-content"
