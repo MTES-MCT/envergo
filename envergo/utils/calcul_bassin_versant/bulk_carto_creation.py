@@ -1,3 +1,4 @@
+import argparse
 import os
 import warnings
 
@@ -45,3 +46,34 @@ def bulkCartoCreation(inputFolder, outputFolder, outputCartoPrecision=20):
             ouptutFile,
             inputFolder,
         )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Run a bulk carto creation for bassin versant."
+    )
+    parser.add_argument(
+        "inputFolder",
+        type=str,
+        help="the input folder in which to search for rge alti cartos",
+    )
+    parser.add_argument(
+        "outputFolder",
+        type=str,
+        help="the output folder in which to store the bassin versant cartos",
+    )
+    parser.add_argument(
+        "--output-precision",
+        dest="outputPrecision",
+        default=20,
+        help="the output precision of the carto, defaults to 20",
+    )
+
+    args = parser.parse_args()
+    print(args.inputFolder)
+    print(args.outputFolder)
+    print(args.outputPrecision)
+
+    bulkCartoCreation(
+        args.inputFolder, args.outputFolder, outputCartoPrecision=args.outputPrecision
+    )
