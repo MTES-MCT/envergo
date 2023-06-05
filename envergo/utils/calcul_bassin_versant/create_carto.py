@@ -3,6 +3,7 @@ import warnings
 from tqdm import tqdm
 from utils import carto
 from utils.bassin_versant import calculateBassinVersantOnePoint
+from utils.cartoQuerier import cartoQuerier
 from utils.classes import Parameters
 
 warnings.filterwarnings("ignore")
@@ -17,7 +18,7 @@ def calculateBassinVersantOnPoints(
 ):
     results = []
 
-    cartoMachine = carto.cartoQuerier(inputFolder, currentTile)
+    cartoMachine = cartoQuerier(inputFolder, currentTile)
 
     OriginLessInnerCirclePoints, OriginLessQuadrantsPoints = carto.createQuadrants(
         params.cartoPrecision, params.innerRadius, params.radii, params.quadrantsNb
