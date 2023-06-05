@@ -7,13 +7,8 @@ import numpy as np
 from bulk_carto_creation import bulkCartoCreation
 from create_carto import createCarto
 from matplotlib.colors import ListedColormap
-from utils.carto import (
-    cartoQuerier,
-    createQuadrants,
-    getCartoInfo,
-    loadCarto,
-    saveArrayToCarto,
-)
+from utils.carto import createQuadrants, getCartoInfo, loadCarto, saveArrayToCarto
+from utils.cartoQuerier import cartoQuerier
 from utils.classes import Parameters
 
 ALTI_PARENT_FOLDER = str(Path(__file__).parent)
@@ -132,7 +127,6 @@ def testCartoCreator(
     inputFolder,
     show=False,
 ):
-    print("testCartoCreator", currentTile, "\n")
     createCarto(
         params,
         currentTile,
