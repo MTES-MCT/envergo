@@ -181,7 +181,7 @@ class TerrainAssietteForm(forms.Form):
 
 class TerrainAssiette(MoulinetteCriterion):
     slug = "terrain_assiette"
-    title = "Terrain d'assiette de l'opération"
+    title = "Terrain d'assiette"
     choice_label = "Éval Env > Terrain d'assiette"
     subtitle = "Seuil réglementaire : 10 ha (cas par cas : 5 ha)"
     header = """Rubrique 39 b) de l’<a target='_blank' rel='noopener'
