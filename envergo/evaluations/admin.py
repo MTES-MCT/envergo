@@ -254,7 +254,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "opts": self.opts,
                 "txt_mail_template": txt_mail_template,
                 "html_mail_template": html_mail_template,
-                "github_prefix": "https://github.com/MTES-MCT/envergo/blob/rappel_reglementaire/envergo/templates/",
+                "github_prefix": "https://github.com/MTES-MCT/envergo/blob/main/envergo/templates/",
             }
 
             response = TemplateResponse(
