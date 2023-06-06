@@ -235,13 +235,21 @@ class Evaluation(models.Model):
         html_mail_template = (
             f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
         )
-
+        to_be_transmitted = all(
+            (
+                evalreq.user_type == USER_TYPES.instructor,
+                moulinette.loi_sur_leau.result != "non_soumis",
+                not evalreq.send_eval_to_sponsor,
+            )
+        )
         context = {
             "evaluation": self,
             "rr_mention": self.rr_mention,
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
+            "to_be_transmitted": to_be_transmitted,
         }
+
         txt_body = render_to_string(txt_mail_template, context)
         html_body = render_to_string(html_mail_template, context)
 
