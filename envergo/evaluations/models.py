@@ -231,6 +231,7 @@ class Evaluation(models.Model):
             )
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
+        result = moulinette.loi_sur_leau.result
         txt_mail_template = (
             f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
         )
@@ -240,7 +241,7 @@ class Evaluation(models.Model):
         to_be_transmitted = all(
             (
                 evalreq.user_type == USER_TYPES.instructor,
-                moulinette.loi_sur_leau.result != "non_soumis",
+                result != "non_soumis",
                 not evalreq.send_eval_to_sponsor,
             )
         )
@@ -252,23 +253,34 @@ class Evaluation(models.Model):
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
             "to_be_transmitted": to_be_transmitted,
         }
-
         txt_body = render_to_string(txt_mail_template, context)
         html_body = render_to_string(html_mail_template, context)
 
+        # This is messy. Maybe it would be better with a big matrix?
+        bcc_recipients = []
         if evalreq.user_type == USER_TYPES.instructor:
-            recipients = [evalreq.contact_email]
             if evalreq.send_eval_to_sponsor:
-                cc_recipients = evalreq.project_sponsor_emails
+                if result in ("interdit", "soumis"):
+                    recipients = evalreq.project_sponsor_emails
+                    cc_recipients = [evalreq.contact_email]
+                    if config and config.ddtm_contact_email:
+                        bcc_recipients = [config.ddtm_contact_email]
+                elif result == "action_requise":
+                    recipients = evalreq.project_sponsor_emails
+                    cc_recipients = [evalreq.contact_email]
+                else:
+                    recipients = [evalreq.contact_email]
+                    cc_recipients = []
+
             else:
+                recipients = [evalreq.contact_email]
                 cc_recipients = []
+
         else:
             recipients = evalreq.project_sponsor_emails
             cc_recipients = []
 
-        bcc_recipients = [settings.DEFAULT_FROM_EMAIL]
-        if config and config.ddtm_contact_email:
-            bcc_recipients.append(config.ddtm_contact_email)
+        bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
         subject = "Rappel réglementaire Loi sur l'eau"
         if self.address:
