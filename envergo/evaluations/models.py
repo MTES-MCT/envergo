@@ -136,13 +136,14 @@ class Evaluation(models.Model):
     )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
-    rr_mention = models.TextField(
+    rr_mention_md = models.TextField(
         _("Regulatory reminder mention"),
         blank=True,
         help_text=_(
-            "Will be included in the RR email. Only use blank text with eventual new lines."
+            "Will be included in the RR email. Only simple markdown (bold, italic, links, newlines)."
         ),
     )
+    rr_mention_html = models.TextField(_("Regulatory reminder mention"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
@@ -164,6 +165,7 @@ class Evaluation(models.Model):
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
+        self.rr_mention_html = markdown_to_html(self.rr_mention_md)
         self.moulinette_data = params_from_url(self.moulinette_url)
         super().save(*args, **kwargs)
 
@@ -244,7 +246,8 @@ class Evaluation(models.Model):
         )
         context = {
             "evaluation": self,
-            "rr_mention": self.rr_mention,
+            "rr_mention_md": self.rr_mention_md,
+            "rr_mention_html": self.rr_mention_html,
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
             "to_be_transmitted": to_be_transmitted,

@@ -5,7 +5,7 @@
     Au vu des informations qui nous ont été transmises, il apparaît que <strong style="background-color: #F4BAA8;">ce projet est interdit</strong>.
   </p>
 
-  {% if rr_mention %}{{ rr_mention|linebreaks }}{% endif %}
+  {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
 
   <p>Plus de détails sur cette évaluation et les structures en charge de cette réglementation :</p>
 
