@@ -221,7 +221,11 @@ class Evaluation(models.Model):
         return self.request and self.moulinette_url
 
     def get_regulatory_reminder_email(self, request):
-        """Generates a "rappel réglementaire" email for this evaluation."""
+        """Generates a "rappel réglementaire" email for this evaluation.
+
+        The content of the email will vary depending on the evaluation result
+        and the field values in the eval requset.
+        """
 
         try:
             evalreq = self.request
@@ -282,7 +286,11 @@ class Evaluation(models.Model):
 
         bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
-        subject = "Rappel réglementaire Loi sur l'eau"
+        if result == "non_soumis":
+            subject = "Évaluation EnvErgo"
+        else:
+            subject = "Rappel réglementaire Loi sur l'eau"
+
         if self.address:
             subject += f" / {self.address}"
 
