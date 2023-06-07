@@ -1,51 +1,80 @@
 import warnings
+from typing import List
 
 from tqdm import tqdm
 from utils import carto
-from utils.bassin_versant import calculateBassinVersantOnePoint
-from utils.cartoQuerier import cartoQuerier
-from utils.classes import Parameters
+from utils.bassin_versant import calculate_bassin_versant_one_point
+from utils.carto_querier import cartoQuerier
 
 warnings.filterwarnings("ignore")
 # ignore when numpy is trying to do the mean of an empty slice
 
 
-def calculateBassinVersantOnPoints(
+class bassinVersantParameters:
+    def __init__(
+        self,
+        carto_precision: int,
+        inner_radius: int,
+        radii: List[int],
+        quadrants_nb: int,
+        slope: float,
+    ):
+        self.carto_precision = carto_precision
+        self.inner_radius = inner_radius
+        self.radii = radii
+        self.quadrants_nb = quadrants_nb
+        self.slope = slope
+
+    def __str__(self):
+        string_result = "parameters("
+        string_result += f"carto_precision: {self.carto_precision}"
+        string_result += f" - inner_radius: {self.inner_radius}"
+        string_result += f" - radii: {self.radii}"
+        string_result += f" - slope: {self.slope})"
+        return string_result
+
+
+def calculate_bassin_versant_on_points(
     points,
-    params: Parameters,
-    currentTile,
-    inputFolder,
+    params: bassinVersantParameters,
+    current_tile,
+    input_folder,
 ):
     results = []
 
-    cartoMachine = cartoQuerier(inputFolder, currentTile)
+    carto_machine = cartoQuerier(input_folder, current_tile)
 
-    OriginLessInnerCirclePoints, OriginLessQuadrantsPoints = carto.createQuadrants(
-        params.cartoPrecision, params.innerRadius, params.radii, params.quadrantsNb
+    (
+        origin_less_inner_circle_points,
+        origin_less_quadrants_points,
+    ) = carto.create_quadrants(
+        params.carto_precision, params.inner_radius, params.radii, params.quadrants_nb
     )
 
     for point in tqdm(points, leave=False):
-        if cartoMachine.queryOnePoint(point) is not None:
-            innerCirclePoints = carto.updateOrigin(point, OriginLessInnerCirclePoints)
+        if carto_machine.queryOnePoint(point) is not None:
+            inner_circle_points = carto.update_origin(
+                point, origin_less_inner_circle_points
+            )
 
             quadrants = []
-            for q in range(params.quadrantsNb):
+            for q in range(params.quadrants_nb):
                 quadrants.append([])
                 for i, _ in enumerate(params.radii):
                     quadrants[q].append([])
-                    quadrants[q][i] = cartoMachine.getMeanAlti(
-                        carto.updateOrigin(point, OriginLessQuadrantsPoints[q][i])
+                    quadrants[q][i] = carto_machine.get_mean_alti(
+                        carto.update_origin(point, origin_less_quadrants_points[q][i])
                     )
 
-            innerCircleAlti = cartoMachine.getMeanAlti(innerCirclePoints)
+            inner_circle_alti = carto_machine.get_mean_alti(inner_circle_points)
             results.append(
                 (
                     point,
-                    calculateBassinVersantOnePoint(
-                        innerCircleAlti,
+                    calculate_bassin_versant_one_point(
+                        inner_circle_alti,
                         quadrants,
                         params.radii,
-                        params.quadrantsNb,
+                        params.quadrants_nb,
                         params.slope,
                     ),
                 )
@@ -57,44 +86,44 @@ def calculateBassinVersantOnPoints(
     return results
 
 
-def createCarto(
-    params: Parameters,
-    currentTile: str,
-    outputCartoPrecision: int,
-    ouptutFile: str,
-    inputFolder: str,
+def create_carto(
+    params: bassinVersantParameters,
+    current_tile: str,
+    output_carto_precision: int,
+    ouptut_file: str,
+    input_folder: str,
 ):
-    bottomLeft = carto.getBottomLeftCorner(currentTile)
-    info = carto.getCartoInfo(currentTile)
-    width = round(params.cartoPrecision * info["ncols"] / outputCartoPrecision)
-    height = round(params.cartoPrecision * info["nrows"] / outputCartoPrecision)
+    bottom_left = carto.get_bottom_left_corner(current_tile)
+    info = carto.get_carto_info(current_tile)
+    width = round(params.carto_precision * info["ncols"] / output_carto_precision)
+    height = round(params.carto_precision * info["nrows"] / output_carto_precision)
 
     points = []
     for y in range(height):
         for x in range(width):
             points.append(
                 (
-                    round(bottomLeft[0] + x * outputCartoPrecision),
-                    round(bottomLeft[1] + y * outputCartoPrecision),
+                    round(bottom_left[0] + x * output_carto_precision),
+                    round(bottom_left[1] + y * output_carto_precision),
                 )
             )
 
-    res = calculateBassinVersantOnPoints(
+    res = calculate_bassin_versant_on_points(
         points,
         params,
-        currentTile,
-        inputFolder,
+        current_tile,
+        input_folder,
     )
 
-    carto.saveListToCarto(
+    carto.save_list_to_carto(
         res,
-        ouptutFile,
+        ouptut_file,
         {
             "ncols": width,
             "nrows": height,
-            "xllcorner": bottomLeft[0],
-            "yllcorner": bottomLeft[1],
-            "cellsize": outputCartoPrecision,
-            "NODATA_value": -99999.00,
+            "xllcorner": bottom_left[0],
+            "yllcorner": bottom_left[1],
+            "cellsize": output_carto_precision,
+            "nodata_value": -99999.00,
         },
     )
