@@ -1,8 +1,8 @@
 from pathlib import Path
 
+from create_carto import bassinVersantParameters
 from utils import carto
-from utils.classes import Parameters
-from visualization import compareCartosV2, testCartoCreator
+from visualization import compare_cartos_v2, test_carto_creator
 
 ALTI_PARENT_FOLDER = str(Path(__file__).parent)
 
@@ -11,50 +11,50 @@ rayons1 = [50, 70, 90, 110, 130, 145, 160]
 rayons0 = [59, 81, 98, 113, 126, 138, 149, 160]
 rayons00 = [55, 74, 89, 102, 113, 123, 133, 142, 150, 158]
 
-p1_12 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p1_12 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons1,
-    quadrantsNb=12,
+    quadrants_nb=12,
     slope=0.05,
 )
-p1_16 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p1_16 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons1,
-    quadrantsNb=16,
+    quadrants_nb=16,
     slope=0.05,
 )
-p0_12 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p0_12 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons0,
-    quadrantsNb=12,
+    quadrants_nb=12,
     slope=0.05,
 )
-p0_16 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p0_16 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons0,
-    quadrantsNb=16,
+    quadrants_nb=16,
     slope=0.05,
 )
-p00_12 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p00_12 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons00,
-    quadrantsNb=12,
+    quadrants_nb=12,
     slope=0.05,
 )
-p00_16 = Parameters(
-    cartoPrecision=5,
-    innerRadius=25,
+p00_16 = bassinVersantParameters(
+    carto_precision=5,
+    inner_radius=25,
     radii=rayons00,
-    quadrantsNb=16,
+    quadrants_nb=16,
     slope=0.05,
 )
 
-PARAMS = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
+params = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
 
 f = (p1_16, p1_12)
 g = (p0_12, p1_12)
@@ -64,91 +64,91 @@ j = (p00_12, p0_12)
 k = (p00_16, p0_16)
 
 
-PARAMS_COMPARISON = [f, g, h, i, j, k]
+params_comparison = [f, g, h, i, j, k]
 
-PLACES = [
+places = [
     [
         "44",
-        ALTI_PARENT_FOLDER + "/alti_data/RGEALTI_FXX_0285_6710_MNT_LAMB93_IGN69.asc",
+        ALTI_PARENT_FOLDER + "/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
     ],
     [
         "39",
-        ALTI_PARENT_FOLDER + "/alti_data_39/RGEALTI_FXX_0890_6625_MNT_LAMB93_IGN69.asc",
+        ALTI_PARENT_FOLDER + "/alti_data_39/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc",
     ],
     [
         "29",
-        ALTI_PARENT_FOLDER + "/alti_data_29/RGEALTI_FXX_0215_6845_MNT_LAMB93_IGN69.asc",
+        ALTI_PARENT_FOLDER + "/alti_data_29/rgealti_fxx_0215_6845_mnt_lamb93_ign69.asc",
     ],
 ]
 
 
-def getName(place, params: Parameters):
-    bottomLeft = carto.getBottomLeftCorner(place[1])
+def get_name(place, params: bassinVersantParameters):
+    bottom_left = carto.get_bottom_left_corner(place[1])
     return (
         place[0]
         + "_"
-        + str(bottomLeft[0])
+        + str(bottom_left[0])
         + "_"
-        + str(bottomLeft[1])
+        + str(bottom_left[1])
         + "_test_20_"
-        + str(params.cartoPrecision)
+        + str(params.carto_precision)
         + "_"
-        + str(params.quadrantsNb)
+        + str(params.quadrants_nb)
         + "_"
         + "-".join([str(r) for r in params.radii])
     )
 
 
-def getDataFolder(cartoFileName):
-    return "/".join(cartoFileName.split("/")[:-1])
+def get_data_folder(carto_file_name):
+    return "/".join(carto_file_name.split("/")[:-1])
 
 
-generate = True
+generate = False
 if generate:
-    for place in PLACES:
-        for params in PARAMS:
-            print("Doing : ", place, params, "\n")
-            name = getName(place, params)
-            testCartoCreator(
+    for place in places:
+        for params in params:
+            print("doing : ", place, params, "\n")
+            name = get_name(place, params)
+            test_carto_creator(
                 params,
-                currentTile=place[1],
-                outputCartoPrecision=20,
-                ouptutFile=ALTI_PARENT_FOLDER + "/output/test/" + name + ".asc",
-                ouptutScreenShot=ALTI_PARENT_FOLDER + "/output/test/" + name + ".png",
-                inputFolder=getDataFolder(place[1]),
+                current_tile=place[1],
+                output_carto_precision=20,
+                ouptut_file=ALTI_PARENT_FOLDER + "/output/test/" + name + ".asc",
+                ouptut_screen_shot=ALTI_PARENT_FOLDER + "/output/test/" + name + ".png",
+                input_folder=get_data_folder(place[1]),
                 show=False,
             )
 
-for place in PLACES:
-    for params1, params2 in PARAMS_COMPARISON:
-        print("Evaluating : ", place, params1, params2)
-        testDir = ALTI_PARENT_FOLDER + "/output/test/"
-        saveDir = (
+for place in places:
+    for params1, params2 in params_comparison:
+        print("evaluating : ", place, params1, params2)
+        test_dir = ALTI_PARENT_FOLDER + "/output/test/"
+        save_dir = (
             ALTI_PARENT_FOLDER
             + "/output/decision/"
             + place[0]
             + "_"
-            + str(carto.getBottomLeftCorner(place[1])[0])
+            + str(carto.get_bottom_left_corner(place[1])[0])
             + "_"
-            + str(carto.getBottomLeftCorner(place[1])[1])
+            + str(carto.get_bottom_left_corner(place[1])[1])
             + "/"
-            + str(params1.cartoPrecision)
+            + str(params1.carto_precision)
             + "v"
-            + str(params2.cartoPrecision)
+            + str(params2.carto_precision)
             + "_"
             + "-".join([str(p) for p in params1.radii])
             + "v"
             + "-".join([str(p) for p in params2.radii])
             + "_"
-            + str(params1.quadrantsNb)
+            + str(params1.quadrants_nb)
             + "v"
-            + str(params2.quadrantsNb)
+            + str(params2.quadrants_nb)
         )
-        compareCartosV2(
-            testDir + getName(place, params2) + ".asc",
-            testDir + getName(place, params1) + ".asc",
+        compare_cartos_v2(
+            test_dir + get_name(place, params2) + ".asc",
+            test_dir + get_name(place, params1) + ".asc",
             5000,
             8000,
             stretch=(1, 1),
-            saveDir=saveDir,
+            save_dir=save_dir,
         )
