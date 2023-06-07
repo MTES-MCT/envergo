@@ -1,7 +1,7 @@
 from math import pi
 
 
-def calculateBassinVersantOnePoint(
+def calculate_bassin_versant_one_point(
     innerCircleAlti, quadrants, radii, quadrantsNb, slope
 ):
     surfaceCount = 0
@@ -9,27 +9,27 @@ def calculateBassinVersantOnePoint(
     innerCircleMeanAlti = innerCircleAlti
 
     for quadrant in quadrants:
-        surfaceCount += nextQuadrantCheck(
+        surfaceCount += next_quadrant_check(
             innerCircleMeanAlti, quadrant, radii, slope=slope
         )
 
     return surfaceCount / quadrantsNb
 
 
-def nextQuadrantCheck(currentAlti, quadrant, radii, index=0, surface=0, slope=0.05):
+def next_quadrant_check(currentAlti, quadrant, radii, index=0, surface=0, slope=0.05):
     if index == len(quadrant):
         return surface
 
     meanAlti = quadrant[index]
-    if checkElevationDiff(meanAlti, currentAlti, index, radii, slope):
-        surface += getSurface(index, radii)
-        return nextQuadrantCheck(
+    if check_elevation_diff(meanAlti, currentAlti, index, radii, slope):
+        surface += get_surface(index, radii)
+        return next_quadrant_check(
             meanAlti, quadrant, radii, index=index + 1, surface=surface, slope=slope
         )
     return surface
 
 
-def checkElevationDiff(meanAlti, altiToCheck, index, radii, slope):
+def check_elevation_diff(meanAlti, altiToCheck, index, radii, slope):
     if index == 0:
         return (meanAlti - altiToCheck) / (radii[0] / 2) > slope
     else:
@@ -38,7 +38,7 @@ def checkElevationDiff(meanAlti, altiToCheck, index, radii, slope):
         ) > slope
 
 
-def getSurface(index, radii):
+def get_surface(index, radii):
     if index == 0:
         return pi * radii[index] ** 2
     else:
