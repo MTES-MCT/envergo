@@ -10,7 +10,6 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def loisurleau_criterions(france_map):  # noqa
-
     classes = [
         "envergo.moulinette.regulations.loisurleau.ZoneHumide",
         "envergo.moulinette.regulations.loisurleau.ZoneInondable",

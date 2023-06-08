@@ -18,10 +18,7 @@ def test_searching_inexisting_eval(client):
     assert res.status_code == 404
 
     content = res.content.decode("utf-8")
-    assert (
-        "l'évaluation Loi sur l'eau n'est pas encore disponible pour ce projet"
-        in content
-    )
+    assert "l'évaluation EnvErgo n'est pas encore disponible pour ce projet" in content
 
 
 def test_search_existing_eval(client, evaluation):
@@ -54,7 +51,6 @@ def test_eval_request_wizard_step_1(client):
 
 
 def test_eval_request_wizard_step_2(client):
-
     qs = Request.objects.all()
     assert qs.count() == 0
 
