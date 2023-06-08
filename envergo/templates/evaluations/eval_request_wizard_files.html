@@ -15,7 +15,6 @@
     <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
   </div>
 
-
   <form action=""
         autocomplete="off"
         method="post"
@@ -26,12 +25,10 @@
 
     {% include '_dropzone_snippet.html' with field=form.additional_files %}
 
-
     <div id="has-errors-warning" class="fr-mt-6w fr-alert fr-alert--error">
       <p class="fr-alert__title">Les fichiers marqués d'une croix ne seront pas envoyés</p>
       <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
     </div>
-
 
     <button type="submit"
             class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">

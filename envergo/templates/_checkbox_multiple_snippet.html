@@ -5,7 +5,7 @@
   <fieldset class="fr-fieldset fr-fieldset--inline">
 
     <legend class="fr-fieldset__legend fr-text--regular"
-            id='{{ field.name }}-legend'>
+            id="{{ field.name }}-legend">
       {{ field.label }}
       {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
     </legend>
@@ -13,7 +13,6 @@
     <div class="fr-fieldset__content">
       {% for option in field %}
         <div class="fr-checkbox-group{% if field.errors %} fr-checkbox-group--error{% endif %}">
-
 
           {{ option.tag }}
 

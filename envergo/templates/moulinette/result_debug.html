@@ -2,7 +2,6 @@
 
 {% load evaluations static moulinette %}
 
-
 {% block result %}
 
   <section class="debug">
@@ -90,7 +89,6 @@
       </dl>
     {% endfor %}
 
-
     <h2>Résultat</h2>
 
     {% for regulation in moulinette.regulations %}
@@ -113,20 +111,20 @@
         </dd>
       {% endfor %}
     </dd>
+  </section>
+{% endblock %}
 
-  {% endblock %}
-
-  {% block extra_js %}
-    {{ block.super }}
-    <script>
+{% block extra_js %}
+  {{ block.super }}
+  <script>
     window.addEventListener('load', function() {
       L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
     });
-    </script>
+  </script>
 
-    {% regroup grouped_perimeters by map as map_list %}
-    {% for map in map_list %}
-      <script>
+  {% regroup grouped_perimeters by map as map_list %}
+  {% for map in map_list %}
+    <script>
       window.addEventListener('load', function() {
 
         var map = L.map('perimeter-map-{{ forloop.counter0 }}', {maxZoom: 21});
@@ -153,12 +151,12 @@
 
         map.fitBounds(bounds);
       });
-      </script>
-    {% endfor %}
+    </script>
+  {% endfor %}
 
-    {% regroup grouped_zones by type as map_list %}
-    {% for map_type in map_list %}
-      <script>
+  {% regroup grouped_zones by type as map_list %}
+  {% for map_type in map_list %}
+    <script>
       window.addEventListener('load', function() {
 
         var map = L.map('zone-map-{{ forloop.counter0 }}', {maxZoom: 21});
@@ -185,7 +183,7 @@
 
         map.fitBounds(bounds);
       });
-      </script>
-    {% endfor %}
+    </script>
+  {% endfor %}
 
-  {% endblock %}
+{% endblock %}

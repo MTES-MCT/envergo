@@ -8,19 +8,18 @@
 
   <div id="moulinette-container" class="fr-container {{ source }} fr-mb-5w">
     <div class="fr-grid-row fr-grid-row--gutters">
-      <div id="form-col" class="">
+      <div id="form-col">
         {% block form-col %}
 
           <h2>Saisissez les caractéristiques de votre projet</h2>
 
           {% include 'moulinette/_form.html' with form=form %}
 
-
           {% block extra-form-col %}{% endblock %}
         {% endblock %}
       </div>
 
-      <article id="content-col" class="">
+      <article id="content-col">
         {% block top_result %}{% endblock %}
         {% block result %}{% endblock %}
       </article>

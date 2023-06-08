@@ -29,7 +29,6 @@
 
 {% block result %}
 
-
   <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
             data-fr-opened="false"
@@ -42,7 +41,6 @@
   <h2 class="fr-h3">Résumé de l'évaluation</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
-
 
   {% for regulation in moulinette.regulations %}
 
@@ -112,7 +110,6 @@
 
 {% block extra_body %}
   {% include 'moulinette/_share_modal.html' %}
-
 
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal_useful.html' %}

@@ -26,7 +26,6 @@
 
     {% include '_form_header.html' with form=form %}
 
-
     <fieldset class="fr-mb-6w">
       <legend class="fr-h2">Localisation du projet</legend>
 
@@ -35,7 +34,6 @@
       </div>
 
       {% include '_field_snippet.html' with field=form.address %}
-
 
       <label class="fr-label fr-mb-3w">
         Renseignez la ou les parcelles cadastrales concernées par le projet.
@@ -46,7 +44,6 @@
       </label>
 
       {% include 'geodata/_parcel_formset.html' with formset=parcel_formset %}
-
 
       <button type="button"
               id="btn-add-parcel"
