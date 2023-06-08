@@ -3,10 +3,12 @@ from urllib.parse import urlparse
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.contrib.sites.models import Site
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -103,6 +105,11 @@ class CriterionInline(admin.StackedInline):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            "all": ["css/project_admin.css"],
+        }
+
     list_display = [
         "reference",
         "created_at",
@@ -148,7 +155,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Evaluation report"),
-            {"fields": ("result", "details_md")},
+            {"fields": ("result", "details_md", "rr_mention_md")},
         ),
         (
             _("Contact data"),
@@ -192,6 +199,69 @@ class EvaluationAdmin(admin.ModelAdmin):
     @admin.display(description=_("Url"), boolean=True)
     def has_moulinette_url(self, obj):
         return bool(obj.moulinette_url)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/rappel-reglementaire/",
+                self.admin_site.admin_view(self.rappel_reglementaire),
+                name="evaluations_evaluation_rr",
+            ),
+        ]
+        return custom_urls + urls
+
+    def rappel_reglementaire(self, request, object_id):
+        evaluation = self.get_object(request, unquote(object_id))
+
+        try:
+            rr_email = evaluation.get_regulatory_reminder_email(request)
+        except Exception as error:  # noqa
+            # There was an error generating the email
+            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
+            response = HttpResponseRedirect(url)
+            self.message_user(
+                request,
+                f"Impossible de générer le rappel réglementaire -> {error}",
+                messages.ERROR,
+            )
+            return response
+
+        moulinette = evaluation.get_moulinette()
+        txt_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
+        )
+        html_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
+        )
+
+        if request.method == "POST":
+            rr_email.send()
+            self.message_user(request, "Le rappel réglementaire a été envoyé.")
+            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
+            response = HttpResponseRedirect(url)
+        else:
+            context = {
+                **self.admin_site.each_context(request),
+                "title": "Rappel réglementaire",
+                "subtitle": str(evaluation),
+                "object_id": object_id,
+                "evaluation": evaluation,
+                "email": rr_email,
+                "email_html": rr_email.alternatives[0][0],
+                "email_txt": rr_email.body,
+                "media": self.media,
+                "opts": self.opts,
+                "txt_mail_template": txt_mail_template,
+                "html_mail_template": html_mail_template,
+                "github_prefix": "https://github.com/MTES-MCT/envergo/blob/main/envergo/templates/",
+            }
+
+            response = TemplateResponse(
+                request, "evaluations/admin/rappel_reglementaire.html", context
+            )
+
+        return response
 
 
 class ParcelInline(admin.TabularInline):
@@ -297,14 +367,12 @@ class RequestAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
-
         parcel_map_url = obj.get_parcel_map_url()
         link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
         return mark_safe(link)
 
     @admin.display(description=_("Exporter vers QGis ou autre"))
     def parcels_geojson(self, obj):
-
         parcel_export_url = obj.get_parcel_geojson_export_url()
         link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
         return mark_safe(link)
@@ -375,27 +443,7 @@ class RequestAdmin(admin.ModelAdmin):
 
         req = queryset[0]
         try:
-            req.evaluation
-        except Evaluation.DoesNotExist:
-            # Good, good…
-            # We can't create an evaluation if one already exists
-            pass
-        else:
-            error = _("There already is an evaluation associated with this request.")
-            self.message_user(request, error, level=messages.ERROR)
-            return
-
-        try:
-            evaluation = Evaluation.objects.create(
-                reference=req.reference,
-                moulinette_url=req.moulinette_url,
-                contact_email=req.contact_email,
-                request=req,
-                application_number=req.application_number,
-                address=req.address,
-                created_surface=req.created_surface,
-                existing_surface=req.existing_surface,
-            )
+            evaluation = req.create_evaluation()
         except Exception as e:
             error = _("There was an error creating your evaluation: %(error)s") % {
                 "error": e

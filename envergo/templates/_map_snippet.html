@@ -11,11 +11,15 @@
 
     {% if map.sources %}
       <div class="sources">
-        Sources : <ul class="source-list">
+        Sources :
+        <ul class="source-list">
           {% for source in map.sources %}
             <li>
               {% if source.source %}
-                <a class="fr-link" href="{{ source.source }}" target="_blank" rel="noopener">{{ source.display_name }}</a>
+                <a class="fr-link"
+                   href="{{ source.source }}"
+                   target="_blank"
+                   rel="noopener">{{ source.display_name }}</a>
               {% else %}
                 {{ source.display_name }}
               {% endif %}

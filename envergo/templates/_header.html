@@ -1,4 +1,5 @@
 {% load pages static %}
+
 <div class="fr-header__body">
   <div class="fr-container">
     <div class="fr-header__body-row">
@@ -7,28 +8,33 @@
           <div class="fr-header__logo">
             <p class="fr-logo">
               République
-              <br>Française
+              <br>
+              Française
             </p>
           </div>
           <div class="fr-header__navbar">
-            <button class="fr-btn--menu fr-btn" data-fr-opened="false" aria-controls="modal-menu" aria-haspopup="menu" title="Menu">
+            <button class="fr-btn--menu fr-btn"
+                    data-fr-opened="false"
+                    aria-controls="modal-menu"
+                    aria-haspopup="menu"
+                    title="Menu">
               Menu
             </button>
           </div>
         </div>
         <div class="fr-header__service">
           <a href="/">
-            <p class="fr-header__service-title">
-              EnvErgo
-            </p>
+            <p class="fr-header__service-title">EnvErgo</p>
           </a>
         </div>
       </div>
 
       {% if user.is_authenticated %}
         {% include '_user_menu.html' %}
+
       {% else %}
         {% include '_anonymous_menu.html' %}
+
       {% endif %}
     </div>
   </div>
@@ -37,26 +43,17 @@
 <div class="fr-header__menu fr-modal" id="modal-menu">
   <div class="fr-container">
     <button class="fr-link--close fr-link" aria-controls="modal-menu">Fermer</button>
-    <div class="fr-header__menu-links">
-    </div>
+    <div class="fr-header__menu-links"></div>
 
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
-        <li class="fr-nav__item">
-          {% menu_item 'moulinette_home' "Simulateur" %}
-        </li>
+        <li class="fr-nav__item">{% menu_item 'moulinette_home' "Simulateur" %}</li>
 
-        <li class="fr-nav__item">
-          {% evalreq_menu %}
-        </li>
+        <li class="fr-nav__item">{% evalreq_menu %}</li>
 
-        <li class="fr-nav__item">
-          {% menu_item 'faq' "Questions fréquentes" %}
-        </li>
+        <li class="fr-nav__item">{% menu_item 'faq' "Questions fréquentes" %}</li>
 
-        <li class="fr-nav__item">
-          {% evaluation_menu %}
-        </li>
+        <li class="fr-nav__item">{% evaluation_menu %}</li>
       </ul>
     </nav>
   </div>

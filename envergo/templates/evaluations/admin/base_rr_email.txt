@@ -1,0 +1,18 @@
+{% block content %}
+{% if to_be_transmitted %}À transmettre au porteur de projet.
+
+{% endif %}Bonjour,
+
+Ceci est un rappel réglementaire du Ministère de la Transition Écologique.
+
+Nous avons eu connaissance du projet suivant :
+
+Adresse : {{ evaluation.address|default:"Non communiqué" }}
+{% if evaluation.application_number %}N° de demande de permis : {{ evaluation.application_number }}{% endif %}
+
+{% block detail %}{% endblock %}
+
+{{ evaluation_link }}
+
+{% include 'emails/_email_signature.txt' %}
+{% endblock %}

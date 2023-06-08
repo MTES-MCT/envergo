@@ -1,0 +1,8 @@
+{
+    "indent": 2,
+    "blank_line_after_tag": "load,extends,include",
+    "line_break_after_multiline_tag": "true",
+    "max_line_length": "120",
+    "preserve_blank_lines": "false",
+    "ignore": "T002,T003,H021,D018,H022,H006,H029"
+}

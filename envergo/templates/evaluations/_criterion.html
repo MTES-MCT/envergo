@@ -3,11 +3,11 @@
 <section class="fr-accordion fr-accordion--no-icon">
 
   <h3 class="fr-accordion__title">
-    <button class="fr-accordion__btn" aria-expanded="false" aria-controls="read-more-{{ criterion.criterion }}">
+    <button class="fr-accordion__btn"
+            aria-expanded="false"
+            aria-controls="read-more-{{ criterion.criterion }}">
       {% probability criterion %}
-      <span class="title">
-        {{ criterion.get_criterion_display|safe }}
-      </span>
+      <span class="title">{{ criterion.get_criterion_display|safe }}</span>
     </button>
 
   </h3>
@@ -19,10 +19,13 @@
 
     {% if criterion.map %}
 
-      <figure class="fr-content-media fr-content-media--sm" role="group" aria-label="{{ criterion.legend_md }}">
+      <figure class="fr-content-media fr-content-media--sm"
+              role="group"
+              aria-label="{{ criterion.legend_md }}">
         <div class="fr-content-media__img">
-          <img src="{{ criterion.map.url }}" class="fr-responsive-img"
-            alt="Cartographie illustrant ce critère d'évaluation" />
+          <img src="{{ criterion.map.url }}"
+               class="fr-responsive-img"
+               alt="Cartographie illustrant ce critère d'évaluation" />
         </div>
         {% if criterion.legend_html %}
           <figcaption class="fr-content-media__caption">{{ criterion.legend_html|safe }}</figcaption>
@@ -34,4 +37,5 @@
   </div>
 
   {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.criterion %}
+
 </section>

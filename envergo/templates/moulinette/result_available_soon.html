@@ -1,4 +1,5 @@
 {% extends 'moulinette/base_result.html' %}
+
 {% load evaluations static %}
 
 {% block result %}
@@ -10,20 +11,26 @@
     <p>Il sera disponible d'ici à quelques semaines au plus tard.</p>
   </div>
 
-  <p>👉 Testez le simulateur avec <a href="{% url 'moulinette_home' %}?created_surface=1250&existing_surface=1000&lng=-1.83425&lat=47.20490&is_lotissement=non">
+  <p>
+    👉 Testez le simulateur avec <a href="{% url 'moulinette_home' %}?created_surface=1250&existing_surface=1000&lng=-1.83425&lat=47.20490&is_lotissement=non">
     cet exemple de projet : une extension de
     1250 m² d'un bâtiment près des rives de la Loire, soumise à
-    la Loi sur l'eau</a>.</p>
+    la Loi sur l'eau</a>.
+  </p>
 
   <p>💡 Inscrivez-vous pour être informé·e de l’ouverture d’EnvErgo à votre département.</p>
 
-  <a target="_blank" rel="noopener" class="fr-btn fr-mb-5w" href="https://tally.so/r/nG6lko">
+  <a target="_blank"
+     rel="noopener"
+     class="fr-btn fr-mb-5w"
+     href="https://tally.so/r/nG6lko">
     Signaler mon intérêt
   </a>
 
-  <p>⏱ Vous pouvez également <a  href="{% url 'request_evaluation' %}"> demander une évaluation manuelle</a>
-    de votre projet, réalisée par l'équipe EnvErgo. Réponse en trois jours ouvrés.</p>
-  </div>
+  <p>
+    ⏱ Vous pouvez également <a href="{% url 'request_evaluation' %}">demander une évaluation manuelle</a>
+    de votre projet, réalisée par l'équipe EnvErgo. Réponse en trois jours ouvrés.
+  </p>
 
 {% endblock %}
 

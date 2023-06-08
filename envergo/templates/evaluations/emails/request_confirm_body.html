@@ -7,9 +7,7 @@
 
   <p>
     Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo
-    {% if application_number %}
-      (numéro de demande de permis : {{ application_number }})
-    {% endif %}
+    {% if application_number %}(numéro de demande de permis : {{ application_number }}){% endif %}
     sous la référence {{ reference }}.
   </p>
 
@@ -17,11 +15,16 @@
 
   <p>En attendant, vous pouvez consulter notre page d'information :</p>
 
-  <p><a href="{{ faq_url }}">{{ faq_url }}</a></p>
+  <p>
+    <a href="{{ faq_url }}">{{ faq_url }}</a>
+  </p>
 
   <p>N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.</p>
 
-  <p><a href="{{ contact_url }}">{{ contact_url }}</a></p>
+  <p>
+    <a href="{{ contact_url }}">{{ contact_url }}</a>
+  </p>
 
   {% include 'emails/_email_signature.html' %}
+
 {% endblock %}

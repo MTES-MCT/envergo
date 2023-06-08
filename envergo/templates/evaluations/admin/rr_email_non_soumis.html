@@ -1,0 +1,25 @@
+{% extends 'evaluations/admin/base_rr_email.html' %}
+
+{% block greetings %}
+  <p>Nous faisons suite à votre demande d'évaluation EnvErgo concernant le projet suivant :</p>
+{% endblock %}
+
+{% block detail %}
+  <p>
+    Il apparaît que ce projet <strong style="font-weight: bold; background-color: #b1f0bd">ne semble pas soumis</strong> :
+  </p>
+
+  <ul>
+    <li>ni à la Loi sur l'eau au titre des impacts suivants :</li>
+    <ul>
+      <li>impact sur une zone humide ;</li>
+      <li>construction en zone inondable ;</li>
+      <li>interception de ruissellement d'eaux pluviales.</li>
+    </ul>
+    <li>ni à Natura 2000 ;</li>
+    <li>ni à évaluation environnementale au titre de la rubrique 39 (construction et aménagement).</li>
+  </ul>
+  {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
+
+  <p>Plus de détails sur cette évaluation :</p>
+{% endblock %}

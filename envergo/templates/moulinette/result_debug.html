@@ -1,6 +1,6 @@
 {% extends 'moulinette/base_result.html' %}
-{% load evaluations static moulinette %}
 
+{% load evaluations static moulinette %}
 
 {% block result %}
 
@@ -20,7 +20,8 @@
     {% regroup grouped_perimeters by map as map_list %}
     {% for map in map_list %}
       <h3>
-        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}<br />
+        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}
+        <br />
         <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
       </h3>
 
@@ -34,17 +35,19 @@
 
       <dl class="fr-mb-5w">
         <dt>Distance :</dt>
-        <dd>{{ map.list.0.distance }}</dd>
+        <dd>
+          {{ map.list.0.distance }}
+        </dd>
 
         <dt>Distance d'activation</dt>
-        <dd>{{ map.list.0.activation_distance }} m</dd>
+        <dd>
+          {{ map.list.0.activation_distance }} m
+        </dd>
         <dt>Critères :</dt>
         <dd>
           <ul>
             {% regroup map.list by criterion as criterion_list %}
-            {% for criterion in criterion_list %}
-              <li>{{ criterion.grouper.choice_label }}</li>
-            {% endfor %}
+            {% for criterion in criterion_list %}<li>{{ criterion.grouper.choice_label }}</li>{% endfor %}
           </ul>
         </dd>
       </dl>
@@ -58,9 +61,7 @@
 
     {% regroup grouped_zones by type as map_list %}
     {% for map_type in map_list %}
-      <h3>
-        {{ map_type.list.0.map.get_map_type_display }} ({{ map_type.list.0.map.get_data_type_display }})
-      </h3>
+      <h3>{{ map_type.list.0.map.get_map_type_display }} ({{ map_type.list.0.map.get_data_type_display }})</h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
@@ -73,18 +74,20 @@
       <dl class="fr-mb-5w">
         <dt>Carte</dt>
         <dd>
-          <strong>{{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}</strong> <br />
-          <a href="{% url 'admin:geodata_map_change' map_type.list.0.map.id %}">
-            {{ map_type.list.0.map.name }}
-          </a>
+          <strong>{{ map_type.list.0.map.display_name|default:"(Pas de nom fourni)" }}</strong>
+          <br />
+          <a href="{% url 'admin:geodata_map_change' map_type.list.0.map.id %}">{{ map_type.list.0.map.name }}</a>
         </dd>
         <dt>Id carte</dt>
-        <dd>{{ map_type.list.0.map.id }}</dd>
+        <dd>
+          {{ map_type.list.0.map.id }}
+        </dd>
         <dt>Distance :</dt>
-        <dd>{{ map_type.list.0.distance }}</dd>
+        <dd>
+          {{ map_type.list.0.distance }}
+        </dd>
       </dl>
     {% endfor %}
-
 
     <h2>Résultat</h2>
 
@@ -103,10 +106,12 @@
     <dd>
       {% for key, value in moulinette.catalog.items %}
         <dt>{{ key }}</dt>
-        <dd>{{ value|truncatechars:150 }}</dd>
+        <dd>
+          {{ value|truncatechars:150 }}
+        </dd>
       {% endfor %}
     </dd>
-
+  </section>
 {% endblock %}
 
 {% block extra_js %}

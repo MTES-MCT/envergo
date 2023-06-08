@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+
 {% load evaluations %}
 
 {% block title %}Votre demande d'évaluation a été enregistrée{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">
+      Voir le fil d'Ariane
+    </button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
@@ -30,8 +35,10 @@
     <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
   </div>
 
-  <p>Si vous souhaitez apporter des modifications ou des compléments à votre
-    demande, <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter</a>.</p>
+  <p>
+    Si vous souhaitez apporter des modifications ou des compléments à votre
+    demande, <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter</a>.
+  </p>
 
   <a class="fr-btn" href="{% url 'request_evaluation' %}">Soumettre une nouvelle demande d'évaluation</a>
 

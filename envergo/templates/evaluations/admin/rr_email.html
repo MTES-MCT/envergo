@@ -1,0 +1,62 @@
+{% extends 'emails/base_inlined.html' %}
+
+{% block content %}
+  <p>Bonjour,</p>
+
+  <p>Ceci est un rappel réglementaire du Ministère de la Transition Écologique.</p>
+
+  <p>Nous avons eu connaissance du projet suivant :</p>
+
+  <ul>
+    <li>
+      <strong>Adresse :</strong> {{ evaluation.address|default:"Non communiqué" }}
+    </li>
+    <li>
+      <strong>N° de demande de permis :</strong> {{ evaluation.application_number|default:"Non communiqué" }}
+    </li>
+  </ul>
+
+  {% with lse_result=moulinette.loi_sur_leau.result %}
+    {% if lse_result == 'interdit' %}
+      <p>Au vu des informations qui nous ont été transmises, il apparaît que ce projet est interdit.</p>
+    {% elif lse_result == 'soumis' %}
+      <p>Au vu des informations qui nous ont été transmises, il apparaît que  ce projet est soumis à la Loi sur l'eau.</p>
+
+      <p>Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.</p>
+    {% elif lse_result == 'action_requise' %}
+      <p>Au vu des informations qui nous ont été transmises, il apparaît qu’une action du porteur de projet est requise.</p>
+    {% else %}
+    {% endif %}
+  {% endwith %}
+
+  <p>Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.</p>
+
+  <p>Plus de détails sur cette évaluation et sur la procédure à suivre :</p>
+
+  <table role="presentation"
+         border="0"
+         cellpadding="0"
+         cellspacing="0"
+         style="border-collapse: separate;
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+                background-color: #F5F5FD;
+                width: 100%"
+         width="100%"
+         bgcolor="#F5F5FD">
+    <tr>
+      <td style="font-family: Arial, sans-serif;
+                 font-size: 16px;
+                 vertical-align: top;
+                 display: block;
+                 padding: 10px;
+                 margin: 0 auto"
+          valign="top">
+        <p style="text-align: center;">
+          <a href="{{ evaluation_link }}">{{ evaluation_link }}</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+
+{% endblock %}

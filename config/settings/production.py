@@ -108,7 +108,7 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <envergo@beta.gouv.fr>"
+    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
@@ -130,13 +130,24 @@ INSTALLED_APPS += ["anymail"]  # noqa F405
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps/sendinblue/
-EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-ANYMAIL = {
-    "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
-    "SENDINBLUE_API_URL": env(
-        "SENDINBLUE_API_URL", default="https://api.sendinblue.com/v3/"
-    ),
-}
+
+IS_REVIEW_APP = env.bool("IS_REVIEW_APP", default=False)
+
+# Different settings between scalingo prod and review apps
+if IS_REVIEW_APP:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = env("DJANGO_REVIEW_APP_EMAIL_HOST")
+    EMAIL_HOST_USER = env("DJANGO_REVIEW_APP_EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = env("DJANGO_REVIEW_APP_EMAIL_HOST_PASSWORD")
+    EMAIL_PORT = env("DJANGO_REVIEW_APP_EMAIL_PORT")
+else:
+    EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+    ANYMAIL = {
+        "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
+        "SENDINBLUE_API_URL": env(
+            "SENDINBLUE_API_URL", default="https://api.sendinblue.com/v3/"
+        ),
+    }
 
 # django-compressor
 # ------------------------------------------------------------------------------

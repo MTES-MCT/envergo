@@ -4,11 +4,14 @@ from os.path import splitext
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
+from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.http import QueryDict
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -18,7 +21,17 @@ from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
+from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+
+# WGS84, geodetic coordinates, units in degrees
+# Good for storing data and working wordwide
+EPSG_WGS84 = 4326
+
+# Projected coordinates
+# Used for displaying tiles in web map systems (OSM, GoogleMaps)
+# Good for working in meters
+EPSG_MERCATOR = 3857
 
 
 def evaluation_file_format(instance, filename):
@@ -123,6 +136,14 @@ class Evaluation(models.Model):
     )
     details_md = models.TextField(_("Details"), blank=True)
     details_html = models.TextField(_("Details"), blank=True)
+    rr_mention_md = models.TextField(
+        _("Regulatory reminder mention"),
+        blank=True,
+        help_text=_(
+            "Will be included in the RR email. Only simple markdown (bold, italic, links, newlines)."
+        ),
+    )
+    rr_mention_html = models.TextField(_("Regulatory reminder mention"), blank=True)
     contact_md = models.TextField(_("Contact"), blank=True)
     contact_html = models.TextField(_("Contact (html)"), blank=True)
 
@@ -144,6 +165,7 @@ class Evaluation(models.Model):
     def save(self, *args, **kwargs):
         self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
+        self.rr_mention_html = markdown_to_html(self.rr_mention_md)
         self.moulinette_data = params_from_url(self.moulinette_url)
         super().save(*args, **kwargs)
 
@@ -170,6 +192,117 @@ class Evaluation(models.Model):
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
         return params_from_url(self.moulinette_url)
+
+    def get_moulinette_config(self):
+        params = self.moulinette_params
+        if "lng" not in params or "lat" not in params:
+            return None
+
+        lng, lat = params["lng"], params["lat"]
+        coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        department = Department.objects.filter(geometry__contains=coords).first()
+        return department.moulinette_config if department else None
+
+    def get_moulinette(self):
+        """Return the moulinette instance for this evaluation."""
+        from envergo.moulinette.forms import MoulinetteForm
+        from envergo.moulinette.models import Moulinette
+
+        raw_params = self.moulinette_params
+        form = MoulinetteForm(raw_params)
+        form.is_valid()
+        params = form.cleaned_data
+        moulinette = Moulinette(params, raw_params)
+        return moulinette
+
+    def can_send_regulatory_reminder(self):
+        """Return True if a regulatory reminder can be sent for this evaluation."""
+
+        return self.request and self.moulinette_url
+
+    def get_regulatory_reminder_email(self, request):
+        """Generates a "rappel réglementaire" email for this evaluation.
+
+        The content of the email will vary depending on the evaluation result
+        and the field values in the eval requset.
+        """
+
+        try:
+            evalreq = self.request
+        except Request.DoesNotExist:
+            raise ValueError(
+                "Impossible de générer un rappel reglementaire sans demande"
+            )
+        config = self.get_moulinette_config()
+        moulinette = self.get_moulinette()
+        result = moulinette.loi_sur_leau.result
+        txt_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
+        )
+        html_mail_template = (
+            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
+        )
+        to_be_transmitted = all(
+            (
+                evalreq.user_type == USER_TYPES.instructor,
+                result != "non_soumis",
+                not evalreq.send_eval_to_sponsor,
+            )
+        )
+        context = {
+            "evaluation": self,
+            "rr_mention_md": self.rr_mention_md,
+            "rr_mention_html": self.rr_mention_html,
+            "moulinette": moulinette,
+            "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
+            "to_be_transmitted": to_be_transmitted,
+        }
+        txt_body = render_to_string(txt_mail_template, context)
+        html_body = render_to_string(html_mail_template, context)
+
+        # This is messy. Maybe it would be better with a big matrix?
+        bcc_recipients = []
+        if evalreq.user_type == USER_TYPES.instructor:
+            if evalreq.send_eval_to_sponsor:
+                if result in ("interdit", "soumis"):
+                    recipients = evalreq.project_sponsor_emails
+                    cc_recipients = [evalreq.contact_email]
+                    if config and config.ddtm_contact_email:
+                        bcc_recipients = [config.ddtm_contact_email]
+                elif result == "action_requise":
+                    recipients = evalreq.project_sponsor_emails
+                    cc_recipients = [evalreq.contact_email]
+                else:
+                    recipients = [evalreq.contact_email]
+                    cc_recipients = []
+
+            else:
+                recipients = [evalreq.contact_email]
+                cc_recipients = []
+
+        else:
+            recipients = evalreq.project_sponsor_emails
+            cc_recipients = []
+
+        bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
+
+        if result == "non_soumis":
+            subject = "Évaluation EnvErgo"
+        else:
+            subject = "Rappel réglementaire Loi sur l'eau"
+
+        if self.address:
+            subject += f" / {self.address}"
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=txt_body,
+            to=recipients,
+            cc=cc_recipients,
+            bcc=bcc_recipients,
+        )
+        email.attach_alternative(html_body, "text/html")
+        return email
 
 
 CRITERIONS = Choices(
@@ -319,6 +452,8 @@ class Request(models.Model):
         verbose_name=_("Who are you?"),
     )
     contact_email = models.EmailField(_("E-mail"), blank=True)
+
+    # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
@@ -378,6 +513,32 @@ class Request(models.Model):
 
         url = f"{map_url}?{qd.urlencode()}"
         return url
+
+    def create_evaluation(self):
+        """Create an evaluation from this evaluation request."""
+
+        # Let's make sure there is not already an
+        # evaluation associated with this request
+        try:
+            self.evaluation
+        except Evaluation.DoesNotExist:
+            # We're good
+            pass
+        else:
+            error = _("There already is an evaluation associated with this request.")
+            raise ValueError(error)
+
+        evaluation = Evaluation.objects.create(
+            reference=self.reference,
+            moulinette_url=self.moulinette_url,
+            contact_email=self.contact_email,
+            request=self,
+            application_number=self.application_number,
+            address=self.address,
+            created_surface=self.created_surface,
+            existing_surface=self.existing_surface,
+        )
+        return evaluation
 
 
 def request_file_format(instance, filename):

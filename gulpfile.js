@@ -62,7 +62,7 @@ function styles() {
         }) // minify result
     ]
 
-    return src(`${paths.sass}/project.scss`)
+    return src(`${paths.sass}/project*.scss`)
         .pipe(sass({
             includePaths: [
                 paths.sass

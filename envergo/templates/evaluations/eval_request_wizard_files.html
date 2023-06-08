@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
@@ -14,8 +15,12 @@
     <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
   </div>
 
-
-  <form action="" autocomplete="off" method="post" id="request-evaluation-form" novalidate enctype="multipart/form-data">
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="request-evaluation-form"
+        novalidate
+        enctype="multipart/form-data">
     {% csrf_token %}
 
     {% include '_dropzone_snippet.html' with field=form.additional_files %}
@@ -25,8 +30,8 @@
       <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
     </div>
 
-
-    <button type="submit" class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
+    <button type="submit"
+            class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
       Envoyer votre demande d'évaluation
     </button>
 

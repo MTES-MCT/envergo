@@ -4,7 +4,11 @@
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">
+      Voir le fil d'Ariane
+    </button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
@@ -28,7 +32,8 @@
     Hélas, l'évaluation EnvErgo n'est pas encore disponible pour ce projet.
   </p>
 
-  <p>Nous faisons le maximum pour répondre dans les 72 h ouvrables. N'hésitez pas 
+  <p>
+    Nous faisons le maximum pour répondre dans les 72 h ouvrables. N'hésitez pas
     <a href="{% url 'contact_us' %}">à nous contacter directement</a>
     pour toute demande ou en cas d'urgence.
   </p>

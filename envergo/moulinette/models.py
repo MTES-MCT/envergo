@@ -94,6 +94,7 @@ class MoulinetteConfig(models.Model):
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
     n2000_contact_ddtm_instruction = models.TextField(
@@ -130,7 +131,7 @@ class MoulinetteCatalog(dict):
         """If the data is not in the dict, use a method to fetch it."""
 
         if not hasattr(self, key):
-            raise KeyError()
+            raise KeyError(f"Donnée manquante : {key}")
 
         method = getattr(self, key)
         value = method()
@@ -191,15 +192,7 @@ class Moulinette:
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
-        zones = (
-            Zone.objects.filter(
-                geometry__dwithin=(catalog["coords"], D(m=fetching_radius))
-            )
-            .annotate(distance=Distance("geometry", catalog["coords"]))
-            .annotate(geom=Cast("geometry", MultiPolygonField()))
-            .select_related("map")
-            .order_by("distance", "map__name")
-        )
+        zones = self.get_zones(catalog["coords"], fetching_radius)
         catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
@@ -266,17 +259,15 @@ class Moulinette:
         criterions = set([perimeter.criterion for perimeter in self.perimeters])
         return criterions
 
-    def get_zones(self):
-        """For debug purpose only.
+    def get_zones(self, coords, radius=200):
+        """Return the Zone objects containing the queried coordinates."""
 
-        Return the Zone objects containing the queried coordinates.
-        """
         zones = (
-            Zone.objects.filter(geometry__dwithin=(self.catalog["coords"], D(m=0)))
+            Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
+            .annotate(distance=Distance("geometry", coords))
+            .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
-            .prefetch_related("map__perimeters")
-            .filter(map__perimeters__isnull=False)
-            .distinct()
+            .order_by("distance", "map__name")
         )
         return zones
 

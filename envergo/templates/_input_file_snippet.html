@@ -1,6 +1,7 @@
 {% load utils %}
 
-<div id="form-group-{{ field.name }}" class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
+<div id="form-group-{{ field.name }}"
+     class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
   {% include '_label.html' %}
 
@@ -13,9 +14,7 @@
       <label id="default-box-msg" for="{{ field.id_for_label }}" class="box-msg">
         Cliquez ici ou glissez / déposez directement votre fichier dans cette zone.
       </label>
-      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg">
-        Votre fichier a bien été déposé.
-      </label>
+      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg">Votre fichier a bien été déposé.</label>
 
     </div>
   </div>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% load static %}
 
 {% block title %}Demandez une évaluation pour un projet{% endblock %}
@@ -10,21 +11,32 @@
   <h2>Quelques résultats préconfigurés</h2>
 
   <ul>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Interdit</a></li>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=non_soumis&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Soumis sans action requise</a></li>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Soumis avec action requise</a></li>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=non_soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise interdit</a></li>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=action_requise&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=non_soumis&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise soumis</a></li>
-    <li><a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=action_requise&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise soumis & interdit</a></li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Interdit</a>
+    </li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=non_soumis&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Soumis sans action requise</a>
+    </li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Soumis avec action requise</a>
+    </li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=non_soumis&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise interdit</a>
+    </li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=action_requise&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=non_soumis&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise soumis</a>
+    </li>
+    <li>
+      <a href="/simulateur/debug/?department=44&emprise=&surface_plancher=&terrain_assiette=&clause_filet=&autres_rubriques=&zone_humide=action_requise&zone_inondable=&ruissellement=&zone_humide_vie_jaunay_85=action_requise_interdit&zone_humide_44=&zone_inondable_44=&iota=&lotissement=">Action requise soumis & interdit</a>
+    </li>
   </ul>
 
   <h2>Générez une réponse spécifique</h2>
 
   <form method="GET" action="">
     {% include '_form_snippet.html' with form=form %}
-    <button type="submit" class="fr-btn fr-btn--primary">
-      Lancer le debug
-    </button>
+
+    <button type="submit" class="fr-btn fr-btn--primary">Lancer le debug</button>
   </form>
 
 {% endblock %}

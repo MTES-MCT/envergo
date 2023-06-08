@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button" aria-expanded="false" aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">
+      Voir le fil d'Ariane
+    </button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
@@ -36,16 +41,14 @@
           <h3>Projet de construction</h3>
           <ul>
             <li>Adresse : {{ evaluation.address }}</li>
-            {% if evaluation.application_number %}
-              <li>
-                Demande de permis n° {{ evaluation.application_number }}
-              </li>
-            {% endif %}
+            {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
           </ul>
           <div class="fr-alert fr-alert--success fr-my-8w">
             <p class="fr-alert__title">Projet non soumis à la Loi sur l'eau.</p>
-            <p>D'après les informations dont nous disposons, ce projet est
-              <span class="fr-tag probability probability-1">non soumis</span> à la Loi sur l'eau.</p>
+            <p>
+              D'après les informations dont nous disposons, ce projet est
+              <span class="fr-tag probability probability-1">non soumis</span> à la Loi sur l'eau.
+            </p>
           </div>
         </div>
       </div>
@@ -61,7 +64,8 @@
 
           <ul>
             <li>
-              Surface créée : {{ evaluation.created_surface }} m²<br />
+              Surface créée : {{ evaluation.created_surface }} m²
+              <br />
               <span class="fr-text--light">
                 Somme des emprises au sol de toutes les installations nouvelles (bâtiment, voirie, remblais, noue, serre, bassin…)
               </span>
@@ -69,30 +73,33 @@
 
             {% if evaluation.existing_surface %}
               <li>
-                Surface existante : {{ evaluation.existing_surface }} m²<br />
+                Surface existante : {{ evaluation.existing_surface }} m²
+                <br />
                 <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
               </li>
             {% endif %}
 
             {% if evaluation.request %}
-              <li>Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a></li>
+              <li>
+                Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a>
+              </li>
             {% endif %}
           </ul>
 
-
           {% if criterions %}
-            <p>Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :</p>
+            <p>
+              Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :
+            </p>
 
             <div id="evaluation-accordion" class="fr-mb-3w">
               {% for criterion in criterions %}
                 {% include 'evaluations/_criterion.html' with criterion=criterion %}
+
               {% endfor %}
             </div>
           {% endif %}
 
-          {% if evaluation.details_html %}
-            {{ evaluation.details_html|safe }}
-          {% endif %}
+          {% if evaluation.details_html %}{{ evaluation.details_html|safe }}{% endif %}
 
         </div>
       </div>

@@ -1,4 +1,5 @@
 {% extends "moulinette/base_result.html" %}
+
 {% load leaflet_tags static %}
 
 {% block title %}Demandez une évaluation pour un projet{% endblock %}
@@ -7,12 +8,15 @@
 
   <h1>Natura 2000, Loi sur l'eau… Évaluez à quelles réglementations votre projet de construction est soumis</h1>
 
-  <p>Un projet qui découvre qu'il est soumis à une procédure en plus du permis de construire, c'est jusqu'à :
-  </p>
+  <p>Un projet qui découvre qu'il est soumis à une procédure en plus du permis de construire, c'est jusqu'à :</p>
 
   <ul class="fr-mb-3w">
-    <li><strong>6 mois de délai</strong> d'instruction supplémentaire ;</li>
-    <li>des milliers d'€uros de <strong>coûts d'expertise</strong> non anticipés.</li>
+    <li>
+      <strong>6 mois de délai</strong> d'instruction supplémentaire ;
+    </li>
+    <li>
+      des milliers d'€uros de <strong>coûts d'expertise</strong> non anticipés.
+    </li>
   </ul>
 
   <img src="{% static 'images/maison.svg' %}" alt="">
@@ -22,11 +26,12 @@
     projet instantanément.
   </p>
 
-  <p><em>
-    Vous pouvez <a href="{% url "request_evaluation" %}">
+  <p>
+    <em>
+      Vous pouvez <a href="{% url "request_evaluation" %}">
       demander une évaluation réalisée manuellement par l'équipe
       EnvErgo</a>. Réponse en trois jours ouvrés.
-  </em>
+    </em>
   </p>
 
 {% endblock %}

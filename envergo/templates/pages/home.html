@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
 {% block title %}Demandez une évaluation pour un projet{% endblock %}
@@ -11,18 +12,21 @@
     est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
   </p>
 
-  <p>Faites-nous parvenir le Cerfa et les pièces complémentaires utiles à l'évaluation
-    (plan de masse, autres documents…) à l'adresse suivante :</p>
+  <p>
+    Faites-nous parvenir le Cerfa et les pièces complémentaires utiles à l'évaluation
+    (plan de masse, autres documents…) à l'adresse suivante :
+  </p>
 
   <p class="fr-grid-row fr-grid-row--center">
-    <a class="fr-btn fr-btn--info fr-my-4w" href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+    <a class="fr-btn fr-btn--info fr-my-4w"
+       href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
   </p>
 
   <div class="fr-alert fr-alert--info fr-mt-6w">
     <p class="fr-alert__title">Vous connaissez déjà votre référence EnvErgo ?</p>
-    <p> <a href="{% url 'evaluation_search' %}">
-      Retrouvez votre évaluation.</a></p>
+    <p>
+      <a href="{% url 'evaluation_search' %}">Retrouvez votre évaluation.</a>
+    </p>
   </div>
-
 
 {% endblock %}

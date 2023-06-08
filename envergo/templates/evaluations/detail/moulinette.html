@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load evaluations static l10n %}
 
 {% block title %}Consultez l'évaluation pour votre projet{% endblock %}
@@ -21,32 +22,30 @@
   </div>
 
   <ul class="fr-mb-5w">
-    <li><strong>Adresse :</strong> {{ evaluation.address }}</li>
-    {% if evaluation.application_number %}
-      <li>
-        Demande de permis n° {{ evaluation.application_number }}
-      </li>
-    {% endif %}
+    <li>
+      <strong>Adresse :</strong> {{ evaluation.address }}
+    </li>
+    {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
 
     <li>
-      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²<br />
-      <span class="fr-hint-text">
-        Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs
-      </span>
+      <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²
+      <br />
+      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
     </li>
 
     {% if evaluation.moulinette_params.existing_surface %}
       <li>
-        <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²<br />
+        <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²
+        <br />
         <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
       </li>
     {% endif %}
 
     {% if evaluation.moulinette_params.final_surface %}
       <li>
-        <strong>Surface impactée totale, y compris l'existant :</strong> {{ evaluation.moulinette_params.final_surface|localize }} m²<br />
-        <span class="fr-hint-text">
-          Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
+        <strong>Surface impactée totale, y compris l'existant :</strong> {{ evaluation.moulinette_params.final_surface|localize }} m²
+        <br />
+        <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
       </li>
     {% endif %}
 
@@ -58,7 +57,8 @@
 
     {% if evaluation.moulinette_params.emprise %}
       <li>
-        <strong>Emprise au sol créée par le projet : </strong>{{ evaluation.moulinette_params.emprise|localize }} m²<br />
+        <strong>Emprise au sol créée par le projet :</strong>{{ evaluation.moulinette_params.emprise|localize }} m²
+        <br />
         <span class="fr-hint-text">Projection verticale du volume de la construction nouvelle</span>
       </li>
     {% endif %}
@@ -79,7 +79,8 @@
     {% if evaluation.moulinette_params.terrain_assiette %}
       <li>
         <strong>Terrain d'assiette du projet :</strong>
-        {{ evaluation.moulinette_params.terrain_assiette|localize }} m²<br />
+        {{ evaluation.moulinette_params.terrain_assiette|localize }} m²
+        <br />
         <span class="fr-hint-text">Ensemble des parcelles cadastrales concernées par le projet</span>
       </li>
     {% endif %}
@@ -93,19 +94,22 @@
   {% if evaluation.details_html %}
     <div class="fr-callout fr-mb-5w">
       <h3 class="fr-callout__title">Commentaire de l'équipe EnvErgo</h3>
-      <div class="fr-callout__text">
-        {{ evaluation.details_html|safe }}
-      </div>
+      <div class="fr-callout__text">{{ evaluation.details_html|safe }}</div>
     </div>
   {% endif %}
 
   {% for regulation in moulinette.regulations %}
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+
   {% endfor %}
 
   <div class="fr-alert fr-alert--info fr-my-5w">
-    <p>EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.</p>
-    <p><i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.</p>
+    <p>
+      EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
+    </p>
+    <p>
+      <i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.
+    </p>
   </div>
 
 {% endblock %}
@@ -119,9 +123,16 @@
           <h2>Besoin de partager cette évaluation à un contact ?</h2>
 
           <p>
-            <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn" data-fr-opened="false" aria-controls="share-modal" data-btn="bottom">Partager cette page par email</button>
+            <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+                    data-fr-opened="false"
+                    aria-controls="share-modal"
+                    data-btn="bottom">
+              Partager cette page par email
+            </button>
           </p>
-          <p>Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.</p>
+          <p>
+            Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.
+          </p>
         </div>
       </div>
     </div>
@@ -130,6 +141,7 @@
 
 {% block extra_body %}
   {% include 'moulinette/_share_modal.html' %}
+
 {% endblock %}
 
 {% block extra_css %}

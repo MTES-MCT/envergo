@@ -1,0 +1,15 @@
+{% extends 'evaluations/admin/base_rr_email.html' %}
+
+{% block detail %}
+  <p>
+    Au vu des informations qui nous ont été transmises, il apparaît que <strong style="background-color: #F4BAA8;">ce projet est soumis à la Loi sur l'eau</strong>.
+  </p>
+
+  <p>Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.</p>
+
+  {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
+
+  <p>Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.</p>
+
+  <p>Plus de détails sur cette évaluation et sur la procédure à suivre :</p>
+{% endblock %}

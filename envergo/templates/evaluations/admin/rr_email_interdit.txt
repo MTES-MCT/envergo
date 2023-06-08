@@ -1,0 +1,10 @@
+{% extends 'evaluations/admin/base_rr_email.txt' %}
+
+{% block detail %}
+Au vu des informations qui nous ont été transmises, il apparaît que ce projet est interdit.
+
+{% if rr_mention_md %}{{ rr_mention_md }}{% endif %}
+
+Plus de détails sur cette évaluation et les structures en charge de cette réglementation :
+
+{% endblock %}

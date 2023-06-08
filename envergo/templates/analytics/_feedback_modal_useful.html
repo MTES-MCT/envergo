@@ -1,11 +1,18 @@
-<dialog aria-labelledby="feedback-form-useful-dialog-title" role="dialog" id="feedback-form-useful-dialog" class="fr-modal feedback-dialog">
+<dialog aria-labelledby="feedback-form-useful-dialog-title"
+        role="dialog"
+        id="feedback-form-useful-dialog"
+        class="fr-modal feedback-dialog">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
         <div class="fr-modal__body">
 
           <div class="fr-modal__header">
-            <button class="fr-link--close fr-link" title="Fermer le formulaire de retour" aria-controls="feedback-form-useful-dialog">Fermer</button>
+            <button class="fr-link--close fr-link"
+                    title="Fermer le formulaire de retour"
+                    aria-controls="feedback-form-useful-dialog">
+              Fermer
+            </button>
           </div>
 
           <form action="{% url 'feedback_submit' %}" method="post">
@@ -17,6 +24,7 @@
               <div class="feedback-form">
                 <p class="fr-mb-3w">Pour contribuer à améliorer ce service public et gratuit, vous pouvez nous en dire plus :</p>
                 {% include '_form_snippet.html' with form=feedback_form_useful %}
+
               </div>
             </div>
 
