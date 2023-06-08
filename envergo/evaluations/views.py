@@ -383,7 +383,11 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             confirm_request_to_admin.delay(request.id, self.request.get_host())
             post_request_to_notion.delay(request.id, self.request.get_host())
 
-        transaction.on_commit(confirm_request)
+        # Special case, hackish
+        # The product is often used for demo purpose. In that case, we don't
+        # want to send confirmation emails or any other notifications.
+        if request.contact_email != settings.TEST_EMAIL:
+            transaction.on_commit(confirm_request)
 
         log_event(
             "evaluation",
