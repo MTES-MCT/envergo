@@ -327,9 +327,7 @@ class LoiSurLEau(MoulinetteRegulation):
 
         results = [criterion.result for criterion in self.criterions]
 
-        if RESULTS.interdit in results:
-            result = RESULTS.interdit
-        elif RESULTS.soumis in results:
+        if RESULTS.soumis in results:
             result = RESULTS.soumis
         elif RESULTS.action_requise in results:
             result = RESULTS.action_requise
