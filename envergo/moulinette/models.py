@@ -13,6 +13,7 @@ from envergo.moulinette.regulations import MoulinetteCriterion
 from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
 from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
+from envergo.moulinette.regulations.sage import Sage
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -167,6 +168,7 @@ class Moulinette:
         # that is just the result of the "Loi sur l'eau" regulation.
         self.regulations = [
             LoiSurLEau(self),
+            Sage(self),
             Natura2000(self),
             EvalEnvironnementale(self),
         ]
