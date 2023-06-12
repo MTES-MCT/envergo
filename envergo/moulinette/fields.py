@@ -47,7 +47,11 @@ class CriterionChoiceField(models.Field):
         return criteria
 
     def from_db_value(self, value, expression, connection):
-        return self.to_python(value)
+        try:
+            val = self.to_python(value)
+        except ValidationError:
+            val = None
+        return val
 
     def to_python(self, value):
         """Converts the stored string to a python type."""
