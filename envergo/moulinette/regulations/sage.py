@@ -360,7 +360,9 @@ class Sage(MoulinetteRegulation):
             result = RESULTS.interdit
         elif RESULTS.action_requise in results:
             result = RESULTS.action_requise
-        else:
+        elif RESULTS.non_soumis in results:
             result = RESULTS.non_soumis
+        else:
+            result = RESULTS.non_disponible
 
         return result
