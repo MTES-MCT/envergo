@@ -14,6 +14,7 @@ from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
 from envergo.moulinette.regulations.loisurleau import LoiSurLEau
 from envergo.moulinette.regulations.natura2000 import Natura2000
 from envergo.moulinette.regulations.sage import Sage
+from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -430,3 +431,28 @@ class FakeMoulinette(Moulinette):
 
     def get_department(self):
         return self.catalog["department"]
+
+
+class Contact(models.Model):
+    """Contact data for a perimeter."""
+
+    perimeter = models.OneToOneField(
+        Perimeter,
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="contact",
+    )
+    name = models.CharField(_("Name"), max_length=256)
+    url = models.URLField(_("URL"), blank=True)
+    address_md = models.TextField(_("Address"))
+    address_html = models.TextField(_("Address HTML"), blank=True)
+
+    class Meta:
+        verbose_name = _("Contact")
+        verbose_name_plural = _("Contacts")
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.address_html = markdown_to_html(self.address_md)

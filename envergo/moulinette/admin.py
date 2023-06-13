@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 
 from envergo.geodata.models import Map
-from envergo.moulinette.models import MoulinetteConfig, Perimeter
+from envergo.moulinette.models import Contact, MoulinetteConfig, Perimeter
 from envergo.moulinette.regulations import MoulinetteCriterion
 
 
@@ -51,3 +51,9 @@ class MoulinetteConfigForm(forms.ModelForm):
 class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated"]
     form = MoulinetteConfigForm
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ["name", "perimeter", "url"]
+    fields = ["perimeter", "name", "url", "address_md"]
