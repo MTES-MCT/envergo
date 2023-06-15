@@ -33,7 +33,6 @@ class CeleryDebugStream:
         self.expected_zones = expected_zones
 
     def write(self, msg):
-
         sys.stdout.write(msg)
 
         # Find the number of processed results from progress message
@@ -92,7 +91,6 @@ def count_features(shapefile):
 
 
 def process_shapefile(map, file, task=None):
-
     logger.info("Creating temporary directory")
     with extract_shapefile(file) as shapefile:
         if task:

@@ -68,13 +68,14 @@ class MapAdmin(admin.ModelAdmin):
         "col_data_type",
         "col_departments",
         "col_display_for_user",
-        "col_expected_zones",
+        "col_zones",
         "col_import_status",
     ]
     readonly_fields = [
         "created_at",
         "zone_count",
         "expected_zones",
+        "imported_zones",
         "import_status",
         "task_status",
         "import_error_msg",
@@ -133,11 +134,18 @@ class MapAdmin(admin.ModelAdmin):
         return mark_safe(html)
 
     @admin.display(
-        ordering="expected_zones",
-        description=mark_safe("<abbr title='Nb de zones attendues'>Zones</abbr>"),
+        ordering="imported_zones",
+        description=mark_safe(
+            "<abbr title='Nb de zones importées / attendues'>Zones</abbr>"
+        ),
     )
-    def col_expected_zones(self, obj):
-        return obj.expected_zones
+    def col_zones(self, obj):
+        if obj.imported_zones is None:
+            imported = "ND"
+        else:
+            imported = obj.imported_zones
+
+        return f'{imported} / {obj.expected_zones or ""}'
 
     @admin.action(description=_("Extract and import a shapefile"))
     def process(self, request, queryset):
