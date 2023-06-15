@@ -254,13 +254,18 @@ class Moulinette:
             .annotate(geometry=F("map__zones__geometry"))
             .annotate(distance=Distance("map__zones__geometry", coords))
             .order_by("distance", "map__name")
-            .select_related("map")
+            .select_related("map", "contact")
         )
         return perimeters
 
     def get_criterions(self):
-        criterions = set([perimeter.criterion for perimeter in self.perimeters])
-        return criterions
+        criterions = []
+        for perimeter in self.perimeters:
+            criterion = perimeter.criterion
+            if hasattr(perimeter, "contact"):
+                criterion.contact = perimeter.contact
+            criterions.append(criterion)
+        return set(criterions)
 
     def get_zones(self, coords, radius=200):
         """Return the Zone objects containing the queried coordinates."""
@@ -456,3 +461,4 @@ class Contact(models.Model):
 
     def save(self, *args, **kwargs):
         self.address_html = markdown_to_html(self.address_md)
+        super().save(*args, **kwargs)
