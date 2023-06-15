@@ -31,4 +31,6 @@ while [ $i -lt $nb_steps ]; do
     i=$((i+1))
 done
 
+python manage.py update_zone_counts
+
 echo ">>> Leaving the copy polygons script"
