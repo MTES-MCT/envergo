@@ -347,7 +347,7 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
 
 class Sage(MoulinetteRegulation):
     slug = "sage"
-    title = "Réglement de SAGE"
+    title = "Règlement de SAGE"
     criterion_classes = [ZoneHumideVieJaunay85, ZoneHumideGMRE56]
 
     @cached_property
