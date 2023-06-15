@@ -82,7 +82,7 @@ class MapAdmin(admin.ModelAdmin):
     actions = ["process"]
     exclude = ["task_id"]
     search_fields = ["name", "display_name"]
-    list_filter = ["map_type", "data_type", DepartmentsListFilter]
+    list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
     enable_nav_sidebar = False
 
     def save_model(self, request, obj, form, change):
