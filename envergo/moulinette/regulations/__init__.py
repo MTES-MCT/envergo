@@ -148,7 +148,6 @@ class Map:
     zoom: int = 16  # the map zoom to pass to leaflet
 
     def to_json(self):
-
         # Don't display full polygons
         EPSG_WGS84 = 4326
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)

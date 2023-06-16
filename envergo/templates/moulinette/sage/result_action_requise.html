@@ -1,0 +1,47 @@
+<p>Le projet se situe dans un périmètre de SAGE (Schéma d’Aménagement et de Gestion des Eaux).</p>
+
+<p>Il doit donc respecter le règlement de ce SAGE.</p>
+
+<p>
+  En l'occurence, le projet est <strong>susceptible d'être interdit</strong>.
+</p>
+
+<p>Une action du porteur de projet est requise.</p>
+
+<h3>Marche à suivre</h3>
+
+<p>Pour être certain que son projet n’est pas interdit, le porteur doit s’assurer que celui-ci :</p>
+
+<ul>
+  {% for action in regulation.required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
+</ul>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+  <p>
+    Le porteur de projet doit mener des études sur les points cités précédemment, afin d'évaluer si le projet est autorisé.
+  </p>
+
+  <p>Ainsi, il convient de :</p>
+
+  <p>
+    <strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale et lui communiquer ces éléments.</strong>
+  </p>
+
+  <p>
+    Les études pourront révéler que le projet est interdit en l’état, qui devra donc être modifié pour respecter le règlement de SAGE.
+  </p>
+
+  <p>
+    <strong>2/ Se rapprocher de la structure en charge de l’animation du SAGE</strong>
+  </p>
+
+  <ul>
+    {% for contact in regulation.discussion_contacts %}<li>{{ contact|safe }}</li>{% endfor %}
+  </ul>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+</div>

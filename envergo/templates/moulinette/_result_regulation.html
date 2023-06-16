@@ -5,6 +5,8 @@
     <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
   </h2>
 
+  {% perimeter_contact_string regulation %}
+
   <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
 
   {% if regulation.map %}
@@ -13,7 +15,7 @@
   {% endif %}
 
   <div class="criteria">
-    <h3>Détail des rubriques</h3>
+    {% if regulation.criterions %}<h3>Détail des rubriques</h3>{% endif %}
 
     {% for criterion in regulation.criterions %}
       {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
