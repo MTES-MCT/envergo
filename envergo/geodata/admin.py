@@ -79,6 +79,7 @@ class MapAdmin(admin.ModelAdmin):
         "import_status",
         "task_status",
         "import_error_msg",
+        "geometry",
     ]
     actions = ["process"]
     exclude = ["task_id"]

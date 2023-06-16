@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 import requests
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db.models import QuerySet
@@ -191,3 +191,18 @@ def merge_geometries(polygons):
             pass
 
     return merged
+
+
+def preview_map(map):
+    merged = GEOSGeometry("MULTIPOLYGON EMPTY", srid=4326)
+    zones = map.zones.all()
+    for zone in zones:
+        try:
+            merged = merged.union(zone.geometry.simplify(preserve_topology=True))
+        except:  # noqa
+            pass
+
+    simplified = merged.simplify(preserve_topology=True)
+    if isinstance(simplified, Polygon):
+        simplified = MultiPolygon(simplified)
+    return simplified
