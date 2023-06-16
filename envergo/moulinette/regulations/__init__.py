@@ -32,7 +32,7 @@ class MoulinetteRegulation:
         self.criterions = [
             Criterion(moulinette)
             for Criterion in self.criterion_classes
-            if Criterion in moulinette.criterions
+            if Criterion in moulinette.criterions_classes
         ]
 
     def get_catalog_data(self):
