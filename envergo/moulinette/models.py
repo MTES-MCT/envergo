@@ -158,7 +158,7 @@ class Moulinette:
             self.catalog["config"] = self.department.moulinette_config
 
         self.perimeters = self.get_perimeters()
-        self.criterions = self.get_criterions()
+        self.criterions_classes = self.get_criterions()
 
         # This is a clear case of circular references, since the Moulinette
         # holds references to the regulations it's computing, but regulations and
