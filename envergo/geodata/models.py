@@ -180,7 +180,9 @@ class Map(models.Model):
             choices=DEPARTMENT_CHOICES,
         ),
     )
-
+    geometry = gis_models.MultiPolygonField(
+        _("Simplified geometry"), geography=True, null=True
+    )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     expected_zones = models.IntegerField(_("Expected zones"), default=0)
     imported_zones = models.IntegerField(_("Imported zones"), null=True, blank=True)
