@@ -362,6 +362,8 @@ class Sage(MoulinetteRegulation):
             result = RESULTS.action_requise
         elif RESULTS.non_soumis in results:
             result = RESULTS.non_soumis
+        elif RESULTS.non_concerne in results:
+            result = RESULTS.non_concerne
         else:
             result = RESULTS.non_disponible
 
