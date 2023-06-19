@@ -102,7 +102,7 @@
       </h3>
 
       <div class="fr-collapse" id="accordion-savoir_si_mon_projet_est_soumis">
-      <p>S’il s’agit d’un projet d’aménagement ou de construction, <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si le projet est soumis à Natura 2000 — ainsi qu’aux autres réglementations environnementales (Loi sur l’eau, évaluation environnementale…).
+      <p>S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si le projet est soumis à Natura 2000 — ainsi qu’aux autres réglementations environnementales (Loi sur l’eau, évaluation environnementale…).
         C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
         Il fonctionne pour l'instant en Loire-Atlantique, dans le Morbihan et en Vendée, et sera prochainement étendu à un territoire plus large.
       </p>
@@ -178,7 +178,7 @@
           En effet, des impacts sur un site protégé peuvent être induits par le projet (bruit, effluents, activité humaine…), même s’il n’est pas strictement dans le périmètre.
         </p>
 
-        <p>Le simulateur EnvErgo, pour déterminer si un projet de construction ou d’aménagement est soumis à Natura 2000,
+        <p>Le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a>, pour déterminer si un projet de construction ou d’aménagement est soumis à Natura 2000,
           prend en compte les listes locales et la doctrine DDT(M) de chaque département.
         </p>
       </div>
@@ -193,9 +193,26 @@
       </h3>
 
       <div class="fr-collapse" id="accordion-que_faire">
-        <p>
-          Bla bla bla
+        <p class="fr-highlight">
+          <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
+          <strong>
+            Vous devez obligatoirement déposer une évaluation des incidences Natura 2000,
+            en plus de la demande de permis de construire ou d’aménager.
+          </strong>
         </p>
+        <p>
+          L’administration à qui déposer le dossier d’EIN dépend des autres procédures auxquelles est soumis le dossier :
+        </p>
+        <ul>
+        <li>Si le projet est également soumis à autre une procédure administrative (par exemple Loi sur l’eau, examen au cas par cas, ou au titre des installations classées), l’EIN est attachée au dossier déposé à la DDT(M) ;
+        </li>
+        <li>sinon l’EIN est jointe à la demande de permis de construire ou d’aménager déposée en mairie.</li>
+        </ul>
+
+        <p>Le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> permet de déterminer à la fois si votre projet est soumis à EIN,
+          et la procédure associée pour déposer le dossier.
+        </p>
+        
       </div>
     </section>
 
