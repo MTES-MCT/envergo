@@ -8,7 +8,11 @@ ALTI_PARENT_FOLDER = str(Path(__file__).parent)
 
 
 def benchmark_parameters(
-    params_to_benchmark, comparisons_to_do, places_to_evaluate, generate_cartos=False
+    params_to_benchmark,
+    comparisons_to_do,
+    places_to_evaluate,
+    project_surface=2000,
+    generate_cartos=False,
 ):
     def get_name(place, params: bassinVersantParameters):
         bottom_left = carto.get_bottom_left_corner(place[1])
@@ -75,8 +79,8 @@ def benchmark_parameters(
             compare_cartos_v2(
                 test_dir + get_name(place, params2) + ".asc",
                 test_dir + get_name(place, params1) + ".asc",
-                5000,
-                8000,
+                7000 - project_surface,
+                10000 - project_surface,
                 stretch=(1, 1),
                 save_dir=save_dir,
             )
@@ -157,4 +161,8 @@ places_to_evaluate = [
     ],
 ]
 
-benchmark_parameters(params_to_benchmark, comparisons_to_do, places_to_evaluate)
+project_surface = 2000
+
+benchmark_parameters(
+    params_to_benchmark, comparisons_to_do, places_to_evaluate, project_surface
+)
