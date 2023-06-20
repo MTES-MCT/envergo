@@ -76,11 +76,11 @@ def plot_alti_carto(
 
     if colormap == "bassin_versant":
         cmap = mpl.colors.ListedColormap(["white", "orange", "red"])
-        my_cmap = cmap(np.arange(cmap.n))
+        my_cmap = cmap(np.arange(cmap.N))
         my_cmap[:, -1] = [0, 1, 0.7]
         my_cmap = mpl.colors.ListedColormap(my_cmap)
         bounds = [0, 3000, 8000, 80000]
-        norm = mpl.colors.boundary_norm(bounds, cmap.n)
+        norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(h, alpha=alpha, cmap=my_cmap, norm=norm)
         cbar = plt.colorbar()
         cbar.ax.set_ylabel("surface de bassin versant en m2", rotation=270)
@@ -108,11 +108,11 @@ def plot_alti_carto(
                 "black",
             ]
         )
-        my_cmap = cmap(np.arange(cmap.n))
+        my_cmap = cmap(np.arange(cmap.N))
         # my_cmap[:,-1] = [0,1,0.7]
         my_cmap = mpl.colors.ListedColormap(my_cmap)
         bounds = [-9.5, -8, -2, -0.5, 0.5, 2, 9.5, 10]
-        norm = mpl.colors.boundary_norm(bounds, cmap.n)
+        norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(h, alpha=alpha, cmap=my_cmap, norm=norm)
         cbar = plt.colorbar()
 
@@ -300,7 +300,7 @@ def compare_cartos_v2(
         file + ".asc",
         title="différence absolue :\n" + car_name1 + "\n et \n" + car_name2,
         alpha=1,
-        colormap="rd_bu",
+        colormap="RdBu",
         vmax=3000,
         vmin=-3000,
     )
@@ -314,7 +314,7 @@ def compare_cartos_v2(
         file + ".asc",
         title="différence pourcentage :\n" + car_name1 + "\n et \n" + car_name2,
         alpha=1,
-        colormap="rd_bu",
+        colormap="RdBu",
         vmax=0.50,
         vmin=-0.50,
     )
@@ -343,7 +343,7 @@ def compare_cartos_v2(
         + "\n et \n"
         + car_name2,
         alpha=1,
-        colormap="rd_bu",
+        colormap="RdBu",
         vmax=3000,
         vmin=-3000,
     )
