@@ -20,6 +20,8 @@ from envergo.geodata.models import Zone
 
 logger = logging.getLogger(__name__)
 
+EPSG_WGS84 = 4326
+
 
 class CeleryDebugStream:
     """A sys.stdout proxy that also updates the celery task states.
@@ -50,6 +52,8 @@ class CeleryDebugStream:
 
 
 class CustomMapping(LayerMapping):
+    """A custom LayerMapping that allows to pass extra arguments to the generated model."""
+
     def __init__(self, *args, **kwargs):
         self.extra_kwargs = kwargs.pop("extra_kwargs")
         super().__init__(*args, **kwargs)
@@ -127,8 +131,6 @@ def to_geojson(obj, geometry_field="geometry"):
     make sure to make the conversion if geometries are stored in a different
     srid.
     """
-
-    EPSG_WGS84 = 4326
 
     if isinstance(obj, (QuerySet, list)):
         geojson = serialize("geojson", obj, geometry_field=geometry_field)
@@ -208,7 +210,7 @@ def simplify_map(map):
         )
         row = cursor.fetchone()
 
-    polygon = GEOSGeometry(row[0], srid=4326)
+    polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
     simplified = polygon.simplify(preserve_topology=True)
     if isinstance(simplified, Polygon):
         simplified = MultiPolygon(simplified)
