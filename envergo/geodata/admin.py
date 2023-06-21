@@ -60,7 +60,7 @@ SHORT_MAP_TYPES = {
 
 
 @admin.register(Map)
-class MapAdmin(admin.ModelAdmin):
+class MapAdmin(gis_admin.GISModelAdmin):
     form = MapForm
     list_display = [
         "name",
