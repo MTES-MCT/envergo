@@ -4,7 +4,7 @@ from django.db import transaction
 
 from config.celery_app import app
 from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.utils import preview_map, process_shapefile
+from envergo.geodata.utils import process_shapefile, simplify_map
 
 logger = logging.getLogger(__name__)
 
@@ -37,5 +37,5 @@ def process_shapefile_map(task, map_id):
 
     map.task_id = None
     map.imported_zones = nb_imported_zones
-    map.geometry = preview_map(map)
+    map.geometry = simplify_map(map)
     map.save()
