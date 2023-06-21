@@ -9,7 +9,7 @@ from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Map, Parcel, Zone
-from envergo.geodata.tasks import process_shapefile_map
+from envergo.geodata.tasks import generate_map_preview, process_shapefile_map
 from envergo.geodata.utils import count_features, extract_shapefile
 
 
@@ -80,7 +80,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "task_status",
         "import_error_msg",
     ]
-    actions = ["process"]
+    actions = ["process", "generate_preview"]
     exclude = ["task_id"]
     search_fields = ["name", "display_name"]
     list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
@@ -159,6 +159,18 @@ class MapAdmin(gis_admin.GISModelAdmin):
         msg = _(
             "Your shapefile will be processed soon. It might take up to a few minutes."
         )
+        self.message_user(request, msg, level=messages.INFO)
+
+    @admin.action(description=_("Generate the simplified preview geometry"))
+    def generate_preview(self, request, queryset):
+        if queryset.count() > 1:
+            error = _("Please only select one map for this action.")
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        map = queryset[0]
+        generate_map_preview.delay(map.id)
+        msg = _("The map preview will be updated soon.")
         self.message_user(request, msg, level=messages.INFO)
 
     @admin.display(description=_("Extracted zones"))
