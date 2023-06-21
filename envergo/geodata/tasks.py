@@ -45,3 +45,12 @@ def process_shapefile_map(task, map_id):
     map.task_id = None
     map.imported_zones = nb_imported_zones
     map.save()
+
+
+@app.task(bind=True)
+def generate_map_preview(task, map_id):
+    logger.info(f"Starting preview generation on map {map_id}")
+
+    map = Map.objects.get(pk=map_id)
+    map.geometry = simplify_map(map)
+    map.save()
