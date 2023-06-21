@@ -197,12 +197,36 @@ def merge_geometries(polygons):
 
 
 def simplify_map(map):
-    """Generates a simplified geometry for the entire map."""
+    """Generates a simplified geometry for the entire map.
+
+    This methods takes a map and generates a single polygon that is the union
+    of all the polygons in the map.
+
+    We also simplify the polygon because this is for display purpose only.
+
+    We use native postgis methods those operations, because it's way faster.
+
+    As for simplification, we don't preserve topology (ST_Simplify instead of
+    ST_SimplifyPreserveTopology) because we want to be able to drop small
+    holes in the polygon.
+
+    Because of that, we also have to call ST_MakeValid to avoid returning invalid
+    polygons."""
 
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT ST_AsText(ST_Union(z.geometry::geometry)) AS hull
+            SELECT
+              ST_AsText(
+                ST_MakeValid(
+                  ST_Simplify(
+                    ST_Union(z.geometry::geometry),
+                    0.0001
+                  ),
+                  'method=structure keepcollapsed=false'
+                )
+              )
+              AS polygon
             FROM geodata_zone as z
             WHERE z.map_id = %s
             """,
@@ -211,7 +235,6 @@ def simplify_map(map):
         row = cursor.fetchone()
 
     polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
-    simplified = polygon.simplify(preserve_topology=True)
-    if isinstance(simplified, Polygon):
-        simplified = MultiPolygon(simplified)
-    return simplified
+    if isinstance(polygon, Polygon):
+        polygon = MultiPolygon(polygon)
+    return polygon
