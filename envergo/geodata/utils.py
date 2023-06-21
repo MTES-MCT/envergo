@@ -12,6 +12,7 @@ from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
+from django.db import connection
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
@@ -193,16 +194,22 @@ def merge_geometries(polygons):
     return merged
 
 
-def preview_map(map):
-    merged = GEOSGeometry("MULTIPOLYGON EMPTY", srid=4326)
-    zones = map.zones.all()
-    for zone in zones:
-        try:
-            merged = merged.union(zone.geometry.simplify(preserve_topology=True))
-        except:  # noqa
-            pass
+def simplify_map(map):
+    """Generates a simplified geometry for the entire map."""
 
-    simplified = merged.simplify(preserve_topology=True)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT ST_AsText(ST_Union(z.geometry::geometry)) AS hull
+            FROM geodata_zone as z
+            WHERE z.map_id = %s
+            """,
+            [map.id],
+        )
+        row = cursor.fetchone()
+
+    polygon = GEOSGeometry(row[0], srid=4326)
+    simplified = polygon.simplify(preserve_topology=True)
     if isinstance(simplified, Polygon):
         simplified = MultiPolygon(simplified)
     return simplified

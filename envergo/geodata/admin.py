@@ -79,7 +79,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "import_status",
         "task_status",
         "import_error_msg",
-        "geometry",
     ]
     actions = ["process"]
     exclude = ["task_id"]
