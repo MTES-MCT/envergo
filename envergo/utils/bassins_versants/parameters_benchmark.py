@@ -30,7 +30,7 @@ def benchmark_parameters(
     if benchmark_folder is None:
         now = datetime.now()
         benchmark_folder = f"{ALTI_PARENT_FOLDER}/output/benchmarks/{now.strftime('%Y_%m_%d_%H_%M_%S')}"
-        os.mkdirs(f"{benchmark_folder}/cartos")
+        os.makedirs(f"{benchmark_folder}/cartos")
 
         for place in places_to_evaluate:
             for params in params_to_benchmark:
@@ -50,7 +50,7 @@ def benchmark_parameters(
     for place in places_to_evaluate:
         for params1, params2 in comparisons_to_do:
             print("evaluating : ", place, params1, params2)
-            os.mkdirs(f"{benchmark_folder}/graphs")
+            os.makedirs(f"{benchmark_folder}/graphs")
             save_dir = (
                 f"{benchmark_folder}/graphs/{place[0]}_"
                 + f"{str(carto.get_bottom_left_corner(place[1])[0])}_"
@@ -79,42 +79,42 @@ p1_12 = bassinVersantParameters(
     inner_radius=25,
     radii=rayons1,
     quadrants_nb=12,
-    slope=0.025,
+    slope=0.05,
 )
 p1_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons1,
     quadrants_nb=16,
-    slope=0.025,
+    slope=0.05,
 )
 p0_12 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons0,
     quadrants_nb=12,
-    slope=0.025,
+    slope=0.05,
 )
 p0_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons0,
     quadrants_nb=16,
-    slope=0.025,
+    slope=0.05,
 )
 p00_12 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons00,
     quadrants_nb=12,
-    slope=0.025,
+    slope=0.05,
 )
 p00_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons00,
     quadrants_nb=16,
-    slope=0.025,
+    slope=0.05,
 )
 
 params_to_benchmark = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
@@ -144,12 +144,9 @@ places_to_evaluate = [
     ],
 ]
 
-project_surface = 2000
-
 benchmark_parameters(
     params_to_benchmark,
     comparisons_to_do,
     places_to_evaluate,
-    project_surface,
-    generate_cartos=True,
+    project_surface=2000,
 )
