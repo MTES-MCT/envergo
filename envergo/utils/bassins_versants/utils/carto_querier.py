@@ -49,7 +49,8 @@ class cartoQuerier:
 
         # find the neigbor tiles and add them to the big_carto
         for file in os.listdir(carto_dir):
-            current_info = carto.get_carto_info(carto_dir + "/" + file)
+            file_name = f"{carto_dir}/{file}"
+            current_info = carto.get_carto_info(file_name)
             x_coord, y_coord = get_carto_coords(current_info)
 
             # checking if we are in the neighborhood of the middle tile, and adding the carto to the big tile if so.
@@ -60,7 +61,7 @@ class cartoQuerier:
                 x_max = (x_coord + 1) * self.center_tile_info["ncols"]
 
                 self.current_big_carto[y_min:y_max, x_min:x_max] = carto.load_carto(
-                    carto_dir + "/" + file
+                    file_name
                 )
 
     def get_mean_alti(self, points):

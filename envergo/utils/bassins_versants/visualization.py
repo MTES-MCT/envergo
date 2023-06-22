@@ -182,40 +182,26 @@ def compare_cartos(carto1, carto2, stretch=(1, 1)):
     car_name1 = carto1.split("/")[-1].split(".")[0]
     car_name2 = carto2.split("/")[-1].split(".")[0]
     diff = c1 - c2
-    print("\n ====== comparaison : " + car_name1 + " et  " + car_name2 + " ======")
-    print("stats c1 : moyenne : ", np.mean(c1), "ecart type : ", np.std(c1))
-    print("stats c2 : moyenne : ", np.mean(c2), "ecart type : ", np.std(c2))
-    print("abs diff moyenne :", np.mean(np.abs(diff)), "\n")
+    print(f"\n ====== comparaison : {car_name1} et  {car_name2} ======")
+    print(f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}")
+    print(f"stats c2 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}")
+    print(f"abs diff moyenne : {np.mean(np.abs(diff))}\n")
+    ouput_name = (f"{ALTI_PARENT_FOLDER}/output/diff/diff_{car_name1}_{car_name2}",)
     save_array_to_carto(
         diff,
-        ALTI_PARENT_FOLDER
-        + "/output/diff/diff_"
-        + car_name1
-        + "_"
-        + car_name2
-        + ".asc",
+        f"{ouput_name}.asc",
         get_carto_info(carto1),
     )
     plot_alti_carto(
-        ALTI_PARENT_FOLDER
-        + "/output/diff/diff_"
-        + car_name1
-        + "_"
-        + car_name2
-        + ".asc",
-        title="pourcentage de différence : " + car_name1 + " et  " + car_name2,
+        f"{ouput_name}.asc",
+        title=f"pourcentage de différence : {car_name1} et  {car_name2}",
         alpha=1,
         colormap="cool",
         vmin=-10000,
         vmax=10000,
     )
     plt.savefig(
-        ALTI_PARENT_FOLDER
-        + "/output/diff/diff_"
-        + car_name1
-        + "_"
-        + car_name2
-        + ".png",
+        f"{ouput_name}.png",
         dpi=500,
     )
 
@@ -249,105 +235,78 @@ def compare_cartos_v2(
     diff = c1 - c2
     changes = np.where(diff_category == 0, 0, diff)
     if save_dir is None:
-        save_dir = (
-            ALTI_PARENT_FOLDER
-            + "/output/decision/"
-            + car_name1
-            + "_"
-            + car_name2
-            + "_proj_"
-            + str(10000 - barre2)
-        )
+        save_dir = f"{ALTI_PARENT_FOLDER}/output/decision/{car_name1}_{car_name2}_proj_{10000 - barre2}"
     if not Path(save_dir).exists():
         os.makedirs(save_dir)
 
     text_result = ""
-    text_result += (
-        "\n ====== comparaison : " + car_name1 + " et  " + car_name2 + " ======" + "\n"
-    )
-    text_result += (
-        "stats c1 : moyenne : "
-        + str(np.mean(c1))
-        + "ecart type : "
-        + str(np.std(c1))
-        + "\n"
-    )
-    text_result += (
-        "stats c2 : moyenne : "
-        + str(np.mean(c2))
-        + "ecart type : "
-        + str(np.std(c2))
-        + "\n"
-    )
-    text_result += "abs diff moyenne :" + str(np.mean(np.abs(diff))) + "\n"
-    text_result += (
-        "abs diff category moyenne :"
-        + str(np.mean(np.abs(diff_category)))
-        + "\n"
-        + "\n"
-    )
+    text_result += f"\n ====== comparaison : {car_name1} et {car_name2} ======\n"
+    text_result += f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}\n"
+
+    text_result += f"stats c1 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}\n"
+
+    text_result += f"abs diff moyenne : {np.mean(np.abs(diff))}\n"
+    text_result += f"abs diff category moyenne : {np.mean(np.abs(diff_category))}\n\n"
 
     if interactive:
         print(text_result)
-    with open(save_dir + "/" + "stats_diff.txt", "w") as f:
+    with open(f"{save_dir}/stats_diff.txt", "w") as f:
         f.write(text_result)
 
     plt.clf()
     # plot the normal diff
-    file = save_dir + "/" + "diff"
-    save_array_to_carto(diff, file + ".asc", get_carto_info(carto1))
+    file = f"{save_dir}/diff"
+    save_array_to_carto(diff, f"{file}.asc", get_carto_info(carto1))
     plot_alti_carto(
-        file + ".asc",
-        title="différence absolue :\n" + car_name1 + "\n et \n" + car_name2,
+        f"{file}.asc",
+        title=f"différence absolue :\n{car_name1}\n et \n{car_name2}",
         alpha=1,
         colormap="RdBu",
         vmax=3000,
         vmin=-3000,
     )
-    plt.savefig(file + ".png", dpi=500, bbox_inches="tight")
+    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
     plt.clf()
 
     # plot the percentage diff
-    file = save_dir + "/" + "diff_percentage"
-    save_array_to_carto(diff / c1, file + ".asc", get_carto_info(carto1))
+    file = f"{save_dir}/diff_percentage"
+    save_array_to_carto(diff / c1, f"{file}.asc", get_carto_info(carto1))
     plot_alti_carto(
-        file + ".asc",
-        title="différence pourcentage :\n" + car_name1 + "\n et \n" + car_name2,
+        f"{file}.asc",
+        title=f"différence pourcentage :\n{car_name1}\n et \n{car_name2}",
         alpha=1,
         colormap="RdBu",
         vmax=0.50,
         vmin=-0.50,
     )
-    plt.savefig(file + ".png", dpi=500, bbox_inches="tight")
+    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
     plt.clf()
 
     # plot the decision diff
-    file = save_dir + "/" + "decision_diff"
-    save_array_to_carto(diff_category, file + ".asc", get_carto_info(carto1))
+    file = f"{save_dir}/decision_diff"
+    save_array_to_carto(diff_category, f"{file}.asc", get_carto_info(carto1))
     plot_alti_carto(
-        file + ".asc",
-        title="différence de décision :\n" + car_name1 + "\n et \n" + car_name2,
+        f"{file}.asc",
+        title=f"différence de décision :\n{car_name1} \n et \n{car_name2}",
         alpha=1,
         colormap="decision",
     )
-    plt.savefig(file + ".png", dpi=500, bbox_inches="tight")
+    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
     plt.clf()
 
     # plot the diff when the decision was changed
-    file = save_dir + "/" + "decision__changes_diff"
-    save_array_to_carto(changes, file + ".asc", get_carto_info(carto1))
+    file = f"{save_dir}/decision__changes_diff"
+    save_array_to_carto(changes, f"{file}.asc", get_carto_info(carto1))
     plot_alti_carto(
-        file + ".asc",
+        f"{file}.asc",
         title="valeur de la différence menant à un changement de catégorie\npour: "
-        + car_name1
-        + "\n et \n"
-        + car_name2,
+        + f"{car_name1}\n et \n{car_name2}",
         alpha=1,
         colormap="RdBu",
         vmax=3000,
         vmin=-3000,
     )
-    plt.savefig(file + ".png", dpi=500, bbox_inches="tight")
+    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
     plt.clf()
 
     unique_values, value_counts = np.unique(diff_category, return_counts=True)
@@ -358,13 +317,9 @@ def compare_cartos_v2(
     plt.bar(non_zero_values, non_zero_counts)
     plt.title(
         "répartition des changements de catégorie\npour: "
-        + car_name1
-        + "\n et \n"
-        + car_name2
+        + f"{car_name1}\n et \n{car_name2}"
     )
-    plt.savefig(
-        save_dir + "/" + "decision__changes_rep" + ".png", dpi=500, bbox_inches="tight"
-    )
+    plt.savefig(f"{save_dir}/decision__changes_rep.png", dpi=500, bbox_inches="tight")
     plt.clf()
 
     if interactive:
@@ -374,18 +329,18 @@ def compare_cartos_v2(
 def run_tests():
     compare_cartos_go = False
     if compare_cartos_go:
-        test_dir = ALTI_PARENT_FOLDER + "/output/test/"
+        test_dir = f"{ALTI_PARENT_FOLDER}output/test/"
 
         compare_cartos_v2(
-            test_dir + "test_20_20_8.asc",
-            test_dir + "test_20_5_12.asc",
+            f"{test_dir}test_20_20_8.asc",
+            f"{test_dir}test_20_5_12.asc",
             5000,
             8000,
             stretch=(1, 1),
         )
         compare_cartos_v2(
-            test_dir + "test_20_10_12.asc",
-            test_dir + "test_20_5_12.asc",
+            f"{test_dir}test_20_10_12.asc",
+            f"{test_dir}test_20_5_12.asc",
             5000,
             8000,
             stretch=(1, 1),
@@ -403,25 +358,23 @@ def run_tests():
         )
         test_carto_creator(
             params,
-            current_tile=ALTI_PARENT_FOLDER
-            + "/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
+            current_tile=f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
             output_carto_precision=20,
-            ouptut_file=ALTI_PARENT_FOLDER + "/output/test/" + name + ".asc",
-            ouptut_screen_shot=ALTI_PARENT_FOLDER + "/output/test/" + name + ".png",
-            input_folder=ALTI_PARENT_FOLDER + "/alti_data",
+            ouptut_file=f"{ALTI_PARENT_FOLDER}/output/test/{name}.asc",
+            ouptut_screen_shot=f"{ALTI_PARENT_FOLDER}/output/test/{name}.png",
+            input_folder=f"{ALTI_PARENT_FOLDER}/alti_data",
             show=True,
         )
 
     test_big_carto = False
     if test_big_carto:
         cqot = cartoQuerier(
-            ALTI_PARENT_FOLDER + "/alti_data",
-            ALTI_PARENT_FOLDER
-            + "/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
+            f"{ALTI_PARENT_FOLDER}/alti_data",
+            f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
         )
         save_array_to_carto(
             cqot.current_big_carto,
-            ALTI_PARENT_FOLDER + "/output/big_carto.asc",
+            f"{ALTI_PARENT_FOLDER}/output/big_carto.asc",
             {
                 "ncols": 3000,
                 "nrows": 3000,
@@ -431,13 +384,13 @@ def run_tests():
                 "nodata_value": -99999.00,
             },
         )
-        plot_alti_carto(ALTI_PARENT_FOLDER + "/output/big_carto.asc", "big_carto")
+        plot_alti_carto(f"{ALTI_PARENT_FOLDER}/output/big_carto.asc", "big_carto")
         plt.show()
 
     create_bulk_carto = False
     if create_bulk_carto:
         bulk_carto_creation(
-            ALTI_PARENT_FOLDER + "/alti_data", ALTI_PARENT_FOLDER + "/output/bulk_bv"
+            f"{ALTI_PARENT_FOLDER}alti_data", f"{ALTI_PARENT_FOLDER}output/bulk_bv"
         )
 
 

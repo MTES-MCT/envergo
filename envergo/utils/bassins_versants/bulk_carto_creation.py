@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 
 
 def bulk_carto_creation(input_folder, output_folder, output_carto_precision=20):
-    print("\nRunning Bulk Carto Creator in " + input_folder + " ...\n")
+    print(f"\nRunning Bulk Carto Creator in {input_folder}...\n")
 
     # region parameters
     params = bassinVersantParameters(
@@ -28,19 +28,19 @@ def bulk_carto_creation(input_folder, output_folder, output_carto_precision=20):
         "progression : first bar is the number of cartos, second is the current carto creation"
     )
     for file in tqdm(os.listdir(input_folder)):
-        info = get_carto_info(input_folder + "/" + file)
+        info = get_carto_info(f"{input_folder}/{file}")
         bottom_left = (info["xllcorner"], info["yllcorner"])
         ouptut_file = (
-            output_folder
-            + "/envergo_basssin_versant_fxx_"
-            + "{:04d}".format(round(bottom_left[0] / 1000))
-            + "_"
-            + "{:04d}".format(round(bottom_left[1] / 1000))
-            + "_mnt_lamb93.asc"
+            "{}/envergo_basssin_versant_fxx_{:04d}_{:04d}_mnt_lamb93.asc".format(
+                output_folder,
+                round(bottom_left[0] / 1000),
+                round(bottom_left[1] / 1000),
+            )
         )
+
         create_carto(
             params,
-            input_folder + "/" + file,
+            f"{input_folder}/{file}",
             output_carto_precision,
             ouptut_file,
             input_folder,
