@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-15 09:12+0000\n"
+"POT-Creation-Date: 2023-06-22 14:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,8 +93,8 @@ msgid "Metadata"
 msgstr "Données Geo"
 
 #: envergo/analytics/models.py:20 envergo/evaluations/models.py:153
-#: envergo/evaluations/models.py:472 envergo/geodata/models.py:184
-#: envergo/geodata/models.py:224
+#: envergo/evaluations/models.py:472 envergo/geodata/models.py:186
+#: envergo/geodata/models.py:226
 msgid "Date created"
 msgstr "Date de création"
 
@@ -344,7 +344,7 @@ msgid "Evaluation file"
 msgstr "Fichier d'évaluation"
 
 #: envergo/evaluations/models.py:127 envergo/evaluations/models.py:416
-#: envergo/geodata/forms.py:79
+#: envergo/geodata/forms.py:79 envergo/moulinette/models.py:457
 msgid "Address"
 msgstr "Adresse"
 
@@ -381,7 +381,7 @@ msgstr ""
 "Apparaîtra dans le mail de rappel réglementaire. Utilisez du markdown simple "
 "(gras, italique, liens, retours à la ligne)."
 
-#: envergo/evaluations/models.py:147
+#: envergo/evaluations/models.py:147 envergo/moulinette/models.py:461
 msgid "Contact"
 msgstr "Contact"
 
@@ -435,7 +435,7 @@ msgid "Probability"
 msgstr "Probabilité"
 
 #: envergo/evaluations/models.py:362 envergo/evaluations/models.py:370
-#: envergo/moulinette/models.py:70
+#: envergo/moulinette/models.py:72
 msgid "Criterion"
 msgstr "Critère"
 
@@ -448,8 +448,8 @@ msgstr "Description"
 msgid "Description (html)"
 msgstr " Description (html)"
 
-#: envergo/evaluations/models.py:365 envergo/geodata/models.py:199
-#: envergo/moulinette/models.py:66
+#: envergo/evaluations/models.py:365 envergo/geodata/models.py:201
+#: envergo/moulinette/models.py:68
 msgid "Map"
 msgstr "Carte"
 
@@ -506,7 +506,7 @@ msgid "File"
 msgstr "Fichier"
 
 #: envergo/evaluations/models.py:568 envergo/geodata/models.py:158
-#: envergo/moulinette/models.py:63
+#: envergo/moulinette/models.py:65 envergo/moulinette/models.py:455
 msgid "Name"
 msgstr "Nom"
 
@@ -556,7 +556,7 @@ msgid "This file does not seem valid ({e})"
 msgstr "Ce fichier semble invalide ({e})"
 
 #: envergo/geodata/admin.py:42 envergo/geodata/models.py:174
-#: envergo/geodata/models.py:244
+#: envergo/geodata/models.py:246
 msgid "Departments"
 msgstr "Départements"
 
@@ -568,7 +568,7 @@ msgstr ""
 msgid "Extract and import a shapefile"
 msgstr "Extraire et importer le fichier shapefile"
 
-#: envergo/geodata/admin.py:153
+#: envergo/geodata/admin.py:153 envergo/geodata/admin.py:167
 msgid "Please only select one map for this action."
 msgstr "Merci de sélectionner une et une seule carte pour cette action."
 
@@ -580,14 +580,22 @@ msgstr ""
 "minutes."
 
 #: envergo/geodata/admin.py:164
+msgid "Generate the simplified preview geometry"
+msgstr "Générer la carte simplifiée"
+
+#: envergo/geodata/admin.py:173
+msgid "The map preview will be updated soon."
+msgstr "La carte sera mise à jour incessamment."
+
+#: envergo/geodata/admin.py:176
 msgid "Extracted zones"
 msgstr "Zones extraites"
 
-#: envergo/geodata/admin.py:187 envergo/geodata/models.py:167
+#: envergo/geodata/admin.py:199 envergo/geodata/models.py:167
 msgid "Data type"
 msgstr "Valeur carto"
 
-#: envergo/geodata/admin.py:191
+#: envergo/geodata/admin.py:203
 msgid "Data certainty"
 msgstr "Valeur carto"
 
@@ -705,48 +713,52 @@ msgid "Select departments ids separated by commas"
 msgstr ""
 "Saisissez des numéros de départements séparés par des virgules, e.g « 44,56 »"
 
-#: envergo/geodata/models.py:185
+#: envergo/geodata/models.py:184
+msgid "Simplified geometry"
+msgstr ""
+
+#: envergo/geodata/models.py:187
 msgid "Expected zones"
 msgstr "Nb de zones attendues"
 
-#: envergo/geodata/models.py:186
+#: envergo/geodata/models.py:188
 msgid "Imported zones"
 msgstr "Nb de zones importées"
 
-#: envergo/geodata/models.py:188
+#: envergo/geodata/models.py:190
 msgid "Import status"
 msgstr "Statut d'import"
 
-#: envergo/geodata/models.py:191
+#: envergo/geodata/models.py:193
 msgid "Celery task id"
 msgstr "Id de tâche Celery"
 
-#: envergo/geodata/models.py:193
+#: envergo/geodata/models.py:195
 msgid "Import error message"
 msgstr "Message d'erreur de l'import"
 
-#: envergo/geodata/models.py:195
+#: envergo/geodata/models.py:197
 msgid "Copy to staging?"
 msgstr "Copier en recette ?"
 
-#: envergo/geodata/models.py:195
+#: envergo/geodata/models.py:197
 msgid "Don't touch this please"
 msgstr "Réservé aux admins, merci de ne pas toucher svp."
 
-#: envergo/geodata/models.py:200
+#: envergo/geodata/models.py:202
 msgid "Maps"
 msgstr "Cartes"
 
-#: envergo/geodata/models.py:227
+#: envergo/geodata/models.py:229
 msgid "Zone"
 msgstr "Zone"
 
-#: envergo/geodata/models.py:228
+#: envergo/geodata/models.py:230
 msgid "Zones"
 msgstr "Zones"
 
-#: envergo/geodata/models.py:235 envergo/geodata/models.py:243
-#: envergo/moulinette/forms/__init__.py:92 envergo/moulinette/models.py:88
+#: envergo/geodata/models.py:237 envergo/geodata/models.py:245
+#: envergo/moulinette/forms/__init__.py:92 envergo/moulinette/models.py:90
 msgid "Department"
 msgstr "Département"
 
@@ -758,7 +770,7 @@ msgstr "carte/"
 msgid "zone.geojson"
 msgstr "zone.geojson"
 
-#: envergo/geodata/utils.py:77
+#: envergo/geodata/utils.py:82
 msgid "No .shp file found in archive"
 msgstr "Aucun fichier .shp trouvé dans l'archive"
 
@@ -796,37 +808,53 @@ msgstr ""
 "La surface impactée totale doit être au moins égale à celle des nouveaux "
 "impacts"
 
-#: envergo/moulinette/models.py:72
+#: envergo/moulinette/models.py:74
 msgid "Activation distance"
 msgstr "Distance d'activation (m)"
 
-#: envergo/moulinette/models.py:76
+#: envergo/moulinette/models.py:78 envergo/moulinette/models.py:451
 msgid "Perimeter"
 msgstr "Périmètre"
 
-#: envergo/moulinette/models.py:77
+#: envergo/moulinette/models.py:79
 msgid "Perimeters"
 msgstr "Périmètres"
 
-#: envergo/moulinette/models.py:93
+#: envergo/moulinette/models.py:95
 msgid "Is activated"
 msgstr "Est actif"
 
-#: envergo/moulinette/models.py:94
+#: envergo/moulinette/models.py:96
 msgid "Is the moulinette available for this department?"
 msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
-#: envergo/moulinette/models.py:97
+#: envergo/moulinette/models.py:99
 msgid "DDT(M) contact email"
 msgstr "E-mail DDT(M) (rappel réglementaire)"
 
-#: envergo/moulinette/models.py:114
+#: envergo/moulinette/models.py:116
 msgid "Moulinette config"
 msgstr "Config moulinette"
 
-#: envergo/moulinette/models.py:115
+#: envergo/moulinette/models.py:117
 msgid "Moulinette configs"
 msgstr "Configs moulinette"
+
+#: envergo/moulinette/models.py:456
+msgid "URL"
+msgstr ""
+
+#: envergo/moulinette/models.py:458
+#, fuzzy
+#| msgid "Address"
+msgid "Address HTML"
+msgstr "Adresse"
+
+#: envergo/moulinette/models.py:462
+#, fuzzy
+#| msgid "Contact"
+msgid "Contacts"
+msgstr "Contact"
 
 #: envergo/moulinette/regulations/evalenv.py:161
 #: envergo/moulinette/regulations/natura2000.py:270
