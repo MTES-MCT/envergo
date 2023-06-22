@@ -1,3 +1,5 @@
+import os
+from datetime import datetime
 from pathlib import Path
 
 from create_carto import bassinVersantParameters
@@ -12,7 +14,7 @@ def benchmark_parameters(
     comparisons_to_do,
     places_to_evaluate,
     project_surface=2000,
-    generate_cartos=False,
+    benchmark_folder=None,
 ):
     def get_name(place, params: bassinVersantParameters):
         bottom_left = carto.get_bottom_left_corner(place[1])
@@ -25,12 +27,16 @@ def benchmark_parameters(
     def get_data_folder(carto_file_name):
         return "/".join(carto_file_name.split("/")[:-1])
 
-    if generate_cartos:
+    if benchmark_folder is None:
+        now = datetime.now()
+        benchmark_folder = f"{ALTI_PARENT_FOLDER}/output/benchmarks/{now.strftime('%Y_%m_%d_%H_%M_%S')}"
+        os.mkdirs(f"{benchmark_folder}/cartos")
+
         for place in places_to_evaluate:
             for params in params_to_benchmark:
                 print("doing : ", place, params, "\n")
                 name = get_name(place, params)
-                ouput_id = f"{ALTI_PARENT_FOLDER}/output/fixed/test/{name}"
+                ouput_id = f"{benchmark_folder}/cartos/{name}"
                 test_carto_creator(
                     params,
                     current_tile=place[1],
@@ -44,9 +50,9 @@ def benchmark_parameters(
     for place in places_to_evaluate:
         for params1, params2 in comparisons_to_do:
             print("evaluating : ", place, params1, params2)
-            test_dir = f"{ALTI_PARENT_FOLDER}output/fixed/test/"
+            os.mkdirs(f"{benchmark_folder}/graphs")
             save_dir = (
-                f"{ALTI_PARENT_FOLDER}/output/fixed/decision/{place[0]}_"
+                f"{benchmark_folder}/graphs/{place[0]}_"
                 + f"{str(carto.get_bottom_left_corner(place[1])[0])}_"
                 + f"{carto.get_bottom_left_corner(place[1])[1]}/"
                 + f"{params1.carto_precision}v{params2.carto_precision}_"
@@ -54,8 +60,8 @@ def benchmark_parameters(
                 + f"{params1.quadrants_nb}v{params2.quadrants_nb}"
             )
             compare_cartos_v2(
-                f"{test_dir}{get_name(place, params2)}.asc",
-                f"{test_dir}{get_name(place, params1)}.asc",
+                f"{benchmark_folder}/cartos/{get_name(place, params2)}.asc",
+                f"{benchmark_folder}/cartos/{get_name(place, params1)}.asc",
                 7000 - project_surface,
                 10000 - project_surface,
                 stretch=(1, 1),
