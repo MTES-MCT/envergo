@@ -52,7 +52,7 @@ def save_list_to_carto(data_list, file_name, info):
     altitudes_array = np.array(altitudes)
 
     # create the 2d numpy array with coordinates as indices and altitudes as values
-    x_coords, y_coords = coordinates_array.t
+    x_coords, y_coords = coordinates_array.T
     num_x = len(np.unique(x_coords))
     num_y = len(np.unique(y_coords))
     result_array = np.zeros((num_y, num_x))
