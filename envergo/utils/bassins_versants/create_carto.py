@@ -52,7 +52,7 @@ def calculate_bassin_versant_on_points(
     )
 
     for point in tqdm(points, leave=False):
-        if carto_machine.queryOnePoint(point) is not None:
+        if carto_machine.query_one_point(point) is not None:
             inner_circle_points = carto.update_origin(
                 point, origin_less_inner_circle_points
             )
