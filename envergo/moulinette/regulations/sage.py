@@ -384,7 +384,7 @@ class Sage(MoulinetteRegulation):
             return None
 
         map_polygons = [MapPolygon([perimeter], "red", "Sage")]
-        caption = "Le projet se situe dans le périmètre de Sage."
+        caption = "Le projet se situe dans le périmètre du Sage."
 
         map = Map(
             center=self.catalog["coords"],
