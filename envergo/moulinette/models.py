@@ -3,7 +3,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.db import models
-from django.db.models import F
+from django.db.models import Case, F, When
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
@@ -251,7 +251,12 @@ class Moulinette:
             Perimeter.objects.filter(
                 map__zones__geometry__dwithin=(coords, F("activation_distance"))
             )
-            .annotate(geometry=F("map__zones__geometry"))
+            .annotate(
+                geometry=Case(
+                    When(map__geometry__isnull=False, then=F("map__geometry")),
+                    default=F("map__zones__geometry"),
+                )
+            )
             .annotate(distance=Distance("map__zones__geometry", coords))
             .order_by("distance", "map__name")
             .select_related("map", "contact")
