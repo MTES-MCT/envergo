@@ -454,6 +454,7 @@ class Contact(models.Model):
     )
     name = models.CharField(_("Name"), max_length=256)
     url = models.URLField(_("URL"), blank=True)
+    regulation_url = models.URLField(_("Regulation URL"), blank=True)
     address_md = models.TextField(_("Address"))
     address_html = models.TextField(_("Address HTML"), blank=True)
 
