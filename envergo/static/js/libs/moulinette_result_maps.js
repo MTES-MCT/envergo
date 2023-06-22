@@ -43,11 +43,17 @@
     marker.addTo(map);
 
     // Display all polygons
+    const bounds = L.latLngBounds();
     for (const polygonId in mapData.polygons) {
       const polygon = mapData.polygons[polygonId];
       const polygonJson = L.geoJSON(
         polygon['polygon'], { style: { color: polygon['color'], fillColor: polygon['color'] } });
+      bounds.extend(polygonJson.getBounds());
       polygonJson.addTo(map);
+    }
+
+    if (mapData["zoom"] === null) {
+      map.fitBounds(bounds);
     }
 
     // Display the legend

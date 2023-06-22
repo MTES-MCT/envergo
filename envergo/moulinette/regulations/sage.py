@@ -368,3 +368,30 @@ class Sage(MoulinetteRegulation):
             result = RESULTS.non_disponible
 
         return result
+
+    def _get_map(self):
+        # Let's find the first map that we can display
+        perimeter = next(
+            (
+                criterion.perimeter
+                for criterion in self.criterions
+                if criterion.perimeter.map.display_for_user
+                and criterion.perimeter.map.geometry
+            ),
+            None,
+        )
+        if not perimeter:
+            return None
+
+        map_polygons = [MapPolygon([perimeter], "red", "Sage")]
+        caption = "Le projet se situe dans le périmètre de Sage."
+
+        map = Map(
+            center=self.catalog["coords"],
+            entries=map_polygons,
+            caption=caption,
+            truncate=False,
+            zoom=None,
+        )
+
+        return map

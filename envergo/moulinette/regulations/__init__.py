@@ -126,7 +126,11 @@ class MoulinetteRegulation(ABC):
 
 @dataclass
 class MapPolygon:
-    """Data that can be displayed and labeled on a leaflet map as a polygon."""
+    """Data that can be displayed and labeled on a leaflet map as a polygon.
+
+    A `MapPolygon is meant to represent a single entry on a map:
+    a polygon with a given color and label.
+    """
 
     perimeters: list  # List of `envergo.geofr.Perimeter` objects
     color: str
