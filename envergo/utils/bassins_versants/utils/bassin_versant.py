@@ -8,7 +8,7 @@ def calculate_bassin_versant_one_point(
 
     for quadrant in quadrants:
         surfaceCount += next_quadrant_check(
-            innerCircleMeanAlti, quadrant, [0, inner_radius] + radii, slope
+            innerCircleMeanAlti, quadrant, [0, inner_radius] + radii, slope=slope
         )
 
     return surfaceCount / quadrantsNb
