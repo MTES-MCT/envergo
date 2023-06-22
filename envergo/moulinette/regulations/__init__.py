@@ -1,4 +1,5 @@
 import json
+from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
@@ -21,8 +22,8 @@ class RequiredAction:
         return self.text
 
 
-class MoulinetteRegulation:
-    """Run the moulinette for a single regulation (e.g Loi sur l'eau)."""
+class MoulinetteRegulation(ABC):
+    """Run the moulinette for a single regulation (e.g Loi sur l'eau).
 
     criterion_classes = []
 
@@ -185,7 +186,7 @@ class Map:
         return maps
 
 
-class MoulinetteCriterion:
+class MoulinetteCriterion(ABC):
     """Run a single moulinette check."""
 
     # Prevent template engine to instanciate the class since we sometimes want
