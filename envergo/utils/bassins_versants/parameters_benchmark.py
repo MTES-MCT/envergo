@@ -27,6 +27,8 @@ def benchmark_parameters(
             + "_"
             + str(params.quadrants_nb)
             + "_"
+            + str(params.slope)
+            + "_"
             + "-".join([str(r) for r in params.radii])
         )
 
@@ -42,9 +44,12 @@ def benchmark_parameters(
                     params,
                     current_tile=place[1],
                     output_carto_precision=20,
-                    ouptut_file=ALTI_PARENT_FOLDER + "/output/test/" + name + ".asc",
+                    ouptut_file=ALTI_PARENT_FOLDER
+                    + "/output/fixed/test/"
+                    + name
+                    + ".asc",
                     ouptut_screen_shot=ALTI_PARENT_FOLDER
-                    + "/output/test/"
+                    + "/output/fixed/test/"
                     + name
                     + ".png",
                     input_folder=get_data_folder(place[1]),
@@ -54,10 +59,10 @@ def benchmark_parameters(
     for place in places_to_evaluate:
         for params1, params2 in comparisons_to_do:
             print("evaluating : ", place, params1, params2)
-            test_dir = ALTI_PARENT_FOLDER + "/output/test/"
+            test_dir = ALTI_PARENT_FOLDER + "/output/fixed/test/"
             save_dir = (
                 ALTI_PARENT_FOLDER
-                + "/output/decision/"
+                + "/output/fixed/decision/"
                 + place[0]
                 + "_"
                 + str(carto.get_bottom_left_corner(place[1])[0])
@@ -96,42 +101,42 @@ p1_12 = bassinVersantParameters(
     inner_radius=25,
     radii=rayons1,
     quadrants_nb=12,
-    slope=0.05,
+    slope=0.025,
 )
 p1_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons1,
     quadrants_nb=16,
-    slope=0.05,
+    slope=0.025,
 )
 p0_12 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons0,
     quadrants_nb=12,
-    slope=0.05,
+    slope=0.025,
 )
 p0_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons0,
     quadrants_nb=16,
-    slope=0.05,
+    slope=0.025,
 )
 p00_12 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons00,
     quadrants_nb=12,
-    slope=0.05,
+    slope=0.025,
 )
 p00_16 = bassinVersantParameters(
     carto_precision=5,
     inner_radius=25,
     radii=rayons00,
     quadrants_nb=16,
-    slope=0.05,
+    slope=0.025,
 )
 
 params_to_benchmark = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
@@ -164,5 +169,9 @@ places_to_evaluate = [
 project_surface = 2000
 
 benchmark_parameters(
-    params_to_benchmark, comparisons_to_do, places_to_evaluate, project_surface
+    params_to_benchmark,
+    comparisons_to_do,
+    places_to_evaluate,
+    project_surface,
+    generate_cartos=True,
 )
