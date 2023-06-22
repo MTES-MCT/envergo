@@ -17,18 +17,8 @@ def benchmark_parameters(
     def get_name(place, params: bassinVersantParameters):
         bottom_left = carto.get_bottom_left_corner(place[1])
         return (
-            place[0]
-            + "_"
-            + str(bottom_left[0])
-            + "_"
-            + str(bottom_left[1])
-            + "_test_20_"
-            + str(params.carto_precision)
-            + "_"
-            + str(params.quadrants_nb)
-            + "_"
-            + str(params.slope)
-            + "_"
+            f"{place[0]}_{bottom_left[0]}_{bottom_left[1]}__test_20_"
+            + f"{params.carto_precision}_{params.quadrants_nb}_{params.slope}"
             + "-".join([str(r) for r in params.radii])
         )
 
@@ -40,18 +30,13 @@ def benchmark_parameters(
             for params in params_to_benchmark:
                 print("doing : ", place, params, "\n")
                 name = get_name(place, params)
+                ouput_id = f"{ALTI_PARENT_FOLDER}/output/fixed/test/{name}"
                 test_carto_creator(
                     params,
                     current_tile=place[1],
                     output_carto_precision=20,
-                    ouptut_file=ALTI_PARENT_FOLDER
-                    + "/output/fixed/test/"
-                    + name
-                    + ".asc",
-                    ouptut_screen_shot=ALTI_PARENT_FOLDER
-                    + "/output/fixed/test/"
-                    + name
-                    + ".png",
+                    ouptut_file=f"{ouput_id}.asc",
+                    ouptut_screen_shot=f"{ouput_id}.png",
                     input_folder=get_data_folder(place[1]),
                     show=False,
                 )
@@ -59,31 +44,18 @@ def benchmark_parameters(
     for place in places_to_evaluate:
         for params1, params2 in comparisons_to_do:
             print("evaluating : ", place, params1, params2)
-            test_dir = ALTI_PARENT_FOLDER + "/output/fixed/test/"
+            test_dir = f"{ALTI_PARENT_FOLDER}output/fixed/test/"
             save_dir = (
-                ALTI_PARENT_FOLDER
-                + "/output/fixed/decision/"
-                + place[0]
-                + "_"
-                + str(carto.get_bottom_left_corner(place[1])[0])
-                + "_"
-                + str(carto.get_bottom_left_corner(place[1])[1])
-                + "/"
-                + str(params1.carto_precision)
-                + "v"
-                + str(params2.carto_precision)
-                + "_"
-                + "-".join([str(p) for p in params1.radii])
-                + "v"
-                + "-".join([str(p) for p in params2.radii])
-                + "_"
-                + str(params1.quadrants_nb)
-                + "v"
-                + str(params2.quadrants_nb)
+                f"{ALTI_PARENT_FOLDER}/output/fixed/decision/{place[0]}_"
+                + f"{str(carto.get_bottom_left_corner(place[1])[0])}_"
+                + f"{carto.get_bottom_left_corner(place[1])[1]}/"
+                + f"{params1.carto_precision}v{params2.carto_precision}_"
+                + f"{'-'.join([str(p) for p in params1.radii])}v{'-'.join([str(p) for p in params2.radii])}_"
+                + f"{params1.quadrants_nb}v{params2.quadrants_nb}"
             )
             compare_cartos_v2(
-                test_dir + get_name(place, params2) + ".asc",
-                test_dir + get_name(place, params1) + ".asc",
+                f"{test_dir}{get_name(place, params2)}.asc",
+                f"{test_dir}{get_name(place, params1)}.asc",
                 7000 - project_surface,
                 10000 - project_surface,
                 stretch=(1, 1),
@@ -154,15 +126,15 @@ comparisons_to_do = [f, g, h, i, j, k]
 places_to_evaluate = [
     [
         "44",
-        ALTI_PARENT_FOLDER + "/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
     ],
     [
         "39",
-        ALTI_PARENT_FOLDER + "/alti_data_39/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}alti_data_39/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc",
     ],
     [
         "29",
-        ALTI_PARENT_FOLDER + "/alti_data_29/rgealti_fxx_0215_6845_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}alti_data_29/rgealti_fxx_0215_6845_mnt_lamb93_ign69.asc",
     ],
 ]
 
