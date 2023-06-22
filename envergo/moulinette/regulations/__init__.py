@@ -25,15 +25,21 @@ class RequiredAction:
 class MoulinetteRegulation(ABC):
     """Run the moulinette for a single regulation (e.g Loi sur l'eau).
 
+    This class is meant to be inherited to implement actual regulations.
+    """
+
+    # Implement this in subclasses
     criterion_classes = []
 
     def __init__(self, moulinette):
         self.moulinette = moulinette
         self.moulinette.catalog.update(self.get_catalog_data())
+
+        # Instanciate the criterions
         self.criterions = [
-            Criterion(moulinette)
-            for Criterion in self.criterion_classes
-            if Criterion in moulinette.criterions_classes
+            perimeter.criterion(moulinette, perimeter)
+            for perimeter in moulinette.perimeters
+            if perimeter.criterion in self.criterion_classes
         ]
 
     def get_catalog_data(self):
@@ -199,9 +205,10 @@ class MoulinetteCriterion(ABC):
     # "Nomenclature réglementations & critères" document.
     CODES = ["soumis", "non_soumis", "action_requise", "non_concerne"]
 
-    def __init__(self, moulinette):
+    def __init__(self, moulinette, perimeter):
         self.moulinette = moulinette
         self.moulinette.catalog.update(self.get_catalog_data())
+        self.perimeter = perimeter
 
     def get_catalog_data(self):
         """Get data to inject to the global catalog."""
