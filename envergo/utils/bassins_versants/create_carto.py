@@ -73,6 +73,7 @@ def calculate_bassin_versant_on_points(
                     calculate_bassin_versant_one_point(
                         inner_circle_alti,
                         quadrants,
+                        params.inner_radius,
                         params.radii,
                         params.quadrants_nb,
                         params.slope,
