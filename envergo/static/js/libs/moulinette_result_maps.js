@@ -1,21 +1,21 @@
-(function(exports, L) {
+(function (exports, L) {
   'use strict';
 
   /**
    * Initialize the leaflet maps for the moulinette result page.
    */
-  const MapConfigurator = function(maps) {
+  const MapConfigurator = function (maps) {
     this.maps = maps;
   };
   exports.MapConfigurator = MapConfigurator;
 
-  MapConfigurator.prototype.init = function() {
+  MapConfigurator.prototype.init = function () {
     for (const map in this.maps) {
       this.initMap(map);
     };
   };
 
-  MapConfigurator.prototype.initMap = function(mapId) {
+  MapConfigurator.prototype.initMap = function (mapId) {
     const mapData = this.maps[mapId];
     const center = mapData.center;
 
@@ -58,7 +58,7 @@
 
     // Display the legend
     const legend = L.control({ position: 'bottomright' });
-    legend.onAdd = function(map) {
+    legend.onAdd = function (map) {
       const div = L.DomUtil.create('div', 'info legend');
       for (const polygonId in mapData.polygons) {
         const polygon = mapData.polygons[polygonId];
@@ -78,7 +78,7 @@
 
     // Upon page printing, the map container width is reduced, so we need to
     // make sure the map displays correctly with the new size.
-    window.matchMedia('print').addEventListener("change", function(query) {
+    window.matchMedia('print').addEventListener("change", function (query) {
       if (query.matches) {
         map.invalidateSize();
       }
@@ -89,7 +89,7 @@
 
 })(this, L);
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
   var MAPS = window.MAPS || {};
   var configurator = new MapConfigurator(MAPS);
   configurator.init();
