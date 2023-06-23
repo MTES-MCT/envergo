@@ -26,7 +26,10 @@
           href="{% static '@gouvfr/dsfr/dist/favicon/favicon.ico' %}"
           type="image/x-icon">
 
-    <link rel="alternate" type="application/rss+xml" title="Les actualités EnvErgo" href="https://envergo.beta.gouv.fr{% url 'news_feed' %}" />
+    <link rel="alternate"
+          type="application/rss+xml"
+          title="Les actualités EnvErgo"
+          href="https://envergo.beta.gouv.fr{% url 'news_feed' %}" />
 
     {% block css %}
       {% compress css %}
