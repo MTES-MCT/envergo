@@ -20,12 +20,11 @@
 
             <ul class="fr-sidemenu__list">
               <li class="fr-sidemenu__item">
-                <button class="fr-sidemenu__btn">Évaluations environnementales</button>
+                <button class="fr-sidemenu__btn">Réglementations environnementales</button>
                 <ul class="fr-sidemenu__list">
                   {# djlint:off #}
                   {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
                   {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
-                  {% sidemenu_item 'faq_eval_env' "Évaluation environnementale" %}
                   {# djlint:on #}
                 </ul>
               </li>
@@ -49,7 +48,7 @@
         <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
 
         <p class="fr-text--lead">
-          Retrouvez toutes nos informations concernant les réglementations environnementales prises en compte par Envergo.
+          Consultez les réponses aux questions fréquentes sur les réglementations environnementales prises en compte par EnvErgo.
         </p>
 
         <div class="fr-grid-row fr-grid-row--gutters">
@@ -75,9 +74,11 @@
               <div class="fr-card__body">
                 <div class="fr-card__content">
                   <h2 class="fr-card__title">
-                    <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
+                    <a href="{% url 'faq_natura_2000' %}">Natura 2000</a>
                   </h2>
-                  <p class="fr-card__desc">Évaluation environnementale bla bla bla</p>
+                  <p class="fr-card__desc">
+                    Natura 2000 est un dispositif visant la protection d'espèces animales et végétales fragiles et de leur habitat.
+                  </p>
                 </div>
               </div>
             </div>
