@@ -61,20 +61,12 @@ if __name__ == "__main__":
         type=str,
         help="the output folder in which to store the bassin versant cartos",
     )
-    parser.add_argument(
-        "--output-precision",
-        dest="output_precision",
-        default=20,
-        help="the output precision of the carto, defaults to 20",
-    )
 
     args = parser.parse_args()
     print(args.input_folder)
     print(args.output_folder)
-    print(args.output_precision)
 
     bulk_carto_creation(
         args.input_folder,
         args.output_folder,
-        output_carto_precision=args.output_precision,
     )
