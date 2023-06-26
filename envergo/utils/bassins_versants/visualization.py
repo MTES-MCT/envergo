@@ -99,12 +99,12 @@ def plot_alti_carto(
     elif colormap == "decision":
         cmap = mpl.colors.ListedColormap(
             [
-                "black",
                 "red",
                 "orange",
+                "yellow",
                 "white",
-                "pink",
-                "purple",
+                "blue",
+                "green",
                 "black",
             ]
         )

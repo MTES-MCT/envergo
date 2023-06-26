@@ -46,13 +46,14 @@ def benchmark_parameters(
                     input_folder=get_data_folder(place[1]),
                     show=False,
                 )
-
+    if not Path(f"{benchmark_folder}/decision").exists():
+        os.makedirs(f"{benchmark_folder}/decision")
     for place in places_to_evaluate:
         for params1, params2 in comparisons_to_do:
             print("evaluating : ", place, params1, params2)
-            os.makedirs(f"{benchmark_folder}/graphs")
+
             save_dir = (
-                f"{benchmark_folder}/graphs/{place[0]}_"
+                f"{benchmark_folder}/decision/{place[0]}_"
                 + f"{str(carto.get_bottom_left_corner(place[1])[0])}_"
                 + f"{carto.get_bottom_left_corner(place[1])[1]}/"
                 + f"{params1.carto_precision}v{params2.carto_precision}_"
@@ -132,15 +133,15 @@ comparisons_to_do = [f, g, h, i, j, k]
 places_to_evaluate = [
     [
         "44",
-        f"{ALTI_PARENT_FOLDER}alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
     ],
     [
         "39",
-        f"{ALTI_PARENT_FOLDER}alti_data_39/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}/alti_data_39/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc",
     ],
     [
         "29",
-        f"{ALTI_PARENT_FOLDER}alti_data_29/rgealti_fxx_0215_6845_mnt_lamb93_ign69.asc",
+        f"{ALTI_PARENT_FOLDER}/alti_data_29/rgealti_fxx_0215_6845_mnt_lamb93_ign69.asc",
     ],
 ]
 
@@ -149,4 +150,5 @@ benchmark_parameters(
     comparisons_to_do,
     places_to_evaluate,
     project_surface=2000,
+    benchmark_folder="/Users/hugoborsoni/Documents/CS/8_JE/envergo/code/envergo/envergo/utils/bassins_versants/output/benchmarks/benchmark_slope_005",
 )
