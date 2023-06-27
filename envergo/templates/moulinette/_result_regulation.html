@@ -15,9 +15,9 @@
   {% endif %}
 
   <div class="criteria">
-    {% if regulation.criterions %}<h3>Détail des rubriques</h3>{% endif %}
+    {% if regulation.criteria.all %}<h3>Détail des rubriques</h3>{% endif %}
 
-    {% for criterion in regulation.criterions %}
+    {% for criterion in regulation.criteria.all %}
       {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
 
     {% endfor %}

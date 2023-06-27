@@ -62,7 +62,7 @@ def debug(stuff):
 
 @register.simple_tag
 def perimeter_contact_string(regulation):
-    criteria = regulation.criterions
+    criteria = regulation.criteria.all()
     contacts = [
         criterion.contact for criterion in criteria if hasattr(criterion, "contact")
     ]
@@ -70,7 +70,7 @@ def perimeter_contact_string(regulation):
     if contact:
         string = f"""
         <p>
-        Le projet se trouve dans le <a href="{contact.url}">périmètre du Schéma d'Aménagement et de
+        Le projet se trouve dans le <a href="{contact.url}">    périmètre du Schéma d'Aménagement et de
         Gestion des Eaux (SAGE) « {contact} »</a>.
         </p>
         """

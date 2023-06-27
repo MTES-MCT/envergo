@@ -1,19 +1,18 @@
+from functools import cached_property
+
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.db import models
-from django.db.models import Case, F, When
+from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
+from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionChoiceField
 from envergo.moulinette.regulations import MoulinetteCriterion
-from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
-from envergo.moulinette.regulations.loisurleau import LoiSurLEau
-from envergo.moulinette.regulations.natura2000 import Natura2000
-from envergo.moulinette.regulations.sage import Sage
 from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
@@ -49,6 +48,13 @@ class Regulation(models.Model):
     def __str__(self):
         return self.title
 
+    @cached_property
+    def result(self):
+        """The result will be displayed to the user with a fancy label."""
+
+        # XXX
+        return RESULTS.non_concerne
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -80,6 +86,25 @@ class Criterion(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_form(self):
+        return None
+
+    @cached_property
+    def result(self):
+        """The result will be displayed to the user with a fancy label."""
+        return self.result_code
+
+    @property
+    def result_code(self):
+        """Return a unique code for the criterion result.
+
+        Sometimes, a same criterion can have the same result for different reasons.
+        Because of this, we want unique codes to display custom messages to
+        the user.
+        """
+        # XXX
+        return RESULTS.non_concerne
 
 
 class Perimeter(models.Model):
@@ -180,6 +205,7 @@ class Moulinette:
         if hasattr(self.department, "moulinette_config"):
             self.catalog["config"] = self.department.moulinette_config
 
+        self.regulations = self.get_regulations()
         self.perimeters = self.get_perimeters()
         self.criterions_classes = self.get_criterions()
 
@@ -190,12 +216,12 @@ class Moulinette:
         # access to other pieces of data from the moulinette.
         # For example, to compute the "Natura2000" result, there is a criterion
         # that is just the result of the "Loi sur l'eau" regulation.
-        self.regulations = [
-            LoiSurLEau(self),
-            Sage(self),
-            Natura2000(self),
-            EvalEnvironnementale(self),
-        ]
+        # self.regulations = [
+        #     LoiSurLEau(self),
+        #     Sage(self),
+        #     Natura2000(self),
+        #     EvalEnvironnementale(self),
+        # ]
 
         self.catalog.update(self.cleaned_additional_data())
 
@@ -263,6 +289,47 @@ class Moulinette:
 
         return catalog
 
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
+        coords = self.catalog["coords"]
+
+        criteria = (
+            Criterion.objects.filter(
+                perimeter__zones__geometry__dwithin=(coords, F("activation_distance"))
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        perimeter__geometry__isnull=False, then=F("perimeter__geometry")
+                    ),
+                    default=F("perimeter__zones__geometry"),
+                )
+            )
+            .annotate(distance=Distance("perimeter__zones__geometry", coords))
+            .order_by("weight")
+            .select_related("perimeter")
+        )
+
+        regulations = (
+            Regulation.objects.filter(
+                perimeter__zones__geometry__dwithin=(coords, F("activation_distance"))
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        perimeter__geometry__isnull=False, then=F("perimeter__geometry")
+                    ),
+                    default=F("perimeter__zones__geometry"),
+                )
+            )
+            .annotate(distance=Distance("perimeter__zones__geometry", coords))
+            .order_by("weight")
+            .select_related("perimeter")
+            .prefetch_related(Prefetch("criteria", queryset=criteria))
+        )
+        return regulations
+
     def get_perimeters(self):
         """Find activated perimeters
 
@@ -324,7 +391,7 @@ class Moulinette:
 
         form_errors = []
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 form = criterion.get_form()
                 if form:
                     form_errors.append(not form.is_valid())
@@ -336,7 +403,7 @@ class Moulinette:
 
         data = {}
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 form = criterion.get_form()
                 if form and form.is_valid():
                     data.update(form.cleaned_data)
@@ -369,7 +436,7 @@ class Moulinette:
                 "result": regulation.result,
                 "criterions": {},
             }
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 result[regulation.slug]["criterions"][criterion.slug] = criterion.result
 
         return result
@@ -384,7 +451,7 @@ class Moulinette:
         forms = []
 
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 if hasattr(criterion, "form_class"):
                     forms.append(criterion.form_class)
 
