@@ -53,7 +53,7 @@ class Regulation(models.Model):
         """The result will be displayed to the user with a fancy label."""
 
         # XXX
-        return RESULTS.non_concerne
+        return RESULTS.non_soumis
 
 
 class Criterion(models.Model):
