@@ -2,6 +2,15 @@ import numpy as np
 
 
 def get_carto_info(file_name):
+    """
+    Obtient les informations de la cartographie à partir du nom de fichier, en analysant les headers.
+
+    Args:
+        file_name (str): Nom du fichier de la cartographie.
+
+    Returns:
+        dict: Informations de la cartographie.
+    """
     info = {}
     with open(file_name) as f:
         info["file_name"] = file_name
@@ -31,6 +40,15 @@ def get_carto_info(file_name):
 
 
 def load_carto(file_name):
+    """
+    Charge la cartographie à partir du fichier.
+
+    Args:
+        file_name (str): Nom du fichier de la cartographie.
+
+    Returns:
+        ndarray: Cartographie chargée.
+    """
     info = get_carto_info(file_name)
     carto = np.loadtxt(file_name, skiprows=6)
     carto[carto == info["nodata_value"]] = np.nan
@@ -38,20 +56,37 @@ def load_carto(file_name):
 
 
 def get_bottom_left_corner(carto_file_name):
+    """
+    Obtient le coin inférieur gauche de la cartographie à partir du nom du fichier.
+
+    Args:
+        carto_file_name (str): Nom du fichier de la cartographie.
+
+    Returns:
+        tuple: Coordonnées du coin inférieur gauche.
+    """
     info = get_carto_info(carto_file_name)
     return (info["x_range"][0], info["y_range"][0])
 
 
 def save_list_to_carto(data_list, file_name, info):
-    # extract coordinates and altitudes separately
+    """
+    Enregistre une liste de données en une cartographie au format asc.
+
+    Args:
+        data_list (list): Liste de données à enregistrer.
+        file_name (str): Nom du fichier de la cartographie.
+        info (dict): Informations de la cartographie.
+    """
+    # Extraire les coordonnées et les altitudes séparément
     coordinates = [element[0] for element in data_list]
     altitudes = [element[1] for element in data_list]
 
-    # convert coordinates and altitudes to numpy arrays
+    # Convertir les coordonnées et les altitudes en tableaux numpy
     coordinates_array = np.array(coordinates)
     altitudes_array = np.array(altitudes)
 
-    # create the 2d numpy array with coordinates as indices and altitudes as values
+    # Créer un tableau numpy 2D avec les coordonnées comme indices et les altitudes comme valeurs
     x_coords, y_coords = coordinates_array.T
     num_x = len(np.unique(x_coords))
     num_y = len(np.unique(y_coords))
@@ -66,6 +101,14 @@ def save_list_to_carto(data_list, file_name, info):
 
 
 def save_array_to_carto(array, file_name, info):
+    """
+    Enregistre un tableau numpy en une cartographie au format asc.
+
+    Args:
+        array (ndarray): Tableau à enregistrer.
+        file_name (str): Nom du fichier de la cartographie.
+        info (dict): Informations de la cartographie.
+    """
     header = "ncols     %s\n" % info["ncols"]
     header += "nrows    %s\n" % info["nrows"]
     header += "xllcorner %s\n" % info["xllcorner"]
@@ -78,6 +121,18 @@ def save_array_to_carto(array, file_name, info):
 
 
 def create_quadrants(carto_precision, inner_radius, radii, quadrants_nb):
+    """
+    Crée les quadrants pour un calcul de bassin versant.
+
+    Args:
+        carto_precision (float): Précision de la cartographie.
+        inner_radius (float): Rayon intérieur.
+        radii (list): Liste des rayons.
+        quadrants_nb (int): Nombre de quadrants.
+
+    Returns:
+        tuple: Points du cercle intérieur et liste de liste des coordonnées des points de chaque partie de quadrant, avec une origine à (0,0).
+    """
     quarter_points_nb = int(np.ceil(radii[-1] / carto_precision))
     quadrants_bins = np.linspace(0, 2 * np.pi, quadrants_nb + 1)
     quadrants = [[[] for _ in range(len(radii))] for _ in range(quadrants_nb)]
@@ -90,17 +145,17 @@ def create_quadrants(carto_precision, inner_radius, radii, quadrants_nb):
     displacements = carto_precision * points
     new_points = displacements[0] + 1j * displacements[1]
 
-    # find the corresponding 'donut' for each point
+    # Trouver le 'donut' correspondant à chaque point
     distances = np.abs(new_points)
     radius_nbs = np.searchsorted(
         np.concatenate(([inner_radius], radii, [np.inf])), distances
     )
 
-    # find the quadrant for each point
+    # Trouver le quadrant pour chaque point
     angles = np.angle(new_points) % (2 * np.pi)
     quad_nbs = np.digitize(angles, quadrants_bins) - 1
 
-    # process the points based on their quadrant and radius using the masks
+    # Traiter les points en fonction de leur quadrant et rayon en utilisant les masques
     for quad_nb in range(quadrants_nb):
         for radius_nb in range(len(radii)):
             mask = np.logical_and(quad_nbs == quad_nb, radius_nbs == radius_nb + 1)
@@ -111,7 +166,7 @@ def create_quadrants(carto_precision, inner_radius, radii, quadrants_nb):
                     np.round(quad_points.imag).astype(int),
                 )
             )
-            # convert the extended points to a num_py array
+            # Convertir les points étendus en un tableau num_py
             quadrants[quad_nb][radius_nb] = np.array(
                 quadrants[quad_nb][radius_nb], dtype=np.int32
             )
@@ -128,4 +183,14 @@ def create_quadrants(carto_precision, inner_radius, radii, quadrants_nb):
 
 
 def update_origin(origin, points):
+    """
+    Met à jour l'origine des points.
+
+    Args:
+        origin (ndarray): Origine.
+        points (ndarray): Points à mettre à jour.
+
+    Returns:
+        ndarray: Points mis à jour, dans un nouveau tableau.
+    """
     return np.add(points, origin)

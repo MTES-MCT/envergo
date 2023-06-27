@@ -19,6 +19,9 @@ ALTI_PARENT_FOLDER = str(Path(__file__).parent)
 
 
 def test_plot():
+    """
+    Test de l'affichage de quadrants.
+    """
     q_nb = 8
     radii = [50, 75, 100, 130, 160]
     inner_atli, quads, _ = create_quadrants(
@@ -35,6 +38,15 @@ def test_plot():
 
 
 def plot_quadrants(inner_atli, quads, radii, q_nb):
+    """
+    Test de l 'affichage de quadrants paramétrable.
+
+    Args:
+        inner_atli (List[Tuple[int, int]]): Liste des coordonnées x, y de l'atli interne.
+        quads (List[List[List[Tuple[int, int]]]]): Liste des quadrants.
+        radii (List[int]): Liste des rayons.
+        q_nb (int): Nombre de quadrants.
+    """
     colors = ["blue", "purple", "red", "pink", "orange", "yellow", "lime", "green"]
     fig, ax = plt.subplots()
     ax.set_xlim([0, 1000])
@@ -54,8 +66,8 @@ def plot_quadrants(inner_atli, quads, radii, q_nb):
     plt.show()
 
 
-def plot_alti_carto(
-    alti_carto_file,
+def plot_carto(
+    carto_file,
     title,
     alpha=1,
     stretch=1,
@@ -64,13 +76,27 @@ def plot_alti_carto(
     vmin=None,
     vmax=None,
 ):
+    """
+    Affiche une carto.
+
+    Args:
+        carto_file (str): Chemin du fichier de la carto.
+        title (str): Titre du graphique.
+        alpha (float, optional): Valeur d'opacité. Par défaut 1.
+        stretch (int, optional): Facteur d'étirement. Par défaut 1.
+        given_ax (Axes, optional): Axes donné. Par défaut None.
+            Si donné, le plot s'effectuera par dessus celui déjà présent.
+        colormap (str, optional): Nom de la colormap. Par défaut None.
+        vmin (float, optional): Valeur minimale de l'échelle de couleur. Par défaut None.
+        vmax (float, optional): Valeur maximale. Par défaut None.
+    """
     if given_ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
     else:
         ax = given_ax
 
-    h = load_carto(alti_carto_file)
+    h = load_carto(carto_file)
     h = np.repeat(np.repeat(h, stretch, axis=0), stretch, axis=1)
     ax.set_title(title)
 
@@ -156,10 +182,10 @@ def bassin_versant_plot(
 ):
     bassin_versant_file_info = get_carto_info(bassin_versant_file)
     alti_file_info = get_carto_info(alti_file)
-    ax = plot_alti_carto(
+    ax = plot_carto(
         alti_file, title, colormap="alti", stretch=round(1000 / alti_file_info["nrows"])
     )
-    ax = plot_alti_carto(
+    ax = plot_carto(
         bassin_versant_file,
         title,
         alpha=0.5,
@@ -192,7 +218,7 @@ def compare_cartos(carto1, carto2, stretch=(1, 1)):
         f"{ouput_name}.asc",
         get_carto_info(carto1),
     )
-    plot_alti_carto(
+    plot_carto(
         f"{ouput_name}.asc",
         title=f"pourcentage de différence : {car_name1} et  {car_name2}",
         alpha=1,
@@ -211,6 +237,20 @@ def compare_cartos(carto1, carto2, stretch=(1, 1)):
 def compare_cartos_v2(
     carto1, carto2, barre1, barre2, stretch=(1, 1), interactive=False, save_dir=None
 ):
+    """
+    Compare deux représentations cartographiques (cartos) et génère des statistiques
+    et des visualisations des différences.
+
+    Arguments :
+        - path_c1 (str) : Chemin vers le fichier de la première carto.
+        - path_c2 (str) : Chemin vers le fichier de la deuxième carto.
+        - barre1 (float) : Valeur de la première barre de seuil pour la catégorisation.
+        - barre2 (float) : Valeur de la deuxième barre de seuil pour la catégorisation.
+        - stretch (tuple) : Facteurs d'étirement pour ajuster les cartographies entre elles (défaut: (1, 1)).
+        - save_dir (str) : Répertoire de sauvegarde des résultats (défaut: "output/decision/carto1_carto2_proj_proj-surface").
+        - interactive (bool) : Indique si les résultats doivent être affichés de manière interactive (défaut: False).
+    """
+
     def transform_array(arr):
         # create an array of zeros with the same shape as input
         result = np.zeros_like(arr)
@@ -257,7 +297,7 @@ def compare_cartos_v2(
     # plot the normal diff
     file = f"{save_dir}/diff"
     save_array_to_carto(diff, f"{file}.asc", get_carto_info(carto1))
-    plot_alti_carto(
+    plot_carto(
         f"{file}.asc",
         title=f"différence absolue :\n{car_name1}\n et \n{car_name2}",
         alpha=1,
@@ -271,7 +311,7 @@ def compare_cartos_v2(
     # plot the percentage diff
     file = f"{save_dir}/diff_percentage"
     save_array_to_carto(diff / c1, f"{file}.asc", get_carto_info(carto1))
-    plot_alti_carto(
+    plot_carto(
         f"{file}.asc",
         title=f"différence pourcentage :\n{car_name1}\n et \n{car_name2}",
         alpha=1,
@@ -285,7 +325,7 @@ def compare_cartos_v2(
     # plot the decision diff
     file = f"{save_dir}/decision_diff"
     save_array_to_carto(diff_category, f"{file}.asc", get_carto_info(carto1))
-    plot_alti_carto(
+    plot_carto(
         f"{file}.asc",
         title=f"différence de décision :\n{car_name1} \n et \n{car_name2}",
         alpha=1,
@@ -297,7 +337,7 @@ def compare_cartos_v2(
     # plot the diff when the decision was changed
     file = f"{save_dir}/decision__changes_diff"
     save_array_to_carto(changes, f"{file}.asc", get_carto_info(carto1))
-    plot_alti_carto(
+    plot_carto(
         f"{file}.asc",
         title="valeur de la différence menant à un changement de catégorie\npour: "
         + f"{car_name1}\n et \n{car_name2}",
@@ -326,8 +366,22 @@ def compare_cartos_v2(
         plt.show()
 
 
-def run_tests():
-    compare_cartos_go = False
+def run_tests(
+    compare_cartos_go=False,
+    generate_one_carto=False,
+    test_big_carto=False,
+    create_bulk_carto=False,
+):
+    """
+    Lance les tests de visualisation en fonction des variables qui sont passées à True
+
+    Args:
+        compare_cartos_go (bool): Indique si les tests de comparaison de cartos doivent être lancés.
+        generate_one_carto (bool): Indique si le test de génération d'une seule carto doit être lancé.
+        test_big_carto (bool): Indique si le test de visualisation de la "big carto" doit être lancé.
+        create_bulk_carto (bool): Indique si le test de création massive de carto doit être lancé.
+    """
+
     if compare_cartos_go:
         test_dir = f"{ALTI_PARENT_FOLDER}output/test/"
 
@@ -346,7 +400,6 @@ def run_tests():
             stretch=(1, 1),
         )
 
-    generate_one_carto = False
     if generate_one_carto:
         name = "test_20_5_12"
         params = bassinVersantParameters(
@@ -366,7 +419,6 @@ def run_tests():
             show=True,
         )
 
-    test_big_carto = False
     if test_big_carto:
         cqot = cartoQuerier(
             f"{ALTI_PARENT_FOLDER}/alti_data",
@@ -384,10 +436,9 @@ def run_tests():
                 "nodata_value": -99999.00,
             },
         )
-        plot_alti_carto(f"{ALTI_PARENT_FOLDER}/output/big_carto.asc", "big_carto")
+        plot_carto(f"{ALTI_PARENT_FOLDER}/output/big_carto.asc", "big_carto")
         plt.show()
 
-    create_bulk_carto = False
     if create_bulk_carto:
         bulk_carto_creation(
             f"{ALTI_PARENT_FOLDER}alti_data", f"{ALTI_PARENT_FOLDER}output/bulk_bv"
