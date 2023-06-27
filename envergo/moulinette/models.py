@@ -26,39 +26,6 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 
-def fetch_zones_around(coords, radius, zone_type, data_type="certain"):
-    """Helper method to fetch Zones around a given point."""
-
-    qs = (
-        Zone.objects.filter(map__map_type=zone_type)
-        .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_type=data_type)
-    )
-    return qs
-
-
-# Those dummy methods are useful for unit testing
-def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zone_humide")
-
-
-def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zone_humide")
-
-
-def fetch_potential_wetlands(coords):
-    qs = (
-        Zone.objects.filter(map__map_type="zone_humide")
-        .filter(map__data_type="uncertain")
-        .filter(geometry__dwithin=(coords, D(m=0)))
-    )
-    return qs
-
-
-def fetch_flood_zones_around_12m(coords):
-    return fetch_zones_around(coords, 12, "zone_inondable")
-
-
 class Perimeter(models.Model):
     """Link a map and regulation criteria."""
 
