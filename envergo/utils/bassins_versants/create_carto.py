@@ -19,6 +19,16 @@ class bassinVersantParameters:
         quadrants_nb: int,
         slope: float,
     ):
+        """
+        Crée un objet avec les paramètres pour le calcul du bassin versant.
+
+        Args:
+            carto_precision (int): Précision de lecture de la cartographie d'altimétrie.
+            inner_radius (int): Rayon interne.
+            radii (List[int]): Liste des rayons.
+            quadrants_nb (int): Nombre de quadrants.
+            slope (float): Pente.
+        """
         self.carto_precision = carto_precision
         self.inner_radius = inner_radius
         self.radii = radii
@@ -40,6 +50,18 @@ def calculate_bassin_versant_on_points(
     current_tile,
     input_folder,
 ):
+    """
+    Calcule le bassin versant pour une liste de points donnés.
+
+    Args:
+        points: Liste des points.
+        params (bassinVersantParameters): Paramètres pour le calcul du bassin versant.
+        current_tile: Tuile d'altimétrie pour laquelle calculer le bassin versant.
+        input_folder: Dossier d'entrée contenant les cartographies d'altimétrie.
+
+    Returns:
+        List: Liste des résultats du calcul du bassin versant pour chaque point.
+    """
     results = []
 
     carto_machine = cartoQuerier(input_folder, current_tile)
@@ -94,6 +116,16 @@ def create_carto(
     ouptut_file: str,
     input_folder: str,
 ):
+    """
+    Crée une cartographie en calculant le bassin versant.
+
+    Args:
+        params (bassinVersantParameters): Paramètres pour le calcul du bassin versant.
+        current_tile:  Tuile d'altimétrie pour laquelle calculer le bassin versant.
+        output_carto_precision (int): Précision de la cartographie de sortie.
+        ouptut_file (str): Fichier de sortie de la cartographie.
+        input_folder (str): Dossier d'entrée.
+    """
     bottom_left = carto.get_bottom_left_corner(current_tile)
     info = carto.get_carto_info(current_tile)
     width = round(params.carto_precision * info["ncols"] / output_carto_precision)

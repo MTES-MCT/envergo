@@ -11,6 +11,14 @@ warnings.filterwarnings("ignore")
 
 
 def bulk_carto_creation(input_folder, output_folder, output_carto_precision=20):
+    """
+    Crée une cartographie de bassin versant par cartographie d'altimétrie présente dans le dossier d'entrée.
+
+    Args:
+        input_folder (str): Le dossier d'entrée dans lequel rechercher les cartographies d'altitudes.
+        output_folder (str): Le dossier de sortie dans lequel stocker les cartographies du bassin versant.
+        output_carto_precision (int): La précision de la cartographie de sortie (par défaut : 20m car suffisant).
+    """
     print(f"\nRunning Bulk Carto Creator in {input_folder}...\n")
 
     # region parameters
