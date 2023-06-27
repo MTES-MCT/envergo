@@ -4,8 +4,8 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from bulk_carto_creation import bulk_carto_creation
 from create_carto import bassinVersantParameters, create_carto
+from mass_carto_creation import mass_carto_creation
 from matplotlib.colors import ListedColormap
 from utils.carto import (
     create_quadrants,
@@ -370,7 +370,7 @@ def run_tests(
     compare_cartos_go=False,
     generate_one_carto=False,
     test_big_carto=False,
-    create_bulk_carto=False,
+    create_mass_carto=False,
 ):
     """
     Lance les tests de visualisation en fonction des variables qui sont passées à True
@@ -379,7 +379,7 @@ def run_tests(
         compare_cartos_go (bool): Indique si les tests de comparaison de cartos doivent être lancés.
         generate_one_carto (bool): Indique si le test de génération d'une seule carto doit être lancé.
         test_big_carto (bool): Indique si le test de visualisation de la "big carto" doit être lancé.
-        create_bulk_carto (bool): Indique si le test de création massive de carto doit être lancé.
+        create_mass_carto (bool): Indique si le test de création massive de carto doit être lancé.
     """
 
     if compare_cartos_go:
@@ -439,9 +439,9 @@ def run_tests(
         plot_carto(f"{ALTI_PARENT_FOLDER}/output/big_carto.asc", "big_carto")
         plt.show()
 
-    if create_bulk_carto:
-        bulk_carto_creation(
-            f"{ALTI_PARENT_FOLDER}alti_data", f"{ALTI_PARENT_FOLDER}output/bulk_bv"
+    if create_mass_carto:
+        mass_carto_creation(
+            f"{ALTI_PARENT_FOLDER}alti_data", f"{ALTI_PARENT_FOLDER}output/mass_bv"
         )
 
 

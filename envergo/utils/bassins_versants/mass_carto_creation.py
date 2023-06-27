@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 # ignore when numpy is trying to do the mean of an empty slice
 
 
-def bulk_carto_creation(input_folder, output_folder, output_carto_precision=20):
+def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
     """
     Crée une cartographie de bassin versant par cartographie d'altimétrie présente dans le dossier d'entrée.
 
@@ -57,7 +57,7 @@ def bulk_carto_creation(input_folder, output_folder, output_carto_precision=20):
 
 if __name__ == "__main__":
     parser = argparse.argument_parser(
-        description="run a bulk carto creation for bassin versant."
+        description="run a mass carto creation for bassin versant."
     )
     parser.add_argument(
         "input_folder",
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     print(args.input_folder)
     print(args.output_folder)
 
-    bulk_carto_creation(
+    mass_carto_creation(
         args.input_folder,
         args.output_folder,
     )
