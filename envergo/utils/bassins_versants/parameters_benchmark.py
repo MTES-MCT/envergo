@@ -16,6 +16,19 @@ def benchmark_parameters(
     project_surface=2000,
     benchmark_folder=None,
 ):
+    """
+    Effectue une évaluation comparative des paramètres de benchmark pour les bassins versants.
+
+    Args:
+        params_to_benchmark (list): Liste des paramètres à évaluer.
+        comparisons_to_do (list): Liste des comparaisons à effectuer.
+        places_to_evaluate (list): Liste des emplacements à évaluer.
+        project_surface (int): Surface du projet (par défaut : 2000).
+        benchmark_folder (str): Dossier de benchmark (par défaut : None).
+
+    Si un dossier est renseigné, le programme ne recalcule pas les bassins versants mais utilise ceux du dossier pour effectuer les comparaisons.
+    """
+
     def get_name(place, params: bassinVersantParameters):
         bottom_left = carto.get_bottom_left_corner(place[1])
         return (
@@ -63,9 +76,8 @@ def benchmark_parameters(
             compare_cartos_v2(
                 f"{benchmark_folder}/cartos/{get_name(place, params2)}.asc",
                 f"{benchmark_folder}/cartos/{get_name(place, params1)}.asc",
-                7000 - project_surface,
-                10000 - project_surface,
-                stretch=(1, 1),
+                7000 - project_surface,  # action requise
+                10000 - project_surface,  # soumis
                 save_dir=save_dir,
             )
 
