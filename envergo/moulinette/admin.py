@@ -14,13 +14,13 @@ from envergo.moulinette.regulations import MoulinetteCriterion
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["title", "slug", "perimeter"]
+    list_display = ["title", "slug", "perimeter", "activation_distance"]
     prepopulated_fields = {"slug": ["title"]}
 
 
 @admin.register(Criterion)
 class CriterionAdmin(admin.ModelAdmin):
-    list_display = ["title", "slug", "regulation", "perimeter"]
+    list_display = ["title", "slug", "regulation", "perimeter", "activation_distance"]
     prepopulated_fields = {"slug": ["title"]}
 
 

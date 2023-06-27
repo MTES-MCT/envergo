@@ -37,6 +37,9 @@ class Regulation(models.Model):
         on_delete=models.PROTECT,
         related_name="regulations",
     )
+    activation_distance = models.PositiveIntegerField(
+        _("Activation distance"), default=0
+    )
     weight = models.PositiveIntegerField(_("Weight"), default=1)
 
     class Meta:
@@ -59,6 +62,9 @@ class Criterion(models.Model):
         verbose_name=_("Perimeter"),
         on_delete=models.PROTECT,
         related_name="criteria",
+    )
+    activation_distance = models.PositiveIntegerField(
+        _("Activation distance"), default=0
     )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
