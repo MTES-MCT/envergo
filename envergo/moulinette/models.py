@@ -26,6 +26,56 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 
+class Regulation(models.Model):
+    """A single regulation (e.g Loi sur l'eau)."""
+
+    title = models.CharField(_("Title"), max_length=256)
+    slug = models.SlugField(_("Slug"), max_length=256)
+    perimeter = models.ForeignKey(
+        "geodata.Map",
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="regulations",
+    )
+    weight = models.PositiveIntegerField(_("Weight"), default=1)
+
+    class Meta:
+        verbose_name = _("Regulation")
+        verbose_name_plural = _("Regulations")
+
+    def __str__(self):
+        return self.title
+
+
+class Criterion(models.Model):
+    """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
+
+    title = models.CharField(_("Title"), max_length=256)
+    slug = models.SlugField(_("Slug"), max_length=256)
+    subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
+    header = models.CharField(_("Header"), max_length=4096, blank=True)
+    perimeter = models.ForeignKey(
+        "geodata.Map",
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+    )
+    regulation = models.ForeignKey(
+        "moulinette.Regulation",
+        verbose_name=_("Regulation"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+    )
+    weight = models.PositiveIntegerField(_("Weight"), default=1)
+
+    class Meta:
+        verbose_name = _("Criterion")
+        verbose_name_plural = _("Criteria")
+
+    def __str__(self):
+        return self.title
+
+
 class Perimeter(models.Model):
     """Link a map and regulation criteria."""
 

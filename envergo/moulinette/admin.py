@@ -2,8 +2,26 @@ from django import forms
 from django.contrib import admin
 
 from envergo.geodata.models import Map
-from envergo.moulinette.models import Contact, MoulinetteConfig, Perimeter
+from envergo.moulinette.models import (
+    Contact,
+    Criterion,
+    MoulinetteConfig,
+    Perimeter,
+    Regulation,
+)
 from envergo.moulinette.regulations import MoulinetteCriterion
+
+
+@admin.register(Regulation)
+class RegulationAdmin(admin.ModelAdmin):
+    list_display = ["title", "slug", "perimeter"]
+    prepopulated_fields = {"slug": ["title"]}
+
+
+@admin.register(Criterion)
+class CriterionAdmin(admin.ModelAdmin):
+    list_display = ["title", "slug", "regulation", "perimeter"]
+    prepopulated_fields = {"slug": ["title"]}
 
 
 class PerimeterAdminForm(forms.ModelForm):
