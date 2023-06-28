@@ -28,6 +28,11 @@ dossier_de_destination/RGE_ALTI/1_DONNEES_LIVRAISON_\[...]
 vous pouvez alors directement lancer le calcul pour toutes les cartos disponibles :
 
 Depuis la racine du projet :
+1. Installer les dépendances :
+```
+python3 -m pip install -r envergo/utils/bassins_versants/requirements.txt
+```
+2. Lancer le programme :
 ```
 python3 envergo/utils/bassin_versants/mass_carto_creation.py \
     --input-folder <dossier_de_destination_des_cartos>/RGE_ALTI/1_DONNEES_LIVRAISON_[...] \
