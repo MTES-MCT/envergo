@@ -24,9 +24,7 @@ def test_plot():
     """
     q_nb = 8
     radii = [50, 75, 100, 130, 160]
-    inner_atli, quads, _ = create_quadrants(
-        x=1155,
-        y=1650,
+    inner_atli, quads = create_quadrants(
         carto_precision=5,
         inner_radius=25,
         radii=radii,
@@ -47,20 +45,31 @@ def plot_quadrants(inner_atli, quads, radii, q_nb):
         radii (List[int]): Liste des rayons.
         q_nb (int): Nombre de quadrants.
     """
-    colors = ["blue", "purple", "red", "pink", "orange", "yellow", "lime", "green"]
+    colors = [
+        "#ff0000",
+        "#ff8000",
+        "#ffff00",
+        "#80ff00",
+        "#00ff00",
+        "#00ff80",
+        "#00ffff",
+        "#0080ff",
+        "#0000ff",
+        "#8000ff",
+        "#ff00ff",
+        "#ff0080",
+    ]
     fig, ax = plt.subplots()
-    ax.set_xlim([0, 1000])
-    ax.set_ylim([0, 1000])
     ax.scatter(
-        [p[0] for p in inner_atli], [p[1] for p in inner_atli], color="grey", s=0.1
+        [p[1] for p in inner_atli], [p[0] for p in inner_atli], color="grey", s=0.1
     )
     for q in range(q_nb):
         for i, _ in enumerate(radii):
             ax.scatter(
-                [1000 - p[1] / 5 for p in quads[q][i]],
-                [p[0] / 5 for p in quads[q][i]],
+                [p[1] for p in quads[q][i]],
+                [p[0] for p in quads[q][i]],
                 color=colors[q],
-                s=(i + 1) ** 2,
+                s=5 + 10 * (1 - i % 2),
             )
 
     plt.show()
@@ -367,6 +376,7 @@ def compare_cartos_v2(
 
 
 def run_tests(
+    plot_quadrants_go=False,
     compare_cartos_go=False,
     generate_one_carto=False,
     test_big_carto=False,
@@ -376,11 +386,23 @@ def run_tests(
     Lance les tests de visualisation en fonction des variables qui sont passées à True
 
     Args:
+        plot_quadrants (bool): Indique si les tests d'affichage de quadrants doivent être lancés.
         compare_cartos_go (bool): Indique si les tests de comparaison de cartos doivent être lancés.
         generate_one_carto (bool): Indique si le test de génération d'une seule carto doit être lancé.
         test_big_carto (bool): Indique si le test de visualisation de la "big carto" doit être lancé.
         create_mass_carto (bool): Indique si le test de création massive de carto doit être lancé.
     """
+    if plot_quadrants_go:
+        q_nb = 12
+        radii = [59, 81, 98, 113, 126, 138, 149, 160]
+        inner_atli, quads = create_quadrants(
+            carto_precision=5,
+            inner_radius=25,
+            radii=radii,
+            quadrants_nb=q_nb,
+        )
+
+        plot_quadrants(inner_atli, quads, radii, q_nb)
 
     if compare_cartos_go:
         test_dir = f"{ALTI_PARENT_FOLDER}output/test/"
