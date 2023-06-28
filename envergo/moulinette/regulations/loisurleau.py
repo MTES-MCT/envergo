@@ -4,10 +4,9 @@ from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    CriterionEvaluator,
     Map,
     MapPolygon,
-    MoulinetteCriterion,
-    MoulinetteRegulation,
     RequiredAction,
     Stake,
 )
@@ -17,12 +16,8 @@ LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
 
 
-class ZoneHumide(MoulinetteCriterion):
-    slug = "zone_humide"
+class ZoneHumide(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone humide"
-    title = "Impact sur une zone humide"
-    subtitle = "Seuil de déclaration : 1 000 m²"
-    header = "Rubrique 3.3.1.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     CODES = [
         "soumis",
@@ -32,6 +27,30 @@ class ZoneHumide(MoulinetteCriterion):
         "action_requise_proche",
         "action_requise_dans_doute",
     ]
+
+    CODE_MATRIX = {
+        ("inside", "big"): "soumis",
+        ("inside", "medium"): "action_requise",
+        ("inside", "small"): "non_soumis",
+        ("close_to", "big"): "action_requise_proche",
+        ("close_to", "medium"): "non_soumis",
+        ("close_to", "small"): "non_soumis",
+        ("inside_potential", "big"): "action_requise_dans_doute",
+        ("inside_potential", "medium"): "non_soumis",
+        ("inside_potential", "small"): "non_soumis",
+        ("outside", "big"): "non_concerne",
+        ("outside", "medium"): "non_concerne",
+        ("outside", "small"): "non_concerne",
+    }
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "non_soumis": RESULTS.non_soumis,
+        "non_concerne": RESULTS.non_concerne,
+        "action_requise": RESULTS.action_requise,
+        "action_requise_proche": RESULTS.action_requise,
+        "action_requise_dans_doute": RESULTS.action_requise,
+    }
 
     def get_catalog_data(self):
         data = {}
@@ -82,47 +101,6 @@ class ZoneHumide(MoulinetteCriterion):
             project_size = "small"
 
         return wetland_status, project_size
-
-    @cached_property
-    def result(self):
-        """Run the check for the 3.3.1.0 rule.
-
-        Associate a unique result code with a value from the RESULTS enum.
-        """
-
-        code = self.result_code
-        result_matrix = {
-            "soumis": RESULTS.soumis,
-            "non_soumis": RESULTS.non_soumis,
-            "non_concerne": RESULTS.non_concerne,
-            "action_requise": RESULTS.action_requise,
-            "action_requise_proche": RESULTS.action_requise,
-            "action_requise_dans_doute": RESULTS.action_requise,
-        }
-        result = result_matrix[code]
-        return result
-
-    @property
-    def result_code(self):
-        """Return the unique result code"""
-
-        wetland_status, project_size = self.get_result_data()
-        code_matrix = {
-            ("inside", "big"): "soumis",
-            ("inside", "medium"): "action_requise",
-            ("inside", "small"): "non_soumis",
-            ("close_to", "big"): "action_requise_proche",
-            ("close_to", "medium"): "non_soumis",
-            ("close_to", "small"): "non_soumis",
-            ("inside_potential", "big"): "action_requise_dans_doute",
-            ("inside_potential", "medium"): "non_soumis",
-            ("inside_potential", "small"): "non_soumis",
-            ("outside", "big"): "non_concerne",
-            ("outside", "medium"): "non_concerne",
-            ("outside", "small"): "non_concerne",
-        }
-        code = code_matrix[(wetland_status, project_size)]
-        return code
 
     def _get_map(self):
         map_polygons = []
@@ -185,12 +163,19 @@ class ZoneHumide(MoulinetteCriterion):
         return action
 
 
-class ZoneInondable(MoulinetteCriterion):
-    slug = "zone_inondable"
+class ZoneInondable(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
-    title = "Impact sur une zone inondable"
-    subtitle = "Seuil de déclaration : 400 m²"
-    header = "Rubrique 3.2.2.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
+
+    CODES = ["soumis", "action_requise", "non_soumis", "non_concerne"]
+
+    CODE_MATRIX = {
+        ("inside", "big"): RESULTS.soumis,
+        ("inside", "medium"): RESULTS.action_requise,
+        ("inside", "small"): RESULTS.non_soumis,
+        ("outside", "big"): RESULTS.non_concerne,
+        ("outside", "medium"): RESULTS.non_concerne,
+        ("outside", "small"): RESULTS.non_soumis,
+    }
 
     def get_catalog_data(self):
         data = {}
@@ -202,8 +187,7 @@ class ZoneInondable(MoulinetteCriterion):
             data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
-    @cached_property
-    def result_code(self):
+    def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
 
         if self.catalog["flood_zones_within_12m"]:
@@ -218,21 +202,7 @@ class ZoneInondable(MoulinetteCriterion):
         else:
             project_size = "small"
 
-        result_matrix = {
-            "inside": {
-                "big": RESULTS.soumis,
-                "medium": RESULTS.action_requise,
-                "small": RESULTS.non_soumis,
-            },
-            "outside": {
-                "big": RESULTS.non_concerne,
-                "medium": RESULTS.non_concerne,
-                "small": RESULTS.non_soumis,
-            },
-        }
-
-        result = result_matrix[flood_zone_status][project_size]
-        return result
+        return flood_zone_status, project_size
 
     def _get_map(self):
         zone_qs = [
@@ -268,12 +238,8 @@ class ZoneInondable(MoulinetteCriterion):
         return action
 
 
-class Ruissellement(MoulinetteCriterion):
-    slug = "ruissellement"
+class Ruissellement(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Ruissellement"
-    title = "Impact sur l'écoulement des eaux pluviales"
-    subtitle = "Seuil de déclaration : 1 ha"
-    header = "Rubrique 2.1.5.0. de la <a target='_blank' rel='noopener' href='https://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf'>nomenclature IOTA</a>"  # noqa
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
@@ -299,41 +265,11 @@ class Ruissellement(MoulinetteCriterion):
         return action
 
 
-class OtherCriteria(MoulinetteCriterion):
-    slug = "autres_rubriques"
+class OtherCriteria(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Autres rubriques"
-    title = "Autres rubriques"
 
     CODES = ["non_disponible"]
 
     @cached_property
     def result_code(self):
         return RESULTS.non_disponible
-
-
-class LoiSurLEau(MoulinetteRegulation):
-    slug = "loi_sur_leau"
-    title = "Loi sur l'eau"
-    criterion_classes = [
-        ZoneHumide,
-        ZoneInondable,
-        Ruissellement,
-        OtherCriteria,
-    ]
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        elif RESULTS.a_verifier in results:
-            result = RESULTS.iota_a_verifier
-        else:
-            result = RESULTS.non_soumis
-
-        return result

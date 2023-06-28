@@ -267,3 +267,39 @@ class MoulinetteCriterion(ABC):
 
     def discussion_contact(self):
         return None
+
+
+class CriterionEvaluator(ABC):
+    """Evaluate a single criterion."""
+
+    # Associate evaluation data with a single result code
+    CODE_MATRIX = {}
+
+    # Associate a result code with a single result
+    RESULT_MATRIX = {}
+
+    def get_result_data(self):
+        """Return the data used to perform the criterion check."""
+
+        raise NotImplementedError(
+            f"Implement the `{type(self).__name__}.get_result_data` method."
+        )
+
+    @property
+    def result_code(self):
+        """Return a unique code for the criterion result.
+
+        Sometimes, a same criterion can have the same result for different reasons.
+        Because of this, we want unique codes to display custom messages to
+        the user.
+        """
+        result_data = self.get_result_data()
+        result_code = self.CODE_MATRIX.get(result_data)
+        return result_code
+
+    @cached_property
+    def result(self):
+        """The result will be displayed to the user with a fancy label."""
+        result_code = self.result_code
+        result = self.RESULT_MATRIX.get(result_code, result_code)
+        return result
