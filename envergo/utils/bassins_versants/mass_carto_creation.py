@@ -20,16 +20,16 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
         output_carto_precision (int): La précision de la cartographie de sortie (par défaut : 20m car suffisant).
     """
 
-    # region parameters
+    # region default parameters
     params = bassinVersantParameters(
         carto_precision=5,
         inner_radius=25,
-        radii=[50, 75, 100, 130, 160],
+        radii=[59, 81, 98, 113, 126, 138, 149, 160],
         quadrants_nb=12,
         slope=0.05,
     )
-
     # endregion
+
     print("\n\n")
     print("========= mass carto creation =========")
     print(f"\nRunning Mass Carto Creator in {input_folder}...\n\n")
