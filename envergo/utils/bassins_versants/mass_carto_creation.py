@@ -20,13 +20,18 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
         output_carto_precision (int): La précision de la cartographie de sortie (par défaut : 20m car suffisant).
     """
 
-    # region default parameters
+    # region paramètres par défaut : ces paramètres ont été décidés avec Nicolas après notre étude comparative (voir benchmark_parameters.py)
     params = bassinVersantParameters(
         carto_precision=5,
+        # la meilleure précision d'entrée que nous pouvons obtenir à partir de ces cartes
         inner_radius=25,
+        # donne une surface interne d'environ 2000m2, ce qui correspond à la moyenne des projets soumis à envergo
         radii=[59, 81, 98, 113, 126, 138, 149, 160],
+        # meilleur ensemble de rayons que nous avons testé
         quadrants_nb=12,
+        # meilleur nombre de quadrants que nous avons testé, plus est trop radial et moins est imprécis
         slope=0.05,
+        # pente a partir de laquelle on observe un écoulement d'eau qui compte comme bassin versant.
     )
     # endregion
 
