@@ -19,7 +19,6 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
         output_folder (str): Le dossier de sortie dans lequel stocker les cartographies du bassin versant.
         output_carto_precision (int): La précision de la cartographie de sortie (par défaut : 20m car suffisant).
     """
-    print(f"\nRunning Bulk Carto Creator in {input_folder}...\n")
 
     # region parameters
     params = bassinVersantParameters(
@@ -31,7 +30,9 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
     )
 
     # endregion
-
+    print("\n\n")
+    print("========= mass carto creation =========")
+    print(f"\nRunning Mass Carto Creator in {input_folder}...\n\n")
     print(
         "progression : first bar is the number of cartos, second is the current carto creation"
     )
@@ -39,7 +40,7 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
         info = get_carto_info(f"{input_folder}/{file}")
         bottom_left = (info["xllcorner"], info["yllcorner"])
         ouptut_file = (
-            "{}/envergo_basssin_versant_fxx_{:04d}_{:04d}_mnt_lamb93.asc".format(
+            "{}/ENVERGO_BASSSIN_VERSANT_FXX_{:04d}_{:04d}_MNT_LAMB93.ASC".format(
                 output_folder,
                 round(bottom_left[0] / 1000),
                 round(bottom_left[1] / 1000),
@@ -56,17 +57,21 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
 
 
 if __name__ == "__main__":
-    parser = argparse.argument_parser(
+    parser = argparse.ArgumentParser(
         description="run a mass carto creation for bassin versant."
     )
     parser.add_argument(
-        "input_folder",
+        "--input-folder",
+        dest="input_folder",
         type=str,
+        required=True,
         help="the input folder in which to search for rge alti cartos",
     )
     parser.add_argument(
-        "output_folder",
+        "--output-folder",
+        dest="output_folder",
         type=str,
+        required=True,
         help="the output folder in which to store the bassin versant cartos",
     )
 
