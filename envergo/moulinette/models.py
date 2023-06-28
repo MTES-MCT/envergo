@@ -50,10 +50,52 @@ class Regulation(models.Model):
 
     @cached_property
     def result(self):
-        """The result will be displayed to the user with a fancy label."""
+        """Compute global result from individual criterions.
 
-        # XXX
-        return RESULTS.non_soumis
+        When we perform an evaluation, a single regulation has many criteria.
+        Criteria can have different results, but we display a single value for
+        the regulation result.
+
+        We can reduce different criteria results into a single regulation
+        result because results have different priorities.
+
+        For example, if a single criterion has the "interdit" result, the
+        regulation result will be "interdit" too, no matter what the other
+        criteria results are. Then it will be "soumis", etc.
+
+        Different regulations have different set of possible result values, e.g
+        only the Évaluation environnementale regulation has the "cas par cas" or
+        "systematique" results, but the cascade still works.
+        """
+
+        cascade = [
+            RESULTS.interdit,
+            RESULTS.systematique,
+            RESULTS.cas_par_cas,
+            RESULTS.soumis,
+            RESULTS.action_requise,
+            RESULTS.a_verifier,
+            RESULTS.non_soumis,
+            RESULTS.non_concerne,
+            RESULTS.non_disponible,
+        ]
+        results = [criterion.result for criterion in self.criteria.all()]
+        result = None
+        for status in cascade:
+            if status in results:
+                result = status
+                break
+
+        # Special case for the Natura2000 regulation, the criterion and
+        # regulation statuses are different
+        if result == RESULTS.a_verifier:
+            result = RESULTS.iota_a_verifier
+
+        # If there is no criterion at all, set a default result of "non disponible"
+        if result is None:
+            result = RESULTS.non_disponible
+
+        return result
 
 
 class Criterion(models.Model):
