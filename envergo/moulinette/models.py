@@ -11,7 +11,10 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
-from envergo.moulinette.fields import CriterionChoiceField
+from envergo.moulinette.fields import (
+    CriterionChoiceField,
+    CriterionEvaluatorChoiceField,
+)
 from envergo.moulinette.regulations import MoulinetteCriterion
 from envergo.utils.markdown import markdown_to_html
 
@@ -105,6 +108,7 @@ class Criterion(models.Model):
     slug = models.SlugField(_("Slug"), max_length=256)
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
+    evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     perimeter = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Perimeter"),
