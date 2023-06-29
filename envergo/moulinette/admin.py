@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Map
 from envergo.moulinette.models import (
@@ -9,7 +10,7 @@ from envergo.moulinette.models import (
     Perimeter,
     Regulation,
 )
-from envergo.moulinette.regulations import MoulinetteCriterion
+from envergo.moulinette.regulations import CriterionEvaluator, MoulinetteCriterion
 
 
 @admin.register(Regulation)
@@ -18,10 +19,40 @@ class RegulationAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ["title"]}
 
 
+class CriterionAdminForm(forms.ModelForm):
+    def get_initial_for_field(self, field, field_name):
+        """Prevent Evaluator choice to be instanciated.
+
+        In the legacy's version of this function, callable values are, well,
+        called.
+
+        But since we have a custom field that should return
+        `CriterionEvaluator` subclasses, we don't want the form to actually
+        instanciate those classes.
+        """
+
+        value = self.initial.get(field_name, field.initial)
+        if callable(value) and not issubclass(value, CriterionEvaluator):
+            value = value()
+        return value
+
+
 @admin.register(Criterion)
 class CriterionAdmin(admin.ModelAdmin):
-    list_display = ["title", "slug", "regulation", "perimeter", "activation_distance"]
+    list_display = [
+        "title",
+        "slug",
+        "regulation",
+        "perimeter",
+        "activation_distance",
+        "evaluator_column",
+    ]
     prepopulated_fields = {"slug": ["title"]}
+    form = CriterionAdminForm
+
+    @admin.display(description=_("Evaluator"))
+    def evaluator_column(self, obj):
+        return obj.evaluator.choice_label
 
 
 class PerimeterAdminForm(forms.ModelForm):
