@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -51,7 +49,13 @@ class Regulation(models.Model):
     def __str__(self):
         return self.title
 
-    @cached_property
+    def evaluate(self, moulinette):
+        """Evaluate the regulation and all its criterions."""
+
+        for criterion in self.criteria.all():
+            criterion.evaluate(moulinette)
+
+    @property
     def result(self):
         """Compute global result from individual criterions.
 
@@ -136,21 +140,29 @@ class Criterion(models.Model):
     def get_form(self):
         return None
 
-    @cached_property
-    def result(self):
-        """The result will be displayed to the user with a fancy label."""
-        return self.result_code
+    def evaluate(self, moulinette):
+        self._evaluator = self.evaluator(moulinette)
+        self._evaluator.evaluate()
 
     @property
     def result_code(self):
-        """Return a unique code for the criterion result.
+        """Return the criterion result code."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
 
-        Sometimes, a same criterion can have the same result for different reasons.
-        Because of this, we want unique codes to display custom messages to
-        the user.
-        """
-        # XXX
-        return RESULTS.non_concerne
+        return self._evaluator.result_code
+
+    @property
+    def result(self):
+        """Return the criterion result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result."
+            )
+
+        return self._evaluator.result
 
 
 class Perimeter(models.Model):
@@ -270,6 +282,11 @@ class Moulinette:
         # ]
 
         self.catalog.update(self.cleaned_additional_data())
+        self.evaluate()
+
+    def evaluate(self):
+        for regulation in self.regulations:
+            regulation.evaluate(self)
 
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]

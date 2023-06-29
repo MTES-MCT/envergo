@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
@@ -243,7 +241,7 @@ class Ruissellement(CriterionEvaluator):
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
-    @cached_property
+    @property
     def result_code(self):
         if self.catalog["final_surface"] >= 10000:
             res = RESULTS.soumis
@@ -270,6 +268,5 @@ class OtherCriteria(CriterionEvaluator):
 
     CODES = ["non_disponible"]
 
-    @cached_property
-    def result_code(self):
-        return RESULTS.non_disponible
+    def evaluate(self):
+        self._result_code, self._result = RESULTS.non_disponible, RESULTS.non_disponible
