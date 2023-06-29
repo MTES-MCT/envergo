@@ -162,5 +162,4 @@ benchmark_parameters(
     comparisons_to_do,
     places_to_evaluate,
     project_surface=2000,
-    benchmark_folder="/Users/hugoborsoni/Documents/CS/8_JE/envergo/code/envergo/envergo/utils/bassins_versants/output/benchmarks/benchmark_slope_005",
 )
