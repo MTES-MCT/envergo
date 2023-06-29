@@ -33,7 +33,7 @@ def benchmark_parameters(
         bottom_left = carto.get_bottom_left_corner(place[1])
         return (
             f"{place[0]}_{bottom_left[0]}_{bottom_left[1]}__test_20_"
-            + f"{params.carto_precision}_{params.quadrants_nb}_{params.slope}"
+            + f"{params.carto_precision}_{params.quadrants_nb}_{str(params.slope).replace('.','-')}_"
             + "-".join([str(r) for r in params.radii])
         )
 
