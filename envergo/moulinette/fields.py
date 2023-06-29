@@ -12,6 +12,9 @@ from envergo.moulinette.regulations import (  # noqa
     sage,
 )
 
+# Note: we need to import the different modules from `regulations`, so the
+# `CriterionEvaluator.__subclasses__` returns all the available evaluators.
+
 
 def classpath(klass):
     return "{}.{}".format(klass.__module__, klass.__name__)
