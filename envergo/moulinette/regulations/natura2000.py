@@ -263,6 +263,7 @@ class Lotissement(CriterionEvaluator):
 
     def get_distance_to_n2000(self):
         # XXX
+        return 0
         perimeters = self.moulinette.perimeters
         perimeter = next((p for p in perimeters if p.criterion == type(self)), None)
         return perimeter.distance.m
