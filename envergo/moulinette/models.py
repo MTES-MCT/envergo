@@ -137,9 +137,6 @@ class Criterion(models.Model):
     def __str__(self):
         return self.title
 
-    def get_form(self):
-        return None
-
     def evaluate(self, moulinette):
         self._evaluator = self.evaluator(moulinette)
         self._evaluator.evaluate()
@@ -182,6 +179,12 @@ class Criterion(models.Model):
         except:  # noqa
             map = None
         return map
+
+    def get_form_class(self):
+        return self._evaluator.get_form_class()
+
+    def get_form(self):
+        return self._evaluator.get_form()
 
 
 class Perimeter(models.Model):
@@ -300,7 +303,6 @@ class Moulinette:
         #     EvalEnvironnementale(self),
         # ]
 
-        self.catalog.update(self.cleaned_additional_data())
         self.evaluate()
 
     def evaluate(self):
@@ -534,8 +536,9 @@ class Moulinette:
 
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
-                if hasattr(criterion, "form_class"):
-                    forms.append(criterion.form_class)
+                form_class = criterion.get_form_class()
+                if form_class:
+                    forms.append(form_class)
 
         return forms
 

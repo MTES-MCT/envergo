@@ -302,7 +302,13 @@ class CriterionEvaluator(ABC):
     def get_catalog_data(self):
         """Get data to inject to the global catalog."""
 
-        return {}
+        form = self.get_form()
+        if form and form.is_valid():
+            data = form.cleaned_data
+        else:
+            data = {}
+
+        return data
 
     def get_result_data(self):
         """Return the data used to perform the criterion check."""
@@ -319,7 +325,10 @@ class CriterionEvaluator(ABC):
             result = self.RESULT_MATRIX.get(result_code, result_code)
             self._result_code, self._result = result_code, result
         else:
-            self._result_code, self._result = None, None
+            self._result_code, self._result = (
+                RESULTS.non_disponible,
+                RESULTS.non_disponible,
+            )
 
     @property
     def result_code(self):
@@ -340,6 +349,10 @@ class CriterionEvaluator(ABC):
     def get_map(self):
         """Returns a `Map` object."""
         return None
+
+    def get_form_class(self):
+        form_class = getattr(self, "form_class", None)
+        return form_class
 
     def get_form(self):
         if hasattr(self, "form_class"):
