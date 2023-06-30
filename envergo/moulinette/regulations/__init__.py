@@ -312,10 +312,14 @@ class CriterionEvaluator(ABC):
         )
 
     def evaluate(self):
-        result_data = self.get_result_data()
-        result_code = self.CODE_MATRIX.get(result_data)
-        result = self.RESULT_MATRIX.get(result_code, result_code)
-        self._result_code, self._result = result_code, result
+        form = self.get_form()
+        if (form and form.is_valid()) or form is None:
+            result_data = self.get_result_data()
+            result_code = self.CODE_MATRIX.get(result_data)
+            result = self.RESULT_MATRIX.get(result_code, result_code)
+            self._result_code, self._result = result_code, result
+        else:
+            self._result_code, self._result = None, None
 
     @property
     def result_code(self):
@@ -336,3 +340,10 @@ class CriterionEvaluator(ABC):
     def get_map(self):
         """Returns a `Map` object."""
         return None
+
+    def get_form(self):
+        if hasattr(self, "form_class"):
+            form = self.form_class(self.moulinette.raw_data)
+        else:
+            form = None
+        return form
