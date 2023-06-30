@@ -6,9 +6,9 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    CriterionEvaluator,
     Map,
     MapPolygon,
-    MoulinetteCriterion,
     MoulinetteRegulation,
 )
 
@@ -16,12 +16,8 @@ BLUE = "blue"
 LIGHTBLUE = "lightblue"
 
 
-class ZoneHumide44(MoulinetteCriterion):
-    slug = "zone_humide_44"
+class ZoneHumide44(CriterionEvaluator):
     choice_label = "Natura 2000 > 44 - Zone humide"
-    title = "Impact sur zone humide Natura 2000"
-    subtitle = "Seuil réglementaire : 100 m²"
-    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
     CODES = [
         "soumis",
@@ -33,8 +29,29 @@ class ZoneHumide44(MoulinetteCriterion):
         "non_concerne",
     ]
 
+    CODE_MATRIX = {
+        ("inside", "big"): "soumis",
+        ("inside", "small"): "non_soumis",
+        ("close_to", "big"): "action_requise_proche",
+        ("close_to", "small"): "non_soumis_proche",
+        ("inside_potential", "big"): "action_requise_dans_doute",
+        ("inside_potential", "small"): "non_soumis_dans_doute",
+        ("outside", "big"): "non_concerne",
+        ("outside", "small"): "non_concerne",
+    }
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "non_soumis": RESULTS.non_soumis,
+        "action_requise_proche": RESULTS.action_requise,
+        "non_soumis_proche": RESULTS.non_soumis,
+        "action_requise_dans_doute": RESULTS.action_requise,
+        "non_soumis_dans_doute": RESULTS.non_soumis,
+        "non_concerne": RESULTS.non_concerne,
+    }
+
     def get_catalog_data(self):
-        data = {}
+        data = super().get_catalog_data()
 
         if "wetlands_25" not in data:
             data["wetlands_25"] = [
@@ -81,45 +98,7 @@ class ZoneHumide44(MoulinetteCriterion):
 
         return wetland_status, project_size
 
-    @property
-    def result_code(self):
-        """Return the unique result code"""
-
-        wetland_status, project_size = self.get_result_data()
-        code_matrix = {
-            ("inside", "big"): "soumis",
-            ("inside", "small"): "non_soumis",
-            ("close_to", "big"): "action_requise_proche",
-            ("close_to", "small"): "non_soumis_proche",
-            ("inside_potential", "big"): "action_requise_dans_doute",
-            ("inside_potential", "small"): "non_soumis_dans_doute",
-            ("outside", "big"): "non_concerne",
-            ("outside", "small"): "non_concerne",
-        }
-        code = code_matrix[(wetland_status, project_size)]
-        return code
-
-    @cached_property
-    def result(self):
-        """Run the check for the 3.3.1.0 rule.
-
-        Associate a unique result code with a value from the RESULTS enum.
-        """
-
-        code = self.result_code
-        result_matrix = {
-            "soumis": RESULTS.soumis,
-            "non_soumis": RESULTS.non_soumis,
-            "action_requise_proche": RESULTS.action_requise,
-            "non_soumis_proche": RESULTS.non_soumis,
-            "action_requise_dans_doute": RESULTS.action_requise,
-            "non_soumis_dans_doute": RESULTS.non_soumis,
-            "non_concerne": RESULTS.non_concerne,
-        }
-        result = result_matrix[code]
-        return result
-
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -170,17 +149,20 @@ class ZoneHumide44(MoulinetteCriterion):
         return criterion_map
 
 
-class ZoneInondable44(MoulinetteCriterion):
-    slug = "zone_inondable_44"
+class ZoneInondable44(CriterionEvaluator):
     choice_label = "Natura 2000 > 44 - Zone inondable"
-    title = "Impact sur zone inondable Natura 2000"
-    subtitle = "Seuil réglementaire : 200 m²"
-    header = "« Liste locale 2 » Natura 2000 en Loire-Atlantique (10° de l'art. 1 de l'<a href='/static/pdfs/arrete_08042014.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"  # noqa
 
     CODES = ["soumis", "non_soumis", "non_concerne"]
 
+    CODE_MATRIX = {
+        ("inside", "big"): RESULTS.soumis,
+        ("inside", "small"): RESULTS.non_soumis,
+        ("outside", "big"): RESULTS.non_concerne,
+        ("outside", "small"): RESULTS.non_concerne,
+    }
+
     def get_catalog_data(self):
-        data = {}
+        data = super().get_catalog_data()
 
         if "flood_zones_12" not in self.catalog:
             data["flood_zones_12"] = [
@@ -189,10 +171,7 @@ class ZoneInondable44(MoulinetteCriterion):
             data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
         return data
 
-    @cached_property
-    def result_code(self):
-        """Run the check for the 3.1.2.0 rule."""
-
+    def get_result_data(self):
         if self.catalog["flood_zones_within_12m"]:
             flood_zone_status = "inside"
         else:
@@ -203,21 +182,9 @@ class ZoneInondable44(MoulinetteCriterion):
         else:
             project_size = "small"
 
-        result_matrix = {
-            "inside": {
-                "big": RESULTS.soumis,
-                "small": RESULTS.non_soumis,
-            },
-            "outside": {
-                "big": RESULTS.non_concerne,
-                "small": RESULTS.non_concerne,
-            },
-        }
+        return flood_zone_status, project_size
 
-        result = result_matrix[flood_zone_status][project_size]
-        return result
-
-    def _get_map(self):
+    def get_map(self):
         zone_qs = [
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
@@ -241,16 +208,12 @@ class ZoneInondable44(MoulinetteCriterion):
         return criterion_map
 
 
-class IOTA(MoulinetteCriterion):
-    slug = "iota"
+class IOTA(CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
-    title = "Natura 2000 si dossier Loi sur l'eau"
-    header = "« Liste nationale » Natura 2000 (4° du I de l'<a href='https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/' target='_blank' rel='noopener'>article R414-19 du Code de l'Environnement</a>)"  # noqa
 
     CODES = ["soumis", "non_soumis", "a_verifier"]
 
-    @cached_property
-    def result_code(self):
+    def evaluate(self):
         iota = self.moulinette.loi_sur_leau.result
         if iota in (RESULTS.soumis, RESULTS.interdit):
             result = RESULTS.soumis
@@ -259,11 +222,10 @@ class IOTA(MoulinetteCriterion):
         else:
             result = RESULTS.a_verifier
 
-        return result
+        self._result_code, self._result = result, result
 
 
 class LotissementForm(forms.Form):
-
     # I sacrificed a frog to the god of bad translations for the right to use
     # this variable name. Sorry.
     is_lotissement = forms.ChoiceField(
@@ -274,10 +236,8 @@ class LotissementForm(forms.Form):
     )
 
 
-class Lotissement(MoulinetteCriterion):
-    slug = "lotissement"
+class Lotissement(CriterionEvaluator):
     choice_label = "Natura 2000 > Lotissement"
-    title = "Lotissement dans zone Natura 2000"
     form_class = LotissementForm
 
     CODES = [
@@ -287,49 +247,41 @@ class Lotissement(MoulinetteCriterion):
         "non_disponible",
     ]
 
+    CODE_MATRIX = {
+        ("oui", "dedans"): "soumis_dedans",
+        ("oui", "proximite_immediate"): "soumis_proximite_immediate",
+        ("non", "dedans"): "non_soumis",
+        ("non", "proximite_immediate"): "non_soumis",
+    }
+
+    RESULT_MATRIX = {
+        "soumis_dedans": RESULTS.soumis,
+        "soumis_proximite_immediate": RESULTS.soumis,
+        "non_soumis": RESULTS.non_soumis,
+        "non_disponible": RESULTS.non_disponible,
+    }
+
     def get_distance_to_n2000(self):
+        # XXX
         perimeters = self.moulinette.perimeters
         perimeter = next((p for p in perimeters if p.criterion == type(self)), None)
         return perimeter.distance.m
 
-    @cached_property
-    def result_code(self):
+    def get_result_data(self):
+        is_lotissement = self.catalog["is_lotissement"]
+        distance_to_n2000 = self.get_distance_to_n2000()
+        if distance_to_n2000 <= 0.0:
+            distance = "dedans"
+        else:
+            distance = "proximite_immediate"
 
-        form = self.get_form()
-        if form.is_valid():
-            distance_to_n2000 = self.get_distance_to_n2000()
-            is_lotissement = form.cleaned_data["is_lotissement"] == "oui"
-
-            if is_lotissement:
-                if distance_to_n2000 <= 0.0:
-                    code = "soumis_dedans"
-                else:
-                    code = "soumis_proximite_immediate"
-            else:
-                code = "non_soumis"
-
-            return code
-
-        return "non_disponible"
-
-    @cached_property
-    def result(self):
-        code = self.result_code
-        result_matrix = {
-            "soumis_dedans": RESULTS.soumis,
-            "soumis_proximite_immediate": RESULTS.soumis,
-            "non_soumis": RESULTS.non_soumis,
-            "non_disponible": RESULTS.non_disponible,
-        }
-        result = result_matrix[code]
-        return result
+        return is_lotissement, distance
 
 
 class Lotissement44(Lotissement):
     # Note : this is the legacy name of the criterion.
     # It was renamed "Lotissement", but we keep the old name to avoid breaking
     # existing perimeters.
-    slug = "lotissement_44"
     choice_label = "Natura 2000 > 44 - Lotissement (obsolète)"
 
 
@@ -364,7 +316,7 @@ class Natura2000(MoulinetteRegulation):
         """
         return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
 
-    def _get_map(self):
+    def get_map(self):
         """Display a Natura 2000 map if a single criterion has been activated.
 
         Since there is probably a single Natura 2000 map for all Natura 2000
@@ -374,6 +326,8 @@ class Natura2000(MoulinetteRegulation):
         perimeter will likely be entire departments, so displaying it will not
         be relevant.
         """
+
+        # XXX
 
         # Let's find the first perimeter with a map that we can display
         perimeter = next(
