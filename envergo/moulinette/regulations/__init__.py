@@ -270,7 +270,19 @@ class MoulinetteCriterion(ABC):
 
 
 class CriterionEvaluator(ABC):
-    """Evaluate a single criterion."""
+    """Evaluate a single criterion.
+
+    The basic workflow is has follow:
+
+     - make sure the data we need is available (`get_catalog_data`) and inject
+       it to the global catalog, to avoid duplicate queries from other criteria
+     - get the data we need to perform the check (`get_result_data`)
+     - convert the data to a single result code using the `CODE_MATRIX` dict
+     - convert the result code to a single result using the `RESULT_MATRIX` dict
+
+    Those operations are performed in the `evaluate` method, which should only
+    be called once, and that populates the `result_code` and `result` properties.
+    """
 
     # Associate evaluation data with a single result code
     CODE_MATRIX = {}
