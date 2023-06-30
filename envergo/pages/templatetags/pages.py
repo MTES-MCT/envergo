@@ -16,16 +16,42 @@ def nav_link(route, label, aria_current=False):
 
 
 @register.simple_tag(takes_context=True)
-def menu_item(context, route, label):
-    """Generate html for a main menu item."""
+def menu_item(context, route, label, subroutes=[]):
+    """Generate html for a main menu item.
+
+    If you pass a list of subroutes, the menu item will be highlighted
+    if the current url is any on the main route or subroutes.
+    """
 
     try:
         current_route = context.request.resolver_match.url_name
     except AttributeError:
         current_route = ""
 
-    aria_current = route == current_route
+    aria_current = route == current_route or current_route in subroutes
     return nav_link(route, label, aria_current)
+
+
+@register.simple_tag(takes_context=True)
+def sidemenu_item(context, route, label):
+    try:
+        current_route = context.request.resolver_match.url_name
+    except AttributeError:
+        current_route = ""
+
+    aria_current = route == current_route
+    url = reverse(route)
+    sidemenu_class = "fr-sidemenu__item--current" if aria_current else ""
+    aria_attr = 'aria-current="page"' if aria_current else ""
+    return mark_safe(
+        f"""
+        <li class="fr-sidemenu__item {sidemenu_class}">
+            <a class="fr-sidemenu__link" href="{url}" {aria_attr}>
+                {label}
+            </a>
+        </li>
+        """
+    )
 
 
 @register.simple_tag(takes_context=True)
@@ -34,21 +60,27 @@ def evalreq_menu(context):
 
     link_route = "request_evaluation"
     link_label = "Demander une évaluation manuelle"
-
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
-
-    routes = [
+    subroutes = [
         "request_eval_wizard_step_1",
         "request_eval_wizard_step_2",
         "request_eval_wizard_step_3",
         "request_success",
     ]
+    return menu_item(context, link_route, link_label, subroutes)
 
-    aria_current = 'aria-current="page"' if current_route in routes else ""
-    return nav_link(link_route, link_label, aria_current)
+
+@register.simple_tag(takes_context=True)
+def faq_menu(context):
+    """Generate html for the "Faq" collapsible menu."""
+
+    link_route = "faq"
+    link_label = "Questions fréquentes"
+    subroutes = [
+        "faq_loi_sur_leau",
+        "faq_natura_2000",
+        "faq_eval_env",
+    ]
+    return menu_item(context, link_route, link_label, subroutes)
 
 
 @register.simple_tag(takes_context=True)

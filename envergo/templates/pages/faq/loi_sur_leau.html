@@ -1,18 +1,11 @@
-{% extends "base.html" %}
+{% extends "pages/faq/index.html" %}
 
 {% load static %}
 
-{% block title %}Questions fréquentes{% endblock %}
-
-{% block article %}
-  <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
-
-  <p class="fr-text--lead">
-    La Loi sur l'eau encadre tous les projets qui risquent d'impacter l'eau et les milieux aquatiques.
-  </p>
-
+{% block title %}Questions fréquentes : Loi sur l'eau{% endblock %}
+{% block faq_content %}
+  <h1 id="questcequelaloisurleau">Questions fréquentes : Loi sur l'eau</h1>
   <div id="faq-accordion">
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
@@ -21,7 +14,6 @@
           <span>Qu'est-ce que la Loi sur l'eau ?</span>
         </button>
       </h3>
-
       <div class="fr-collapse" id="accordion-loi_sur_leau">
         <p>La Loi sur l'eau encadre tous les projets qui risquent d'impacter les milieux aquatiques.</p>
         <p class="fr-highlight">
@@ -31,27 +23,22 @@
           l'eau</strong>.
         </p>
         <p>
-          La liste décrivant les projets soumis à la Loi sur l'eau se situe dans
-          <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042075042/2020-09-01/"
-             target="_blank"
-             rel="noopener">
-            l'article R.214-1 du Code de l'Environnement
-          </a>, aussi appelée
-          <a href="http://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf"
-             target="_blank"
-             rel="noopener">
-            nomenclature « IOTA » (pour Installations, Ouvrages, Travaux, Activités)
-          </a>.
+          La liste décrivant les projets soumis à la Loi sur l'eau se situe dans <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042075042/2020-09-01/"
+    target="_blank"
+    rel="noopener">l'article R.214-1 du
+          Code de
+          l'Environnement</a>, aussi appelée <a href="http://www.driee.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf"
+    target="_blank"
+    rel="noopener">nomenclature
+          « IOTA » (pour Installations, Ouvrages, Travaux, Activités)</a>.
         </p>
         <p>Les impacts sur les milieux aquatiques y sont répartis en plusieurs rubriques :</p>
-
         <ul>
           <li>modification du ruissellement d'eaux pluviales ;</li>
           <li>construction en zone inondable par un cours d'eau ;</li>
           <li>assèchement ou destruction de zones humides ;</li>
           <li>impact sur un cours d'eau, en milieu marin, forage, etc.</li>
         </ul>
-
         <p>Pour chaque rubrique il y a deux seuils d'impact :</p>
         <ul>
           <li>Le seuil (D), pour Déclaration ;</li>
@@ -65,79 +52,71 @@
         </p>
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="accordion-savoir-si-mon-projet-est-soumis">
+                aria-controls="accordion-savoir_si_mon_projet_est_soumis">
           <span>Comment déterminer si mon projet est soumis à la Loi sur l'eau ?</span>
         </button>
       </h3>
-
-      <div class="fr-collapse" id="accordion-savoir-si-mon-projet-est-soumis">
-
+      <div class="fr-collapse" id="accordion-savoir_si_mon_projet_est_soumis">
         <p>
-          En première approche, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si votre projet est soumis à la Loi sur l'eau, ainsi qu'à d'autres réglementations environnementales (Natura 2000…).
+          S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si le projet est soumis à la Loi sur l'eau — ainsi qu’aux autres réglementations environnementales (Natura 2000, évaluation environnementale…).
           C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
           Il fonctionne pour l'instant en Loire-Atlantique, dans le Morbihan et en Vendée, et sera prochainement étendu à un territoire plus large.
         </p>
-
         <p>Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé :</p>
-
         <ul>
           <li>
             <p>
               <strong>De se rapprocher d'un bureau d'études disposant d'une expertise « dossier Loi sur l'eau ».</strong>
             </p>
-            <p>
-              Les échanges vous permettront de confirmer si votre projet de construction est soumis à la Loi sur l'eau,
-              et s'il y a lieu de constituer un dossier à déposer à l'administration.
-            </p>
+            <p>Le bureau d’études environnemental vous permet :</p>
+            <ul>
+              <li>
+                d’évaluer si votre projet de construction ou d’aménagement est soumis à la Loi sur l'eau ou à d’autres règlementations environnementales ;
+              </li>
+              <li>de vous accompagner dans la réduction des impacts de votre projet ;</li>
+              <li>et de constituer les dossiers à déposer à l'administration.</li>
+            </ul>
           </li>
-
           <li>
             <p>
               <strong>De demander une évaluation Loi sur l'eau au service EnvErgo</strong>
             </p>
-
             <p>
               Vous pouvez <a href="{% url 'request_evaluation' %}">demander une évaluation de votre projet</a>, qui sera réalisée manuellement par l'équipe d'EnvErgo
               — disponible sur la totalité du territoire français.
             </p>
-
             <p>
               Enfin, n'hésitez pas à <a href="{% url 'contact_us' %}">contacter l'équipe EnvErgo pour toute question complémentaire</a>.
             </p>
-
+            <!-- this empty p tag is here for formatting reasons, allows for welcome vertical space-->
           </li>
-
           <li>
             <p>
               <strong>De se rapprocher du service qui instruit les dossiers Loi sur l'eau</strong>
             </p>
             <p>Pour cela, contactez la DDT(M) (Direction Départementale des Territoires et de la Mer) de votre département.</p>
           </li>
-
         </ul>
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="false"
                 aria-controls="accordion-que_faire">
-          <span>Que faire si mon projet est soumis à la Loi sur l'eau ?</span>
+          <span>Que faire si mon projet de construction ou d'aménagement est soumis à la Loi sur l'eau ?</span>
         </button>
       </h3>
-
       <div class="fr-collapse" id="accordion-que_faire">
         <p class="fr-highlight">
           <span class="fr-fi-error-warning-line" aria-hidden="true"></span>
           <strong>
             Vous devez obligatoirement déposer un dossier de déclaration Loi sur l'eau, en plus de la demande de permis de
-            construire.
+            construire ou d'aménager.
           </strong>
         </p>
         <p>
@@ -145,40 +124,31 @@
           de la Mer).
         </p>
         <p>
-          Il est à déposer au guichet unique de l'environnement du département où se situe le projet.
-          <a href="https://entreprendre.service-public.fr/vosdroits/R62929"
-             target="_blank"
-             rel="noopener">
-            Le dépôt peut se faire numériquement, via une procédure en ligne.
-          </a>
+          Il est à déposer au guichet unique de l'environnement du département où
+          se situe le projet. <a href="https://entreprendre.service-public.fr/vosdroits/R62929"
+    target="_blank"
+    rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne.</a>
         </p>
-
         <p>
           Il suit une procédure d'instruction spécifique, distincte de la demande de permis de construire, avec ses
           délais propres.
         </p>
-
         <p class="fr-highlight">
           Son appellation « Déclaration » <strong>ne signifie pas qu'il s'agit d'une procédure
           déclarative sans obligation associée</strong>. Au contraire, elle déclenche une
           véritable instruction sur le fond du projet, qui peut aboutir :
         </p>
-
         <ul>
           <li>à un accord ;</li>
-
           <li>
             à un accord sous conditions, sous la forme d'un arrêté de prescriptions particulières qui devront être
             respectées
             ;
           </li>
-
           <li>à un refus, sous la forme d'un arrêté d'opposition à la déclaration.</li>
         </ul>
-
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
@@ -202,13 +172,11 @@
           <li>Si le dossier est complet, un récépissé de déclaration ;</li>
           <li>Si le dossier est incomplet, une demande de pièces complémentaires.</li>
         </ul>
-
         <p>
           Si des compléments au dossier sont nécessaires, vous avez alors 3 mois pour apporter les pièces
           complémentaires, sans quoi le projet est rejeté automatiquement.
         </p>
         <p>Le délai d'instruction de 2 mois redémarre à la date de réception des compléments par la DDT(M).</p>
-
         <p>
           <strong>Dans les 2 mois</strong> après réception du récépissé, vous recevez la décision du préfet :
         </p>
@@ -224,46 +192,36 @@
         </p>
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="accordion-permis-construire">
+                aria-controls="accordion-permis_construire">
           <span>Quel est le lien entre la déclaration Loi sur l'eau et le permis de construire ?</span>
         </button>
       </h3>
-
-      <div class="fr-collapse" id="accordion-permis-construire">
+      <div class="fr-collapse" id="accordion-permis_construire">
         <p>
           Les procédures Loi sur l'eau sont des procédures spécifiques, à effectuer en plus de la demande de permis de
           construire ou d'aménager.
         </p>
-
         <p class="fr-highlight">
           Si votre projet est soumis à la Loi sur l'eau, <strong>il vous faut donc bien articuler les deux procédures
           d'instruction</strong> (Permis de construire ou d'aménager / Loi sur l'eau) qui peuvent <strong>s'influencer l'une
           l'autre</strong>.
         </p>
-
         <p>
-          Dans le formulaire de demande de permis de construire hors maison individuelle ou permis d'aménager
-          (
-          <a href="https://www.service-public.fr/particuliers/vosdroits/R20835"
-             target="_blank"
-             rel="noopener">
-            Cerfa 13409
-          </a>
-          ), le
+          Dans le formulaire de demande de permis de construire hors maison individuelle ou permis d'aménager (<a target="_blank"
+   rel="noopener"
+   href="https://www.service-public.fr/particuliers/vosdroits/R20835">Cerfa
+          13409</a>), le
           cadre n°8 sert à informer le service urbanisme des démarches menées au titre de
           la Loi sur l'eau.
         </p>
-
         <ul>
           <li>
             La première case du cadre n°8 doit être cochée si votre projet est soumis à
             Déclaration au titre de la nomenclature IOTA :
-
             <figure class="fr-content-media"
                     role="group"
                     aria-label="Pensez à cocher la case appropriée si votre projet est soumis à la Loi sur l'eau">
@@ -277,40 +235,34 @@
               </figcaption>
             </figure>
           </li>
-
           <li>
             La deuxième case du cadre n°8 doit être cochée si votre projet est soumis à
             Autorisation au titre de la nomenclature IOTA, qui correspond à un niveau
             d'impact plus élevé que celui de la Déclaration.
           </li>
         </ul>
-
         <p>
           Le service urbanisme qui étudie votre demande est en droit de vous demander des pièces complémentaires, pour déterminer si vous avez déposé
           ou non un dossier Loi sur l'eau pour votre projet.
         </p>
-
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="accordion-reponse-prefecture">
+                aria-controls="accordion-travaux_avant_reponse">
           <span>Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?</span>
         </button>
       </h3>
-
-      <div class="fr-collapse" id="accordion-reponse-prefecture">
+      <div class="fr-collapse" id="accordion-travaux_avant_reponse">
         <p>Vous ne pouvez pas démarrer les travaux avant d'avoir reçu une réponse de la préfecture.</p>
         <p>
           S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
           administratives et pénales pouvant comprendre une
-          <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1500 € par
+          <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
           jour.</strong>
         </p>
-
         <p>
           Toutefois, dans certains cas, le récepissé de déclaration mentionne explicitement la possibilité de démarrer
           les travaux.
@@ -325,7 +277,6 @@
           <span>Quelles sont les conséquences en cas d'omission ?</span>
         </button>
       </h3>
-
       <div class="fr-collapse" id="accordion-consequences_omission">
         <p class="fr-highlight">
           <strong>Votre demande de permis de construire peut être rejetée si vous n'avez pas déposé de dossier Loi sur
@@ -344,24 +295,23 @@
           S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
           administratives et pénales, qui peuvent aller jusqu'à :
         </p>
-
         <ul>
           <li>
-            <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1500 € par
-            jour ;</strong>
+            <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
+              jour (<a href="https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006074220/LEGISCTA000025136610/#LEGISCTA000025141893"
+   target="_blank"
+   rel="noopener">article L.171-7 du code de
+            l'environnement</a>) ;</strong>
           </li>
           <li>
-            un an d'emprisonnement et 75000 € d'amende (
-            <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/"
-               target="_blank"
-               rel="noopener">
-              article L.173-1 du code de l'environnement
-            </a>).
+            un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/"
+   target="_blank"
+   rel="noopener">article L.173-1 du code de
+            l'environnement</a>).
           </li>
         </ul>
       </div>
     </section>
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
         <button class="fr-accordion__btn"
@@ -370,7 +320,6 @@
           <span>Que faire si mon projet est soumis à Autorisation Environnementale ?</span>
         </button>
       </h3>
-
       <div class="fr-collapse" id="accordion-autorisation-environnementale">
         <p class="fr-highlight">
           <strong>
@@ -381,34 +330,26 @@
         <p>Une procédure d’Autorisation Environnementale dure en moyenne de 9 à 12 mois.</p>
         <p>
           La demande est à déposer au guichet unique de l'environnement du département où
-          se situe le projet.
-          <a href="https://entreprendre.service-public.fr/vosdroits/R57779"
-             target="_blank"
-             rel="noopener">
-            Le dépôt peut se faire numériquement, via une procédure en ligne.
-          </a>
+          se situe le projet. <a href="https://entreprendre.service-public.fr/vosdroits/R57779"
+    target="_blank"
+    rel="noopener">Le dépôt peut se faire numériquement, via une procédure en ligne.</a>
         </p>
         <p>
           <a href="https://entreprendre.service-public.fr/vosdroits/F33414"
              target="_blank"
-             rel="noopener">
-            Retrouvez plus d’informations sur la procédure à ce lien.
-          </a>
+             rel="noopener">Retrouvez plus d’informations sur la procédure à ce lien.</a>
         </p>
-
       </div>
     </section>
-
   </div>
 {% endblock %}
-
 {% block extra_js %}
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
   <script>
     window.addEventListener('load', function() {
-      const accordion = document.getElementById('faq-accordion');
-      new AccordionAnalytics(accordion);
+      const elt = document.getElementById('faq-accordion');
+      const accordion = new AccordionAnalytics(elt);
+      accordion.init();
     });
   </script>
-
 {% endblock %}

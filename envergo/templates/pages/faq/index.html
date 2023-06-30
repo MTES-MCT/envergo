@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% load static pages %}
+
+{% block title %}Questions fréquentes{% endblock %}
+
+{% block content %}
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12 fr-col-md-4">
+      <nav class="fr-sidemenu" aria-labelledby="fr-sidemenu-title">
+        <div class="fr-sidemenu__inner">
+          <button class="fr-sidemenu__btn"
+                  hidden
+                  aria-controls="fr-sidemenu-wrapper"
+                  aria-expanded="false">
+            Dans cette rubrique
+          </button>
+          <div class="fr-collapse" id="fr-sidemenu-wrapper">
+            <div class="fr-sidemenu__title" id="fr-sidemenu-title">Questions fréquentes</div>
+
+            <ul class="fr-sidemenu__list">
+              <li class="fr-sidemenu__item">
+                <button class="fr-sidemenu__btn">Réglementations environnementales</button>
+                <ul class="fr-sidemenu__list">
+                  {# djlint:off #}
+                  {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
+                  {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
+                  {# djlint:on #}
+                </ul>
+              </li>
+
+              <li class="fr-sidemenu__item">
+                <button class="fr-sidemenu__btn">Le projet EnvErgo</button>
+                <ul class="fr-sidemenu__list">
+                  {% sidemenu_item 'faq_news' "Historique des nouveautés" %}
+                </ul>
+              </li>
+
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="fr-col-12 fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+
+      {% block faq_content %}
+        <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
+
+        <p class="fr-text--lead">
+          Consultez les réponses aux questions fréquentes sur les réglementations environnementales prises en compte par EnvErgo.
+        </p>
+
+        <div class="fr-grid-row fr-grid-row--gutters">
+
+          <div class="fr-col fr-col-12 fr-col-md-6">
+            <div class="fr-card fr-card--shadow fr-enlarge-link">
+              <div class="fr-card__body">
+                <div class="fr-card__content">
+                  <h2 class="fr-card__title">
+                    <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
+                  </h2>
+                  <p class="fr-card__desc">
+                    La loi sur l'eau encadre tous les projets
+                    qui risquent d'impacter l'eau et les milieux aquatiques.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fr-col fr-col-12 fr-col-md-6">
+            <div class="fr-card fr-card--shadow fr-enlarge-link">
+              <div class="fr-card__body">
+                <div class="fr-card__content">
+                  <h2 class="fr-card__title">
+                    <a href="{% url 'faq_natura_2000' %}">Natura 2000</a>
+                  </h2>
+                  <p class="fr-card__desc">
+                    Natura 2000 est un dispositif visant la protection d'espèces animales et végétales fragiles et de leur habitat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      {% endblock %}
+    </div>
+  </div>
+
+{% endblock %}
