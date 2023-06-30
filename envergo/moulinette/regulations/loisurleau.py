@@ -51,7 +51,7 @@ class ZoneHumide(CriterionEvaluator):
     }
 
     def get_catalog_data(self):
-        data = {}
+        data = super().get_catalog_data()
 
         if "wetlands_25" not in data:
             data["wetlands_25"] = [
@@ -176,7 +176,7 @@ class ZoneInondable(CriterionEvaluator):
     }
 
     def get_catalog_data(self):
-        data = {}
+        data = super().get_catalog_data()
 
         if "flood_zones_12" not in self.catalog:
             data["flood_zones_12"] = [
@@ -241,16 +241,21 @@ class Ruissellement(CriterionEvaluator):
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
-    @property
-    def result_code(self):
-        if self.catalog["final_surface"] >= 10000:
-            res = RESULTS.soumis
-        elif self.catalog["final_surface"] >= 8000:
-            res = RESULTS.action_requise
-        else:
-            res = RESULTS.non_soumis
+    CODE_MATRIX = {
+        "big": "soumis",
+        "medium": "action_requise",
+        "small": "non_soumis",
+    }
 
-        return res
+    def get_result_data(self):
+        if self.catalog["final_surface"] >= 10000:
+            project_size = "big"
+        elif self.catalog["final_surface"] >= 8000:
+            project_size = "medium"
+        else:
+            project_size = "small"
+
+        return project_size
 
     def required_action(self):
         action = None
