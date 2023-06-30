@@ -332,3 +332,7 @@ class CriterionEvaluator(ABC):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._result
+
+    def get_map(self):
+        """Returns a `Map` object."""
+        return None

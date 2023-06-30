@@ -164,6 +164,25 @@ class Criterion(models.Model):
 
         return self._evaluator.result
 
+    @property
+    def map(self):
+        """Returns a map to be displayed for a single criterion.
+
+        Returns a `envergo.moulinette.regulations.Map` object or None.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        try:
+            map = self._get_map()
+        except:  # noqa
+            map = None
+        return map
+
 
 class Perimeter(models.Model):
     """Link a map and regulation criteria."""

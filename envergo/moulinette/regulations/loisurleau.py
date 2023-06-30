@@ -100,7 +100,7 @@ class ZoneHumide(CriterionEvaluator):
 
         return wetland_status, project_size
 
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -202,7 +202,7 @@ class ZoneInondable(CriterionEvaluator):
 
         return flood_zone_status, project_size
 
-    def _get_map(self):
+    def get_map(self):
         zone_qs = [
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
