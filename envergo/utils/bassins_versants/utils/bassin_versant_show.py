@@ -1,4 +1,4 @@
-from bassin_versant import check_elevation_diff, get_surface
+from .bassin_versant import check_elevation_diff, get_surface
 
 
 def get_bassin_versant_sections_one_point(
