@@ -7,7 +7,6 @@ import numpy as np
 from create_carto import bassinVersantParameters, create_carto
 from mass_carto_creation import mass_carto_creation
 from matplotlib.colors import ListedColormap
-from utils.bassin_versant import calculate_bassin_versant_one_point
 from utils.bassin_versant_show import get_bassin_versant_sections_one_point
 from utils.carto import (
     create_quadrants,
@@ -87,6 +86,7 @@ def plot_carto(
     colormap=None,
     vmin=None,
     vmax=None,
+    colorbar=True,
 ):
     """
     Affiche une carto.
@@ -117,11 +117,14 @@ def plot_carto(
         my_cmap = cmap(np.arange(cmap.N))
         my_cmap[:, -1] = [0, 1, 0.7]
         my_cmap = mpl.colors.ListedColormap(my_cmap)
-        bounds = [0, 3000, 8000, 80000]
+        bounds = [0, 5000, 8000, 80000]
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(h, alpha=alpha, cmap=my_cmap, norm=norm)
-        cbar = plt.colorbar()
-        cbar.ax.set_ylabel("surface de bassin versant en m2", rotation=270)
+        if colorbar:
+            cbar = plt.colorbar()
+            cbar.ax.set_ylabel(
+                "surface de bassin versant en m2", rotation=270, labelpad=15
+            )
 
     elif colormap == "alti":
         plt.imshow(
@@ -131,8 +134,9 @@ def plot_carto(
                 mpl.colormaps["gist_earth"](np.linspace(0.25, 0.85, 155))
             ),
         )
-        cbar = plt.colorbar()
-        cbar.ax.set_ylabel("altitude en m", rotation=270)
+        if colorbar:
+            cbar = plt.colorbar()
+            cbar.ax.set_ylabel("altitude en m", rotation=270, labelpad=15)
 
     elif colormap == "decision":
         cmap = mpl.colors.ListedColormap(
@@ -140,7 +144,7 @@ def plot_carto(
                 "red",
                 "orange",
                 "yellow",
-                "white",
+                (0, 0, 0, 0),
                 "blue",
                 "green",
                 "black",
@@ -152,15 +156,18 @@ def plot_carto(
         bounds = [-10, -9.5, -2, -0.5, 0.5, 2, 9.5, 10]
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(h, alpha=alpha, cmap=my_cmap, norm=norm)
-        cbar = plt.colorbar()
+        if colorbar:
+            cbar = plt.colorbar()
 
     elif colormap:
         plt.imshow(h, alpha=alpha, cmap=mpl.colormaps[colormap], vmin=vmin, vmax=vmax)
-        plt.colorbar()
+        if colorbar:
+            plt.colorbar()
 
     else:
         plt.imshow(h, alpha=alpha)
-        plt.colorbar()
+        if colorbar:
+            plt.colorbar()
 
     return ax
 
@@ -185,11 +192,18 @@ def test_carto_creator(
     bassin_versant_plot(carte, ouptut_file, ouptut_screen_shot, show=show)
 
 
-def plot_point_bassin_versant(
-    paramsList, input_folder, current_tile, point, colors, bv_nrows=250
+def plot_sections_point_bassin_versant(
+    paramsList,
+    input_folder,
+    current_tile,
+    decision_tile,
+    point,
+    disp,
+    decision_nrows=250,
 ):
     carto_machine = cartoQuerier(input_folder, current_tile)
     alti_file_info = get_carto_info(current_tile)
+    decision_file_info = get_carto_info(decision_tile)
 
     def fit_to_tile(points):
         new_x = np.round(
@@ -205,7 +219,7 @@ def plot_point_bassin_versant(
         )
         return np.column_stack((new_y, new_x))
 
-    title = "Bassin versant sections\n" + "\n".join(
+    title = f"Bassin versant sections for {point}\n" + "\n".join(
         [f"{paramIndex}:{params.radii}" for paramIndex, params in enumerate(paramsList)]
     )
 
@@ -215,17 +229,38 @@ def plot_point_bassin_versant(
         colormap="alti",
         stretch=round(1000 / alti_file_info["nrows"]),
     )
+    ax = plot_carto(
+        decision_tile,
+        title,
+        colormap="decision",
+        stretch=round(1000 / decision_file_info["nrows"]),
+        alpha=0.2,
+        given_ax=ax,
+    )
+    ax = plot_carto(
+        current_tile,
+        title,
+        colormap="alti",
+        stretch=round(1000 / alti_file_info["nrows"]),
+        given_ax=ax,
+        alpha=0,
+        colorbar=False,
+    )
 
     point = (
         round(
             alti_file_info["x_range"][0]
-            + point[1] * alti_file_info["cellsize"] * alti_file_info["nrows"] / bv_nrows
+            + point[1]
+            * alti_file_info["cellsize"]
+            * alti_file_info["nrows"]
+            / decision_nrows
         ),
         round(
             alti_file_info["y_range"][1]
-            - (point[0] * alti_file_info["cellsize"] - 1)
+            - (point[0] * alti_file_info["cellsize"])
             * alti_file_info["nrows"]
-            / bv_nrows
+            / decision_nrows
+            - 15
         ),
     )
 
@@ -274,14 +309,6 @@ def plot_point_bassin_versant(
                 params.radii,
                 params.slope,
             )
-            bv = calculate_bassin_versant_one_point(
-                inner_circle_alti,
-                quadrants,
-                params.inner_radius,
-                params.radii,
-                params.quadrants_nb,
-                params.slope,
-            )
 
             normalized_inner_circle_points = fit_to_tile(inner_circle_points)
             ax.scatter(
@@ -290,37 +317,38 @@ def plot_point_bassin_versant(
                 color="black",
                 s=0.1,
             )
-            ok_sections_points = np.concatenate(
-                [
-                    fit_to_tile(
-                        update_origin(point, origin_less_quadrants_points[q][i])
-                    )
-                    for i in range(len(params.radii))
-                    for q in range(len(quadrants))
-                    if bassin_versant_sections[q][i]
-                ]
-            )
+            if any([any(quad) for quad in bassin_versant_sections]):
+                ok_sections_points = np.concatenate(
+                    [
+                        fit_to_tile(
+                            update_origin(point, origin_less_quadrants_points[q][i])
+                        )
+                        for i in range(len(params.radii))
+                        for q in range(len(quadrants))
+                        if bassin_versant_sections[q][i]
+                    ]
+                )
 
-            ax.scatter(
-                [p[1] for p in ok_sections_points],
-                [p[0] for p in ok_sections_points],
-                color=colors[paramIndex],
-                s=5,
-                alpha=0.5,
-                label=f"params nb : {paramIndex}, bv: {round(bv)}",
-            )
+                ax.scatter(
+                    [p[1] for p in ok_sections_points],
+                    [p[0] for p in ok_sections_points],
+                    color=disp[paramIndex][0],
+                    s=5,
+                    alpha=disp[paramIndex][1],
+                    label=f"params nb : {paramIndex}, bv: {round(np.sum(bassin_versant_sections)/params.quadrants_nb)}",
+                )
+                ax.legend()
 
             for r in params.radii:
                 c = plt.Circle(
                     (p[1], p[0]),
                     r / alti_file_info["cellsize"],
-                    color=colors[paramIndex],
+                    color=disp[paramIndex][0],
                     fill=False,
                     alpha=0.3,
                 )
                 ax.add_patch(c)
 
-    ax.legend()
     plt.tight_layout()
     plt.show()
 
@@ -586,13 +614,15 @@ def run_tests(
             quadrants_nb=12,
             slope=0.05,
         )
+        point = (92, 53)
         input_folder = f"{ALTI_PARENT_FOLDER}/alti_data"
         alti_tile = (
             f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc"
         )
-        colors = ["blue", "red"]
-        plot_point_bassin_versant(
-            [p0_12, p1_12], input_folder, alti_tile, (93, 53), colors
+        decision_tile = f"{ALTI_PARENT_FOLDER}/output/benchmarks/2023_06_29_16_20_03/decision/44_285000_6705000/5v5_50-70-90-110-130-145-160v59-81-98-113-126-138-149-160_12v12/decision_diff.asc"
+        disp = [("blue", 0.5), ("red", 0.3)]
+        plot_sections_point_bassin_versant(
+            [p0_12, p1_12], input_folder, alti_tile, decision_tile, point, disp
         )
 
     if compare_cartos_go:
