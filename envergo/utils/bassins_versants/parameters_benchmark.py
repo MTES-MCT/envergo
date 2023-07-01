@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from create_carto import bassinVersantParameters
-from utils import carto
+from utils import asc_to_csv, carto
 from visualization import compare_cartos_v2, test_carto_creator
 
 ALTI_PARENT_FOLDER = str(Path(__file__).parent)
@@ -59,6 +59,7 @@ def benchmark_parameters(
                     input_folder=get_data_folder(place[1]),
                     show=False,
                 )
+                asc_to_csv.asc_to_csv(f"{ouput_id}.asc", f"{ouput_id}.csv")
     if not Path(f"{benchmark_folder}/decision").exists():
         os.makedirs(f"{benchmark_folder}/decision")
     for place in places_to_evaluate:
@@ -80,6 +81,14 @@ def benchmark_parameters(
                 10000 - project_surface,  # soumis
                 save_dir=save_dir,
             )
+            for data_name in [
+                "decision__changes_diff",
+                "decision_diff",
+                "diff_percentage",
+            ]:
+                asc_to_csv.asc_to_csv(
+                    f"{save_dir}/{data_name}.asc", f"{save_dir}/{data_name}.csv"
+                )
 
 
 rayons2 = [50, 75, 100, 130, 160]
@@ -130,7 +139,8 @@ p00_16 = bassinVersantParameters(
     slope=0.05,
 )
 
-params_to_benchmark = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
+# params_to_benchmark = [p1_12, p0_12, p00_12, p1_16, p0_16, p00_16]
+params_to_benchmark = [p1_12, p0_12]
 
 f = (p1_16, p1_12)
 g = (p0_12, p1_12)
@@ -140,7 +150,8 @@ j = (p00_12, p0_12)
 k = (p00_16, p0_16)
 
 
-comparisons_to_do = [f, g, h, i, j, k]
+# comparisons_to_do = [f, g, h, i, j, k]
+comparisons_to_do = [g]
 
 places_to_evaluate = [
     [
