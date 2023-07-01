@@ -8,6 +8,11 @@ from visualization import compare_cartos_v2, test_carto_creator
 
 ALTI_PARENT_FOLDER = str(Path(__file__).parent)
 
+rayons2 = [50, 75, 100, 130, 160]
+rayons1 = [50, 70, 90, 110, 130, 145, 160]
+rayons0 = [59, 81, 98, 113, 126, 138, 149, 160]
+rayons00 = [55, 74, 89, 102, 113, 123, 133, 142, 150, 158]
+
 
 def benchmark_parameters(
     params_to_benchmark,
@@ -29,12 +34,23 @@ def benchmark_parameters(
     Si un dossier est renseigné, le programme ne recalcule pas les bassins versants mais utilise ceux du dossier pour effectuer les comparaisons.
     """
 
+    def get_radii_name(radii):
+        if radii == rayons00:
+            return "r00"
+        if radii == rayons0:
+            return "r0"
+        if radii == rayons1:
+            return "r1"
+        if radii == rayons2:
+            return "r2"
+        return "-".join([str(r) for r in params.radii])
+
     def get_name(place, params: bassinVersantParameters):
         bottom_left = carto.get_bottom_left_corner(place[1])
         return (
             f"{place[0]}_{bottom_left[0]}_{bottom_left[1]}__test_20_"
             + f"{params.carto_precision}_{params.quadrants_nb}_{str(params.slope).replace('.','-')}_"
-            + "-".join([str(r) for r in params.radii])
+            + f"{get_radii_name(params.radii)}"
         )
 
     def get_data_folder(carto_file_name):
@@ -71,7 +87,7 @@ def benchmark_parameters(
                 + f"{str(carto.get_bottom_left_corner(place[1])[0])}_"
                 + f"{carto.get_bottom_left_corner(place[1])[1]}/"
                 + f"{params1.carto_precision}v{params2.carto_precision}_"
-                + f"{'-'.join([str(p) for p in params1.radii])}v{'-'.join([str(p) for p in params2.radii])}_"
+                + f"{get_radii_name(params1.radii)}v{get_radii_name(params2.radii)}_"
                 + f"{params1.quadrants_nb}v{params2.quadrants_nb}"
             )
             compare_cartos_v2(
@@ -82,7 +98,7 @@ def benchmark_parameters(
                 save_dir=save_dir,
             )
             for data_name in [
-                "decision__changes_diff",
+                "decision_changes_diff",
                 "decision_diff",
                 "diff_percentage",
             ]:
@@ -90,11 +106,6 @@ def benchmark_parameters(
                     f"{save_dir}/{data_name}.asc", f"{save_dir}/{data_name}.csv"
                 )
 
-
-rayons2 = [50, 75, 100, 130, 160]
-rayons1 = [50, 70, 90, 110, 130, 145, 160]
-rayons0 = [59, 81, 98, 113, 126, 138, 149, 160]
-rayons00 = [55, 74, 89, 102, 113, 123, 133, 142, 150, 158]
 
 p1_12 = bassinVersantParameters(
     carto_precision=5,
