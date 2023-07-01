@@ -7,11 +7,14 @@ import numpy as np
 from create_carto import bassinVersantParameters, create_carto
 from mass_carto_creation import mass_carto_creation
 from matplotlib.colors import ListedColormap
+from utils.bassin_versant import calculate_bassin_versant_one_point
+from utils.bassin_versant_show import get_bassin_versant_sections_one_point
 from utils.carto import (
     create_quadrants,
     get_carto_info,
     load_carto,
     save_array_to_carto,
+    update_origin,
 )
 from utils.carto_querier import cartoQuerier
 
@@ -182,6 +185,146 @@ def test_carto_creator(
     bassin_versant_plot(carte, ouptut_file, ouptut_screen_shot, show=show)
 
 
+def plot_point_bassin_versant(
+    paramsList, input_folder, current_tile, point, colors, bv_nrows=250
+):
+    carto_machine = cartoQuerier(input_folder, current_tile)
+    alti_file_info = get_carto_info(current_tile)
+
+    def fit_to_tile(points):
+        new_x = np.round(
+            (points[:, 0] - alti_file_info["x_range"][0]) / alti_file_info["cellsize"]
+        )
+        new_y = (
+            np.round(
+                alti_file_info["nrows"]
+                - (points[:, 1] - alti_file_info["y_range"][0])
+                / alti_file_info["cellsize"]
+            )
+            - 1
+        )
+        return np.column_stack((new_y, new_x))
+
+    title = "Bassin versant sections\n" + "\n".join(
+        [f"{paramIndex}:{params.radii}" for paramIndex, params in enumerate(paramsList)]
+    )
+
+    ax = plot_carto(
+        current_tile,
+        title,
+        colormap="alti",
+        stretch=round(1000 / alti_file_info["nrows"]),
+    )
+
+    point = (
+        round(
+            alti_file_info["x_range"][0]
+            + point[1] * alti_file_info["cellsize"] * alti_file_info["nrows"] / bv_nrows
+        ),
+        round(
+            alti_file_info["y_range"][1]
+            - (point[0] * alti_file_info["cellsize"] - 1)
+            * alti_file_info["nrows"]
+            / bv_nrows
+        ),
+    )
+
+    [p] = fit_to_tile(np.array([np.array([point[0], point[1]])]))
+    ax.scatter(
+        [p[1]],
+        [p[0]],
+        color="black",
+    )
+    c = plt.Circle(
+        (p[1], p[0]),
+        paramsList[0].inner_radius / alti_file_info["cellsize"],
+        color="black",
+        fill=False,
+        alpha=0.3,
+    )
+    ax.add_patch(c)
+
+    for paramIndex, params in enumerate(paramsList):
+        (
+            origin_less_inner_circle_points,
+            origin_less_quadrants_points,
+        ) = create_quadrants(
+            params.carto_precision,
+            params.inner_radius,
+            params.radii,
+            params.quadrants_nb,
+        )
+        if carto_machine.query_one_point(point) is not None:
+            inner_circle_points = update_origin(point, origin_less_inner_circle_points)
+
+            quadrants = []
+            for q in range(params.quadrants_nb):
+                quadrants.append([])
+                for i, _ in enumerate(params.radii):
+                    quadrants[q].append([])
+                    quadrants[q][i] = carto_machine.get_mean_alti(
+                        update_origin(point, origin_less_quadrants_points[q][i])
+                    )
+
+            inner_circle_alti = carto_machine.get_mean_alti(inner_circle_points)
+            bassin_versant_sections = get_bassin_versant_sections_one_point(
+                inner_circle_alti,
+                quadrants,
+                params.inner_radius,
+                params.radii,
+                params.slope,
+            )
+            bv = calculate_bassin_versant_one_point(
+                inner_circle_alti,
+                quadrants,
+                params.inner_radius,
+                params.radii,
+                params.quadrants_nb,
+                params.slope,
+            )
+
+            normalized_inner_circle_points = fit_to_tile(inner_circle_points)
+            ax.scatter(
+                [p[1] for p in normalized_inner_circle_points],
+                [p[0] for p in normalized_inner_circle_points],
+                color="black",
+                s=0.1,
+            )
+            ok_sections_points = np.concatenate(
+                [
+                    fit_to_tile(
+                        update_origin(point, origin_less_quadrants_points[q][i])
+                    )
+                    for i in range(len(params.radii))
+                    for q in range(len(quadrants))
+                    if bassin_versant_sections[q][i]
+                ]
+            )
+
+            ax.scatter(
+                [p[1] for p in ok_sections_points],
+                [p[0] for p in ok_sections_points],
+                color=colors[paramIndex],
+                s=5,
+                alpha=0.5,
+                label=f"params nb : {paramIndex}, bv: {round(bv)}",
+            )
+
+            for r in params.radii:
+                c = plt.Circle(
+                    (p[1], p[0]),
+                    r / alti_file_info["cellsize"],
+                    color=colors[paramIndex],
+                    fill=False,
+                    alpha=0.3,
+                )
+                ax.add_patch(c)
+
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 def bassin_versant_plot(
     alti_file,
     bassin_versant_file,
@@ -302,6 +445,26 @@ def compare_cartos_v2(
     with open(f"{save_dir}/stats_diff.txt", "w") as f:
         f.write(text_result)
 
+    text_result = ""
+    text_result += f"\n ====== interesting points : {car_name1} et {car_name2} ======\n"
+    for value in [10, 9, 1, -1, -9, -10]:
+        interesting_points = np.where(diff_category == value)
+        text_result += f"points {value} : \n"
+        text_result += (
+            ", ".join(
+                [
+                    f"({interesting_points[0][i]},{interesting_points[1][i]})"
+                    for i in range(len(interesting_points[0]))
+                ]
+            )
+            + "\n"
+        )
+
+    if interactive:
+        print(text_result)
+    with open(f"{save_dir}/interesting_points.txt", "w") as f:
+        f.write(text_result)
+
     plt.clf()
     # plot the normal diff
     file = f"{save_dir}/diff"
@@ -377,6 +540,7 @@ def compare_cartos_v2(
 
 def run_tests(
     plot_quadrants_go=False,
+    plot_bassin_versant_sections=True,
     compare_cartos_go=False,
     generate_one_carto=False,
     test_big_carto=False,
@@ -387,6 +551,7 @@ def run_tests(
 
     Args:
         plot_quadrants (bool): Indique si les tests d'affichage de quadrants doivent être lancés.
+        plot_bassin_versant_sections (bool): Indique si les tests d'affichage de section correspondant au bassin versant doivent être lancés.
         compare_cartos_go (bool): Indique si les tests de comparaison de cartos doivent être lancés.
         generate_one_carto (bool): Indique si le test de génération d'une seule carto doit être lancé.
         test_big_carto (bool): Indique si le test de visualisation de la "big carto" doit être lancé.
@@ -403,6 +568,32 @@ def run_tests(
         )
 
         plot_quadrants(inner_atli, quads, radii, q_nb)
+
+    if plot_bassin_versant_sections:
+        rayons0 = [59, 81, 98, 113, 126, 138, 149, 160]
+        rayons1 = [50, 70, 90, 110, 130, 145, 160]
+        p0_12 = bassinVersantParameters(
+            carto_precision=5,
+            inner_radius=25,
+            radii=rayons0,
+            quadrants_nb=12,
+            slope=0.05,
+        )
+        p1_12 = bassinVersantParameters(
+            carto_precision=5,
+            inner_radius=25,
+            radii=rayons1,
+            quadrants_nb=12,
+            slope=0.05,
+        )
+        input_folder = f"{ALTI_PARENT_FOLDER}/alti_data"
+        alti_tile = (
+            f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc"
+        )
+        colors = ["blue", "red"]
+        plot_point_bassin_versant(
+            [p0_12, p1_12], input_folder, alti_tile, (93, 53), colors
+        )
 
     if compare_cartos_go:
         test_dir = f"{ALTI_PARENT_FOLDER}output/test/"
