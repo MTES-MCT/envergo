@@ -28,12 +28,12 @@ def calculate_bassin_versant_one_point(
     return surfaceCount / quadrantsNb
 
 
-def next_quadrant_check(currentAlti, quadrant, radii, index=0, surface=0, slope=0.05):
+def next_quadrant_check(previousAlti, quadrant, radii, index=0, surface=0, slope=0.05):
     """
     Fonction récursive qui vérifie le prochain quadrant pour le calcul du bassin versant, et renvoie la surface de bassin versant du quadrant une fois la récursion terminée.
 
     Args:
-        currentAlti (float): Altitude actuelle.
+        previousAlti (float): Altitude actuelle.
         quadrant (list): Liste des altitudes moyennes du quadrant.
         radii (list): Liste des rayons des cercles concentriques.
         index (int): Index actuel.
@@ -47,7 +47,7 @@ def next_quadrant_check(currentAlti, quadrant, radii, index=0, surface=0, slope=
         return surface
 
     meanAlti = quadrant[index]
-    if check_elevation_diff(meanAlti, currentAlti, index, radii, slope):
+    if check_elevation_diff(meanAlti, previousAlti, index, radii, slope):
         surface += get_surface(index, radii)
         return next_quadrant_check(
             meanAlti, quadrant, radii, index=index + 1, surface=surface, slope=slope
