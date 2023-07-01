@@ -1,3 +1,6 @@
+from bassin_versant import check_elevation_diff, get_surface
+
+
 def get_bassin_versant_sections_one_point(
     innerCircleMeanAlti, quadrants, inner_radius, radii, slope
 ):
@@ -14,7 +17,7 @@ def get_bassin_versant_sections_one_point(
     Returns:
         list(list(bool)): Sections faisant aprtie du bassin versant pour le point donné.
     """
-    bassin_versant_sections = [[False] * len(q) for q in quadrants]
+    bassin_versant_sections = [[0] * len(q) for q in quadrants]
 
     for i, quadrant in enumerate(quadrants):
         bassin_versant_sections[i] = next_quadrant_check(
@@ -50,7 +53,7 @@ def next_quadrant_check(
 
     meanAlti = quadrant[index]
     if check_elevation_diff(meanAlti, previousAlti, index, radii, slope):
-        bassin_versant_quadrant[index] = True
+        bassin_versant_quadrant[index] = get_surface(index, radii)
         return next_quadrant_check(
             meanAlti,
             quadrant,
@@ -60,20 +63,3 @@ def next_quadrant_check(
             slope=slope,
         )
     return bassin_versant_quadrant
-
-
-def check_elevation_diff(currentAlti, previousAlti, index, radii, slope):
-    """
-    Vérifie la différence d'altitude pour déterminer si elle respecte le critère de pente.
-
-    Args:
-        currentAlti (float): Altitude de la partie du quadrant que l'on souhaite véirifer.
-        previousAlti (float): Altitude de la partie précédente du quadrant.
-        index (int): Index actuel.
-        radii (list): Liste des rayons des cercles concentriques.
-        slope (float): Pente.
-
-    Returns:
-        bool: True si la différence d'altitude respecte la pente, False sinon.
-    """
-    return 2 * (currentAlti - previousAlti) / (radii[index + 2] - radii[index]) > slope
