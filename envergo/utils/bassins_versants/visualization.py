@@ -146,7 +146,7 @@ def plot_carto(
         my_cmap = cmap(np.arange(cmap.N))
         # my_cmap[:,-1] = [0,1,0.7]
         my_cmap = mpl.colors.ListedColormap(my_cmap)
-        bounds = [-9.5, -8, -2, -0.5, 0.5, 2, 9.5, 10]
+        bounds = [-10, -9.5, -2, -0.5, 0.5, 2, 9.5, 10]
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         plt.imshow(h, alpha=alpha, cmap=my_cmap, norm=norm)
         cbar = plt.colorbar()
