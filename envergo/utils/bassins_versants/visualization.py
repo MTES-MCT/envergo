@@ -4,8 +4,7 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from create_carto import bassinVersantParameters, create_carto
-from mass_carto_creation import mass_carto_creation
+from create_carto import create_carto
 from matplotlib.colors import ListedColormap
 from utils.bassin_versant_show import get_bassin_versant_sections_one_point
 from utils.carto import (
@@ -123,7 +122,7 @@ def plot_carto(
         if colorbar:
             cbar = plt.colorbar()
             cbar.ax.set_ylabel(
-                "surface de bassin versant en m2", rotation=270, labelpad=15
+                "surface de bassin versant en m2", rotation=270, labelpad=5
             )
 
     elif colormap == "alti":
@@ -136,7 +135,7 @@ def plot_carto(
         )
         if colorbar:
             cbar = plt.colorbar()
-            cbar.ax.set_ylabel("altitude en m", rotation=270, labelpad=15)
+            cbar.ax.set_ylabel("altitude en m", rotation=270, labelpad=5)
 
     elif colormap == "decision":
         cmap = mpl.colors.ListedColormap(
@@ -196,14 +195,14 @@ def plot_sections_point_bassin_versant(
     paramsList,
     input_folder,
     current_tile,
-    decision_tile,
+    comparison,
     point,
     disp,
-    decision_nrows=250,
 ):
+    decision_diff_tile = f"{comparison}/decision_diff.asc"
     carto_machine = cartoQuerier(input_folder, current_tile)
     alti_file_info = get_carto_info(current_tile)
-    decision_file_info = get_carto_info(decision_tile)
+    decision_diff_file_info = get_carto_info(decision_diff_tile)
 
     def fit_to_tile(points):
         new_x = np.round(
@@ -230,10 +229,10 @@ def plot_sections_point_bassin_versant(
         stretch=round(1000 / alti_file_info["nrows"]),
     )
     ax = plot_carto(
-        decision_tile,
+        decision_diff_tile,
         title,
         colormap="decision",
-        stretch=round(1000 / decision_file_info["nrows"]),
+        stretch=round(1000 / decision_diff_file_info["nrows"]),
         alpha=0.2,
         given_ax=ax,
     )
@@ -253,13 +252,13 @@ def plot_sections_point_bassin_versant(
             + point[1]
             * alti_file_info["cellsize"]
             * alti_file_info["nrows"]
-            / decision_nrows
+            / decision_diff_file_info["nrows"]
         ),
         round(
             alti_file_info["y_range"][1]
             - (point[0] * alti_file_info["cellsize"])
             * alti_file_info["nrows"]
-            / decision_nrows
+            / decision_diff_file_info["nrows"]
             - 15
         ),
     )
@@ -357,9 +356,11 @@ def bassin_versant_plot(
     alti_file,
     bassin_versant_file,
     save_png,
-    title="bassin versant \n1 unité = 5m",
+    title=None,
     show=True,
 ):
+    if title is not None:
+        title = f"{bassin_versant_file.split('/')[-1]}\nbassin versant \n1 unité = 5m"
     bassin_versant_file_info = get_carto_info(bassin_versant_file)
     alti_file_info = get_carto_info(alti_file)
     ax = plot_carto(
@@ -454,238 +455,142 @@ def compare_cartos_v2(
     diff_category = transform_array(c2) - transform_array(c1)
     diff = c1 - c2
     changes = np.where(diff_category == 0, 0, diff)
+
     if save_dir is None:
         save_dir = f"{ALTI_PARENT_FOLDER}/output/decision/{car_name1}_{car_name2}_proj_{10000 - barre2}"
-    if not Path(save_dir).exists():
-        os.makedirs(save_dir)
 
-    text_result = ""
-    text_result += f"\n ====== comparaison : {car_name1} et {car_name2} ======\n"
-    text_result += f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}\n"
+    def get_stats():
+        if not Path(save_dir).exists():
+            os.makedirs(save_dir)
 
-    text_result += f"stats c1 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}\n"
-
-    text_result += f"abs diff moyenne : {np.mean(np.abs(diff))}\n"
-    text_result += f"abs diff category moyenne : {np.mean(np.abs(diff_category))}\n\n"
-
-    if interactive:
-        print(text_result)
-    with open(f"{save_dir}/stats_diff.txt", "w") as f:
-        f.write(text_result)
-
-    text_result = ""
-    text_result += f"\n ====== interesting points : {car_name1} et {car_name2} ======\n"
-    for value in [10, 9, 1, -1, -9, -10]:
-        interesting_points = np.where(diff_category == value)
-        text_result += f"points {value} : \n"
+        text_result = ""
+        text_result += f"\n ====== comparaison : {car_name1} et {car_name2} ======\n"
         text_result += (
-            ", ".join(
-                [
-                    f"({interesting_points[0][i]},{interesting_points[1][i]})"
-                    for i in range(len(interesting_points[0]))
-                ]
+            f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}\n"
+        )
+
+        text_result += (
+            f"stats c1 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}\n"
+        )
+
+        text_result += f"abs diff moyenne : {np.mean(np.abs(diff))}\n"
+        text_result += (
+            f"abs diff category moyenne : {np.mean(np.abs(diff_category))}\n\n"
+        )
+
+        if interactive:
+            print(text_result)
+        with open(f"{save_dir}/stats_diff.txt", "w") as f:
+            f.write(text_result)
+
+    def get_intersting_points():
+        text_result = ""
+        text_result += (
+            f"\n ====== interesting points : {car_name1} et {car_name2} ======\n"
+        )
+        for value in [10, 9, 1, -1, -9, -10]:
+            interesting_points = np.where(diff_category == value)
+            text_result += f"points {value} : \n"
+            text_result += (
+                ", ".join(
+                    [
+                        f"({interesting_points[0][i]},{interesting_points[1][i]})"
+                        for i in range(len(interesting_points[0]))
+                    ]
+                )
+                + "\n"
             )
-            + "\n"
+
+        if interactive:
+            print(text_result)
+        with open(f"{save_dir}/interesting_points.txt", "w") as f:
+            f.write(text_result)
+
+    def plot_diff():
+        plt.clf()
+        # plot the normal diff
+        file = f"{save_dir}/diff"
+        save_array_to_carto(diff, f"{file}.asc", get_carto_info(carto1))
+        plot_carto(
+            f"{file}.asc",
+            title=f"différence absolue :\n{car_name1}\n et \n{car_name2}",
+            alpha=1,
+            colormap="RdBu",
+            vmax=3000,
+            vmin=-3000,
+        )
+        plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
+
+    def plot_diff_percentage():
+        plt.clf()
+        # plot the percentage diff
+        file = f"{save_dir}/diff_percentage"
+        save_array_to_carto(diff / c1, f"{file}.asc", get_carto_info(carto1))
+        plot_carto(
+            f"{file}.asc",
+            title=f"différence pourcentage :\n{car_name1}\n et \n{car_name2}",
+            alpha=1,
+            colormap="RdBu",
+            vmax=0.50,
+            vmin=-0.50,
+        )
+        plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
+
+    def plot_decision_diff():
+        plt.clf()
+
+        # plot the decision diff
+        file = f"{save_dir}/decision_diff"
+        save_array_to_carto(diff_category, f"{file}.asc", get_carto_info(carto1))
+        plot_carto(
+            f"{file}.asc",
+            title=f"différence de décision :\n{car_name1} \n et \n{car_name2}",
+            alpha=1,
+            colormap="decision",
+        )
+        plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
+
+    def plot_diff_changes():
+        plt.clf()
+
+        # plot the diff when the decision was changed
+        file = f"{save_dir}/decision_changes_diff"
+        save_array_to_carto(changes, f"{file}.asc", get_carto_info(carto1))
+        plot_carto(
+            f"{file}.asc",
+            title="valeur de la différence menant à un changement de catégorie\npour: "
+            + f"{car_name1}\n et \n{car_name2}",
+            alpha=1,
+            colormap="RdBu",
+            vmax=3000,
+            vmin=-3000,
+        )
+        plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
+
+    def plot_diff_changes_rep():
+        plt.clf()
+
+        unique_values, value_counts = np.unique(diff_category, return_counts=True)
+        non_zero_values = unique_values[unique_values != 0]
+        non_zero_counts = value_counts[unique_values != 0] / (
+            diff_category.shape[0] * diff_category.shape[1]
+        )
+        plt.bar(non_zero_values, non_zero_counts)
+        plt.title(
+            "répartition des changements de catégorie\npour: "
+            + f"{car_name1}\n et \n{car_name2}"
+        )
+        plt.savefig(
+            f"{save_dir}/decision_diff_changes_rep.png", dpi=500, bbox_inches="tight"
         )
 
-    if interactive:
-        print(text_result)
-    with open(f"{save_dir}/interesting_points.txt", "w") as f:
-        f.write(text_result)
+        if interactive:
+            plt.show()
 
-    plt.clf()
-    # plot the normal diff
-    file = f"{save_dir}/diff"
-    save_array_to_carto(diff, f"{file}.asc", get_carto_info(carto1))
-    plot_carto(
-        f"{file}.asc",
-        title=f"différence absolue :\n{car_name1}\n et \n{car_name2}",
-        alpha=1,
-        colormap="RdBu",
-        vmax=3000,
-        vmin=-3000,
-    )
-    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
-    plt.clf()
-
-    # plot the percentage diff
-    file = f"{save_dir}/diff_percentage"
-    save_array_to_carto(diff / c1, f"{file}.asc", get_carto_info(carto1))
-    plot_carto(
-        f"{file}.asc",
-        title=f"différence pourcentage :\n{car_name1}\n et \n{car_name2}",
-        alpha=1,
-        colormap="RdBu",
-        vmax=0.50,
-        vmin=-0.50,
-    )
-    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
-    plt.clf()
-
-    # plot the decision diff
-    file = f"{save_dir}/decision_diff"
-    save_array_to_carto(diff_category, f"{file}.asc", get_carto_info(carto1))
-    plot_carto(
-        f"{file}.asc",
-        title=f"différence de décision :\n{car_name1} \n et \n{car_name2}",
-        alpha=1,
-        colormap="decision",
-    )
-    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
-    plt.clf()
-
-    # plot the diff when the decision was changed
-    file = f"{save_dir}/decision__changes_diff"
-    save_array_to_carto(changes, f"{file}.asc", get_carto_info(carto1))
-    plot_carto(
-        f"{file}.asc",
-        title="valeur de la différence menant à un changement de catégorie\npour: "
-        + f"{car_name1}\n et \n{car_name2}",
-        alpha=1,
-        colormap="RdBu",
-        vmax=3000,
-        vmin=-3000,
-    )
-    plt.savefig(f"{file}.png", dpi=500, bbox_inches="tight")
-    plt.clf()
-
-    unique_values, value_counts = np.unique(diff_category, return_counts=True)
-    non_zero_values = unique_values[unique_values != 0]
-    non_zero_counts = value_counts[unique_values != 0] / (
-        diff_category.shape[0] * diff_category.shape[1]
-    )
-    plt.bar(non_zero_values, non_zero_counts)
-    plt.title(
-        "répartition des changements de catégorie\npour: "
-        + f"{car_name1}\n et \n{car_name2}"
-    )
-    plt.savefig(f"{save_dir}/decision__changes_rep.png", dpi=500, bbox_inches="tight")
-    plt.clf()
-
-    if interactive:
-        plt.show()
-
-
-def run_tests(
-    plot_quadrants_go=False,
-    plot_bassin_versant_sections=True,
-    compare_cartos_go=False,
-    generate_one_carto=False,
-    test_big_carto=False,
-    create_mass_carto=False,
-):
-    """
-    Lance les tests de visualisation en fonction des variables qui sont passées à True
-
-    Args:
-        plot_quadrants (bool): Indique si les tests d'affichage de quadrants doivent être lancés.
-        plot_bassin_versant_sections (bool): Indique si les tests d'affichage de section correspondant au bassin versant doivent être lancés.
-        compare_cartos_go (bool): Indique si les tests de comparaison de cartos doivent être lancés.
-        generate_one_carto (bool): Indique si le test de génération d'une seule carto doit être lancé.
-        test_big_carto (bool): Indique si le test de visualisation de la "big carto" doit être lancé.
-        create_mass_carto (bool): Indique si le test de création massive de carto doit être lancé.
-    """
-    if plot_quadrants_go:
-        q_nb = 12
-        radii = [59, 81, 98, 113, 126, 138, 149, 160]
-        inner_atli, quads = create_quadrants(
-            carto_precision=5,
-            inner_radius=25,
-            radii=radii,
-            quadrants_nb=q_nb,
-        )
-
-        plot_quadrants(inner_atli, quads, radii, q_nb)
-
-    if plot_bassin_versant_sections:
-        rayons0 = [59, 81, 98, 113, 126, 138, 149, 160]
-        rayons1 = [50, 70, 90, 110, 130, 145, 160]
-        p0_12 = bassinVersantParameters(
-            carto_precision=5,
-            inner_radius=25,
-            radii=rayons0,
-            quadrants_nb=12,
-            slope=0.05,
-        )
-        p1_12 = bassinVersantParameters(
-            carto_precision=5,
-            inner_radius=25,
-            radii=rayons1,
-            quadrants_nb=12,
-            slope=0.05,
-        )
-        point = (92, 53)
-        input_folder = f"{ALTI_PARENT_FOLDER}/alti_data"
-        alti_tile = (
-            f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc"
-        )
-        decision_tile = f"{ALTI_PARENT_FOLDER}/output/benchmarks/2023_06_29_16_20_03/decision/44_285000_6705000/5v5_50-70-90-110-130-145-160v59-81-98-113-126-138-149-160_12v12/decision_diff.asc"
-        disp = [("blue", 0.5), ("red", 0.3)]
-        plot_sections_point_bassin_versant(
-            [p0_12, p1_12], input_folder, alti_tile, decision_tile, point, disp
-        )
-
-    if compare_cartos_go:
-        test_dir = f"{ALTI_PARENT_FOLDER}output/test/"
-
-        compare_cartos_v2(
-            f"{test_dir}test_20_20_8.asc",
-            f"{test_dir}test_20_5_12.asc",
-            5000,
-            8000,
-            stretch=(1, 1),
-        )
-        compare_cartos_v2(
-            f"{test_dir}test_20_10_12.asc",
-            f"{test_dir}test_20_5_12.asc",
-            5000,
-            8000,
-            stretch=(1, 1),
-        )
-
-    if generate_one_carto:
-        name = "test_20_5_12"
-        params = bassinVersantParameters(
-            carto_precision=5,
-            inner_radius=25,
-            radii=[50, 75, 100, 130, 160],
-            quadrants_nb=12,
-            slope=0.05,
-        )
-        test_carto_creator(
-            params,
-            current_tile=f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
-            output_carto_precision=20,
-            ouptut_file=f"{ALTI_PARENT_FOLDER}/output/test/{name}.asc",
-            ouptut_screen_shot=f"{ALTI_PARENT_FOLDER}/output/test/{name}.png",
-            input_folder=f"{ALTI_PARENT_FOLDER}/alti_data",
-            show=True,
-        )
-
-    if test_big_carto:
-        cqot = cartoQuerier(
-            f"{ALTI_PARENT_FOLDER}/alti_data",
-            f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc",
-        )
-        save_array_to_carto(
-            cqot.current_big_carto,
-            f"{ALTI_PARENT_FOLDER}/output/big_carto.asc",
-            {
-                "ncols": 3000,
-                "nrows": 3000,
-                "xllcorner": 285000,
-                "yllcorner": 675000,
-                "cellsize": 5,
-                "nodata_value": -99999.00,
-            },
-        )
-        plot_carto(f"{ALTI_PARENT_FOLDER}/output/big_carto.asc", "big_carto")
-        plt.show()
-
-    if create_mass_carto:
-        mass_carto_creation(
-            f"{ALTI_PARENT_FOLDER}alti_data", f"{ALTI_PARENT_FOLDER}output/mass_bv"
-        )
-
-
-run_tests()
+    get_stats()
+    get_intersting_points()
+    plot_diff()
+    plot_diff_percentage()
+    plot_decision_diff()
+    plot_diff_changes()
+    plot_diff_changes_rep()
