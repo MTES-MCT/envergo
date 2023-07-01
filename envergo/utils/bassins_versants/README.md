@@ -97,6 +97,15 @@ Il se peut que certains dossiers manquent au moment de lancer le programme. Il f
 ```
 A l'endroit où se lance le fichier python.
 
+4. Etudier des points en particulier
+
+Une fois qu'on a lancé les benchmarks, on peut regarder les points "intéressants" (comprendre, pour lesquels la décision est différente suivant les paramètres), et les utiliser pour lancer `plot_sections_point_bassin_versant` via le fichier [run_visualization.py](run_visualization.py), en mettant la valeur `plot_bassin_versant_sections` à `True`, comme c'est le cas par défaut dans le fichier commit.
+Avant de lancer la visualisation, ne pas oublier de mettre à jour
+- `point`
+- `input_folder`
+- `alti_tile`
+- `comparison`
+
 # Bassin Versant Calculator - Fonctionnement de l'algorithme
 
 ## Les quadrants
@@ -158,10 +167,20 @@ Ces explications sont aussi présentes dans les docstrings des fonctions, mais e
   - `check_elevation_diff` pour vérifier si la différence d'altitude remplit le critère de pente fixé en paramètre
   - `next_quadrant_check` qui permet d'appliquer le critère de pente aux quadrants de manière récursive, en cumulant la surface de bassin versant.
 
+## bassin_versant_show.py
+- Dans [bassin_versant_show.py](utils/bassin_versant_show.py) , on a aussi le calcul du bassin versant pour un point qui se fait avec la fonction `get_bassin_versant_sections_one_point`, mais cette fois ci on renvoie le détail des sections contribuant au bassin versant. Cette fonction n'est utilisée que pour la visualisation, et utilise d'autres sous fonctions :
+  - `next_quadrant_check` qui permet d'appliquer le critère de pente aux quadrants de manière récursive, en mettant à jour la surface de bassin versant dasn les sections.
+
 ## mass_carto_creation.py
 [mass_carto_creation.py](utils/mass_carto_creation.py) contient la fonction `mass_carto_creation`. Cette fonction prend en argument un dossier d'entrée et un dossier de sortie. Elle analyse les cartes alti RGE du dossier d'entrée, et pour chaque carte, elle crée une nouvelle carte de bassin versant dans le dossier de sortie. Un argument supplémentaire est la précision de la carte de sortie (par défaut, fixée à 20m comme décidé avec Nicolas).
 
 Il y a également un argparse à l'intérieur de mass carto creator pour exécuter facilement la génération de cartes pour un département entier. Il semble que cela puisse être exécuté en même temps dans différents terminaux si vous avez plusieurs cœurs. Son fonctionnement est expliqué ci-dessus (comment l'utiliser).
 
 ## visualizations.py
-[visualizations.py](utils/visualizations.py) est essentiellement un fichier de test manuel, permettant aux développeurs de vérifier le comportement des fonctions décrites précédemment. Ses fonctions produis
+[visualizations.py](utils/visualizations.py) est essentiellement une bibliothèque de fonctions de visualisations, permettant aux développeurs de vérifier le comportement des fonctions décrites précédemment.
+
+## run_visualizations.py
+[run_visualizations.py](utils/run_visualizations.py) permet aux developpeurs de choisir quelle fonction de visulaisation lancer.
+
+## parameters_benchmark.py
+[parameters_benchmark.py](utils/parameters_benchmark.py) permet d'effectuer des calculs de cartographies pour des paramètres et tuiles de cartographie d'altimétrie données, puis de lancer les comparaisons entre certaines des cartographies produites.
