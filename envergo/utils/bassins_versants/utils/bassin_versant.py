@@ -83,7 +83,4 @@ def get_surface(index, radii):
     Returns:
         float: Surface de la zone entre deux rayons.
     """
-    if index == 0:
-        return pi * radii[index] ** 2
-    else:
-        return pi * radii[index] ** 2 - pi * radii[index - 1] ** 2
+    return pi * radii[index + 2] ** 2 - pi * radii[index + 1] ** 2
