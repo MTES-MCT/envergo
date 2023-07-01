@@ -15,7 +15,7 @@ def get_bassin_versant_sections_one_point(
         slope (float): Pente.
 
     Returns:
-        list(list(bool)): Sections faisant aprtie du bassin versant pour le point donné.
+        list(list(float)): Surface des sectinos faisant partie du bassin versant pour le point donné, .
     """
     bassin_versant_sections = [[0] * len(q) for q in quadrants]
 
