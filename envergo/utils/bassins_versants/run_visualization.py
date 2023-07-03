@@ -64,15 +64,16 @@ def run_tests(
             quadrants_nb=12,
             slope=0.05,
         )
-        point = (62, 20)
-        input_folder = f"{ALTI_PARENT_FOLDER}/alti_data"
-        alti_tile = (
-            f"{ALTI_PARENT_FOLDER}/alti_data/rgealti_fxx_0285_6710_mnt_lamb93_ign69.asc"
-        )
-        comparison = f"{ALTI_PARENT_FOLDER}/output/benchmarks/2023_07_01_16_50_35/decision/44_285000_6705000/5v5_r0vr1_12v12"
+        # replace this info with the point, params comparison and alti tile you want to study
+        point = (56, 196)
+        input_folder = f"{ALTI_PARENT_FOLDER}/alti_data_39"
+        alti_tile = f"{input_folder}/rgealti_fxx_0890_6625_mnt_lamb93_ign69.asc"
+        comparison = f"{ALTI_PARENT_FOLDER}/output/benchmarks/2023_07_02_09_38_27/decision/39_890000_6620000/5v5_r0vr1_12v12"
         disp = [("blue", 0.5), ("red", 0.3)]
+        params = [p0_12, p1_12]
+
         plot_sections_point_bassin_versant(
-            [p0_12, p1_12], input_folder, alti_tile, comparison, point, disp
+            params, input_folder, alti_tile, comparison, point, disp
         )
 
     if compare_cartos_go:

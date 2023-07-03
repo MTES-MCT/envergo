@@ -390,8 +390,8 @@ def compare_cartos(carto1, carto2, stretch=(1, 1)):
     car_name2 = carto2.split("/")[-1].split(".")[0]
     diff = c1 - c2
     print(f"\n ====== comparaison : {car_name1} et  {car_name2} ======")
-    print(f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}")
-    print(f"stats c2 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}")
+    print(f"stats {car_name1} : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}")
+    print(f"stats {car_name2}  : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}")
     print(f"abs diff moyenne : {np.mean(np.abs(diff))}\n")
     ouput_name = (f"{ALTI_PARENT_FOLDER}/output/diff/diff_{car_name1}_{car_name2}",)
     save_array_to_carto(
@@ -466,12 +466,10 @@ def compare_cartos_v2(
         text_result = ""
         text_result += f"\n ====== comparaison : {car_name1} et {car_name2} ======\n"
         text_result += (
-            f"stats c1 : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}\n"
+            f"stats {car_name1} : moyenne : {np.mean(c1)} | ecart type : {np.std(c1)}\n"
         )
 
-        text_result += (
-            f"stats c1 : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}\n"
-        )
+        text_result += f"stats {car_name2}  : moyenne : {np.mean(c2)} | ecart type : {np.std(c2)}\n"
 
         text_result += f"abs diff moyenne : {np.mean(np.abs(diff))}\n"
         text_result += (
