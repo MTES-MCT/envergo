@@ -286,23 +286,6 @@ class Moulinette:
             self.catalog["config"] = self.department.moulinette_config
 
         self.regulations = self.get_regulations()
-        self.perimeters = self.get_perimeters()
-        self.criterions_classes = self.get_criterions()
-
-        # This is a clear case of circular references, since the Moulinette
-        # holds references to the regulations it's computing, but regulations and
-        # criterions holds a reference to the Moulinette.
-        # That is because the Reality™ is messy and sometimes criterions require
-        # access to other pieces of data from the moulinette.
-        # For example, to compute the "Natura2000" result, there is a criterion
-        # that is just the result of the "Loi sur l'eau" regulation.
-        # self.regulations = [
-        #     LoiSurLEau(self),
-        #     Sage(self),
-        #     Natura2000(self),
-        #     EvalEnvironnementale(self),
-        # ]
-
         self.evaluate()
 
     def evaluate(self):
@@ -413,38 +396,6 @@ class Moulinette:
             .prefetch_related(Prefetch("criteria", queryset=criteria))
         )
         return regulations
-
-    def get_perimeters(self):
-        """Find activated perimeters
-
-        Regulation criterions have a geographical component and must only computed in
-        certain zones.
-        """
-        coords = self.catalog["coords"]
-        perimeters = (
-            Perimeter.objects.filter(
-                map__zones__geometry__dwithin=(coords, F("activation_distance"))
-            )
-            .annotate(
-                geometry=Case(
-                    When(map__geometry__isnull=False, then=F("map__geometry")),
-                    default=F("map__zones__geometry"),
-                )
-            )
-            .annotate(distance=Distance("map__zones__geometry", coords))
-            .order_by("distance", "map__name")
-            .select_related("map", "contact")
-        )
-        return perimeters
-
-    def get_criterions(self):
-        criterions = []
-        for perimeter in self.perimeters:
-            criterion = perimeter.criterion
-            if hasattr(perimeter, "contact"):
-                criterion.contact = perimeter.contact
-            criterions.append(criterion)
-        return set(criterions)
 
     def get_zones(self, coords, radius=200):
         """Return the Zone objects containing the queried coordinates."""
