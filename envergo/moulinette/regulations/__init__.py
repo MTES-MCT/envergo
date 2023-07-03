@@ -290,8 +290,15 @@ class CriterionEvaluator(ABC):
     # Associate a result code with a single result
     RESULT_MATRIX = {}
 
-    def __init__(self, moulinette):
+    def __init__(self, moulinette, distance):
+        """Initialize the evaluator.
+
+        Args:
+            moulinette (Moulinette): The moulinette instance.
+            distance (int): The distance to the queried coordinates.
+        """
         self.moulinette = moulinette
+        self.distance = distance
         self.moulinette.catalog.update(self.get_catalog_data())
 
     @property

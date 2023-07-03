@@ -50,10 +50,14 @@ class Regulation(models.Model):
         return self.title
 
     def evaluate(self, moulinette):
-        """Evaluate the regulation and all its criterions."""
+        """Evaluate the regulation and all its criterions.
+
+        Note : the `distance` field is not a member of the Criterion model,
+        it is added with an annotation in the `get_regulations` method.
+        """
 
         for criterion in self.criteria.all():
-            criterion.evaluate(moulinette)
+            criterion.evaluate(moulinette, criterion.distance)
 
     @property
     def result(self):
@@ -137,8 +141,8 @@ class Criterion(models.Model):
     def __str__(self):
         return self.title
 
-    def evaluate(self, moulinette):
-        self._evaluator = self.evaluator(moulinette)
+    def evaluate(self, moulinette, distance):
+        self._evaluator = self.evaluator(moulinette, distance)
         self._evaluator.evaluate()
 
     @property

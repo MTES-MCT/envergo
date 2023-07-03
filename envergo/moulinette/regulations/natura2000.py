@@ -261,17 +261,9 @@ class Lotissement(CriterionEvaluator):
         "non_disponible": RESULTS.non_disponible,
     }
 
-    def get_distance_to_n2000(self):
-        # XXX
-        return 0
-        perimeters = self.moulinette.perimeters
-        perimeter = next((p for p in perimeters if p.criterion == type(self)), None)
-        return perimeter.distance.m
-
     def get_result_data(self):
         is_lotissement = self.catalog["is_lotissement"]
-        distance_to_n2000 = self.get_distance_to_n2000()
-        if distance_to_n2000 <= 0.0:
+        if self.distance <= D(m=0.0):
             distance = "dedans"
         else:
             distance = "proximite_immediate"
