@@ -36,6 +36,20 @@ class CriterionAdminForm(forms.ModelForm):
             value = value()
         return value
 
+    def clean(self):
+        """Ensure required action and stake are both set if one is set."""
+
+        data = super().clean()
+        has_required_action = bool(data.get("required_action"))
+        has_stake = bool(data.get("required_action_stake"))
+        if any([has_required_action, has_stake]) and not all(
+            [has_required_action, has_stake]
+        ):
+            raise forms.ValidationError(
+                "Both required action and stake are required if one is set."
+            )
+        return data
+
 
 @admin.register(Criterion)
 class CriterionAdmin(admin.ModelAdmin):

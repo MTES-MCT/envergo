@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
@@ -15,7 +16,7 @@ from envergo.moulinette.fields import (
     CriterionChoiceField,
     CriterionEvaluatorChoiceField,
 )
-from envergo.moulinette.regulations import MoulinetteCriterion
+from envergo.moulinette.regulations import MoulinetteCriterion, Stake
 from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
@@ -113,6 +114,14 @@ class Regulation(models.Model):
 
         return result
 
+# A list of required action stakes.
+# For example, a user might learn that an action is required, to check if the
+# project is subject to the Water Law. Or if the project is forbidden.
+STAKES = Choices(
+    ("soumis", "Soumis"),
+    ("interdit", "Interdit"),
+)
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -138,6 +147,15 @@ class Criterion(models.Model):
         related_name="criteria",
     )
     weight = models.PositiveIntegerField(_("Weight"), default=1)
+    required_action = models.CharField(
+        _("Required action"),
+        help_text="Le porteur doit s'assurer que son projet…",
+        max_length=256,
+        blank=True,
+    )
+    required_action_stake = models.CharField(
+        _("Required action stake"), choices=STAKES, max_length=32, blank=True
+    )
 
     class Meta:
         verbose_name = _("Criterion")
