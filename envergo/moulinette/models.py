@@ -141,6 +141,16 @@ class Regulation(models.Model):
     def required_actions_interdit(self):
         return self.required_actions(STAKES.interdit)
 
+    def project_impacts(self):
+        impacts = [c.project_impact for c in self.criteria.all() if c.project_impact]
+        return impacts
+
+    def discussion_contacts(self):
+        contacts = [
+            c.discussion_contact for c in self.criteria.all() if c.discussion_contact
+        ]
+        return contacts
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -174,6 +184,17 @@ class Criterion(models.Model):
     )
     required_action_stake = models.CharField(
         _("Required action stake"), choices=STAKES, max_length=32, blank=True
+    )
+    project_impact = models.CharField(
+        _("Project impact"),
+        help_text="Au vu des informations saisies, le projet…",
+        max_length=256,
+        blank=True,
+    )
+    discussion_contact = models.TextField(
+        _("Discussion contact (html)"),
+        help_text="Le porteur de projet peut se rapprocher…",
+        blank=True,
     )
 
     class Meta:
