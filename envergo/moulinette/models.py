@@ -64,6 +64,42 @@ class Regulation(models.Model):
     def __str__(self):
         return self.title
 
+    def __getattr__(self, attr):
+        """Returns the corresponding regulation.
+
+        Allows to do something like this:
+        moulinette.loi_sur_leau.zone_humide to fetch the correct regulation.
+        """
+
+        def select_criterion(criterion):
+            return criterion.slug == attr
+
+        # If we just call `self.criteria.all(), we will trigger a recursive call
+        # to __getattr__.
+        # To avoid this, we get that data from the prefetched cache instead
+        if (
+            "_prefetched_objects_cache" in self.__dict__
+            and "criteria" in self.__dict__["_prefetched_objects_cache"]
+        ):
+            criteria = self.__dict__["_prefetched_objects_cache"]["criteria"]
+            if criteria:
+                criterion = next(filter(select_criterion, criteria), None)
+                if criterion:
+                    return criterion
+        val = super().__getattr__(attr)
+        return val
+
+    def get_criterion(self, criterion_slug):
+        """Return the criterion with the given slug."""
+
+        def select_criterion(criterion):
+            return criterion.slug == criterion_slug
+
+        criterion = next(filter(select_criterion, self.criteria.all()), None)
+        if criterion is None:
+            logger.warning(f"Criterion {criterion_slug} not found.")
+        return criterion
+
     def evaluate(self, moulinette):
         """Evaluate the regulation and all its criterions.
 
