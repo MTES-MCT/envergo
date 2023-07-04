@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -24,6 +26,9 @@ EPSG_WGS84 = 4326
 # Used for displaying tiles in web map systems (OSM, GoogleMaps)
 # Good for working in meters
 EPSG_MERCATOR = 3857
+
+
+logger = logging.getLogger(__name__)
 
 
 class Regulation(models.Model):
@@ -464,6 +469,8 @@ class Moulinette:
             return regulation.slug == regulation_slug
 
         regul = next(filter(select_regulation, self.regulations), None)
+        if regul is None:
+            logger.warning(f"Regulation {regulation_slug} not found.")
         return regul
 
     def result(self):
