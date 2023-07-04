@@ -31,7 +31,7 @@
     <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
   </p>
 
-  {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+  {% if moulinette.natura2000.lotissement.result == 'soumis' %}
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
       <li>Délai d'instruction inchangé : 3 mois.</li>
@@ -47,7 +47,7 @@
 
   <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-  {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+  {% if moulinette.natura2000.lotissement.result == 'soumis' %}
     <ul>
       <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
       <li>Délai d'instruction inchangé : 3 mois.</li>
@@ -121,7 +121,7 @@
 
     <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
 
-    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
       <p>
         <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
       </p>
@@ -142,7 +142,7 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
 
       <p>L’EIN est à déposer en mairie, avec le permis d’aménager.</p>
 
@@ -175,7 +175,7 @@
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
 
       <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
 
@@ -208,7 +208,7 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement_44.result == 'soumis' %}
+    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
 
       <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande de permis d'aménager.</p>
 
