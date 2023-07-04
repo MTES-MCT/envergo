@@ -16,7 +16,7 @@ from envergo.moulinette.fields import (
     CriterionChoiceField,
     CriterionEvaluatorChoiceField,
 )
-from envergo.moulinette.regulations import MoulinetteCriterion, Stake
+from envergo.moulinette.regulations import MoulinetteCriterion
 from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
@@ -30,6 +30,15 @@ EPSG_MERCATOR = 3857
 
 
 logger = logging.getLogger(__name__)
+
+
+# A list of required action stakes.
+# For example, a user might learn that an action is required, to check if the
+# project is subject to the Water Law. Or if the project is forbidden.
+STAKES = Choices(
+    ("soumis", "Soumis"),
+    ("interdit", "Interdit"),
+)
 
 
 class Regulation(models.Model):
@@ -114,13 +123,23 @@ class Regulation(models.Model):
 
         return result
 
-# A list of required action stakes.
-# For example, a user might learn that an action is required, to check if the
-# project is subject to the Water Law. Or if the project is forbidden.
-STAKES = Choices(
-    ("soumis", "Soumis"),
-    ("interdit", "Interdit"),
-)
+    def required_actions(self, stake):
+        """Return the list of required actions for the given stake."""
+
+        actions = [
+            c.required_action
+            for c in self.criteria.all()
+            if c.required_action
+            and c.result == "action_requise"
+            and c.required_action_stake == stake
+        ]
+        return actions
+
+    def required_actions_soumis(self):
+        return self.required_actions(STAKES.soumis)
+
+    def required_actions_interdit(self):
+        return self.required_actions(STAKES.interdit)
 
 
 class Criterion(models.Model):
