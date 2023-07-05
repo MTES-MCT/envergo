@@ -106,7 +106,9 @@ class SurfacePlancher(CriterionEvaluator):
         return surface_plancher_sup_thld
 
 
-TERRAIN_ASSIETTE_THRESHOLD = 10000
+TERRAIN_ASSIETTE_QUESTION_THRESHOLD = 10000
+TERRAIN_ASSIETTE_CASPARCAS_THRESHOLD = 50000
+TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD = 100000
 
 
 class TerrainAssietteForm(forms.Form):
@@ -133,81 +135,50 @@ class TerrainAssietteForm(forms.Form):
             existing_surface = int(self.data["existing_surface"])
             final_surface = created_surface + existing_surface
 
-        if final_surface < TERRAIN_ASSIETTE_THRESHOLD:
+        if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
             del self.fields["is_lotissement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
-    slug = "terrain_assiette"
-    title = "Terrain d'assiette"
     choice_label = "Éval Env > Terrain d'assiette"
-    subtitle = "Seuil réglementaire : 10 ha (cas par cas : 5 ha)"
-    header = """Rubrique 39 b) de l’<a target='_blank' rel='noopener'
-                href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329'>
-                annexe à l’art. R122-2 du code de l’environnement</a>"""
     form_class = TerrainAssietteForm
 
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-        return data
+    CODE_MATRIX = {
+        ("0", "non"): "non_soumis",
+        ("0", "oui"): "non_soumis",
+        ("10000", "non"): "non_concerne",
+        ("10000", "oui"): "non_soumis",
+        ("50000", "non"): "non_concerne",
+        ("50000", "oui"): "cas_par_cas",
+        ("100000", "non"): "non_concerne",
+        ("100000", "oui"): "systematique",
+    }
 
-    @property
-    def result_code(self):
-        """Return the unique result code"""
-        form = self.get_form()
-        if not form.is_valid():
-            return "non_disponible"
+    def get_result_data(self):
+        terrain_assiette = self.catalog.get("terrain_assiette", 0)
+        is_lotissement = self.catalog.get("is_lotissement", "non")
 
-        is_lotissement = form.cleaned_data.get("is_lotissement", None)
-        terrain_assiette = form.cleaned_data.get("terrain_assiette", None)
-
-        if is_lotissement is None or terrain_assiette is None:
-            result = RESULTS.non_soumis
-        elif is_lotissement == "non":
-            result = RESULTS.non_concerne
+        if terrain_assiette >= TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD:
+            assiette_thld = "100000"
+        elif terrain_assiette >= TERRAIN_ASSIETTE_CASPARCAS_THRESHOLD:
+            assiette_thld = "50000"
+        elif terrain_assiette >= TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
+            assiette_thld = "10000"
         else:
-            if terrain_assiette < 50000:
-                result = RESULTS.non_soumis
-            elif terrain_assiette < 100000:
-                result = RESULTS.cas_par_cas
-            else:
-                result = RESULTS.systematique
-
-        return result
-
-    @cached_property
-    def result(self):
-        code = self.result_code
-        return code
-
-
-class ClauseFilet(CriterionEvaluator):
-    slug = "clause_filet"
-    title = "Clause filet"
-    choice_label = "Éval Env > Clause Filet"
-    subtitle = ""
-    header = ""
-
-    @property
-    def result_code(self):
-        """Return the unique result code"""
-
-        return RESULTS.clause_filet
+            assiette_thld = "0"
+        return assiette_thld, is_lotissement
 
 
 class OtherCriteria(CriterionEvaluator):
-    slug = "autres_rubriques"
     choice_label = "Éval Env > Autres rubriques"
-    title = "Autres rubriques"
 
     CODES = ["non_disponible"]
 
-    @cached_property
-    def result_code(self):
-        return RESULTS.non_disponible
+    def evaluate(self):
+        self._result_code, self._result = RESULTS.non_disponible, RESULTS.non_disponible
 
 
 class EvalEnvironnementale(MoulinetteRegulation):
