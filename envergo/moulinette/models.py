@@ -187,6 +187,17 @@ class Regulation(models.Model):
         ]
         return contacts
 
+    def iota_only(self):
+        """Is the IOTA criterion the only valid criterion.
+
+        There is an edge case for the Natura2000 regulation.
+        Projects can be subject to Natura2000 only
+        because they are subject to IOTA, even though they are outsite
+        Natura 2000 zones.
+        """
+        criteria_slugs = [c.slug for c in self.criteria.all()]
+        return criteria_slugs == ["iota"]
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
