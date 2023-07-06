@@ -53,19 +53,19 @@ class ZoneHumide(CriterionEvaluator):
     def get_catalog_data(self):
         data = super().get_catalog_data()
 
-        if "wetlands_25" not in data:
+        if "wetlands_25" not in self.catalog:
             data["wetlands_25"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
             ]
             data["wetlands_within_25m"] = bool(data["wetlands_25"])
 
-        if "wetlands_100" not in data:
+        if "wetlands_100" not in self.catalog:
             data["wetlands_100"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
             ]
             data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
-        if "potential_wetlands_0" not in data:
+        if "potential_wetlands_0" not in self.catalog:
             data["potential_wetlands_0"] = [
                 zone
                 for zone in self.catalog["potential_wetlands"]

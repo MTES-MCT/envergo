@@ -52,13 +52,13 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         data = {}
         wetlands = self.catalog["forbidden_wetlands"]
 
-        if "forbidden_wetlands_25" not in data:
+        if "forbidden_wetlands_25" not in self.catalog:
             data["forbidden_wetlands_25"] = [
                 zone for zone in wetlands if zone.distance <= D(m=25)
             ]
             data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
 
-        if "forbidden_wetlands_100" not in data:
+        if "forbidden_wetlands_100" not in self.catalog:
             data["forbidden_wetlands_100"] = [
                 zone for zone in wetlands if zone.distance <= D(m=100)
             ]
@@ -184,19 +184,19 @@ class ZoneHumideGMRE56(CriterionEvaluator):
     def get_catalog_data(self):
         data = {}
 
-        if "wetlands_25" not in data:
+        if "wetlands_25" not in self.catalog:
             data["wetlands_25"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
             ]
             data["wetlands_within_25m"] = bool(data["wetlands_25"])
 
-        if "wetlands_100" not in data:
+        if "wetlands_100" not in self.catalog:
             data["wetlands_100"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
             ]
             data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
-        if "potential_wetlands_0" not in data:
+        if "potential_wetlands_0" not in self.catalog:
             data["potential_wetlands_0"] = [
                 zone
                 for zone in self.catalog["potential_wetlands"]
