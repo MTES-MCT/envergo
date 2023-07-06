@@ -91,7 +91,7 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
 
         return wetland_status, project_size
 
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -220,7 +220,7 @@ class ZoneHumideGMRE56(CriterionEvaluator):
 
         return wetland_status
 
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -327,7 +327,7 @@ class Sage(MoulinetteRegulation):
 
         return result
 
-    def _get_map(self):
+    def get_map(self):
         # Let's find the first map that we can display
         perimeter = next(
             (

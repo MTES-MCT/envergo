@@ -289,7 +289,7 @@ class Criterion(models.Model):
             )
 
         try:
-            map = self._get_map()
+            map = self._evaluator.get_map()
         except:  # noqa
             map = None
         return map
