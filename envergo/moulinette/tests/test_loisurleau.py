@@ -1,7 +1,6 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
@@ -9,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def loisurleau_criterions(france_map):  # noqa
+def loisurleau_criteria(france_map):  # noqa
     regulation = RegulationFactory(
         title="Loi sur l'eau", slug="loi_sur_leau", perimeter=france_map
     )
@@ -49,14 +48,6 @@ def moulinette_data(footprint):
         "created_surface": footprint,
         "final_surface": footprint,
     }
-
-
-def no_zones(_coords):
-    return []
-
-
-def create_zones():
-    return [ZoneFactory()]
 
 
 @pytest.mark.parametrize("footprint", [50])

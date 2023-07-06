@@ -214,13 +214,18 @@ class IOTA(CriterionEvaluator):
     CODES = ["soumis", "non_soumis", "a_verifier"]
 
     def evaluate(self):
-        iota = self.moulinette.loi_sur_leau.result
-        if iota in (RESULTS.soumis, RESULTS.interdit):
-            result = RESULTS.soumis
-        elif iota == RESULTS.non_soumis:
-            result = RESULTS.non_soumis
-        else:
-            result = RESULTS.a_verifier
+        try:
+            iota = self.moulinette.loi_sur_leau.result
+            if iota in (RESULTS.soumis, RESULTS.interdit):
+                result = RESULTS.soumis
+            elif iota == RESULTS.non_soumis:
+                result = RESULTS.non_soumis
+            else:
+                result = RESULTS.a_verifier
+        except AttributeError:
+            # If there is no Loi sur l'eau regulation
+            # for example, during unit tests
+            result = RESULTS.non_disponible
 
         self._result_code, self._result = result, result
 
