@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import storages
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -264,9 +265,16 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
     def get_evaluations(self):
         user_email = self.request.user.email
-        return Evaluation.objects.filter(contact_email=user_email).order_by(
-            "-created_at"
+        result_isnull = Q(result__isnull=True)
+        url_isnull = Q(moulinette_url="")
+        invalid_evals = result_isnull & url_isnull
+
+        evals = (
+            Evaluation.objects.filter(contact_email=user_email)
+            .exclude(invalid_evals)
+            .order_by("-created_at")
         )
+        return evals
 
 
 DATA_KEY = "REQUEST_WIZARD_DATA"
