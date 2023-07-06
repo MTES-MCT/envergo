@@ -295,9 +295,17 @@ class Criterion(models.Model):
         return map
 
     def get_form_class(self):
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the form class."
+            )
+
         return self._evaluator.get_form_class()
 
     def get_form(self):
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError("Criterion must be evaluated before accessing the form.")
+
         return self._evaluator.get_form()
 
 
