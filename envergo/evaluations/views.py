@@ -167,7 +167,9 @@ class EvaluationDetailLegacy(FormView, DetailView):
             RESULTS.action_requise: "evaluations/detail/action_requise.html",
         }
         evaluation = self.object
-        template_names = [templates.get(evaluation.result)]
+        template_names = [
+            templates.get(evaluation.result, "evaluations/not_found.html")
+        ]
         return template_names
 
     def get_queryset(self):
