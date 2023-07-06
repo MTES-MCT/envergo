@@ -10,7 +10,7 @@ from envergo.moulinette.models import (
     Perimeter,
     Regulation,
 )
-from envergo.moulinette.regulations import CriterionEvaluator, MoulinetteCriterion
+from envergo.moulinette.regulations import CriterionEvaluator
 
 
 @admin.register(Regulation)
@@ -82,7 +82,7 @@ class PerimeterAdminForm(forms.ModelForm):
         """
 
         value = self.initial.get(field_name, field.initial)
-        if callable(value) and not issubclass(value, MoulinetteCriterion):
+        if callable(value) and not getattr(value, "do_not_call_in_templates", False):
             value = value()
         return value
 

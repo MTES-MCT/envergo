@@ -284,6 +284,10 @@ class CriterionEvaluator(ABC):
     be called once, and that populates the `result_code` and `result` properties.
     """
 
+    # Prevent template engine to instanciate the class since we sometimes want
+    # to display the raw type for debug purpose
+    do_not_call_in_templates = True
+
     # Associate evaluation data with a single result code
     CODE_MATRIX = {}
 
