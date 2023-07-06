@@ -32,10 +32,12 @@ def probability(criterion):
 
 @register.simple_tag
 def result_tag(result):
-
     proba_level = result
-    result_label = RESULTS[result]
-    display = f'<span class="fr-tag probability probability-{proba_level}">{result_label}</span>'
+    try:
+        result_label = RESULTS[result]
+        display = f'<span class="fr-tag probability probability-{proba_level}">{result_label}</span>'
+    except KeyError:
+        display = ""
     return mark_safe(display)
 
 
