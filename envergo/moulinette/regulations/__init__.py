@@ -132,7 +132,7 @@ class MapPolygon:
     a polygon with a given color and label.
     """
 
-    perimeters: list  # List of `envergo.geofr.Perimeter` objects
+    perimeters: list  # List of objects with a `geometry` property
     color: str
     label: str
 
@@ -144,7 +144,14 @@ class MapPolygon:
 
     @property
     def maps(self):
-        perimeter_maps = [p.map for p in self.perimeters]
+        from envergo.geodata.models import Map as geodata_Map
+
+        perimeter_maps = []
+        for p in self.perimeters:
+            if hasattr(p, "map"):
+                perimeter_maps.append(p.map)
+            elif isinstance(p, geodata_Map):
+                perimeter_maps.append(p)
         return perimeter_maps
 
 

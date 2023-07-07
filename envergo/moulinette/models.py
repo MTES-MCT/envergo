@@ -16,7 +16,7 @@ from envergo.moulinette.fields import (
     CriterionChoiceField,
     CriterionEvaluatorChoiceField,
 )
-from envergo.moulinette.regulations import MoulinetteCriterion
+from envergo.moulinette.regulations import Map, MapPolygon, MoulinetteCriterion
 from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
@@ -57,6 +57,10 @@ class Regulation(models.Model):
     )
     weight = models.PositiveIntegerField(_("Weight"), default=1)
 
+    show_map = models.BooleanField(_("Show map"), default=False)
+    map_caption = models.TextField(_("Map caption"), blank=True)
+    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
+
     class Meta:
         verbose_name = _("Regulation")
         verbose_name_plural = _("Regulations")
@@ -86,7 +90,7 @@ class Regulation(models.Model):
                 criterion = next(filter(select_criterion, criteria), None)
                 if criterion:
                     return criterion
-        val = super().__getattr__(attr)
+        val = getattr(super(), attr)
         return val
 
     def get_criterion(self, criterion_slug):
@@ -106,7 +110,7 @@ class Regulation(models.Model):
         Note : the `distance` field is not a member of the Criterion model,
         it is added with an annotation in the `get_regulations` method.
         """
-
+        self.moulinette = moulinette
         for criterion in self.criteria.all():
             criterion.evaluate(moulinette, criterion.distance)
 
@@ -197,6 +201,27 @@ class Regulation(models.Model):
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
         return criteria_slugs == ["iota"]
+
+    @property
+    def map(self):
+        """Returns a map to be displayed for the regulation.
+
+        Returns a `envergo.moulinette.regulations.Map` object or None.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        if not self.show_map:
+            return None
+
+        polygon = MapPolygon([self.perimeter], self.polygon_color, self.title)
+        map = Map(
+            center=self.moulinette.catalog["coords"],
+            entries=[polygon],
+            caption=self.map_caption,
+            truncate=False,
+            zoom=None,
+        )
+        return map
 
 
 class Criterion(models.Model):
