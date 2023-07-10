@@ -19,9 +19,9 @@
                 <a class="fr-link"
                    href="{{ source.source }}"
                    target="_blank"
-                   rel="noopener">{{ source.display_name }}</a>
+                   rel="noopener">{{ source.display_name|default:source.name }}</a>
               {% else %}
-                {{ source.display_name }}
+                {{ source.display_name|default:source.name }}
               {% endif %}
             </li>
           {% endfor %}
