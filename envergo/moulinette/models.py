@@ -210,6 +210,10 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
+        for criterion in self.criteria.all():
+            if criterion.show_map:
+                return criterion.regulation_map
+
         if not self.show_map:
             return None
 
@@ -268,6 +272,15 @@ class Criterion(models.Model):
         help_text="Le porteur de projet peut se rapprocher…",
         blank=True,
     )
+    show_map = models.BooleanField(
+        _("Show map"),
+        help_text=_(
+            "Allow this criterion's map to be displayed at the regulation level."
+        ),
+        default=False,
+    )
+    map_caption = models.TextField(_("Map caption"), blank=True)
+    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
     class Meta:
         verbose_name = _("Criterion")
@@ -277,6 +290,7 @@ class Criterion(models.Model):
         return self.title
 
     def evaluate(self, moulinette, distance):
+        self.moulinette = moulinette
         self._evaluator = self.evaluator(moulinette, distance)
         self._evaluator.evaluate()
 
@@ -317,6 +331,31 @@ class Criterion(models.Model):
             map = self._evaluator.get_map()
         except:  # noqa
             map = None
+        return map
+
+    @property
+    def regulation_map(self):
+        """Returns a map to be displayed for the regulation.
+
+        Sometimes, we want a criterion map to be displayed at the regulation level.
+        For example, for the Sage regulation, where a single criterion should be
+        activated at the same time.
+
+        Returns a `envergo.moulinette.regulations.Map` object or None.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        if not self.show_map:
+            return None
+
+        polygon = MapPolygon([self.perimeter], self.polygon_color, self.title)
+        map = Map(
+            center=self.moulinette.catalog["coords"],
+            entries=[polygon],
+            caption=self.map_caption,
+            truncate=False,
+            zoom=None,
+        )
         return map
 
     def get_form_class(self):
