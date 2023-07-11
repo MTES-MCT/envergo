@@ -2,13 +2,11 @@
 
 <div class="fr-header__body">
   <div class="fr-container">
-    {% spaceless %}
-      <div class="fr-header__body-row">
-        <div class="fr-header__brand fr-enlarge-link">
-          <div class="fr-header__brand-top">
-            <div class="fr-header__logo">
-              <img src="{% static 'images/marianne.svg' %}" alt="République française">
-            </div>
+    <div class="fr-header__body-row">
+      <div class="fr-header__brand fr-enlarge-link">
+        <div class="fr-header__brand-top">
+          <div class="fr-header__logo">
+            <img src="{% static 'images/marianne.svg' %}" alt="République française">
           </div>
           <div class="fr-header__navbar">
             <button class="fr-btn--menu fr-btn"
@@ -19,41 +17,40 @@
               Menu
             </button>
           </div>
-          <div class="fr-header__service">
-            <a href="/">
-              <p class="fr-header__service-title">EnvErgo</p>
-            </a>
-          </div>
         </div>
-
-        <div id="slim-menu" class="fr-header__tools">
-          <div class="fr-header__tools-links">
-            <ul class="fr-links-group">
-              <li>
-                <a class="fr-link" href="{% url 'moulinette_home' %}">Simulateur</a>
-              </li>
-              <li>
-                <a class="fr-link" href="{% url 'request_evaluation' %}">Évaluation manuelle</a>
-              </li>
-              <li>
-                <a class="fr-link" href="{% url 'faq' %}">Questions fréquentes</a>
-              </li>
-
-              {% if user.is_authenticated %}
-                <li>
-                  <a class="fr-link fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
-                </li>
-              {% else %}
-                <li>
-                  <a class="fr-link fr-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
-                </li>
-              {% endif %}
-            </ul>
-          </div>
+        <div class="fr-header__service">
+          <a href="/">
+            <p class="fr-header__service-title">EnvErgo</p>
+          </a>
         </div>
-
       </div>
-    {% endspaceless %}
+
+      <div id="slim-menu" class="fr-header__tools">
+        <div class="fr-header__tools-links">
+          <ul class="fr-links-group">
+            <li>
+              <a class="fr-link" href="{% url 'moulinette_home' %}">Simulateur</a>
+            </li>
+            <li>
+              <a class="fr-link" href="{% url 'request_evaluation' %}">Évaluation manuelle</a>
+            </li>
+            <li>
+              <a class="fr-link" href="{% url 'faq' %}">Questions fréquentes</a>
+            </li>
+
+            {% if user.is_authenticated %}
+              <li>
+                <a class="fr-link fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+              </li>
+            {% else %}
+              <li>
+                <a class="fr-link fr-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -61,7 +58,9 @@
   <div class="fr-container">
     <button class="fr-btn--close fr-btn"
             aria-controls="modal-menu-slim"
-            title="Fermer">
+            title="Fermer"
+            aria-haspopup="slim-menu"
+            title="Menu">
       Fermer
     </button>
     <div class="fr-header__menu-links"></div>
