@@ -224,7 +224,7 @@ def simplify_map(map):
                     0.0001
                   ),
                   'method=structure keepcollapsed=false'
-                )
+                )::geography
               )
               AS polygon
             FROM geodata_zone as z
