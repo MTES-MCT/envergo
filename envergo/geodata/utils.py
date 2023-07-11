@@ -213,6 +213,8 @@ def simplify_map(map):
     Because of that, we also have to call ST_MakeValid to avoid returning invalid
     polygons."""
 
+    logger.info("Generating map preview polygon")
+
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -238,4 +240,6 @@ def simplify_map(map):
     polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
     if isinstance(polygon, Polygon):
         polygon = MultiPolygon(polygon)
+
+    logger.info("Preview generation is done")
     return polygon
