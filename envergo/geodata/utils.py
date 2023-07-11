@@ -229,6 +229,7 @@ def simplify_map(map):
               AS polygon
             FROM geodata_zone as z
             WHERE z.map_id = %s
+            AND ST_IsValid(z.geometry::geometry)
             """,
             [map.id],
         )
