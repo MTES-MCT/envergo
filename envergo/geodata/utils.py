@@ -238,8 +238,10 @@ def simplify_map(map):
         row = cursor.fetchone()
 
     polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
+    logging.info(f"Type of generated polygon: {type(polygon)}")
+
     if isinstance(polygon, Polygon):
-        polygon = MultiPolygon(polygon)
+        polygon = MultiPolygon([polygon])
 
     logger.info("Preview generation is done")
     return polygon
