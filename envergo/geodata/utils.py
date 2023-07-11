@@ -211,7 +211,9 @@ def simplify_map(map):
     holes in the polygon.
 
     Because of that, we also have to call ST_MakeValid to avoid returning invalid
-    polygons."""
+    polygons.
+
+    We wrap all of this in ST_CollectionExtract to make sure we get a MultiPolygon."""
 
     logger.info("Generating map preview polygon")
 

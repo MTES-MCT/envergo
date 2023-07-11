@@ -28,7 +28,7 @@ def process_shapefile_map(task, map_id):
         with transaction.atomic():
             map.zones.all().delete()
             process_shapefile(map, map.file, task)
-            # map.geometry = simplify_map(map)
+            map.geometry = simplify_map(map)
     except Exception as e:
         map.import_error_msg = f"Erreur d'import ({e})"
         logger.error(map.import_error_msg)
