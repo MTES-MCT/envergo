@@ -220,18 +220,19 @@ def simplify_map(map):
             """
             SELECT
               ST_AsText(
-                ST_MakeValid(
-                  ST_Simplify(
-                    ST_Union(z.geometry::geometry),
-                    0.0001
+                ST_CollectionExtract(
+                  ST_MakeValid(
+                    ST_Simplify(
+                      ST_Union(ST_MakeValid(z.geometry::geometry)),
+                      0.0001
+                    ),
+                    'method=structure keepcollapsed=false'
                   ),
-                  'method=structure keepcollapsed=false'
-                )::geography
+                3)::geography
               )
               AS polygon
             FROM geodata_zone as z
             WHERE z.map_id = %s
-            AND ST_IsValid(z.geometry::geometry)
             """,
             [map.id],
         )
