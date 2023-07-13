@@ -113,6 +113,10 @@ class Regulation(models.Model):
         return self.regulation
 
     @property
+    def title(self):
+        return self.get_regulation_display()
+
+    @property
     def result(self):
         """Compute global result from individual criterions.
 
@@ -201,6 +205,11 @@ class Regulation(models.Model):
         return criteria_slugs == ["iota"]
 
     @property
+    def perimeter(self):
+        """Return the perimeter of the regulation."""
+        return self.perimeters.first()
+
+    @property
     def map(self):
         """Returns a map to be displayed for the regulation.
 
@@ -208,6 +217,7 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
+        return None
         for criterion in self.criteria.all():
             if criterion.show_map:
                 return criterion.regulation_map
@@ -375,6 +385,12 @@ class Perimeter(models.Model):
     """Link a map and regulation criteria."""
 
     name = models.CharField(_("Name"), max_length=256)
+    long_name = models.CharField(
+        _("Long name"),
+        max_length=256,
+        blank=True,
+        help_text=_("Displayed below the regulation title"),
+    )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
         verbose_name=_("Regulation"),

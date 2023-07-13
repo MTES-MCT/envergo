@@ -5,6 +5,19 @@
     <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
   </h2>
 
+  {% if regulation.perimeter %}
+    <p>
+      Le projet se trouve dans ce périmètre :
+      {% if regulation.perimeter.contact_url %}
+        <a href="{{ regulation.perimeter.contact_url }}"
+           target="_blank"
+           rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>
+      {% else %}
+        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}
+      {% endif %}
+    </p>
+  {% endif %}
+
   {% if regulation.map %}
     {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
 
