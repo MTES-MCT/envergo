@@ -5,8 +5,6 @@
     <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
   </h2>
 
-  {% perimeter_contact_string regulation %}
-
   {% if regulation.map %}
     {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
 

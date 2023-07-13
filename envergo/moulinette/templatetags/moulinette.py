@@ -58,22 +58,3 @@ def criterion_value(config, criterion, field):
 @register.simple_tag()
 def debug(stuff):
     raise 0
-
-
-@register.simple_tag
-def perimeter_contact_string(regulation):
-    criteria = regulation.criteria.all()
-    contacts = [
-        criterion.contact for criterion in criteria if hasattr(criterion, "contact")
-    ]
-    contact = contacts.pop() if contacts else None
-    if contact:
-        string = f"""
-        <p>
-        Le projet se trouve dans le <a href="{contact.url}">    périmètre du Schéma d'Aménagement et de
-        Gestion des Eaux (SAGE) « {contact} »</a>.
-        </p>
-        """
-    else:
-        string = ""
-    return mark_safe(string)

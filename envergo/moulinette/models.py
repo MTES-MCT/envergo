@@ -109,6 +109,10 @@ class Regulation(models.Model):
             criterion.evaluate(moulinette, criterion.distance)
 
     @property
+    def slug(self):
+        return self.regulation
+
+    @property
     def result(self):
         """Compute global result from individual criterions.
 
@@ -550,37 +554,47 @@ class Moulinette:
 
         criteria = (
             Criterion.objects.filter(
-                perimeter__zones__geometry__dwithin=(coords, F("activation_distance"))
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
             )
             .annotate(
                 geometry=Case(
                     When(
-                        perimeter__geometry__isnull=False, then=F("perimeter__geometry")
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
                     ),
-                    default=F("perimeter__zones__geometry"),
+                    default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("perimeter__zones__geometry", coords))
+            .annotate(distance=Distance("activation_map__zones__geometry", coords))
             .order_by("weight")
-            .select_related("perimeter")
+            .select_related("activation_map")
+        )
+
+        perimeters = (
+            Perimeter.objects.filter(
+                activation_map__geometry__dwithin=(coords, F("activation_distance"))
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .select_related("activation_map")
         )
 
         regulations = (
-            Regulation.objects.filter(
-                perimeter__zones__geometry__dwithin=(coords, F("activation_distance"))
-            )
-            .annotate(
-                geometry=Case(
-                    When(
-                        perimeter__geometry__isnull=False, then=F("perimeter__geometry")
-                    ),
-                    default=F("perimeter__zones__geometry"),
-                )
-            )
-            .annotate(distance=Distance("perimeter__zones__geometry", coords))
+            Regulation.objects.all()
             .order_by("weight")
-            .select_related("perimeter")
             .prefetch_related(Prefetch("criteria", queryset=criteria))
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
         )
         return regulations
 
