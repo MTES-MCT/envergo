@@ -3,20 +3,17 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Map
-from envergo.moulinette.models import (
-    Contact,
-    Criterion,
-    MoulinetteConfig,
-    Perimeter,
-    Regulation,
-)
+from envergo.moulinette.models import Criterion, MoulinetteConfig, Perimeter, Regulation
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["title", "slug", "perimeter", "activation_distance"]
-    prepopulated_fields = {"slug": ["title"]}
+    list_display = ["get_regulation_display"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.order_by("weight")
 
 
 class CriterionAdminForm(forms.ModelForm):
@@ -57,7 +54,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "title",
         "slug",
         "regulation",
-        "perimeter",
+        "activation_map",
         "activation_distance",
         "evaluator_column",
     ]
@@ -89,6 +86,7 @@ class PerimeterAdminForm(forms.ModelForm):
 
 @admin.register(Perimeter)
 class PerimeterAdmin(admin.ModelAdmin):
+    list_display = ["name", "regulation", "activation_map", "activation_distance"]
     form = PerimeterAdminForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -114,9 +112,3 @@ class MoulinetteConfigForm(forms.ModelForm):
 class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated"]
     form = MoulinetteConfigForm
-
-
-@admin.register(Contact)
-class ContactAdmin(admin.ModelAdmin):
-    list_display = ["name", "perimeter", "url"]
-    fields = ["perimeter", "name", "url", "address_md"]

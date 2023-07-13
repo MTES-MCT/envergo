@@ -9,15 +9,12 @@ from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
+from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
-from envergo.moulinette.fields import (
-    CriterionChoiceField,
-    CriterionEvaluatorChoiceField,
-)
+from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.regulations import Map, MapPolygon, MoulinetteCriterion
-from envergo.utils.markdown import markdown_to_html
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -40,21 +37,18 @@ STAKES = Choices(
     ("interdit", "Interdit"),
 )
 
+REGULATIONS = Choices(
+    ("loi_sur_leau", "Loi sur l'eau"),
+    ("natura2000", "Natura 2000"),
+    ("eval_env", "Évaluation environnementale"),
+    ("sage", "Réglement de SAGE"),
+)
+
 
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
-    title = models.CharField(_("Title"), max_length=256)
-    slug = models.SlugField(_("Slug"), max_length=256)
-    perimeter = models.ForeignKey(
-        "geodata.Map",
-        verbose_name=_("Perimeter"),
-        on_delete=models.PROTECT,
-        related_name="regulations",
-    )
-    activation_distance = models.PositiveIntegerField(
-        _("Activation distance"), default=0
-    )
+    regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Weight"), default=1)
 
     show_map = models.BooleanField(_("Show map"), default=False)
@@ -66,7 +60,7 @@ class Regulation(models.Model):
         verbose_name_plural = _("Regulations")
 
     def __str__(self):
-        return self.title
+        return self.get_regulation_display()
 
     def __getattr__(self, attr):
         """Returns the corresponding regulation.
@@ -235,8 +229,13 @@ class Criterion(models.Model):
     slug = models.SlugField(_("Slug"), max_length=256)
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
-    evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
-    perimeter = models.ForeignKey(
+    regulation = models.ForeignKey(
+        "moulinette.Regulation",
+        verbose_name=_("Regulation"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+    )
+    activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Perimeter"),
         on_delete=models.PROTECT,
@@ -245,12 +244,7 @@ class Criterion(models.Model):
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
-    regulation = models.ForeignKey(
-        "moulinette.Regulation",
-        verbose_name=_("Regulation"),
-        on_delete=models.PROTECT,
-        related_name="criteria",
-    )
+    evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     weight = models.PositiveIntegerField(_("Weight"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -377,16 +371,23 @@ class Perimeter(models.Model):
     """Link a map and regulation criteria."""
 
     name = models.CharField(_("Name"), max_length=256)
-    map = models.ForeignKey(
+    regulation = models.ForeignKey(
+        "moulinette.Regulation",
+        verbose_name=_("Regulation"),
+        on_delete=models.PROTECT,
+        related_name="perimeters",
+    )
+    activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Map"),
         related_name="perimeters",
         on_delete=models.PROTECT,
     )
-    criterion = CriterionChoiceField(_("Criterion"))
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
+    contact_url = models.URLField(_("Contact url"), blank=True)
+    contact_phone = PhoneNumberField(_("Contact phone"), blank=True)
 
     class Meta:
         verbose_name = _("Perimeter")
@@ -755,30 +756,3 @@ class FakeMoulinette(Moulinette):
 
     def get_department(self):
         return self.catalog["department"]
-
-
-class Contact(models.Model):
-    """Contact data for a perimeter."""
-
-    perimeter = models.OneToOneField(
-        Perimeter,
-        verbose_name=_("Perimeter"),
-        on_delete=models.PROTECT,
-        related_name="contact",
-    )
-    name = models.CharField(_("Name"), max_length=256)
-    url = models.URLField(_("URL"), blank=True)
-    regulation_url = models.URLField(_("Regulation URL"), blank=True)
-    address_md = models.TextField(_("Address"))
-    address_html = models.TextField(_("Address HTML"), blank=True)
-
-    class Meta:
-        verbose_name = _("Contact")
-        verbose_name_plural = _("Contacts")
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        self.address_html = markdown_to_html(self.address_md)
-        super().save(*args, **kwargs)
