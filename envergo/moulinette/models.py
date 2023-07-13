@@ -206,7 +206,17 @@ class Regulation(models.Model):
 
     @property
     def perimeter(self):
-        """Return the perimeter of the regulation."""
+        """Return the perimeter the project is in.
+
+        The perimeter is an administrative zone. In a perfect one, for a single
+        regulation, perimeters are non-overlapping, meaning there is a single
+        perimeter for a single location.
+
+        French administration being what it is, this is not always the case.
+
+        Hence, if we are matching several perimeters, we have no way to tell which
+        one is the correct one. So we just return the first one.
+        """
         return self.perimeters.first()
 
     @property
