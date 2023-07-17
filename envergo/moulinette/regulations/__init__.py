@@ -161,7 +161,7 @@ class Map:
 
     center: tuple  # Coordinates to center the map
     entries: list  # List of `MapPolygon` objects
-    caption: str  # Legend displayed below the map
+    caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
     zoom: int = 16  # the map zoom to pass to leaflet
 

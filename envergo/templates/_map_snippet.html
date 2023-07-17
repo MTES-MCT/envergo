@@ -6,29 +6,31 @@
       </div>
     </div>
   </div>
-  <figcaption class="fr-content-media__caption">
-    {{ map.caption|safe }}
+  {% if map.caption %}
+    <figcaption class="fr-content-media__caption">
+      {{ map.caption|safe }}
 
-    {% if map.sources %}
-      <div class="sources">
-        Sources :
-        <ul class="source-list">
-          {% for source in map.sources %}
-            <li>
-              {% if source.source %}
-                <a class="fr-link"
-                   href="{{ source.source }}"
-                   target="_blank"
-                   rel="noopener">{{ source.display_name|default:source.name }}</a>
-              {% else %}
-                {{ source.display_name|default:source.name }}
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-  </figcaption>
+      {% if map.sources %}
+        <div class="sources">
+          Sources :
+          <ul class="source-list">
+            {% for source in map.sources %}
+              <li>
+                {% if source.source %}
+                  <a class="fr-link"
+                     href="{{ source.source }}"
+                     target="_blank"
+                     rel="noopener">{{ source.display_name|default:source.name }}</a>
+                {% else %}
+                  {{ source.display_name|default:source.name }}
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </figcaption>
+  {% endif %}
 </figure>
 
 <script>
