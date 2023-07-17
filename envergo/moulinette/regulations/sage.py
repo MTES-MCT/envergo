@@ -141,21 +141,6 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
             """
         return impact
 
-    def discussion_contact(self):
-        contact = None
-        if self.result in (RESULTS.action_requise, RESULTS.interdit):
-            contact = """
-            de la structure en charge de l’animation du SAGE Vie et Jaunay :
-            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-                <address>
-                <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
-                Téléphone : 02 51 54 28 18<br />
-                Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
-                </address>
-            </div>
-            """
-        return contact
-
 
 class ZoneHumideGMRE56(CriterionEvaluator):
     choice_label = "56 - Zone humide GMRE"
@@ -285,22 +270,6 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         if self.result == RESULTS.interdit:
             impact = "impacte une zone humide dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel."
         return impact
-
-    def discussion_contact(self):
-        contact = None
-        if self.result in (RESULTS.action_requise, RESULTS.interdit):
-            contact = """
-            de la structure en charge de l’animation du SAGE Golfe du Morbihan et Ria d'Etel :
-            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-                <address>
-                <strong>Syndicat Mixte du SAGE Golfe du Morbihan et Ria d’Etel</strong><br />
-                Téléphone : 02 97 52 47 60<br />
-                Site internet : <a href="https://www.sagegmre.fr/contact,pa12.html" target="_blank" rel="noopener">
-                https://www.sagegmre.fr</a>
-                </address>
-            </div>
-            """
-        return contact
 
 
 class Sage(MoulinetteRegulation):
