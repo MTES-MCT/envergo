@@ -1,16 +1,9 @@
-from functools import cached_property
-
 from django import forms
 from django.contrib.gis.measure import Distance as D
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import (
-    CriterionEvaluator,
-    Map,
-    MapPolygon,
-    MoulinetteRegulation,
-)
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 BLUE = "blue"
 LIGHTBLUE = "lightblue"
@@ -274,86 +267,3 @@ class Lotissement(CriterionEvaluator):
             distance = "proximite_immediate"
 
         return is_lotissement, distance
-
-
-class Lotissement44(Lotissement):
-    # Note : this is the legacy name of the criterion.
-    # It was renamed "Lotissement", but we keep the old name to avoid breaking
-    # existing perimeters.
-    choice_label = "Natura 2000 > 44 - Lotissement (obsolète)"
-
-
-class Natura2000(MoulinetteRegulation):
-    slug = "natura2000"
-    title = "Natura 2000"
-    criterion_classes = [ZoneHumide44, ZoneInondable44, IOTA, Lotissement]
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        elif RESULTS.a_verifier in results:
-            result = RESULTS.iota_a_verifier
-        else:
-            result = RESULTS.non_soumis
-
-        return result
-
-    def iota_only(self):
-        """Is the IOTA criterion the only valid criterion.
-
-        There is an edge case where projects can be subject to Natura2000 only
-        because they are subject to IOTA, even though they are outsite
-        Natura 2000 zones.
-        """
-        return len(self.criterions) == 1 and isinstance(self.criterions[0], IOTA)
-
-    def get_map(self):
-        """Display a Natura 2000 map if a single criterion has been activated.
-
-        Since there is probably a single Natura 2000 map for all Natura 2000
-        criterions, we only display a single polygon and a single map source.
-
-        The IOTA criterion must not be taken into account, though, because it's
-        perimeter will likely be entire departments, so displaying it will not
-        be relevant.
-        """
-
-        # XXX
-
-        # Let's find the first perimeter with a map that we can display
-        perimeter = next(
-            (
-                p
-                for p in self.moulinette.perimeters
-                if p.criterion in self.criterion_classes
-                and not p.criterion == IOTA
-                and p.map.display_for_user
-            ),
-            None,
-        )
-        if not perimeter:
-            return None
-
-        map_polygons = [MapPolygon([perimeter], "green", "Site Natura 2000")]
-
-        if perimeter.distance.m <= 0.0:
-            caption = "Le projet se situe sur un site Natura 2000."
-        else:
-            caption = "Le projet se situe à proximité immédiate d’un site Natura 2000."
-
-        map = Map(
-            center=self.catalog["coords"],
-            entries=map_polygons,
-            caption=caption,
-            truncate=False,
-            zoom=15,
-        )
-
-        return map

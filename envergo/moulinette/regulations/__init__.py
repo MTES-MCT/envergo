@@ -2,7 +2,6 @@ import json
 from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import merge_geometries, to_geojson
@@ -20,102 +19,6 @@ class RequiredAction:
 
     def __str__(self):
         return self.text
-
-
-class MoulinetteRegulation(ABC):
-    """Run the moulinette for a single regulation (e.g Loi sur l'eau).
-
-    This class is meant to be inherited to implement actual regulations.
-    """
-
-    # Implement this in subclasses
-    criterion_classes = []
-
-    def __init__(self, moulinette):
-        self.moulinette = moulinette
-        self.moulinette.catalog.update(self.get_catalog_data())
-
-        # Instanciate the criterions
-        self.criterions = [
-            perimeter.criterion(moulinette, perimeter)
-            for perimeter in moulinette.perimeters
-            if perimeter.criterion in self.criterion_classes
-        ]
-
-    def get_catalog_data(self):
-        """Get data to inject to the global catalog."""
-
-        return {}
-
-    @property
-    def catalog(self):
-        """Is is a simple shortcut for readability purpose."""
-        return self.moulinette.catalog
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        else:
-            result = RESULTS.non_soumis
-
-        return result
-
-    def required_actions(self):
-        actions = [c.required_action() for c in self.criterions if c.required_action()]
-        return actions
-
-    def required_actions_soumis(self):
-        actions = [
-            action for action in self.required_actions() if action.stake == Stake.SOUMIS
-        ]
-        return actions
-
-    def required_actions_interdit(self):
-        actions = [
-            action
-            for action in self.required_actions()
-            if action.stake == Stake.INTERDIT
-        ]
-        return actions
-
-    def project_impacts(self):
-        impacts = [c.project_impact() for c in self.criterions if c.project_impact()]
-        return impacts
-
-    def __getattr__(self, attr):
-        """Returs the corresponding criterion.
-
-        Allows to do something like this:
-        moulinette.loi_sur_leau.zones_inondables to fetch the correct criterion.
-        """
-        return self.get_criterion(attr)
-
-    def get_criterion(self, criterion_slug):
-        """Return the regulation with the given slug."""
-
-        def select_criterion(criterion):
-            return criterion.slug == criterion_slug
-
-        criterion = next(filter(select_criterion, self.criterions), None)
-        return criterion
-
-    @cached_property
-    def map(self):
-        try:
-            map = self._get_map()
-        except:  # noqa
-            map = None
-        return map
-
-    def _get_map(self):
-        return None
 
 
 @dataclass
@@ -195,76 +98,6 @@ class Map:
             for map in entry.maps:
                 maps.add(map)
         return maps
-
-
-class MoulinetteCriterion(ABC):
-    """Run a single moulinette check."""
-
-    # Prevent template engine to instanciate the class since we sometimes want
-    # to display the raw type for debug purpose
-    do_not_call_in_templates = True
-
-    # This is the list of all unique result codes the criterion can return.
-    # This is onlyy used for debugging purpose in the `envergo.moulinette.forms.MoulinetteDebug` form.
-    # Every subclass should override this property to match the
-    # "Nomenclature réglementations & critères" document.
-    CODES = ["soumis", "non_soumis", "action_requise", "non_concerne"]
-
-    def __init__(self, moulinette, perimeter):
-        self.moulinette = moulinette
-        self.moulinette.catalog.update(self.get_catalog_data())
-        self.perimeter = perimeter
-
-    def get_catalog_data(self):
-        """Get data to inject to the global catalog."""
-
-        return {}
-
-    @property
-    def catalog(self):
-        """Is is a simple shortcut for readability purpose."""
-        return self.moulinette.catalog
-
-    @cached_property
-    def result(self):
-        """The result will be displayed to the user with a fancy label."""
-        return self.result_code
-
-    @property
-    def result_code(self):
-        """Return a unique code for the criterion result.
-
-        Sometimes, a same criterion can have the same result for different reasons.
-        Because of this, we want unique codes to display custom messages to
-        the user.
-        """
-        raise NotImplementedError(
-            f"Implement the `{type(self).__name__}.result_code` method."
-        )
-
-    @cached_property
-    def map(self):
-        try:
-            map = self._get_map()
-        except:  # noqa
-            map = None
-        return map
-
-    def _get_map(self):
-        return None
-
-    def get_form(self):
-        if hasattr(self, "form_class"):
-            form = self.form_class(self.moulinette.raw_data)
-        else:
-            form = None
-        return form
-
-    def required_action(self):
-        return None
-
-    def project_impact(self):
-        return None
 
 
 class CriterionEvaluator(ABC):

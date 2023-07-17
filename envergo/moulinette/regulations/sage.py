@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
@@ -7,7 +5,6 @@ from envergo.moulinette.regulations import (
     CriterionEvaluator,
     Map,
     MapPolygon,
-    MoulinetteRegulation,
     RequiredAction,
     Stake,
 )
@@ -270,55 +267,3 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         if self.result == RESULTS.interdit:
             impact = "impacte une zone humide dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel."
         return impact
-
-
-class Sage(MoulinetteRegulation):
-    slug = "sage"
-    title = "Règlement de SAGE"
-    criterion_classes = [ZoneHumideVieJaunay85, ZoneHumideGMRE56]
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.interdit in results:
-            result = RESULTS.interdit
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        elif RESULTS.non_soumis in results:
-            result = RESULTS.non_soumis
-        elif RESULTS.non_concerne in results:
-            result = RESULTS.non_concerne
-        else:
-            result = RESULTS.non_disponible
-
-        return result
-
-    def get_map(self):
-        # Let's find the first map that we can display
-        perimeter = next(
-            (
-                criterion.perimeter
-                for criterion in self.criterions
-                if criterion.perimeter.map.display_for_user
-                and criterion.perimeter.map.geometry
-            ),
-            None,
-        )
-        if not perimeter:
-            return None
-
-        map_polygons = [MapPolygon([perimeter], "red", "Sage")]
-        caption = "Le projet se situe dans le périmètre du Sage."
-
-        map = Map(
-            center=self.catalog["coords"],
-            entries=map_polygons,
-            caption=caption,
-            truncate=False,
-            zoom=None,
-        )
-
-        return map

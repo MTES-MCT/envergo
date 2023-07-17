@@ -1,11 +1,9 @@
-from functools import cached_property
-
 from django import forms
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, MoulinetteRegulation
+from envergo.moulinette.regulations import CriterionEvaluator
 
 # Only ask the "emprise" question if created surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
@@ -179,22 +177,3 @@ class OtherCriteria(CriterionEvaluator):
 
     def evaluate(self):
         self._result_code, self._result = RESULTS.non_disponible, RESULTS.non_disponible
-
-
-class EvalEnvironnementale(MoulinetteRegulation):
-    slug = "eval_env"
-    title = "Évaluation Environnementale"
-    criterion_classes = [Emprise, SurfacePlancher, TerrainAssiette, OtherCriteria]
-
-    @cached_property
-    def result(self):
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.systematique in results:
-            result = RESULTS.systematique
-        elif RESULTS.cas_par_cas in results:
-            result = RESULTS.cas_par_cas
-        else:
-            result = RESULTS.non_soumis
-
-        return result

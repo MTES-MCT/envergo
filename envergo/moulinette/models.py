@@ -15,7 +15,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.regulations import Map, MapPolygon, MoulinetteCriterion
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -787,7 +787,7 @@ class FakeMoulinette(Moulinette):
     def get_criterions(self):
         criteria = [
             criterion
-            for criterion in MoulinetteCriterion.__subclasses__()
+            for criterion in CriterionEvaluator.__subclasses__()
             if self.catalog[criterion.slug]
         ]
         return criteria
