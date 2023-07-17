@@ -262,7 +262,7 @@ class Criterion(models.Model):
     )
     activation_map = models.ForeignKey(
         "geodata.Map",
-        verbose_name=_("Perimeter"),
+        verbose_name=_("Activation map"),
         on_delete=models.PROTECT,
         related_name="criteria",
     )
