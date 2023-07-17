@@ -7,6 +7,7 @@ from django.contrib.gis.measure import Distance as D
 from django.db import models
 from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
@@ -401,6 +402,27 @@ class Perimeter(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def contact(self):
+        """Format an address string."""
+        lines = [f"<strong>{self.long_name}</strong>"]
+        if self.contact_phone:
+            lines.append(
+                f'Téléphone : <a href="tel:{self.contact_phone}">{self.contact_phone.as_national}</a>'
+            )
+        if self.contact_url:
+            lines.append(
+                f'Site internet : <a href="{self.contact_url}" target="_blank" rel="noopener">{self.contact_url}</a>'
+            )
+        contact = f"""
+        <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+            <address>
+                {"<br/>".join(lines)}
+            </address>
+            </div>
+        """
+        return mark_safe(contact)
 
 
 class MoulinetteConfig(models.Model):

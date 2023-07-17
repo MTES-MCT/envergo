@@ -5,14 +5,12 @@
     <p>
       <a target="_blank" rel="noopener" href="{{ perimeter.url }}">Le règlement complet du SAGE « {{ perimeter.name }} »</a> doit cependant être consulté, pour tenir compte d’éventuelles obligations de compensation des impacts sur zone humide.
     </p>
+
+    <p>
+      <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
+    </p>
+
+    {{ perimeter.contact }}
+
   {% endif %}
 {% endwith %}
-
-<p>
-  <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-
-  <ul>
-    {% for contact in regulation.discussion_contacts %}<li>{{ contact|safe }}</li>{% endfor %}
-  </ul>
-
-</p>
