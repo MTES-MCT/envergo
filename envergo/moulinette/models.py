@@ -391,6 +391,7 @@ class Perimeter(models.Model):
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
+    url = models.URLField(_("Url"))
     contact_url = models.URLField(_("Contact url"), blank=True)
     contact_phone = PhoneNumberField(_("Contact phone"), blank=True)
 

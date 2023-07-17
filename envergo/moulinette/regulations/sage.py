@@ -40,7 +40,7 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         ("outside", "small"): "non_concerne",
     }
 
-    REUSLT_MATRIX = {
+    RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
         "action_requise_interdit": RESULTS.action_requise,
         "action_requise_proche_interdit": RESULTS.action_requise,
