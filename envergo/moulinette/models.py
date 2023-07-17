@@ -206,9 +206,9 @@ class Regulation(models.Model):
 
     @property
     def perimeter(self):
-        """Return the perimeter the project is in.
+        """Return the administrative perimeter the project is in.
 
-        The perimeter is an administrative zone. In a perfect one, for a single
+        The perimeter is an administrative zone. In a perfect world, for a single
         regulation, perimeters are non-overlapping, meaning there is a single
         perimeter for a single location.
 
@@ -392,7 +392,15 @@ class Criterion(models.Model):
 
 
 class Perimeter(models.Model):
-    """Link a map and regulation criteria."""
+    """A perimeter is an administrative zone.
+
+    Examples of perimeters:
+     - Sage GMRE
+     - Marais de Vilaine
+
+    Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
+
+    """
 
     name = models.CharField(_("Name"), max_length=256)
     long_name = models.CharField(
