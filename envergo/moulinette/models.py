@@ -169,16 +169,18 @@ class Regulation(models.Model):
 
         return result
 
-    def required_actions(self, stake):
+    def required_actions(self, stake=None):
         """Return the list of required actions for the given stake."""
 
         actions = [
             c.required_action
             for c in self.criteria.all()
-            if c.required_action
-            and c.result == "action_requise"
-            and c.required_action_stake == stake
+            if c.required_action and c.result == "action_requise"
         ]
+        if stake:
+            actions = [
+                action for action in actions if action.required_action_stake == stake
+            ]
         return actions
 
     def required_actions_soumis(self):
