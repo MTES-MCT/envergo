@@ -51,7 +51,7 @@ class CriterionAdminForm(forms.ModelForm):
 @admin.register(Criterion)
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
-        "title",
+        "backend_title",
         "slug",
         "regulation",
         "activation_map",

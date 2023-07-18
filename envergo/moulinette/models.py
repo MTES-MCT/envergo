@@ -253,7 +253,14 @@ class Regulation(models.Model):
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
 
-    title = models.CharField(_("Title"), max_length=256)
+    backend_title = models.CharField(
+        _("Admin title"),
+        help_text=_("For backend usage only"),
+        max_length=256,
+    )
+    title = models.CharField(
+        _("Title"), help_text=_("For frontend usage"), max_length=256
+    )
     slug = models.SlugField(_("Slug"), max_length=256)
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)

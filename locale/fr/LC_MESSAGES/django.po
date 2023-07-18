@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-18 15:46+0200\n"
+"POT-Creation-Date: 2023-07-18 15:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -179,7 +179,7 @@ msgid "Request"
 msgstr "Demande"
 
 #: envergo/evaluations/admin.py:199 envergo/evaluations/admin.py:392
-#: envergo/moulinette/models.py:397
+#: envergo/moulinette/models.py:404
 msgid "Url"
 msgstr "Url"
 
@@ -417,12 +417,12 @@ msgid "Non concerné"
 msgstr "Non concerné"
 
 #: envergo/evaluations/models.py:351 envergo/geodata/models.py:105
-#: envergo/moulinette/models.py:53 envergo/moulinette/models.py:276
+#: envergo/moulinette/models.py:53 envergo/moulinette/models.py:283
 #: envergo/stats/models.py:8
 msgid "Order"
 msgstr "Ordre"
 
-#: envergo/evaluations/models.py:354 envergo/moulinette/models.py:278
+#: envergo/evaluations/models.py:354 envergo/moulinette/models.py:285
 msgid "Required action"
 msgstr "Action requise"
 
@@ -431,7 +431,7 @@ msgid "Probability"
 msgstr "Probabilité"
 
 #: envergo/evaluations/models.py:362 envergo/evaluations/models.py:370
-#: envergo/moulinette/models.py:299
+#: envergo/moulinette/models.py:306
 msgid "Criterion"
 msgstr "Critère"
 
@@ -445,7 +445,7 @@ msgid "Description (html)"
 msgstr " Description (html)"
 
 #: envergo/evaluations/models.py:365 envergo/geodata/models.py:201
-#: envergo/moulinette/models.py:390
+#: envergo/moulinette/models.py:397
 msgid "Map"
 msgstr "Carte"
 
@@ -502,7 +502,7 @@ msgid "File"
 msgstr "Fichier"
 
 #: envergo/evaluations/models.py:568 envergo/geodata/models.py:158
-#: envergo/moulinette/models.py:375
+#: envergo/moulinette/models.py:382
 msgid "Name"
 msgstr "Nom"
 
@@ -752,7 +752,7 @@ msgid "Zones"
 msgstr "Zones"
 
 #: envergo/geodata/models.py:237 envergo/geodata/models.py:245
-#: envergo/moulinette/forms/__init__.py:92 envergo/moulinette/models.py:441
+#: envergo/moulinette/forms/__init__.py:92 envergo/moulinette/models.py:448
 msgid "Department"
 msgstr "Département"
 
@@ -768,7 +768,7 @@ msgstr "zone.geojson"
 msgid "No .shp file found in archive"
 msgstr "Aucun fichier .shp trouvé dans l'archive"
 
-#: envergo/moulinette/admin.py:64 envergo/moulinette/models.py:275
+#: envergo/moulinette/admin.py:64 envergo/moulinette/models.py:282
 msgid "Evaluator"
 msgstr "Évaluateur"
 
@@ -807,7 +807,7 @@ msgstr ""
 "impacts"
 
 #: envergo/moulinette/models.py:52 envergo/moulinette/models.py:63
-#: envergo/moulinette/models.py:262 envergo/moulinette/models.py:384
+#: envergo/moulinette/models.py:269 envergo/moulinette/models.py:391
 msgid "Regulation"
 msgstr "Réglementation"
 
@@ -827,96 +827,108 @@ msgstr "Couleur du polygone"
 msgid "Regulations"
 msgstr "Réglementations"
 
-#: envergo/moulinette/models.py:256 envergo/pages/models.py:11
+#: envergo/moulinette/models.py:257
+msgid "Admin title"
+msgstr "Titre (admin)"
+
+#: envergo/moulinette/models.py:258
+msgid "For backend usage only"
+msgstr "Affiché dans l'admin uniquement"
+
+#: envergo/moulinette/models.py:262 envergo/pages/models.py:11
 #: envergo/stats/models.py:6
 msgid "Title"
 msgstr "Titre"
 
-#: envergo/moulinette/models.py:257
+#: envergo/moulinette/models.py:262
+msgid "For frontend usage"
+msgstr "Titre affiché côté front"
+
+#: envergo/moulinette/models.py:264
 msgid "Slug"
 msgstr "Slug"
 
-#: envergo/moulinette/models.py:258
+#: envergo/moulinette/models.py:265
 msgid "Subtitle"
 msgstr "Sous-titre"
 
-#: envergo/moulinette/models.py:259
+#: envergo/moulinette/models.py:266
 msgid "Header"
 msgstr "En-tête"
 
-#: envergo/moulinette/models.py:268
+#: envergo/moulinette/models.py:275
 msgid "Activation map"
 msgstr "Carte d'activation"
 
-#: envergo/moulinette/models.py:273 envergo/moulinette/models.py:395
+#: envergo/moulinette/models.py:280 envergo/moulinette/models.py:402
 msgid "Activation distance"
 msgstr "Distance d'activation (m)"
 
-#: envergo/moulinette/models.py:284
+#: envergo/moulinette/models.py:291
 msgid "Required action stake"
 msgstr "Enjeu de l'action requise"
 
-#: envergo/moulinette/models.py:287
+#: envergo/moulinette/models.py:294
 msgid "Project impact"
 msgstr "Impact du projet"
 
-#: envergo/moulinette/models.py:293
+#: envergo/moulinette/models.py:300
 msgid "Discussion contact (html)"
 msgstr "Contact pour discussion (html)"
 
-#: envergo/moulinette/models.py:300
+#: envergo/moulinette/models.py:307
 msgid "Criteria"
 msgstr "Critères"
 
-#: envergo/moulinette/models.py:377
+#: envergo/moulinette/models.py:384
 msgid "Long name"
 msgstr "Nom détaillé"
 
-#: envergo/moulinette/models.py:380
+#: envergo/moulinette/models.py:387
 msgid "Displayed below the regulation title"
 msgstr "Affiché sous le titre de la réglementation"
 
-#: envergo/moulinette/models.py:398
+#: envergo/moulinette/models.py:405
 msgid "Contact name"
 msgstr "Nom / intitulé de contact"
 
-#: envergo/moulinette/models.py:399
+#: envergo/moulinette/models.py:406
 msgid "Contact url"
 msgstr "Site web de contact"
 
-#: envergo/moulinette/models.py:400
+#: envergo/moulinette/models.py:407
 msgid "Contact phone"
 msgstr "Téléphone de contact"
 
-#: envergo/moulinette/models.py:401
+#: envergo/moulinette/models.py:408
 msgid "Contact email"
 msgstr "E-mail de contact"
 
-#: envergo/moulinette/models.py:404
+#: envergo/moulinette/models.py:411
 msgid "Perimeter"
 msgstr "Périmètre"
 
-#: envergo/moulinette/models.py:405
+#: envergo/moulinette/models.py:412
 msgid "Perimeters"
 msgstr "Périmètres"
 
-#: envergo/moulinette/models.py:446
+#: envergo/moulinette/models.py:453
 msgid "Is activated"
 msgstr "Est actif"
 
-#: envergo/moulinette/models.py:447
+#: envergo/moulinette/models.py:454
 msgid "Is the moulinette available for this department?"
 msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
-#: envergo/moulinette/models.py:450
+#: envergo/moulinette/models.py:457
 msgid "DDT(M) contact email"
 msgstr "E-mail DDT(M) (rappel réglementaire)"
 
-#: envergo/moulinette/models.py:467
+#: envergo/moulinette/models.py:474
 msgid "Moulinette config"
 msgstr "Config moulinette"
 
-#: envergo/moulinette/models.py:468
+#: envergo/moulinette/models.py:475
 msgid "Moulinette configs"
 msgstr "Configs moulinette"
 
