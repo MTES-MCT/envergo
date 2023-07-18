@@ -86,7 +86,13 @@ class PerimeterAdminForm(forms.ModelForm):
 
 @admin.register(Perimeter)
 class PerimeterAdmin(admin.ModelAdmin):
-    list_display = ["name", "regulation", "activation_map", "activation_distance"]
+    list_display = [
+        "backend_name",
+        "name",
+        "regulation",
+        "activation_map",
+        "activation_distance",
+    ]
     form = PerimeterAdminForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

@@ -7,14 +7,8 @@
 
   {% if regulation.perimeter %}
     <p>
-      Le projet se trouve dans le périmètre du
-      {% if regulation.perimeter.contact_url %}
-        <a href="{{ regulation.perimeter.contact_url }}"
-           target="_blank"
-           rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>
-      {% else %}
-        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}
-      {% endif %}
+      Le projet se trouve dans le périmètre
+      <a href="{{ regulation.perimeter.url }}" target="_blank" rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>
     </p>
   {% endif %}
 

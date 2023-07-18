@@ -243,9 +243,7 @@ class Regulation(models.Model):
 
         perimeter = self.perimeter
         if perimeter:
-            polygon = MapPolygon(
-                [perimeter], self.polygon_color, f"Périmètre du {perimeter.long_name}"
-            )
+            polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
             map = Map(
                 center=self.moulinette.catalog["coords"],
                 entries=[polygon],
@@ -421,7 +419,7 @@ class Perimeter(models.Model):
     contact_email = models.EmailField(_("Contact email"), blank=True)
 
     map_legend = models.CharField(_("Map legend"), max_length=256, blank=True)
-    rules_url = models.URLField(_("Rules url"), blank=True)
+    rules_url = models.URLField(_("Rules url"))
 
     class Meta:
         verbose_name = _("Perimeter")
@@ -440,7 +438,7 @@ class Perimeter(models.Model):
             )
         if self.contact_url:
             lines.append(
-                f'Site internet : <a href="{self.contact_url}" target="_blank" rel="noopener">{self.contact_url}</a>'
+                f'Site web : <a href="{self.contact_url}" target="_blank" rel="noopener">{self.contact_url}</a>'
             )
         if self.contact_email:
             lines.append(
