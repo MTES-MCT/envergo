@@ -317,6 +317,10 @@ class Criterion(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def unique_slug(self):
+        return f"{self.regulation.slug}_{self.slug}"
+
     def evaluate(self, moulinette, distance):
         self.moulinette = moulinette
         self._evaluator = self.evaluator(moulinette, distance)
