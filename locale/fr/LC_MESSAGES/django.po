@@ -719,7 +719,7 @@ msgid ""
 msgstr ""
 "NE PAS MODIFIER ! Nous ne pouvons pas facilement désactiver ce widget,\n"
 "mais si vous modifiez ce polygone ici, vous casserez EnvErgo.\n"
-""
+" "
 
 #: envergo/geodata/models.py:194
 msgid "Expected zones"
