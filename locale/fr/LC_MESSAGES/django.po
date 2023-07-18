@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-18 15:43+0200\n"
+"POT-Creation-Date: 2023-07-18 15:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -417,6 +417,7 @@ msgid "Non concerné"
 msgstr "Non concerné"
 
 #: envergo/evaluations/models.py:351 envergo/geodata/models.py:105
+#: envergo/moulinette/models.py:53 envergo/moulinette/models.py:276
 #: envergo/stats/models.py:8
 msgid "Order"
 msgstr "Ordre"
@@ -810,10 +811,6 @@ msgstr ""
 msgid "Regulation"
 msgstr "Réglementation"
 
-#: envergo/moulinette/models.py:53 envergo/moulinette/models.py:276
-msgid "Weight"
-msgstr "Poids"
-
 #: envergo/moulinette/models.py:56
 msgid "Show perimeter map"
 msgstr "Afficher la carte du périmètre"
@@ -1065,6 +1062,9 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "Weight"
+#~ msgstr "Poids"
 
 #~ msgid "Map caption"
 #~ msgstr "Légende de la carte"

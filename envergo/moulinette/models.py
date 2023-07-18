@@ -50,7 +50,7 @@ class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
-    weight = models.PositiveIntegerField(_("Weight"), default=1)
+    weight = models.PositiveIntegerField(_("Order"), default=1)
 
     show_map = models.BooleanField(
         _("Show perimeter map"),
@@ -273,7 +273,7 @@ class Criterion(models.Model):
         _("Activation distance"), default=0
     )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
-    weight = models.PositiveIntegerField(_("Weight"), default=1)
+    weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
         help_text="Le porteur doit s'assurer que son projet…",
