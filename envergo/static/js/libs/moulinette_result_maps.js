@@ -23,12 +23,12 @@
     const centerCoords = [center.coordinates[1], center.coordinates[0]];
     const map = L.map(mapId, {
       maxZoom: 21,
-      zoomControl: false,
-      dragging: false,
-      doubleClickZoom: false,
-      scrollWheelZoom: false,
-      touchZoom: false,
-      keyboard: false
+      zoomControl: !mapData["fixed"],
+      dragging: !mapData["fixed"],
+      doubleClickZoom: !mapData["fixed"],
+      scrollWheelZoom: !mapData["fixed"],
+      touchZoom: !mapData["fixed"],
+      keyboard: !mapData["fixed"]
     }).setView(centerCoords, mapData['zoom']);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

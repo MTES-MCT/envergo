@@ -250,6 +250,7 @@ class Regulation(models.Model):
                 truncate=False,
                 zoom=None,
                 ratio="2x1",
+                fixed=False,
             )
             return map
 

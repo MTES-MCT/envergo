@@ -62,6 +62,7 @@ class Map:
     truncate: bool = True  # Should the displayed polygons be truncated?
     zoom: int = 16  # the map zoom to pass to leaflet
     ratio: str = "4x3"  # Check for "project.scss" for available ratios
+    fixed: bool = True  # Is the map fixed or can it be zoomed and dragged?
 
     def to_json(self):
         # Don't display full polygons
@@ -88,6 +89,7 @@ class Map:
                 "sources": [
                     {"name": map.name, "url": map.source} for map in self.sources
                 ],
+                "fixed": self.fixed,
             }
         )
         return data
