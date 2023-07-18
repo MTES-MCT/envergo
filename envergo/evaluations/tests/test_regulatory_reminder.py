@@ -6,7 +6,12 @@ from envergo.evaluations.models import USER_TYPES
 from envergo.evaluations.tests.factories import RequestFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map, france_zh  # noqa
-from envergo.moulinette.tests.factories import MoulinetteConfigFactory, PerimeterFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    MoulinetteConfigFactory,
+    PerimeterFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -23,9 +28,10 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
         is_activated=True,
         ddtm_contact_email="ddtm_email_test@example.org",
     )
+    regulation = RegulationFactory()
     PerimeterFactory(
-        map=france_map,
-        criterion="envergo.moulinette.regulations.loisurleau.ZoneHumide",
+        regulation=regulation,
+        activation_map=france_map,
     )
     classes = [
         "envergo.moulinette.regulations.loisurleau.ZoneHumide",
@@ -33,7 +39,9 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
         "envergo.moulinette.regulations.loisurleau.Ruissellement",
     ]
     for path in classes:
-        PerimeterFactory(map=france_map, criterion=path)
+        CriterionFactory(
+            regulation=regulation, activation_map=france_map, evaluator=path
+        )
 
 
 @pytest.fixture

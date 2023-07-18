@@ -9,30 +9,28 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def n2000_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
-        title="Natura 2000", slug="natura2000", perimeter=france_map
-    )
+    regulation = RegulationFactory(regulation="natura2000")
     criteria = [
         CriterionFactory(
             title="Zone humide 44",
-            slug="zone_humide_44",
+            slug="zone_humide",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.natura2000.ZoneHumide44",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="Zone inondable 44",
-            slug="zone_inondable_44",
+            slug="zone_inondable",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.natura2000.ZoneInondable44",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="IOTA",
             slug="iota",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.natura2000.IOTA",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
     ]
     return criteria
@@ -57,7 +55,7 @@ def test_zh_small_footprint_outside_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "non_concerne"
+    assert moulinette.natura2000.zone_humide.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -67,7 +65,7 @@ def test_zh_small_footprint_inside_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "non_soumis"
+    assert moulinette.natura2000.zone_humide.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [150])
@@ -77,7 +75,7 @@ def test_zh_large_footprint_within_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "soumis"
+    assert moulinette.natura2000.zone_humide.result == "soumis"
 
 
 @pytest.mark.parametrize("footprint", [150])
@@ -88,7 +86,7 @@ def test_zh_large_footprint_close_to_wetlands(moulinette_data):
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "action_requise"
+    assert moulinette.natura2000.zone_humide.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [150])
@@ -100,7 +98,7 @@ def test_zh_large_footprint_inside_potential_wetland(moulinette_data):
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_0m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "action_requise"
+    assert moulinette.natura2000.zone_humide.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [150])
@@ -109,7 +107,7 @@ def test_zh_large_footprint_outside_wetlands(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_humide_44.result == "non_concerne"
+    assert moulinette.natura2000.zone_humide.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [150])
@@ -120,7 +118,7 @@ def test_zi_small_footprint(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_inondable_44.result == "non_soumis"
+    assert moulinette.natura2000.zone_inondable.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [300])
@@ -130,7 +128,7 @@ def test_zi_medium_footprint_within_flood_zones(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_inondable_44.result == "soumis"
+    assert moulinette.natura2000.zone_inondable.result == "soumis"
 
 
 @pytest.mark.parametrize("footprint", [300])
@@ -140,4 +138,4 @@ def test_zi_medium_footprint_outside_flood_zones(moulinette_data):
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.natura2000.zone_inondable_44.result == "non_concerne"
+    assert moulinette.natura2000.zone_inondable.result == "non_concerne"

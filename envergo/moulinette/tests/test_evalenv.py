@@ -9,30 +9,28 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def evalenv_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
-        title="Evaluation environnementale", slug="eval_env", perimeter=france_map
-    )
+    regulation = RegulationFactory(regulation="eval_env")
     criteria = [
         CriterionFactory(
             title="Emprise",
             slug="emprise",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.Emprise",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="Surface Plancher",
             slug="surface_plancher",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.SurfacePlancher",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="Terrain d'assiette",
             slug="terrain_assiette",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
     ]
     return criteria

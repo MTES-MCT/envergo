@@ -9,30 +9,28 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def loisurleau_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
-        title="Loi sur l'eau", slug="loi_sur_leau", perimeter=france_map
-    )
+    regulation = RegulationFactory(regulation="loi_sur_leau")
     criteria = [
         CriterionFactory(
             title="Zone humide",
             slug="zone_humide",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="Zone inondable",
             slug="zone_inondable",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneInondable",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
         CriterionFactory(
             title="Ruissellement",
             slug="ruissellement",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.Ruissellement",
-            perimeter=france_map,
+            activation_map=france_map,
         ),
     ]
     return criteria
