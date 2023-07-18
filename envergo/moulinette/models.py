@@ -599,7 +599,10 @@ class Moulinette:
 
         perimeters = (
             Perimeter.objects.filter(
-                activation_map__geometry__dwithin=(coords, F("activation_distance"))
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
             )
             .annotate(
                 geometry=Case(
