@@ -160,7 +160,7 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         "interdit": RESULTS.interdit,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "action_requise_dans_doute_interdit": RESULTS.action_requise,
-        "non_concerne": RESULTS.non_concerne,
+        "non_concerne": RESULTS.non_soumis,
     }
 
     def get_catalog_data(self):

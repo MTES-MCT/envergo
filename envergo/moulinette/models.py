@@ -393,8 +393,10 @@ class Perimeter(models.Model):
         _("Activation distance"), default=0
     )
     url = models.URLField(_("Url"))
+    contact_name = models.CharField(_("Contact name"), max_length=256, blank=True)
     contact_url = models.URLField(_("Contact url"), blank=True)
     contact_phone = PhoneNumberField(_("Contact phone"), blank=True)
+    contact_email = models.EmailField(_("Contact email"), blank=True)
 
     class Meta:
         verbose_name = _("Perimeter")
@@ -406,7 +408,7 @@ class Perimeter(models.Model):
     @property
     def contact(self):
         """Format an address string."""
-        lines = [f"<strong>{self.long_name}</strong>"]
+        lines = [f"<strong>{self.contact_name or self.long_name or self.name}</strong>"]
         if self.contact_phone:
             lines.append(
                 f'Téléphone : <a href="tel:{self.contact_phone}">{self.contact_phone.as_national}</a>'
@@ -414,6 +416,10 @@ class Perimeter(models.Model):
         if self.contact_url:
             lines.append(
                 f'Site internet : <a href="{self.contact_url}" target="_blank" rel="noopener">{self.contact_url}</a>'
+            )
+        if self.contact_email:
+            lines.append(
+                f'Email : <a href="mailto:{self.contact_email}">{self.contact_email}</a>'
             )
         contact = f"""
         <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
