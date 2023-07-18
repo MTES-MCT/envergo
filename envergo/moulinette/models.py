@@ -390,7 +390,9 @@ class Perimeter(models.Model):
 
     """
 
-    backend_name = models.CharField(_("Name"), max_length=256)
+    backend_name = models.CharField(
+        _("Backend name"), help_text=_("For admin usage only"), max_length=256
+    )
     name = models.CharField(_("Name"), max_length=256)
     long_name = models.CharField(
         _("Long name"),
