@@ -207,6 +207,7 @@ class Map(models.Model):
     class Meta:
         verbose_name = _("Map")
         verbose_name_plural = _("Maps")
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
