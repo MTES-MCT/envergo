@@ -194,6 +194,8 @@ class Regulation(models.Model):
     def required_actions_interdit(self):
         return self.required_actions(STAKES.interdit)
 
+    # FIXME: all the impacts of the matched criteria will be displayed, even
+    # when said criteria have a "non soumis" result.
     def project_impacts(self):
         impacts = [c.project_impact for c in self.criteria.all() if c.project_impact]
         return impacts
