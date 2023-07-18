@@ -249,6 +249,7 @@ class Regulation(models.Model):
                 entries=[polygon],
                 truncate=False,
                 zoom=None,
+                ratio="2x1",
             )
             return map
 

@@ -514,6 +514,7 @@ form#request-evaluation-form {}
 // See https://css-tricks.com/aspect-ratio-boxes/
 .ratio-1x1,
 .ratio-4x3,
+.ratio-2x1,
 .ratio-16x9 {
   width: 100%;
   position: relative;
@@ -552,6 +553,13 @@ form#request-evaluation-form {}
     padding-bottom: 56.25%;
   }
 }
+
+.ratio-2x1 {
+  &:before {
+    padding-bottom: 50%;
+  }
+}
+
 
 figcaption.fr-content-media__caption .fr-link[target=_blank]::after {
   margin-left: .25rem;

@@ -61,6 +61,7 @@ class Map:
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
     zoom: int = 16  # the map zoom to pass to leaflet
+    ratio: str = "4x3"  # Check for "project.scss" for available ratios
 
     def to_json(self):
         # Don't display full polygons
