@@ -42,7 +42,7 @@ REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
-    ("sage", "Réglement de SAGE"),
+    ("sage", "Règlement de SAGE"),
 )
 
 
