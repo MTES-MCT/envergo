@@ -243,7 +243,9 @@ class Regulation(models.Model):
 
         perimeter = self.perimeter
         if perimeter:
-            polygon = MapPolygon([perimeter], self.polygon_color, perimeter.name)
+            polygon = MapPolygon(
+                [perimeter], self.polygon_color, f"Périmètre du {perimeter.long_name}"
+            )
             map = Map(
                 center=self.moulinette.catalog["coords"],
                 entries=[polygon],
