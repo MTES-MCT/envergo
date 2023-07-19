@@ -9,9 +9,9 @@
     <p>
       Le projet se trouve dans le périmètre
       {% if regulation.perimeter.url %}
-        <a href="{{ regulation.perimeter.url }}" target="_blank" rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>
+        <a href="{{ regulation.perimeter.url }}" target="_blank" rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>.
       {% else %}
-        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}
+        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}.
       {% endif %}
     </p>
   {% endif %}
