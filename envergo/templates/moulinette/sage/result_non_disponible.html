@@ -1,1 +1,18 @@
-<p>Le règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux) sera prochainement pris en compte.</p>
+{% with perimeter=regulation.perimeter %}
+  {% if perimeter %}
+    <p>Le règlement du SAGE « {{ perimeter.name }} » sera prochainement pris en compte par EnvErgo.</p>
+
+    <p>
+      <a target="_blank" rel="noopener" href="{{ perimeter.rules_url }}">Le règlement complet du SAGE « {{ perimeter.name }} »</a> est consultable en ligne.
+    </p>
+
+    <p>
+      <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
+    </p>
+
+    {{ perimeter.contact }}
+
+  {% else %}
+    <p>Le règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux) sera prochainement pris en compte.</p>
+  {% endif %}
+{% endwith %}

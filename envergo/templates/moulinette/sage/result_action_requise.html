@@ -1,9 +1,5 @@
-<p>Le projet se situe dans un périmètre de SAGE (Schéma d’Aménagement et de Gestion des Eaux).</p>
-
-<p>Il doit donc respecter le règlement de ce SAGE.</p>
-
 <p>
-  En l'occurence, le projet est <strong>susceptible d'être interdit</strong>.
+  Le projet est <strong>susceptible d'être interdit</strong>.
 </p>
 
 <p>Une action du porteur de projet est requise.</p>
@@ -38,9 +34,29 @@
     <strong>2/ Se rapprocher de la structure en charge de l’animation du SAGE</strong>
   </p>
 
-  <ul>
-    {% for contact in regulation.discussion_contacts %}<li>{{ contact|safe }}</li>{% endfor %}
-  </ul>
+  {% with perimeter=regulation.perimeter %}
+    {% if perimeter %}{{ perimeter.contact }}{% endif %}
+  {% endwith %}
+
+  <h4 class="fr-h4">Sanctions en cas d'omission</h4>
+
+  <div class="fr-alert fr-alert--info fr-my-3w">
+    <p>
+      S'il s'avère que le projet est réalisé sans respecter le règlement de SAGE, le responsable s'expose à des sanctions administratives et pénales, qui peuvent aller jusqu'à :
+    </p>
+
+    <ul class="fr-mb-0">
+      <li>
+        <strong>obligation de remettre le terrain en son état initial ;</strong>
+      </li>
+      <li>
+        amende de catégorie 5 : 1 500 € (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006836872/"
+   target="_blank"
+   rel="noopener">article R.212-48 du code de l'environnement</a>).
+      </li>
+    </ul>
+
+  </div>
 
   {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 

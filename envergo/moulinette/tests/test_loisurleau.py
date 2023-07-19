@@ -1,22 +1,39 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.models import Moulinette
-from envergo.moulinette.tests.factories import PerimeterFactory
+from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def loisurleau_criterions(france_map):  # noqa
-    classes = [
-        "envergo.moulinette.regulations.loisurleau.ZoneHumide",
-        "envergo.moulinette.regulations.loisurleau.ZoneInondable",
-        "envergo.moulinette.regulations.loisurleau.Ruissellement",
+def loisurleau_criteria(france_map):  # noqa
+    regulation = RegulationFactory(regulation="loi_sur_leau")
+    criteria = [
+        CriterionFactory(
+            title="Zone humide",
+            slug="zone_humide",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
+            activation_map=france_map,
+        ),
+        CriterionFactory(
+            title="Zone inondable",
+            slug="zone_inondable",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.ZoneInondable",
+            activation_map=france_map,
+        ),
+        CriterionFactory(
+            title="Ruissellement",
+            slug="ruissellement",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.Ruissellement",
+            activation_map=france_map,
+        ),
     ]
-    perimeters = [PerimeterFactory(map=france_map, criterion=path) for path in classes]
-    return perimeters
+    return criteria
 
 
 @pytest.fixture
@@ -31,20 +48,13 @@ def moulinette_data(footprint):
     }
 
 
-def no_zones(_coords):
-    return []
-
-
-def create_zones():
-    return [ZoneFactory()]
-
-
 @pytest.mark.parametrize("footprint", [50])
 def test_3310_small_footprint_outside_wetlands(moulinette_data):
     """Project with footprint < 700m² are not subject to the 3310."""
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
@@ -54,6 +64,7 @@ def test_3310_small_footprint_inside_wetlands(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
@@ -63,6 +74,7 @@ def test_3310_medium_footprint_inside_wetlands(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
@@ -72,6 +84,7 @@ def test_3310_medium_footprint_inside_wetlands_2(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
@@ -83,6 +96,7 @@ def test_3310_medium_footprint_close_to_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
@@ -95,6 +109,7 @@ def test_3310_medium_footprint_inside_potential_wetlands(moulinette_data):
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_0m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
@@ -103,6 +118,7 @@ def test_3310_medium_footprint_outside_wetlands(moulinette_data):
     """Project with 700 < footprint < 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
@@ -112,6 +128,7 @@ def test_3310_large_footprint_within_wetlands(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
 
@@ -122,6 +139,7 @@ def test_3310_large_footprint_close_to_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
@@ -133,6 +151,7 @@ def test_3310_large_footprint_inside_potential_wetland(moulinette_data):
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_0m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
@@ -141,6 +160,7 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data):
     """Project with footprint > 1000m² outside a wetland."""
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
@@ -151,6 +171,7 @@ def test_3220_small_footprint(moulinette_data):
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
@@ -160,6 +181,7 @@ def test_3220_medium_footprint_within_flood_zones(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
@@ -169,6 +191,7 @@ def test_3220_medium_footprint_outside_flood_zones(moulinette_data):
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
 
 
@@ -178,6 +201,7 @@ def test_3220_large_footprint_within_flood_zones(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "soumis"
 
 
@@ -187,4 +211,5 @@ def test_3220_large_footprint_outside_flood_zones(moulinette_data):
 
     # Make sure the project in in a flood zone
     moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"

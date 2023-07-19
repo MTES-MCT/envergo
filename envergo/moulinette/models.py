@@ -1,20 +1,21 @@
+import logging
+
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.db import models
-from django.db.models import F
+from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
+from phonenumber_field.modelfields import PhoneNumberField
 
+from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
-from envergo.moulinette.fields import CriterionChoiceField
-from envergo.moulinette.regulations import MoulinetteCriterion
-from envergo.moulinette.regulations.evalenv import EvalEnvironnementale
-from envergo.moulinette.regulations.loisurleau import LoiSurLEau
-from envergo.moulinette.regulations.natura2000 import Natura2000
-from envergo.moulinette.regulations.sage import Sage
-from envergo.utils.markdown import markdown_to_html
+from envergo.moulinette.fields import CriterionEvaluatorChoiceField
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -26,53 +27,404 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 
-def fetch_zones_around(coords, radius, zone_type, data_type="certain"):
-    """Helper method to fetch Zones around a given point."""
+logger = logging.getLogger(__name__)
 
-    qs = (
-        Zone.objects.filter(map__map_type=zone_type)
-        .filter(geometry__dwithin=(coords, D(m=radius)))
-        .filter(map__data_type=data_type)
+
+# A list of required action stakes.
+# For example, a user might learn that an action is required, to check if the
+# project is subject to the Water Law. Or if the project is forbidden.
+STAKES = Choices(
+    ("soumis", "Soumis"),
+    ("interdit", "Interdit"),
+)
+
+REGULATIONS = Choices(
+    ("loi_sur_leau", "Loi sur l'eau"),
+    ("natura2000", "Natura 2000"),
+    ("eval_env", "Évaluation environnementale"),
+    ("sage", "Règlement de SAGE"),
+)
+
+
+class Regulation(models.Model):
+    """A single regulation (e.g Loi sur l'eau)."""
+
+    regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
+    weight = models.PositiveIntegerField(_("Order"), default=1)
+
+    show_map = models.BooleanField(
+        _("Show perimeter map"),
+        help_text=_("The perimeter's map will be displayed, if it exists"),
+        default=False,
     )
-    return qs
+    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
+
+    class Meta:
+        verbose_name = _("Regulation")
+        verbose_name_plural = _("Regulations")
+
+    def __str__(self):
+        return self.get_regulation_display()
+
+    def __getattr__(self, attr):
+        """Returns the corresponding regulation.
+
+        Allows to do something like this:
+        moulinette.loi_sur_leau.zone_humide to fetch the correct regulation.
+        """
+
+        def select_criterion(criterion):
+            return criterion.slug == attr
+
+        # If we just call `self.criteria.all(), we will trigger a recursive call
+        # to __getattr__.
+        # To avoid this, we get that data from the prefetched cache instead
+        if (
+            "_prefetched_objects_cache" in self.__dict__
+            and "criteria" in self.__dict__["_prefetched_objects_cache"]
+        ):
+            criteria = self.__dict__["_prefetched_objects_cache"]["criteria"]
+            if criteria:
+                criterion = next(filter(select_criterion, criteria), None)
+                if criterion:
+                    return criterion
+        val = getattr(super(), attr)
+        return val
+
+    def get_criterion(self, criterion_slug):
+        """Return the criterion with the given slug."""
+
+        def select_criterion(criterion):
+            return criterion.slug == criterion_slug
+
+        criterion = next(filter(select_criterion, self.criteria.all()), None)
+        if criterion is None:
+            logger.warning(f"Criterion {criterion_slug} not found.")
+        return criterion
+
+    def evaluate(self, moulinette):
+        """Evaluate the regulation and all its criterions.
+
+        Note : the `distance` field is not a member of the Criterion model,
+        it is added with an annotation in the `get_regulations` method.
+        """
+        self.moulinette = moulinette
+        for criterion in self.criteria.all():
+            criterion.evaluate(moulinette, criterion.distance)
+
+    @property
+    def slug(self):
+        return self.regulation
+
+    @property
+    def title(self):
+        return self.get_regulation_display()
+
+    @property
+    def result(self):
+        """Compute global result from individual criterions.
+
+        When we perform an evaluation, a single regulation has many criteria.
+        Criteria can have different results, but we display a single value for
+        the regulation result.
+
+        We can reduce different criteria results into a single regulation
+        result because results have different priorities.
+
+        For example, if a single criterion has the "interdit" result, the
+        regulation result will be "interdit" too, no matter what the other
+        criteria results are. Then it will be "soumis", etc.
+
+        Different regulations have different set of possible result values, e.g
+        only the Évaluation environnementale regulation has the "cas par cas" or
+        "systematique" results, but the cascade still works.
+        """
+
+        cascade = [
+            RESULTS.interdit,
+            RESULTS.systematique,
+            RESULTS.cas_par_cas,
+            RESULTS.soumis,
+            RESULTS.action_requise,
+            RESULTS.a_verifier,
+            RESULTS.non_soumis,
+            RESULTS.non_concerne,
+            RESULTS.non_disponible,
+        ]
+        results = [criterion.result for criterion in self.criteria.all()]
+        result = None
+        for status in cascade:
+            if status in results:
+                result = status
+                break
+
+        # Special case for the Natura2000 regulation, the criterion and
+        # regulation statuses are different
+        if result == RESULTS.a_verifier:
+            result = RESULTS.iota_a_verifier
+
+        # If there is no criterion at all, set a default result of "non disponible"
+        if result is None:
+            result = RESULTS.non_disponible
+
+        return result
+
+    def required_actions(self, stake=None):
+        """Return the list of required actions for the given stake."""
+
+        if stake:
+            actions = [
+                c.required_action
+                for c in self.criteria.all()
+                if c.required_action
+                and c.result == "action_requise"
+                and c.required_action_stake == stake
+            ]
+        else:
+            actions = [
+                c.required_action
+                for c in self.criteria.all()
+                if c.required_action and c.result == "action_requise"
+            ]
+        return actions
+
+    def required_actions_soumis(self):
+        return self.required_actions(STAKES.soumis)
+
+    def required_actions_interdit(self):
+        return self.required_actions(STAKES.interdit)
+
+    # FIXME: all the impacts of the matched criteria will be displayed, even
+    # when said criteria have a "non soumis" result.
+    def project_impacts(self):
+        impacts = [c.project_impact for c in self.criteria.all() if c.project_impact]
+        return impacts
+
+    def discussion_contacts(self):
+        contacts = [
+            c.discussion_contact for c in self.criteria.all() if c.discussion_contact
+        ]
+        return contacts
+
+    def iota_only(self):
+        """Is the IOTA criterion the only valid criterion.
+
+        There is an edge case for the Natura2000 regulation.
+        Projects can be subject to Natura2000 only
+        because they are subject to IOTA, even though they are outsite
+        Natura 2000 zones.
+        """
+        criteria_slugs = [c.slug for c in self.criteria.all()]
+        return criteria_slugs == ["iota"]
+
+    @property
+    def perimeter(self):
+        """Return the administrative perimeter the project is in.
+
+        The perimeter is an administrative zone. In a perfect world, for a single
+        regulation, perimeters are non-overlapping, meaning there is a single
+        perimeter for a single location.
+
+        French administration being what it is, this is not always the case.
+
+        Hence, if we are matching several perimeters, we have no way to tell which
+        one is the correct one. So we just return the first one.
+        """
+        return self.perimeters.first()
+
+    @property
+    def map(self):
+        """Returns a map to be displayed for the regulation.
+
+        Returns a `envergo.moulinette.regulations.Map` object or None.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        if not self.show_map:
+            return None
+
+        perimeter = self.perimeter
+        if perimeter:
+            polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
+            map = Map(
+                center=self.moulinette.catalog["coords"],
+                entries=[polygon],
+                truncate=False,
+                zoom=None,
+                ratio="2x1",
+                fixed=False,
+            )
+            return map
+
+        return None
 
 
-# Those dummy methods are useful for unit testing
-def fetch_wetlands_around_25m(coords):
-    return fetch_zones_around(coords, 25, "zone_humide")
+class Criterion(models.Model):
+    """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
 
-
-def fetch_wetlands_around_100m(coords):
-    return fetch_zones_around(coords, 100, "zone_humide")
-
-
-def fetch_potential_wetlands(coords):
-    qs = (
-        Zone.objects.filter(map__map_type="zone_humide")
-        .filter(map__data_type="uncertain")
-        .filter(geometry__dwithin=(coords, D(m=0)))
+    backend_title = models.CharField(
+        _("Admin title"),
+        help_text=_("For backend usage only"),
+        max_length=256,
     )
-    return qs
+    title = models.CharField(
+        _("Title"), help_text=_("For frontend usage"), max_length=256
+    )
+    slug = models.SlugField(_("Slug"), max_length=256)
+    subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
+    header = models.CharField(_("Header"), max_length=4096, blank=True)
+    regulation = models.ForeignKey(
+        "moulinette.Regulation",
+        verbose_name=_("Regulation"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+    )
+    activation_map = models.ForeignKey(
+        "geodata.Map",
+        verbose_name=_("Activation map"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+    )
+    activation_distance = models.PositiveIntegerField(
+        _("Activation distance"), default=0
+    )
+    evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
+    weight = models.PositiveIntegerField(_("Order"), default=1)
+    required_action = models.CharField(
+        _("Required action"),
+        help_text="Le porteur doit s'assurer que son projet…",
+        max_length=256,
+        blank=True,
+    )
+    required_action_stake = models.CharField(
+        _("Required action stake"), choices=STAKES, max_length=32, blank=True
+    )
+    project_impact = models.CharField(
+        _("Project impact"),
+        help_text="Au vu des informations saisies, le projet…",
+        max_length=256,
+        blank=True,
+    )
+    discussion_contact = models.TextField(
+        _("Discussion contact (html)"),
+        help_text="Le porteur de projet peut se rapprocher…",
+        blank=True,
+    )
 
+    class Meta:
+        verbose_name = _("Criterion")
+        verbose_name_plural = _("Criteria")
 
-def fetch_flood_zones_around_12m(coords):
-    return fetch_zones_around(coords, 12, "zone_inondable")
+    def __str__(self):
+        return self.title
+
+    @property
+    def unique_slug(self):
+        return f"{self.regulation.slug}_{self.slug}"
+
+    def evaluate(self, moulinette, distance):
+        self.moulinette = moulinette
+        self._evaluator = self.evaluator(moulinette, distance)
+        self._evaluator.evaluate()
+
+    @property
+    def result_code(self):
+        """Return the criterion result code."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        return self._evaluator.result_code
+
+    @property
+    def result(self):
+        """Return the criterion result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result."
+            )
+
+        return self._evaluator.result
+
+    @property
+    def map(self):
+        """Returns a map to be displayed for a single criterion.
+
+        Returns a `envergo.moulinette.regulations.Map` object or None.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        try:
+            map = self._evaluator.get_map()
+        except:  # noqa
+            map = None
+        return map
+
+    def get_form_class(self):
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the form class."
+            )
+
+        return self._evaluator.get_form_class()
+
+    def get_form(self):
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError("Criterion must be evaluated before accessing the form.")
+
+        return self._evaluator.get_form()
 
 
 class Perimeter(models.Model):
-    """Link a map and regulation criteria."""
+    """A perimeter is an administrative zone.
 
+    Examples of perimeters:
+     - Sage GMRE
+     - Marais de Vilaine
+
+    Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
+
+    """
+
+    backend_name = models.CharField(
+        _("Backend name"), help_text=_("For admin usage only"), max_length=256
+    )
     name = models.CharField(_("Name"), max_length=256)
-    map = models.ForeignKey(
+    long_name = models.CharField(
+        _("Long name"),
+        max_length=256,
+        blank=True,
+        help_text=_("Displayed below the regulation title"),
+    )
+    regulation = models.ForeignKey(
+        "moulinette.Regulation",
+        verbose_name=_("Regulation"),
+        on_delete=models.PROTECT,
+        related_name="perimeters",
+    )
+    activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Map"),
         related_name="perimeters",
         on_delete=models.PROTECT,
     )
-    criterion = CriterionChoiceField(_("Criterion"))
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
+    url = models.URLField(_("Url"), blank=True)
+    contact_name = models.CharField(_("Contact name"), max_length=256, blank=True)
+    contact_url = models.URLField(_("Contact url"), blank=True)
+    contact_phone = PhoneNumberField(_("Contact phone"), blank=True)
+    contact_email = models.EmailField(_("Contact email"), blank=True)
+
+    map_legend = models.CharField(_("Map legend"), max_length=256, blank=True)
+    rules_url = models.URLField(_("Rules url"))
 
     class Meta:
         verbose_name = _("Perimeter")
@@ -80,6 +432,31 @@ class Perimeter(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def contact(self):
+        """Format an address string."""
+        lines = [f"<strong>{self.contact_name or self.long_name or self.name}</strong>"]
+        if self.contact_phone:
+            lines.append(
+                f'Téléphone : <a href="tel:{self.contact_phone}">{self.contact_phone.as_national}</a>'
+            )
+        if self.contact_url:
+            lines.append(
+                f'Site web : <a href="{self.contact_url}" target="_blank" rel="noopener">{self.contact_url}</a>'
+            )
+        if self.contact_email:
+            lines.append(
+                f'Email : <a href="mailto:{self.contact_email}">{self.contact_email}</a>'
+            )
+        contact = f"""
+        <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
+            <address>
+                {"<br/>".join(lines)}
+            </address>
+            </div>
+        """
+        return mark_safe(contact)
 
 
 class MoulinetteConfig(models.Model):
@@ -157,24 +534,12 @@ class Moulinette:
         if hasattr(self.department, "moulinette_config"):
             self.catalog["config"] = self.department.moulinette_config
 
-        self.perimeters = self.get_perimeters()
-        self.criterions = self.get_criterions()
+        self.regulations = self.get_regulations()
+        self.evaluate()
 
-        # This is a clear case of circular references, since the Moulinette
-        # holds references to the regulations it's computing, but regulations and
-        # criterions holds a reference to the Moulinette.
-        # That is because the Reality™ is messy and sometimes criterions require
-        # access to other pieces of data from the moulinette.
-        # For example, to compute the "Natura2000" result, there is a criterion
-        # that is just the result of the "Loi sur l'eau" regulation.
-        self.regulations = [
-            LoiSurLEau(self),
-            Sage(self),
-            Natura2000(self),
-            EvalEnvironnementale(self),
-        ]
-
-        self.catalog.update(self.cleaned_additional_data())
+    def evaluate(self):
+        for regulation in self.regulations:
+            regulation.evaluate(self)
 
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
@@ -240,32 +605,59 @@ class Moulinette:
 
         return catalog
 
-    def get_perimeters(self):
-        """Find activated perimeters
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
 
-        Regulation criterions have a geographical component and must only computed in
-        certain zones.
-        """
         coords = self.catalog["coords"]
+
+        criteria = (
+            Criterion.objects.filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .order_by("weight")
+            .select_related("activation_map")
+        )
+
         perimeters = (
             Perimeter.objects.filter(
-                map__zones__geometry__dwithin=(coords, F("activation_distance"))
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
             )
-            .annotate(geometry=F("map__zones__geometry"))
-            .annotate(distance=Distance("map__zones__geometry", coords))
-            .order_by("distance", "map__name")
-            .select_related("map", "contact")
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .select_related("activation_map")
         )
-        return perimeters
 
-    def get_criterions(self):
-        criterions = []
-        for perimeter in self.perimeters:
-            criterion = perimeter.criterion
-            if hasattr(perimeter, "contact"):
-                criterion.contact = perimeter.contact
-            criterions.append(criterion)
-        return set(criterions)
+        regulations = (
+            Regulation.objects.all()
+            .order_by("weight")
+            .prefetch_related(Prefetch("criteria", queryset=criteria))
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
+        return regulations
 
     def get_zones(self, coords, radius=200):
         """Return the Zone objects containing the queried coordinates."""
@@ -296,7 +688,7 @@ class Moulinette:
 
         form_errors = []
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 form = criterion.get_form()
                 if form:
                     form_errors.append(not form.is_valid())
@@ -308,7 +700,7 @@ class Moulinette:
 
         data = {}
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 form = criterion.get_form()
                 if form and form.is_valid():
                     data.update(form.cleaned_data)
@@ -330,6 +722,8 @@ class Moulinette:
             return regulation.slug == regulation_slug
 
         regul = next(filter(select_regulation, self.regulations), None)
+        if regul is None:
+            logger.warning(f"Regulation {regulation_slug} not found.")
         return regul
 
     def result(self):
@@ -341,7 +735,7 @@ class Moulinette:
                 "result": regulation.result,
                 "criterions": {},
             }
-            for criterion in regulation.criterions:
+            for criterion in regulation.criteria.all():
                 result[regulation.slug]["criterions"][criterion.slug] = criterion.result
 
         return result
@@ -356,9 +750,10 @@ class Moulinette:
         forms = []
 
         for regulation in self.regulations:
-            for criterion in regulation.criterions:
-                if hasattr(criterion, "form_class"):
-                    forms.append(criterion.form_class)
+            for criterion in regulation.criteria.all():
+                form_class = criterion.get_form_class()
+                if form_class:
+                    forms.append(form_class)
 
         return forms
 
@@ -429,36 +824,10 @@ class FakeMoulinette(Moulinette):
     def get_criterions(self):
         criteria = [
             criterion
-            for criterion in MoulinetteCriterion.__subclasses__()
+            for criterion in CriterionEvaluator.__subclasses__()
             if self.catalog[criterion.slug]
         ]
         return criteria
 
     def get_department(self):
         return self.catalog["department"]
-
-
-class Contact(models.Model):
-    """Contact data for a perimeter."""
-
-    perimeter = models.OneToOneField(
-        Perimeter,
-        verbose_name=_("Perimeter"),
-        on_delete=models.PROTECT,
-        related_name="contact",
-    )
-    name = models.CharField(_("Name"), max_length=256)
-    url = models.URLField(_("URL"), blank=True)
-    address_md = models.TextField(_("Address"))
-    address_html = models.TextField(_("Address HTML"), blank=True)
-
-    class Meta:
-        verbose_name = _("Contact")
-        verbose_name_plural = _("Contacts")
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        self.address_html = markdown_to_html(self.address_md)
-        super().save(*args, **kwargs)

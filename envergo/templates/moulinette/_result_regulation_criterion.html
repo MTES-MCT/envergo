@@ -24,7 +24,7 @@
     {% show_criterion_body regulation criterion %}
 
     {% if criterion.map %}
-      {% include '_map_snippet.html' with map=criterion.map map_id=criterion.slug %}
+      {% include '_map_snippet.html' with map=criterion.map map_id=criterion.unique_slug %}
 
     {% endif %}
   </div>

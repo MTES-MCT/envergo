@@ -1,9 +1,5 @@
-<p>Le projet se situe dans un périmètre de SAGE (Schéma d’Aménagement et de Gestion des Eaux).</p>
-
-<p>Il doit donc respecter le règlement de ce SAGE.</p>
-
 <p>
-  En l'occurrence, <strong>le projet est interdit.</strong>
+  <strong>Le projet est interdit.</strong>
 </p>
 
 <p>En effet, au vu des informations saisies, le projet :</p>
@@ -16,18 +12,21 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
+  {% with perimeter=regulation.perimeter %}
+    {% if perimeter %}
+      <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
 
-  <p>Le porteur de projet peut se rapprocher :</p>
-  <ul>
-    {% for contact in regulation.discussion_contacts %}<li>{{ contact|safe }}</li>{% endfor %}
-  </ul>
+      <p>La structure en charge de l’animation du SAGE « {{ perimeter.name }} » :</p>
+
+      {{ perimeter.contact }}
+    {% endif %}
+  {% endwith %}
 
   <h4 class="fr-h4">Sanctions en cas d'omission</h4>
 
   <div class="fr-alert fr-alert--info fr-my-3w">
     <p>
-      S'il s'avère que le projet est réalisé sans respecter le réglement de SAGE, le responsable s'expose à des sanctions administratives et pénales, qui peuvent aller jusqu'à :
+      S'il s'avère que le projet est réalisé sans respecter le règlement de SAGE, le responsable s'expose à des sanctions administratives et pénales, qui peuvent aller jusqu'à :
     </p>
 
     <ul class="fr-mb-0">

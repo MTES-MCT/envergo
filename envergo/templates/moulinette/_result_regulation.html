@@ -5,19 +5,28 @@
     <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
   </h2>
 
-  {% perimeter_contact_string regulation %}
-
-  <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
+  {% if regulation.perimeter %}
+    <p>
+      Le projet se trouve dans le périmètre
+      {% if regulation.perimeter.url %}
+        <a href="{{ regulation.perimeter.url }}" target="_blank" rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>.
+      {% else %}
+        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}.
+      {% endif %}
+    </p>
+  {% endif %}
 
   {% if regulation.map %}
     {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
 
   {% endif %}
 
-  <div class="criteria">
-    {% if regulation.criterions %}<h3>Détail des rubriques</h3>{% endif %}
+  <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
 
-    {% for criterion in regulation.criterions %}
+  <div class="criteria">
+    {% if regulation.criteria.all %}<h3>Détail des rubriques</h3>{% endif %}
+
+    {% for criterion in regulation.criteria.all %}
       {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
 
     {% endfor %}

@@ -9,15 +9,18 @@ from tempfile import TemporaryDirectory
 
 import requests
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
+from django.db import connection
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Zone
 
 logger = logging.getLogger(__name__)
+
+EPSG_WGS84 = 4326
 
 
 class CeleryDebugStream:
@@ -49,6 +52,8 @@ class CeleryDebugStream:
 
 
 class CustomMapping(LayerMapping):
+    """A custom LayerMapping that allows to pass extra arguments to the generated model."""
+
     def __init__(self, *args, **kwargs):
         self.extra_kwargs = kwargs.pop("extra_kwargs")
         super().__init__(*args, **kwargs)
@@ -127,8 +132,6 @@ def to_geojson(obj, geometry_field="geometry"):
     srid.
     """
 
-    EPSG_WGS84 = 4326
-
     if isinstance(obj, (QuerySet, list)):
         geojson = serialize("geojson", obj, geometry_field=geometry_field)
     elif hasattr(obj, "geojson"):
@@ -191,3 +194,57 @@ def merge_geometries(polygons):
             pass
 
     return merged
+
+
+def simplify_map(map):
+    """Generates a simplified geometry for the entire map.
+
+    This methods takes a map and generates a single polygon that is the union
+    of all the polygons in the map.
+
+    We also simplify the polygon because this is for display purpose only.
+
+    We use native postgis methods those operations, because it's way faster.
+
+    As for simplification, we don't preserve topology (ST_Simplify instead of
+    ST_SimplifyPreserveTopology) because we want to be able to drop small
+    holes in the polygon.
+
+    Because of that, we also have to call ST_MakeValid to avoid returning invalid
+    polygons.
+
+    We wrap all of this in ST_CollectionExtract to make sure we get a MultiPolygon."""
+
+    logger.info("Generating map preview polygon")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+              ST_AsText(
+                ST_CollectionExtract(
+                  ST_MakeValid(
+                    ST_Simplify(
+                      ST_Union(ST_MakeValid(z.geometry::geometry)),
+                      0.0001
+                    ),
+                    'method=structure keepcollapsed=false'
+                  ),
+                3)::geography
+              )
+              AS polygon
+            FROM geodata_zone as z
+            WHERE z.map_id = %s
+            """,
+            [map.id],
+        )
+        row = cursor.fetchone()
+
+    polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
+    logging.info(f"Type of generated polygon: {type(polygon)}")
+
+    if isinstance(polygon, Polygon):
+        polygon = MultiPolygon([polygon])
+
+    logger.info("Preview generation is done")
+    return polygon

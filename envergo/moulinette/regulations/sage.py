@@ -1,13 +1,10 @@
-from functools import cached_property
-
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    CriterionEvaluator,
     Map,
     MapPolygon,
-    MoulinetteCriterion,
-    MoulinetteRegulation,
     RequiredAction,
     Stake,
 )
@@ -17,32 +14,46 @@ LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
 
 
-class ZoneHumideVieJaunay85(MoulinetteCriterion):
-    slug = "zone_humide_vie_jaunay_85"
+class ZoneHumideVieJaunay85(CriterionEvaluator):
     choice_label = "85 - Zone humide Vie & Jaunay"
-    title = "Impact sur une zone humide"
-    subtitle = "Seuil d'interdiction : 1 000 m²"
-    header = "Article 5 du <a target='_blank' rel='noopener' href='https://www.gesteau.fr/document/reglement-du-sage-de-la-vie-et-du-jaunay'>règlement du SAGE Vie et Jaunay</a>"  # noqa
 
     CODES = [
         "interdit",
         "action_requise_interdit",
         "action_requise_proche_interdit",
         "non_soumis",
-        "non_concerne",
     ]
+
+    CODE_MATRIX = {
+        ("inside", "big"): "interdit",
+        ("inside", "medium"): "action_requise_interdit",
+        ("inside", "small"): "non_soumis",
+        ("close_to", "big"): "action_requise_proche_interdit",
+        ("close_to", "medium"): "non_soumis",
+        ("close_to", "small"): "non_soumis",
+        ("outside", "big"): "non_soumis",
+        ("outside", "medium"): "non_soumis",
+        ("outside", "small"): "non_soumis",
+    }
+
+    RESULT_MATRIX = {
+        "interdit": RESULTS.interdit,
+        "action_requise_interdit": RESULTS.action_requise,
+        "action_requise_proche_interdit": RESULTS.action_requise,
+        "non_soumis": RESULTS.non_soumis,
+    }
 
     def get_catalog_data(self):
         data = {}
         wetlands = self.catalog["forbidden_wetlands"]
 
-        if "forbidden_wetlands_25" not in data:
+        if "forbidden_wetlands_25" not in self.catalog:
             data["forbidden_wetlands_25"] = [
                 zone for zone in wetlands if zone.distance <= D(m=25)
             ]
             data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
 
-        if "forbidden_wetlands_100" not in data:
+        if "forbidden_wetlands_100" not in self.catalog:
             data["forbidden_wetlands_100"] = [
                 zone for zone in wetlands if zone.distance <= D(m=100)
             ]
@@ -75,44 +86,7 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
 
         return wetland_status, project_size
 
-    @property
-    def result_code(self):
-        """Return the unique result code."""
-
-        wetland_status, project_size = self.get_result_data()
-        code_matrix = {
-            ("inside", "big"): "interdit",
-            ("inside", "medium"): "action_requise_interdit",
-            ("inside", "small"): "non_soumis",
-            ("close_to", "big"): "action_requise_proche_interdit",
-            ("close_to", "medium"): "non_soumis",
-            ("close_to", "small"): "non_soumis",
-            ("outside", "big"): "non_concerne",
-            ("outside", "medium"): "non_concerne",
-            ("outside", "small"): "non_concerne",
-        }
-        code = code_matrix[(wetland_status, project_size)]
-        return code
-
-    @cached_property
-    def result(self):
-        """Run the check for the 3.3.1.0 rule.
-
-        Associate a unique result code with a value from the RESULTS enum.
-        """
-
-        code = self.result_code
-        result_matrix = {
-            "interdit": RESULTS.interdit,
-            "action_requise_interdit": RESULTS.action_requise,
-            "action_requise_proche_interdit": RESULTS.action_requise,
-            "non_soumis": RESULTS.non_soumis,
-            "non_concerne": RESULTS.non_concerne,
-        }
-        result = result_matrix[code]
-        return result
-
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -162,52 +136,47 @@ class ZoneHumideVieJaunay85(MoulinetteCriterion):
             """
         return impact
 
-    def discussion_contact(self):
-        contact = None
-        if self.result in (RESULTS.action_requise, RESULTS.interdit):
-            contact = """
-            de la structure en charge de l’animation du SAGE Vie et Jaunay :
-            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-                <address>
-                <strong>Syndicat Mixte des Marais, de la Vie, du Ligneron et du Jaunay</strong><br />
-                Téléphone : 02 51 54 28 18<br />
-                Site internet : <a href="https://www.vie-jaunay.com" target="_blank" rel="noopener">vie-jaunay.com</a>
-                </address>
-            </div>
-            """
-        return contact
 
-
-class ZoneHumideGMRE56(MoulinetteCriterion):
-    slug = "zone_humide_gmre_56"
+class ZoneHumideGMRE56(CriterionEvaluator):
     choice_label = "56 - Zone humide GMRE"
-    title = "Impact sur une zone humide"
-    subtitle = "Seuil d'interdiction : dès le premier m²"
-    header = "Règle 4 du <a target='_blank' rel='noopener' href='https://www.gesteau.fr/document/sage-golfe-du-morbihan-et-ria-detel-reglement'>règlement du SAGE Golfe du Morbihan & Ria d’Etel</a>"  # noqa
 
     CODES = [
         "interdit",
         "action_requise_proche_interdit",
         "action_requise_dans_doute_interdit",
-        "non_concerne",
+        "non_soumis",
     ]
+
+    CODE_MATRIX = {
+        "inside": "interdit",
+        "close_to": "action_requise_proche_interdit",
+        "inside_potential": "action_requise_dans_doute_interdit",
+        "outside": "non_soumis",
+    }
+
+    RESULT_MATRIX = {
+        "interdit": RESULTS.interdit,
+        "action_requise_proche_interdit": RESULTS.action_requise,
+        "action_requise_dans_doute_interdit": RESULTS.action_requise,
+        "non_soumis": RESULTS.non_soumis,
+    }
 
     def get_catalog_data(self):
         data = {}
 
-        if "wetlands_25" not in data:
+        if "wetlands_25" not in self.catalog:
             data["wetlands_25"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
             ]
             data["wetlands_within_25m"] = bool(data["wetlands_25"])
 
-        if "wetlands_100" not in data:
+        if "wetlands_100" not in self.catalog:
             data["wetlands_100"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
             ]
             data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
-        if "potential_wetlands_0" not in data:
+        if "potential_wetlands_0" not in self.catalog:
             data["potential_wetlands_0"] = [
                 zone
                 for zone in self.catalog["potential_wetlands"]
@@ -231,38 +200,7 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
 
         return wetland_status
 
-    @property
-    def result_code(self):
-        """Return the unique result code."""
-
-        wetland_status = self.get_result_data()
-        results = {
-            "inside": "interdit",
-            "close_to": "action_requise_proche_interdit",
-            "inside_potential": "action_requise_dans_doute_interdit",
-            "outside": "non_concerne",
-        }
-        code = results[wetland_status]
-        return code
-
-    @cached_property
-    def result(self):
-        """Run the check for the 3.3.1.0 rule.
-
-        Associate a unique result code with a value from the RESULTS enum.
-        """
-
-        code = self.result_code
-        result_matrix = {
-            "interdit": RESULTS.interdit,
-            "action_requise_proche_interdit": RESULTS.action_requise,
-            "action_requise_dans_doute_interdit": RESULTS.action_requise,
-            "non_concerne": RESULTS.non_concerne,
-        }
-        result = result_matrix[code]
-        return result
-
-    def _get_map(self):
+    def get_map(self):
         map_polygons = []
 
         wetlands_qs = [
@@ -327,44 +265,3 @@ class ZoneHumideGMRE56(MoulinetteCriterion):
         if self.result == RESULTS.interdit:
             impact = "impacte une zone humide dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel."
         return impact
-
-    def discussion_contact(self):
-        contact = None
-        if self.result in (RESULTS.action_requise, RESULTS.interdit):
-            contact = """
-            de la structure en charge de l’animation du SAGE Golfe du Morbihan et Ria d'Etel :
-            <div class="fr-highlight fr-mb-2w fr-ml-0 fr-mt-1w">
-                <address>
-                <strong>Syndicat Mixte du SAGE Golfe du Morbihan et Ria d’Etel</strong><br />
-                Téléphone : 02 97 52 47 60<br />
-                Site internet : <a href="https://www.sagegmre.fr/contact,pa12.html" target="_blank" rel="noopener">
-                https://www.sagegmre.fr</a>
-                </address>
-            </div>
-            """
-        return contact
-
-
-class Sage(MoulinetteRegulation):
-    slug = "sage"
-    title = "Règlement de SAGE"
-    criterion_classes = [ZoneHumideVieJaunay85, ZoneHumideGMRE56]
-
-    @cached_property
-    def result(self):
-        """Compute global result from individual criterions."""
-
-        results = [criterion.result for criterion in self.criterions]
-
-        if RESULTS.interdit in results:
-            result = RESULTS.interdit
-        elif RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        elif RESULTS.non_soumis in results:
-            result = RESULTS.non_soumis
-        elif RESULTS.non_concerne in results:
-            result = RESULTS.non_concerne
-        else:
-            result = RESULTS.non_disponible
-
-        return result
