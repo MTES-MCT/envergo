@@ -22,7 +22,6 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         "action_requise_interdit",
         "action_requise_proche_interdit",
         "non_soumis",
-        "non_concerne",
     ]
 
     CODE_MATRIX = {
@@ -32,9 +31,9 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         ("close_to", "big"): "action_requise_proche_interdit",
         ("close_to", "medium"): "non_soumis",
         ("close_to", "small"): "non_soumis",
-        ("outside", "big"): "non_concerne",
-        ("outside", "medium"): "non_concerne",
-        ("outside", "small"): "non_concerne",
+        ("outside", "big"): "non_soumis",
+        ("outside", "medium"): "non_soumis",
+        ("outside", "small"): "non_soumis",
     }
 
     RESULT_MATRIX = {
@@ -42,7 +41,6 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         "action_requise_interdit": RESULTS.action_requise,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "non_soumis": RESULTS.non_soumis,
-        "non_concerne": RESULTS.non_concerne,
     }
 
     def get_catalog_data(self):
@@ -146,21 +144,21 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         "interdit",
         "action_requise_proche_interdit",
         "action_requise_dans_doute_interdit",
-        "non_concerne",
+        "non_soumis",
     ]
 
     CODE_MATRIX = {
         "inside": "interdit",
         "close_to": "action_requise_proche_interdit",
         "inside_potential": "action_requise_dans_doute_interdit",
-        "outside": "non_concerne",
+        "outside": "non_soumis",
     }
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "action_requise_dans_doute_interdit": RESULTS.action_requise,
-        "non_concerne": RESULTS.non_soumis,
+        "non_soumis": RESULTS.non_soumis,
     }
 
     def get_catalog_data(self):
