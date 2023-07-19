@@ -7,6 +7,7 @@ from django.contrib.gis.measure import Distance as D
 from django.db import models
 from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -217,7 +218,7 @@ class Regulation(models.Model):
         criteria_slugs = [c.slug for c in self.criteria.all()]
         return criteria_slugs == ["iota"]
 
-    @property
+    @cached_property
     def perimeter(self):
         """Return the administrative perimeter the project is in.
 
