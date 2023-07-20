@@ -189,6 +189,7 @@ class Map(models.Model):
         ),
         geography=True,
         null=True,
+        blank=True,
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     expected_zones = models.IntegerField(_("Expected zones"), default=0)
