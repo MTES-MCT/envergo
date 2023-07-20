@@ -12,7 +12,7 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import FakeMoulinette, Moulinette
+from envergo.moulinette.models import FakeMoulinette, Moulinette, MoulinetteConfig
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -261,6 +261,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
                 .order_by("type", "map__name", "distance")
             )
+
+        if moulinette and not moulinette.has_config():
+            context["nb_available_depts"] = MoulinetteConfig.objects.filter(
+                is_activated=True
+            ).count()
 
         return context
 
