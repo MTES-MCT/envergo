@@ -2,6 +2,8 @@ from django import template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from envergo.moulinette.models import MoulinetteConfig
+
 register = template.Library()
 
 
@@ -119,3 +121,10 @@ def evaluation_menu(context):
         </div>
     """
     return mark_safe(menu_html)
+
+
+@register.simple_tag()
+def nb_available_depts():
+    """Return nb of depts where EnvErgo is available."""
+
+    return MoulinetteConfig.objects.filter(is_activated=True).count()
