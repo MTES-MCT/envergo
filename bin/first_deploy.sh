@@ -6,7 +6,7 @@ set -exv
 echo ">>> Starting the first_deploy hook"
 
 # Scalingo requires you to run this script to update postgres' version
-dbclient-fetcher psql 13
+dbclient-fetcher psql 14
 
 # Let's seed the database
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
