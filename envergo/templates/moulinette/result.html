@@ -59,6 +59,26 @@
 
   {% endfor %}
 
+  <section class="regulation fr-mb-5w" id="regulation_especes_protegees">
+    <h2>
+      <span class="content">Espèces protégées</span>
+    </h2>
+    <p>
+      Tout projet qui détruit ou perturbe une espèce animale ou végétale protégée est interdit, et ne peut être réalisé qu'à condition d’obtenir une <em>dérogation</em> « espèces protégées ». C'est également le cas des projets qui impactent certains habitats de ces espèces.
+    </p>
+    <p>
+      Cette réglementation s'applique en toutes circonstances, même si le projet n'est soumis à aucune autre réglementation environnementale ou procédure, telle qu’étude d'impact ou évaluation des incidences Natura 2000.
+    </p>
+
+    {% if moulinette.department.department == "35" %}
+      <p>
+        La DDTM d'Ille-et-Vilaine met à disposition un <a href="https://www.ille-et-vilaine.gouv.fr/contenu/telechargement/56441/383553/file/Réglementation espèces protégées_Inventaires projets.pdf"
+    target="_blank"
+    ref="noopener">guide sur la réglementation espèces protégées</a>.
+      </p>
+    {% endif %}
+  </section>
+
   <div class="fr-alert fr-alert--info fr-my-5w">
     <p>
       EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
@@ -72,17 +92,6 @@
            id="regulation_loi_littoral">
     <h2>
       <span class="content">Loi Littoral</span> {% result_tag 'non_disponible' %}
-    </h2>
-    <p>
-      Cette réglementation sera prochainement prise en compte dans EnvErgo.
-      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.
-    </p>
-  </section>
-
-  <section class="regulation regulation-disabled fr-mb-5w"
-           id="regulation_especes_protegees">
-    <h2>
-      <span class="content">Espèces protégées</span> {% result_tag 'non_disponible' %}
     </h2>
     <p>
       Cette réglementation sera prochainement prise en compte dans EnvErgo.
@@ -121,7 +130,7 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>var DEPARTMENT = "{{ department.department }}";</script>
+  <script>var DEPARTMENT = "{{ moulinette.department.department }}";</script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
