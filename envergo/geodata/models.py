@@ -10,10 +10,16 @@ from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from localflavor.fr.fr_department import DEPARTMENT_CHOICES
+from localflavor.fr.fr_department import DEPARTMENT_CHOICES_PER_REGION
 from model_utils import Choices
 
 logger = logging.getLogger(__name__)
+
+
+#: A list of departments
+DEPARTMENT_CHOICES = tuple(
+    [(dep[0], f"{dep[1]} ({dep[0]})") for dep in DEPARTMENT_CHOICES_PER_REGION]
+)
 
 
 class Parcel(models.Model):

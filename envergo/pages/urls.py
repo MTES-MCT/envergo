@@ -3,7 +3,13 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
 from envergo.geodata.views import ParcelsExport
-from envergo.pages.views import LegalMentionsView, NewsFeed, NewsView, Outlinks
+from envergo.pages.views import (
+    AvailabilityInfo,
+    LegalMentionsView,
+    NewsFeed,
+    NewsView,
+    Outlinks,
+)
 
 urlpatterns = [
     path(
@@ -56,6 +62,11 @@ urlpatterns = [
                     _("envergo-news/feed/"),
                     NewsFeed(),
                     name="news_feed",
+                ),
+                path(
+                    _("available-departments/"),
+                    AvailabilityInfo.as_view(),
+                    name="faq_availability_info",
                 ),
             ]
         ),

@@ -9,6 +9,7 @@ from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import ListView, TemplateView
 
+from envergo.moulinette.models import MoulinetteConfig
 from envergo.pages.models import NewsItem
 
 
@@ -66,6 +67,25 @@ class Outlinks(TemplateView):
             links.append({"label": label, "url": url, "status": req.status_code})
 
         return links
+
+
+class AvailabilityInfo(TemplateView):
+    """List departments where EnvErgo is available."""
+
+    template_name = "pages/faq/availability_info.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["configs_available"] = MoulinetteConfig.objects.filter(
+            is_activated=True
+        ).order_by("department")
+
+        context["configs_soon"] = MoulinetteConfig.objects.filter(
+            is_activated=False
+        ).order_by("department")
+
+        return context
 
 
 class NewsView(ListView):
