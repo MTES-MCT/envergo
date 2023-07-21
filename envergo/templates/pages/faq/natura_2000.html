@@ -1,6 +1,6 @@
 {% extends "pages/faq/index.html" %}
 
-{% load static %}
+{% load static pages %}
 
 {% block title %}Questions fréquentes : Natura 2000{% endblock %}
 {% block faq_content %}
@@ -105,7 +105,7 @@
         <p>
           S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si le projet est soumis à Natura 2000 — ainsi qu’aux autres réglementations environnementales (Loi sur l’eau, évaluation environnementale…).
           C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
-          Il fonctionne pour l'instant en Loire-Atlantique, dans le Morbihan et en Vendée, et sera prochainement étendu à un territoire plus large.
+          Il fonctionne pour l'instant dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a>, et sera prochainement étendu à un territoire plus large.
         </p>
         <p>De façon générale, un projet peut être soumis à EIN :</p>
         <ul>

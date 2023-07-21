@@ -1,6 +1,6 @@
 {% extends 'moulinette/base_result.html' %}
 
-{% load evaluations static %}
+{% load evaluations static pages %}
 
 {% block result %}
 
@@ -8,7 +8,9 @@
 
   <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
     <p class="fr-alert__title">Le simulateur EnvErgo n'est pas encore déployé dans votre département.</p>
-    <p>Il est pour l'instant disponible en Loire-Atlantique (44), dans le Morbihan (56) et en Vendée (85).</p>
+    <p>
+      Il est pour l'instant <a href="{% url 'faq_availability_info' %}">disponible dans {% nb_available_depts %} départements</a>.
+    </p>
   </div>
 
   <p>

@@ -1,0 +1,47 @@
+{% extends "pages/faq/index.html" %}
+
+{% load static %}
+
+{% block title %}Départements disponibles{% endblock %}
+
+{% block faq_content %}
+  <h1>Départements disponibles</h1>
+  <p class="fr-text--lead">
+    EnvErgo a vocation à être disponible sur l’ensemble du territoire français, mais se déploie progressivement, en coordination avec les DDT(M) et DREAL de chaque territoire.
+  </p>
+
+  <p>💡 Vous pouvez nous signaler votre intérêt pour le déploiement du simulateur EnvErgo dans votre département.</p>
+
+  <a target="_blank"
+     rel="noopener"
+     class="fr-btn fr-mb-5w"
+     href="https://tally.so/r/nG6lko">
+    Signaler mon intérêt
+  </a>
+
+  <h2>Départements où EnvErgo est disponible</h2>
+
+  <ul>
+    {% for config in configs_available %}<li>{{ config.department }}</li>{% endfor %}
+  </ul>
+
+  <h2>Départements prochainement disponibles</h2>
+
+  {% if configs_soon %}
+    <ul>
+      {% for config in configs_soon %}<li>{{ config.department }}</li>{% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun département n'est en cours de déploiement.</p>
+  {% endif %}
+
+  <p>💡 Vous pouvez nous signaler votre intérêt pour le déploiement du simulateur EnvErgo dans votre département.</p>
+
+  <a target="_blank"
+     rel="noopener"
+     class="fr-btn fr-mb-5w"
+     href="https://tally.so/r/nG6lko">
+    Signaler mon intérêt
+  </a>
+
+{% endblock %}
