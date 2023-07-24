@@ -248,3 +248,15 @@ def simplify_map(map):
 
     logger.info("Preview generation is done")
     return polygon
+
+
+def fill_polygon_stats():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        UPDATE geodata_zone
+        SET
+            area = ST_Area(geometry),
+            npoints = ST_NPoints(geometry::geometry);
+        """
+        )

@@ -3,6 +3,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
@@ -69,6 +70,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "col_departments",
         "col_display_for_user",
         "col_zones",
+        "col_preview_status",
         "col_import_status",
     ]
     readonly_fields = [
@@ -89,6 +91,15 @@ class MapAdmin(gis_admin.GISModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
         super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        # The `geometry` field can contain huge amount of data
+        # Since we don't need it on the list page, we defer it
+        qs = qs.defer("geometry").annotate(has_preview=Q(geometry__isnull=False))
+
+        return qs
 
     @admin.display(ordering="map_type", description=_("Type"))
     def col_map_type(self, obj):
@@ -119,7 +130,19 @@ class MapAdmin(gis_admin.GISModelAdmin):
     def col_display_for_user(self, obj):
         return obj.display_for_user
 
-    @admin.display(ordering="import_status", description="Import")
+    @admin.display(
+        boolean=True,
+        description=mark_safe(
+            "<abbr title='Géométrie simplifiée générée ?'>Prévis.</abbr>"
+        ),
+    )
+    def col_preview_status(self, obj):
+        return obj.has_preview
+
+    @admin.display(
+        ordering="import_status",
+        description=mark_safe("<abbr title='Importé avec succes ?'>Imp.</abbr>"),
+    )
     def col_import_status(self, obj):
         if not obj.import_status:
             return ""
@@ -192,8 +215,16 @@ class MapAdmin(gis_admin.GISModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.GISModelAdmin):
-    list_display = ["id", "map", "created_at", "map_type", "data_type"]
-    readonly_fields = ["map", "created_at"]
+    list_display = [
+        "id",
+        "map",
+        "created_at",
+        "map_type",
+        "data_type",
+        "area",
+        "npoints",
+    ]
+    readonly_fields = ["map", "created_at", "area", "npoints"]
     list_filter = ["map__map_type", "map__data_type", "map"]
 
     @admin.display(description=_("Data type"))
