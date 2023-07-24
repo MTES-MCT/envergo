@@ -215,8 +215,16 @@ class MapAdmin(gis_admin.GISModelAdmin):
 
 @admin.register(Zone)
 class ZoneAdmin(gis_admin.GISModelAdmin):
-    list_display = ["id", "map", "created_at", "map_type", "data_type"]
-    readonly_fields = ["map", "created_at"]
+    list_display = [
+        "id",
+        "map",
+        "created_at",
+        "map_type",
+        "data_type",
+        "area",
+        "npoints",
+    ]
+    readonly_fields = ["map", "created_at", "area", "npoints"]
     list_filter = ["map__map_type", "map__data_type", "map"]
 
     @admin.display(description=_("Data type"))

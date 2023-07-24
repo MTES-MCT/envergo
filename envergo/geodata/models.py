@@ -244,7 +244,8 @@ class Zone(gis_models.Model):
             """
         ),
     )
-
+    area = models.BigIntegerField(_("Area"), null=True, blank=True)
+    npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
