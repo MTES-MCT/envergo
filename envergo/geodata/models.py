@@ -251,6 +251,10 @@ class Zone(gis_models.Model):
     class Meta:
         verbose_name = _("Zone")
         verbose_name_plural = _("Zones")
+        indexes = [
+            models.Index(fields=["-area"]),
+            models.Index(fields=["-npoints"]),
+        ]
 
 
 class Department(models.Model):

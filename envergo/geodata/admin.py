@@ -235,6 +235,10 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
     def data_type(self, obj):
         return obj.map.get_data_type_display()
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.defer("geometry")
+
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
