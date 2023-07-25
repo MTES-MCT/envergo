@@ -955,3 +955,15 @@ div.hero-alt {
     }
   }
 }
+
+.fr-callout.evaluation-comment {
+
+  .fr-callout__title {
+    font-size: 1.375rem;
+  }
+
+  .fr-callout__text {
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
