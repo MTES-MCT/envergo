@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 import requests
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
@@ -264,15 +264,17 @@ def simplify_map(map):
             """
             SELECT
               ST_AsText(
-                ST_CollectionExtract(
-                  ST_MakeValid(
-                    ST_Simplify(
-                      ST_Union(ST_MakeValid(z.geometry::geometry)),
-                      0.0001
+                ST_Multi(
+                  ST_CollectionExtract(
+                    ST_MakeValid(
+                      ST_Simplify(
+                        ST_Union(ST_MakeValid(z.geometry::geometry)),
+                        0.0001
+                      ),
+                      'method=structure keepcollapsed=false'
                     ),
-                    'method=structure keepcollapsed=false'
-                  ),
-                3)::geography
+                  3)
+                )::geography
               )
               AS polygon
             FROM geodata_zone as z
@@ -283,10 +285,10 @@ def simplify_map(map):
         row = cursor.fetchone()
 
     polygon = GEOSGeometry(row[0], srid=EPSG_WGS84)
-    logging.info(f"Type of generated polygon: {type(polygon)}")
-
-    if isinstance(polygon, Polygon):
-        polygon = MultiPolygon([polygon])
+    if not isinstance(polygon, MultiPolygon):
+        logger.error(
+            f"The query did not generate the correct geometry type ({type(polygon)})"
+        )
 
     logger.info("Preview generation is done")
     return polygon
