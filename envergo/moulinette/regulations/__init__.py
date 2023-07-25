@@ -75,11 +75,9 @@ class Map:
                 "zoom": self.zoom,
                 "polygons": [
                     {
-                        "polygon": to_geojson(
-                            entry.geometry.buffer(0).intersection(buffer)
-                        )
+                        "polygon": to_geojson(entry.geometry.intersection(buffer))
                         if self.truncate
-                        else to_geojson(entry.geometry.buffer(0)),
+                        else to_geojson(entry.geometry),
                         "color": entry.color,
                         "label": entry.label,
                     }
