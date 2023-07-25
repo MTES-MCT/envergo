@@ -119,6 +119,48 @@ def process_shapefile(map, file, task=None):
         logger.info("Importing is done")
 
 
+def make_polygons_valid(map):
+    """Run a postgis query to make sure all polygons are valid.
+
+    This is to prevent errors with some GEOS operations, and avoid
+    `TopologyException` errors.
+
+    ST_MakeValid: fix polygons topology errors
+    ST_CollectionExtract: Extract polygons from results (discards points and lines)
+    ST_Multi: Make sure the result is a MultiPolygon
+    """
+
+    logger.info("Fixing invalid polygons")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+            FROM geodata_zone
+            WHERE ST_IsValid(geometry::geometry) = False
+            AND map_id = %s
+            """,
+            [map.id],
+        )
+        res = cursor.fetchone()
+        logger.info(f"{res[0]} invalid polygons have been found")
+
+        cursor.execute(
+            """
+            UPDATE geodata_zone
+            SET geometry = ST_Multi(
+              ST_CollectionExtract(
+                ST_MakeValid(geometry::geometry, 'method=structure keepcollapsed=false'),
+                3
+              )
+            )::geography
+            WHERE ST_IsValid(geometry::geometry) = False
+            AND map_id = %s
+            """,
+            [map.id],
+        )
+    logger.info("Invalid polygons have been fixed")
+
+
 def to_geojson(obj, geometry_field="geometry"):
     """Return serialized geojson.
 

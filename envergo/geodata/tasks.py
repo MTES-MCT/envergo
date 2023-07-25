@@ -4,7 +4,7 @@ from django.db import transaction
 
 from config.celery_app import app
 from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.utils import process_shapefile, simplify_map
+from envergo.geodata.utils import make_polygons_valid, process_shapefile, simplify_map
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ def process_shapefile_map(task, map_id):
         with transaction.atomic():
             map.zones.all().delete()
             process_shapefile(map, map.file, task)
+            make_polygons_valid(map)
             map.geometry = simplify_map(map)
     except Exception as e:
         map.import_error_msg = f"Erreur d'import ({e})"
