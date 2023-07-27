@@ -2,14 +2,20 @@ Bonjour,
 
 Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
 
-Vous recevrez une réponse dans les trois jours ouvrés.
+Cependant, l'équipe EnvErgo sera momentanément indisponible en raison de congés estivaux jusqu'au 28 août.
 
-En attendant, vous pouvez consulter notre page d'information :
+Nous vous répondrons dans les plus brefs délais dès notre retour.
+
+Si vous avez une urgence, vous pouvez nous contacter par e-mail à contact@envergo.beta.gouv.fr et nous vous apporterons une réponse le plus rapidement possible.
+
+Vous pouvez ajouter ou retirer des documents à votre demande :
+
+{{ file_upload_url }}
+
+Notre page d'information sur les réglementations environnementales est consultable :
 
 {{ faq_url }}
 
-N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.
-
-{{ contact_url }}
+En vous souhaitant un bel été, nous avons hâte de vous retrouver à notre retour pour continuer à améliorer la prise en compte de l'environnement dans les projets d’aménagement.
 
 {% include 'emails/_email_signature.txt' %}

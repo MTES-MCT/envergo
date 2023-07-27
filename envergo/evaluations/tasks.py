@@ -50,11 +50,13 @@ def confirm_request_to_requester(request_id, host):
     user_email = request.contact_email
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
+    file_upload_url = reverse("request_eval_wizard_step_3", args=[request.reference])
     context = {
         "application_number": request.application_number,
         "reference": request.reference,
         "faq_url": f"https://{host}{faq_url}",
         "contact_url": f"https://{host}{contact_url}",
+        "file_upload_url": f"https://{host}{file_upload_url}",
     }
     txt_body = render_to_string(
         "evaluations/emails/request_confirm_body.txt", context=context
@@ -64,7 +66,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'évaluation manuelle",
+        subject="[EnvErgo] Suspension temporaire des services EnvErgo jusqu'au 28 août",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email],
@@ -76,7 +78,6 @@ def confirm_request_to_requester(request_id, host):
 
 @app.task
 def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
-
     user = User.objects.get(id=sender_id)
     evaluation = Evaluation.objects.get(reference=evaluation_reference)
     subject = "[EnvErgo] Évaluation Loi sur l'eau"
