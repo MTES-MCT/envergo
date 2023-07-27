@@ -4,7 +4,11 @@ Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo{% if ap
 
 Vous recevrez une réponse dans les trois jours ouvrés.
 
-En attendant, vous pouvez consulter notre page d'information :
+Vous pouvez ajouter ou retirer des documents à votre demande :
+
+{{ file_upload_url }}
+
+Notre page d'information sur les réglementations environnementales est consultable :
 
 {{ faq_url }}
 
