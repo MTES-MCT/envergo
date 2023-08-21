@@ -369,6 +369,7 @@ shapely==2.0.1
 six==1.16.0
     # via
     #   -r base.txt
+    #   asttokens
     #   cssbeautifier
     #   jsbeautifier
     #   python-dateutil
@@ -419,7 +420,7 @@ vine==5.0.0
     #   kombu
 virtualenv==20.24.3
     # via pre-commit
-watchdog==2.2.1
+watchdog==3.0.0
     # via -r local.in
 wcwidth==0.2.6
     # via

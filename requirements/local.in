@@ -30,4 +30,4 @@ django-debug-toolbar
 django-extensions
 django-coverage-plugin
 pytest-django
-watchdog<2.3
+watchdog
