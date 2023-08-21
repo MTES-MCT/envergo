@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+
+  <ul class="messagelist">
+    <li class="warning">Vous modifiez la configuration pour le département {{ original }}</li>
+  </ul>
+
+  {{ block.super }}
+{% endblock %}
