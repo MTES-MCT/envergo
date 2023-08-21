@@ -1,4 +1,5 @@
 django<=4.2
+urllib3<2
 django-environ
 django-model-utils
 django-allauth
@@ -23,3 +24,6 @@ django-braces
 shapely
 pyproj
 django-localflavor
+
+# See this link for the urllib3 version pin
+# https://github.com/boto/botocore/issues/2926
