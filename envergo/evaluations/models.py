@@ -267,18 +267,18 @@ class Evaluation(models.Model):
             if evalreq.send_eval_to_sponsor:
                 if result in ("interdit", "soumis"):
                     recipients = evalreq.project_sponsor_emails
-                    cc_recipients = [evalreq.contact_email]
+                    cc_recipients = evalreq.contact_emails
                     if config and config.ddtm_contact_email:
                         bcc_recipients = [config.ddtm_contact_email]
                 elif result == "action_requise":
                     recipients = evalreq.project_sponsor_emails
-                    cc_recipients = [evalreq.contact_email]
+                    cc_recipients = evalreq.contact_emails
                 else:
-                    recipients = [evalreq.contact_email]
+                    recipients = evalreq.contact_emails
                     cc_recipients = []
 
             else:
-                recipients = [evalreq.contact_email]
+                recipients = evalreq.contact_emails
                 cc_recipients = []
 
         else:

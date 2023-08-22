@@ -47,7 +47,7 @@ def post_request_to_notion(request_id, host):
 @app.task
 def confirm_request_to_requester(request_id, host):
     request = Request.objects.filter(id=request_id).first()
-    user_email = request.contact_email
+    user_emails = request.contact_emails
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
     file_upload_url = reverse("request_eval_wizard_step_3", args=[request.reference])
@@ -69,7 +69,7 @@ def confirm_request_to_requester(request_id, host):
         subject="[EnvErgo] Suspension temporaire des services EnvErgo jusqu'au 28 août",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user_email],
+        to=user_emails,
         bcc=[settings.DEFAULT_FROM_EMAIL],
     )
     email.attach_alternative(html_body, "text/html")
