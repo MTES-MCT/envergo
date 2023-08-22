@@ -321,7 +321,7 @@ class Criterion(models.Model):
 
     @property
     def unique_slug(self):
-        return f"{self.regulation.slug}_{self.slug}"
+        return f"{self.regulation.slug}__{self.slug}"
 
     def evaluate(self, moulinette, distance):
         self.moulinette = moulinette
