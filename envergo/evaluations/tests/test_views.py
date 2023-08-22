@@ -173,8 +173,12 @@ def test_dashboard_displays_empty_messages(user, client):
 
 
 def test_dashboard_lists_requests_and_evals(user, client):
-    RequestFactory.create_batch(7, contact_emails=[user.email])
-    EvaluationFactory.create_batch(11, contact_emails=[user.email])
+    RequestFactory.create_batch(
+        7, contact_emails=[user.email, "someoneelse@example.com"]
+    )
+    EvaluationFactory.create_batch(
+        11, contact_emails=[user.email, "someoneelse@example.com"]
+    )
 
     dashboard_url = reverse("dashboard")
     client.force_login(user)
