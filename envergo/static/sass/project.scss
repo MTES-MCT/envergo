@@ -15,6 +15,16 @@ html.nojs .js {
   display: none !important;
 }
 
+// Make sure the :target element is not hidden behind the sticky header
+// Note: not all pages have a sticky header, but fortunately, right now,
+// all pages with target links do.
+@media (min-width: 62em) {
+  html {
+    scroll-padding-top: 4rem;
+    /* height of sticky header */
+  }
+}
+
 /**
  * Useful components
  */
@@ -938,6 +948,7 @@ div.hero-alt {
     }
   }
 
+  // Makes the header stick at the top of the page
   &.header-sticky {
     position: sticky;
     top: 0px;
@@ -945,6 +956,8 @@ div.hero-alt {
 
   }
 
+  // Makes a new header show when the page is crolled down
+  // and the top header leaves the viewport
   &.header-popup {
     display: none;
 
