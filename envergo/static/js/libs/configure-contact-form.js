@@ -1,10 +1,10 @@
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
 
   var form = document.getElementById(FORM_ID);
   var contactSection = document.getElementById(CONTACT_SECTION_ID);
 
   var DISPLAY_FIELDS = {
-    instructor: ['contact_email', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
+    instructor: ['contact_emails', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
     petitioner: ['project_sponsor_emails', 'project_sponsor_phone_number'],
   };
 
@@ -30,15 +30,15 @@ window.addEventListener('load', function() {
     }
   };
 
-  var getUserType = function() {
+  var getUserType = function () {
     var input = form.querySelector('[name=user_type]:checked');
     return input.value;
   };
 
-  var toggleContactFields = function(userType) {
+  var toggleContactFields = function (userType) {
     var fieldsToDisplay = DISPLAY_FIELDS[userType];
     var allFieldsDivs = contactSection.querySelectorAll('div[id^=form-group-]')
-    allFieldsDivs.forEach(function(fieldDiv) {
+    allFieldsDivs.forEach(function (fieldDiv) {
       var divId = fieldDiv.id;
       var fieldName = divId.replace('form-group-', '');
       var fieldMustBeDisplayed = (fieldsToDisplay.indexOf(fieldName) >= 0);
@@ -50,10 +50,10 @@ window.addEventListener('load', function() {
     });
   };
 
-  var updateFieldLabels = function(userType) {
+  var updateFieldLabels = function (userType) {
     var fieldsSetup = FIELDS_SETUP[userType];
     var allFieldsDivs = contactSection.querySelectorAll('div[id^=form-group-]')
-    allFieldsDivs.forEach(function(fieldDiv) {
+    allFieldsDivs.forEach(function (fieldDiv) {
       var divId = fieldDiv.id;
       var fieldName = divId.replace('form-group-', '');
       var setup = fieldsSetup[fieldName];
@@ -69,7 +69,7 @@ window.addEventListener('load', function() {
     });
   };
 
-  var renderContactSection = function() {
+  var renderContactSection = function () {
     var userType = getUserType();
     toggleContactFields(userType);
     updateFieldLabels(userType);
