@@ -20,13 +20,13 @@ class Migration(migrations.Migration):
         ("moulinette", "0027_alter_perimeter_url"),
     ]
 
-    operations = [
-        migrations.RunSQL(
-            """
-            ALTER TABLE moulinette_perimeter
-            DROP IF EXISTS criterion
-            """,
-            migrations.RunSQL.noop,
-        ),
-        migrations.RunPython(create_initial_data, migrations.RunPython.noop),
-    ]
+    # operations = [
+    #     migrations.RunSQL(
+    #         """
+    #         ALTER TABLE moulinette_perimeter
+    #         DROP IF EXISTS criterion
+    #         """,
+    #         migrations.RunSQL.noop,
+    #     ),
+    #     migrations.RunPython(create_initial_data, migrations.RunPython.noop),
+    # ]
