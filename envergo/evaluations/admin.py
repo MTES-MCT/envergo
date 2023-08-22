@@ -116,7 +116,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         "has_moulinette_url",
         "application_number",
         "result",
-        "contact_email",
         "contact_emails",
         "request_link",
     ]
@@ -127,7 +126,6 @@ class EvaluationAdmin(admin.ModelAdmin):
     search_fields = [
         "reference",
         "application_number",
-        "contact_email",
         "contact_emails",
     ]
 
@@ -138,7 +136,6 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": (
                     "reference",
                     "moulinette_url",
-                    "contact_email",
                     "contact_emails",
                     "request",
                     "application_number",
@@ -296,7 +293,6 @@ class RequestAdmin(admin.ModelAdmin):
         "has_moulinette_url",
         "application_number",
         "user_type",
-        "contact_email",
         "contact_emails",
         "project_sponsor_phone_number",
         "evaluation_link",
@@ -313,7 +309,6 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = [
         "reference",
         "application_number",
-        "contact_email",
         "contact_emails",
     ]
     ordering = ["-created_at"]
@@ -340,7 +335,6 @@ class RequestAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user_type",
-                    "contact_email",
                     "contact_emails",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",

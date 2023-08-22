@@ -17,7 +17,7 @@ class EvaluationFactory(DjangoModelFactory):
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     result = "soumis"
-    contact_email = "instructor@example.org"
+    contact_emails = ["instructor@example.org"]
     contact_md = "envergo@example.org"
     contact_html = "envergo@example.org"
 
@@ -55,7 +55,7 @@ class RequestFactory(DjangoModelFactory):
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     project_description = factory.Faker("text")
     user_type = "instructor"
-    contact_email = "instructor@example.org"
+    contact_emails = ["instructor@example.org"]
     project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
     @factory.post_generation
