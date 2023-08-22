@@ -117,6 +117,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "result",
         "contact_email",
+        "contact_emails",
         "request_link",
     ]
     form = EvaluationAdminForm
@@ -127,6 +128,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "reference",
         "application_number",
         "contact_email",
+        "contact_emails",
     ]
 
     fieldsets = (
@@ -137,6 +139,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "reference",
                     "moulinette_url",
                     "contact_email",
+                    "contact_emails",
                     "request",
                     "application_number",
                     "evaluation_file",
@@ -294,6 +297,7 @@ class RequestAdmin(admin.ModelAdmin):
         "application_number",
         "user_type",
         "contact_email",
+        "contact_emails",
         "project_sponsor_phone_number",
         "evaluation_link",
     ]
@@ -306,7 +310,12 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_geojson",
     ]
     inlines = [ParcelInline, RequestFileInline]
-    search_fields = ["reference", "application_number", "contact_email"]
+    search_fields = [
+        "reference",
+        "application_number",
+        "contact_email",
+        "contact_emails",
+    ]
     ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "moulinette_url", "summary")}),
@@ -332,6 +341,7 @@ class RequestAdmin(admin.ModelAdmin):
                 "fields": (
                     "user_type",
                     "contact_email",
+                    "contact_emails",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
                     "send_eval_to_sponsor",

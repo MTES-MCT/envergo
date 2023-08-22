@@ -102,6 +102,8 @@ class Evaluation(models.Model):
         db_index=True,
     )
     contact_email = models.EmailField(_("E-mail"))
+    contact_emails = ArrayField(models.EmailField(), verbose_name=_("Contact e-mails"))
+
     request = models.OneToOneField(
         "evaluations.Request",
         verbose_name=_("Request"),
@@ -452,6 +454,9 @@ class Request(models.Model):
         verbose_name=_("Who are you?"),
     )
     contact_email = models.EmailField(_("E-mail"), blank=True)
+    contact_emails = ArrayField(
+        models.EmailField(), blank=True, default=list, verbose_name=_("Contact e-mails")
+    )
 
     # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
@@ -532,6 +537,7 @@ class Request(models.Model):
             reference=self.reference,
             moulinette_url=self.moulinette_url,
             contact_email=self.contact_email,
+            contact_emails=self.contact_emails,
             request=self,
             application_number=self.application_number,
             address=self.address,
