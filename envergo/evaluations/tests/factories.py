@@ -9,6 +9,7 @@ from envergo.geodata.tests.factories import ParcelFactory
 class EvaluationFactory(DjangoModelFactory):
     class Meta:
         model = Evaluation
+        skip_postgeneration_save = True
 
     application_number = factory.Sequence(lambda n: f"PC05112321D{n:04}")
     evaluation_file = factory.django.FileField(filename="eval.pdf", data=b"Hello")
@@ -48,6 +49,7 @@ class CriterionFactory(DjangoModelFactory):
 class RequestFactory(DjangoModelFactory):
     class Meta:
         model = Request
+        skip_postgeneration_save = True
 
     reference = factory.Sequence(lambda n: f"ABC{n:03}")
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
