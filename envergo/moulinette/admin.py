@@ -9,11 +9,15 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["get_regulation_display"]
+    list_display = ["get_regulation_display", "regulation_slug"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.order_by("weight")
+
+    @admin.display(description=_("Regulation slug"))
+    def regulation_slug(self, obj):
+        return obj.regulation
 
 
 class CriterionAdminForm(forms.ModelForm):
