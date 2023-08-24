@@ -101,7 +101,9 @@ class Evaluation(models.Model):
         unique=True,
         db_index=True,
     )
-    contact_emails = ArrayField(models.EmailField(), verbose_name=_("Contact e-mails"))
+    contact_emails = ArrayField(
+        models.EmailField(), verbose_name=_("Urbanism department email address(es)")
+    )
 
     request = models.OneToOneField(
         "evaluations.Request",
@@ -453,7 +455,10 @@ class Request(models.Model):
         verbose_name=_("Who are you?"),
     )
     contact_emails = ArrayField(
-        models.EmailField(), blank=True, default=list, verbose_name=_("Contact e-mails")
+        models.EmailField(),
+        blank=True,
+        default=list,
+        verbose_name=_("Urbanism department email address(es)"),
     )
 
     # TODO rename the inexact word "sponsor"
