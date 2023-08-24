@@ -88,7 +88,6 @@ class WizardContactForm(forms.ModelForm):
     contact_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Urbanism department email address(es)"),
-        help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_sponsor_emails = SimpleArrayField(
