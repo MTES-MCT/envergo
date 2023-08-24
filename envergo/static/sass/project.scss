@@ -249,11 +249,19 @@ nav#evaluation-summary {
 
     .fr-input-group--error {
 
+      &::before {
+        background-image: none;
+      }
+
       .fr-fieldset--error,
-      .fr-fieldset__legend,
-      .fr-label {
+      .fr-fieldset__legend {
         background-image: none;
         color: var(--text-default-grey);
+      }
+
+      .fr-label {
+        color: var(--text-default-grey);
+        --border-plain-error: var(--background-action-high-blue-france);
       }
 
       .fr-error-text {
