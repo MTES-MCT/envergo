@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
+from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
@@ -25,6 +26,12 @@ from envergo.moulinette.forms import MoulinetteForm
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
+    contact_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Urbanism department email address(es)"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+    )
     reference = forms.CharField(
         label=_("Reference"),
         help_text=_("If you select an existing request, this value will be replaced."),
@@ -278,9 +285,10 @@ class RequestFileInline(admin.TabularInline):
 class RequestAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
+            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
-            )
+            ),
         }
 
 
