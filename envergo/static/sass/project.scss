@@ -324,6 +324,22 @@ section.regulation {
     }
   }
 
+  .fr-accordion {
+    .fr-accordion__btn {
+      color: inherit;
+    }
+
+    .fr-accordion__btn[aria-expanded="true"] {
+      background-color: var(--hover-tint);
+      --hover: inherit;
+      --active: inherit;
+
+      &:hover {
+        background-color: var(--active-tint);
+      }
+    }
+  }
+
   .more.fr-collapse>*:first-child {
     margin-top: 1.5rem;
   }
