@@ -954,6 +954,14 @@ div.hero-alt {
     top: 0px;
     z-index: 2000;
 
+    .fr-btn {
+      // Dsfr style for this selector is weirdly specific
+      // So !important is necessary to override it
+      font-size: 0.875rem !important;
+      line-height: 1.5rem !important;
+      min-height: 2rem !important;
+      padding: 0.25rem 0.75rem !important;
+    }
   }
 
   // Makes a new header show when the page is crolled down

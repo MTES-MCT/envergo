@@ -27,24 +27,24 @@
 
       <div id="slim-menu" class="fr-header__tools">
         <div class="fr-header__tools-links">
-          <ul class="fr-links-group">
+          <ul class="fr-btns-group">
             <li>
-              <a class="fr-link" href="{% url 'moulinette_home' %}">Simulateur</a>
+              <a class="fr-btn" href="{% url 'moulinette_home' %}">Simulateur</a>
             </li>
             <li>
-              <a class="fr-link" href="{% url 'request_evaluation' %}">Évaluation manuelle</a>
+              <a class="fr-btn" href="{% url 'request_evaluation' %}">Évaluation manuelle</a>
             </li>
             <li>
-              <a class="fr-link" href="{% url 'faq' %}">Questions fréquentes</a>
+              <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
             </li>
 
             {% if user.is_authenticated %}
               <li>
-                <a class="fr-link fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
               </li>
             {% else %}
               <li>
-                <a class="fr-link fr-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
+                <a class="fr-btn fr-icon-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
               </li>
             {% endif %}
           </ul>
