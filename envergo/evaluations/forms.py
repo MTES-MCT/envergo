@@ -78,7 +78,6 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
 
 class WizardContactForm(forms.ModelForm):
-
     user_type = forms.ChoiceField(
         label="Vous êtes :",
         required=True,
@@ -86,8 +85,10 @@ class WizardContactForm(forms.ModelForm):
         initial=USER_TYPES.instructor,
         widget=forms.RadioSelect,
     )
-    contact_email = forms.EmailField(
-        label=_("Urbanism department email"), help_text=_("Project instructor…")
+    contact_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Urbanism department email address(es)"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_sponsor_emails = SimpleArrayField(
         forms.EmailField(),
@@ -111,13 +112,16 @@ class WizardContactForm(forms.ModelForm):
         model = Request
         fields = [
             "user_type",
-            "contact_email",
+            "contact_emails",
             "project_sponsor_emails",
             "send_eval_to_sponsor",
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["contact_emails"].widget.attrs["placeholder"] = _(
+            "Provide one or several addresses separated by commas « , »"
+        )
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
@@ -134,11 +138,11 @@ class WizardContactForm(forms.ModelForm):
         data = super().clean()
         user_type = data.get("user_type", None)
         if user_type == USER_TYPES.petitioner:
-            self.fields["contact_email"].required = False
-            if "contact_email" in self._errors:
-                del self._errors["contact_email"]
-            if "contact_email" in data:
-                del data["contact_email"]
+            self.fields["contact_emails"].required = False
+            if "contact_emails" in self._errors:
+                del self._errors["contact_emails"]
+            if "contact_emails" in data:
+                del data["contact_emails"]
 
         return data
 
@@ -168,7 +172,7 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "application_number",
             "project_description",
             "user_type",
-            "contact_email",
+            "contact_emails",
             "project_sponsor_emails",
             "project_sponsor_phone_number",
             "send_eval_to_sponsor",

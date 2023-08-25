@@ -101,7 +101,10 @@ class Evaluation(models.Model):
         unique=True,
         db_index=True,
     )
-    contact_email = models.EmailField(_("E-mail"))
+    contact_emails = ArrayField(
+        models.EmailField(), verbose_name=_("Urbanism department email address(es)")
+    )
+
     request = models.OneToOneField(
         "evaluations.Request",
         verbose_name=_("Request"),
@@ -266,18 +269,18 @@ class Evaluation(models.Model):
             if evalreq.send_eval_to_sponsor:
                 if result in ("interdit", "soumis"):
                     recipients = evalreq.project_sponsor_emails
-                    cc_recipients = [evalreq.contact_email]
+                    cc_recipients = evalreq.contact_emails
                     if config and config.ddtm_contact_email:
                         bcc_recipients = [config.ddtm_contact_email]
                 elif result == "action_requise":
                     recipients = evalreq.project_sponsor_emails
-                    cc_recipients = [evalreq.contact_email]
+                    cc_recipients = evalreq.contact_emails
                 else:
-                    recipients = [evalreq.contact_email]
+                    recipients = evalreq.contact_emails
                     cc_recipients = []
 
             else:
-                recipients = [evalreq.contact_email]
+                recipients = evalreq.contact_emails
                 cc_recipients = []
 
         else:
@@ -451,7 +454,12 @@ class Request(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_email = models.EmailField(_("E-mail"), blank=True)
+    contact_emails = ArrayField(
+        models.EmailField(),
+        blank=True,
+        default=list,
+        verbose_name=_("Urbanism department email address(es)"),
+    )
 
     # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
@@ -531,7 +539,7 @@ class Request(models.Model):
         evaluation = Evaluation.objects.create(
             reference=self.reference,
             moulinette_url=self.moulinette_url,
-            contact_email=self.contact_email,
+            contact_emails=self.contact_emails,
             request=self,
             application_number=self.application_number,
             address=self.address,

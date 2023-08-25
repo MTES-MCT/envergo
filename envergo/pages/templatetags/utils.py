@@ -43,3 +43,41 @@ def add_classes(field, classes):
     css_classes = field.field.widget.attrs.get("class", "").split(" ")
     all_classes = sorted(list(set(classes.split(" ")) | set(css_classes)))
     return field.as_widget(attrs={"class": " ".join(all_classes)})
+
+
+@register.inclusion_tag("admin/submit_line.html", takes_context=True)
+def envergo_submit_row(context):
+    """Custom submit line for admin edition templates.
+
+    We only display a single "save" button that do not leave the edit page
+    afterwards.
+    """
+    show_save = context.get("show_save", True)
+
+    add = context["add"]
+    change = context["change"]
+    is_popup = context["is_popup"]
+    show_save = context.get("show_save", True)
+    has_add_permission = context["has_add_permission"]
+    has_change_permission = context["has_change_permission"]
+    has_editable_inline_admin_formsets = context["has_editable_inline_admin_formsets"]
+    can_save = (
+        (has_change_permission and change)
+        or (has_add_permission and add)
+        or has_editable_inline_admin_formsets
+    )
+    can_change = has_change_permission or has_editable_inline_admin_formsets
+    context.update(
+        {
+            "can_change": can_change,
+            "show_save": show_save and can_save,
+            "show_close": not (show_save and can_save),
+            "show_delete_link": (
+                not is_popup
+                and context["has_delete_permission"]
+                and change
+                and context.get("show_delete", True)
+            ),
+        }
+    )
+    return context

@@ -6,6 +6,6 @@ Adresse : {{ request.address }}
 Numéro de demande de permis : {{ request.application_number }}
 Description : {{ request.project_description }}
 —
-E-mail du service d'urbanisme : {{ request.contact_email }}
+E-mail(s) du service d'urbanisme : {{ request.contact_emails|join:", " }}
 E-mail(s) du porteur : {{ request.project_sponsor_emails|join:", " }}
 Envoyer au porteur : {{ request.send_eval_to_sponsor|yesno:"Oui,Non" }}

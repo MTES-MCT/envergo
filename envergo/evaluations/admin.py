@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
+from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
@@ -25,6 +26,12 @@ from envergo.moulinette.forms import MoulinetteForm
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
+    contact_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Urbanism department email address(es)"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+    )
     reference = forms.CharField(
         label=_("Reference"),
         help_text=_("If you select an existing request, this value will be replaced."),
@@ -116,7 +123,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "has_moulinette_url",
         "application_number",
         "result",
-        "contact_email",
+        "contact_emails",
         "request_link",
     ]
     form = EvaluationAdminForm
@@ -126,7 +133,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     search_fields = [
         "reference",
         "application_number",
-        "contact_email",
+        "contact_emails",
     ]
 
     fieldsets = (
@@ -136,7 +143,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": (
                     "reference",
                     "moulinette_url",
-                    "contact_email",
+                    "contact_emails",
                     "request",
                     "application_number",
                     "evaluation_file",
@@ -278,9 +285,10 @@ class RequestFileInline(admin.TabularInline):
 class RequestAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
+            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
-            )
+            ),
         }
 
 
@@ -293,7 +301,7 @@ class RequestAdmin(admin.ModelAdmin):
         "has_moulinette_url",
         "application_number",
         "user_type",
-        "contact_email",
+        "contact_emails",
         "project_sponsor_phone_number",
         "evaluation_link",
     ]
@@ -306,7 +314,11 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_geojson",
     ]
     inlines = [ParcelInline, RequestFileInline]
-    search_fields = ["reference", "application_number", "contact_email"]
+    search_fields = [
+        "reference",
+        "application_number",
+        "contact_emails",
+    ]
     ordering = ["-created_at"]
     fieldsets = (
         (None, {"fields": ("reference", "moulinette_url", "summary")}),
@@ -331,7 +343,7 @@ class RequestAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user_type",
-                    "contact_email",
+                    "contact_emails",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
                     "send_eval_to_sponsor",

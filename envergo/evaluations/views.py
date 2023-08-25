@@ -260,7 +260,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
     def get_requests(self):
         user_email = self.request.user.email
         return (
-            Request.objects.filter(contact_email=user_email)
+            Request.objects.filter(contact_emails__contains=[user_email])
             .filter(evaluation__isnull=True)
             .order_by("-created_at")
         )
@@ -272,7 +272,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         invalid_evals = result_isnull & url_isnull
 
         evals = (
-            Evaluation.objects.filter(contact_email=user_email)
+            Evaluation.objects.filter(contact_emails__contains=[user_email])
             .exclude(invalid_evals)
             .order_by("-created_at")
         )
@@ -396,7 +396,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         # Special case, hackish
         # The product is often used for demo purpose. In that case, we don't
         # want to send confirmation emails or any other notifications.
-        if request.contact_email != settings.TEST_EMAIL:
+        if settings.TEST_EMAIL not in request.contact_emails:
             transaction.on_commit(confirm_request)
 
         log_event(

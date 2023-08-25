@@ -16,7 +16,7 @@ def form_data():
         "address": "Sunny side of the street",
         "created_surface": 20,
         "existing_surface": 42,
-        "contact_email": "test@example.org",
+        "contact_emails": ["test@example.org"],
         "contact_md": "Léotard Tiflette",
     }
 
@@ -39,7 +39,7 @@ def test_create_eval_from_request(client, admin_user, eval_request):
     assert eval.address == eval_request.address
     assert eval.created_surface == eval_request.created_surface
     assert eval.existing_surface == eval_request.existing_surface
-    assert eval.contact_email == eval_request.contact_email
+    assert eval.contact_emails == eval_request.contact_emails
 
 
 def test_create_eval_requires_a_single_request(client, admin_user):

@@ -9,6 +9,7 @@ from envergo.geodata.tests.factories import ParcelFactory
 class EvaluationFactory(DjangoModelFactory):
     class Meta:
         model = Evaluation
+        skip_postgeneration_save = True
 
     application_number = factory.Sequence(lambda n: f"PC05112321D{n:04}")
     evaluation_file = factory.django.FileField(filename="eval.pdf", data=b"Hello")
@@ -17,7 +18,7 @@ class EvaluationFactory(DjangoModelFactory):
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     result = "soumis"
-    contact_email = "instructor@example.org"
+    contact_emails = ["instructor@example.org"]
     contact_md = "envergo@example.org"
     contact_html = "envergo@example.org"
 
@@ -48,6 +49,7 @@ class CriterionFactory(DjangoModelFactory):
 class RequestFactory(DjangoModelFactory):
     class Meta:
         model = Request
+        skip_postgeneration_save = True
 
     reference = factory.Sequence(lambda n: f"ABC{n:03}")
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
@@ -55,7 +57,7 @@ class RequestFactory(DjangoModelFactory):
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
     project_description = factory.Faker("text")
     user_type = "instructor"
-    contact_email = "instructor@example.org"
+    contact_emails = ["instructor@example.org"]
     project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
     @factory.post_generation

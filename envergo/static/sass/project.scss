@@ -15,6 +15,16 @@ html.nojs .js {
   display: none !important;
 }
 
+// Make sure the :target element is not hidden behind the sticky header
+// Note: not all pages have a sticky header, but fortunately, right now,
+// all pages with target links do.
+@media (min-width: 62em) {
+  html {
+    scroll-padding-top: 4rem;
+    /* height of sticky header */
+  }
+}
+
 /**
  * Useful components
  */
@@ -239,11 +249,19 @@ nav#evaluation-summary {
 
     .fr-input-group--error {
 
+      &::before {
+        background-image: none;
+      }
+
       .fr-fieldset--error,
-      .fr-fieldset__legend,
-      .fr-label {
+      .fr-fieldset__legend {
         background-image: none;
         color: var(--text-default-grey);
+      }
+
+      .fr-label {
+        color: var(--text-default-grey);
+        --border-plain-error: var(--background-action-high-blue-france);
       }
 
       .fr-error-text {
@@ -302,6 +320,22 @@ section.regulation {
 
       li+li::before {
         content: ", ";
+      }
+    }
+  }
+
+  .fr-accordion {
+    .fr-accordion__btn {
+      color: inherit;
+    }
+
+    .fr-accordion__btn[aria-expanded="true"] {
+      background-color: var(--hover-tint);
+      --hover: inherit;
+      --active: inherit;
+
+      &:hover {
+        background-color: var(--active-tint);
       }
     }
   }
@@ -938,13 +972,24 @@ div.hero-alt {
     }
   }
 
+  // Makes the header stick at the top of the page
   &.header-sticky {
     position: sticky;
     top: 0px;
     z-index: 2000;
 
+    .fr-btn {
+      // Dsfr style for this selector is weirdly specific
+      // So !important is necessary to override it
+      font-size: 0.875rem !important;
+      line-height: 1.5rem !important;
+      min-height: 2rem !important;
+      padding: 0.25rem 0.75rem !important;
+    }
   }
 
+  // Makes a new header show when the page is crolled down
+  // and the top header leaves the viewport
   &.header-popup {
     display: none;
 
