@@ -58,10 +58,10 @@ def sidemenu_item(context, route, label):
 
 @register.simple_tag(takes_context=True)
 def evalreq_menu(context):
-    """Generate html for the "Demander une évaluation" collapsible menu."""
+    """Generate html for the "Services urbanisme" collapsible menu."""
 
     link_route = "request_evaluation"
-    link_label = "Demander une évaluation manuelle"
+    link_label = "Services urbanisme"
     subroutes = [
         "request_eval_wizard_step_1",
         "request_eval_wizard_step_2",
@@ -87,7 +87,7 @@ def faq_menu(context):
 
 @register.simple_tag(takes_context=True)
 def evaluation_menu(context):
-    """Generate html for the "Mes évaluations" collapsible menu."""
+    """Generate html for the "Mes avis réglementaires" collapsible menu."""
 
     try:
         current_route = context.request.resolver_match.url_name
@@ -95,7 +95,7 @@ def evaluation_menu(context):
         current_route = ""
 
     links = (
-        ("evaluation_search", "Retrouver une évaluation"),
+        ("evaluation_search", "Retrouver un avis"),
         ("dashboard", "Tableau de bord"),
     )
     links_html = [nav_link(url, label, url == current_route) for url, label in links]
@@ -110,7 +110,7 @@ def evaluation_menu(context):
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
     menu_html = f"""
         <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-evaluations" {aria_current}>
-            Mes évaluations
+            Mes avis réglementaires
         </button>
         <div class="fr-collapse fr-menu" id="menu-evaluations">
           <ul class="fr-menu__list">
