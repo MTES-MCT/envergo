@@ -50,7 +50,7 @@ def criterion_value(config, criterion, field):
     display the config value instead.
     """
     values = config.criteria_values
-    key = f"{criterion.slug}__{field}"
+    key = f"{criterion.unique_slug}__{field}"
     default = getattr(criterion, field, "")
     return mark_safe(values.get(key, default))
 

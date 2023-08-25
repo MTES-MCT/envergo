@@ -4,7 +4,7 @@
   <h4 class="fr-accordion__title">
     <button class="fr-accordion__btn"
             aria-expanded="false"
-            aria-controls="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
+            aria-controls="read-more-{{ criterion.unique_slug }}">
       {% result_tag criterion.result %}
       <span class="title">
         <strong>{{ criterion.title }}</strong>
@@ -17,8 +17,7 @@
 
   </h4>
 
-  <div class="fr-collapse"
-       id="read-more-{{ regulation.slug }}_{{ criterion.slug }}">
+  <div class="fr-collapse" id="read-more-{{ criterion.unique_slug }}">
     {% criterion_value config criterion 'header' as criterion_header %}
     {% if criterion_header %}<p class="fr-text--light fr-text--sm">{{ criterion_header }}</p>{% endif %}
     {% show_criterion_body regulation criterion %}
@@ -29,6 +28,6 @@
     {% endif %}
   </div>
 
-  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"_"|add:criterion.slug %}
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
 </div>
