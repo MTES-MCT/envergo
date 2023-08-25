@@ -147,8 +147,8 @@ class ZoneHumide44(ZoneHumide):
     choice_label = "Natura 2000 > 44 - Zone humide (obsolète)"
 
 
-class ZoneInondable44(CriterionEvaluator):
-    choice_label = "Natura 2000 > 44 - Zone inondable"
+class ZoneInondable(CriterionEvaluator):
+    choice_label = "Natura 2000 > Zone inondable"
 
     CODES = ["soumis", "non_soumis", "non_concerne"]
 
@@ -204,6 +204,10 @@ class ZoneInondable44(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
+
+
+class ZoneInondable44(ZoneInondable):
+    choice_label = "Natura 2000 > 44 - Zone inondable (obsolète)"
 
 
 class IOTA(CriterionEvaluator):
