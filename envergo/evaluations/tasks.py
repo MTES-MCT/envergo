@@ -66,7 +66,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Suspension temporaire des services EnvErgo jusqu'au 28 août",
+        subject="[EnvErgo] Votre demande d'évaluation manuelle",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=user_emails,
