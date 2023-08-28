@@ -250,7 +250,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         else:
             context = {
                 **self.admin_site.each_context(request),
-                "title": "Rappel réglementaire",
+                "title": "Avis réglementaire",
                 "subtitle": str(evaluation),
                 "object_id": object_id,
                 "evaluation": evaluation,

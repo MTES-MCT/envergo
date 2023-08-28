@@ -3,7 +3,7 @@
 
 {% endif %}Bonjour,
 
-Ceci est un rappel réglementaire du Ministère de la Transition Écologique.
+Ceci est un avis réglementaire du Ministère de la Transition Écologique.
 
 Nous avons eu connaissance du projet suivant :
 

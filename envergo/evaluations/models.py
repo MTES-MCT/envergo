@@ -292,7 +292,7 @@ class Evaluation(models.Model):
         if result == "non_soumis":
             subject = "Évaluation EnvErgo"
         else:
-            subject = "Rappel réglementaire Loi sur l'eau"
+            subject = "Avis réglementaire Loi sur l'eau"
 
         if self.address:
             subject += f" / {self.address}"
