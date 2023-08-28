@@ -124,7 +124,7 @@ msgstr "Référence"
 #: envergo/evaluations/admin.py:30
 msgid "If you select an existing request, this value will be replaced."
 msgstr ""
-"Si vous associez cette évaluation à une demande existante, cette valeur sera "
+"Si vous associez cet avis réglementaire à une demande existante, cette valeur sera "
 "synchronisée."
 
 #: envergo/evaluations/admin.py:36 envergo/evaluations/forms.py:17
@@ -333,7 +333,7 @@ msgstr "E-mails de contact"
 
 #: envergo/evaluations/models.py:109
 msgid "Does this evaluation answers to an existing request?"
-msgstr "Cette évaluation répond-elle à une demande existante ?"
+msgstr "Cet avis réglementaire répond-il à une demande existante ?"
 
 #: envergo/evaluations/models.py:121
 msgid "Evaluation file"
@@ -533,7 +533,7 @@ msgstr "Le format du numéro de dossier est invalide."
 
 #: envergo/evaluations/views.py:240
 msgid "We forwarded this evaluation to the specified emails."
-msgstr "Nous avons envoyé cette évaluation aux adresses spécifiées."
+msgstr "Nous avons envoyé cet avis réglementaire aux adresses spécifiées."
 
 #: envergo/evaluations/views.py:246
 msgid "we could not process your request. Please check for errors below."

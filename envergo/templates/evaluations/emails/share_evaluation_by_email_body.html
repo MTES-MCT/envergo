@@ -1,11 +1,11 @@
 {% extends 'emails/_base.html' %}
 
-{% block email_title %}Une évaluation Loi sur l'eau vous a été adressée{% endblock %}
+{% block email_title %}Un avis réglementaire vous a été adressé{% endblock %}
 
 {% block content %}
   <p>Bonjour,</p>
 
-  <p>Une évaluation Loi sur l'eau du service EnvErgo vous a été adressée par {{ sender_email }}.</p>
+  <p>Un avis réglementaire du service EnvErgo vous a été adressé par {{ sender_email }}.</p>
 
   <ul>
     <li>Adresse du projet : {{ address }}</li>
@@ -13,7 +13,7 @@
   </ul>
 
   <p>
-    <a href="{{ evaluation_url }}">L'évaluation est disponible à cette adresse.</a>
+    <a href="{{ evaluation_url }}">L'avis réglementaire est disponible à cette adresse.</a>
   </p>
 
   <p>Pour toute question, vous pouvez répondre directement à ce mail.</p>

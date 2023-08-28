@@ -156,8 +156,8 @@ class Evaluation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Evaluation")
-        verbose_name_plural = _("Evaluations")
+        verbose_name = _("Regulatory notice")
+        verbose_name_plural = _("Regulatory notices")
 
     def __str__(self):
         return self.reference

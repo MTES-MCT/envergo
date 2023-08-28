@@ -13,5 +13,5 @@
   - ni à évaluation environnementale au titre de la rubrique 39 (construction et aménagement).
   {% if rr_mention_md %}{{ rr_mention_md }}{% endif %}
 
-  Plus de détails sur cette évaluation :
+  Plus de détails sur cet avis réglementaire :
 {% endblock %}

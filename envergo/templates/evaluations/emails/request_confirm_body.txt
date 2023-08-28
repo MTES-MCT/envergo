@@ -1,6 +1,6 @@
 Bonjour,
 
-Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
+Nous avons bien enregistré votre demande d'avis réglementaire EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
 
 Vous recevrez une réponse dans les trois jours ouvrés.
 
@@ -12,7 +12,7 @@ Notre page d'information sur les réglementations environnementales est consulta
 
 {{ faq_url }}
 
-N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.
+N'hésitez pas à nous contacter pour toute question sur cette demande d'avis réglementaire ou sur EnvErgo.
 
 {{ contact_url }}
 

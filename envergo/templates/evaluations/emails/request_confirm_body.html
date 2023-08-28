@@ -1,12 +1,12 @@
 {% extends 'emails/_base.html' %}
 
-{% block email_title %}Votre demande d'évaluation manuelle{% endblock %}
+{% block email_title %}Votre demande d'avis réglementaire{% endblock %}
 
 {% block content %}
   <p>Bonjour,</p>
 
   <p>
-    Nous avons bien enregistré votre demande d'évaluation manuelle EnvErgo
+    Nous avons bien enregistré votre demande d'avis réglementaire EnvErgo
     {% if application_number %}(numéro de demande de permis : {{ application_number }}){% endif %}
     sous la référence {{ reference }}.
   </p>
@@ -23,7 +23,7 @@
     <a href="{{ faq_url }}">{{ faq_url }}</a>
   </p>
 
-  <p>N'hésitez pas à nous contacter pour toute question sur cette demande d'évaluation ou sur EnvErgo.</p>
+  <p>N'hésitez pas à nous contacter pour toute question sur cette demande d'avis réglementaire ou sur EnvErgo.</p>
 
   <p>
     <a href="{{ contact_url }}">{{ contact_url }}</a>

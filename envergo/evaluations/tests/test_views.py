@@ -18,7 +18,10 @@ def test_searching_inexisting_eval(client):
     assert res.status_code == 404
 
     content = res.content.decode("utf-8")
-    assert "l'évaluation EnvErgo n'est pas encore disponible pour ce projet" in content
+    assert (
+        "l'avis réglementaire correspondant à cette référence est introuvable"
+        in content
+    )
 
 
 def test_search_existing_eval(client, evaluation):

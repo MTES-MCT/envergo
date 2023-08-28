@@ -36,7 +36,7 @@ class FeedbackRespondForm(forms.Form):
 
     feedback = forms.ChoiceField(
         required=True,
-        label="Cette évaluation vous est-elle utile ?",
+        label="Cette simulation vous est-elle utile ?",
         choices=FEEDBACK_CHOICES,
     )
     moulinette_data = forms.JSONField(required=False, widget=forms.HiddenInput)
@@ -45,7 +45,7 @@ class FeedbackRespondForm(forms.Form):
 class FeedbackForm(forms.Form):
     feedback = forms.ChoiceField(
         required=True,
-        label="Cette évaluation vous est-elle utile ?",
+        label="Cette simulation vous est-elle utile ?",
         choices=FEEDBACK_CHOICES,
         widget=forms.HiddenInput,
     )

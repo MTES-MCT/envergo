@@ -444,7 +444,7 @@ class RequestAdmin(admin.ModelAdmin):
         else:
             return super().response_change(request, obj)
 
-    @admin.action(description=_("Create an evaluation from this request"))
+    @admin.action(description=_("Create a regulatory notice from this request"))
     def make_evaluation(self, request, queryset):
         """Create an evaluation matching an existing eval request."""
 
