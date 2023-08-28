@@ -34,7 +34,7 @@ class EvaluationSearchForm(forms.Form):
 
     reference = forms.CharField(
         label=_("EnvErgo reference"),
-        help_text=_("The value you received when you requested an evaluation."),
+        help_text=_("The value you received when you requested a regulatory notice."),
         max_length=64,
     )
 

@@ -1,22 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Retrouvez une évaluation Loi sur l'eau{% endblock %}
+{% block title %}Retrouvez un avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>EnvErgo</h1>
-  <p class="fr-text--lead">Retrouvez une évaluation Loi sur l'eau</p>
+  <h1>Retrouvez un avis réglementaire EnvErgo</h1>
 
-  <p>Saisissez votre référence EnvErgo pour accéder à l'évaluation personnalisée d'un projet.</p>
+  <p>Saisissez la référence de votre demande EnvErgo pour accéder à l'avis réglementaire concernant un projet.</p>
 
   <form method="post" action="" novalidate>
     {% csrf_token %}
     {% include '_form_snippet.html' with form=form %}
 
-    <button type="submit" class="fr-btn">Consulter l'évaluation</button>
+    <button type="submit" class="fr-btn">Consulter l'avis réglementaire</button>
 
     <p class="fr-mt-3w">
       Vous n'avez pas de référence EnvErgo ?
-      <a href="{% url 'home' %}">Demandez l'évaluation d'un projet.</a>
+      <a href="{% url 'home' %}">Demandez un avis réglementaire</a>
+      pour connaître les réglementations environnementales qui s'appliquent à
+      un projet de construction ou d'aménagement.
     </p>
   </form>
 
