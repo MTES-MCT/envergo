@@ -87,7 +87,7 @@
       {% endfor %}
 
       {% if additional_forms and moulinette.has_missing_data %}
-        <button type="submit" class="fr-btn">Compléter l'évaluation</button>
+        <button type="submit" class="fr-btn">Compléter la simulation</button>
       {% endif %}
 
     </div>
@@ -97,9 +97,9 @@
   <div class="hide-print">
     {% if additional_forms and moulinette.has_missing_data %}
     {% elif moulinette %}
-      <button type="submit" class="fr-btn">Renouveler l'évaluation</button>
+      <button type="submit" class="fr-btn">Renouveler lu simulation</button>
     {% else %}
-      <button type="submit" class="fr-btn">Démarrer l'évaluation</button>
+      <button type="submit" class="fr-btn">Démarrer la simulation</button>
     {% endif %}
   </div>
 </form>
