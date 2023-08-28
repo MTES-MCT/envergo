@@ -2,7 +2,7 @@
 
 {% load evaluations static %}
 
-{% block title %}Tableau de bord EnvErgo{% endblock %}
+{% block title %}Tableau de bord{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
@@ -17,7 +17,7 @@
           <a class="fr-breadcrumb__link" href="/">Accueil</a>
         </li>
         <li>
-          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Avis réglementaires</a>
         </li>
         <li>
           <a class="fr-breadcrumb__link" aria-current="page">Tableau de bord</a>
@@ -32,7 +32,7 @@
 
   <div class="fr-table fr-table--bordered">
     <table>
-      <caption>Vos demandes d'évaluations en attente</caption>
+      <caption>Vos demandes d'avis réglementaires en attente</caption>
       <thead>
         <tr>
           <th>Référence</th>
@@ -53,7 +53,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="5">Il n'y a aucune demande d'évaluation en attente pour l'instant</td>
+            <td colspan="5">Il n'y a aucune demande d'avis réglementaire en attente pour l'instant</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -63,7 +63,7 @@
 
   <div class="fr-table fr-table--bordered">
     <table>
-      <caption>Vos évaluations Loi sur l'eau disponibles</caption>
+      <caption>Vos avis réglementaires disponibles</caption>
       <thead>
         <tr>
           <th>Référence</th>
@@ -95,7 +95,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="6">Il n'y a aucune évaluation disponible pour l'instant</td>
+            <td colspan="6">Il n'y a aucun avis réglementaire disponible pour l'instant</td>
           </tr>
         {% endfor %}
       </tbody>
