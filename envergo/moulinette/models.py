@@ -535,6 +535,8 @@ class Moulinette:
         if hasattr(self.department, "moulinette_config"):
             self.catalog["config"] = self.department.moulinette_config
 
+        self.perimeters = self.get_perimeters()
+        self.criteria = self.get_criteria()
         self.regulations = self.get_regulations()
         self.evaluate()
 
@@ -606,9 +608,7 @@ class Moulinette:
 
         return catalog
 
-    def get_regulations(self):
-        """Find the activated regulations and their criteria."""
-
+    def get_criteria(self):
         coords = self.catalog["coords"]
 
         criteria = (
@@ -631,6 +631,10 @@ class Moulinette:
             .order_by("weight")
             .select_related("activation_map")
         )
+        return criteria
+
+    def get_perimeters(self):
+        coords = self.catalog["coords"]
 
         perimeters = (
             Perimeter.objects.filter(
@@ -652,11 +656,16 @@ class Moulinette:
             .select_related("activation_map")
         )
 
+        return perimeters
+
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
         regulations = (
             Regulation.objects.all()
             .order_by("weight")
-            .prefetch_related(Prefetch("criteria", queryset=criteria))
-            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+            .prefetch_related(Prefetch("criteria", queryset=self.criteria))
+            .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
         )
         return regulations
 
