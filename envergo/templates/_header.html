@@ -17,9 +17,7 @@
                     data-fr-opened="false"
                     aria-controls="modal-menu"
                     aria-haspopup="menu"
-                    title="Menu">
-              Menu
-            </button>
+                    title="Menu">Menu</button>
           </div>
         </div>
         <div class="fr-header__service">
@@ -36,10 +34,8 @@
 
       {% if user.is_authenticated %}
         {% include '_user_menu.html' %}
-
       {% else %}
         {% include '_anonymous_menu.html' %}
-
       {% endif %}
     </div>
   </div>
@@ -53,11 +49,8 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'moulinette_home' "Simulateur" %}</li>
-
         <li class="fr-nav__item">{% evalreq_menu %}</li>
-
         <li class="fr-nav__item">{% faq_menu %}</li>
-
         <li class="fr-nav__item">{% evaluation_menu %}</li>
       </ul>
     </nav>
