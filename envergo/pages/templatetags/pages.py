@@ -61,7 +61,7 @@ def evalreq_menu(context):
     """Generate html for the "Services urbanisme" collapsible menu."""
 
     link_route = "request_evaluation"
-    link_label = "Services urbanisme"
+    link_label = "📍 Services urbanisme"
     subroutes = [
         "request_eval_wizard_step_1",
         "request_eval_wizard_step_2",
