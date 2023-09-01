@@ -490,3 +490,29 @@ class RequestAdmin(admin.ModelAdmin):
 @admin.register(RequestFile)
 class RequestFileAdmin(admin.ModelAdmin):
     list_display = ["name", "file", "request"]
+
+
+class RegulatoryNoticeLogAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            "to": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "cc": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "bcc": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "moulinette_data": admin.widgets.AdminTextareaWidget(attrs={"rows": 6}),
+            "moulinette_result": admin.widgets.AdminTextareaWidget(attrs={"rows": 6}),
+        }
+
+
+@admin.register(RegulatoryNoticeLog)
+class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
+    list_display = ["sent_at", "evaluation", "sender", "subject"]
+    form = RegulatoryNoticeLogAdminForm
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
