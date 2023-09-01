@@ -24,6 +24,7 @@ auth_patterns = [
     path(
         _("password_reset/"),
         auth_views.PasswordResetView.as_view(
+            subject_template_name="emails/password_reset_subject.txt",
             email_template_name="emails/password_reset.txt",
             html_email_template_name="emails/password_reset.html",
         ),
