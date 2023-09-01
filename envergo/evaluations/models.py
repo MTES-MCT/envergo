@@ -581,3 +581,32 @@ class RequestFile(models.Model):
     class Meta:
         verbose_name = _("Request file")
         verbose_name_plural = _("Request files")
+
+
+class RegulatoryNoticeLog(models.Model):
+    """Store regulatory notice email logs."""
+
+    evaluation = models.ForeignKey(
+        "Evaluation",
+        verbose_name="Avis",
+        on_delete=models.PROTECT,
+        related_name="regulatory_notice_logs",
+    )
+    sender = models.ForeignKey(
+        "users.User", verbose_name=_("Sender"), on_delete=models.PROTECT
+    )
+    frm = models.EmailField(_("From"))
+    to = ArrayField(models.EmailField(), verbose_name=_("To"))
+    cc = ArrayField(models.EmailField(), verbose_name=_("Cc"))
+    bcc = ArrayField(models.EmailField(), verbose_name=_("Bcc"))
+    txt_body = models.CharField(_("Text body"))
+    html_body = models.CharField(_("Html body"))
+    subject = models.CharField(_("Subject"), max_length=1024)
+    sent_at = models.DateTimeField(_("Date sent"), default=timezone.now)
+    moulinette_data = models.JSONField(_("Moulinette data"), null=True, blank=True)
+    moulinette_result = models.JSONField(_("Moulinette result"), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Regulatory notice log")
+        verbose_name_plural = _("Regulatory notice logs")
+        ordering = ("-sent_at",)
