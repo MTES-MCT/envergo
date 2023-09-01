@@ -1,0 +1,108 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n static admin_urls %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% url 'admin:jsi18n' %}"></script>
+  <script src="{% static 'admin/js/collapse.js' %}"></script>
+  {{ media }}
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ evaluation|truncatewords:"18" }}</a>
+    › Événements d'envoi d'avis réglementaires
+  </div>
+{% endblock %}
+
+{% block content %}
+  <ul class="object-tools">
+    <li>
+      <a href="{% url 'admin:evaluations_evaluation_change' object_id %}"
+         class="">Revenir à l'événement d'envoi</a>
+    </li>
+  </ul>
+
+  {{ html_body|safe }}
+
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <fieldset class="module">
+      <ul class="rr-preview">
+        <li>
+          <strong>De :</strong>
+          {{ email.from_email }}
+        </li>
+        <li>
+          <strong>À :</strong>
+          {{ email.to|join:", " }}
+        </li>
+        <li>
+          <strong>Copie :</strong>
+          {{ email.cc|join:", " }}
+        </li>
+        <li>
+          <strong>Copie cachée :</strong>
+          {{ email.bcc|join:", " }}
+        </li>
+        <li style="font-size: 120%">
+          <strong>Objet :</strong>
+          {{ email.subject }}
+        </li>
+        <li>
+          <strong>Contenu (html) :</strong>
+          <div class="rr-content">
+            <iframe class="mail-content"
+                    width="800px"
+                    height="1200px"
+                    srcdoc="{{ email_html|safe|force_escape }}">
+            </iframe>
+          </div>
+        </li>
+      </ul>
+    </fieldset>
+
+    <fieldset class="module collapse">
+      <h2>Contenu texte</h2>
+      <ul class="rr-preview">
+        <li>
+          <strong>Contenu (txt) :</strong>
+          <div class="rr-content">
+            <iframe class="mail-content"
+                    width="800px"
+                    height="1200px"
+                    srcdoc="{{ email_txt|linebreaksbr }}">
+            </iframe>
+          </div>
+        </li>
+      </ul>
+    </fieldset>
+
+    <fieldset class="module collapse">
+      <h2>Templates</h2>
+      <ul class="rr-preview">
+        <li>
+          <strong>Gabarits : <a href="{{ github_prefix }}{{ html_mail_template }}">{{ html_mail_template }}</a> / <a href="{{ github_prefix }}{{ txt_mail_template }}">{{ txt_mail_template }}</a></strong>
+        </li>
+      </ul>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit"
+             value="Envoyer l'avis réglementaire par email"
+             class="default"
+             name="_save">
+    </div>
+  </form>
+
+{% endblock %}

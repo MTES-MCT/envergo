@@ -10,7 +10,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.html import linebreaks, mark_safe
+from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
@@ -506,6 +506,8 @@ class RegulatoryNoticeLogAdminForm(forms.ModelForm):
 @admin.register(RegulatoryNoticeLog)
 class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
     list_display = ["sent_at", "evaluation", "sender", "subject"]
+    exclude = ["html_body"]
+    readonly_fields = ["html_body_link"]
     form = RegulatoryNoticeLogAdminForm
 
     def has_change_permission(self, request, obj=None):
@@ -516,3 +518,38 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def html_body_link(self, obj):
+        url = reverse("admin:evaluations_regulatorynoticelog_mail_body", args=[obj.pk])
+        link = format_html('<a href="{}">Voir le corps du mail</a>', url)
+        return link
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/mail-body/",
+                self.admin_site.admin_view(self.mail_body),
+                name="evaluations_regulatorynoticelog_mail_body",
+            ),
+        ]
+        return custom_urls + urls
+
+    def mail_body(self, request, object_id):
+        log = self.get_object(request, unquote(object_id))
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Avis réglementaire",
+            "subtitle": "Corps du mail",
+            "object_id": object_id,
+            "object": log,
+            "html_body": log.html_body,
+            "media": self.media,
+            "opts": self.opts,
+        }
+
+        response = TemplateResponse(
+            request, "admin/evaluations/regulatorynoticelogs/mail_body.html", context
+        )
+
+        return response
