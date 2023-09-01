@@ -18,6 +18,7 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    RegulatoryNoticeLog,
     Request,
     RequestFile,
     generate_reference,
@@ -244,6 +245,19 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         if request.method == "POST":
             rr_email.send()
+            RegulatoryNoticeLog.objects.create(
+                evaluation=evaluation,
+                sender=request.user,
+                frm=rr_email.from_email,
+                to=rr_email.to,
+                cc=rr_email.cc,
+                bcc=rr_email.bcc,
+                subject=rr_email.subject,
+                txt_body=rr_email.body,
+                html_body=rr_email.alternatives[0][0],
+                moulinette_data=moulinette.raw_data,
+                moulinette_result=moulinette.result(),
+            )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
