@@ -389,7 +389,7 @@ class RequestAdmin(admin.ModelAdmin):
         link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
         return mark_safe(link)
 
-    @admin.display(description=_("Evaluation"), ordering="evaluation")
+    @admin.display(description="Avis", ordering="evaluation")
     def evaluation_link(self, obj):
         if not obj.evaluation:
             return ""

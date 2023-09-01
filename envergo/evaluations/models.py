@@ -91,7 +91,12 @@ EVAL_RESULTS = Choices(
 
 
 class Evaluation(models.Model):
-    """A single evaluation for a building permit application."""
+    """A single evaluation for a building permit application.
+
+    Note: the domaine technical name evolved from "évaluation" to "avis réglementaire",
+    often shortened in "avis".
+
+    """
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.CharField(
@@ -107,8 +112,8 @@ class Evaluation(models.Model):
 
     request = models.OneToOneField(
         "evaluations.Request",
-        verbose_name=_("Request"),
-        help_text=_("Does this evaluation answers to an existing request?"),
+        verbose_name="Demande associée",
+        help_text=_("Does this regulatory notice answers to an existing request?"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -156,8 +161,8 @@ class Evaluation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Regulatory notice")
-        verbose_name_plural = _("Regulatory notices")
+        verbose_name = "Avis"
+        verbose_name_plural = "Avis"
 
     def __str__(self):
         return self.reference

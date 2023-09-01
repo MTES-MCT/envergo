@@ -233,12 +233,12 @@ msgstr "Merci de sélectionner une et une seule demande pour cette action."
 #: envergo/evaluations/admin.py:460
 #, python-format
 msgid "There was an error creating your evaluation: %(error)s"
-msgstr "Une erreur a empêché la création de l'évaluation : %(error)s"
+msgstr "Une erreur a empêché la création de l'avis réglementaire : %(error)s"
 
 #: envergo/evaluations/admin.py:469
 #, python-format
 msgid "<a href=\"%(admin_url)s\">The new evaluation has been created.</a>"
-msgstr "<a href=\"%(admin_url)s\">La nouvelle évaluation a été créée.</a>"
+msgstr "<a href=\"%(admin_url)s\">Le nouvel avis réglementaire a été créée.</a>"
 
 #: envergo/evaluations/forms.py:36
 msgid "EnvErgo reference"
@@ -484,15 +484,15 @@ msgstr "Autres contacts"
 
 #: envergo/evaluations/models.py:483
 msgid "Evaluation request"
-msgstr "Demande d'évaluation"
+msgstr "Demande d'avis"
 
 #: envergo/evaluations/models.py:484
 msgid "Evaluation requests"
-msgstr "Demandes d'évaluation"
+msgstr "Demandes d'avis"
 
 #: envergo/evaluations/models.py:536
 msgid "There already is an evaluation associated with this request."
-msgstr "Cette demande est déjà associée avec une évaluation existante."
+msgstr "Cette demande est déjà associée avec un avis existant."
 
 #: envergo/evaluations/models.py:572 envergo/geodata/models.py:168
 msgid "File"
