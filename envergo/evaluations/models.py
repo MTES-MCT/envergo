@@ -224,7 +224,7 @@ class Evaluation(models.Model):
         return self.request and self.moulinette_url
 
     def get_regulatory_reminder_email(self, request):
-        """Generates a "rappel réglementaire" email for this evaluation.
+        """Generates a "avis réglementaire" email for this evaluation.
 
         The content of the email will vary depending on the evaluation result
         and the field values in the eval requset.
@@ -233,9 +233,7 @@ class Evaluation(models.Model):
         try:
             evalreq = self.request
         except Request.DoesNotExist:
-            raise ValueError(
-                "Impossible de générer un rappel reglementaire sans demande"
-            )
+            raise ValueError("Impossible de générer un avis reglementaire sans demande")
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
         result = moulinette.loi_sur_leau.result
@@ -290,7 +288,7 @@ class Evaluation(models.Model):
         bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
         if result == "non_soumis":
-            subject = "Évaluation EnvErgo"
+            subject = "Avis réglementaire EnvErgo"
         else:
             subject = "Avis réglementaire Loi sur l'eau"
 
