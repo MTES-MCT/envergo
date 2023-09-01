@@ -171,8 +171,8 @@ def test_dashboard_displays_empty_messages(user, client):
     res = client.get(dashboard_url)
 
     assert res.status_code == 200
-    assert "aucune demande d'évaluation en attente" in res.content.decode()
-    assert "aucune évaluation disponible pour l'instant" in res.content.decode()
+    assert "aucune demande d'avis réglementaire en attente" in res.content.decode()
+    assert "aucun avis réglementaire disponible pour l'instant" in res.content.decode()
 
 
 def test_dashboard_lists_requests_and_evals(user, client):
@@ -223,7 +223,7 @@ def test_share_evaluation_by_email_form_for_anonymous(client, evaluation, mailou
     res = client.get(url)
     content = res.content.decode()
 
-    assert "Partagez cette évaluation" in content
+    assert "Partagez cet avis réglementaire" in content
     assert (
         '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
         not in content
@@ -247,7 +247,7 @@ def test_share_evaluation_by_email_form(client, user, evaluation, mailoutbox):
     res = client.get(url)
     content = res.content.decode()
 
-    assert "Partagez cette évaluation" in content
+    assert "Partagez cet avis réglementaire" in content
     assert (
         '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
         in content

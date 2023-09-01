@@ -492,7 +492,7 @@ msgstr "Demandes d'avis"
 
 #: envergo/evaluations/models.py:536
 msgid "There already is an evaluation associated with this request."
-msgstr "Cette demande est déjà associée avec un avis existant."
+msgstr "Cette demande est déjà associée avec un avis réglementaire existant."
 
 #: envergo/evaluations/models.py:572 envergo/geodata/models.py:168
 msgid "File"
