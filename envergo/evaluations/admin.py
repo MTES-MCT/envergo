@@ -136,6 +136,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
+    readonly_fields = ["sent_history"]
 
     fieldsets = (
         (
@@ -168,6 +169,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         (
             _("Contact data"),
             {"fields": ("contact_md",)},
+        ),
+        (
+            _("Sent history"),
+            {"fields": ("sent_history",)},
         ),
     )
 
@@ -283,6 +288,17 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
 
         return response
+
+    def sent_history(self, obj):
+        logs = obj.regulatory_notice_logs.all()
+        content = render_to_string(
+            "admin/evaluations/sent_history_field.html",
+            {
+                "evaluation": obj,
+                "logs": logs,
+            },
+        )
+        return mark_safe(content)
 
 
 class ParcelInline(admin.TabularInline):

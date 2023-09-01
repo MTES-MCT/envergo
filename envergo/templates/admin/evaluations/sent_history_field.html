@@ -1,0 +1,24 @@
+
+{% if logs %}
+  <table>
+    <thead>
+      <tr>
+        <td></td>
+        <td>envoyé le</td>
+        <td>par</td>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for log in logs %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+          <td>{{ log.sender }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <span>Il n'y a pas d'envoi associés</span>
+{% endif %}
