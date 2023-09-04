@@ -91,7 +91,12 @@ EVAL_RESULTS = Choices(
 
 
 class Evaluation(models.Model):
-    """A single evaluation for a building permit application."""
+    """A single evaluation for a building permit application.
+
+    Note: the domaine technical name evolved from "évaluation" to "avis réglementaire",
+    often shortened in "avis".
+
+    """
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.CharField(
@@ -107,8 +112,8 @@ class Evaluation(models.Model):
 
     request = models.OneToOneField(
         "evaluations.Request",
-        verbose_name=_("Request"),
-        help_text=_("Does this evaluation answers to an existing request?"),
+        verbose_name="Demande associée",
+        help_text=_("Does this regulatory notice answers to an existing request?"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -156,8 +161,8 @@ class Evaluation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Evaluation")
-        verbose_name_plural = _("Evaluations")
+        verbose_name = "Avis"
+        verbose_name_plural = "Avis"
 
     def __str__(self):
         return self.reference
@@ -224,7 +229,7 @@ class Evaluation(models.Model):
         return self.request and self.moulinette_url
 
     def get_regulatory_reminder_email(self, request):
-        """Generates a "rappel réglementaire" email for this evaluation.
+        """Generates a "avis réglementaire" email for this evaluation.
 
         The content of the email will vary depending on the evaluation result
         and the field values in the eval requset.
@@ -233,9 +238,7 @@ class Evaluation(models.Model):
         try:
             evalreq = self.request
         except Request.DoesNotExist:
-            raise ValueError(
-                "Impossible de générer un rappel reglementaire sans demande"
-            )
+            raise ValueError("Impossible de générer un avis reglementaire sans demande")
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
         result = moulinette.loi_sur_leau.result
@@ -290,9 +293,9 @@ class Evaluation(models.Model):
         bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
         if result == "non_soumis":
-            subject = "Évaluation EnvErgo"
+            subject = "Avis réglementaire EnvErgo"
         else:
-            subject = "Rappel réglementaire Loi sur l'eau"
+            subject = "Avis réglementaire Loi sur l'eau"
 
         if self.address:
             subject += f" / {self.address}"

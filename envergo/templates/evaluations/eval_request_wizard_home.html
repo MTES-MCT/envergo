@@ -2,39 +2,52 @@
 
 {% load evaluations leaflet_tags static %}
 
-{% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
+{% block title %}Demander un avis réglementaire{% endblock %}
 
 {% block content %}
   <article>
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
 
-        <h1>Demander l’évaluation manuelle d’un projet</h1>
+        <h1>Demander un avis réglementaire sur un projet</h1>
 
-        <p class="fr-text--lead">
-          L'évaluation EnvErgo détermine si le projet de construction ou d’aménagement est soumis à la Loi sur l’eau, à Natura 2000, à évaluation environnementale ou au cas par cas.
+        <p class="fr-text--lead fr-mb-3w">
+          Vous êtes instructeur dans un service d'urbanisme ?
+          L'avis réglementaire EnvErgo vous permet de déterminer si un projet de
+          construction ou d'aménagement est soumis à une réglementation
+          environnementale.
         </p>
+
+        <ul class="fr-badge-group fr-mb-3w">
+          <li>
+            <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+          </li>
+          <li>
+            <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+          </li>
+          <li>
+            <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+          </li>
+        </ul>
 
         <p>
           <a class=" fr-btn fr-fi-arrow-right-line fr-btn--icon-left"
-             href="{% url 'request_eval_wizard_reset' %}">
-            Commencer la demande
-          </a>
+             href="{% url 'request_eval_wizard_reset' %}">Commencer la demande</a>
           <br />
           <small><i>Durée : 1 min 30</i></small>
         </p>
 
         <div class="alt hero-alt fr-py-3w fr-mb-5w">
-          <h2 class="fr-h3">Une évaluation manuelle, pour quoi faire ?</h2>
+          <h2 class="fr-h3">Pourquoi demander un avis réglementaire ?</h2>
           <ul class="roomy">
             <li>
-              <strong>Le projet est examiné manuellement par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique
+              <strong>Le projet est examiné par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique
             </li>
             <li>
-              <strong>L’évaluation est envoyée directement par EnvErgo au porteur de projet</strong>, ainsi informé de ses obligations réglementaires
+              <strong>Un avis réglementaire est envoyé directement au porteur de projet</strong>, ainsi informé de ses obligations réglementaires
             </li>
             <li>
-              <strong>L’équipe EnvErgo accompagne le porteur de projet dans la compréhension de l’évaluation</strong> et des démarches à engager
+              <strong>L’équipe EnvErgo accompagne le porteur de projet</strong> dans sa compréhension de l'avis et des démarches à engager
             </li>
           </ul>
         </div>
@@ -61,7 +74,7 @@
         <div class="fr-card fr-card--shadow fr-card--no-arrow">
           <div class="fr-card__body">
             <div class="fr-card__content">
-              <p class="fr-card__desc">2. Dans les trois jours, un membre de l’équipe EnvErgo réalise l’évaluation.</p>
+              <p class="fr-card__desc">2. Dans les trois jours, un membre de l’équipe EnvErgo examine le projet.</p>
             </div>
           </div>
         </div>
@@ -72,7 +85,7 @@
           <div class="fr-card__body">
             <div class="fr-card__content">
               <p class="fr-card__desc">
-                3. Si le projet est soumis à une réglementation environnementale, un rappel réglementaire est envoyé au porteur de projet.
+                3. Si le projet est soumis à une réglementation environnementale, un avis réglementaire est envoyé au porteur de projet.
               </p>
             </div>
           </div>
@@ -84,7 +97,7 @@
           <div class="fr-card__body">
             <div class="fr-card__content">
               <p class="fr-card__desc">
-                4. Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l’évaluation.
+                4. Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l'avis réglementaire.
               </p>
             </div>
           </div>
@@ -95,9 +108,7 @@
       <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
 
         <a class="fr-mt-4w fr-btn fr-fi-arrow-right-line fr-btn--icon-left"
-           href="{% url 'request_eval_wizard_reset' %}">
-          Commencer la demande
-        </a>
+           href="{% url 'request_eval_wizard_reset' %}">Commencer la demande</a>
         <br />
         <small><i>Durée : 1 min 30</i></small>
       </div>

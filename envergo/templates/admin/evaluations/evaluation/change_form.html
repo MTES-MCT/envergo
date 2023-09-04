@@ -4,7 +4,7 @@
   {% if original.can_send_regulatory_reminder %}
     <li>
       <a href="{% url 'admin:evaluations_evaluation_rr' original.pk %}"
-         class="">Envoyer un rappel réglementaire</a>
+         class="">Envoyer un avis réglementaire</a>
     </li>
   {% endif %}
   {{ block.super }}

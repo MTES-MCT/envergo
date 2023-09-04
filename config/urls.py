@@ -24,6 +24,7 @@ auth_patterns = [
     path(
         _("password_reset/"),
         auth_views.PasswordResetView.as_view(
+            subject_template_name="emails/password_reset_subject.txt",
             email_template_name="emails/password_reset.txt",
             html_email_template_name="emails/password_reset.html",
         ),
@@ -51,8 +52,9 @@ urlpatterns = [
     path("", include("envergo.pages.urls")),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
+    path("evaluations/", include("envergo.evaluations.redirect_urls")),
     path("évaluations/", include("envergo.evaluations.redirect_urls")),
-    path("evaluations/", include("envergo.evaluations.urls")),
+    path("avis/", include("envergo.evaluations.urls")),
     path(_("moulinette/"), include("envergo.moulinette.urls")),
     path(_("geo/"), include("envergo.geodata.urls")),
     path(_("analytics/"), include("envergo.analytics.urls")),

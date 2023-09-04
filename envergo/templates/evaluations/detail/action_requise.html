@@ -2,22 +2,20 @@
 
 {% load evaluations static %}
 
-{% block title %}Consultez l'évaluation pour votre projet{% endblock %}
+{% block title %}Consultez l'avis réglementaire pour votre projet{% endblock %}
 
 {% block breadcrumbs %}
   <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
     <button class="fr-breadcrumb__button"
             aria-expanded="false"
-            aria-controls="breadcrumb-1">
-      Voir le fil d'Ariane
-    </button>
+            aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
     <div class="fr-collapse" id="breadcrumb-1">
       <ol class="fr-breadcrumb__list">
         <li>
           <a class="fr-breadcrumb__link" href="/">Accueil</a>
         </li>
         <li>
-          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Évaluations</a>
+          <a class="fr-breadcrumb__link" href="{% url 'evaluation_search' %}">Avis réglementaires</a>
         </li>
         <li>
           <a class="fr-breadcrumb__link" aria-current="page">Référence {{ evaluation.reference }}</a>
@@ -123,9 +121,9 @@
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
 
-          <h2>Sur quels éléments cette évaluation se fonde-t-elle ?</h2>
+          <h2>Sur quels éléments cet avis réglementaire se fonde-t-elle ?</h2>
 
-          <p>Cette évaluation se fonde sur les informations suivantes :</p>
+          <p>Cet avis réglementaire se fonde sur les informations suivantes :</p>
 
           <ul>
             <li>

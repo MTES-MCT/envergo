@@ -2,4 +2,4 @@
 
 {{ origin_url|safe }}
 Adresse (géocodée) : {{ address }}
-Évaluation utile : {{ feedback }}
+Avis réglementaire utile : {{ feedback }}

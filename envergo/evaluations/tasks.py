@@ -66,7 +66,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'évaluation manuelle",
+        subject="[EnvErgo] Votre demande d'avis réglementaire",
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=user_emails,
@@ -80,7 +80,7 @@ def confirm_request_to_requester(request_id, host):
 def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
     user = User.objects.get(id=sender_id)
     evaluation = Evaluation.objects.get(reference=evaluation_reference)
-    subject = "[EnvErgo] Évaluation Loi sur l'eau"
+    subject = "[EnvErgo] Simulation réglementaire"
     url = reverse("evaluation_detail", args=[evaluation_reference])
     evaluation_url = f"https://{host}{url}?utm_medium=email"
 

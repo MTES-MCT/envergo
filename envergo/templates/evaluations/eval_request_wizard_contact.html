@@ -2,10 +2,10 @@
 
 {% load evaluations leaflet_tags static %}
 
-{% block title %}Demander l’évaluation manuelle d’un projet{% endblock %}
+{% block title %}Demander un avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>Demander l’évaluation manuelle d’un projet</h1>
+  <h1>Demander un avis réglementaire sur un projet</h1>
 
   <div class="fr-stepper">
     <h2 class="fr-stepper__title">
@@ -33,7 +33,7 @@
       {% include '_field_snippet.html' with field=form.contact_emails %}
 
       <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+        <p>Nous enverrons l'avis réglementaire à ces coordonnées.</p>
       </div>
 
       {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
@@ -44,7 +44,7 @@
 
     <button type="submit"
             class="fr-mt-6w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
-      Poursuivre votre demande d'évaluation
+      Poursuivre votre demande d'avis réglementaire
     </button>
 
   </form>

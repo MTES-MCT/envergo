@@ -5,9 +5,7 @@
   <select onchange="window.location=this.value">
     {% for choice in choices %}
       <option {% if choice.selected %}selected{% endif %}
-              value="{{ choice.query_string|iriencode }}">
-        {{ choice.display }}
-      </option>
+              value="{{ choice.query_string|iriencode }}">{{ choice.display }}</option>
     {% endfor %}
   </select>
 </div>

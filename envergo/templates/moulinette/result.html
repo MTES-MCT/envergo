@@ -24,7 +24,7 @@
     </div>
   {% endif %}
 
-  <h1 class="fr-mb-5w">Réglementations environnementales : évaluation personnalisée</h1>
+  <h1 class="fr-mb-5w">Simulation réglementaire du projet</h1>
 {% endblock %}
 
 {% block result %}
@@ -33,12 +33,10 @@
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
             data-fr-opened="false"
             aria-controls="share-modal"
-            data-btn="bottom">
-      Partager cette page par email
-    </button>
+            data-btn="bottom">Partager cette page par email</button>
   </div>
 
-  <h2 class="fr-h3">Résumé de l'évaluation</h2>
+  <h2 class="fr-h3">Réglementations environnementales</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
 
@@ -49,9 +47,7 @@
         <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill "
                 data-fr-opened="false"
                 aria-controls="share-modal"
-                data-btn="{{ regulation.slug }}">
-          Partager cette page par email
-        </button>
+                data-btn="{{ regulation.slug }}">Partager cette page par email</button>
       </div>
     {% endif %}
 
@@ -102,15 +98,13 @@
 {% endblock %}
 
 {% block bottom_alt %}
-  <h2>Besoin de partager cette évaluation à un contact ?</h2>
+  <h2>Besoin de partager cette simulation à un contact ?</h2>
 
   <p>
     <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
             data-fr-opened="false"
             aria-controls="share-modal"
-            data-btn="bottom">
-      Partager cette page par email
-    </button>
+            data-btn="bottom">Partager cette page par email</button>
   </p>
   <p>
     Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.
@@ -118,7 +112,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include 'moulinette/_share_modal.html' %}
+  {% include 'moulinette/_share_simulation_modal.html' %}
 
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal_useful.html' %}

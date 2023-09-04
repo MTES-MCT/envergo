@@ -4,7 +4,7 @@
 
 {% block result %}
 
-  <h1>Réglementations environnementales : évaluation personnalisée</h1>
+  <h1>Simulation réglementaire du projet</h1>
 
   <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
     <p class="fr-alert__title">Le simulateur EnvErgo n'est pas encore déployé dans votre département.</p>
@@ -23,13 +23,11 @@
   <a target="_blank"
      rel="noopener"
      class="fr-btn fr-mb-5w"
-     href="https://tally.so/r/nG6lko">
-    Signaler mon intérêt
-  </a>
+     href="https://tally.so/r/nG6lko">Signaler mon intérêt</a>
 
   <p>
-    ⏱ Vous pouvez également <a href="{% url 'request_evaluation' %}">demander une évaluation manuelle</a>
-    de votre projet, réalisée par l'équipe EnvErgo. Réponse en trois jours ouvrés.
+    ⏱ Vous pouvez également <a href="{% url 'request_evaluation' %}">demander un avis réglementaire</a>
+    sur votre projet, réalisé par l'équipe EnvErgo. Réponse en trois jours ouvrés.
   </p>
 
 {% endblock %}

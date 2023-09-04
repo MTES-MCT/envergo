@@ -2,10 +2,10 @@
 
 {% load evaluations leaflet_tags static %}
 
-{% block title %}Demandez une évaluation pour un projet{% endblock %}
+{% block title %}Demandez une avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>Demandez une évaluation pour un projet</h1>
+  <h1>Demandez un avis réglementaire pour un projet</h1>
 
   <p class="fr-text--lead">
     EnvErgo vous aide à déterminer si un projet de construction
@@ -13,7 +13,7 @@
   </p>
 
   <p>
-    Vous connaissez déjà votre référence EnvErgo ? <a href="{% url 'evaluation_search' %}">Retrouvez votre évaluation.</a>
+    Vous connaissez déjà votre référence EnvErgo ? <a href="{% url 'evaluation_search' %}">Retrouvez votre avis réglementaire.</a>
   </p>
 
   <form action=""
@@ -47,9 +47,7 @@
 
       <button type="button"
               id="btn-add-parcel"
-              class="fr-btn fr-btn--secondary fr-mt-3w">
-        Saisir une parcelle supplémentaire
-      </button>
+              class="fr-btn fr-btn--secondary fr-mt-3w">Saisir une parcelle supplémentaire</button>
 
     </fieldset>
 
@@ -57,7 +55,7 @@
       <legend class="fr-h2">Caractéristiques du projet</legend>
 
       <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Ces paramètres nous permettront de réaliser l'évaluation.</p>
+        <p>Ces paramètres nous permettront de réaliser l'avis réglementaire.</p>
       </div>
 
       {% include '_field_snippet.html' with field=form.created_surface %}
@@ -72,7 +70,7 @@
       <legend class="fr-h2">Informations de contact</legend>
 
       <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'évaluation à ces coordonnées.</p>
+        <p>Nous enverrons l'avis réglementaire à ces coordonnées.</p>
       </div>
 
       {% include '_field_snippet.html' with field=form.contact_emails %}
@@ -91,7 +89,7 @@
 
     <button type="submit"
             class="fr-mt-4w fr-btn fr-btn--lg fr-fi-checkbox-circle-line fr-btn--icon-left">
-      Envoyer votre demande d'évaluation
+      Envoyer votre demande d'avis réglementaire
     </button>
 
   </form>

@@ -20,7 +20,7 @@
     › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
     › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
     › <a href="{% url opts|admin_urlname:'change' evaluation.pk|admin_urlquote %}">{{ evaluation|truncatewords:"18" }}</a>
-    › Rappel réglementaire
+    › Avis réglementaire
   </div>
 {% endblock %}
 
@@ -28,7 +28,7 @@
   <ul class="object-tools">
     <li>
       <a href="{% url 'admin:evaluations_evaluation_change' object_id %}"
-         class="">Revenir à l'évaluation</a>
+         class="">Revenir à l'avis réglementaire</a>
     </li>
   </ul>
 
@@ -97,7 +97,7 @@
 
     <div class="submit-row">
       <input type="submit"
-             value="Envoyer le rappel réglementaire par email"
+             value="Envoyer l'avis réglementaire par email"
              class="default"
              name="_save">
     </div>

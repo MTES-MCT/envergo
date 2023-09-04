@@ -30,7 +30,7 @@ def test_create_eval_from_request(client, admin_user, eval_request):
     data = {"action": "make_evaluation", "_selected_action": eval_request.id}
 
     res = client.post(url, data=data, follow=True)
-    assert "La nouvelle évaluation a été créée" in res.content.decode()
+    assert "Le nouvel avis réglementaire a été créé" in res.content.decode()
     assert qs.count() == 1
 
     eval = qs[0]
@@ -69,7 +69,7 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
 
     res = client.post(url, data=data, follow=True)
     assert (
-        "Cette demande est déjà associée avec une évaluation existante"
+        "Cette demande est déjà associée avec un avis réglementaire existant"
         in res.content.decode()
     )
     assert qs.count() == 1

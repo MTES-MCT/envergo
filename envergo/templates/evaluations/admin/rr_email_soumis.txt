@@ -9,5 +9,5 @@ Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à l
 
 Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.
 
-Plus de détails sur cette évaluation et sur la procédure à suivre :
+Plus de détails sur cet avis réglementaire et sur la procédure à suivre :
 {% endblock %}

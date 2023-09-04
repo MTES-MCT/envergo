@@ -2,35 +2,52 @@
 
 {% load leaflet_tags static %}
 
-{% block title %}Demandez une évaluation pour un projet{% endblock %}
+{% block title %}Accueil{% endblock %}
 
 {% block result %}
 
-  <h1>Natura 2000, Loi sur l'eau… Évaluez à quelles réglementations votre projet de construction est soumis</h1>
+  <h1>À quelles réglementations environnementales votre projet de construction est-il soumis ?</h1>
 
-  <p>Un projet qui découvre qu'il est soumis à une procédure en plus du permis de construire, c'est jusqu'à :</p>
+  <p class="fr-text--lead fr-mb-3w">Simulation instantanée et gratuite</p>
 
-  <ul class="fr-mb-3w">
+  <ul class="fr-badge-group fr-mb-3w">
     <li>
-      <strong>6 mois de délai</strong> d'instruction supplémentaire ;
+      <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
     </li>
     <li>
-      des milliers d'€uros de <strong>coûts d'expertise</strong> non anticipés.
+      <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+    </li>
+    <li>
+      <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+    </li>
+  </ul>
+
+  <p>EnvErgo est un service public destiné aux acteurs de l'aménagement et de la construction.</p>
+
+  <p>Il permet de déterminer en quelques clics :</p>
+
+  <ul>
+    <li>
+      les <strong>réglementations environnementales</strong> auxquelles un projet est soumis : Loi sur l'eau, Natura 2000, étude d'impact ou cas par cas…
+    </li>
+    <li>
+      les <strong>études</strong> à mener, le cas échéant ;
+    </li>
+    <li>
+      et les <strong>procédures administratives</strong> à suivre, en plus du dépôt de permis de construire ou d'aménager.
     </li>
   </ul>
 
   <img src="{% static 'images/maison.svg' %}" alt="">
 
   <p>
-    Remplissez les informations du formulaire ci-contre pour évaluer votre
-    projet instantanément.
+    Remplissez les informations du formulaire ci-contre pour obtenir instantanément la simulation réglementaire d'un projet de construction ou d'aménagement.
   </p>
 
   <p>
     <em>
-      Vous pouvez <a href="{% url "request_evaluation" %}">
-      demander une évaluation réalisée manuellement par l'équipe
-      EnvErgo</a>. Réponse en trois jours ouvrés.
+      Vous pouvez <a href="{% url "request_evaluation" %}">demander un avis réglementaire</a> à l'équipe
+      EnvErgo du Ministère de la Transition Écologique. Réponse en trois jours ouvrés.
     </em>
   </p>
 

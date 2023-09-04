@@ -250,7 +250,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         else:
             context = {
                 **self.admin_site.each_context(request),
-                "title": "Rappel réglementaire",
+                "title": "Avis réglementaire",
                 "subtitle": str(evaluation),
                 "object_id": object_id,
                 "evaluation": evaluation,
@@ -389,7 +389,7 @@ class RequestAdmin(admin.ModelAdmin):
         link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
         return mark_safe(link)
 
-    @admin.display(description=_("Evaluation"), ordering="evaluation")
+    @admin.display(description="Avis", ordering="evaluation")
     def evaluation_link(self, obj):
         if not obj.evaluation:
             return ""
@@ -444,7 +444,7 @@ class RequestAdmin(admin.ModelAdmin):
         else:
             return super().response_change(request, obj)
 
-    @admin.action(description=_("Create an evaluation from this request"))
+    @admin.action(description=_("Create a regulatory notice from this request"))
     def make_evaluation(self, request, queryset):
         """Create an evaluation matching an existing eval request."""
 

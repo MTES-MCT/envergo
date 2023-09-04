@@ -15,9 +15,9 @@
       <li>Surface finale: {{ final_surface }} m²</li>
     </ul>
 
-    <h2>Périmètres et critères activés</h2>
+    <h2>Périmètres activés</h2>
 
-    {% regroup grouped_perimeters by map as map_list %}
+    {% regroup grouped_perimeters by activation_map as map_list %}
     {% for map in map_list %}
       <h3>
         {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}
@@ -43,11 +43,47 @@
         <dd>
           {{ map.list.0.activation_distance }} m
         </dd>
-        <dt>Critères :</dt>
+        <dt>Périmètres :</dt>
         <dd>
           <ul>
-            {% regroup map.list by criterion as criterion_list %}
-            {% for criterion in criterion_list %}<li>{{ criterion.grouper.choice_label }}</li>{% endfor %}
+            {% for perimeter in map.list %}<li>{{ perimeter }}</li>{% endfor %}
+          </ul>
+        </dd>
+      </dl>
+    {% endfor %}
+
+    <h2>Critères activés</h2>
+
+    {% regroup grouped_criteria by activation_map as map_list %}
+    {% for map in map_list %}
+      <h3>
+        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}
+        <br />
+        <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
+      </h3>
+
+      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+        <div class="ratio-content">
+          <div class="leaflet-container">
+            <div id="criterion-map-{{ forloop.counter0 }}"></div>
+          </div>
+        </div>
+      </div>
+
+      <dl class="fr-mb-5w">
+        <dt>Distance :</dt>
+        <dd>
+          {{ map.list.0.distance }}
+        </dd>
+
+        <dt>Distance d'activation</dt>
+        <dd>
+          {{ map.list.0.activation_distance }} m
+        </dd>
+        <dt>Critères:</dt>
+        <dd>
+          <ul>
+            {% for criterion in map.list %}<li>{{ criterion }}</li>{% endfor %}
           </ul>
         </dd>
       </dl>
@@ -122,12 +158,44 @@
     });
   </script>
 
-  {% regroup grouped_perimeters by map as map_list %}
+  {% regroup grouped_perimeters by activation_map as map_list %}
   {% for map in map_list %}
     <script>
       window.addEventListener('load', function() {
 
         var map = L.map('perimeter-map-{{ forloop.counter0 }}', {maxZoom: 21});
+        var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
+        var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 22,
+          maxNativeZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        }).addTo(map);
+
+        var coords = JSON.parse('{% to_geojson coords %}');
+        var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
+        coordsGeoJSON.addTo(map);
+
+        var polygon = JSON.parse('{% to_geojson map.list.0.geometry %}');
+        var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
+        polygonGeoJSON.addTo(map);
+
+        var bounds = L.latLngBounds();
+        bounds.extend(polygonGeoJSON.getBounds());
+        bounds.extend(coordsGeoJSON.getBounds());
+
+        map.fitBounds(bounds);
+      });
+    </script>
+  {% endfor %}
+
+  {% regroup grouped_criteria by activation_map as map_list %}
+  {% for map in map_list %}
+    <script>
+      window.addEventListener('load', function() {
+
+        var map = L.map('criterion-map-{{ forloop.counter0 }}', {maxZoom: 21});
         var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
         var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
 

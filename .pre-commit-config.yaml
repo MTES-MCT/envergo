@@ -28,7 +28,7 @@ repos:
         additional_dependencies: [flake8-isort]
 
   - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.28.0
+    rev: v1.32.1
     hooks:
       - id: djlint-reformat-django
       - id: djlint-django

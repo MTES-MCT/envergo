@@ -1,11 +1,11 @@
 Bonjour,
 
-Une évaluation Loi sur l'eau du service EnvErgo vous a été adressée par {{ sender_email }}.
+Un avis réglementaire du service EnvErgo vous a été adressé par {{ sender_email }}.
 
 Adresse du projet : {{ address }}
 {% if application_number %}N° de permis d'urbanisme : {{ application_number}}{% endif %}
 
-L'évaluation est disponible à cette adresse :
+L'avis réglementaire est disponible à cette adresse :
 
 {{ evaluation_url }}
 
