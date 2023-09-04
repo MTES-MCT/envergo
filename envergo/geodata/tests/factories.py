@@ -21,6 +21,19 @@ def generate_section():
 # https://stackoverflow.com/a/53570031/665797
 
 
+france_polygon = Polygon(
+    [
+        (2.239523057461999, 51.37848260569899),
+        (-5.437949095065911, 48.830042871275225),
+        (-2.020973593289057, 42.22052255703733),
+        (7.672371135600932, 42.3263119734425),
+        (9.759728555096416, 49.41947007260785),
+        (2.239523057461999, 51.37848260569899),
+    ]
+)
+france_multipolygon = MultiPolygon([france_polygon])
+
+
 class FuzzyPolygon(factory.fuzzy.BaseFuzzyAttribute):
     """Yields random polygon"""
 
@@ -74,11 +87,21 @@ class ParcelFactory(DjangoModelFactory):
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
+        skip_postgeneration_save = True
 
     name = factory_Faker("name")
-    # file = Faker("file", locale="fr")
     map_type = "zone_humide"
     description = "Lorem ipsum"
+
+    @factory.post_generation
+    def zones(obj, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            obj.zones.add(*extracted)
+        else:
+            ZoneFactory(map=obj)
 
 
 class ZoneFactory(DjangoModelFactory):
@@ -86,7 +109,7 @@ class ZoneFactory(DjangoModelFactory):
         model = Zone
 
     map = factory.SubFactory(MapFactory)
-    geometry = FuzzyMultiPolygon()
+    geometry = france_multipolygon
 
 
 class DepartmentFactory(DjangoModelFactory):

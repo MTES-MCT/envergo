@@ -3,8 +3,13 @@ from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
 from envergo.evaluations.admin import EvaluationAdmin
-from envergo.evaluations.models import Evaluation, generate_reference
+from envergo.evaluations.models import (
+    Evaluation,
+    RegulatoryNoticeLog,
+    generate_reference,
+)
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.moulinette.tests.factories import CriterionFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -129,3 +134,21 @@ def test_form_validation_contact_field_with_moulinette_url(form_data):
     del form_data["contact_md"]
     form = EvaluationForm(form_data)
     assert form.is_valid()
+
+
+def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
+    # Make sure the "loi sur l'eau" result will be set
+    CriterionFactory()
+
+    url = reverse("admin:evaluations_evaluation_rr", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    res = admin_client.post(url)
+    assert len(mailoutbox) == 1
+    assert RegulatoryNoticeLog.objects.count() == 1
+
+    log = RegulatoryNoticeLog.objects.first()
+    assert log.evaluation == evaluation

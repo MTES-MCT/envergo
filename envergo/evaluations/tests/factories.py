@@ -13,6 +13,7 @@ class EvaluationFactory(DjangoModelFactory):
 
     application_number = factory.Sequence(lambda n: f"PC05112321D{n:04}")
     evaluation_file = factory.django.FileField(filename="eval.pdf", data=b"Hello")
+    request = factory.SubFactory("envergo.evaluations.tests.factories.RequestFactory")
 
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
     created_surface = fuzzy.FuzzyInteger(25, 9999)
@@ -32,6 +33,11 @@ class EvaluationFactory(DjangoModelFactory):
                 self.criterions.add(criterion)
         else:
             self.criterions.add(CriterionFactory(evaluation=self))
+
+    @factory.lazy_attribute
+    def moulinette_url(self):
+        moulinette_url = f"http://envergo/?created_surface={self.created_surface}&existing_surface={self.existing_surface}&lng=-1.30933&lat=47.11971"  # noqa
+        return moulinette_url
 
 
 class CriterionFactory(DjangoModelFactory):
