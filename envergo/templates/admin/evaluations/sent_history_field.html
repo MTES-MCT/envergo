@@ -13,7 +13,11 @@
       {% for log in logs %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td>{{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+          <td>
+            <a href="{% url 'admin:evaluations_regulatorynoticelog_change' log.pk %}">
+              {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
+            </a>
+          </td>
           <td>{{ log.sender }}</td>
         </tr>
       {% endfor %}
