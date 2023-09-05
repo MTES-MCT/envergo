@@ -95,7 +95,7 @@ django==4.2
 django-allauth==0.54.0
     # via -r base.txt
 django-anymail[sendinblue]==10.1
-    # via -r production.in
+    # via -r base.txt
 django-appconf==1.0.5
     # via
     #   -r base.txt
