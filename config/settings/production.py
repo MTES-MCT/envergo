@@ -142,12 +142,14 @@ if IS_REVIEW_APP:
     EMAIL_PORT = env("DJANGO_REVIEW_APP_EMAIL_PORT")
 else:
     EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-    ANYMAIL = {
-        "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
-        "SENDINBLUE_API_URL": env(
-            "SENDINBLUE_API_URL", default="https://api.sendinblue.com/v3/"
-        ),
-    }
+
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
+    "SENDINBLUE_API_URL": env(
+        "SENDINBLUE_API_URL", default="https://api.sendinblue.com/v3/"
+    ),
+    "WEBHOOK_SECRET": env("SENDINBLUE_WEBHOOK_SECRET"),
+}
 
 # django-compressor
 # ------------------------------------------------------------------------------
