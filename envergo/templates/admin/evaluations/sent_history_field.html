@@ -4,8 +4,9 @@
     <thead>
       <tr>
         <td></td>
-        <td>envoyé le</td>
-        <td>par</td>
+        <td>Envoyé le</td>
+        <td>Par</td>
+        <td>Message</td>
       </tr>
     </thead>
     <tbody>
@@ -19,6 +20,9 @@
             </a>
           </td>
           <td>{{ log.sender }}</td>
+          <td>
+            <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.pk %}">Voir</a>
+          </td>
         </tr>
       {% endfor %}
     </tbody>
