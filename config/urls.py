@@ -9,7 +9,6 @@ from django.views import defaults as default_views
 
 # We redefine django auth patterns for better customization
 auth_patterns = [
-    path("anymail/", include("anymail.urls")),
     path(_("login/"), auth_views.LoginView.as_view(), name="login"),
     path(_("logout/"), auth_views.LogoutView.as_view(), name="logout"),
     path(
@@ -51,6 +50,7 @@ auth_patterns = [
 
 urlpatterns = [
     path("", include("envergo.pages.urls")),
+    path("anymail/", include("anymail.urls")),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
     path("evaluations/", include("envergo.evaluations.redirect_urls")),
