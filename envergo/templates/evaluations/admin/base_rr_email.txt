@@ -3,9 +3,9 @@
 
 {% endif %}Bonjour,
 
-Ceci est un avis réglementaire du Ministère de la Transition Écologique.
+{% block greetings %}Ceci est un avis réglementaire du Ministère de la Transition Écologique.
 
-Nous avons eu connaissance du projet suivant :
+Nous avons eu connaissance du projet suivant :{% endblock %}
 
 Adresse : {{ evaluation.address|default:"Non communiqué" }}
 {% if evaluation.application_number %}N° de demande de permis : {{ evaluation.application_number }}{% endif %}
