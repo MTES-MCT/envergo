@@ -615,7 +615,7 @@ class RegulatoryNoticeLog(models.Model):
 
 class MailLog(models.Model):
     regulatory_notice_log = models.ForeignKey(
-        RegulatoryNoticeLog, on_delete=models.CASCADE
+        RegulatoryNoticeLog, on_delete=models.CASCADE, related_name="mail_logs"
     )
     event = models.CharField(_("Event"), max_length=64)
     date = models.DateTimeField(_("Date"))

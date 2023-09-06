@@ -7,6 +7,7 @@
         <td>Envoyé le</td>
         <td>Par</td>
         <td>Message</td>
+        <td>Evts</td>
       </tr>
     </thead>
     <tbody>
@@ -22,6 +23,30 @@
           <td>{{ log.sender }}</td>
           <td>
             <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.pk %}">Voir</a>
+          </td>
+          <td>
+            {% if log.mail_logs.all %}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Évt</th>
+                    <th>Date</th>
+                    <th>À</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for event in log.mail_logs.all %}
+                    <tr>
+                      <td>{{ event.event }}</td>
+                      <td>{{ event.date|date:'SHORT_DATETIME_FORMAT' }}</td>
+                      <td>{{ event.recipient }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              Aucun événements
+            {% endif %}
           </td>
         </tr>
       {% endfor %}
