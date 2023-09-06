@@ -14,10 +14,9 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     logger.info(f"Received event {event.event_type} from {esp_name}")
 
     event_name = event.event_type
-    recipient = event.email
-    timestamp = event.ts
+    recipient = event.recipient
     message_id = event.message_id
-    subject = event.subject
+    timestamp = event.timestamp
     date = datetime.fromtimestamp(timestamp)
 
     logger.info(f"Found message id {message_id}")
@@ -35,5 +34,4 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         event=event_name,
         date=date,
         recipient=recipient,
-        subject=subject,
     )

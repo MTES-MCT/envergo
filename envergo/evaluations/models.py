@@ -620,7 +620,7 @@ class MailLog(models.Model):
     event = models.CharField(_("Event"), max_length=64)
     date = models.DateTimeField(_("Date"))
     recipient = models.EmailField(_("Recipient"))
-    subject = models.CharField(_("Subject"), max_length=1024)
+    subject = models.CharField(_("Subject"), max_length=1024, blank=True)
 
     class Meta:
         verbose_name = _("Mail log")
