@@ -611,3 +611,18 @@ class RegulatoryNoticeLog(models.Model):
         verbose_name = _("Regulatory notice log")
         verbose_name_plural = _("Regulatory notice logs")
         ordering = ("-sent_at",)
+
+
+class MailLog(models.Model):
+    regulatory_notice_log = models.ForeignKey(
+        RegulatoryNoticeLog, on_delete=models.CASCADE
+    )
+    event = models.CharField(_("Event"), max_length=64)
+    date = models.DateTimeField(_("Date"))
+    recipient = models.EmailField(_("Recipient"))
+    subject = models.CharField(_("Subject"), max_length=1024)
+
+    class Meta:
+        verbose_name = _("Mail log")
+        verbose_name_plural = _("Mail logs")
+        ordering = ("-date",)
