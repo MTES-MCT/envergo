@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
+    logger.info(f"Received event from {esp_name}: {dict(event)}")
+
     event_name = event["event"]
     recipient = event["email"]
     timestamp = event["ts"]
@@ -18,9 +20,11 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     subject = event["subject"]
     date = datetime.fromtimestamp(timestamp)
 
+    logger.info(f"Found message id {message_id}")
     try:
         regulatory_notice_log = RegulatoryNoticeLog.objects.get(message_id=message_id)
     except RegulatoryNoticeLog.DoesNotExist:
+        logger.warning(f"Could not find message id {message_id}")
         return
 
     logger.info(
