@@ -19,7 +19,6 @@ def event_data():
         "message-id": "201798300811.5787683@relay.domain.com",
         "ts_event": 1604933654,
         "subject": "My first Transactional",
-        "X-Mailin-custom": "some_custom_header",
         "sending_ip": "xxx.xxx.xxx.xxx",
         "ts_epoch": 1604933654,
         "template_id": 22,

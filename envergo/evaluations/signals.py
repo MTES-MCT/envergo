@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
-    logger.info(f"Received event from {esp_name}: {dict(event)}")
+    logger.info(f"Received event {event['event']} from {esp_name}")
 
     event_name = event["event"]
     recipient = event["email"]
