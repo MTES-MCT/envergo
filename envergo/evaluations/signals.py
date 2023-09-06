@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
-    logger.info(f"Received event {event['event']} from {esp_name}")
+    logger.info(f"Received event {event.event} from {esp_name}")
 
-    event_name = event["event"]
-    recipient = event["email"]
-    timestamp = event["ts"]
-    message_id = event["message-id"]
-    subject = event["subject"]
+    event_name = event.event
+    recipient = event.email
+    timestamp = event.ts
+    message_id = event.message_id
+    subject = event.subject
     date = datetime.fromtimestamp(timestamp)
 
     logger.info(f"Found message id {message_id}")
