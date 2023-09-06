@@ -262,6 +262,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 html_body=rr_email.alternatives[0][0],
                 moulinette_data=moulinette.raw_data,
                 moulinette_result=moulinette.result(),
+                message_id=rr_email.anymail_status.message_id,
             )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])

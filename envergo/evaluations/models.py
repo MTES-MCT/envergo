@@ -605,6 +605,7 @@ class RegulatoryNoticeLog(models.Model):
     sent_at = models.DateTimeField(_("Date sent"), default=timezone.now)
     moulinette_data = models.JSONField(_("Moulinette data"), null=True, blank=True)
     moulinette_result = models.JSONField(_("Moulinette result"), null=True, blank=True)
+    message_id = models.CharField(_("Message id"), max_length=1024, blank=True)
 
     class Meta:
         verbose_name = _("Regulatory notice log")
