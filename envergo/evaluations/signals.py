@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from anymail.signals import tracking
 from django.dispatch import receiver
@@ -17,7 +16,6 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     recipient = event.recipient
     message_id = event.message_id
     timestamp = event.timestamp
-    date = datetime.fromtimestamp(timestamp)
 
     logger.info(f"Found message id {message_id}")
     try:
@@ -32,6 +30,6 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     MailLog.objects.create(
         regulatory_notice_log=regulatory_notice_log,
         event=event_name,
-        date=date,
+        date=timestamp,
         recipient=recipient,
     )
