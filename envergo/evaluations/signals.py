@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def handle_mail_event(sender, event, esp_name, **kwargs):
     logger.info(f"Received event {event.event_type} from {esp_name}")
 
-    event_name = event.event
+    event_name = event.event_type
     recipient = event.email
     timestamp = event.ts
     message_id = event.message_id
