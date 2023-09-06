@@ -2,7 +2,12 @@ import factory
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 
-from envergo.evaluations.models import Criterion, Evaluation, Request
+from envergo.evaluations.models import (
+    Criterion,
+    Evaluation,
+    RegulatoryNoticeLog,
+    Request,
+)
 from envergo.geodata.tests.factories import ParcelFactory
 
 
@@ -76,3 +81,19 @@ class RequestFactory(DjangoModelFactory):
                 self.parcels.add(parcel)
         else:
             self.parcels.add(ParcelFactory())
+
+
+class RegulatoryNoticeLogFactory(DjangoModelFactory):
+    class Meta:
+        model = RegulatoryNoticeLog
+
+    evaluation = factory.SubFactory(EvaluationFactory)
+    sender = factory.SubFactory("envergo.users.tests.factories.UserFactory")
+    frm = "from@example.com"
+    to = ["to1@example.com", "to2@example.com"]
+    cc = ["cc1@example.com", "admin@envergo"]
+    bcc = []
+    txt_body = factory.Faker("text")
+    html_body = factory.Faker("text")
+    subject = "Email subject"
+    message_id = factory.Sequence(lambda n: f"message_{n}")
