@@ -18,6 +18,7 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    MailLog,
     RegulatoryNoticeLog,
     Request,
     RequestFile,
@@ -570,3 +571,8 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
+
+
+@admin.register(MailLog)
+class MailLogAdmin(admin.ModelAdmin):
+    list_display = ["regulatory_notice_log", "event", "date", "recipient"]
