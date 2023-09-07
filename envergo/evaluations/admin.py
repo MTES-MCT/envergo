@@ -523,7 +523,14 @@ class RegulatoryNoticeLogAdminForm(forms.ModelForm):
 
 @admin.register(RegulatoryNoticeLog)
 class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
-    list_display = ["sent_at", "evaluation", "sender", "subject"]
+    list_display = [
+        "sent_at",
+        "evaluation",
+        "sender",
+        "subject",
+        "last_opened",
+        "last_clicked",
+    ]
     exclude = ["html_body"]
     readonly_fields = ["html_body_link"]
     form = RegulatoryNoticeLogAdminForm

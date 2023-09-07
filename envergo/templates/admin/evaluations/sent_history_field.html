@@ -7,6 +7,8 @@
         <td>Envoyé le</td>
         <td>Par</td>
         <td>Message</td>
+        <td>Ouvertures</td>
+        <td>Clics</td>
         <td>Evts</td>
       </tr>
     </thead>
@@ -23,6 +25,14 @@
           <td>{{ log.sender }}</td>
           <td>
             <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.pk %}">Voir</a>
+          </td>
+          <td>
+            {{ log.nb_opened }}
+            {% if log.nb_opened > 0 %}({{ log.last_opened|date:'SHORT_DATETIME_FORMAT' }}){% endif %}
+          </td>
+          <td>
+            {{ log.nb_clicked }}
+            {% if log.nb_clicked > 0 %}({{ log.last_clicked|date:'SHORT_DATETIME_FORMAT' }}){% endif %}
           </td>
           <td>
             {% if log.mail_logs.all %}

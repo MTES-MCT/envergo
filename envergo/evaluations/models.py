@@ -610,11 +610,11 @@ class RegulatoryNoticeLog(models.Model):
     nb_opened = models.IntegerField(
         _("Number of times the email was opened"), default=0
     )
-    last_opened = models.DateTimeField(_("Last time the email was opened"), null=True)
+    last_opened = models.DateTimeField(_("Last opened at"), null=True)
     nb_clicked = models.IntegerField(
         _("Number of times the email was clicked"), default=0
     )
-    last_clicked = models.DateTimeField(_("Last time the email was clicked"), null=True)
+    last_clicked = models.DateTimeField(_("Last clicked at"), null=True)
 
     class Meta:
         verbose_name = _("Regulatory notice log")
