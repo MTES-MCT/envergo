@@ -8,8 +8,14 @@ from envergo.evaluations.models import (
     RegulatoryNoticeLog,
     generate_reference,
 )
-from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.evaluations.tests.factories import (
+    EvaluationFactory,
+    MailLogFactory,
+    RegulatoryNoticeLogFactory,
+    RequestFactory,
+)
 from envergo.moulinette.tests.factories import CriterionFactory
+from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -152,3 +158,31 @@ def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
 
     log = RegulatoryNoticeLog.objects.first()
     assert log.evaluation == evaluation
+
+
+def test_mail_log_query(admin_client, evaluation):
+    url = reverse("admin:evaluations_evaluation_change", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert "sent_history" in res.content.decode()
+    assert "sent_history_row" not in res.content.decode()
+
+    user = UserFactory()
+    log1 = RegulatoryNoticeLogFactory(evaluation=evaluation, sender=user)
+    RegulatoryNoticeLogFactory(evaluation=evaluation, sender=user)
+
+    MailLogFactory(regulatory_notice_log=log1, event="opened")
+    MailLogFactory(regulatory_notice_log=log1, event="opened")
+    MailLogFactory(regulatory_notice_log=log1, event="opened")
+
+    MailLogFactory(regulatory_notice_log=log1, event="clicked")
+    MailLogFactory(regulatory_notice_log=log1, event="clicked")
+    MailLogFactory(regulatory_notice_log=log1, event="clicked")
+    MailLogFactory(regulatory_notice_log=log1, event="clicked")
+
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "sent_history" in content
+    assert content.count("sent_history_row") == 1
+    assert content.count("sent_history_recipient_row") == 2

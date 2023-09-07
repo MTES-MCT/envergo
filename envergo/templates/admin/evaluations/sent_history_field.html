@@ -1,6 +1,6 @@
 
 {% if logs %}
-  <table>
+  <table id="sent_history">
     <thead>
       <tr>
         <td>Envoyé le</td>
@@ -14,7 +14,7 @@
       {% regroup logs by log_id as log_list %}
       {% for log_id, event_list in log_list %}
         {% with log=event_list.0 %}
-          <tr>
+          <tr class="sent_history_row">
             <td>
               <a href="{% url 'admin:evaluations_regulatorynoticelog_change' log_id %}">
                 {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
@@ -36,7 +36,7 @@
                 </thead>
                 <tbody>
                   {% for event in event_list %}
-                    <tr>
+                    <tr class="sent_history_recipient_row">
                       <td>{{ event.recipient }}</td>
                       <td>{{ event.event }}</td>
                       <td>{{ event.count }}</td>
