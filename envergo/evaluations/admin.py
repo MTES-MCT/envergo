@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
+from django.db.models import Count, F, Max
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -292,7 +293,29 @@ class EvaluationAdmin(admin.ModelAdmin):
         return response
 
     def sent_history(self, obj):
-        logs = obj.regulatory_notice_logs.all()
+        """Display ESP data about the sent regulatory notices.
+
+        One sent regulatory notice (from the admin) can generate several emails
+        because there are several recipients.
+
+        Hence, we fetch all events gathered from the ESP webhook (`MailLog` objects),
+        and group them by sent regulatory notice log first, then by recipient (email),
+        then by event (opened, clicked, etc.).
+
+        """
+        logs = (
+            MailLog.objects.order_by("regulatory_notice_log", "recipient", "event")
+            .values(
+                "recipient",
+                "event",
+                log_id=F("regulatory_notice_log__pk"),
+                sent_at=F("regulatory_notice_log__sent_at"),
+                sender=F("regulatory_notice_log__sender__name"),
+            )
+            .annotate(count=Count("event"))
+            .annotate(last_event=Max("date"))
+        )
+
         content = render_to_string(
             "admin/evaluations/sent_history_field.html",
             {
@@ -528,8 +551,6 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         "evaluation",
         "sender",
         "subject",
-        "last_opened",
-        "last_clicked",
     ]
     exclude = ["html_body"]
     readonly_fields = ["html_body_link"]
@@ -582,13 +603,19 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
 
 @admin.register(MailLog)
 class MailLogAdmin(admin.ModelAdmin):
-    list_display = ["regulatory_notice_log", "event", "date", "recipient"]
+    list_display = ["sent_at", "evaluation", "event", "date", "recipient"]
 
-    def has_change_permission(self, request, obj=None):
-        return False
+    @admin.display(
+        description=_("Evaluation"),
+        ordering="regulatory_notice_log__evaluation__reference",
+    )
+    def evaluation(self, obj):
+        return obj.regulatory_notice_log.evaluation.reference
 
-    def has_delete_permission(self, request, obj=None):
-        return False
+    @admin.display(description=_("Sent at"), ordering="regulatory_notice_log__sent_at")
+    def sent_at(self, obj):
+        return obj.regulatory_notice_log.sent_at
 
-    def has_add_permission(self, request):
-        return False
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("regulatory_notice_log__evaluation")

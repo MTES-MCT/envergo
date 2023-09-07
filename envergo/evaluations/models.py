@@ -607,14 +607,6 @@ class RegulatoryNoticeLog(models.Model):
     moulinette_data = models.JSONField(_("Moulinette data"), null=True, blank=True)
     moulinette_result = models.JSONField(_("Moulinette result"), null=True, blank=True)
     message_id = models.CharField(_("Message id"), max_length=1024, blank=True)
-    nb_opened = models.IntegerField(
-        _("Number of times the email was opened"), default=0
-    )
-    last_opened = models.DateTimeField(_("Last opened at"), null=True)
-    nb_clicked = models.IntegerField(
-        _("Number of times the email was clicked"), default=0
-    )
-    last_clicked = models.DateTimeField(_("Last clicked at"), null=True)
 
     class Meta:
         verbose_name = _("Regulatory notice log")

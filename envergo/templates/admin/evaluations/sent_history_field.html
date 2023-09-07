@@ -3,62 +3,51 @@
   <table>
     <thead>
       <tr>
-        <td></td>
         <td>Envoyé le</td>
         <td>Par</td>
         <td>Message</td>
-        <td>Ouvertures</td>
-        <td>Clics</td>
-        <td>Evts</td>
+        <td>Destinataires</td>
       </tr>
     </thead>
     <tbody>
 
-      {% for log in logs %}
-        <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>
-            <a href="{% url 'admin:evaluations_regulatorynoticelog_change' log.pk %}">
-              {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
-            </a>
-          </td>
-          <td>{{ log.sender }}</td>
-          <td>
-            <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.pk %}">Voir</a>
-          </td>
-          <td>
-            {{ log.nb_opened }}
-            {% if log.nb_opened > 0 %}({{ log.last_opened|date:'SHORT_DATETIME_FORMAT' }}){% endif %}
-          </td>
-          <td>
-            {{ log.nb_clicked }}
-            {% if log.nb_clicked > 0 %}({{ log.last_clicked|date:'SHORT_DATETIME_FORMAT' }}){% endif %}
-          </td>
-          <td>
-            {% if log.mail_logs.all %}
+      {% regroup logs by log_id as log_list %}
+      {% for log_id, event_list in log_list %}
+        {% with log=event_list.0 %}
+          <tr>
+            <td>
+              <a href="{% url 'admin:evaluations_regulatorynoticelog_change' log_id %}">
+                {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
+              </a>
+            </td>
+            <td>{{ log.sender }}</td>
+            <td>
+              <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log_id %}">Voir</a>
+            </td>
+            <td>
               <table>
                 <thead>
                   <tr>
-                    <th>Évt</th>
+                    <th>Destinataire</th>
+                    <th>Statut</th>
+                    <th>Nb</th>
                     <th>Date</th>
-                    <th>À</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for event in log.mail_logs.all %}
+                  {% for event in event_list %}
                     <tr>
-                      <td>{{ event.event }}</td>
-                      <td>{{ event.date|date:'SHORT_DATETIME_FORMAT' }}</td>
                       <td>{{ event.recipient }}</td>
+                      <td>{{ event.event }}</td>
+                      <td>{{ event.count }}</td>
+                      <td>{{ event.last_event|date:'SHORT_DATETIME_FORMAT' }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>
               </table>
-            {% else %}
-              Aucun événements
-            {% endif %}
-          </td>
-        </tr>
+            </td>
+          </tr>
+        {% endwith %}
       {% endfor %}
     </tbody>
   </table>
