@@ -10,14 +10,12 @@ logger = logging.getLogger(__name__)
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
-    logger.info(f"Received event {event.event_type} from {esp_name}")
-
     event_name = event.event_type
     recipient = event.recipient
     message_id = event.message_id
     timestamp = event.timestamp
 
-    logger.info(f"Found message id {message_id}")
+    logger.info(f"Received event {event.event_type} for message id {message_id}")
     try:
         regulatory_notice_log = RegulatoryNoticeLog.objects.get(message_id=message_id)
     except RegulatoryNoticeLog.DoesNotExist:
