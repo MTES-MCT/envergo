@@ -39,7 +39,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         recipient=recipient,
     )
 
-    status = RecipientStatus.objects.get_or_create(
+    status, _created = RecipientStatus.objects.get_or_create(
         regulatory_notice_log=regulatory_notice_log,
         recipient=recipient,
         defaults={"status": event_name, "latest_status": timestamp},
