@@ -19,7 +19,6 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
-    MailLog,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -298,11 +297,6 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         One sent regulatory notice (from the admin) can generate several emails
         because there are several recipients.
-
-        Hence, we fetch all events gathered from the ESP webhook (`MailLog` objects),
-        and group them by sent regulatory notice log first, then by recipient (email),
-        then by event (opened, clicked, etc.).
-
         """
         statuses = RecipientStatus.objects.order_by("recipient")
         logs = (
@@ -595,26 +589,6 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
-
-
-@admin.register(MailLog)
-class MailLogAdmin(admin.ModelAdmin):
-    list_display = ["sent_at", "evaluation", "event", "date", "recipient"]
-
-    @admin.display(
-        description=_("Evaluation"),
-        ordering="regulatory_notice_log__evaluation__reference",
-    )
-    def evaluation(self, obj):
-        return obj.regulatory_notice_log.evaluation.reference
-
-    @admin.display(description=_("Sent at"), ordering="regulatory_notice_log__sent_at")
-    def sent_at(self, obj):
-        return obj.regulatory_notice_log.sent_at
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.select_related("regulatory_notice_log__evaluation")
 
 
 @admin.register(RecipientStatus)

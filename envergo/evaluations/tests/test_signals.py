@@ -1,7 +1,7 @@
 import pytest
 from anymail.signals import tracking
 
-from envergo.evaluations.models import MailLog
+from envergo.evaluations.models import RecipientStatus
 from envergo.evaluations.tests.factories import RegulatoryNoticeLogFactory
 
 pytestmark = pytest.mark.django_db
@@ -27,17 +27,17 @@ def event_data():
 
 
 def test_webhook_event_catching(event_data):
-    log_qs = MailLog.objects.all()
-    assert log_qs.count() == 0
+    statuses_qs = RecipientStatus.objects.all()
+    assert statuses_qs.count() == 0
 
     message_id = "test_message_id"
     log = RegulatoryNoticeLogFactory(message_id=message_id)
     event_data["message-id"] = message_id
 
     tracking.send(sender=None, event=event_data, esp_name="sendinblue")
-    assert log_qs.count() == 1
+    assert statuses_qs.count() == 1
 
-    log_event = log_qs[0]
+    log_event = statuses_qs[0]
     assert log_event.event == event_data["event"]
     assert log_event.recipient == event_data["email"]
     assert log_event.regulatory_notice_log == log

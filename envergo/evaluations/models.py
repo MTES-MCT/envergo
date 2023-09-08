@@ -629,17 +629,3 @@ class RecipientStatus(models.Model):
     class Meta:
         verbose_name = _("Recipient status")
         verbose_name_plural = _("Recipient statuses")
-
-
-class MailLog(models.Model):
-    regulatory_notice_log = models.ForeignKey(
-        RegulatoryNoticeLog, on_delete=models.CASCADE, related_name="mail_logs"
-    )
-    event = models.CharField(_("Event"), max_length=64)
-    date = models.DateTimeField(_("Date"))
-    recipient = models.EmailField(_("Recipient"))
-
-    class Meta:
-        verbose_name = _("Mail log")
-        verbose_name_plural = _("Mail logs")
-        ordering = ("-date",)

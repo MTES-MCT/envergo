@@ -4,7 +4,7 @@ from anymail.signals import tracking
 from django.db.models import F
 from django.dispatch import receiver
 
-from envergo.evaluations.models import MailLog, RecipientStatus, RegulatoryNoticeLog
+from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +32,6 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     logger.info(
         f"Received event {event_name} for {recipient} on notice {regulatory_notice_log.pk}"
     )
-    MailLog.objects.create(
-        regulatory_notice_log=regulatory_notice_log,
-        event=event_name,
-        date=timestamp,
-        recipient=recipient,
-    )
-
     status, _created = RecipientStatus.objects.get_or_create(
         regulatory_notice_log=regulatory_notice_log,
         recipient=recipient,

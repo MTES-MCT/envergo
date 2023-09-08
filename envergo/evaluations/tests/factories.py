@@ -5,7 +5,6 @@ from factory.django import DjangoModelFactory
 from envergo.evaluations.models import (
     Criterion,
     Evaluation,
-    MailLog,
     RegulatoryNoticeLog,
     Request,
 )
@@ -98,13 +97,3 @@ class RegulatoryNoticeLogFactory(DjangoModelFactory):
     html_body = factory.Faker("text")
     subject = "Email subject"
     message_id = factory.Sequence(lambda n: f"message_{n}")
-
-
-class MailLogFactory(DjangoModelFactory):
-    class Meta:
-        model = MailLog
-
-    regulatory_notice_log = factory.SubFactory(RegulatoryNoticeLogFactory)
-    event = "opened"
-    date = factory.Faker("date_time")
-    recipient = "recipient@example.com"
