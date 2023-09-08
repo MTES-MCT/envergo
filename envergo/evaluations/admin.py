@@ -304,7 +304,8 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         """
         logs = (
-            MailLog.objects.order_by("regulatory_notice_log", "recipient", "event")
+            MailLog.objects.filter(regulatory_notice_log__evaluation=obj)
+            .order_by("regulatory_notice_log", "recipient", "event")
             .values(
                 "recipient",
                 "event",
