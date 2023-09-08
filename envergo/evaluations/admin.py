@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
+from django.db.models import Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -303,11 +304,12 @@ class EvaluationAdmin(admin.ModelAdmin):
         then by event (opened, clicked, etc.).
 
         """
+        statuses = RecipientStatus.objects.order_by("recipient")
         logs = (
             RegulatoryNoticeLog.objects.filter(evaluation=obj)
             .order_by("-sent_at")
             .select_related("sender")
-            .prefetch_related("recipient_statuses")
+            .prefetch_related(Prefetch("recipient_statuses", queryset=statuses))
         )
 
         content = render_to_string(
