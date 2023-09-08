@@ -242,6 +242,13 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
             return response
 
+        # We need to store the message id from the esp, but in local dev or testing,
+        # there is no such sing.
+        try:
+            message_id = rr_email.anymail_status.message_id
+        except AttributeError:
+            message_id = ""
+
         moulinette = evaluation.get_moulinette()
         txt_mail_template = (
             f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
@@ -264,7 +271,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 html_body=rr_email.alternatives[0][0],
                 moulinette_data=moulinette.raw_data,
                 moulinette_result=moulinette.result(),
-                message_id=rr_email.anymail_status.message_id,
+                message_id=message_id,
             )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
