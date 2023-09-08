@@ -9,9 +9,18 @@ from envergo.evaluations.models import MailLog, RegulatoryNoticeLog
 logger = logging.getLogger(__name__)
 
 
+# Those are the only events we want to track
+# Note: those events name are normalized by anymail
+# See https://anymail.dev/en/stable/sending/tracking/#event-tracking
+TRACKED_EVENTS = ("opened", "clicked")
+
+
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
     event_name = event.event_type
+    if event_name not in TRACKED_EVENTS:
+        return
+
     recipient = event.recipient
     message_id = event.message_id
     timestamp = event.timestamp
