@@ -4,7 +4,7 @@ from anymail.signals import tracking
 from django.db.models import F
 from django.dispatch import receiver
 
-from envergo.evaluations.models import MailLog, RegulatoryNoticeLog
+from envergo.evaluations.models import MailLog, RecipientStatus, RegulatoryNoticeLog
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +18,6 @@ TRACKED_EVENTS = ("opened", "clicked")
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
     event_name = event.event_type
-    if event_name not in TRACKED_EVENTS:
-        return
-
     recipient = event.recipient
     message_id = event.message_id
     timestamp = event.timestamp
@@ -42,11 +39,20 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         recipient=recipient,
     )
 
+    status = RecipientStatus.objects.get_or_create(
+        regulatory_notice_log=regulatory_notice_log,
+        recipient=recipient,
+        defaults={"status": event_name, "latest_status": timestamp},
+    )
+    if status.latest_status < timestamp:
+        status.status = event_name
+        status.latest_status = timestamp
+
     if event_name == "opened":
-        regulatory_notice_log.nb_opened = F("nb_opened") + 1
-        regulatory_notice_log.last_opened = timestamp
-        regulatory_notice_log.save()
+        status.nb_opened = F("nb_opened") + 1
+        status.latest_opened = timestamp
     elif event_name == "clicked":
-        regulatory_notice_log.nb_clicked = F("nb_clicked") + 1
-        regulatory_notice_log.last_clicked = timestamp
-        regulatory_notice_log.save()
+        status.nb_clicked = F("nb_clicked") + 1
+        status.latest_clicked = timestamp
+
+    status.save()

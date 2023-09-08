@@ -6,7 +6,6 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
-from django.db.models import Count, F, Max
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -20,6 +19,7 @@ from envergo.evaluations.models import (
     Criterion,
     Evaluation,
     MailLog,
+    RecipientStatus,
     RegulatoryNoticeLog,
     Request,
     RequestFile,
@@ -304,17 +304,10 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         """
         logs = (
-            MailLog.objects.filter(regulatory_notice_log__evaluation=obj)
-            .order_by("regulatory_notice_log", "recipient", "event")
-            .values(
-                "recipient",
-                "event",
-                log_id=F("regulatory_notice_log__pk"),
-                sent_at=F("regulatory_notice_log__sent_at"),
-                sender=F("regulatory_notice_log__sender__name"),
-            )
-            .annotate(count=Count("event"))
-            .annotate(last_event=Max("date"))
+            RegulatoryNoticeLog.objects.filter(evaluation=obj)
+            .order_by("-sent_at")
+            .select_related("sender")
+            .prefetch_related("recipient_statuses")
         )
 
         content = render_to_string(
@@ -620,3 +613,17 @@ class MailLogAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related("regulatory_notice_log__evaluation")
+
+
+@admin.register(RecipientStatus)
+class RecipientStatusAdmin(admin.ModelAdmin):
+    list_display = [
+        "regulatory_notice_log",
+        "recipient",
+        "status",
+        "latest_status",
+        "nb_opened",
+        "latest_opened",
+        "nb_clicked",
+        "latest_clicked",
+    ]
