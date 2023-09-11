@@ -26,6 +26,7 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.moulinette.forms import MoulinetteForm
+from envergo.utils.crisp import create_contacts
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
@@ -273,6 +274,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 moulinette_result=moulinette.result(),
                 message_id=message_id,
             )
+            create_contacts(rr_email.to + rr_email.cc)
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
