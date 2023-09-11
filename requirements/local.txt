@@ -80,6 +80,8 @@ coverage==7.3.0
     # via
     #   -r local.in
     #   django-coverage-plugin
+crisp-api==1.1.18
+    # via -r base.txt
 cryptography==41.0.3
     # via
     #   -r base.txt
@@ -358,6 +360,7 @@ regex==2023.8.8
 requests==2.31.0
     # via
     #   -r base.txt
+    #   crisp-api
     #   django-allauth
     #   django-anymail
     #   requests-oauthlib
