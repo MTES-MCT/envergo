@@ -290,8 +290,7 @@ class Evaluation(models.Model):
             recipients = evalreq.project_sponsor_emails
             cc_recipients = []
 
-        # TODO: uncomment this later
-        # bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
+        bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
         if result == "non_soumis":
             subject = "Avis réglementaire EnvErgo"
