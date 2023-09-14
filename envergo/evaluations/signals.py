@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # E.g if a message is already "clicked", and later the recipient
 # opens it again and we receive an "opened" event, we want the status
 # to stay "clicked"
-TRACKED_EVENTS = ["sent", "delivered", "opened", "clicked"]
+TRACKED_EVENTS = ["queued", "delivered", "opened", "clicked"]
 
 
 @receiver(tracking)
@@ -44,8 +44,8 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     )
 
     status_index = TRACKED_EVENTS.index(event_name)
-    latest_status_index = TRACKED_EVENTS.index(status.latest_status)
-    if status_index > latest_status_index:
+    current_status_index = TRACKED_EVENTS.index(status.status)
+    if status_index > current_status_index:
         status.status = event_name
         status.latest_status = timestamp
 
