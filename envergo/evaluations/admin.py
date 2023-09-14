@@ -582,8 +582,8 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         log = self.get_object(request, unquote(object_id))
         context = {
             **self.admin_site.each_context(request),
-            "title": "Avis réglementaire",
-            "subtitle": "Corps du mail",
+            "title": "Événement d'envoi d'avis réglementaire",
+            "subtitle": "Détail de l'e-mail envoyé",
             "object_id": object_id,
             "object": log,
             "log": log,
