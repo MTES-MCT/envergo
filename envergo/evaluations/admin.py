@@ -245,15 +245,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
             return response
 
-        # We need to store the message id from the esp, but in local dev or testing,
-        # there is no such sing.
-        try:
-            message_id = rr_email.anymail_status.message_id
-            logger.info(f"Envoi avis réglementaire, message id: {message_id}")
-        except AttributeError as e:
-            logger.warning(f"Impossible de récupérer le message id: {e}")
-            message_id = ""
-
         moulinette = evaluation.get_moulinette()
         txt_mail_template = (
             f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
@@ -264,6 +255,14 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         if request.method == "POST":
             rr_email.send()
+            # We need to store the message id from the esp, but in local dev or testing,
+            # there is no such sing.
+            try:
+                message_id = rr_email.anymail_status.message_id
+                logger.info(f"Envoi avis réglementaire, message id: {message_id}")
+            except AttributeError as e:
+                logger.warning(f"Impossible de récupérer le message id: {e}")
+                message_id = ""
             RegulatoryNoticeLog.objects.create(
                 evaluation=evaluation,
                 sender=request.user,
