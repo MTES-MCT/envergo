@@ -553,6 +553,9 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
     readonly_fields = ["html_body_link"]
     form = RegulatoryNoticeLogAdminForm
 
+    def has_module_permission(self, request):
+        return False
+
     def has_change_permission(self, request, obj=None):
         return False
 
@@ -597,17 +600,3 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
-
-
-@admin.register(RecipientStatus)
-class RecipientStatusAdmin(admin.ModelAdmin):
-    list_display = [
-        "regulatory_notice_log",
-        "recipient",
-        "status",
-        "latest_status",
-        "nb_opened",
-        "latest_opened",
-        "nb_clicked",
-        "latest_clicked",
-    ]
