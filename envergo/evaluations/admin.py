@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlparse
 
 from django import forms
@@ -26,6 +27,8 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.moulinette.forms import MoulinetteForm
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
@@ -246,7 +249,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         # there is no such sing.
         try:
             message_id = rr_email.anymail_status.message_id
-        except AttributeError:
+            logger.info(f"Envoi avis réglementaire, message id: {message_id}")
+        except AttributeError as e:
+            logger.warning(f"Impossible de récupérer le message id: {e}")
             message_id = ""
 
         moulinette = evaluation.get_moulinette()
