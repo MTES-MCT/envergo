@@ -17,7 +17,7 @@
     this.buttonElt.classList.add("fr-mr-1w");
 
     let textElt = document.createElement('span');
-    textElt.innerHTML = 'Évaluation en cours…';
+    textElt.innerHTML = 'Simulation en cours…';
     textElt.style.display = "inline";
     textElt.classList.add("fr-hint-text");
     this.buttonElt.insertAdjacentElement("afterend", textElt);
