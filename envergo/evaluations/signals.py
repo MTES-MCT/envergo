@@ -8,11 +8,13 @@ from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
 
 logger = logging.getLogger(__name__)
 
-
-# Those are the only events we want to track
-# Note: those events name are normalized by anymail
-# See https://anymail.dev/en/stable/sending/tracking/#event-tracking
-TRACKED_EVENTS = ("opened", "clicked")
+# Those are the events we want to receive fro mthe ESP and track
+# There is also an order of priority, and the latest status in not
+# necessarily the one we want to keep
+# E.g if a message is already "clicked", and later the recipient
+# opens it again and we receive an "opened" event, we want the status
+# to stay "clicked"
+TRACKED_EVENTS = ["sent", "delivered", "opened", "clicked"]
 
 
 @receiver(tracking)
@@ -23,6 +25,9 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     timestamp = event.timestamp
 
     logger.info(f"Received event {event.event_type} for message id {message_id}")
+    if event_name not in TRACKED_EVENTS:
+        return
+
     try:
         regulatory_notice_log = RegulatoryNoticeLog.objects.get(message_id=message_id)
     except RegulatoryNoticeLog.DoesNotExist:
@@ -37,7 +42,10 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         recipient=recipient,
         defaults={"status": event_name, "latest_status": timestamp},
     )
-    if status.latest_status < timestamp:
+
+    status_index = TRACKED_EVENTS.index(event_name)
+    latest_status_index = TRACKED_EVENTS.index(status.latest_status)
+    if status_index > latest_status_index:
         status.status = event_name
         status.latest_status = timestamp
 
