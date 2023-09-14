@@ -32,6 +32,33 @@
     </li>
   </ul>
 
+  <ul class="rr-preview">
+    <li>
+      <strong>De :</strong>
+      {{ log.frm }}
+    </li>
+    <li>
+      <strong>À :</strong>
+      {{ log.to|join:", " }}
+    </li>
+    <li>
+      <strong>Copie :</strong>
+      {{ log.cc|join:", " }}
+    </li>
+    <li>
+      <strong>Copie cachée :</strong>
+      {{ log.bcc|join:", " }}
+    </li>
+    <li>
+      <strong>Objet :</strong>
+      {{ log.subject }}
+    </li>
+    <li>
+      <strong>Envoyé le :</strong>
+      {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
+    </li>
+  </ul>
+
   <div class="rr-content">
     <iframe class="mail-content"
             width="800px"

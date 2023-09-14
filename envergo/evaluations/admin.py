@@ -586,6 +586,7 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
             "subtitle": "Corps du mail",
             "object_id": object_id,
             "object": log,
+            "log": log,
             "html_body": log.html_body,
             "media": self.media,
             "opts": self.opts,
