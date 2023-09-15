@@ -161,22 +161,22 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": (
                     "address",
                     "application_number",
-                    # "project_description",
+                    "project_description",
                 )
             },
         ),
-        # (
-        #     _("Contact info"),
-        #     {
-        #         "fields": (
-        #             "user_type",
-        #             "contact_emails",
-        #             "project_sponsor_emails",
-        #             "project_sponsor_phone_number",
-        #             "send_eval_to_sponsor",
-        #         )
-        #     },
-        # ),
+        (
+            _("Contact info"),
+            {
+                "fields": (
+                    "user_type",
+                    "contact_emails",
+                    "project_sponsor_emails",
+                    "project_sponsor_phone_number",
+                    "send_eval_to_sponsor",
+                )
+            },
+        ),
         (
             "Contenu de l'avis réglementaire",
             {"fields": ("moulinette_url", "details_md")},

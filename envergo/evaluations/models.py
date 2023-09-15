@@ -33,6 +33,11 @@ EPSG_WGS84 = 4326
 # Good for working in meters
 EPSG_MERCATOR = 3857
 
+USER_TYPES = Choices(
+    ("instructor", "Un service instruction urbanisme"),
+    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
+)
+
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
@@ -131,6 +136,9 @@ class Evaluation(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
     )
+    project_description = models.TextField(
+        _("Project description, comments"), blank=True
+    )
 
     address = models.TextField(_("Address"))
     created_surface = models.IntegerField(
@@ -165,6 +173,35 @@ class Evaluation(models.Model):
 
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
     moulinette_data = models.JSONField(_("Moulinette metadata"), null=True, blank=True)
+
+    # Petitioner data
+    user_type = models.CharField(
+        choices=USER_TYPES,
+        default=USER_TYPES.instructor,
+        max_length=32,
+        verbose_name=_("Who are you?"),
+    )
+    contact_emails = ArrayField(
+        models.EmailField(),
+        blank=True,
+        default=list,
+        verbose_name=_("Urbanism department email address(es)"),
+    )
+
+    # TODO rename the inexact word "sponsor"
+    project_sponsor_emails = ArrayField(
+        models.EmailField(),
+        verbose_name=_("Project sponsor email(s)"),
+        blank=True,
+        default=list,
+    )
+    project_sponsor_phone_number = PhoneNumberField(
+        _("Project sponsor phone number"), max_length=20, blank=True
+    )
+    other_contacts = models.TextField(_("Other contacts"), blank=True)
+    send_eval_to_sponsor = models.BooleanField(
+        _("Send evaluation to project sponsor"), default=True
+    )
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -404,12 +441,6 @@ class Criterion(models.Model):
 def additional_data_file_format(instance, filename):
     _, extension = splitext(filename)
     return f"requests/{instance.reference}{extension}"
-
-
-USER_TYPES = Choices(
-    ("instructor", "Un service instruction urbanisme"),
-    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
-)
 
 
 class Request(models.Model):
