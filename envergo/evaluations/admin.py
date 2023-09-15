@@ -183,7 +183,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             _("Sent emails"),
-            {"fields": ("rr_mention_md",)},
+            {"fields": ("rr_mention_md", "sent_history")},
         ),
         (
             _("Legacy regulatory notice data"),
@@ -191,10 +191,6 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": ("created_surface", "existing_surface", "result"),
                 "classes": ("collapse",),
             },
-        ),
-        (
-            _("Sent history"),
-            {"fields": ("sent_history",)},
         ),
     )
 
