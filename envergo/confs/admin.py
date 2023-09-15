@@ -30,6 +30,8 @@ class EnvergoAdminSite(admin.AdminSite):
             ),
             None,
         )
+        if not evaluations:
+            return apps
 
         # Find the indexes of the "Avis" and "Demande d'avis" models in the "evaluations" app
         avis_index = next(
@@ -48,6 +50,8 @@ class EnvergoAdminSite(admin.AdminSite):
             ),
             None,
         )
+        if not all((avis_index, demande_index)):
+            return apps
 
         # And do the swap, python style
         (
