@@ -581,6 +581,12 @@ class Request(models.Model):
             address=self.address,
             created_surface=self.created_surface,
             existing_surface=self.existing_surface,
+            project_description=self.project_description,
+            user_type=self.user_type,
+            project_sponsor_emails=self.project_sponsor_emails,
+            project_sponsor_phone_number=self.project_sponsor_phone_number,
+            other_contacts=self.other_contacts,
+            send_eval_to_sponsor=self.send_eval_to_sponsor,
         )
         return evaluation
 
