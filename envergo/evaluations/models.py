@@ -280,10 +280,6 @@ class Evaluation(models.Model):
         and the field values in the eval requset.
         """
 
-        try:
-            evalreq = self.request
-        except Request.DoesNotExist:
-            raise ValueError("Impossible de générer un avis reglementaire sans demande")
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
         result = moulinette.loi_sur_leau.result
@@ -295,9 +291,9 @@ class Evaluation(models.Model):
         )
         to_be_transmitted = all(
             (
-                evalreq.user_type == USER_TYPES.instructor,
+                self.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
-                not evalreq.send_eval_to_sponsor,
+                not self.send_eval_to_sponsor,
             )
         )
         context = {
@@ -313,26 +309,26 @@ class Evaluation(models.Model):
 
         # This is messy. Maybe it would be better with a big matrix?
         bcc_recipients = []
-        if evalreq.user_type == USER_TYPES.instructor:
-            if evalreq.send_eval_to_sponsor:
+        if self.user_type == USER_TYPES.instructor:
+            if self.send_eval_to_sponsor:
                 if result in ("interdit", "soumis"):
-                    recipients = evalreq.project_sponsor_emails
-                    cc_recipients = evalreq.contact_emails
+                    recipients = self.project_sponsor_emails
+                    cc_recipients = self.contact_emails
                     if config and config.ddtm_contact_email:
                         bcc_recipients = [config.ddtm_contact_email]
                 elif result == "action_requise":
-                    recipients = evalreq.project_sponsor_emails
-                    cc_recipients = evalreq.contact_emails
+                    recipients = self.project_sponsor_emails
+                    cc_recipients = self.contact_emails
                 else:
-                    recipients = evalreq.contact_emails
+                    recipients = self.contact_emails
                     cc_recipients = []
 
             else:
-                recipients = evalreq.contact_emails
+                recipients = self.contact_emails
                 cc_recipients = []
 
         else:
-            recipients = evalreq.project_sponsor_emails
+            recipients = self.project_sponsor_emails
             cc_recipients = []
 
         if result == "non_soumis":
