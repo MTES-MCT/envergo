@@ -332,11 +332,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         return mark_safe(content)
 
 
-class ParcelInline(admin.TabularInline):
-    model = Request.parcels.through
-    autocomplete_fields = ["parcel"]
-
-
 class RequestFileInline(admin.TabularInline):
     model = RequestFile
     fields = ["file", "name"]
@@ -344,8 +339,14 @@ class RequestFileInline(admin.TabularInline):
 
 
 class RequestAdminForm(forms.ModelForm):
+    send_eval_to_sponsor = forms.BooleanField(
+        label="Envoyer directement au porteur de projet",
+        required=False,
+    )
+
     class Meta:
         widgets = {
+            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
@@ -374,7 +375,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_map",
         "parcels_geojson",
     ]
-    inlines = [ParcelInline, RequestFileInline]
+    inlines = [RequestFileInline]
     search_fields = [
         "reference",
         "application_number",
@@ -382,20 +383,14 @@ class RequestAdmin(admin.ModelAdmin):
     ]
     ordering = ["-created_at"]
     fieldsets = (
-        (None, {"fields": ("reference", "moulinette_url", "summary")}),
-        (
-            _("Project localisation"),
-            {"fields": ("address", "parcels", "parcels_map", "parcels_geojson")},
-        ),
+        (None, {"fields": ("reference",)}),
         (
             _("Project data"),
             {
                 "fields": (
+                    "address",
                     "application_number",
-                    "created_surface",
-                    "existing_surface",
                     "project_description",
-                    "additional_data",
                 )
             },
         ),
