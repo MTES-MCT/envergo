@@ -142,13 +142,21 @@ class Evaluation(models.Model):
     result = models.CharField(
         _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
     )
-    details_md = models.TextField(_("Details"), blank=True)
+    details_md = models.TextField(
+        _("Additional mention"),
+        blank=True,
+        help_text=_(
+            """Will be included in the notice page.
+            Only simple markdown (*bold*, _italic_, [links](https://url), newlines)."""
+        ),
+    )
     details_html = models.TextField(_("Details"), blank=True)
     rr_mention_md = models.TextField(
         _("Regulatory reminder mention"),
         blank=True,
         help_text=_(
-            "Will be included in the RR email. Only simple markdown (bold, italic, links, newlines)."
+            """Will be included in the RR email.
+            Only simple markdown (*bold*, _italic_, [links](https://url), newlines)."""
         ),
     )
     rr_mention_html = models.TextField(_("Regulatory reminder mention"), blank=True)

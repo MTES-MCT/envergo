@@ -105,6 +105,7 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
+    classes = ["collapse"]
     fields = (
         "order",
         "criterion",
@@ -142,7 +143,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
-    readonly_fields = ["sent_history"]
+    readonly_fields = ["reference", "request", "sent_history"]
 
     fieldsets = (
         (
@@ -150,11 +151,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "reference",
-                    "moulinette_url",
-                    "contact_emails",
                     "request",
-                    "application_number",
-                    "evaluation_file",
                 )
             },
         ),
@@ -163,18 +160,37 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "address",
-                    "created_surface",
-                    "existing_surface",
+                    "application_number",
+                    # "project_description",
                 )
             },
         ),
+        # (
+        #     _("Contact info"),
+        #     {
+        #         "fields": (
+        #             "user_type",
+        #             "contact_emails",
+        #             "project_sponsor_emails",
+        #             "project_sponsor_phone_number",
+        #             "send_eval_to_sponsor",
+        #         )
+        #     },
+        # ),
         (
-            _("Evaluation report"),
-            {"fields": ("result", "details_md", "rr_mention_md")},
+            "Contenu de l'avis réglementaire",
+            {"fields": ("moulinette_url", "details_md")},
         ),
         (
-            _("Contact data"),
-            {"fields": ("contact_md",)},
+            _("Sent emails"),
+            {"fields": ("rr_mention_md",)},
+        ),
+        (
+            _("Legacy regulatory notice data"),
+            {
+                "fields": ("created_surface", "existing_surface", "result"),
+                "classes": ("collapse",),
+            },
         ),
         (
             _("Sent history"),
