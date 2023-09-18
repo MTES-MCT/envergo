@@ -433,18 +433,6 @@ class RequestAdmin(admin.ModelAdmin):
         )
         return qs
 
-    def save_model(self, request, obj, form, change):
-        """Update model with data from moulinette url if provided."""
-        params = obj.moulinette_params
-
-        if "created_surface" in params:
-            obj.created_surface = params["created_surface"]
-
-        if "existing_surface" in params:
-            obj.existing_surface = params["existing_surface"]
-
-        super().save_model(request, obj, form, change)
-
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
         parcel_map_url = obj.get_parcel_map_url()
