@@ -372,7 +372,6 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
-        "has_moulinette_url",
         "application_number",
         "user_type",
         "contact_emails",
@@ -468,10 +467,6 @@ class RequestAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{eval_admin_url}">{obj.evaluation}</a>'
         return mark_safe(link)
-
-    @admin.display(description=_("Url"), boolean=True)
-    def has_moulinette_url(self, obj):
-        return bool(obj.moulinette_url)
 
     @admin.display(description=_("Résumé"))
     def summary(self, obj):
