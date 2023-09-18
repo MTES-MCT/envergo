@@ -50,7 +50,7 @@ class EnvergoAdminSite(admin.AdminSite):
             ),
             None,
         )
-        if not all((avis_index, demande_index)):
+        if avis_index is None or demande_index is None:
             return apps
 
         # And do the swap, python style
