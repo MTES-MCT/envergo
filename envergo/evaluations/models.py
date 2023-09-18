@@ -142,10 +142,16 @@ class Evaluation(models.Model):
 
     address = models.TextField(_("Address"))
     created_surface = models.IntegerField(
-        _("Created surface"), help_text=_("In square meters")
+        _("Created surface"),
+        help_text=_("In square meters"),
+        null=True,
+        blank=True,
     )
     existing_surface = models.IntegerField(
-        _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
+        _("Existing surface"),
+        null=True,
+        blank=True,
+        help_text=_("In square meters"),
     )
     result = models.CharField(
         _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
@@ -574,13 +580,10 @@ class Request(models.Model):
 
         evaluation = Evaluation.objects.create(
             reference=self.reference,
-            moulinette_url=self.moulinette_url,
             contact_emails=self.contact_emails,
             request=self,
             application_number=self.application_number,
             address=self.address,
-            created_surface=self.created_surface,
-            existing_surface=self.existing_surface,
             project_description=self.project_description,
             user_type=self.user_type,
             project_sponsor_emails=self.project_sponsor_emails,
