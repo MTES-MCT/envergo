@@ -226,11 +226,6 @@ class Evaluation(models.Model):
         self.details_html = markdown_to_html(self.details_md)
         self.rr_mention_html = markdown_to_html(self.rr_mention_md)
         self.moulinette_data = params_from_url(self.moulinette_url)
-        if "existing_surface" in self.moulinette_data:
-            self.existing_surface = self.moulinette_data["existing_surface"]
-        if "created_surface" in self.moulinette_data:
-            self.created_surface = self.moulinette_data["created_surface"]
-
         super().save(*args, **kwargs)
 
     def compute_result(self):
