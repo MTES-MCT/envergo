@@ -31,9 +31,9 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         ("close_to", "big"): "action_requise_proche_interdit",
         ("close_to", "medium"): "non_soumis",
         ("close_to", "small"): "non_soumis",
-        ("outside", "big"): "non_soumis",
-        ("outside", "medium"): "non_soumis",
-        ("outside", "small"): "non_soumis",
+        ("outside", "big"): "non_soumis_dehors",
+        ("outside", "medium"): "non_soumis_dehors",
+        ("outside", "small"): "non_soumis_dehors",
     }
 
     RESULT_MATRIX = {
@@ -41,6 +41,7 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         "action_requise_interdit": RESULTS.action_requise,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "non_soumis": RESULTS.non_soumis,
+        "non_soumis_dehors": RESULTS.non_soumis,
     }
 
     def get_catalog_data(self):
