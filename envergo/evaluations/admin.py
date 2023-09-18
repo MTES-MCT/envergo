@@ -64,37 +64,33 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        # If a moulinette url is provided, the evaluation result must by set manually
-        if "moulinette_url" in cleaned_data and "result" in cleaned_data:
-            moulinette_url = cleaned_data.get("moulinette_url")
-            result = cleaned_data.get("result")
-            if moulinette_url and not result:
-                msg = _(
-                    "You must provide an evaluation result, since you set a moulinette url."
-                )
-                self.add_error("result", msg)
+        moulinette_url = cleaned_data.get("moulinette_url", None)
+        contact_md = cleaned_data.get("contact_md", None)
+        created_surface = cleaned_data.get("created_surface", None)
 
-            if moulinette_url:
-                parsed_url = urlparse(moulinette_url)
-                query = QueryDict(parsed_url.query)
-                moulinette_form = MoulinetteForm(data=query)
-                if not moulinette_form.is_valid():
-                    self.add_error(
-                        "moulinette_url", _("The moulinette url is invalid.")
-                    )
-                    for field, errors in moulinette_form.errors.items():
-                        for error in errors:
-                            self.add_error(
-                                "moulinette_url", mark_safe(f"{field} : {error}")
-                            )
+        if moulinette_url:
+            parsed_url = urlparse(moulinette_url)
+            query = QueryDict(parsed_url.query)
+            moulinette_form = MoulinetteForm(data=query)
+            if not moulinette_form.is_valid():
+                self.add_error("moulinette_url", _("The moulinette url is invalid."))
+                for field, errors in moulinette_form.errors.items():
+                    for error in errors:
+                        self.add_error(
+                            "moulinette_url", mark_safe(f"{field} : {error}")
+                        )
 
-        # If a moulinette url is NOT provided, a contact info is required
-        if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:
-            moulinette_url = cleaned_data.get("moulinette_url")
-            contact_md = cleaned_data.get("contact_md")
-            if not moulinette_url and not contact_md:
-                msg = _("You must provide contact data.")
-                self.add_error("contact_md", msg)
+        if not moulinette_url and not contact_md:
+            msg = _(
+                "If you don't provide a moulinette url, you must provide contact data."
+            )
+            self.add_error("contact_md", msg)
+
+        if not moulinette_url and not created_surface:
+            msg = _(
+                "If you don't provide a moulinette url, the created surface is required."
+            )
+            self.add_error("created_surface", msg)
 
         return cleaned_data
 
@@ -188,7 +184,12 @@ class EvaluationAdmin(admin.ModelAdmin):
         (
             _("Legacy regulatory notice data"),
             {
-                "fields": ("created_surface", "existing_surface", "result"),
+                "fields": (
+                    "created_surface",
+                    "existing_surface",
+                    "result",
+                    "contact_md",
+                ),
                 "classes": ("collapse",),
             },
         ),
