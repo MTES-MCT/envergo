@@ -64,8 +64,6 @@ class RequestFactory(DjangoModelFactory):
 
     reference = factory.Sequence(lambda n: f"ABC{n:03}")
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
-    created_surface = fuzzy.FuzzyInteger(25, 10000)
-    existing_surface = fuzzy.FuzzyInteger(25, 9999)
     project_description = factory.Faker("text")
     user_type = "instructor"
     contact_emails = ["instructor@example.org"]
