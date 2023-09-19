@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 import pytest
 
 from envergo.evaluations.models import USER_TYPES
-from envergo.evaluations.tests.factories import RequestFactory
+from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map, france_zh  # noqa
 from envergo.moulinette.tests.factories import (
@@ -64,12 +64,11 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
     - the eval result is "soumis"
     - the "send to sponsor" checkbox is not checked
     """
-    evalreq = RequestFactory(
+    eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=moulinette_url,
         send_eval_to_sponsor=False,
     )
-    eval = evalreq.create_evaluation()
     moulinette = eval.get_moulinette()
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
@@ -77,7 +76,7 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
     email = eval.get_regulatory_reminder_email(req)
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
-    assert email.bcc == ["envergo-test@example.org"]
+    assert email.bcc == []
 
     body = email.body
     assert "À transmettre au porteur" in body
@@ -90,12 +89,11 @@ def test_instructor_transmit_soumis(rf, moulinette_url):
     - the eval result is "soumis"
     - the "send to sponsor" checkbox is checked
     """
-    evalreq = RequestFactory(
+    eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=moulinette_url,
         send_eval_to_sponsor=True,
     )
-    eval = evalreq.create_evaluation()
     moulinette = eval.get_moulinette()
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
@@ -103,7 +101,7 @@ def test_instructor_transmit_soumis(rf, moulinette_url):
     email = eval.get_regulatory_reminder_email(req)
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
-    assert email.bcc == ["ddtm_email_test@example.org", "envergo-test@example.org"]
+    assert email.bcc == ["ddtm_email_test@example.org"]
 
     body = email.body
     assert "À transmettre au porteur" not in body
@@ -116,12 +114,11 @@ def test_instructor_transmit_action_requise(rf, moulinette_url):
     - the eval result is "action requise"
     - the "send to sponsor" checkbox is checked
     """
-    evalreq = RequestFactory(
+    eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=moulinette_url,
         send_eval_to_sponsor=True,
     )
-    eval = evalreq.create_evaluation()
     moulinette = eval.get_moulinette()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
@@ -129,7 +126,7 @@ def test_instructor_transmit_action_requise(rf, moulinette_url):
     email = eval.get_regulatory_reminder_email(req)
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
-    assert email.bcc == ["envergo-test@example.org"]
+    assert email.bcc == []
 
     body = email.body
     assert "À transmettre au porteur" not in body
@@ -142,12 +139,11 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
     - the eval result is "non soumis"
     - the "send to sponsor" checkbox is checked
     """
-    evalreq = RequestFactory(
+    eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=moulinette_url,
         send_eval_to_sponsor=True,
     )
-    eval = evalreq.create_evaluation()
     moulinette = eval.get_moulinette()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
@@ -155,7 +151,7 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
     email = eval.get_regulatory_reminder_email(req)
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
-    assert email.bcc == ["envergo-test@example.org"]
+    assert email.bcc == []
 
     body = email.body
     assert "À transmettre au porteur" not in body
@@ -163,18 +159,17 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
 
 @pytest.mark.parametrize("footprint", [1200])
 def test_petitioner(rf, moulinette_url):
-    evalreq = RequestFactory(
+    eval = EvaluationFactory(
         user_type=USER_TYPES.petitioner,
         moulinette_url=moulinette_url,
         send_eval_to_sponsor=False,
     )
-    eval = evalreq.create_evaluation()
     req = rf.get("/")
     email = eval.get_regulatory_reminder_email(req)
 
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == []
-    assert email.bcc == ["envergo-test@example.org"]
+    assert email.bcc == []
 
     body = email.body
     assert "À transmettre au porteur" not in body

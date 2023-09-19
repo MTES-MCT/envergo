@@ -23,10 +23,9 @@ class EvaluationFactory(DjangoModelFactory):
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
-    result = "soumis"
+    user_type = "instructor"
     contact_emails = ["instructor@example.org"]
-    contact_md = "envergo@example.org"
-    contact_html = "envergo@example.org"
+    project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
     @factory.post_generation
     def criterions(self, create, extracted, **kwargs):
