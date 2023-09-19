@@ -111,9 +111,6 @@ class Evaluation(models.Model):
         unique=True,
         db_index=True,
     )
-    contact_emails = ArrayField(
-        models.EmailField(), verbose_name=_("Urbanism department email address(es)")
-    )
 
     request = models.OneToOneField(
         "evaluations.Request",
