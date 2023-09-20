@@ -50,6 +50,18 @@ from envergo.moulinette.views import MoulinetteResult
 logger = logging.getLogger(__name__)
 
 
+class ShortUrlAdminRedirectView(RedirectView):
+    """Create a shorter url format for evaluations.
+
+    This is useful for posting in our crm.
+    """
+
+    def get_redirect_url(self, *args, **kwargs):
+        id = kwargs.get("id")
+        redirect_url = reverse("admin:evaluations_evaluation_change", args=[id])
+        return redirect_url
+
+
 class EvaluationSearch(FormView):
     """A simple search form to find evaluations for a project."""
 
