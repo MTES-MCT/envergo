@@ -57,8 +57,14 @@ class ShortUrlAdminRedirectView(RedirectView):
     """
 
     def get_redirect_url(self, *args, **kwargs):
-        id = kwargs.get("id")
-        redirect_url = reverse("admin:evaluations_evaluation_change", args=[id])
+        reference = kwargs.get("reference")
+        try:
+            evaluation = Evaluation.objects.get(reference=reference)
+        except Evaluation.DoesNotExist:
+            raise Http404
+        redirect_url = reverse(
+            "admin:evaluations_evaluation_change", args=[evaluation.uid]
+        )
         return redirect_url
 
 

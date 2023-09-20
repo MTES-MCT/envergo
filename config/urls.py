@@ -54,7 +54,9 @@ urlpatterns = [
     path("", include("envergo.pages.urls")),
     path("anymail/", include("anymail.urls")),
     path(
-        "a/<int:id>/", ShortUrlAdminRedirectView.as_view(), name="eval_admin_short_url"
+        "a/<slug:reference>/",
+        ShortUrlAdminRedirectView.as_view(),
+        name="eval_admin_short_url",
     ),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
