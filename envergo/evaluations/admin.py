@@ -274,7 +274,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 moulinette_result=moulinette.result(),
                 message_id=message_id,
             )
-            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
+            url = reverse("eval_admin_short_url", args=[object_id])
             full_url = request.build_absolute_uri(url)
             crisp.update_contacts_data(
                 rr_email.to + rr_email.cc, evaluation.reference, full_url
