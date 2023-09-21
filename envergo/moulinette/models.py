@@ -132,6 +132,14 @@ class Regulation(models.Model):
     def title(self):
         return self.get_regulation_display()
 
+    def is_activated(self):
+        """Is the regulation activated in the moulinette config?"""
+
+        config = self.moulinette.config
+        regulations_available = config.regulations_available
+        activated = self.regulation in regulations_available
+        return activated
+
     @property
     def result(self):
         """Compute global result from individual criterions.
@@ -151,6 +159,8 @@ class Regulation(models.Model):
         only the Évaluation environnementale regulation has the "cas par cas" or
         "systematique" results, but the cascade still works.
         """
+        if not self.is_activated():
+            return RESULTS.non_disponible
 
         cascade = [
             RESULTS.interdit,
