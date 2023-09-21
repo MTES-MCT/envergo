@@ -4,6 +4,7 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
@@ -45,6 +46,11 @@ REGULATIONS = Choices(
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
 )
+
+
+# This is to use in model fields `default` attribute
+def all_regulations():
+    return list(dict(REGULATIONS._doubles).keys())
 
 
 class Regulation(models.Model):
@@ -501,6 +507,11 @@ class MoulinetteConfig(models.Model):
     criteria_values = models.JSONField(
         "Valeurs des critères", default=dict, null=True, blank=True
     )
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
 
     class Meta:
         verbose_name = _("Moulinette config")
@@ -545,7 +556,7 @@ class Moulinette:
         self.catalog.update(self.get_catalog_data())
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
-            self.catalog["config"] = self.department.moulinette_config
+            self.config = self.catalog["config"] = self.department.moulinette_config
 
         self.perimeters = self.get_perimeters()
         self.criteria = self.get_criteria()
