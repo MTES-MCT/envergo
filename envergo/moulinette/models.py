@@ -59,6 +59,11 @@ class Regulation(models.Model):
         default=False,
     )
     polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
+    has_perimeters = models.BooleanField(
+        _("Has perimeters"),
+        default=False,
+        help_text=_("Is this regulation linked to local perimetres?"),
+    )
 
     class Meta:
         verbose_name = _("Regulation")
@@ -164,9 +169,16 @@ class Regulation(models.Model):
         if result == RESULTS.a_verifier:
             result = RESULTS.iota_a_verifier
 
-        # If there is no criterion at all, set a default result of "non disponible"
+        # If there is no criterion at all, we have to set a default value
         if result is None:
-            result = RESULTS.non_disponible
+            if self.has_perimeters:
+                perimeter = self.perimeter
+                if perimeter:
+                    result = RESULTS.non_disponible
+                else:
+                    result = RESULTS.non_concerne
+            else:
+                result = RESULTS.non_disponible
 
         return result
 

@@ -9,7 +9,7 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["get_regulation_display", "regulation_slug"]
+    list_display = ["get_regulation_display", "regulation_slug", "has_perimeters"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
