@@ -9,7 +9,7 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
-from envergo.moulinette.tests.factories import CriterionFactory
+from envergo.moulinette.tests.factories import CriterionFactory, MoulinetteConfigFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -104,6 +104,7 @@ def test_form_validation_contact_field_with_moulinette_url(form_data):
 def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
+    MoulinetteConfigFactory()
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)

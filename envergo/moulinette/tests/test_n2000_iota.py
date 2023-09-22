@@ -1,6 +1,6 @@
 import pytest
 
-from envergo.geodata.conftest import france_map, loire_atlantique_department  # noqa
+from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -12,9 +12,8 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def loisurleau_criteria(france_map, loire_atlantique_department):  # noqa
+def loisurleau_criteria(france_map):  # noqa
     MoulinetteConfigFactory(
-        department=loire_atlantique_department,
         is_activated=True,
         ddtm_contact_email="ddtm_email_test@example.org",
     )
