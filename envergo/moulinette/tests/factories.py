@@ -11,6 +11,7 @@ class MoulinetteConfigFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
+    regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
 
 
 class RegulationFactory(DjangoModelFactory):
@@ -18,6 +19,7 @@ class RegulationFactory(DjangoModelFactory):
         model = Regulation
 
     regulation = "loi_sur_leau"
+    has_perimeters = False
 
 
 class CriterionFactory(DjangoModelFactory):

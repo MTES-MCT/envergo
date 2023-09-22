@@ -79,7 +79,7 @@ class Regulation(models.Model):
         return self.get_regulation_display()
 
     def __getattr__(self, attr):
-        """Returns the corresponding regulation.
+        """Returns the corresponding criterion.
 
         Allows to do something like this:
         moulinette.loi_sur_leau.zone_humide to fetch the correct regulation.
@@ -134,6 +134,9 @@ class Regulation(models.Model):
 
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
+
+        if not self.moulinette.has_config():
+            return False
 
         config = self.moulinette.config
         regulations_available = config.regulations_available
