@@ -1,0 +1,61 @@
+
+{% if logs %}
+  <table id="sent_history">
+    <thead>
+      <tr>
+        <td>Envoyé le</td>
+        <td>Par</td>
+        <td>Message</td>
+        <td>Destinataires</td>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for log in logs %}
+        <tr class="sent_history_row">
+          <td>
+            <a href="{% url 'admin:evaluations_regulatorynoticelog_change' log.id %}">
+              {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
+            </a>
+          </td>
+          <td>{{ log.sender }}</td>
+          <td>
+            <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.id %}">Voir</a>
+          </td>
+          <td>
+            {% if log.recipient_statuses.all %}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Destinataire</th>
+                    <th>Statut</th>
+                    <th>Maj. statut</th>
+                    <th>Nb ouverture</th>
+                    <th>Dernière ouverture</th>
+                    <th>Nb clics</th>
+                    <th>Dernier clic</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for recipient in log.recipient_statuses.all %}
+                    <tr class="sent_history_recipient_row">
+                      <td>{{ recipient.recipient }}</td>
+                      <td>{{ recipient.status }}</td>
+                      <td>{{ recipient.latest_status|date:'SHORT_DATETIME_FORMAT' }}</td>
+                      <td>{{ recipient.nb_opened }}</td>
+                      <td>{{ recipient.latest_opened|date:'SHORT_DATETIME_FORMAT' }}</td>
+                      <td>{{ recipient.nb_clicked }}</td>
+                      <td>{{ recipient.latest_clicked|date:'SHORT_DATETIME_FORMAT' }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <span>Il n'y a pas d'envoi associés</span>
+{% endif %}

@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlparse
 
 from django import forms
@@ -6,11 +7,12 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
+from django.db.models import Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.html import linebreaks, mark_safe
+from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.forms import EvaluationFormMixin
@@ -18,11 +20,15 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    RecipientStatus,
+    RegulatoryNoticeLog,
     Request,
     RequestFile,
     generate_reference,
 )
 from envergo.moulinette.forms import MoulinetteForm
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
@@ -135,6 +141,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
+    readonly_fields = ["sent_history"]
 
     fieldsets = (
         (
@@ -167,6 +174,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         (
             _("Contact data"),
             {"fields": ("contact_md",)},
+        ),
+        (
+            _("Sent history"),
+            {"fields": ("sent_history",)},
         ),
     )
 
@@ -244,6 +255,28 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         if request.method == "POST":
             rr_email.send()
+            # We need to store the message id from the esp, but in local dev or testing,
+            # there is no such sing.
+            try:
+                message_id = rr_email.anymail_status.message_id
+                logger.info(f"Envoi avis réglementaire, message id: {message_id}")
+            except AttributeError as e:
+                logger.warning(f"Impossible de récupérer le message id: {e}")
+                message_id = ""
+            RegulatoryNoticeLog.objects.create(
+                evaluation=evaluation,
+                sender=request.user,
+                frm=rr_email.from_email,
+                to=rr_email.to,
+                cc=rr_email.cc,
+                bcc=rr_email.bcc,
+                subject=rr_email.subject,
+                txt_body=rr_email.body,
+                html_body=rr_email.alternatives[0][0],
+                moulinette_data=moulinette.raw_data,
+                moulinette_result=moulinette.result(),
+                message_id=message_id,
+            )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
@@ -269,6 +302,29 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
 
         return response
+
+    def sent_history(self, obj):
+        """Display ESP data about the sent regulatory notices.
+
+        One sent regulatory notice (from the admin) can generate several emails
+        because there are several recipients.
+        """
+        statuses = RecipientStatus.objects.order_by("recipient")
+        logs = (
+            RegulatoryNoticeLog.objects.filter(evaluation=obj)
+            .order_by("-sent_at")
+            .select_related("sender")
+            .prefetch_related(Prefetch("recipient_statuses", queryset=statuses))
+        )
+
+        content = render_to_string(
+            "admin/evaluations/sent_history_field.html",
+            {
+                "evaluation": obj,
+                "logs": logs,
+            },
+        )
+        return mark_safe(content)
 
 
 class ParcelInline(admin.TabularInline):
@@ -476,3 +532,75 @@ class RequestAdmin(admin.ModelAdmin):
 @admin.register(RequestFile)
 class RequestFileAdmin(admin.ModelAdmin):
     list_display = ["name", "file", "request"]
+
+
+class RegulatoryNoticeLogAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            "to": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "cc": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "bcc": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "moulinette_data": admin.widgets.AdminTextareaWidget(attrs={"rows": 6}),
+            "moulinette_result": admin.widgets.AdminTextareaWidget(attrs={"rows": 6}),
+        }
+
+
+@admin.register(RegulatoryNoticeLog)
+class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
+    list_display = [
+        "sent_at",
+        "evaluation",
+        "sender",
+        "subject",
+    ]
+    exclude = ["html_body"]
+    readonly_fields = ["html_body_link"]
+    form = RegulatoryNoticeLogAdminForm
+
+    def has_module_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def html_body_link(self, obj):
+        url = reverse("admin:evaluations_regulatorynoticelog_mail_body", args=[obj.pk])
+        link = format_html('<a href="{}">Voir le corps du mail</a>', url)
+        return link
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/mail-body/",
+                self.admin_site.admin_view(self.mail_body),
+                name="evaluations_regulatorynoticelog_mail_body",
+            ),
+        ]
+        return custom_urls + urls
+
+    def mail_body(self, request, object_id):
+        log = self.get_object(request, unquote(object_id))
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Événement d'envoi d'avis réglementaire",
+            "subtitle": "Détail de l'e-mail envoyé",
+            "object_id": object_id,
+            "object": log,
+            "log": log,
+            "html_body": log.html_body,
+            "media": self.media,
+            "opts": self.opts,
+        }
+
+        response = TemplateResponse(
+            request, "admin/evaluations/regulatorynoticelogs/mail_body.html", context
+        )
+
+        return response

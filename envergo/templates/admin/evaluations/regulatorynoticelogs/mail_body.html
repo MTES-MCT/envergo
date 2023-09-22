@@ -1,0 +1,70 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n static admin_urls %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% url 'admin:jsi18n' %}"></script>
+  <script src="{% static 'admin/js/collapse.js' %}"></script>
+  {{ media }}
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ evaluation|truncatewords:"18" }}</a>
+    › Événements d'envoi d'avis réglementaires
+  </div>
+{% endblock %}
+
+{% block content %}
+  <ul class="object-tools">
+    <li>
+      <a href="{% url 'admin:evaluations_regulatorynoticelog_change' object_id %}"
+         class="">Revenir à l'événement d'envoi</a>
+    </li>
+  </ul>
+
+  <ul class="rr-preview">
+    <li>
+      <strong>De :</strong>
+      {{ log.frm }}
+    </li>
+    <li>
+      <strong>À :</strong>
+      {{ log.to|join:", " }}
+    </li>
+    <li>
+      <strong>Copie :</strong>
+      {{ log.cc|join:", " }}
+    </li>
+    <li>
+      <strong>Copie cachée :</strong>
+      {{ log.bcc|join:", " }}
+    </li>
+    <li>
+      <strong>Objet :</strong>
+      {{ log.subject }}
+    </li>
+    <li>
+      <strong>Envoyé le :</strong>
+      {{ log.sent_at|date:'SHORT_DATETIME_FORMAT' }}
+    </li>
+  </ul>
+
+  <div class="rr-content">
+    <iframe class="mail-content"
+            width="800px"
+            height="1200px"
+            srcdoc="{{ html_body|safe|force_escape }}">
+    </iframe>
+  </div>
+
+{% endblock %}

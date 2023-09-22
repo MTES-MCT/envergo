@@ -42,13 +42,16 @@ click-plugins==1.1.1
 click-repl==0.3.0
     # via celery
 cryptography==41.0.3
-    # via pyjwt
+    # via
+    #   django-anymail
+    #   pyjwt
 defusedxml==0.7.1
     # via python3-openid
 django==4.2
     # via
     #   -r base.in
     #   django-allauth
+    #   django-anymail
     #   django-appconf
     #   django-braces
     #   django-crispy-forms
@@ -58,6 +61,8 @@ django==4.2
     #   django-phonenumber-field
     #   django-redis
 django-allauth==0.54.0
+    # via -r base.in
+django-anymail[sendinblue]==10.1
     # via -r base.in
 django-appconf==1.0.5
     # via django-compressor
@@ -132,6 +137,7 @@ redis==5.0.0
 requests==2.31.0
     # via
     #   django-allauth
+    #   django-anymail
     #   requests-oauthlib
 requests-oauthlib==1.3.1
     # via django-allauth
@@ -150,6 +156,7 @@ tzdata==2023.3
 urllib3==1.26.16
     # via
     #   -r base.in
+    #   django-anymail
     #   requests
 vine==5.0.0
     # via

@@ -20,9 +20,7 @@
     {% regroup grouped_perimeters by activation_map as map_list %}
     {% for map in map_list %}
       <h3>
-        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}
-        <br />
-        <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
+        <a href="{% url 'admin:geodata_map_change' map.grouper.id %}">{{ map.grouper.name }} (id={{ map.grouper.id }})</a>
       </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
@@ -46,7 +44,11 @@
         <dt>Périmètres :</dt>
         <dd>
           <ul>
-            {% for perimeter in map.list %}<li>{{ perimeter }}</li>{% endfor %}
+            {% for perimeter in map.list %}
+              <li>
+                <a href="{% url 'admin:moulinette_perimeter_change' perimeter.id %}">{{ perimeter }}</a>
+              </li>
+            {% endfor %}
           </ul>
         </dd>
       </dl>
@@ -57,9 +59,7 @@
     {% regroup grouped_criteria by activation_map as map_list %}
     {% for map in map_list %}
       <h3>
-        {{ map.grouper.display_name|default:"(Pas de nom fourni)" }}
-        <br />
-        <small>{{ map.grouper.name }} (id={{ map.grouper.id }})</small>
+        <a href="{% url 'admin:geodata_map_change' map.grouper.id %}">{{ map.grouper.name }} (id={{ map.grouper.id }})</a>
       </h3>
 
       <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
@@ -83,7 +83,11 @@
         <dt>Critères:</dt>
         <dd>
           <ul>
-            {% for criterion in map.list %}<li>{{ criterion }}</li>{% endfor %}
+            {% for criterion in map.list %}
+              <li>
+                <a href="{% url 'admin:moulinette_criterion_change' criterion.id %}">{{ criterion.backend_title }}</a>
+              </li>
+            {% endfor %}
           </ul>
         </dd>
       </dl>

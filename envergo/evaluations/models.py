@@ -290,7 +290,8 @@ class Evaluation(models.Model):
             recipients = evalreq.project_sponsor_emails
             cc_recipients = []
 
-        bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
+        # TODO: uncomment this later
+        # bcc_recipients.append(settings.DEFAULT_FROM_EMAIL)
 
         if result == "non_soumis":
             subject = "Avis réglementaire EnvErgo"
@@ -581,3 +582,50 @@ class RequestFile(models.Model):
     class Meta:
         verbose_name = _("Request file")
         verbose_name_plural = _("Request files")
+
+
+class RegulatoryNoticeLog(models.Model):
+    """Store regulatory notice email logs."""
+
+    evaluation = models.ForeignKey(
+        "Evaluation",
+        verbose_name="Avis",
+        on_delete=models.PROTECT,
+        related_name="regulatory_notice_logs",
+    )
+    sender = models.ForeignKey(
+        "users.User", verbose_name=_("Sender"), on_delete=models.PROTECT
+    )
+    frm = models.EmailField(_("From"))
+    to = ArrayField(models.EmailField(), verbose_name=_("To"))
+    cc = ArrayField(models.EmailField(), verbose_name=_("Cc"))
+    bcc = ArrayField(models.EmailField(), verbose_name=_("Bcc"))
+    txt_body = models.TextField(_("Text body"))
+    html_body = models.TextField(_("Html body"))
+    subject = models.CharField(_("Subject"), max_length=1024)
+    sent_at = models.DateTimeField(_("Date sent"), default=timezone.now)
+    moulinette_data = models.JSONField(_("Moulinette data"), null=True, blank=True)
+    moulinette_result = models.JSONField(_("Moulinette result"), null=True, blank=True)
+    message_id = models.CharField(_("Message id"), max_length=1024, blank=True)
+
+    class Meta:
+        verbose_name = _("Regulatory notice log")
+        verbose_name_plural = _("Regulatory notice logs")
+        ordering = ("-sent_at",)
+
+
+class RecipientStatus(models.Model):
+    regulatory_notice_log = models.ForeignKey(
+        RegulatoryNoticeLog, on_delete=models.CASCADE, related_name="recipient_statuses"
+    )
+    recipient = models.EmailField(_("Recipient"))
+    status = models.CharField(_("Status"), max_length=64)
+    latest_status = models.DateTimeField(_("Latest status"))
+    nb_opened = models.IntegerField(_("Nb opened"), default=0)
+    latest_opened = models.DateTimeField(_("Latest opened"), null=True)
+    nb_clicked = models.IntegerField(_("Nb clicked"), default=0)
+    latest_clicked = models.DateTimeField(_("Latest clicked"), null=True)
+
+    class Meta:
+        verbose_name = _("Recipient status")
+        verbose_name_plural = _("Recipient statuses")

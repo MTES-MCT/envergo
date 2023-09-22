@@ -50,6 +50,7 @@ auth_patterns = [
 
 urlpatterns = [
     path("", include("envergo.pages.urls")),
+    path("anymail/", include("anymail.urls")),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
     path("evaluations/", include("envergo.evaluations.redirect_urls")),
