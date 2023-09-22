@@ -115,7 +115,6 @@ class Evaluation(models.Model):
     request = models.OneToOneField(
         "evaluations.Request",
         verbose_name="Demande associée",
-        help_text=_("Does this regulatory notice answers to an existing request?"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -154,7 +153,7 @@ class Evaluation(models.Model):
         _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
     )
     details_md = models.TextField(
-        _("Additional mention"),
+        _("Notice additional mention"),
         blank=True,
         help_text=_(
             """Will be included in the notice page.
@@ -163,7 +162,7 @@ class Evaluation(models.Model):
     )
     details_html = models.TextField(_("Details"), blank=True)
     rr_mention_md = models.TextField(
-        _("Regulatory reminder mention"),
+        _("Email additional mention"),
         blank=True,
         help_text=_(
             """Will be included in the RR email.

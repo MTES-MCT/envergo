@@ -1,5 +1,7 @@
 {% extends "admin/change_form.html" %}
 
+{% load i18n %}
+
 {% block object-tools-items %}
   {% if original.request %}
     <li>
@@ -8,9 +10,13 @@
   {% endif %}
   {% if original.can_send_regulatory_reminder %}
     <li>
-      <a href="{% url 'admin:evaluations_evaluation_rr' original.pk %}"
+      <a href="{% url 'admin:evaluations_evaluation_email_avis' original.pk %}"
          class="">Envoyer un avis réglementaire</a>
     </li>
   {% endif %}
-  {{ block.super }}
+  {% if has_absolute_url %}
+    <li>
+      <a href="{{ absolute_url }}" class="viewsitelink">{% translate "View on site" %}</a>
+    </li>
+  {% endif %}
 {% endblock %}

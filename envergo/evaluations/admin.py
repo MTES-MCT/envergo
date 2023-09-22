@@ -245,9 +245,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<path:object_id>/rappel-reglementaire/",
+                "<path:object_id>/email-avis/",
                 self.admin_site.admin_view(self.rappel_reglementaire),
-                name="evaluations_evaluation_rr",
+                name="evaluations_evaluation_email_avis",
             ),
         ]
         return custom_urls + urls
@@ -310,7 +310,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         else:
             context = {
                 **self.admin_site.each_context(request),
-                "title": "Avis réglementaire",
+                "title": "E-mail d'avis réglementaire",
                 "subtitle": str(evaluation),
                 "object_id": object_id,
                 "evaluation": evaluation,
@@ -325,11 +325,12 @@ class EvaluationAdmin(admin.ModelAdmin):
             }
 
             response = TemplateResponse(
-                request, "evaluations/admin/rappel_reglementaire.html", context
+                request, "evaluations/admin/email_avis.html", context
             )
 
         return response
 
+    @admin.display(description=_("Sent history"))
     def sent_history(self, obj):
         """Display ESP data about the sent regulatory notices.
 

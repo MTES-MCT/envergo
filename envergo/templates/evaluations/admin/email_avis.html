@@ -20,7 +20,7 @@
     › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
     › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
     › <a href="{% url opts|admin_urlname:'change' evaluation.pk|admin_urlquote %}">{{ evaluation|truncatewords:"18" }}</a>
-    › Avis réglementaire
+    › E-mail d'avis réglementaire
   </div>
 {% endblock %}
 

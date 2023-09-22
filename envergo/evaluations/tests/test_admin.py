@@ -105,7 +105,7 @@ def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
 
-    url = reverse("admin:evaluations_evaluation_rr", args=[evaluation.pk])
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
