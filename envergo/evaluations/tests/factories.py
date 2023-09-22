@@ -21,12 +21,15 @@ class EvaluationFactory(DjangoModelFactory):
     request = factory.SubFactory("envergo.evaluations.tests.factories.RequestFactory")
 
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
+    user_type = "instructor"
+    contact_emails = ["instructor@example.org"]
+    project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
+
+    # Legacy data
+    result = "soumis"
     created_surface = fuzzy.FuzzyInteger(25, 9999)
     existing_surface = fuzzy.FuzzyInteger(25, 9999)
-    result = "soumis"
-    contact_emails = ["instructor@example.org"]
-    contact_md = "envergo@example.org"
-    contact_html = "envergo@example.org"
+    contact_md = factory.Faker("text")
 
     @factory.post_generation
     def criterions(self, create, extracted, **kwargs):
@@ -64,8 +67,6 @@ class RequestFactory(DjangoModelFactory):
 
     reference = factory.Sequence(lambda n: f"ABC{n:03}")
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
-    created_surface = fuzzy.FuzzyInteger(25, 10000)
-    existing_surface = fuzzy.FuzzyInteger(25, 9999)
     project_description = factory.Faker("text")
     user_type = "instructor"
     contact_emails = ["instructor@example.org"]

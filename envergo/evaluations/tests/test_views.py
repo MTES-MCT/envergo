@@ -36,7 +36,7 @@ def test_search_existing_eval(client, evaluation):
     assert res.status_code == 200
 
     content = res.content.decode("utf-8")
-    assert "<h1>Notification Loi sur l'eau</h1>" in content
+    assert "<h1>Avis réglementaire</h1>" in content
 
 
 def test_eval_request_wizard_step_1(client):
@@ -216,10 +216,10 @@ def test_users_can_see_dashboard_menu(user, client):
     assert "Tableau de bord" in res.content.decode()
 
 
-def test_share_evaluation_by_email_form_for_anonymous(client, evaluation, mailoutbox):
+def test_share_evaluation_by_email_form_for_anonymous(client, legacy_eval, mailoutbox):
     """Anonymous users cannot share by email."""
 
-    url = evaluation.get_absolute_url()
+    url = legacy_eval.get_absolute_url()
     res = client.get(url)
     content = res.content.decode()
 
@@ -238,12 +238,12 @@ def test_share_evaluation_by_email_form_for_anonymous(client, evaluation, mailou
     assert len(mailoutbox) == 0
 
 
-def test_share_evaluation_by_email_form(client, user, evaluation, mailoutbox):
+def test_share_evaluation_by_email_form(client, user, legacy_eval, mailoutbox):
     """Anonymous users cannot share by email."""
 
     client.force_login(user)
 
-    url = evaluation.get_absolute_url()
+    url = legacy_eval.get_absolute_url()
     res = client.get(url)
     content = res.content.decode()
 

@@ -33,6 +33,11 @@ EPSG_WGS84 = 4326
 # Good for working in meters
 EPSG_MERCATOR = 3857
 
+USER_TYPES = Choices(
+    ("instructor", "Un service instruction urbanisme"),
+    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
+)
+
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
@@ -106,14 +111,10 @@ class Evaluation(models.Model):
         unique=True,
         db_index=True,
     )
-    contact_emails = ArrayField(
-        models.EmailField(), verbose_name=_("Urbanism department email address(es)")
-    )
 
     request = models.OneToOneField(
         "evaluations.Request",
         verbose_name="Demande associée",
-        help_text=_("Does this regulatory notice answers to an existing request?"),
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -131,24 +132,41 @@ class Evaluation(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
     )
+    project_description = models.TextField(
+        _("Project description, comments"), blank=True
+    )
 
     address = models.TextField(_("Address"))
     created_surface = models.IntegerField(
-        _("Created surface"), help_text=_("In square meters")
+        _("Created surface"),
+        help_text=_("In square meters"),
+        null=True,
+        blank=True,
     )
     existing_surface = models.IntegerField(
-        _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
+        _("Existing surface"),
+        null=True,
+        blank=True,
+        help_text=_("In square meters"),
     )
     result = models.CharField(
         _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
     )
-    details_md = models.TextField(_("Details"), blank=True)
-    details_html = models.TextField(_("Details"), blank=True)
-    rr_mention_md = models.TextField(
-        _("Regulatory reminder mention"),
+    details_md = models.TextField(
+        _("Notice additional mention"),
         blank=True,
         help_text=_(
-            "Will be included in the RR email. Only simple markdown (bold, italic, links, newlines)."
+            """Will be included in the notice page.
+            Only simple markdown (*bold*, _italic_, [links](https://url), newlines)."""
+        ),
+    )
+    details_html = models.TextField(_("Details"), blank=True)
+    rr_mention_md = models.TextField(
+        _("Email additional mention"),
+        blank=True,
+        help_text=_(
+            """Will be included in the RR email.
+            Only simple markdown (*bold*, _italic_, [links](https://url), newlines)."""
         ),
     )
     rr_mention_html = models.TextField(_("Regulatory reminder mention"), blank=True)
@@ -157,6 +175,35 @@ class Evaluation(models.Model):
 
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
     moulinette_data = models.JSONField(_("Moulinette metadata"), null=True, blank=True)
+
+    # Petitioner data
+    user_type = models.CharField(
+        choices=USER_TYPES,
+        default=USER_TYPES.instructor,
+        max_length=32,
+        verbose_name=_("Who are you?"),
+    )
+    contact_emails = ArrayField(
+        models.EmailField(),
+        blank=True,
+        default=list,
+        verbose_name=_("Urbanism department email address(es)"),
+    )
+
+    # TODO rename the inexact word "sponsor"
+    project_sponsor_emails = ArrayField(
+        models.EmailField(),
+        verbose_name=_("Project sponsor email(s)"),
+        blank=True,
+        default=list,
+    )
+    project_sponsor_phone_number = PhoneNumberField(
+        _("Project sponsor phone number"), max_length=20, blank=True
+    )
+    other_contacts = models.TextField(_("Other contacts"), blank=True)
+    send_eval_to_sponsor = models.BooleanField(
+        _("Send evaluation to project sponsor"), default=True
+    )
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -235,10 +282,6 @@ class Evaluation(models.Model):
         and the field values in the eval requset.
         """
 
-        try:
-            evalreq = self.request
-        except Request.DoesNotExist:
-            raise ValueError("Impossible de générer un avis reglementaire sans demande")
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
         result = moulinette.loi_sur_leau.result
@@ -250,9 +293,9 @@ class Evaluation(models.Model):
         )
         to_be_transmitted = all(
             (
-                evalreq.user_type == USER_TYPES.instructor,
+                self.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
-                not evalreq.send_eval_to_sponsor,
+                not self.send_eval_to_sponsor,
             )
         )
         context = {
@@ -268,26 +311,26 @@ class Evaluation(models.Model):
 
         # This is messy. Maybe it would be better with a big matrix?
         bcc_recipients = []
-        if evalreq.user_type == USER_TYPES.instructor:
-            if evalreq.send_eval_to_sponsor:
+        if self.user_type == USER_TYPES.instructor:
+            if self.send_eval_to_sponsor:
                 if result in ("interdit", "soumis"):
-                    recipients = evalreq.project_sponsor_emails
-                    cc_recipients = evalreq.contact_emails
+                    recipients = self.project_sponsor_emails
+                    cc_recipients = self.contact_emails
                     if config and config.ddtm_contact_email:
                         bcc_recipients = [config.ddtm_contact_email]
                 elif result == "action_requise":
-                    recipients = evalreq.project_sponsor_emails
-                    cc_recipients = evalreq.contact_emails
+                    recipients = self.project_sponsor_emails
+                    cc_recipients = self.contact_emails
                 else:
-                    recipients = evalreq.contact_emails
+                    recipients = self.contact_emails
                     cc_recipients = []
 
             else:
-                recipients = evalreq.contact_emails
+                recipients = self.contact_emails
                 cc_recipients = []
 
         else:
-            recipients = evalreq.project_sponsor_emails
+            recipients = self.project_sponsor_emails
             cc_recipients = []
 
         if result == "non_soumis":
@@ -396,12 +439,6 @@ class Criterion(models.Model):
 def additional_data_file_format(instance, filename):
     _, extension = splitext(filename)
     return f"requests/{instance.reference}{extension}"
-
-
-USER_TYPES = Choices(
-    ("instructor", "Un service instruction urbanisme"),
-    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
-)
 
 
 class Request(models.Model):
@@ -539,13 +576,16 @@ class Request(models.Model):
 
         evaluation = Evaluation.objects.create(
             reference=self.reference,
-            moulinette_url=self.moulinette_url,
             contact_emails=self.contact_emails,
             request=self,
             application_number=self.application_number,
             address=self.address,
-            created_surface=self.created_surface,
-            existing_surface=self.existing_surface,
+            project_description=self.project_description,
+            user_type=self.user_type,
+            project_sponsor_emails=self.project_sponsor_emails,
+            project_sponsor_phone_number=self.project_sponsor_phone_number,
+            other_contacts=self.other_contacts,
+            send_eval_to_sponsor=self.send_eval_to_sponsor,
         )
         return evaluation
 

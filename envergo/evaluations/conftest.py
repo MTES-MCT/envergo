@@ -10,5 +10,14 @@ def evaluation() -> Evaluation:
 
 
 @pytest.fixture
+def legacy_eval() -> Evaluation:
+    """Create an eval with the old data format.
+
+    (criteria manually set, no moulinette_url)
+    """
+    return EvaluationFactory(moulinette_url="")
+
+
+@pytest.fixture
 def eval_request() -> Request:
     return RequestFactory()

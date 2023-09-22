@@ -58,8 +58,7 @@ DJANGO_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # "django.contrib.humanize", # Handy template tags
-    "django.contrib.admin",
+    # "django.contrib.admin",  # it's overriden below
     "django.forms",
     "django.contrib.gis",
 ]
@@ -77,7 +76,8 @@ LOCAL_APPS = [
     "envergo.stats",
     "envergo.moulinette",
     "envergo.analytics",
-    "envergo.confs",
+    "envergo.confs.apps.ConfsConfig",
+    "envergo.confs.apps.EnvergoAdminConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

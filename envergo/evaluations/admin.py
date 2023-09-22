@@ -61,40 +61,45 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
         ),
     )
 
+    class Meta:
+        widgets = {
+            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
+            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
+                attrs={"rows": 3}
+            ),
+        }
+
     def clean(self):
         cleaned_data = super().clean()
 
-        # If a moulinette url is provided, the evaluation result must by set manually
-        if "moulinette_url" in cleaned_data and "result" in cleaned_data:
-            moulinette_url = cleaned_data.get("moulinette_url")
-            result = cleaned_data.get("result")
-            if moulinette_url and not result:
-                msg = _(
-                    "You must provide an evaluation result, since you set a moulinette url."
-                )
-                self.add_error("result", msg)
+        moulinette_url = cleaned_data.get("moulinette_url", None)
+        contact_md = cleaned_data.get("contact_md", None)
+        created_surface = cleaned_data.get("created_surface", None)
 
-            if moulinette_url:
-                parsed_url = urlparse(moulinette_url)
-                query = QueryDict(parsed_url.query)
-                moulinette_form = MoulinetteForm(data=query)
-                if not moulinette_form.is_valid():
-                    self.add_error(
-                        "moulinette_url", _("The moulinette url is invalid.")
-                    )
-                    for field, errors in moulinette_form.errors.items():
-                        for error in errors:
-                            self.add_error(
-                                "moulinette_url", mark_safe(f"{field} : {error}")
-                            )
+        if moulinette_url:
+            parsed_url = urlparse(moulinette_url)
+            query = QueryDict(parsed_url.query)
+            moulinette_form = MoulinetteForm(data=query)
+            if not moulinette_form.is_valid():
+                self.add_error("moulinette_url", _("The moulinette url is invalid."))
+                for field, errors in moulinette_form.errors.items():
+                    for error in errors:
+                        self.add_error(
+                            "moulinette_url", mark_safe(f"{field} : {error}")
+                        )
 
-        # If a moulinette url is NOT provided, a contact info is required
-        if "moulinette_url" in cleaned_data and "contact_md" in cleaned_data:
-            moulinette_url = cleaned_data.get("moulinette_url")
-            contact_md = cleaned_data.get("contact_md")
-            if not moulinette_url and not contact_md:
-                msg = _("You must provide contact data.")
-                self.add_error("contact_md", msg)
+        if not moulinette_url and not contact_md:
+            msg = _(
+                "If you don't provide a moulinette url, you must provide contact data."
+            )
+            self.add_error("contact_md", msg)
+
+        if not moulinette_url and not created_surface:
+            msg = _(
+                "If you don't provide a moulinette url, the created surface is required."
+            )
+            self.add_error("created_surface", msg)
 
         return cleaned_data
 
@@ -105,6 +110,7 @@ class CriterionAdminForm(forms.ModelForm):
 
 class CriterionInline(admin.StackedInline):
     model = Criterion
+    classes = ["collapse"]
     fields = (
         "order",
         "criterion",
@@ -142,7 +148,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
-    readonly_fields = ["sent_history"]
+    readonly_fields = ["reference", "request", "sent_history"]
 
     fieldsets = (
         (
@@ -150,11 +156,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "reference",
-                    "moulinette_url",
-                    "contact_emails",
                     "request",
-                    "application_number",
-                    "evaluation_file",
                 )
             },
         ),
@@ -163,22 +165,42 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "address",
-                    "created_surface",
-                    "existing_surface",
+                    "application_number",
+                    "project_description",
                 )
             },
         ),
         (
-            _("Evaluation report"),
-            {"fields": ("result", "details_md", "rr_mention_md")},
+            _("Contact info"),
+            {
+                "fields": (
+                    "user_type",
+                    "contact_emails",
+                    "project_sponsor_emails",
+                    "project_sponsor_phone_number",
+                    "send_eval_to_sponsor",
+                )
+            },
         ),
         (
-            _("Contact data"),
-            {"fields": ("contact_md",)},
+            "Contenu de l'avis réglementaire",
+            {"fields": ("moulinette_url", "details_md")},
         ),
         (
-            _("Sent history"),
-            {"fields": ("sent_history",)},
+            _("Sent emails"),
+            {"fields": ("rr_mention_md", "sent_history")},
+        ),
+        (
+            _("Legacy regulatory notice data"),
+            {
+                "fields": (
+                    "created_surface",
+                    "existing_surface",
+                    "result",
+                    "contact_md",
+                ),
+                "classes": ("collapse",),
+            },
         ),
     )
 
@@ -223,9 +245,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<path:object_id>/rappel-reglementaire/",
+                "<path:object_id>/email-avis/",
                 self.admin_site.admin_view(self.rappel_reglementaire),
-                name="evaluations_evaluation_rr",
+                name="evaluations_evaluation_email_avis",
             ),
         ]
         return custom_urls + urls
@@ -288,7 +310,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         else:
             context = {
                 **self.admin_site.each_context(request),
-                "title": "Avis réglementaire",
+                "title": "E-mail d'avis réglementaire",
                 "subtitle": str(evaluation),
                 "object_id": object_id,
                 "evaluation": evaluation,
@@ -303,11 +325,12 @@ class EvaluationAdmin(admin.ModelAdmin):
             }
 
             response = TemplateResponse(
-                request, "evaluations/admin/rappel_reglementaire.html", context
+                request, "evaluations/admin/email_avis.html", context
             )
 
         return response
 
+    @admin.display(description=_("Sent history"))
     def sent_history(self, obj):
         """Display ESP data about the sent regulatory notices.
 
@@ -332,11 +355,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         return mark_safe(content)
 
 
-class ParcelInline(admin.TabularInline):
-    model = Request.parcels.through
-    autocomplete_fields = ["parcel"]
-
-
 class RequestFileInline(admin.TabularInline):
     model = RequestFile
     fields = ["file", "name"]
@@ -344,8 +362,14 @@ class RequestFileInline(admin.TabularInline):
 
 
 class RequestAdminForm(forms.ModelForm):
+    send_eval_to_sponsor = forms.BooleanField(
+        label="Envoyer directement au porteur de projet",
+        required=False,
+    )
+
     class Meta:
         widgets = {
+            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
             "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
@@ -359,7 +383,6 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
-        "has_moulinette_url",
         "application_number",
         "user_type",
         "contact_emails",
@@ -374,7 +397,7 @@ class RequestAdmin(admin.ModelAdmin):
         "parcels_map",
         "parcels_geojson",
     ]
-    inlines = [ParcelInline, RequestFileInline]
+    inlines = [RequestFileInline]
     search_fields = [
         "reference",
         "application_number",
@@ -382,20 +405,14 @@ class RequestAdmin(admin.ModelAdmin):
     ]
     ordering = ["-created_at"]
     fieldsets = (
-        (None, {"fields": ("reference", "moulinette_url", "summary")}),
-        (
-            _("Project localisation"),
-            {"fields": ("address", "parcels", "parcels_map", "parcels_geojson")},
-        ),
+        (None, {"fields": ("reference",)}),
         (
             _("Project data"),
             {
                 "fields": (
+                    "address",
                     "application_number",
-                    "created_surface",
-                    "existing_surface",
                     "project_description",
-                    "additional_data",
                 )
             },
         ),
@@ -426,18 +443,6 @@ class RequestAdmin(admin.ModelAdmin):
         )
         return qs
 
-    def save_model(self, request, obj, form, change):
-        """Update model with data from moulinette url if provided."""
-        params = obj.moulinette_params
-
-        if "created_surface" in params:
-            obj.created_surface = params["created_surface"]
-
-        if "existing_surface" in params:
-            obj.existing_surface = params["existing_surface"]
-
-        super().save_model(request, obj, form, change)
-
     @admin.display(description=_("Lien vers la carte des parcelles"))
     def parcels_map(self, obj):
         parcel_map_url = obj.get_parcel_map_url()
@@ -461,10 +466,6 @@ class RequestAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{eval_admin_url}">{obj.evaluation}</a>'
         return mark_safe(link)
-
-    @admin.display(description=_("Url"), boolean=True)
-    def has_moulinette_url(self, obj):
-        return bool(obj.moulinette_url)
 
     @admin.display(description=_("Résumé"))
     def summary(self, obj):

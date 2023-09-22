@@ -1,11 +1,29 @@
 {% extends 'admin/change_form.html' %}
 
+{% block object-tools-items %}
+  {% if show_make_eval_button %}
+    <li>
+      <input type="submit"
+             form="{{ opts.model_name }}_form"
+             value="Créer un avis réglementaire"
+             name="_make-evaluation">
+
+    </li>
+  {% endif %}
+{% endblock %}
+
 {% block submit_buttons_bottom %}
+
+  <ul class="messagelist">
+    <li class="warning">
+      Une demande d'avis n'a pas vocation à être modifiée par l'admin. Pour ajouter des contacts ou compléter la description, il faut le faire dans l'avis.
+    </li>
+  </ul>
+
   {{ block.super }}
 
   {% if show_make_eval_button %}
     <div class="submit-row">
-      <span>Vos modifications en cours seront sauvegardées avant de créer l'avis réglementaire.</span>
       <input type="submit"
              value="Créer un avis réglementaire"
              name="_make-evaluation">
