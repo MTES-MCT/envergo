@@ -33,7 +33,7 @@ def update_contacts_data(emails, reference, url):
         try:
             create_contact(email)
             now = timezone.now()
-            key = f"{reference}-{now:%Y%m%d}"
+            key = f"{reference}-{now:%y%m%d}"
             data = {"data": {key: url}}
             client.website.update_people_data(settings.CRISP_WEBSITE_ID, email, data)
         except Exception as e:
