@@ -69,6 +69,8 @@ click-repl==0.3.0
     # via
     #   -r base.txt
     #   celery
+crisp-api==1.1.18
+    # via -r base.txt
 cryptography==41.0.3
     # via
     #   -r base.txt
@@ -211,6 +213,7 @@ redis==5.0.0
 requests==2.31.0
     # via
     #   -r base.txt
+    #   crisp-api
     #   django-allauth
     #   django-anymail
     #   requests-oauthlib

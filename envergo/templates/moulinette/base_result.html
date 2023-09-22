@@ -70,6 +70,7 @@
     {% if moulinette_summary %}
       var MOULINETTE_DATA = {{ moulinette_summary|safe }};
     {% endif %}
+    var SIMULATION_FORM_ID = "moulinette-form";
   </script>
   {% include 'moulinette/_form_scripts.html' %}
 

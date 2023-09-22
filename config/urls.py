@@ -7,6 +7,8 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 
+from envergo.evaluations.views import ShortUrlAdminRedirectView
+
 # We redefine django auth patterns for better customization
 auth_patterns = [
     path(_("login/"), auth_views.LoginView.as_view(), name="login"),
@@ -51,6 +53,11 @@ auth_patterns = [
 urlpatterns = [
     path("", include("envergo.pages.urls")),
     path("anymail/", include("anymail.urls")),
+    path(
+        "a/<slug:reference>/",
+        ShortUrlAdminRedirectView.as_view(),
+        name="eval_admin_short_url",
+    ),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
     path("evaluations/", include("envergo.evaluations.redirect_urls")),

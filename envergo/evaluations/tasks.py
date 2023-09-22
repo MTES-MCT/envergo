@@ -70,7 +70,6 @@ def confirm_request_to_requester(request_id, host):
         body=txt_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=user_emails,
-        bcc=[settings.DEFAULT_FROM_EMAIL],
     )
     email.attach_alternative(html_body, "text/html")
     email.send()

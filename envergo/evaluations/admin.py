@@ -27,6 +27,7 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.moulinette.forms import MoulinetteForm
+from envergo.utils import crisp
 
 logger = logging.getLogger(__name__)
 
@@ -277,8 +278,12 @@ class EvaluationAdmin(admin.ModelAdmin):
                 moulinette_result=moulinette.result(),
                 message_id=message_id,
             )
+            url = reverse("eval_admin_short_url", args=[evaluation.reference])
+            full_url = request.build_absolute_uri(url)
+            crisp.update_contacts_data(
+                rr_email.to + rr_email.cc, evaluation.reference, full_url
+            )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
-            url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
         else:
             context = {
