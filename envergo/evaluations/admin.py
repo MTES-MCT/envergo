@@ -61,6 +61,15 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
         ),
     )
 
+    class Meta:
+        widgets = {
+            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
+            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
+                attrs={"rows": 3}
+            ),
+        }
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -359,7 +368,7 @@ class RequestAdminForm(forms.ModelForm):
 
     class Meta:
         widgets = {
-            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
             "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
