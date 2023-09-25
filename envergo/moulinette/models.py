@@ -505,6 +505,11 @@ class MoulinetteConfig(models.Model):
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
     ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
@@ -519,11 +524,6 @@ class MoulinetteConfig(models.Model):
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
     criteria_values = models.JSONField(
         "Valeurs des critères", default=dict, null=True, blank=True
-    )
-    regulations_available = ArrayField(
-        base_field=models.CharField(max_length=64, choices=REGULATIONS),
-        blank=True,
-        default=list,
     )
 
     class Meta:
