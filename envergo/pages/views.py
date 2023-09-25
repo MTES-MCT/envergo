@@ -42,8 +42,9 @@ class Outlinks(TemplateView):
 
         if self.request.POST:
             try:
-                links_report = self.check_links()
+                links_report, errors_report = self.check_links()
                 context["links"] = links_report
+                context["errors"] = errors_report
             except Exception as e:
                 messages.error(
                     self.request,
@@ -60,13 +61,18 @@ class Outlinks(TemplateView):
         data = requests.get(data_url).json()
 
         links = []
+        errors = []
         for datum in data:
             url = datum["url"]
             label = datum["label"]
-            req = requests.head(url)
-            links.append({"label": label, "url": url, "status": req.status_code})
+            try:
+                req = requests.head(url)
+                links.append({"label": label, "url": url, "status": req.status_code})
+            except Exception as e:
+                links.append({"label": label, "url": url, "status": "ND"})
+                errors.append({"label": label, "url": url, "error": e})
 
-        return links
+        return links, errors
 
 
 class AvailabilityInfo(TemplateView):
