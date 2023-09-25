@@ -264,6 +264,10 @@ class Regulation(models.Model):
         """
         return self.perimeters.first()
 
+    def display_perimeter(self):
+        """Should / can a perimeter be displayed?"""
+        return self.is_activated() and self.perimeter
+
     @property
     def map(self):
         """Returns a map to be displayed for the regulation.
@@ -272,9 +276,6 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-        if not self.show_map:
-            return None
-
         perimeter = self.perimeter
         if perimeter:
             polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
@@ -289,6 +290,10 @@ class Regulation(models.Model):
             return map
 
         return None
+
+    def display_map(self):
+        """Should / can a perimeter map be displayed?"""
+        return all((self.is_activated(), self.show_map, self.map))
 
 
 class Criterion(models.Model):

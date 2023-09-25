@@ -5,7 +5,7 @@
     <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
   </h2>
 
-  {% if regulation.perimeter %}
+  {% if regulation.display_perimeter %}
     <p>
       Le projet se trouve dans le périmètre
       {% if regulation.perimeter.url %}
@@ -16,9 +16,8 @@
     </p>
   {% endif %}
 
-  {% if regulation.map %}
+  {% if regulation.display_map %}
     {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
-
   {% endif %}
 
   <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
