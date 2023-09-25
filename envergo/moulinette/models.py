@@ -676,6 +676,7 @@ class Moulinette:
             )
             .annotate(distance=Distance("activation_map__zones__geometry", coords))
             .order_by("weight")
+            .distinct("weight", "id")
             .select_related("activation_map")
         )
         return criteria
@@ -700,6 +701,7 @@ class Moulinette:
                 )
             )
             .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .distinct("id")
             .select_related("activation_map")
         )
 
