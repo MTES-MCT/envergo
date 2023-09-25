@@ -22,13 +22,15 @@
 
   <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
 
-  <div class="criteria">
-    {% if regulation.criteria.all %}<h3>Détail des rubriques</h3>{% endif %}
+  {% if regulation.is_activated and regulation.criteria.all %}
+    <div class="criteria">
+      <h3>Détail des rubriques</h3>
 
-    {% for criterion in regulation.criteria.all %}
-      {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
+      {% for criterion in regulation.criteria.all %}
+        {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
 
-    {% endfor %}
-  </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
 </section>
