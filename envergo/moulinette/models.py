@@ -59,17 +59,17 @@ class Regulation(models.Model):
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
+    has_perimeters = models.BooleanField(
+        _("Has perimeters"),
+        default=False,
+        help_text=_("Is this regulation linked to local perimetres?"),
+    )
     show_map = models.BooleanField(
         _("Show perimeter map"),
         help_text=_("The perimeter's map will be displayed, if it exists"),
         default=False,
     )
     polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
-    has_perimeters = models.BooleanField(
-        _("Has perimeters"),
-        default=False,
-        help_text=_("Is this regulation linked to local perimetres?"),
-    )
 
     class Meta:
         verbose_name = _("Regulation")
