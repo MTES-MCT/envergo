@@ -163,7 +163,7 @@ class Regulation(models.Model):
         "systematique" results, but the cascade still works.
         """
         if not self.is_activated():
-            return RESULTS.non_disponible
+            return RESULTS.non_active
 
         cascade = [
             RESULTS.interdit,

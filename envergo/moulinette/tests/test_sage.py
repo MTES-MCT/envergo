@@ -64,7 +64,7 @@ def test_deactivated_regulation(moulinette_data):
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
 
-    assert moulinette.sage.result == "non_disponible"
+    assert moulinette.sage.result == "non_active"
 
 
 @pytest.mark.parametrize("footprint", [1000])

@@ -85,6 +85,10 @@ RESULTS = Choices(
     ("a_verifier", "À vérifier"),
     ("iota_a_verifier", "En cas de dossier Loi sur l'eau"),
     ("interdit", "Interdit"),
+    (
+        "non_active",
+        "Non disponible",
+    ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
 )
 
 # All possible result codes for a single evaluation
