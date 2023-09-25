@@ -387,7 +387,7 @@ msgstr ""
 
 #: envergo/evaluations/models.py:172
 msgid "Regulatory reminder mention"
-msgstr "Mention libre du rappel réglementaire"
+msgstr "Mention libre de l'avis réglementaire"
 
 #: envergo/evaluations/models.py:173
 msgid "Contact"
@@ -1069,7 +1069,7 @@ msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
 #: envergo/moulinette/models.py:505
 msgid "DDT(M) contact email"
-msgstr "E-mail DDT(M) (rappel réglementaire)"
+msgstr "E-mail DDT(M) (avis réglementaire)"
 
 #: envergo/moulinette/models.py:527
 msgid "Moulinette config"
