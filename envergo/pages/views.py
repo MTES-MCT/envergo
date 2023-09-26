@@ -69,7 +69,6 @@ class Outlinks(TemplateView):
                 req = requests.head(url)
                 links.append({"label": label, "url": url, "status": req.status_code})
             except Exception as e:
-                links.append({"label": label, "url": url, "status": "ND"})
                 errors.append({"label": label, "url": url, "error": e})
 
         return links, errors
