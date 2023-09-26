@@ -14,6 +14,9 @@ if settings.CRISP_TOKEN_ID and settings.CRISP_TOKEN_KEY:
 
 
 def create_contact(email):
+    if settings.ENV_NAME != "production":
+        return
+
     data = {
         "email": email,
         "person": {"nickname": email},
@@ -30,6 +33,9 @@ def create_contact(email):
 
 
 def update_contacts_data(emails, reference, url):
+    if settings.ENV_NAME != "production":
+        return
+
     for email in emails:
         try:
             create_contact(email)

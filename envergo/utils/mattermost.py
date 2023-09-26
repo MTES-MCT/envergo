@@ -11,6 +11,9 @@ def notify(msg):
 
     Which channel is entirely defined in the endpoint settings.
     """
+    if settings.ENV_NAME != "production":
+        return
+
     endpoint = settings.MATTERMOST_ENDPOINT
     if endpoint:
         payload = {"text": msg}
