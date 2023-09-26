@@ -311,8 +311,6 @@ LEAFLET_CONFIG = {
     "MAX_ZOOM": 19,
 }
 
-MATTERMOST_ENDPOINT = ""
-
 ENVERGO_REFERENCE_LENGTH = 6
 
 VISITOR_COOKIE_NAME = "visitorid"
@@ -320,13 +318,20 @@ VISITOR_COOKIE_NAME = "visitorid"
 # The max number of files that can be uploaded with a single evaluation request
 MAX_EVALREQ_FILES = 25
 
+TEST_EMAIL = "test@test.fr"
+
+
+# Third party integration settings
+
+MATTERMOST_ENDPOINT = ""
+
 NOTION_SECRET = ""
 NOTION_DATABASE_ID = ""
 
-MATOMO_SECURITY_TOKEN = env("MATOMO_SECURITY_TOKEN", default="")
+MATOMO_SECURITY_TOKEN = env("MATOMO_SECURITY_TOKEN", None)
 
-TEST_EMAIL = "test@test.fr"
+CRISP_TOKEN_ID = ""
+CRISP_TOKEN_KEY = ""
+CRISP_WEBSITE_ID = ""
 
-CRISP_TOKEN_ID = env("DJANGO_CRISP_TOKEN_ID", None)
-CRISP_TOKEN_KEY = env("DJANGO_CRISP_TOKEN_KEY", None)
-CRISP_WEBSITE_ID = env("DJANGO_CRISP_WEBSITE_ID", None)
+MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", None)

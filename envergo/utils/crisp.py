@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 client = Crisp()
 client.set_tier("plugin")
-client.authenticate(settings.CRISP_TOKEN_ID, settings.CRISP_TOKEN_KEY)
+if settings.CRISP_TOKEN_ID and settings.CRISP_TOKEN_KEY:
+    client.authenticate(settings.CRISP_TOKEN_ID, settings.CRISP_TOKEN_KEY)
 
 
 def create_contact(email):
