@@ -254,12 +254,14 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             # by map first
             context["grouped_perimeters"] = moulinette.perimeters.order_by(
                 "activation_map__name",
+                "id",
                 "distance",
-            )
+            ).distinct("activation_map__name", "id")
             context["grouped_criteria"] = moulinette.criteria.order_by(
                 "activation_map__name",
+                "id",
                 "distance",
-            )
+            ).distinct("activation_map__name", "id")
             context["grouped_zones"] = (
                 moulinette.catalog["all_zones"]
                 .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
