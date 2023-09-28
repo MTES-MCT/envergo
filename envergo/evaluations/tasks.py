@@ -1,7 +1,9 @@
+import json
 import logging
 
+import requests
 from django.conf import settings
-from django.core import mail
+from django.core import mail, serializers
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -103,3 +105,19 @@ def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
 
     connection = mail.get_connection()
     connection.send_messages(messages)
+
+
+@app.task
+def post_evalreq_to_automation(request_id, host):
+    """Send request data to Make.com."""
+
+    logger.info(f"Sending data to make.com {request_id} {host}")
+    request = Request.objects.get(id=request_id)
+    payload = json.loads(serializers.serialize("json", [request]))[0]
+    webhook_url = settings.MAKE_COM_WEBHOOK
+    if not webhook_url:
+        return
+
+    res = requests.post(webhook_url, json=payload)
+    if res.status_code != 200:
+        logger.error(f"Error while posting data to make.com: {res.text}")
