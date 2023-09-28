@@ -701,6 +701,7 @@ class Moulinette:
                 )
             )
             .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .order_by("id")
             .distinct("id")
             .select_related("activation_map")
         )
