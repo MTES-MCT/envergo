@@ -18,6 +18,17 @@ class EvaluationFormMixin(forms.Form):
         help_text="15 caractères commençant par « PA », « PC », « DP » ou « CU »",
         max_length=64,
     )
+    contact_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Urbanism department email address(es)"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+    )
+    project_sponsor_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Project sponsor email address(es)"),
+        help_text=_("Petitioner, project manager…"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+    )
 
     def clean_application_number(self):
         dirty_number = self.cleaned_data.get("application_number")
@@ -27,6 +38,26 @@ class EvaluationFormMixin(forms.Form):
         clean_number = dirty_number.replace(" ", "").strip().upper()
         application_number_validator(clean_number)
         return clean_number
+
+    def clean_project_sponsor_phone_number(self):
+        phone = self.cleaned_data["project_sponsor_phone_number"]
+        return str(phone)
+
+    def clean(self):
+        """Custom form field validation.
+
+        Some contact fields are removed depending on the user type.
+        """
+        data = super().clean()
+        user_type = data.get("user_type", None)
+        if user_type == USER_TYPES.petitioner:
+            self.fields["contact_emails"].required = False
+            if "contact_emails" in self._errors:
+                del self._errors["contact_emails"]
+            if "contact_emails" in data:
+                del data["contact_emails"]
+
+        return data
 
 
 class EvaluationSearchForm(forms.Form):
@@ -77,24 +108,13 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         return data
 
 
-class WizardContactForm(forms.ModelForm):
+class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
     user_type = forms.ChoiceField(
         label="Vous êtes :",
         required=True,
         choices=USER_TYPES,
         initial=USER_TYPES.instructor,
         widget=forms.RadioSelect,
-    )
-    contact_emails = SimpleArrayField(
-        forms.EmailField(),
-        label=_("Urbanism department email address(es)"),
-        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
-    )
-    project_sponsor_emails = SimpleArrayField(
-        forms.EmailField(),
-        label=_("Project sponsor email address(es)"),
-        help_text=_("Petitioner, project manager…"),
-        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_sponsor_phone_number = PhoneNumberField(
         label=_("Project sponsor phone number"), region="FR"
@@ -125,26 +145,6 @@ class WizardContactForm(forms.ModelForm):
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-
-    def clean_project_sponsor_phone_number(self):
-        phone = self.cleaned_data["project_sponsor_phone_number"]
-        return str(phone)
-
-    def clean(self):
-        """Custom form field validation.
-
-        Some contact fields are removed depending on the user type.
-        """
-        data = super().clean()
-        user_type = data.get("user_type", None)
-        if user_type == USER_TYPES.petitioner:
-            self.fields["contact_emails"].required = False
-            if "contact_emails" in self._errors:
-                del self._errors["contact_emails"]
-            if "contact_emails" in data:
-                del data["contact_emails"]
-
-        return data
 
 
 class WizardFilesForm(forms.ModelForm):
