@@ -49,6 +49,9 @@
     },
     "DJANGO_MATTERMOST_ENDPOINT": {
       "value": ""
+    },
+    "DJANGO_MAKE_COM_WEBHOOK": {
+      "value": ""
     }
   },
   "scripts": {

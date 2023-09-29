@@ -1,8 +1,12 @@
+import json
 import logging
 
+import requests
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives
+from django.core.serializers.json import Serializer as JSONSerializer
 from django.template.loader import render_to_string
 from django.urls import reverse
 
@@ -103,3 +107,38 @@ def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
 
     connection = mail.get_connection()
     connection.send_messages(messages)
+
+
+class BetterJsonSerializer(JSONSerializer):
+    """Serialize django model objects to json.
+
+    There is a problem with the default json serializer, where
+    ArrayField instances are serialized to a single string instead of
+    an array of value. This class fixes this issue.
+    """
+
+    def handle_field(self, obj, field):
+        if isinstance(field, ArrayField):
+            self._current[field.name] = getattr(obj, field.name)
+        else:
+            super().handle_field(obj, field)
+
+
+@app.task
+def post_evalreq_to_automation(request_id, host):
+    """Send request data to Make.com."""
+
+    logger.info(f"Sending data to make.com {request_id} {host}")
+    webhook_url = settings.MAKE_COM_WEBHOOK
+    if not webhook_url:
+        return
+
+    request = Request.objects.get(id=request_id)
+    serialized = BetterJsonSerializer().serialize([request])
+    json_data = json.loads(serialized)[0]
+    payload = json_data["fields"]
+    payload["pk"] = json_data["pk"]
+
+    res = requests.post(webhook_url, json=payload)
+    if res.status_code != 200:
+        logger.error(f"Error while posting data to make.com: {res.text}")

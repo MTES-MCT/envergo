@@ -42,6 +42,7 @@ from envergo.evaluations.models import (
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
+    post_evalreq_to_automation,
     post_request_to_notion,
     share_evaluation_by_email,
 )
@@ -410,6 +411,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
             post_request_to_notion.delay(request.id, self.request.get_host())
+            post_evalreq_to_automation.delay(request.id, self.request.get_host())
 
         # Special case, hackish
         # The product is often used for demo purpose. In that case, we don't
