@@ -33,6 +33,11 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
+    address = forms.CharField(
+        label=_("Address"),
+        required=False,
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
+    )
     contact_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Urbanism department email address(es)"),
@@ -63,7 +68,6 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
 
     class Meta:
         widgets = {
-            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
             "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
@@ -362,6 +366,11 @@ class RequestFileInline(admin.TabularInline):
 
 
 class RequestAdminForm(forms.ModelForm):
+    address = forms.CharField(
+        label=_("Address"),
+        required=False,
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
+    )
     send_eval_to_sponsor = forms.BooleanField(
         label="Envoyer directement au porteur de projet",
         required=False,
@@ -369,7 +378,6 @@ class RequestAdminForm(forms.ModelForm):
 
     class Meta:
         widgets = {
-            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
             "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
             "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
                 attrs={"rows": 3}
