@@ -71,6 +71,16 @@ def test_result_without_contact_data(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [50])
+def test_moulinette_config(moulinette_data):
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert not moulinette.has_config()
+
+    MoulinetteConfigFactory(is_activated=False)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    assert moulinette.has_config()
+
+
+@pytest.mark.parametrize("footprint", [50])
 def test_result_with_inactive_contact_data(moulinette_data):
     """Dept contact info is not activated, we cannot run the eval."""
 

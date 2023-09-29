@@ -4,6 +4,7 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Case, F, Prefetch, When
 from django.db.models.functions import Cast
@@ -47,12 +48,22 @@ REGULATIONS = Choices(
 )
 
 
+# This is to use in model fields `default` attribute
+def all_regulations():
+    return list(dict(REGULATIONS._doubles).keys())
+
+
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
+    has_perimeters = models.BooleanField(
+        _("Has perimeters"),
+        default=False,
+        help_text=_("Is this regulation linked to local perimetres?"),
+    )
     show_map = models.BooleanField(
         _("Show perimeter map"),
         help_text=_("The perimeter's map will be displayed, if it exists"),
@@ -68,7 +79,7 @@ class Regulation(models.Model):
         return self.get_regulation_display()
 
     def __getattr__(self, attr):
-        """Returns the corresponding regulation.
+        """Returns the corresponding criterion.
 
         Allows to do something like this:
         moulinette.loi_sur_leau.zone_humide to fetch the correct regulation.
@@ -121,6 +132,17 @@ class Regulation(models.Model):
     def title(self):
         return self.get_regulation_display()
 
+    def is_activated(self):
+        """Is the regulation activated in the moulinette config?"""
+
+        if not self.moulinette.has_config():
+            return False
+
+        config = self.moulinette.config
+        regulations_available = config.regulations_available
+        activated = self.regulation in regulations_available
+        return activated
+
     @property
     def result(self):
         """Compute global result from individual criterions.
@@ -140,6 +162,8 @@ class Regulation(models.Model):
         only the Évaluation environnementale regulation has the "cas par cas" or
         "systematique" results, but the cascade still works.
         """
+        if not self.is_activated():
+            return RESULTS.non_active
 
         cascade = [
             RESULTS.interdit,
@@ -164,9 +188,16 @@ class Regulation(models.Model):
         if result == RESULTS.a_verifier:
             result = RESULTS.iota_a_verifier
 
-        # If there is no criterion at all, set a default result of "non disponible"
+        # If there is no criterion at all, we have to set a default value
         if result is None:
-            result = RESULTS.non_disponible
+            if self.has_perimeters:
+                perimeter = self.perimeter
+                if perimeter:
+                    result = RESULTS.non_disponible
+                else:
+                    result = RESULTS.non_concerne
+            else:
+                result = RESULTS.non_disponible
 
         return result
 
@@ -233,6 +264,10 @@ class Regulation(models.Model):
         """
         return self.perimeters.first()
 
+    def display_perimeter(self):
+        """Should / can a perimeter be displayed?"""
+        return self.is_activated() and self.perimeter
+
     @property
     def map(self):
         """Returns a map to be displayed for the regulation.
@@ -241,9 +276,6 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-        if not self.show_map:
-            return None
-
         perimeter = self.perimeter
         if perimeter:
             polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
@@ -258,6 +290,10 @@ class Regulation(models.Model):
             return map
 
         return None
+
+    def display_map(self):
+        """Should / can a perimeter map be displayed?"""
+        return all((self.is_activated(), self.show_map, self.map))
 
 
 class Criterion(models.Model):
@@ -474,6 +510,11 @@ class MoulinetteConfig(models.Model):
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
     ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
@@ -533,7 +574,7 @@ class Moulinette:
         self.catalog.update(self.get_catalog_data())
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
-            self.catalog["config"] = self.department.moulinette_config
+            self.config = self.catalog["config"] = self.department.moulinette_config
 
         self.perimeters = self.get_perimeters()
         self.criteria = self.get_criteria()
@@ -635,6 +676,7 @@ class Moulinette:
             )
             .annotate(distance=Distance("activation_map__zones__geometry", coords))
             .order_by("weight")
+            .distinct("weight", "id")
             .select_related("activation_map")
         )
         return criteria
@@ -659,6 +701,8 @@ class Moulinette:
                 )
             )
             .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .order_by("id")
+            .distinct("id")
             .select_related("activation_map")
         )
 

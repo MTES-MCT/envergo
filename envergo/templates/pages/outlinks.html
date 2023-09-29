@@ -13,7 +13,7 @@
     <div class="fr-alert fr-alert--info fr-mb-3w">
       <h3 class="fr-alert__title">Soyez patient·e</h3>
       <p>
-        La vérification nécessite de génerer une requête http vers chaque url du rapport. Quelques secondes de patience seront nécessaires.
+        La vérification nécessite de géné rer une requête http vers chaque url du rapport. Quelques secondes de patience seront nécessaires.
       </p>
     </div>
 
@@ -35,7 +35,35 @@
               <td>
                 <a target="_blank" rel="noopener" href="{{ link.url }}">{{ link.label }}</a>
               </td>
-              <td>{{ link.status }}</td>
+              <td>
+                <a href="https://developer.mozilla.org/fr/docs/Web/HTTP/Status/{{ link.status }}">{{ link.status }}</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if errors %}
+
+    <h2>Erreurs d'analyse</h2>
+    <p>Ces urls n'ont pas pu être analysées</p>
+    <div class="fr-table fr-table--bordered">
+      <table>
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Erreur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for error in errors %}
+            <tr>
+              <td>
+                <a target="_blank" rel="noopener" href="{{ error.url }}">{{ error.label }}</a>
+              </td>
+              <td>{{ error.error }}</td>
             </tr>
           {% endfor %}
         </tbody>

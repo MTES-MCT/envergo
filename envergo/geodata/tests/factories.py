@@ -117,4 +117,4 @@ class DepartmentFactory(DjangoModelFactory):
         model = Department
 
     department = 44
-    geometry = FuzzyMultiPolygon()
+    geometry = france_multipolygon

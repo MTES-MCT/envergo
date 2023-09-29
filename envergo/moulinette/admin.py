@@ -3,13 +3,19 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Map
-from envergo.moulinette.models import Criterion, MoulinetteConfig, Perimeter, Regulation
+from envergo.moulinette.models import (
+    REGULATIONS,
+    Criterion,
+    MoulinetteConfig,
+    Perimeter,
+    Regulation,
+)
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["get_regulation_display", "regulation_slug"]
+    list_display = ["get_regulation_display", "regulation_slug", "has_perimeters"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -114,6 +120,10 @@ class PerimeterAdmin(admin.ModelAdmin):
 
 
 class MoulinetteConfigForm(forms.ModelForm):
+    regulations_available = forms.MultipleChoiceField(
+        label=_("Regulations available"), required=False, choices=REGULATIONS
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["n2000_lotissement_proximite"].strip = False
