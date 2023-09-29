@@ -77,7 +77,7 @@ LOCAL_APPS = [
     "envergo.moulinette",
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",
-    "envergo.confs.apps.EnvergoAdminConfig",
+    "envergo.admin.EnvergoAdminConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
