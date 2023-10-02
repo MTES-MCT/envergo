@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-02 09:07+0000\n"
+"POT-Creation-Date: 2023-10-02 13:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -176,11 +176,15 @@ msgstr "L'url moulinette est invalide."
 
 #: envergo/evaluations/admin.py:103
 msgid "If you don't provide a moulinette url, you must provide contact data."
-msgstr "Vous devez fournir des infos de contact si vous ne saisissez pas d'url simulateur."
+msgstr ""
+"Vous devez fournir des infos de contact si vous ne saisissez pas d'url "
+"simulateur."
 
 #: envergo/evaluations/admin.py:109
 msgid "If you don't provide a moulinette url, the created surface is required."
-msgstr "Vous devez fournir une surface créée si vous ne saisissez pas d'url simulateur."
+msgstr ""
+"Vous devez fournir une surface créée si vous ne saisissez pas d'url "
+"simulateur."
 
 #: envergo/evaluations/admin.py:173 envergo/evaluations/admin.py:407
 msgid "Project data"
@@ -1093,9 +1097,13 @@ msgstr "Configs moulinette"
 msgid "Le projet concerne-t-il un lotissement ?"
 msgstr "Le projet concerne-t-il un lotissement ?"
 
-#: envergo/moulinette/urls.py:14
+#: envergo/moulinette/urls.py:15
 msgid "result/"
 msgstr "resultat/"
+
+#: envergo/moulinette/urls.py:23
+msgid "missing-data/"
+msgstr "questions-complementaires/"
 
 #: envergo/pages/models.py:12
 msgid "Content"
