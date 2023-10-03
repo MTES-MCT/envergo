@@ -18,7 +18,7 @@ if READ_DOT_ENV_FILE:
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = env.bool("DJANGO_DEBUG", False)
+DEBUG = env.bool("DJANGO_DEBUG", default=False)
 # Local time zone. Choices are
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
@@ -323,15 +323,15 @@ TEST_EMAIL = "test@test.fr"
 
 # Third party integration settings
 
-MATTERMOST_ENDPOINT = ""
+MATTERMOST_ENDPOINT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 
-NOTION_SECRET = ""
-NOTION_DATABASE_ID = ""
+NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
+NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
 
-MATOMO_SECURITY_TOKEN = env("MATOMO_SECURITY_TOKEN", None)
+MATOMO_SECURITY_TOKEN = env("MATOMO_SECURITY_TOKEN", default=None)
 
-CRISP_TOKEN_ID = ""
-CRISP_TOKEN_KEY = ""
-CRISP_WEBSITE_ID = ""
+CRISP_TOKEN_ID = env("DJANGO_CRISP_TOKEN_ID", default=None)
+CRISP_TOKEN_KEY = env("DJANGO_CRISP_TOKEN_KEY", default=None)
+CRISP_WEBSITE_ID = env("DJANGO_CRISP_WEBSITE_ID", default=None)
 
-MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", None)
+MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", default=None)
