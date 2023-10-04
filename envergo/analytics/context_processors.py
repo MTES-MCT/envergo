@@ -6,24 +6,24 @@ from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.models import Event
 
 
-def build_usage_facet(usage_data):
+def build_evalreq_facet(evalreq_data):
     now = timezone.now()
-    usage_delta = (now - usage_data["latest_date"]).days
+    evalreq_delta = (now - evalreq_data["latest_date"]).days
 
-    if usage_data["count"] >= 2:
-        usage_nb = "n2"
-    elif usage_data["count"] == 1:
-        usage_nb = "n1"
+    if evalreq_data["count"] >= 2:
+        evalreq_nb = "n2"
+    elif evalreq_data["count"] == 1:
+        evalreq_nb = "n1"
     else:
-        usage_nb = "n0"
+        evalreq_nb = "n0"
 
-    if usage_delta <= 60:
-        usage_last = "d0"
+    if evalreq_delta <= 60:
+        evalreq_last = "d0"
     else:
-        usage_last = "d1"
+        evalreq_last = "d1"
 
-    usage_facet = f"{usage_nb}_{usage_last}"
-    return usage_facet
+    evalreq_facet = f"{evalreq_nb}_{evalreq_last}"
+    return evalreq_facet
 
 
 def build_simulation_facet(simulation_data):
@@ -71,11 +71,13 @@ def analytics(request):
     )
     matomo_dimensions = []
 
-    usage_data = next((event for event in events if event["event"] == "request"), None)
-    usage_facet = build_usage_facet(usage_data) if usage_data else "n0_d0"
-    if usage_facet:
+    evalreq_data = next(
+        (event for event in events if event["event"] == "request"), None
+    )
+    evalreq_facet = build_evalreq_facet(evalreq_data) if evalreq_data else "n0_d0"
+    if evalreq_facet:
         matomo_dimensions.append(
-            (settings.MATOMO_USAGE_DIMENSION_ID, usage_facet),
+            (settings.MATOMO_EVALREQ_DIMENSION_ID, evalreq_facet),
         )
 
     simulation_data = next(

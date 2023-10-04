@@ -14,7 +14,7 @@ class EventFactory(DjangoModelFactory):
         model = Event
 
 
-class UsageEventFactory(EventFactory):
+class EvalreqEventFactory(EventFactory):
     category = "evaluation"
     event = "request"
 
