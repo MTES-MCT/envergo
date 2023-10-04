@@ -23,5 +23,6 @@ class Event(models.Model):
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
         indexes = [
+            models.Index(fields=["session_key"]),
             models.Index(fields=["category", "event"]),
         ]
