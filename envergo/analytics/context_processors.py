@@ -67,13 +67,25 @@ def analytics(request):
         .annotate(count=Count("*"), latest_date=Max("date_created"))
         .order_by("event")
     )
+    matomo_dimensions = []
 
-    usage_facet = build_usage_facet(events[0])
-    simulation_facet = build_simulation_facet(events[1])
-    matomo_dimensions = [
-        (settings.MATOMO_USAGE_DIMENSION_ID, usage_facet),
-        (settings.MATOMO_SIMULATION_DIMENSION_ID, simulation_facet),
-    ]
+    usage_data = next((event for event in events if event["event"] == "request"), None)
+    usage_facet = build_usage_facet(usage_data) if usage_data else None
+    if usage_facet:
+        matomo_dimensions.append(
+            (settings.MATOMO_USAGE_DIMENSION_ID, usage_facet),
+        )
+
+    simulation_data = next(
+        (event for event in events if event["event"] == "soumission"), None
+    )
+    simulation_facet = (
+        build_simulation_facet(simulation_data) if simulation_data else None
+    )
+    if simulation_facet:
+        matomo_dimensions.append(
+            (settings.MATOMO_SIMULATION_DIMENSION_ID, simulation_facet),
+        )
 
     return {
         "matomo_dimensions": matomo_dimensions,
