@@ -72,7 +72,7 @@ def analytics(request):
     matomo_dimensions = []
 
     usage_data = next((event for event in events if event["event"] == "request"), None)
-    usage_facet = build_usage_facet(usage_data) if usage_data else None
+    usage_facet = build_usage_facet(usage_data) if usage_data else "n0_d0"
     if usage_facet:
         matomo_dimensions.append(
             (settings.MATOMO_USAGE_DIMENSION_ID, usage_facet),
@@ -82,7 +82,7 @@ def analytics(request):
         (event for event in events if event["event"] == "soumission"), None
     )
     simulation_facet = (
-        build_simulation_facet(simulation_data) if simulation_data else None
+        build_simulation_facet(simulation_data) if simulation_data else "n0_d0"
     )
     if simulation_facet:
         matomo_dimensions.append(
