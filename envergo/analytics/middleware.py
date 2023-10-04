@@ -24,7 +24,6 @@ class SetVisitorIdCookie:
         self.get_response = get_response
 
     def __call__(self, request):
-
         is_first_visit = settings.VISITOR_COOKIE_NAME not in request.COOKIES
         visitor_id = None
         if is_first_visit:

@@ -1,10 +1,17 @@
-
 {% if ANALYTICS.TRACKER_ENABLED %}
   <script type="text/javascript">
     var _paq = window._paq = window._paq || [];
+
     if (typeof MATOMO_CUSTOM_URL === "string") {
       _paq.push(['setCustomUrl', MATOMO_CUSTOM_URL]);
     }
+
+    {% if matomo_dimensions %}
+      {% for dimension_id, dimension_value in matomo_dimensions %}
+        _paq.push(['setCustomDimension', {{ dimension_id }}, '{{ dimension_value }}']);
+      {% endfor %}
+    {% endif %}
+
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
     (function() {
