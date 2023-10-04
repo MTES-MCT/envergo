@@ -56,7 +56,9 @@ def analytics(request):
     We use matomo custom dimensions, but instead of storing raw data, it
     was decided that we manually build the facets here."""
 
-    visitor_id = request.COOKIES[VISITOR_COOKIE_NAME]
+    visitor_id = request.COOKIES.get(VISITOR_COOKIE_NAME, None)
+    if not visitor_id:
+        return {}
 
     q_request = Q(category="evaluation") & Q(event="request")
     q_simulation = Q(category="simulateur") & Q(event="soumission")
