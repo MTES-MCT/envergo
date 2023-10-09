@@ -10,17 +10,23 @@ def build_evalreq_facet(evalreq_data):
     now = timezone.now()
     evalreq_delta = (now - evalreq_data["latest_date"]).days
 
-    if evalreq_data["count"] >= 2:
-        evalreq_nb = "n2"
+    if evalreq_data["count"] == 0:
+        evalreq_nb = "n0"
     elif evalreq_data["count"] == 1:
         evalreq_nb = "n1"
+    elif evalreq_data["count"] <= 10:
+        evalreq_nb = "n2"
     else:
-        evalreq_nb = "n0"
+        evalreq_nb = "n3"
 
-    if evalreq_delta <= 60:
+    if evalreq_delta <= 15:
         evalreq_last = "d0"
-    else:
+    elif evalreq_delta <= 30:
         evalreq_last = "d1"
+    elif evalreq_delta <= 60:
+        evalreq_last = "d2"
+    else:
+        evalreq_last = "d3"
 
     evalreq_facet = f"{evalreq_nb}_{evalreq_last}"
     return evalreq_facet
@@ -30,19 +36,25 @@ def build_simulation_facet(simulation_data):
     now = timezone.now()
     simulation_delta = (now - simulation_data["latest_date"]).days
 
-    if simulation_data["count"] >= 10:
-        simulation_nb = "n3"
-    elif simulation_data["count"] >= 2:
-        simulation_nb = "n2"
+    if simulation_data["count"] == 0:
+        simulation_nb = "n0"
     elif simulation_data["count"] == 1:
         simulation_nb = "n1"
+    elif simulation_data["count"] <= 10:
+        simulation_nb = "n2"
+    elif simulation_data["count"] <= 50:
+        simulation_nb = "n3"
     else:
-        simulation_nb = "n0"
+        simulation_nb = "n4"
 
-    if simulation_delta <= 60:
+    if simulation_delta <= 15:
         simulation_last = "d0"
-    else:
+    elif simulation_delta <= 30:
         simulation_last = "d1"
+    elif simulation_delta <= 60:
+        simulation_last = "d2"
+    else:
+        simulation_last = "d3"
 
     simulation_facet = f"{simulation_nb}_{simulation_last}"
     return simulation_facet

@@ -35,16 +35,40 @@ def test_single_evalreq_event(req):
 def test_several_evalreq_events(req):
     EvalreqEventFactory.create_batch(15, session_key=VISITOR_ID)
     context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n3_d0"), (2, "n0_d0")]}
+
+
+def test_few_evalreq_events(req):
+    EvalreqEventFactory.create_batch(5, session_key=VISITOR_ID)
+    context = analytics(req)
     assert context == {"matomo_dimensions": [(1, "n2_d0"), (2, "n0_d0")]}
+
+
+def test_single_evalreq_recent_event(req):
+    EvalreqEventFactory(
+        session_key=VISITOR_ID,
+        date_created=timezone.now() - timezone.timedelta(days=20),
+    )
+    context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n1_d1"), (2, "n0_d0")]}
+
+
+def test_single_evalreq_not_long_ago_event(req):
+    EvalreqEventFactory(
+        session_key=VISITOR_ID,
+        date_created=timezone.now() - timezone.timedelta(days=50),
+    )
+    context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n1_d2"), (2, "n0_d0")]}
 
 
 def test_single_evalreq_old_event(req):
     EvalreqEventFactory(
         session_key=VISITOR_ID,
-        date_created=timezone.now() - timezone.timedelta(days=61),
+        date_created=timezone.now() - timezone.timedelta(days=70),
     )
     context = analytics(req)
-    assert context == {"matomo_dimensions": [(1, "n1_d1"), (2, "n0_d0")]}
+    assert context == {"matomo_dimensions": [(1, "n1_d3"), (2, "n0_d0")]}
 
 
 def test_single_simulation_event(req):
@@ -65,10 +89,34 @@ def test_more_simulation_events(req):
     assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n3_d0")]}
 
 
+def test_even_more_simulation_events(req):
+    SimulationEventFactory.create_batch(60, session_key=VISITOR_ID)
+    context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n4_d0")]}
+
+
+def test_single_simulation_recent_event(req):
+    SimulationEventFactory(
+        session_key=VISITOR_ID,
+        date_created=timezone.now() - timezone.timedelta(days=20),
+    )
+    context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n1_d1")]}
+
+
+def test_single_simulation_not_so_recent_event(req):
+    SimulationEventFactory(
+        session_key=VISITOR_ID,
+        date_created=timezone.now() - timezone.timedelta(days=50),
+    )
+    context = analytics(req)
+    assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n1_d2")]}
+
+
 def test_single_simulation_old_event(req):
     SimulationEventFactory(
         session_key=VISITOR_ID,
         date_created=timezone.now() - timezone.timedelta(days=61),
     )
     context = analytics(req)
-    assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n1_d1")]}
+    assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n1_d3")]}
