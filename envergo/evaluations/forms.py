@@ -11,14 +11,6 @@ from envergo.evaluations.validators import application_number_validator
 class EvaluationFormMixin(forms.Form):
     """Common code for all evaluation forms."""
 
-    # We don't set `maxlength` to 15 because we want to allow copy-pasting
-    # values with spaces
-    application_number = forms.CharField(
-        label=_("Application number"),
-        help_text="15 caractères commençant par « PA », « PC », « DP » ou « CU »",
-        max_length=64,
-    )
-
     def clean_application_number(self):
         dirty_number = self.cleaned_data.get("application_number")
         if dirty_number == "":
@@ -27,6 +19,26 @@ class EvaluationFormMixin(forms.Form):
         clean_number = dirty_number.replace(" ", "").strip().upper()
         application_number_validator(clean_number)
         return clean_number
+
+    def clean_project_sponsor_phone_number(self):
+        phone = self.cleaned_data["project_sponsor_phone_number"]
+        return str(phone)
+
+    def clean(self):
+        """Custom form field validation.
+
+        Some contact fields are removed depending on the user type.
+        """
+        data = super().clean()
+        user_type = data.get("user_type", None)
+        if user_type == USER_TYPES.petitioner:
+            self.fields["contact_emails"].required = False
+            if "contact_emails" in self._errors:
+                del self._errors["contact_emails"]
+            if "contact_emails" in data:
+                del data["contact_emails"]
+
+        return data
 
 
 class EvaluationSearchForm(forms.Form):
@@ -55,8 +67,8 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     )
 
     class Meta:
-        fields = ["application_number", "address", "project_description"]
         model = Request
+        fields = ["address", "no_address", "application_number", "project_description"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,10 +86,19 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             if "address" in self._errors:
                 del self._errors["address"]
 
+            address = data.get("address", None)
+            if address:
+                self.add_error(
+                    "no_address",
+                    _(
+                        "You checked this box but still provided an address. Please check your submission."
+                    ),
+                )
+
         return data
 
 
-class WizardContactForm(forms.ModelForm):
+class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
     user_type = forms.ChoiceField(
         label="Vous êtes :",
         required=True,
@@ -114,6 +135,7 @@ class WizardContactForm(forms.ModelForm):
             "user_type",
             "contact_emails",
             "project_sponsor_emails",
+            "project_sponsor_phone_number",
             "send_eval_to_sponsor",
         ]
 
@@ -125,26 +147,6 @@ class WizardContactForm(forms.ModelForm):
         self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-
-    def clean_project_sponsor_phone_number(self):
-        phone = self.cleaned_data["project_sponsor_phone_number"]
-        return str(phone)
-
-    def clean(self):
-        """Custom form field validation.
-
-        Some contact fields are removed depending on the user type.
-        """
-        data = super().clean()
-        user_type = data.get("user_type", None)
-        if user_type == USER_TYPES.petitioner:
-            self.fields["contact_emails"].required = False
-            if "contact_emails" in self._errors:
-                del self._errors["contact_emails"]
-            if "contact_emails" in data:
-                del data["contact_emails"]
-
-        return data
 
 
 class WizardFilesForm(forms.ModelForm):

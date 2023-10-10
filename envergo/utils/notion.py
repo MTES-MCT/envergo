@@ -16,6 +16,10 @@ def post_request(request, host):
 
     secret = settings.NOTION_SECRET
     database_id = settings.NOTION_DATABASE_ID
+    if not all((secret, database_id)):
+        logger.warning("Notion not configured. Doing nothing.")
+        return
+
     headers = {
         "Accept": "application/json",
         "Notion-Version": "2022-06-28",

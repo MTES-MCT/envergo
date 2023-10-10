@@ -268,6 +268,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 .order_by("type", "distance", "map__name")
             )
 
+        if moulinette and moulinette.has_missing_data():
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("moulinette_missing_data")
+            )
+
         return context
 
 

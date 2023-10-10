@@ -13,6 +13,9 @@
       <li>Surface existante: {{ existing_surface }} m²</li>
       <li>Surface créée: {{ created_surface }} m²</li>
       <li>Surface finale: {{ final_surface }} m²</li>
+      <li>
+        Département : <a href="{% url 'admin:moulinette_moulinetteconfig_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+      </li>
     </ul>
 
     <h2>Périmètres activés</h2>
@@ -132,7 +135,10 @@
     <h2>Résultat</h2>
 
     {% for regulation in moulinette.regulations %}
-      <h3>{{ regulation.title }} : {% result_tag regulation.result %}</h3>
+      <h3>
+        {{ regulation.title }} : {% result_tag regulation.result %}
+        <small>({{ regulation.result }})</small>
+      </h3>
 
       <ul>
         {% for criterion in regulation.criterions %}

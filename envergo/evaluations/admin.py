@@ -32,24 +32,42 @@ from envergo.utils import crisp
 logger = logging.getLogger(__name__)
 
 
-class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
+class EvalAdminFormMixin(EvaluationFormMixin):
+    address = forms.CharField(
+        label=_("Address"),
+        required=False,
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
+    )
+    send_eval_to_sponsor = forms.BooleanField(
+        label="Envoyer directement au porteur de projet",
+        required=False,
+    )
     contact_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    reference = forms.CharField(
-        label=_("Reference"),
-        help_text=_("If you select an existing request, this value will be replaced."),
-        required=False,
-        initial=generate_reference,
-        max_length=64,
+    project_sponsor_emails = SimpleArrayField(
+        forms.EmailField(),
+        label=_("Project sponsor email(s)"),
+        error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
     application_number = forms.CharField(
         label=_("Application number"),
         required=False,
         help_text=_('A 15 chars value starting with "P"'),
+        max_length=64,
+    )
+
+
+class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
+    reference = forms.CharField(
+        label=_("Reference"),
+        help_text=_("If you select an existing request, this value will be replaced."),
+        required=False,
+        initial=generate_reference,
         max_length=64,
     )
     result = forms.ChoiceField(
@@ -60,15 +78,6 @@ class EvaluationAdminForm(EvaluationFormMixin, forms.ModelForm):
             "If the result can be computed from criterions, this value will be erased."
         ),
     )
-
-    class Meta:
-        widgets = {
-            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
-            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
-            "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
-                attrs={"rows": 3}
-            ),
-        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -361,20 +370,8 @@ class RequestFileInline(admin.TabularInline):
     extra = 0
 
 
-class RequestAdminForm(forms.ModelForm):
-    send_eval_to_sponsor = forms.BooleanField(
-        label="Envoyer directement au porteur de projet",
-        required=False,
-    )
-
-    class Meta:
-        widgets = {
-            "address": admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
-            "contact_emails": admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
-            "project_sponsor_emails": admin.widgets.AdminTextareaWidget(
-                attrs={"rows": 3}
-            ),
-        }
+class RequestAdminForm(EvalAdminFormMixin, forms.ModelForm):
+    pass
 
 
 @admin.register(Request)
