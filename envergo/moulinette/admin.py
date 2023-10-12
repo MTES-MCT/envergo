@@ -103,7 +103,10 @@ class PerimeterAdmin(admin.ModelAdmin):
         "regulation",
         "activation_map",
         "activation_distance",
+        "is_activated",
     ]
+    list_filter = ["regulation", "is_activated"]
+    search_fields = ["backend_name", "name"]
     form = PerimeterAdminForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
