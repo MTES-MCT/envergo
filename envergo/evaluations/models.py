@@ -279,7 +279,7 @@ class Evaluation(models.Model):
 
         return self.request and self.moulinette_url
 
-    def get_regulatory_reminder_email(self, request):
+    def get_evaluation_email(self, request):
         """Generates a "avis réglementaire" email for this evaluation.
 
         The content of the email will vary depending on the evaluation result

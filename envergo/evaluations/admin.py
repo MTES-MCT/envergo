@@ -255,24 +255,24 @@ class EvaluationAdmin(admin.ModelAdmin):
         custom_urls = [
             path(
                 "<path:object_id>/email-avis/",
-                self.admin_site.admin_view(self.rappel_reglementaire),
+                self.admin_site.admin_view(self.evaluation_email),
                 name="evaluations_evaluation_email_avis",
             ),
         ]
         return custom_urls + urls
 
-    def rappel_reglementaire(self, request, object_id):
+    def evaluation_email(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
 
         try:
-            rr_email = evaluation.get_regulatory_reminder_email(request)
+            eval_email = evaluation.get_evaluation_email(request)
         except Exception as error:  # noqa
             # There was an error generating the email
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
             self.message_user(
                 request,
-                f"Impossible de générer le rappel réglementaire -> {error}",
+                f"Impossible de générer l'avis réglementaire -> {error}",
                 messages.ERROR,
             )
             return response
@@ -286,11 +286,11 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
 
         if request.method == "POST":
-            rr_email.send()
+            eval_email.send()
             # We need to store the message id from the esp, but in local dev or testing,
             # there is no such sing.
             try:
-                message_id = rr_email.anymail_status.message_id
+                message_id = eval_email.anymail_status.message_id
                 logger.info(f"Envoi avis réglementaire, message id: {message_id}")
             except AttributeError as e:
                 logger.warning(f"Impossible de récupérer le message id: {e}")
@@ -298,13 +298,13 @@ class EvaluationAdmin(admin.ModelAdmin):
             RegulatoryNoticeLog.objects.create(
                 evaluation=evaluation,
                 sender=request.user,
-                frm=rr_email.from_email,
-                to=rr_email.to,
-                cc=rr_email.cc,
-                bcc=rr_email.bcc,
-                subject=rr_email.subject,
-                txt_body=rr_email.body,
-                html_body=rr_email.alternatives[0][0],
+                frm=eval_email.from_email,
+                to=eval_email.to,
+                cc=eval_email.cc,
+                bcc=eval_email.bcc,
+                subject=eval_email.subject,
+                txt_body=eval_email.body,
+                html_body=eval_email.alternatives[0][0],
                 moulinette_data=moulinette.raw_data,
                 moulinette_result=moulinette.result(),
                 message_id=message_id,
@@ -312,7 +312,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             url = reverse("eval_admin_short_url", args=[evaluation.reference])
             full_url = request.build_absolute_uri(url)
             crisp.update_contacts_data(
-                rr_email.to + rr_email.cc, evaluation.reference, full_url
+                eval_email.to + eval_email.cc, evaluation.reference, full_url
             )
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             response = HttpResponseRedirect(url)
@@ -323,9 +323,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "subtitle": str(evaluation),
                 "object_id": object_id,
                 "evaluation": evaluation,
-                "email": rr_email,
-                "email_html": rr_email.alternatives[0][0],
-                "email_txt": rr_email.body,
+                "email": eval_email,
+                "email_html": eval_email.alternatives[0][0],
+                "email_txt": eval_email.body,
                 "media": self.media,
                 "opts": self.opts,
                 "txt_mail_template": txt_mail_template,
