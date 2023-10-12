@@ -467,7 +467,7 @@ class Perimeter(models.Model):
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Check if all criteria have been set"),
-        default=True,
+        default=False,
     )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
