@@ -40,3 +40,4 @@ class PerimeterFactory(DjangoModelFactory):
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
     regulation = factory.SubFactory(RegulationFactory)
+    is_activated = True

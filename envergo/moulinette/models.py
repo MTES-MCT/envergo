@@ -162,8 +162,20 @@ class Regulation(models.Model):
         only the Évaluation environnementale regulation has the "cas par cas" or
         "systematique" results, but the cascade still works.
         """
+
+        # We start by handling edge cases:
+        # - when the regulation is not activated for the department
+        # - when the perimeter is not activated
+        # - when no perimeter is found
         if not self.is_activated():
             return RESULTS.non_active
+
+        if self.has_perimeters:
+            perimeter = self.perimeter
+            if perimeter and not perimeter.is_activated:
+                return RESULTS.non_disponible
+            if not perimeter:
+                return RESULTS.non_concerne
 
         cascade = [
             RESULTS.interdit,
@@ -191,11 +203,7 @@ class Regulation(models.Model):
         # If there is no criterion at all, we have to set a default value
         if result is None:
             if self.has_perimeters:
-                perimeter = self.perimeter
-                if perimeter:
-                    result = RESULTS.non_disponible
-                else:
-                    result = RESULTS.non_concerne
+                result = RESULTS.non_soumis
             else:
                 result = RESULTS.non_disponible
 
