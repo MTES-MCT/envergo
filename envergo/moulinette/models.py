@@ -177,6 +177,9 @@ class Regulation(models.Model):
             if not perimeter:
                 return RESULTS.non_concerne
 
+        # From this point, we made sure every data (regulation, perimeter) is existing
+        # and activated
+
         cascade = [
             RESULTS.interdit,
             RESULTS.systematique,
