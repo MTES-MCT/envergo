@@ -459,6 +459,11 @@ class Perimeter(models.Model):
     contact_url = models.URLField(_("Contact url"), blank=True)
     contact_phone = PhoneNumberField(_("Contact phone"), blank=True)
     contact_email = models.EmailField(_("Contact email"), blank=True)
+    is_activated = models.BooleanField(
+        _("Is activated"),
+        help_text=_("Check if all criteria have been set"),
+        default=True,
+    )
 
     map_legend = models.CharField(_("Map legend"), max_length=256, blank=True)
     rules_url = models.URLField(_("Rules url"))
