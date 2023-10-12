@@ -143,6 +143,20 @@ class Regulation(models.Model):
         activated = self.regulation in regulations_available
         return activated
 
+    def show_criteria(self):
+        """Should the criteria be displayed?"""
+
+        if any(
+            (
+                not self.is_activated,
+                self.has_perimeters and not self.perimeter,
+                self.has_perimeters and not self.perimeter.is_activated,
+            )
+        ):
+            return False
+
+        return True
+
     @property
     def result(self):
         """Compute global result from individual criterions.
