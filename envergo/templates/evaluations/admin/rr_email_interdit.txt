@@ -1,4 +1,4 @@
-{% extends 'evaluations/admin/base_rr_email.txt' %}
+{% extends 'evaluations/admin/base_eval_email.txt' %}
 
 {% block detail %}
 Au vu des informations qui nous ont été transmises, il apparaît que ce projet est interdit.

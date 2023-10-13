@@ -290,10 +290,10 @@ class Evaluation(models.Model):
         moulinette = self.get_moulinette()
         result = moulinette.loi_sur_leau.result
         txt_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
+            f"evaluations/admin/eval_email_{moulinette.loi_sur_leau.result}.txt"
         )
         html_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
+            f"evaluations/admin/eval_email_{moulinette.loi_sur_leau.result}.html"
         )
         to_be_transmitted = all(
             (
