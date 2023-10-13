@@ -819,8 +819,8 @@ class Moulinette:
             logger.warning(f"Regulation {regulation_slug} not found.")
         return regul
 
-    def result(self):
-        """Export all results as a dict."""
+    def result_data(self):
+        """Export all results data as a dict."""
 
         result = {}
         for regulation in self.regulations:
