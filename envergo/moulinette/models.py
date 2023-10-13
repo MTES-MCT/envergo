@@ -613,7 +613,7 @@ class Moulinette:
 
         log_data = {
             "raw_data": self.raw_data,
-            "result": self.result(),
+            "result": self.result_data(),
         }
         logger.info(log_data)
 
@@ -868,7 +868,7 @@ class Moulinette:
         summary.update(self.cleaned_additional_data())
 
         if self.is_evaluation_available():
-            summary["result"] = self.result()
+            summary["result"] = self.result_data()
 
         return summary
 
