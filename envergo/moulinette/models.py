@@ -678,6 +678,7 @@ class Moulinette:
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
+            .defer("activation_map__geometry")
         )
         return criteria
 
@@ -704,6 +705,7 @@ class Moulinette:
             .order_by("id")
             .distinct("id")
             .select_related("activation_map")
+            .defer("activation_map__geometry")
         )
 
         return perimeters
@@ -727,6 +729,7 @@ class Moulinette:
             .annotate(distance=Distance("geometry", coords))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
+            .defer("map__geometry")
             .order_by("distance", "map__name")
         )
         return zones
