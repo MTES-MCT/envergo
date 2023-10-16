@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Map
@@ -99,15 +100,20 @@ class PerimeterAdminForm(forms.ModelForm):
 class PerimeterAdmin(admin.ModelAdmin):
     list_display = [
         "backend_name",
-        "name",
         "regulation",
-        "activation_map",
-        "activation_distance",
+        "activation_distance_column",
         "is_activated",
     ]
     list_filter = ["regulation", "is_activated"]
     search_fields = ["backend_name", "name"]
     form = PerimeterAdminForm
+
+    @admin.display(
+        ordering="activation_distance",
+        description=mark_safe('<abbr title="Distance d\'activation">Dist. act.</abbr>'),
+    )
+    def activation_distance_column(self, obj):
+        return obj.activation_distance
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Limit map choices to those with empty "map type".
