@@ -148,7 +148,7 @@ class Regulation(models.Model):
 
         if any(
             (
-                not self.is_activated,
+                not self.is_activated(),
                 self.has_perimeters and not self.perimeter,
                 self.has_perimeters and not self.perimeter.is_activated,
             )
