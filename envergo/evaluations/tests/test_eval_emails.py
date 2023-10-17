@@ -73,7 +73,7 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
     req = rf.get("/")
-    email = eval.get_regulatory_reminder_email(req)
+    email = eval.get_evaluation_email(req)
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
     assert email.bcc == []
@@ -98,7 +98,7 @@ def test_instructor_transmit_soumis(rf, moulinette_url):
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
     req = rf.get("/")
-    email = eval.get_regulatory_reminder_email(req)
+    email = eval.get_evaluation_email(req)
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
     assert email.bcc == ["ddtm_email_test@example.org"]
@@ -123,7 +123,7 @@ def test_instructor_transmit_action_requise(rf, moulinette_url):
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
     req = rf.get("/")
-    email = eval.get_regulatory_reminder_email(req)
+    email = eval.get_evaluation_email(req)
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
     assert email.bcc == []
@@ -148,7 +148,7 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
     req = rf.get("/")
-    email = eval.get_regulatory_reminder_email(req)
+    email = eval.get_evaluation_email(req)
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
     assert email.bcc == []
@@ -165,7 +165,7 @@ def test_petitioner(rf, moulinette_url):
         send_eval_to_sponsor=False,
     )
     req = rf.get("/")
-    email = eval.get_regulatory_reminder_email(req)
+    email = eval.get_evaluation_email(req)
 
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == []
