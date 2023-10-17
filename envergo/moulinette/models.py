@@ -872,6 +872,33 @@ class Moulinette:
 
         return summary
 
+    @property
+    def result(self):
+        """Compute global result from individual regulation results."""
+
+        results = [regulation.result for regulation in self.regulations]
+
+        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
+        rules = [
+            ((RESULTS.interdit,), RESULTS.interdit),
+            (
+                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
+                RESULTS.soumis,
+            ),
+            ((RESULTS.action_requise), RESULTS.action_requise),
+            ((RESULTS.non_soumis), RESULTS.non_soumis),
+        ]
+
+        result = None
+        for rule_statuses, rule_result in rules:
+            if any(status in rule_statuses for status in results):
+                result = rule_result
+                break
+
+        result = result or RESULTS.non_soumis
+
+        return result
+
 
 class FakeMoulinette(Moulinette):
     """This is a custom Moulinette subclass used for debugging purpose.

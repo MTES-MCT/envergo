@@ -288,13 +288,9 @@ class Evaluation(models.Model):
 
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
-        result = moulinette.loi_sur_leau.result
-        txt_mail_template = (
-            f"evaluations/admin/eval_email_{moulinette.loi_sur_leau.result}.txt"
-        )
-        html_mail_template = (
-            f"evaluations/admin/eval_email_{moulinette.loi_sur_leau.result}.html"
-        )
+        result = moulinette.result
+        txt_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.txt"
+        html_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.html"
         to_be_transmitted = all(
             (
                 self.user_type == USER_TYPES.instructor,
