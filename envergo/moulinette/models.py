@@ -885,13 +885,13 @@ class Moulinette:
                 (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
                 RESULTS.soumis,
             ),
-            ((RESULTS.action_requise), RESULTS.action_requise),
+            ((RESULTS.action_requise,), RESULTS.action_requise),
             ((RESULTS.non_soumis), RESULTS.non_soumis),
         ]
 
         result = None
         for rule_statuses, rule_result in rules:
-            if any(status in rule_statuses for status in results):
+            if any(rule_status in results for rule_status in rule_statuses):
                 result = rule_result
                 break
 

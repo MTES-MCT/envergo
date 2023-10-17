@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from urllib.parse import urlencode
 
 import pytest
@@ -173,3 +174,41 @@ def test_petitioner(rf, moulinette_url):
 
     body = email.body
     assert "À transmettre au porteur" not in body
+
+
+def fake_moulinette(url, lse, n2000, evalenv, sage):
+    """Create a moulinette with custom regulation results."""
+    lse = MagicMock(result=lse)
+    n2000 = MagicMock(result=n2000)
+    evalenv = MagicMock(result=evalenv)
+    sage = MagicMock(result=sage)
+    eval = EvaluationFactory(
+        user_type=USER_TYPES.instructor,
+        moulinette_url=url,
+        send_eval_to_sponsor=True,
+    )
+    moulinette = eval.get_moulinette()
+    moulinette.regulations = [lse, n2000, evalenv, sage]
+    return moulinette
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_moulinette_global_result(moulinette_url):
+    expected_results = [
+        (("soumis", "non_soumis", "non_concerne", "interdit"), "interdit"),
+        (("soumis", "soumis", "action_requise", "interdit"), "interdit"),
+        (("soumis", "action_requise", "non_concerne", "non_disponible"), "soumis"),
+        (("soumis", "non_soumis", "non_soumis", "non_soumis"), "soumis"),
+        (("non_soumis", "non_soumis", "systematique", "non_soumis"), "soumis"),
+        (("non_soumis", "non_soumis", "cas_par_cas", "non_soumis"), "soumis"),
+        (
+            ("non_soumis", "non_soumis", "action_requise", "non_soumis"),
+            "action_requise",
+        ),
+        (("non_soumis", "non_soumis", "non_concerne", "non_soumis"), "non_soumis"),
+        (("non_soumis", "non_soumis", "non_concerne", "non_disponible"), "non_soumis"),
+    ]
+
+    for results, expected_result in expected_results:
+        moulinette = fake_moulinette(moulinette_url, *results)
+        assert moulinette.result == expected_result
