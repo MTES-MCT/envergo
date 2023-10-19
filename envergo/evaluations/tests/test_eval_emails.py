@@ -7,6 +7,7 @@ from envergo.evaluations.models import USER_TYPES
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map, france_zh  # noqa
+from envergo.moulinette.regulations import RequiredAction, Stake
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     MoulinetteConfigFactory,
@@ -179,17 +180,45 @@ def test_petitioner(rf, moulinette_url):
 def fake_moulinette(url, lse, n2000, evalenv, sage):
     """Create a moulinette with custom regulation results."""
 
-    lse = Mock(result=lse, slug="loi_sur_leau")
-    n2000 = Mock(result=n2000, slug="natura_2000")
-    evalenv = Mock(result=evalenv, slug="eval_env")
-    sage = Mock(result=sage, slug="sage")
     eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=url,
         send_eval_to_sponsor=True,
     )
     moulinette = eval.get_moulinette()
-    moulinette.regulations = [lse, n2000, evalenv, sage]
+
+    # We create mocks based on a real regulation, so it's easier to fake results
+    regulation = RegulationFactory()
+    moulinette.regulations = [
+        Mock(
+            regulation,
+            wraps=regulation,
+            result=lse,
+            slug="loi_sur_leau",
+            do_not_call_in_templates=True,
+        ),
+        Mock(
+            regulation,
+            wraps=regulation,
+            result=n2000,
+            slug="natura_2000",
+            do_not_call_in_templates=True,
+        ),
+        Mock(
+            regulation,
+            wraps=regulation,
+            result=evalenv,
+            slug="eval_env",
+            do_not_call_in_templates=True,
+        ),
+        Mock(
+            regulation,
+            wraps=regulation,
+            result=sage,
+            slug="sage",
+            do_not_call_in_templates=True,
+        ),
+    ]
 
     # We monkeypatch this method, so that the `eval.get_evaluation_email` uses the
     # same moulinette object that we mocked here.
@@ -277,3 +306,75 @@ def test_evalenv_systematique_content(rf, moulinette_url):
     assert "Le projet est soumis à Natura 2000" not in body
     assert "Le projet est soumis à examen au cas par cas" not in body
     assert "Le projet est soumis à évaluation environnementale" in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_required_action_lse(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "action_requise", "non_soumis", "non_soumis", "non_soumis"
+    )
+    moulinette.regulations[0].required_actions_interdit.return_value = []
+    moulinette.regulations[0].required_actions_soumis.return_value = [
+        RequiredAction(Stake.SOUMIS, "action attendue du porteur")
+    ]
+
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "ce projet est susceptible d'être interdit" not in body
+    assert "une action du porteur de projet est requise" in body
+    assert "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" in body
+    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" not in body
+    assert "action attendue du porteur" in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_required_action_n2000(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "non_soumis", "action_requise", "non_soumis", "non_soumis"
+    )
+    moulinette.regulations[1].required_actions_interdit.return_value = []
+    moulinette.regulations[1].required_actions_soumis.return_value = [
+        RequiredAction(Stake.SOUMIS, "action attendue du porteur")
+    ]
+
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "ce projet est susceptible d'être interdit" not in body
+    assert "une action du porteur de projet est requise" in body
+    assert (
+        "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" not in body
+    )
+    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" in body
+    assert "action attendue du porteur" in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_required_action_interdit(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "action_requise", "non_soumis", "non_soumis", "action_requise"
+    )
+    moulinette.regulations[0].required_actions_interdit.return_value = []
+    moulinette.regulations[0].required_actions_soumis.return_value = [
+        RequiredAction(Stake.SOUMIS, "action attendue du porteur")
+    ]
+    moulinette.regulations[3].required_actions_interdit.return_value = [
+        RequiredAction(Stake.INTERDIT, "action requise interdit")
+    ]
+    moulinette.regulations[3].required_actions_soumis.return_value = []
+
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "ce projet est susceptible d'être interdit" in body
+    assert "Le porteur doit mener les études pour s'assurer que le projet" in body
+    assert (
+        "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" not in body
+    )
+    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" not in body
+    assert "action attendue du porteur" not in body
+    assert "action requise interdit" in body

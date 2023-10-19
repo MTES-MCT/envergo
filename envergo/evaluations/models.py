@@ -307,6 +307,10 @@ class Evaluation(models.Model):
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
             "to_be_transmitted": to_be_transmitted,
+            "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
+            "required_actions_interdit": list(
+                moulinette.all_required_actions_interdit()
+            ),
         }
         txt_body = render_to_string(txt_mail_template, context)
         html_body = render_to_string(html_mail_template, context)

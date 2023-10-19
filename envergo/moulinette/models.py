@@ -899,6 +899,21 @@ class Moulinette:
 
         return result
 
+    def all_required_actions(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions():
+                yield required_action
+
+    def all_required_actions_soumis(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_soumis():
+                yield required_action
+
+    def all_required_actions_interdit(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_interdit():
+                yield required_action
+
 
 class FakeMoulinette(Moulinette):
     """This is a custom Moulinette subclass used for debugging purpose.
