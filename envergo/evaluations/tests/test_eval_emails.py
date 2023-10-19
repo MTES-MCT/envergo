@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 from urllib.parse import urlencode
 
 import pytest
@@ -178,10 +178,11 @@ def test_petitioner(rf, moulinette_url):
 
 def fake_moulinette(url, lse, n2000, evalenv, sage):
     """Create a moulinette with custom regulation results."""
-    lse = MagicMock(result=lse)
-    n2000 = MagicMock(result=n2000)
-    evalenv = MagicMock(result=evalenv)
-    sage = MagicMock(result=sage)
+
+    lse = Mock(result=lse, slug="loi_sur_leau")
+    n2000 = Mock(result=n2000, slug="natura_2000")
+    evalenv = Mock(result=evalenv, slug="eval_env")
+    sage = Mock(result=sage, slug="sage")
     eval = EvaluationFactory(
         user_type=USER_TYPES.instructor,
         moulinette_url=url,
@@ -189,7 +190,12 @@ def fake_moulinette(url, lse, n2000, evalenv, sage):
     )
     moulinette = eval.get_moulinette()
     moulinette.regulations = [lse, n2000, evalenv, sage]
-    return moulinette
+
+    # We monkeypatch this method, so that the `eval.get_evaluation_email` uses the
+    # same moulinette object that we mocked here.
+    eval.get_moulinette = lambda: moulinette
+
+    return eval, moulinette
 
 
 @pytest.mark.parametrize("footprint", [1200])
@@ -210,5 +216,64 @@ def test_moulinette_global_result(moulinette_url):
     ]
 
     for results, expected_result in expected_results:
-        moulinette = fake_moulinette(moulinette_url, *results)
+        _eval, moulinette = fake_moulinette(moulinette_url, *results)
         assert moulinette.result == expected_result
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_lse_soumis_content(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "soumis", "non_soumis", "non_soumis", "non_soumis"
+    )
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+    assert "Le projet est soumis à la Loi sur l'eau" in body
+    assert "Le projet est soumis à Natura 2000" not in body
+    assert "Le projet est soumis à examen au cas par cas" not in body
+    assert "Le projet est soumis à évaluation environnementale" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_n2000_soumis_content(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "non_soumis", "soumis", "non_soumis", "non_soumis"
+    )
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "Le projet est soumis à la Loi sur l'eau" not in body
+    assert "Le projet est soumis à Natura 2000" in body
+    assert "Le projet est soumis à examen au cas par cas" not in body
+    assert "Le projet est soumis à évaluation environnementale" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_evalenv_cas_par_cas_content(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "non_soumis", "non_soumis", "cas_par_cas", "non_soumis"
+    )
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "Le projet est soumis à la Loi sur l'eau" not in body
+    assert "Le projet est soumis à Natura 2000" not in body
+    assert "Le projet est soumis à examen au cas par cas" in body
+    assert "Le projet est soumis à évaluation environnementale" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_evalenv_systematique_content(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "non_soumis", "non_soumis", "systematique", "non_soumis"
+    )
+    req = rf.get("/")
+    email = eval.get_evaluation_email(req)
+    body = email.alternatives[0][0]
+
+    assert "Le projet est soumis à la Loi sur l'eau" not in body
+    assert "Le projet est soumis à Natura 2000" not in body
+    assert "Le projet est soumis à examen au cas par cas" not in body
+    assert "Le projet est soumis à évaluation environnementale" in body

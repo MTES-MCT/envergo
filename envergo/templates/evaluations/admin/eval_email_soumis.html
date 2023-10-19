@@ -1,17 +1,48 @@
 {% extends 'evaluations/admin/base_eval_email.html' %}
 
 {% block detail %}
-  <p>
-    Au vu des informations qui nous ont été transmises, il apparaît que <strong style="background-color: #F4BAA8;">ce projet est soumis à la Loi sur l'eau</strong>.
-  </p>
+  <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
 
-  <p>Le porteur du projet doit déposer un dossier de déclaration Loi sur l'eau à la DDTM.</p>
+  <ul>
+    {% if moulinette.loi_sur_leau.result == "soumis" %}
+      <li>
+        <strong style="background-color: #F4BAA8;">Le projet est soumis à la Loi sur l'eau</strong>.
+        <br />
+        Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).
+      </li>
+    {% endif %}
+
+    {% if moulinette.natura_2000.result == "soumis" %}
+      <li>
+        <strong style="background-color: #F4BAA8;">Le projet est soumis à Natura 2000</strong>.
+        <br />
+        Le porteur de projet doit réaliser une évaluation des incidences Natura 2000.
+      </li>
+    {% endif %}
+
+    {% if moulinette.eval_env.result == "cas_par_cas" %}
+      <li>
+        <strong style="background-color: #ffd3a6;">Le projet est soumis à examen au cas par cas</strong>.
+        <br />
+        Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+      </li>
+    {% endif %}
+
+    {% if moulinette.eval_env.result == "systematique" %}
+      <li>
+        <strong style="background-color: #ffb7a5;">Le projet est soumis à évaluation environnementale</strong>.
+        <br />
+        Le porteur de projet doit faire réaliser une étude d'impact.
+      </li>
+    {% endif %}
+
+  </ul>
 
   <div class="rr_mention" style="font-style: italic;">
     {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
   </div>
 
-  <p>Nous vous conseillons de prendre contact avec un bureau d'études en lui transmettant ces éléments.</p>
+  <p>Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.</p>
 
   <p>Plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
 {% endblock %}

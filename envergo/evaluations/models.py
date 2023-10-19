@@ -91,7 +91,9 @@ RESULTS = Choices(
     ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
 )
 
+
 # All possible result codes for a single evaluation
+# This is for legacy evaluations only
 EVAL_RESULTS = Choices(
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
