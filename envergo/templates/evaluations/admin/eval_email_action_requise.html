@@ -32,13 +32,13 @@
       </ul>
     {% endif %}
 
-    {% if moulinette.natura_2000.required_actions_soumis %}
+    {% if moulinette.natura2000.required_actions_soumis %}
       <p>
         Pour s'assurer que le projet n'est pas soumis à Natura 2000, le porteur doit menant les études prouvant que celui-ci :
       </p>
 
       <ul>
-        {% for action in moulinette.natura_2000.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+        {% for action in moulinette.natura2000.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
       </ul>
     {% endif %}
   {% endif %}
