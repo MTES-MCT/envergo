@@ -3,4 +3,4 @@
 
 echo "Starting the Django app ($DJANGO_SETTINGS_MODULE) as user `whoami`"
 
-gunicorn config.wsgi:application --log-file -
+gunicorn config.wsgi:application --preload --max-requests 600 --log-file -
