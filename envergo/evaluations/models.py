@@ -213,7 +213,7 @@ class Evaluation(models.Model):
     send_eval_to_sponsor = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
-
+    is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:

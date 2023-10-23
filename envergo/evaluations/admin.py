@@ -193,7 +193,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             "Contenu de l'avis réglementaire",
-            {"fields": ("moulinette_url", "details_md")},
+            {"fields": ("moulinette_url", "is_icpe", "details_md")},
         ),
         (
             _("Sent emails"),
