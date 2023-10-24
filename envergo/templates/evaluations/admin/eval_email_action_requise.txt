@@ -21,7 +21,7 @@ Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau, le porteur do
 {% endfor %}
 {% endif %}
 {% if moulinette.natura_2000.required_actions_soumis %}
-Pour s'assurer que le projet n'est pas soumis à Natura 2000, le porteur doit menant les études prouvant que celui-ci :
+Pour s'assurer que le projet n'est pas soumis à Natura 2000, le porteur doit mener les études prouvant que celui-ci :
 {% for action in moulinette.natura_2000.required_actions_soumis %}
  - {{ action }}
 {% endfor %}
