@@ -57,9 +57,9 @@
 
     {% if evaluation.moulinette_params.emprise %}
       <li>
-        <strong>Emprise au sol créée par le projet :</strong> {{ evaluation.moulinette_params.emprise|localize }} m²
+        <strong>Emprise au sol totale :</strong> {{ evaluation.moulinette_params.emprise|localize }} m²
         <br />
-        <span class="fr-hint-text">Projection verticale du volume de la construction nouvelle</span>
+        <span class="fr-hint-text">Projection verticale du volume de la construction, en comptant l’existant</span>
       </li>
     {% endif %}
 
@@ -71,8 +71,10 @@
 
     {% if evaluation.moulinette_params.surface_plancher_sup_thld %}
       <li>
-        <strong>Le projet crée une surface plancher supérieure à 10 000 m² :</strong>
+        <strong>La surface de plancher totale est supérieure à 10 000 m² :</strong>
         {{ evaluation.moulinette_params.surface_plancher_sup_thld|capfirst }}
+        <br />
+        <span class="fr-hint-text">En comptant l’existant</span>
       </li>
     {% endif %}
 

@@ -14,8 +14,8 @@ ZONE_U_THRESHOLD = 40000
 
 class EmpriseForm(forms.Form):
     emprise = forms.IntegerField(
-        label="Emprise au sol créée par le projet",
-        help_text="Projection verticale du volume de la construction nouvelle",
+        label="Emprise au sol totale",
+        help_text="Projection verticale du volume de la construction, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
@@ -73,7 +73,8 @@ SURFACE_PLANCHER_THRESHOLD = 3000
 
 class SurfacePlancherForm(forms.Form):
     surface_plancher_sup_thld = forms.ChoiceField(
-        label="Le projet crée-t-il une surface de plancher supérieure à 10 000 m² ?",
+        label="La surface de plancher totale sera-t-elle supérieure à 10 000 m² ?",
+        help_text="En comptant l'existant",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
