@@ -337,10 +337,7 @@ class Evaluation(models.Model):
             recipients = self.project_sponsor_emails
             cc_recipients = []
 
-        if result == "non_soumis":
-            subject = "Avis réglementaire EnvErgo"
-        else:
-            subject = "Avis réglementaire Loi sur l'eau"
+        subject = "Avis réglementaire"
 
         if self.address:
             subject += f" / {self.address}"

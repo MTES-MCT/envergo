@@ -9,8 +9,8 @@ https://htmlemail.io/inline/
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="description" content="" />
-    <meta name="keywords" content="" />
+    <meta name="description" content="">
+    <meta name="keywords" content="">
     <title>
       {% block title %}{% endblock %}
     </title>
@@ -64,6 +64,7 @@ https://htmlemail.io/inline/
           width: auto !important;
         }
       }
+
       @media all {
         .ExternalClass {
           width: 100%;
@@ -201,16 +202,14 @@ https://htmlemail.io/inline/
                                  text-align: center"
                           valign="top"
                           align="center">
-                        <img src="https://img.mailinblue.com/4575616/images/content_library/original/644296cb359d590cc31102f0.png"
-                             alt="République française. Liberté Égalité Fraternité"
-                             width="120"
+                        <img src="https://envergo.beta.gouv.fr/static/images/logo_mte.png"
+                             alt="Ministère de la Transition Écologique"
+                             width="160"
                              border="0"
                              class=""
                              style="border: none;
                                     -ms-interpolation-mode: bicubic;
-                                    max-width: 120px;
-                                    display: block;
-                                    width: 100%">
+                                    display: block">
                       </td>
                     </tr>
                   </table>
@@ -269,7 +268,11 @@ https://htmlemail.io/inline/
                                  font-size: 16px;
                                  vertical-align: top"
                           valign="top">
-                        <p>N'hésitez pas à nous contacter pour toute question.</p>
+                        <p style="font-family: sans-serif;
+                                  font-size: 14px;
+                                  font-weight: normal;
+                                  margin: 0;
+                                  margin-bottom: 15px">N'hésitez pas à nous contacter pour toute question.</p>
                         <p style="font-family: sans-serif;
                                   font-size: 14px;
                                   font-weight: normal;
@@ -287,9 +290,13 @@ https://htmlemail.io/inline/
                                   margin-bottom: 0">
                           <strong>Tél.</strong> : 07 56 81 02 11
                           <br>
-                          <strong>Email</strong> : <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+                          <strong>Email</strong> : <a href="mailto:contact@envergo.beta.gouv.fr"
+    style="color: #3498db;
+           text-decoration: underline">contact@envergo.beta.gouv.fr</a>
                           <br>
-                          <strong>Site web</strong> : <a href="https://envergo.beta.gouv.fr">https://envergo.beta.gouv.fr</a>
+                          <strong>Site web</strong> : <a href="https://envergo.beta.gouv.fr"
+    style="color: #3498db;
+           text-decoration: underline">https://envergo.beta.gouv.fr</a>
                         </p>
                       </td>
                     </tr>

@@ -4,5 +4,13 @@
     "line_break_after_multiline_tag": false,
     "max_line_length": 120,
     "preserve_blank_lines": true,
-    "ignore": "T002,T003,H021,D018,H022,H006,H029"
+    "ignore": "T002,T003,H021,D018,H022,H006,H029",
+    "format_css": true,
+    "css": {
+        "indent_size": 2
+    },
+    "format_js": true,
+    "js": {
+        "indent_size": 2
+    }
 }
