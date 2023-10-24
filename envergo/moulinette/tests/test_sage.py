@@ -77,6 +77,23 @@ def test_default_result_when_a_perimeter_is_found(moulinette_data):
     moulinette.evaluate()
 
     assert moulinette.sage.perimeter is not None
+    assert moulinette.sage.result == "non_soumis"
+
+
+@pytest.mark.parametrize("footprint", [1000])
+def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
+    Criterion.objects.all().delete()
+
+    MoulinetteConfigFactory(is_activated=True)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.catalog["forbidden_wetlands_within_25m"] = True
+
+    perimeter = moulinette.sage.perimeter
+    perimeter.is_activated = False
+    perimeter.save()
+    moulinette.evaluate()
+
+    assert moulinette.sage.perimeter is not None
     assert moulinette.sage.result == "non_disponible"
 
 

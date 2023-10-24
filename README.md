@@ -228,6 +228,7 @@ Depuis un autre shell :
 pg_dump --dbname postgresql://<user>:<pass>@localhost:10000/<db> > /tmp/envergo.dump
 ```
 
+Alternative : récupérer le backup nocture depuis Scalingo.
 
 ## Comment charger une BD de dev depuis un dump
 

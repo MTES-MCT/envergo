@@ -22,7 +22,7 @@
 
   <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
 
-  {% if regulation.is_activated and regulation.criteria.all %}
+  {% if regulation.show_criteria and regulation.criteria.all %}
     <div class="criteria">
       <h3>Détail des rubriques</h3>
 

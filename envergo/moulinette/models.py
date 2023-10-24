@@ -143,6 +143,20 @@ class Regulation(models.Model):
         activated = self.regulation in regulations_available
         return activated
 
+    def show_criteria(self):
+        """Should the criteria be displayed?"""
+
+        if any(
+            (
+                not self.is_activated(),
+                self.has_perimeters and not self.perimeter,
+                self.has_perimeters and not self.perimeter.is_activated,
+            )
+        ):
+            return False
+
+        return True
+
     @property
     def result(self):
         """Compute global result from individual criterions.
@@ -162,8 +176,23 @@ class Regulation(models.Model):
         only the Évaluation environnementale regulation has the "cas par cas" or
         "systematique" results, but the cascade still works.
         """
+
+        # We start by handling edge cases:
+        # - when the regulation is not activated for the department
+        # - when the perimeter is not activated
+        # - when no perimeter is found
         if not self.is_activated():
             return RESULTS.non_active
+
+        if self.has_perimeters:
+            perimeter = self.perimeter
+            if perimeter and not perimeter.is_activated:
+                return RESULTS.non_disponible
+            if not perimeter:
+                return RESULTS.non_concerne
+
+        # From this point, we made sure every data (regulation, perimeter) is existing
+        # and activated
 
         cascade = [
             RESULTS.interdit,
@@ -191,11 +220,7 @@ class Regulation(models.Model):
         # If there is no criterion at all, we have to set a default value
         if result is None:
             if self.has_perimeters:
-                perimeter = self.perimeter
-                if perimeter:
-                    result = RESULTS.non_disponible
-                else:
-                    result = RESULTS.non_concerne
+                result = RESULTS.non_soumis
             else:
                 result = RESULTS.non_disponible
 
@@ -438,6 +463,11 @@ class Perimeter(models.Model):
         max_length=256,
         blank=True,
         help_text=_("Displayed below the regulation title"),
+    )
+    is_activated = models.BooleanField(
+        _("Is activated"),
+        help_text=_("Check if all criteria have been set"),
+        default=False,
     )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
