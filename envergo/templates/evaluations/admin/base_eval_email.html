@@ -1,12 +1,14 @@
 {% extends 'emails/base_inlined.html' %}
 
-{% block content %}
+{# djlint:off #}
+{% block pre-content %}{% if to_be_transmitted %}
+  <p>
+    <strong>À transmettre au porteur de projet</strong>
+  </p>
+{% endif %}{% endblock %}
+{# djlint:on #}
 
-  {% if to_be_transmitted %}
-    <p>
-      <strong>À transmettre au porteur de projet</strong>
-    </p>
-  {% endif %}
+{% block content %}
 
   <p>Bonjour,</p>
 

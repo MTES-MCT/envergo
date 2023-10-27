@@ -32,7 +32,7 @@ https://htmlemail.io/inline/
 
         table.body .wrapper,
         table.body .article {
-          padding: 10px !important;
+          padding: 10px 0 !important;
         }
 
         table.body .content {
@@ -108,7 +108,7 @@ https://htmlemail.io/inline/
       }
     </style>
   </head>
-  <body style="background-color: #f6f6f6;
+  <body style="background-color: #ffffff;
                font-family: Arial, sans-serif;
                -webkit-font-smoothing: antialiased;
                font-size: 16px;
@@ -138,10 +138,10 @@ https://htmlemail.io/inline/
            style="border-collapse: separate;
                   mso-table-lspace: 0pt;
                   mso-table-rspace: 0pt;
-                  background-color: #f6f6f6;
+                  background-color: #ffffff;
                   width: 100%"
            width="100%"
-           bgcolor="#f6f6f6">
+           bgcolor="#ffffff">
       <tr>
         <td style="font-family: Arial, sans-serif;
                    font-size: 16px;
@@ -155,13 +155,13 @@ https://htmlemail.io/inline/
                    max-width: 580px;
                    padding: 10px;
                    width: 580px;
-                   margin: 0 auto"
+                   margin: 0 0"
             width="580"
             valign="top">
           <div class="content"
                style="box-sizing: border-box;
                       display: block;
-                      margin: 0 auto;
+                      margin: 0 0;
                       max-width: 580px;
                       padding: 10px">
 
@@ -178,12 +178,38 @@ https://htmlemail.io/inline/
 
               <!-- START MAIN CONTENT AREA -->
               <tr>
+                <td style="font-family: Arial, sans-serif;
+                           font-size: 16px;
+                           vertical-align: top"
+                    valign="top">
+                  <table role="presentation"
+                         border="0"
+                         cellpadding="0"
+                         cellspacing="0"
+                         style="border-collapse: separate;
+                                mso-table-lspace: 0pt;
+                                mso-table-rspace: 0pt;
+                                width: 100%"
+                         width="100%">
+                    <tr>
+                      <td style="font-family: Arial, sans-serif;
+                                 font-size: 16px;
+                                 vertical-align: top"
+                          valign="top">
+                        {% block pre-content %}{% endblock %}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
                 <td class="wrapper"
                     style="font-family: Arial, sans-serif;
                            font-size: 16px;
                            vertical-align: top;
                            box-sizing: border-box;
-                           padding: 20px"
+                           padding: 20px 0"
                     valign="top">
                   <table role="presentation"
                          border="0"
@@ -209,6 +235,7 @@ https://htmlemail.io/inline/
                              class=""
                              style="border: none;
                                     -ms-interpolation-mode: bicubic;
+                                    max-width: 100%;
                                     display: block">
                       </td>
                     </tr>
@@ -222,7 +249,7 @@ https://htmlemail.io/inline/
                            font-size: 16px;
                            vertical-align: top;
                            box-sizing: border-box;
-                           padding: 20px"
+                           padding: 20px 0"
                     valign="top">
                   <table role="presentation"
                          border="0"
@@ -251,7 +278,7 @@ https://htmlemail.io/inline/
                            font-size: 16px;
                            vertical-align: top;
                            box-sizing: border-box;
-                           padding: 20px"
+                           padding: 20px 0"
                     valign="top">
                   <table role="presentation"
                          border="0"
