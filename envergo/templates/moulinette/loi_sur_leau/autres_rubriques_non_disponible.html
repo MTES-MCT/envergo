@@ -18,3 +18,5 @@
   <li>dûs à des forages (rubrique 1.1.1.0) ;</li>
   <li>ou sur les milieux marins, en cas de proximité à la côte (rubriques commençant par 4.1).</li>
 </ul>
+
+{% if config.lse_free_mention %}{{ config.lse_free_mention|safe }}{% endif %}
