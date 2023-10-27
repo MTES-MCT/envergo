@@ -201,7 +201,7 @@ def fake_moulinette(url, lse, n2000, evalenv, sage):
             regulation,
             wraps=regulation,
             result=n2000,
-            slug="natura_2000",
+            slug="natura2000",
             do_not_call_in_templates=True,
         ),
         Mock(
@@ -324,8 +324,13 @@ def test_required_action_lse(rf, moulinette_url):
 
     assert "ce projet est susceptible d'être interdit" not in body
     assert "une action du porteur de projet est requise" in body
-    assert "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" in body
-    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" not in body
+    assert (
+        "Pour s'assurer que le projet n'est pas soumis à la <b>Loi sur l'eau</b>"
+        in body
+    )
+    assert (
+        "Pour s'assurer que le projet n'est pas soumis à <b>Natura 2000</b>" not in body
+    )
     assert "action attendue du porteur" in body
 
 
@@ -346,9 +351,10 @@ def test_required_action_n2000(rf, moulinette_url):
     assert "ce projet est susceptible d'être interdit" not in body
     assert "une action du porteur de projet est requise" in body
     assert (
-        "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" not in body
+        "Pour s'assurer que le projet n'est pas soumis à la <b>Loi sur l'eau</b>"
+        not in body
     )
-    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" in body
+    assert "Pour s'assurer que le projet n'est pas soumis à <b>Natura 2000</b>" in body
     assert "action attendue du porteur" in body
 
 
@@ -373,8 +379,11 @@ def test_required_action_interdit(rf, moulinette_url):
     assert "ce projet est susceptible d'être interdit" in body
     assert "Le porteur doit mener les études pour s'assurer que le projet" in body
     assert (
-        "Pour s'assurer que le projet n'est pas soumis à la Loi sur l'eau" not in body
+        "Pour s'assurer que le projet n'est pas soumis à la <b>Loi sur l'eau</b>"
+        not in body
     )
-    assert "Pour s'assurer que le projet n'est pas soumis à Natura 2000" not in body
+    assert (
+        "Pour s'assurer que le projet n'est pas soumis à <b>Natura 2000</b>" not in body
+    )
     assert "action attendue du porteur" not in body
     assert "action requise interdit" in body
