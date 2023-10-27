@@ -547,6 +547,9 @@ class MoulinetteConfig(models.Model):
     )
     ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
+    lse_free_mention = models.TextField(
+        "LSE > Mention libre « autres rubriques »", blank=True
+    )
     n2000_contact_ddtm_info = models.TextField("N2000 > Contact DDTM info")
     n2000_contact_ddtm_instruction = models.TextField(
         "N2000 > Contact DDTM instruction"
