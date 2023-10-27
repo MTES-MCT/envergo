@@ -1,0 +1,14 @@
+{% if CRISP_CHATBOX_ENABLED %}
+  <script type="text/javascript">
+    window.$crisp=[];
+    window.CRISP_WEBSITE_ID="{{ CRISP_WEBSITE_ID }}";
+    (function(){
+      var d = document;
+      s = d.createElement("script");
+      s.src = "https://client.crisp.chat/l.js";
+      s.async = true;
+      s.defer = true;
+      d.getElementsByTagName("head")[0].appendChild(s);
+    })();
+  </script>
+{% endif %}

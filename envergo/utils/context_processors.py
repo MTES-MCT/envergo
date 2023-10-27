@@ -10,4 +10,6 @@ def settings_context(_request):
         "ANALYTICS": settings.ANALYTICS,
         "SENTRY_DSN": settings.SENTRY_DSN,
         "ENV_NAME": settings.ENV_NAME,
+        "CRISP_CHATBOX_ENABLED": settings.CRISP_CHATBOX_ENABLED,
+        "CRISP_WEBSITE_ID": settings.CRISP_WEBSITE_ID,
     }
