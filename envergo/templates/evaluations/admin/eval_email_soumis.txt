@@ -1,0 +1,24 @@
+{% extends 'evaluations/admin/base_eval_email.txt' %}
+
+{% block detail %}
+Au vu des informations qui nous ont été transmises, il apparaît que :
+
+{% if moulinette.loi_sur_leau.result == "soumis" %}  - Le projet est soumis à la Loi sur l'eau.
+Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).
+
+{% endif %}{% if moulinette.natura_2000.result == "soumis" %}  - Le projet est soumis à Natura 2000.
+    Le porteur de projet doit réaliser une évaluation des incidences Natura 2000.
+
+{% endif %}{% if moulinette.eval_env.result == "cas_par_cas" %}  - Le projet est soumis à examen au cas par cas.
+    Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+
+{% endif %}{% if moulinette.eval_env.result == "systematique" %}  - Le projet est soumis à évaluation environnementale.
+    Le porteur de projet doit faire réaliser une étude d'impact.
+
+{% endif %}
+{% if rr_mention_md %}{{ rr_mention_md }}
+{% endif %}
+Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.
+
+Plus de détails sur cet avis réglementaire et sur la procédure à suivre :
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'evaluations/admin/base_eval_email.html' %}
+
+{% block detail %}
+
+  {% if required_actions_interdit %}
+    <p>
+      Au vu des informations qui nous ont été transmises, il apparaît
+      que <strong>ce projet est susceptible d'être interdit</strong>.
+      <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur de projet est requise</strong>.
+    </p>
+  {% else %}
+    <p>
+      Au vu des informations qui nous ont été transmises, il apparaît qu'<strong style="font-weight: bold; background-color: #fee7a0">une action du porteur de projet est requise</strong>.
+    </p>
+  {% endif %}
+
+  {% if required_actions_interdit %}
+    <p>Le porteur doit mener les études pour s'assurer que le projet :</p>
+
+    <ul>
+      {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
+    </ul>
+  {% else %}
+
+    {% if moulinette.loi_sur_leau.required_actions_soumis %}
+      <p>
+        Pour s'assurer que le projet n'est pas soumis à la <b>Loi sur l'eau</b>, le porteur doit mener les études prouvant que celui-ci :
+      </p>
+
+      <ul>
+        {% for action in moulinette.loi_sur_leau.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if moulinette.natura2000.required_actions_soumis %}
+      <p>
+        Pour s'assurer que le projet n'est pas soumis à <b>Natura 2000</b>, le porteur doit mener les études prouvant que celui-ci :
+      </p>
+
+      <ul>
+        {% for action in moulinette.natura2000.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+
+  {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
+
+  <p>Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.</p>
+
+  <p>Plus de détails sur cet avis réglementaire et sur les actions à mener :</p>
+{% endblock %}

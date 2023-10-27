@@ -91,7 +91,9 @@ RESULTS = Choices(
     ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
 )
 
+
 # All possible result codes for a single evaluation
+# This is for legacy evaluations only
 EVAL_RESULTS = Choices(
     ("soumis", "Soumis"),
     ("non_soumis", "Non soumis"),
@@ -279,7 +281,7 @@ class Evaluation(models.Model):
 
         return self.request and self.moulinette_url
 
-    def get_regulatory_reminder_email(self, request):
+    def get_evaluation_email(self, request):
         """Generates a "avis réglementaire" email for this evaluation.
 
         The content of the email will vary depending on the evaluation result
@@ -288,13 +290,9 @@ class Evaluation(models.Model):
 
         config = self.get_moulinette_config()
         moulinette = self.get_moulinette()
-        result = moulinette.loi_sur_leau.result
-        txt_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
-        )
-        html_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
-        )
+        result = moulinette.result
+        txt_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.txt"
+        html_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.html"
         to_be_transmitted = all(
             (
                 self.user_type == USER_TYPES.instructor,
@@ -309,6 +307,10 @@ class Evaluation(models.Model):
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(self.get_absolute_url()),
             "to_be_transmitted": to_be_transmitted,
+            "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
+            "required_actions_interdit": list(
+                moulinette.all_required_actions_interdit()
+            ),
         }
         txt_body = render_to_string(txt_mail_template, context)
         html_body = render_to_string(html_mail_template, context)

@@ -613,7 +613,7 @@ class Moulinette:
 
         log_data = {
             "raw_data": self.raw_data,
-            "result": self.result(),
+            "result": self.result_data(),
         }
         logger.info(log_data)
 
@@ -819,8 +819,8 @@ class Moulinette:
             logger.warning(f"Regulation {regulation_slug} not found.")
         return regul
 
-    def result(self):
-        """Export all results as a dict."""
+    def result_data(self):
+        """Export all results data as a dict."""
 
         result = {}
         for regulation in self.regulations:
@@ -868,9 +868,51 @@ class Moulinette:
         summary.update(self.cleaned_additional_data())
 
         if self.is_evaluation_available():
-            summary["result"] = self.result()
+            summary["result"] = self.result_data()
 
         return summary
+
+    @property
+    def result(self):
+        """Compute global result from individual regulation results."""
+
+        results = [regulation.result for regulation in self.regulations]
+
+        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
+        rules = [
+            ((RESULTS.interdit,), RESULTS.interdit),
+            (
+                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
+                RESULTS.soumis,
+            ),
+            ((RESULTS.action_requise,), RESULTS.action_requise),
+            ((RESULTS.non_soumis), RESULTS.non_soumis),
+        ]
+
+        result = None
+        for rule_statuses, rule_result in rules:
+            if any(rule_status in results for rule_status in rule_statuses):
+                result = rule_result
+                break
+
+        result = result or RESULTS.non_soumis
+
+        return result
+
+    def all_required_actions(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions():
+                yield required_action
+
+    def all_required_actions_soumis(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_soumis():
+                yield required_action
+
+    def all_required_actions_interdit(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_interdit():
+                yield required_action
 
 
 class FakeMoulinette(Moulinette):
