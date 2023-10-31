@@ -306,7 +306,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 txt_body=eval_email.body,
                 html_body=eval_email.alternatives[0][0],
                 moulinette_data=moulinette.raw_data,
-                moulinette_result=moulinette.result(),
+                moulinette_result=moulinette.result_data(),
                 message_id=message_id,
             )
             url = reverse("eval_admin_short_url", args=[evaluation.reference])
