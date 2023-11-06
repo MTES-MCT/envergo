@@ -303,14 +303,14 @@ msgstr "Téléphone du porteur de projet"
 #: envergo/evaluations/models.py:518
 msgid "Send evaluation to project sponsor"
 msgstr ""
-"Je souhaite qu'EnvErgo envoie automatiquement l'évaluation au porteur de "
+"Je souhaite qu'EnvErgo envoie automatiquement l'avis réglementaire au porteur de "
 "projet"
 
 #: envergo/evaluations/forms.py:128
 msgid ""
 "If you uncheck this box, you will be the only recipient of the evaluation."
 msgstr ""
-"Si vous décochez cette case, le porteur de projet ne recevra pas l'évaluation"
+"Si vous décochez cette case, le porteur de projet ne recevra pas l'avis."
 
 #: envergo/evaluations/forms.py:145 envergo/evaluations/forms.py:148
 msgid "Provide one or several addresses separated by commas « , »"
@@ -319,7 +319,7 @@ msgstr "Saisissez une ou plusieurs adresses séparées par des virgules « , �
 #: envergo/evaluations/forms.py:154
 msgid "Additional files you might deem useful for the evaluation"
 msgstr ""
-"Informations complémentaires utiles à l'évaluation (CERFA, plan de masse, "
+"Informations complémentaires utiles à l'analyse du projet (CERFA, plan de masse, "
 "pièces complémentaires…)."
 
 #: envergo/evaluations/forms.py:187
