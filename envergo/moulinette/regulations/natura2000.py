@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.gis.measure import Distance as D
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
@@ -276,3 +277,65 @@ class Lotissement(CriterionEvaluator):
             distance = "proximite_immediate"
 
         return is_lotissement, distance
+
+
+AUTORISATION_URBA_CHOICES = (
+    ("pa", "soumis à permis d'aménager (PA)"),
+    ("pc", "soumis à permis de construire (PC)"),
+    (
+        "amenagement_dp",
+        mark_safe(
+            """
+            un aménagement soumis à déclaration préalable (DP)
+            <br /><span class='fr-hint-text'>au sens de l’art. R421-23
+            du code de l’urbanisme</span>
+        """
+        ),
+    ),
+    (
+        "construction_dp",
+        mark_safe(
+            """une construction soumise à déclaration préalable (DP)
+            <br /><span class='fr-hint-text'>au sens de l’art. R421-9
+            du code de l’urbanisme</span>
+        """
+        ),
+    ),
+    ("none", "soumis à aucune autorisation d'urbanisme"),
+    ("other", "autre / je ne sais pas"),
+)
+
+
+class AutorisationUrbanismeForm(forms.Form):
+    autorisation_urba = forms.ChoiceField(
+        label="Le projet est-il…",
+        widget=forms.RadioSelect,
+        choices=AUTORISATION_URBA_CHOICES,
+        required=True,
+    )
+
+
+class AutorisationUrbanisme(CriterionEvaluator):
+    choice_label = "Natural 2000 > Autorisation d'urbanisme"
+    form_class = AutorisationUrbanismeForm
+
+    CODES = ["soumis", "a_verifier_urba", "non_soumis"]
+
+    CODE_MATRIX = {
+        "pa": "soumis",
+        "pc": "soumis",
+        "amenagement_dp": "soumis",
+        "construction_dp": "soumis",
+        "none": "non_soumis",
+        "other": "a_verifier_urba",
+    }
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "a_verifier_urba": RESULTS.a_verifier,
+        "non_soumis": RESULTS.non_soumis,
+    }
+
+    def get_result_data(self):
+        autorisation_urba = self.catalog["autorisation_urba"]
+        return autorisation_urba
