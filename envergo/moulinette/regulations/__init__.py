@@ -175,7 +175,15 @@ class CriterionEvaluator(ABC):
 
     @property
     def result_code(self):
-        """Return the criterion result code."""
+        """Return the criterion result code.
+
+        The result code is a unique code used to render the criterion template.
+
+        This is useful because for a given result, a single criterion could be
+        rendered in different ways. E.g a criterion could have a "action requise"
+        result, but the action is different depending on the criterion parameters.
+
+        """
         if not hasattr(self, "_result_code"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
@@ -183,7 +191,11 @@ class CriterionEvaluator(ABC):
 
     @property
     def result(self):
-        """Return the criterion result."""
+        """Return the criterion result.
+
+        This value is used to rendered the criterion result label (e.g "action requise")
+        and to compute the whole regulation result.
+        """
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
