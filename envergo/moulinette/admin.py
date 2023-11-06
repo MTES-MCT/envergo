@@ -123,8 +123,8 @@ class PerimeterAdmin(admin.ModelAdmin):
         Also, I find it weird that there is no better way to filter foreign key
         choices.
         """
-        if db_field.name == "map":
-            kwargs["queryset"] = Map.objects.filter(map_type="")
+        if db_field.name == "activation_map":
+            kwargs["queryset"] = Map.objects.filter(map_type="").defer("geometry")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 

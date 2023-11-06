@@ -62,13 +62,13 @@ article {
   color: black;
 
   &.probability-non_soumis,
+  &.probability-non_concerne,
   &.probability-1 {
     background-color: #b1f0bd;
   }
 
   &.probability-non_disponible,
   &.probability-non_applicable,
-  &.probability-non_concerne,
   &.probability-non_active,
   &.probability-2 {
     background-color: #d5dbef;
