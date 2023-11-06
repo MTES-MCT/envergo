@@ -3,7 +3,6 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Map
 from envergo.moulinette.models import (
     REGULATIONS,
     Criterion,
@@ -106,6 +105,7 @@ class PerimeterAdmin(admin.ModelAdmin):
     ]
     list_filter = ["regulation", "is_activated"]
     search_fields = ["backend_name", "name"]
+    autocomplete_fields = ["activation_map"]
     form = PerimeterAdminForm
 
     @admin.display(
@@ -114,18 +114,6 @@ class PerimeterAdmin(admin.ModelAdmin):
     )
     def activation_distance_column(self, obj):
         return obj.activation_distance
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """Limit map choices to those with empty "map type".
-
-        Maps for wetlands or flood zones are not used for perimeters.
-
-        Also, I find it weird that there is no better way to filter foreign key
-        choices.
-        """
-        if db_field.name == "activation_map":
-            kwargs["queryset"] = Map.objects.filter(map_type="").defer("geometry")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class MoulinetteConfigForm(forms.ModelForm):
