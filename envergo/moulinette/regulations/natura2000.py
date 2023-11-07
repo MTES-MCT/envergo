@@ -319,7 +319,7 @@ class AutorisationUrbanisme(CriterionEvaluator):
     choice_label = "Natural 2000 > Autorisation d'urbanisme"
     form_class = AutorisationUrbanismeForm
 
-    CODES = ["soumis", "a_verifier_urba", "non_soumis"]
+    CODES = ["soumis", "a_verifier", "non_soumis"]
 
     CODE_MATRIX = {
         "pa": "soumis",
@@ -327,14 +327,29 @@ class AutorisationUrbanisme(CriterionEvaluator):
         "amenagement_dp": "soumis",
         "construction_dp": "soumis",
         "none": "non_soumis",
-        "other": "a_verifier_urba",
+        "other": "a_verifier",
     }
 
     RESULT_MATRIX = {
         "soumis": RESULTS.soumis,
-        "a_verifier_urba": RESULTS.a_verifier,
+        "a_verifier": RESULTS.a_verifier,
         "non_soumis": RESULTS.non_soumis,
     }
+
+    def get_result_code(self, result_data):
+        """For this criterion, the result will depend on the department."""
+
+        # Get custom `data to result code` matrix from moulinette config
+        config = self.moulinette.config
+        urba_code_matrix = config.n2000_autorisation_urba_result
+        try:
+            result_code = urba_code_matrix[result_data]
+            if result_code not in self.RESULT_MATRIX.keys():
+                raise ValueError
+        except (KeyError, ValueError):
+            result_code = super().get_result_code(result_data)
+
+        return result_code
 
     def get_result_data(self):
         autorisation_urba = self.catalog["autorisation_urba"]
