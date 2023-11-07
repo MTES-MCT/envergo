@@ -83,7 +83,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "import_error_msg",
     ]
     actions = ["process", "generate_preview"]
-    exclude = ["task_id"]
+    exclude = ["task_id", "geometry"]
     search_fields = ["name", "display_name"]
     list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
     enable_nav_sidebar = False
