@@ -160,12 +160,24 @@ class CriterionEvaluator(ABC):
             f"Implement the `{type(self).__name__}.get_result_data` method."
         )
 
+    def get_result_code(self, result_data):
+        """Compute a unique result code from criterion data."""
+
+        result_code = self.CODE_MATRIX.get(result_data)
+        return result_code
+
+    def get_result(self, result_code):
+        """Converts a unique result code to a single result label."""
+
+        result = self.RESULT_MATRIX.get(result_code, result_code)
+        return result
+
     def evaluate(self):
         form = self.get_form()
         if (form and form.is_valid()) or form is None:
             result_data = self.get_result_data()
-            result_code = self.CODE_MATRIX.get(result_data)
-            result = self.RESULT_MATRIX.get(result_code, result_code)
+            result_code = self.get_result_code(result_data)
+            result = self.get_result(result_code)
             self._result_code, self._result = result_code, result
         else:
             self._result_code, self._result = (
