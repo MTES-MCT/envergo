@@ -573,6 +573,35 @@ class MoulinetteConfig(models.Model):
         return self.department.get_department_display()
 
 
+TEMPLATE_KEYS = Choices(
+    "autorisation_urba_pc",
+    "autorisation_urba_amenagement_dp",
+    "autorisation_urba_construction_dp",
+    "autorisation_urba_none",
+    "autorisation_urba_other",
+)
+
+
+class MoulinetteTemplate(models.Model):
+    """A custom moulinette template that can be admin edited."""
+
+    config = models.ForeignKey(
+        "moulinette.MoulinetteConfig",
+        verbose_name=_("Config"),
+        on_delete=models.PROTECT,
+        related_name="templates",
+    )
+    key = models.CharField(_("Key"), choices=TEMPLATE_KEYS, max_length=64)
+    content = models.TextField(_("Content"), blank=True, default="")
+
+    class Meta:
+        verbose_name = _("Moulinette template")
+        verbose_name_plural = _("Moulinette templates")
+        constraints = [
+            models.UniqueConstraint("config", "key", name="unique_template_config_key"),
+        ]
+
+
 class MoulinetteCatalog(dict):
     """Custom class responsible for fetching data used in regulation evaluations.
 
