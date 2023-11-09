@@ -1,0 +1,68 @@
+{% load static %}
+
+<p>Bla bla bla</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+  <h4>Comment réaliser une évaluation des incidences Natura 2000 ?</h4>
+
+  {{ config.n2000_procedure_ein|safe }}
+
+  <p>
+    <strong>2/ En cas d’incidences possibles ou avérées, se rapprocher d'un bureau d'études disposant d'une expertise environnementale.</strong>
+  </p>
+
+  <p>
+    Il est chargé de réaliser les études qui conviennent et de rédiger une évaluation des incidences Natura 2000 complète.
+  </p>
+
+  <p>En cas de question, se rapprocher du service de la DDT(M) en charge de Natura 2000 :</p>
+
+  <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_info|safe }}</div>
+
+  <h4>Comment l'instruction de l'évaluation des incidences Natura 2000 se déroule-t-elle ?</h4>
+
+  <p>
+    L'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau.
+    Son instruction se fait donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.
+  </p>
+
+  <p>
+    Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.
+  </p>
+
+  <p>
+    Consultez <a href="{% url 'faq_loi_sur_leau' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.
+  </p>
+
+  <h4>Sanctions en cas d'omission</h4>
+
+  <div class="fr-alert fr-alert--info fr-my-3w">
+    <p>
+      S'il s'avère que le projet est réalisé sans avoir déclaré d’évaluation des incidences Natura 2000
+      ou sans avoir respecté la décision de l’administration,
+      le responsable s'expose à des sanctions administratives et pénales,
+      qui peuvent aller jusqu'à :
+    </p>
+    <ul class="fr-mb-0">
+      <li>
+        obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par jour (articles <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025142210"
+    target="_blank"
+    rel="noopener">L.414-5</a>
+        et <a href="https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006074220/LEGISCTA000025136610/#LEGISCTA000025141893"
+    target="_blank"
+    rel="noopener">L.171-7 du code de l’environnement</a>) ;
+      </li>
+      <li>
+        un an d'emprisonnement et 60 000 € d'amende (article <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033031804/"
+    target="_blank"
+    rel="noopener">L.415-7 du code de l'environnement</a>).
+      </li>
+    </ul>
+  </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+</div>
