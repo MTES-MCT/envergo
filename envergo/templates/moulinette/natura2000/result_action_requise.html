@@ -33,6 +33,10 @@
     <li>n'impacte pas plus de 200 m² de zone inondable.</li>
   {% endif %}
 
+  {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
+    <li>ne nécessite pas d'autorisation d'urbanisme.</li>
+  {% endif %}
+
 </ul>
 
 <p>Si le projet s'avère soumis à Natura 2000, une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
