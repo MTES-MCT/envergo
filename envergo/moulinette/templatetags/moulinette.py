@@ -1,6 +1,8 @@
 import json
+import logging
 
 from django import template
+from django.template import Template
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
@@ -8,6 +10,9 @@ from django.utils.safestring import mark_safe
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 
 register = template.Library()
+
+
+logger = logging.getLogger(__name__)
 
 
 @register.simple_tag
@@ -53,6 +58,25 @@ def criterion_value(config, criterion, field):
     key = f"{criterion.unique_slug}__{field}"
     default = getattr(criterion, field, "")
     return mark_safe(values.get(key, default))
+
+
+@register.simple_tag(takes_context=True)
+def moulinette_template(context, template_key, **kwargs):
+    """Render a moulinette template.
+
+    This template is rendered with the current context.
+    """
+    moulinette = context["moulinette"]
+    template_obj = moulinette.get_template(template_key)
+    if not template_obj:
+        logger.warning(
+            f"Template {template_key} not found for config {moulinette.config}."
+        )
+        return ""
+
+    template = Template(template_obj.content)
+    content = template.render(context)
+    return mark_safe(content)
 
 
 @register.simple_tag()
