@@ -638,6 +638,7 @@ class Moulinette:
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
             self.config = self.catalog["config"] = self.department.moulinette_config
+            self.templates = {t.key: t for t in self.config.templates.all()}
 
         self.perimeters = self.get_perimeters()
         self.criteria = self.get_criteria()
@@ -656,8 +657,16 @@ class Moulinette:
 
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
-        department = Department.objects.filter(geometry__contains=lng_lat).first()
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
         return department
+
+    def get_template(self, template_key):
+        return self.templates.get(template_key, None)
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
