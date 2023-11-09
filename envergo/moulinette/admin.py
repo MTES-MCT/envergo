@@ -7,6 +7,7 @@ from envergo.moulinette.models import (
     REGULATIONS,
     Criterion,
     MoulinetteConfig,
+    MoulinetteTemplate,
     Perimeter,
     Regulation,
 )
@@ -126,7 +127,19 @@ class MoulinetteConfigForm(forms.ModelForm):
         self.fields["n2000_lotissement_proximite"].strip = False
 
 
+class MoulinetteTemplateInline(admin.StackedInline):
+    model = MoulinetteTemplate
+    extra = 0
+
+
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated"]
     form = MoulinetteConfigForm
+    inlines = [MoulinetteTemplateInline]
+
+
+@admin.register(MoulinetteTemplate)
+class MoulinetteTemplateAdmin(admin.ModelAdmin):
+    list_display = ["config", "key"]
+    search_fields = ["content"]
