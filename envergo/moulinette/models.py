@@ -201,6 +201,7 @@ class Regulation(models.Model):
             RESULTS.soumis,
             RESULTS.action_requise,
             RESULTS.a_verifier,
+            RESULTS.iota_a_verifier,
             RESULTS.non_soumis,
             RESULTS.non_concerne,
             RESULTS.non_disponible,
@@ -211,11 +212,6 @@ class Regulation(models.Model):
             if status in results:
                 result = status
                 break
-
-        # Special case for the Natura2000 regulation, the criterion and
-        # regulation statuses are different
-        if result == RESULTS.a_verifier:
-            result = RESULTS.iota_a_verifier
 
         # If there is no criterion at all, we have to set a default value
         if result is None:

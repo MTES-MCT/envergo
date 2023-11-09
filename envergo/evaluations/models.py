@@ -83,7 +83,7 @@ RESULTS = Choices(
     ("non_applicable", "Non applicable"),
     ("non_concerne", "Non concerné"),
     ("a_verifier", "À vérifier"),
-    ("iota_a_verifier", "En cas de dossier Loi sur l'eau"),
+    ("iota_a_verifier", "À vérifier"),
     ("interdit", "Interdit"),
     (
         "non_active",

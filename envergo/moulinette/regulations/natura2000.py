@@ -214,7 +214,7 @@ class ZoneInondable44(ZoneInondable):
 class IOTA(CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
 
-    CODES = ["soumis", "non_soumis", "a_verifier"]
+    CODES = ["soumis", "non_soumis", "iota_a_verifier"]
 
     def evaluate(self):
         try:
@@ -224,7 +224,7 @@ class IOTA(CriterionEvaluator):
             elif iota == RESULTS.non_soumis:
                 result = RESULTS.non_soumis
             else:
-                result = RESULTS.a_verifier
+                result = RESULTS.iota_a_verifier
         except AttributeError:
             # If there is no Loi sur l'eau regulation
             # for example, during unit tests
