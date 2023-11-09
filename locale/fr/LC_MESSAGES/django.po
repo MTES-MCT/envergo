@@ -1111,7 +1111,7 @@ msgstr "questions-complementaires/"
 
 #: envergo/pages/models.py:12
 msgid "Content"
-msgstr "Contact"
+msgstr "Contenu"
 
 #: envergo/pages/models.py:13
 msgid "Content HTML"
