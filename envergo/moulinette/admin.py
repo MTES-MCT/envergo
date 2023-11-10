@@ -71,6 +71,7 @@ class CriterionAdmin(admin.ModelAdmin):
     ]
     prepopulated_fields = {"slug": ["title"]}
     readonly_fields = ["unique_slug"]
+    autocomplete_fields = ["activation_map"]
     form = CriterionAdminForm
 
     @admin.display(description=_("Evaluator"))
