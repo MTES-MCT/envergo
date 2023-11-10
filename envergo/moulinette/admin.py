@@ -164,3 +164,9 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
 class MoulinetteTemplateAdmin(admin.ModelAdmin):
     list_display = ["config", "key"]
     search_fields = ["content"]
+    list_filter = ["is_activated"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.order_by("department")
+        return qs
