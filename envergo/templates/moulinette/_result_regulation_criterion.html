@@ -5,7 +5,16 @@
     <button class="fr-accordion__btn"
             aria-expanded="false"
             aria-controls="read-more-{{ criterion.unique_slug }}">
-      {% result_tag criterion.result %}
+
+      {% comment %}
+      We need to handle the exception where the same result "iota_a_verifier" has a different label on the criterion and on the evaluation result.
+      {% endcomment %}
+      {% if criterion.result == "iota_a_verifier" %}
+        {% result_tag "a_verifier" %}
+      {% else %}
+        {% result_tag criterion.result %}
+      {% endif %}
+
       <span class="title">
         <strong>{{ criterion.title }}</strong>
         {% if criterion.subtitle %}
