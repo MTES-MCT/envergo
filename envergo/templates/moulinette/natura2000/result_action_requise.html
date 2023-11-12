@@ -10,16 +10,38 @@
     une action du porteur de projet est requise.
   </p>
 
+  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
+  <ul>
+    <li>s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;</li>
+    
+    {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
+    <li>ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;</li> 
+    {% endif %}
+    
+    <li>ou s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre</li>
+  </ul>
+
+
 {% else %}
 
-  <p>Une action du porteur de projet est requise.</p>
+  {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
+  
+  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p> 
+  <ul>
+    <li>dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;</li>
+    <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.
+  </ul>
+
+  {% else %}
+
+    <p>Une action du porteur de projet est requise.</p>
+
+  {% endif %}
 
 {% endif %}
 
-<h3>Marche à suivre</h3>
-
 <p>
-  Pour être certain que son projet n'est pas soumis à Natura 2000, le
+  Pour être certain que le projet n'est pas soumis à Natura 2000, le
   porteur doit s'assurer que celui-ci :
 </p>
 
@@ -32,12 +54,10 @@
   {% if moulinette.natura2000.zone_inondable.result == 'action_requise' %}
     <li>n'impacte pas plus de 200 m² de zone inondable.</li>
   {% endif %}
-
-  {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
-    <li>ne nécessite pas d'autorisation d'urbanisme.</li>
-  {% endif %}
-
+  
 </ul>
+
+<h3>Marche à suivre</h3>
 
 <p>Si le projet s'avère soumis à Natura 2000, une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
@@ -138,7 +158,7 @@
     </p>
 
     <p>
-      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :
+      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction Loi sur l'eau :
     </p>
 
     <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
