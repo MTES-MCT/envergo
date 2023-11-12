@@ -76,11 +76,11 @@
     <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
   </p>
 
-  {% if is_lotissement == 'oui' %}
+  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
 
     <ul>
-      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
+      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
+      <li>Le délai d'instruction est inchangé.</li>
     </ul>
 
   {% else %}
@@ -94,11 +94,11 @@
 
 {% else %}
 
-  {% if is_lotissement == 'oui' %}
+  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
 
     <ul>
-      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
+      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
+      <li>Le délai d'instruction est inchangé.</li>
     </ul>
 
   {% else %}
