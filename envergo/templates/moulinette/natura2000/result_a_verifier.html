@@ -1,6 +1,77 @@
 {% load static %}
 
-<p>Bla bla bla</p>
+
+{% if moulinette.loi_sur_leau.result == 'action_requise' %}
+
+  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
+  <ul>
+    <li>s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;</li>
+    
+    <li>ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir 
+      rubrique « Autorisation d’urbanisme » ci-dessous.</li>
+  </ul>
+
+{% else %}
+
+  <p>Le projet est susceptible d’être soumis à Natura 2000, selon l’autorisation d’urbanisme à laquelle il est soumis – voir
+    rubrique « Autorisation d’urbanisme » ci-dessous.</p>
+
+{% endif %}
+
+<h3>Marche à suivre</h3>
+
+<p>Si le projet s'avère soumis à Natura 2000, une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
+
+{% if moulinette.loi_sur_leau.result == 'action_requise' %}
+
+  <p>
+    <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
+  </p>
+
+  <ul>
+    <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
+    <li>Délai d'instruction : 2 mois.</li>
+  </ul>
+
+  <p>
+    <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
+  </p>
+
+  {% if is_lotissement == 'oui' %}
+
+    <ul>
+      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
+      <li>Délai d'instruction inchangé : 3 mois.</li>
+    </ul>
+
+  {% else %}
+
+    <ul>
+      <li>EIN à déposer à la DDT(M).</li>
+      <li>Délai d'instruction : 2 mois.</li>
+    </ul>
+
+  {% endif %}
+
+{% else %}
+
+  {% if is_lotissement == 'oui' %}
+
+    <ul>
+      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
+      <li>Délai d'instruction inchangé : 3 mois.</li>
+    </ul>
+
+  {% else %}
+
+    <ul>
+      <li>EIN à déposer à la DDT(M).</li>
+      <li>Délai d'instruction : 2 mois.</li>
+    </ul>
+
+  {% endif %}
+
+{% endif %}
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
