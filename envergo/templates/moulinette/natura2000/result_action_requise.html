@@ -12,25 +12,30 @@
 
   <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
   <ul>
-    <li>s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;</li>
-    
+    <li>
+      s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;
+    </li>
+
     {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
-    <li>ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;</li> 
+      <li>
+        ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;
+      </li>
     {% endif %}
-    
+
     <li>ou s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre</li>
   </ul>
-
 
 {% else %}
 
   {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
-  
-  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p> 
-  <ul>
-    <li>dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;</li>
-    <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.
-  </ul>
+
+    <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
+    <ul>
+      <li>
+        dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;
+      </li>
+      <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.</li>
+    </ul>
 
   {% else %}
 
@@ -54,7 +59,7 @@
   {% if moulinette.natura2000.zone_inondable.result == 'action_requise' %}
     <li>n'impacte pas plus de 200 m² de zone inondable.</li>
   {% endif %}
-  
+
 </ul>
 
 <h3>Marche à suivre</h3>

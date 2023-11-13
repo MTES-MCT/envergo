@@ -1,20 +1,25 @@
 {% load static %}
 
-
 {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
   <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
   <ul>
-    <li>s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;</li>
-    
-    <li>ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir 
-      rubrique « Autorisation d’urbanisme » ci-dessous.</li>
+    <li>
+      s’il s’avère soumis à la Loi sur l’eau — <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;
+    </li>
+
+    <li>
+      ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir
+      rubrique « Autorisation d’urbanisme » ci-dessous.
+    </li>
   </ul>
 
 {% else %}
 
-  <p>Le projet est susceptible d’être soumis à Natura 2000, selon l’autorisation d’urbanisme à laquelle il est soumis – voir
-    rubrique « Autorisation d’urbanisme » ci-dessous.</p>
+  <p>
+    Le projet est susceptible d’être soumis à Natura 2000, selon l’autorisation d’urbanisme à laquelle il est soumis – voir
+    rubrique « Autorisation d’urbanisme » ci-dessous.
+  </p>
 
 {% endif %}
 
