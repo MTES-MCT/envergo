@@ -31,26 +31,26 @@
     <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
   </p>
 
-  {% if moulinette.natura2000.lotissement.result == 'soumis' %}
-    <ul>
-      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
-    </ul>
-  {% else %}
-    <ul>
-      <li>EIN à déposer à la DDT(M).</li>
-      <li>Délai d'instruction : 2 mois.</li>
-    </ul>
-  {% endif %}
+  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+      <ul>
+        <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
+        <li>Le délai d'instruction est inchangé.</li>
+      </ul>
+    {% else %}
+      <ul>
+        <li>EIN à déposer à la DDT(M).</li>
+        <li>Délai d'instruction : 2 mois.</li>
+      </ul>
+    {% endif %}
 
 {% else %}
 
   <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-  {% if moulinette.natura2000.lotissement.result == 'soumis' %}
+  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
     <ul>
-      <li>EIN à déposer en mairie, avec la demande de permis d'aménager.</li>
-      <li>Délai d'instruction inchangé : 3 mois.</li>
+      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
+      <li>Le délai d'instruction est inchangé.</li>
     </ul>
   {% else %}
     <ul>
@@ -60,6 +60,7 @@
   {% endif %}
 
 {% endif %}
+
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
@@ -121,20 +122,18 @@
 
     <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
 
-    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
+    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+    
       <p>
         <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
       </p>
 
-      <p>L'EIN est à déposer en mairie, avec la demande de permis d'aménager.</p>
-
+      <p>L'EIN est à déposer en mairie, avec la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
+  
     {% else %}
 
       <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
-      </p>
-
-      <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
+        <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l’EIN doit être adressée pour instruction à la DDT(M) :</p>
 
       <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
 
@@ -142,9 +141,9 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
+    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
 
-      <p>L’EIN est à déposer en mairie, avec le permis d’aménager.</p>
+      <p>L'EIN est à déposer en mairie, avec la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
 
     {% else %}
 
@@ -175,7 +174,7 @@
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
+    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
 
       <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
 
@@ -187,8 +186,8 @@
       </p>
 
       <p>
-        <em>S'il n'y a pas de dossier Loi sur l'eau</em>, l'EIN est jointe à la demande de permis d'aménager.
-        Le délai d'instruction par le service urbanisme est de 3 mois, extensible en cas de demande de compléments.
+        <em>S'il n'y a pas de dossier Loi sur l'eau</em>, l'EIN est jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP).
+        Le délai d'instruction par le service urbanisme est inchangé.
       </p>
 
     {% else %}
@@ -208,13 +207,11 @@
 
   {% else %}
 
-    {% if moulinette.natura2000.lotissement.result == 'soumis' %}
+    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
 
-      <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande de permis d'aménager.</p>
+      <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
 
       <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
-
-      <p>Le délai d'instruction est donc de 3 mois, extensible en cas de demande de compléments.</p>
 
     {% else %}
 
