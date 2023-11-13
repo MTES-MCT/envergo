@@ -558,7 +558,11 @@ class MoulinetteConfig(models.Model):
         blank=True,
         default=list,
     )
-    ddtm_contact_email = models.EmailField(_("DDT(M) contact email"), blank=True)
+    ddtm_water_police_email = models.EmailField(
+        "E-mail DDT(M) police de l'eau", blank=True
+    )
+    ddtm_n2000_email = models.EmailField("E-mail DDT(M) Natura 2000", blank=True)
+    dreal_eval_env_email = models.EmailField("E-mail DREAL pôle eval env", blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     lse_free_mention = models.TextField(
         "LSE > Mention libre « autres rubriques »", blank=True
