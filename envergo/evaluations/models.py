@@ -392,19 +392,22 @@ class EvaluationEmail:
             evaluation.user_type == USER_TYPES.instructor
             and evaluation.send_eval_to_sponsor
         ):
-            if moulinette.loi_sur_leau.result == "soumis":
+            if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
                 if config.ddtm_water_police_email:
                     bcc_recipients.append(config.ddtm_water_police_email)
                 else:
                     logger.warning("Manque l'email de la police de l'eau")
 
-            if moulinette.natura2000.result == "soumis":
+            if moulinette.natura2000 and moulinette.natura2000.result == "soumis":
                 if config.ddtm_n2000_email:
                     bcc_recipients.append(config.ddtm_n2000_email)
                 else:
                     logger.warning("Manque l'email de la DDT(M) N2000")
 
-            if moulinette.eval_env.result in ("systematique", "cas_par_cas"):
+            if moulinette.eval_env and moulinette.eval_env.result in (
+                "systematique",
+                "cas_par_cas",
+            ):
                 if config.dreal_eval_env_email:
                     bcc_recipients.append(config.dreal_eval_env_email)
                 else:
