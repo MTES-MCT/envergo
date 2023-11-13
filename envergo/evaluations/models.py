@@ -1,3 +1,4 @@
+import logging
 import secrets
 import uuid
 from os.path import splitext
@@ -23,6 +24,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+
+logger = logging.getLogger(__name__)
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -293,8 +296,8 @@ class EvaluationEmail:
         evaluation = self.evaluation
         moulinette = evaluation.get_moulinette()
         result = moulinette.result
-        txt_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.txt"
-        html_mail_template = f"evaluations/admin/eval_email_{moulinette.result}.html"
+        txt_mail_template = f"evaluations/admin/eval_email_{result}.txt"
+        html_mail_template = f"evaluations/admin/eval_email_{result}.html"
         to_be_transmitted = all(
             (
                 evaluation.user_type == USER_TYPES.instructor,
@@ -379,21 +382,28 @@ class EvaluationEmail:
 
     def get_bcc_recipients(self):
         evaluation = self.evaluation
-        # config = evaluation.get_moulinette_config()
-        result = self.moulinette.result
+        moulinette = self.moulinette
+        config = evaluation.get_moulinette_config()
 
-        if all(
-            (
-                evaluation.user_type == USER_TYPES.instructor,
-                evaluation.send_eval_to_sponsor,
-                result in ("interdit", "soumis"),
-                # config and config.ddtm_contact_email,
-            )
-        ):
-            # bcc_recipients = [config.ddtm_contact_email]
-            bcc_recipients = []
-        else:
-            bcc_recipients = []
+        bcc_recipients = []
+
+        if moulinette.loi_sur_leau.result == "soumis":
+            if config.ddtm_water_police_email:
+                bcc_recipients.append(config.ddtm_water_police_email)
+            else:
+                logger.warning("Manque l'email de la police de l'eau")
+
+        if moulinette.natura2000.result == "soumis":
+            if config.ddtm_n2000_email:
+                bcc_recipients.append(config.ddtm_n2000_email)
+            else:
+                logger.warning("Manque l'email de la DDT(M) N2000")
+
+        if moulinette.eval_env.result in ("systematique", "cas_par_cas"):
+            if config.dreal_eval_env_email:
+                bcc_recipients.append(config.dreal_eval_env_email)
+            else:
+                logger.warning("Manque l'email de la DREAL pôle Éval Env")
 
         return bcc_recipients
 
