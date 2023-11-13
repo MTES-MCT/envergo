@@ -20,7 +20,6 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
-    EvaluationEmail,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -264,7 +263,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def evaluation_email(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
-        evaluation_email = EvaluationEmail(evaluation)
+        evaluation_email = evaluation.get_evaluation_email()
 
         try:
             eval_email = evaluation_email.get_email(request)
