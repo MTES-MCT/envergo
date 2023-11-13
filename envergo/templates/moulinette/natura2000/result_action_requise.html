@@ -45,22 +45,17 @@
 
 {% endif %}
 
-<p>
-  Pour être certain que le projet n'est pas soumis à Natura 2000, le
-  porteur doit s'assurer que celui-ci :
-</p>
+{% if regulation.required_actions_soumis %}
 
-<ul>
+  <p>
+    Pour être certain que le projet n'est pas soumis à Natura 2000, le
+    porteur doit s'assurer que celui-ci :
+  </p>
 
-  {% if moulinette.natura2000.zone_humide.result == 'action_requise' %}
-    <li>n'impacte pas plus de 100 m² de zone humide.</li>
-  {% endif %}
-
-  {% if moulinette.natura2000.zone_inondable.result == 'action_requise' %}
-    <li>n'impacte pas plus de 200 m² de zone inondable.</li>
-  {% endif %}
-
-</ul>
+  <ul>
+    {% for action in regulation.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+  </ul>
+{% endif %}
 
 <h3>Marche à suivre</h3>
 
