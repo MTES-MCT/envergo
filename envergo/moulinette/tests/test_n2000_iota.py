@@ -15,7 +15,7 @@ pytestmark = pytest.mark.django_db
 def loisurleau_criteria(france_map):  # noqa
     MoulinetteConfigFactory(
         is_activated=True,
-        ddtm_contact_email="ddtm_email_test@example.org",
+        ddtm_water_police_email="ddtm_email_test@example.org",
     )
     lse = RegulationFactory(regulation="loi_sur_leau")
     n2000 = RegulationFactory(regulation="natura2000")
