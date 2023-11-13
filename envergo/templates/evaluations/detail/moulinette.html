@@ -87,6 +87,39 @@
       </li>
     {% endif %}
 
+    {% if evaluation.moulinette_params.autorisation_urba %}
+      <li>
+        {% if evaluation.moulinette_params.autorisation_urba == 'pa' %}
+          <strong>Projet soumis à permis d'aménager</strong>
+        {% endif %}
+
+        {% if evaluation.moulinette_params.autorisation_urba == 'pc' %}
+          <strong>Projet soumis à permis de construire</strong>
+        {% endif %}
+
+        {% if evaluation.moulinette_params.autorisation_urba == 'amenagement_dp' %}
+          <strong>Le projet est un aménagement soumis à déclaration préalable</strong>
+          <br />
+          <span class="fr-hint-text">au sens de l’art. R421-23 du code de l’urbanisme</span>
+        {% endif %}
+
+        {% if evaluation.moulinette_params.autorisation_urba == 'construction_dp' %}
+          <strong>Le projet est une construction soumise à déclaration préalable</strong>
+          <br />
+          <span class="fr-hint-text">au sens de l’art. R421-9 du code de l’urbanisme</span>
+        {% endif %}
+
+        {% if evaluation.moulinette_params.autorisation_urba == 'none' %}
+          <strong>Le projet n’est soumis à aucune autorisation d’urbanisme</strong>
+        {% endif %}
+
+        {% if evaluation.moulinette_params.autorisation_urba == 'other' %}
+          <strong>Le statut du projet au regard du code de l’urbanisme est inconnu</strong>
+        {% endif %}
+      </li>
+    {% endif %}
+
+
   </ul>
 
   <h2 class="fr-h3">Réglementations environnementales</h2>

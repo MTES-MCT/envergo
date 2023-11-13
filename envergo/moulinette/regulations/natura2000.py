@@ -1,9 +1,16 @@
 from django import forms
 from django.contrib.gis.measure import Distance as D
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    Map,
+    MapPolygon,
+    RequiredAction,
+    Stake,
+)
 
 BLUE = "blue"
 LIGHTBLUE = "lightblue"
@@ -127,7 +134,7 @@ class ZoneHumide(CriterionEvaluator):
         elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
-            caption = "Le projet ne se situe pas dans zone humide référencée."
+            caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
@@ -140,6 +147,15 @@ class ZoneHumide(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
+
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 100 m² de zone humide",
+            )
+        return action
 
 
 # Only for legacy purpose and not breaking existing data
@@ -205,6 +221,15 @@ class ZoneInondable(CriterionEvaluator):
 
         return criterion_map
 
+    def required_action(self):
+        action = None
+        if self.result == RESULTS.action_requise:
+            action = RequiredAction(
+                stake=Stake.SOUMIS,
+                text="n'impacte pas plus de 200m² de zone inondable",
+            )
+        return action
+
 
 class ZoneInondable44(ZoneInondable):
     choice_label = "Natura 2000 > 44 - Zone inondable (obsolète)"
@@ -213,7 +238,7 @@ class ZoneInondable44(ZoneInondable):
 class IOTA(CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
 
-    CODES = ["soumis", "non_soumis", "a_verifier"]
+    CODES = ["soumis", "non_soumis", "iota_a_verifier"]
 
     def evaluate(self):
         try:
@@ -223,7 +248,7 @@ class IOTA(CriterionEvaluator):
             elif iota == RESULTS.non_soumis:
                 result = RESULTS.non_soumis
             else:
-                result = RESULTS.a_verifier
+                result = RESULTS.iota_a_verifier
         except AttributeError:
             # If there is no Loi sur l'eau regulation
             # for example, during unit tests
@@ -276,3 +301,80 @@ class Lotissement(CriterionEvaluator):
             distance = "proximite_immediate"
 
         return is_lotissement, distance
+
+
+AUTORISATION_URBA_CHOICES = (
+    ("pa", "soumis à permis d'aménager (PA)"),
+    ("pc", "soumis à permis de construire (PC)"),
+    (
+        "amenagement_dp",
+        mark_safe(
+            """
+            un aménagement soumis à déclaration préalable (DP)
+            <br /><span class='fr-hint-text'>au sens de l’art. R421-23
+            du code de l’urbanisme</span>
+        """
+        ),
+    ),
+    (
+        "construction_dp",
+        mark_safe(
+            """une construction soumise à déclaration préalable (DP)
+            <br /><span class='fr-hint-text'>au sens de l’art. R421-9
+            du code de l’urbanisme</span>
+        """
+        ),
+    ),
+    ("none", "soumis à aucune autorisation d'urbanisme"),
+    ("other", "autre / je ne sais pas"),
+)
+
+
+class AutorisationUrbanismeForm(forms.Form):
+    autorisation_urba = forms.ChoiceField(
+        label="Le projet est-il…",
+        widget=forms.RadioSelect,
+        choices=AUTORISATION_URBA_CHOICES,
+        required=True,
+    )
+
+
+class AutorisationUrbanisme(CriterionEvaluator):
+    choice_label = "Natural 2000 > Autorisation d'urbanisme"
+    form_class = AutorisationUrbanismeForm
+
+    CODES = ["soumis", "a_verifier", "non_soumis"]
+
+    CODE_MATRIX = {
+        "pa": "soumis",
+        "pc": "soumis",
+        "amenagement_dp": "soumis",
+        "construction_dp": "soumis",
+        "none": "non_soumis",
+        "other": "a_verifier",
+    }
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "a_verifier": RESULTS.a_verifier,
+        "non_soumis": RESULTS.non_soumis,
+    }
+
+    def get_result_code(self, result_data):
+        """For this criterion, the result will depend on the department."""
+
+        # Get custom `data to result code` matrix from moulinette config
+        config = self.moulinette.config
+        urba_code_matrix = config.n2000_autorisation_urba_result
+        try:
+            result_code = urba_code_matrix[result_data]
+            if result_code not in self.RESULT_MATRIX.keys():
+                raise ValueError
+        except (KeyError, ValueError):
+            result_code = super().get_result_code(result_data)
+
+        return result_code
+
+    def get_result_data(self):
+        autorisation_urba = self.catalog["autorisation_urba"]
+        return autorisation_urba

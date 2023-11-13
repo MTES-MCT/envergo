@@ -160,12 +160,24 @@ class CriterionEvaluator(ABC):
             f"Implement the `{type(self).__name__}.get_result_data` method."
         )
 
+    def get_result_code(self, result_data):
+        """Compute a unique result code from criterion data."""
+
+        result_code = self.CODE_MATRIX.get(result_data)
+        return result_code
+
+    def get_result(self, result_code):
+        """Converts a unique result code to a single result label."""
+
+        result = self.RESULT_MATRIX.get(result_code, result_code)
+        return result
+
     def evaluate(self):
         form = self.get_form()
         if (form and form.is_valid()) or form is None:
             result_data = self.get_result_data()
-            result_code = self.CODE_MATRIX.get(result_data)
-            result = self.RESULT_MATRIX.get(result_code, result_code)
+            result_code = self.get_result_code(result_data)
+            result = self.get_result(result_code)
             self._result_code, self._result = result_code, result
         else:
             self._result_code, self._result = (
@@ -175,7 +187,15 @@ class CriterionEvaluator(ABC):
 
     @property
     def result_code(self):
-        """Return the criterion result code."""
+        """Return the criterion result code.
+
+        The result code is a unique code used to render the criterion template.
+
+        This is useful because for a given result, a single criterion could be
+        rendered in different ways. E.g a criterion could have a "action requise"
+        result, but the action is different depending on the criterion parameters.
+
+        """
         if not hasattr(self, "_result_code"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
@@ -183,7 +203,11 @@ class CriterionEvaluator(ABC):
 
     @property
     def result(self):
-        """Return the criterion result."""
+        """Return the criterion result.
+
+        This value is used to rendered the criterion result label (e.g "action requise")
+        and to compute the whole regulation result.
+        """
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 

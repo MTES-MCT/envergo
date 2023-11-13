@@ -88,6 +88,15 @@ class MapAdmin(gis_admin.GISModelAdmin):
     list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
     enable_nav_sidebar = False
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(
+            request,
+            queryset,
+            search_term,
+        )
+        queryset = queryset.defer("geometry")
+        return queryset, may_have_duplicates
+
     def save_model(self, request, obj, form, change):
         obj.expected_zones = count_features(obj.file)
         super().save_model(request, obj, form, change)

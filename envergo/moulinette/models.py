@@ -201,6 +201,7 @@ class Regulation(models.Model):
             RESULTS.soumis,
             RESULTS.action_requise,
             RESULTS.a_verifier,
+            RESULTS.iota_a_verifier,
             RESULTS.non_soumis,
             RESULTS.non_concerne,
             RESULTS.non_disponible,
@@ -211,11 +212,6 @@ class Regulation(models.Model):
             if status in results:
                 result = status
                 break
-
-        # Special case for the Natura2000 regulation, the criterion and
-        # regulation statuses are different
-        if result == RESULTS.a_verifier:
-            result = RESULTS.iota_a_verifier
 
         # If there is no criterion at all, we have to set a default value
         if result is None:
@@ -559,6 +555,11 @@ class MoulinetteConfig(models.Model):
         "N2000 > Précision proximité immédiate",
         blank=True,
     )
+    n2000_autorisation_urba_result = models.JSONField(
+        "N2000 > Résultat critère autorisation d'urbanisme",
+        blank=True,
+        default=dict,
+    )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
     criteria_values = models.JSONField(
         "Valeurs des critères", default=dict, null=True, blank=True
@@ -570,6 +571,36 @@ class MoulinetteConfig(models.Model):
 
     def __str__(self):
         return self.department.get_department_display()
+
+
+TEMPLATE_KEYS = Choices(
+    "autorisation_urba_pa",
+    "autorisation_urba_pc",
+    "autorisation_urba_amenagement_dp",
+    "autorisation_urba_construction_dp",
+    "autorisation_urba_none",
+    "autorisation_urba_other",
+)
+
+
+class MoulinetteTemplate(models.Model):
+    """A custom moulinette template that can be admin edited."""
+
+    config = models.ForeignKey(
+        "moulinette.MoulinetteConfig",
+        verbose_name=_("Config"),
+        on_delete=models.PROTECT,
+        related_name="templates",
+    )
+    key = models.CharField(_("Key"), choices=TEMPLATE_KEYS, max_length=64)
+    content = models.TextField(_("Content"), blank=True, default="")
+
+    class Meta:
+        verbose_name = _("Moulinette template")
+        verbose_name_plural = _("Moulinette templates")
+        constraints = [
+            models.UniqueConstraint("config", "key", name="unique_template_config_key"),
+        ]
 
 
 class MoulinetteCatalog(dict):
@@ -608,6 +639,7 @@ class Moulinette:
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
             self.config = self.catalog["config"] = self.department.moulinette_config
+            self.templates = {t.key: t for t in self.config.templates.all()}
 
         self.perimeters = self.get_perimeters()
         self.criteria = self.get_criteria()
@@ -626,8 +658,16 @@ class Moulinette:
 
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
-        department = Department.objects.filter(geometry__contains=lng_lat).first()
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
         return department
+
+    def get_template(self, template_key):
+        return self.templates.get(template_key, None)
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
