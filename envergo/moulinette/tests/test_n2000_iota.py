@@ -58,5 +58,5 @@ def test_zh_medium_footprint_inside_wetlands(moulinette_data):
     moulinette.evaluate()
 
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
-    assert moulinette.natura2000.iota.result == "a_verifier"
+    assert moulinette.natura2000.iota.result == "iota_a_verifier"
     assert moulinette.natura2000.result == "iota_a_verifier"
