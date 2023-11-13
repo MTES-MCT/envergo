@@ -20,6 +20,7 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    EvaluationEmail,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -263,9 +264,10 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def evaluation_email(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
+        evaluation_email = EvaluationEmail(evaluation)
 
         try:
-            eval_email = evaluation.get_evaluation_email(request)
+            eval_email = evaluation_email.get_email(request)
         except Exception as error:  # noqa
             # There was an error generating the email
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
