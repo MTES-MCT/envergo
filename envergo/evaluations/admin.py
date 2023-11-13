@@ -274,7 +274,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             response = HttpResponseRedirect(url)
             self.message_user(
                 request,
-                f"Impossible de générer l'avis réglementaire -> {error}",
+                f"""
+                Impossible de générer l'avis réglementaire. Communiquez ce message à l'équipe dev :
+                {error}
+                """,
                 messages.ERROR,
             )
             return response
