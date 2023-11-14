@@ -270,6 +270,23 @@ class Regulation(models.Model):
         criteria_slugs = [c.slug for c in self.criteria.all()]
         return criteria_slugs == ["iota"]
 
+    def autorisation_urba_needed(self):
+        """Is an "autorisation d'urbanisme" needed?
+
+        This is a custom check for the N2000 regulation.
+        Such an authorization is required if the projet is a "lotissement" or if the
+        answer to the "autorisation d'urbanisme" question is anything other than "no".
+        """
+        lotissement = self.get_criterion("lotissement")
+        autorisation_urba = self.get_criterion("autorisation_urba")
+
+        return any(
+            (
+                lotissement and lotissement.result == "soumis",
+                autorisation_urba and autorisation_urba.result != "non_soumis",
+            )
+        )
+
     @cached_property
     def perimeter(self):
         """Return the administrative perimeter the project is in.
