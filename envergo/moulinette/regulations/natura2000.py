@@ -243,7 +243,7 @@ class IOTA(CriterionEvaluator):
     def evaluate(self):
         try:
             iota = self.moulinette.loi_sur_leau.result
-            if iota in (RESULTS.soumis, RESULTS.interdit):
+            if iota == RESULTS.soumis:
                 result = RESULTS.soumis
             elif iota == RESULTS.non_soumis:
                 result = RESULTS.non_soumis
