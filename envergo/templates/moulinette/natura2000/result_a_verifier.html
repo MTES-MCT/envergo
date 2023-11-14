@@ -44,7 +44,7 @@
 
 {% endif %}
 
-{% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+{% if regulation.autorisation_urba_needed %}
 
   <ul>
     <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>

@@ -31,23 +31,23 @@
     <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
   </p>
 
-  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
-      <ul>
-        <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
-        <li>Le délai d'instruction est inchangé.</li>
-      </ul>
-    {% else %}
-      <ul>
-        <li>EIN à déposer à la DDT(M).</li>
-        <li>Délai d'instruction : 2 mois.</li>
-      </ul>
-    {% endif %}
+  {% if regulation.autorisation_urba_needed %}
+    <ul>
+      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
+      <li>Le délai d'instruction est inchangé.</li>
+    </ul>
+  {% else %}
+    <ul>
+      <li>EIN à déposer à la DDT(M).</li>
+      <li>Délai d'instruction : 2 mois.</li>
+    </ul>
+  {% endif %}
 
 {% else %}
 
   <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-  {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+  {% if regulation.autorisation_urba_needed %}
     <ul>
       <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
       <li>Le délai d'instruction est inchangé.</li>
@@ -60,7 +60,6 @@
   {% endif %}
 
 {% endif %}
-
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
@@ -122,8 +121,8 @@
 
     <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
 
-    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
-    
+    {% if regulation.autorisation_urba_needed %}
+
       <p>
         <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
       </p>
@@ -141,7 +140,7 @@
 
   {% else %}
 
-    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+    {% if regulation.autorisation_urba_needed %}
 
       <p>L'EIN est à déposer en mairie, avec la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
 
@@ -174,7 +173,7 @@
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+    {% if regulation.autorisation_urba_needed %}
 
       <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
 
@@ -207,7 +206,7 @@
 
   {% else %}
 
-    {% if is_lotissement == 'oui' or autorisation_urba != 'none' %}
+    {% if regulation.autorisation_urba_needed %}
 
       <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
 
