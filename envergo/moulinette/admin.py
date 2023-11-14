@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
     Criterion,
@@ -97,16 +98,31 @@ class PerimeterAdminForm(forms.ModelForm):
         return value
 
 
+class MapDepartmentsListFilter(DepartmentsListFilter):
+    title = _("Departments")
+    parameter_name = "departments"
+    template = "admin/choice_filter.html"
+
+    def queryset(self, request, queryset):
+        lookup_value = self.value()
+        if lookup_value:
+            queryset = queryset.filter(
+                activation_map__departments__contains=[lookup_value]
+            )
+        return queryset
+
+
 @admin.register(Perimeter)
 class PerimeterAdmin(admin.ModelAdmin):
     list_display = [
         "backend_name",
         "regulation",
         "activation_distance_column",
+        "departments",
         "is_activated",
     ]
-    list_filter = ["regulation", "is_activated"]
-    search_fields = ["backend_name", "name"]
+    list_filter = ["regulation", "is_activated", MapDepartmentsListFilter]
+    search_fields = ["backend_name", "name", "activation_map__departments"]
     autocomplete_fields = ["activation_map"]
     form = PerimeterAdminForm
 
@@ -116,6 +132,10 @@ class PerimeterAdmin(admin.ModelAdmin):
     )
     def activation_distance_column(self, obj):
         return obj.activation_distance
+
+    @admin.display(ordering="activation_map__departments", description=_("Departments"))
+    def departments(self, obj):
+        return obj.activation_map.departments
 
 
 class MoulinetteConfigForm(forms.ModelForm):
