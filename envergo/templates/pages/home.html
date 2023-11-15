@@ -16,13 +16,11 @@
 
       <div class="fr-grid-row fr-grid-row--gutters">
         <div class="fr-col fr-col-md-7">
-          <h1 class="fr-h2">Évaluez à quelles réglementations environnementales est soumis un projet de construction</h1>
+          <h1 class="fr-h1">
+            Simplifier la prise en compte de la réglementation environnementale dans les projets d’aménagement et de construction.
+          </h1>
 
-          <p class="fr-text--lead">
-            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
-          </p>
-
-          <ul class="fr-badge-group">
+          <ul class="fr-badge-group fr-my-3w">
             <li>
               <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
             </li>
@@ -33,94 +31,100 @@
               <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
             </li>
           </ul>
+
+          <p class="fr-text--lead">
+            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
+          </p>
+
+          <a href=""
+             class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w">Découvrir EnvErgo</a>
+
+          <br />
+
+          <span>Accessible sans créer de compte</span>
+
         </div>
         <div class="fr-col-md-5">
-          <img src="{% static 'images/home_screenshot.png' %}"
-               alt="Capture d'écran du résultat du simulateur EnvErgo"
-               class="home-illustration">
+          <img src="{% static 'images/image_produit.png' %}"
+               alt=""
+               class="home-illustration fr-responsive-img">
         </div>
       </div>
     </div>
   </div>
-
-
-  <div class="fr-container fr-py-8w">
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col-md-10 fr-col-offset-1">
-
-        <h2 class="fr-h3">Déterminez en quelques clics…</h2>
-
-        <div class="fr-grid-row fr-grid-row--gutters">
-
-          <div class="fr-col-md-4">
-            <div class="fr-card fr-card--shadow fr-card--no-arrow">
-              <div class="fr-card__body fr-pb-0">
-                <h3 class="fr-card__title">Les réglementations environnementales</h3>
-                <p class="fr-card__desc fr-text--sm fr-mb-3w">…auxquelles un projet est soumis</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="fr-col-md-4">
-            <div class="fr-card fr-card--shadow fr-card--no-arrow">
-              <div class="fr-card__body fr-pb-0">
-                <h3 class="fr-card__title">Les études à mener</h3>
-                <p class="fr-card__desc fr-text--sm fr-mb-3w">…le cas échéant</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="fr-col-md-4">
-            <div class="fr-card fr-card--shadow fr-card--no-arrow">
-              <div class="fr-card__body fr-pb-0">
-                <h3 class="fr-card__title">Les procédures administratives à suivre</h3>
-                <p class="fr-card__desc fr-text--sm fr-mb-3w">…en plus du dépôt de permis de construire ou d'aménager</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
 
   <div class="fr-container">
+    <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
+      <div class="fr-col">
+        <img src="{% static 'images/simu.svg' %}" alt="">
+        <h2>Vous êtes porteur d'un projet en phase initiale ?</h2>
+        <ul class="fr-tags-group fr-mb-2w">
+          <li>
+            <span class="fr-tag">Lotisseurs</span>
+          </li>
+          <li>
+            <span class="fr-tag">Promoteurs</span>
+          </li>
+          <li>
+            <span class="fr-tag">Géomètres</span>
+          </li>
+          <li>
+            <span class="fr-tag">Architectes</span>
+          </li>
+        </ul>
+        <p class="fr-text--lead fr-mb-2w">Planifiez vos études et procédures en ne manquant aucune obligation légale.</p>
+        <p class="fr-mb-1w">
+          En un clic et <strong>anonymement</strong> obtenez :
+        </p>
+        <ul class="fr-mb-3w">
+          <li>
+            Les <strong>réglementations environnementales</strong> auxquelles votre projet est soumis : loi sur l’eau, Natura 2000, cas par cas…
+          </li>
+          <li>
+            Les <strong>études</strong> à mener
+          </li>
+          <li>
+            Les <strong>procédures administratives</strong> à suivre, en plus du dépôt de permis de construire ou d’aménager
+          </li>
+        </ul>
 
-    <div class="fr-grid-row fr-grid-row--gutters fr-py-8w">
-
-      <div class="fr-col-md-6">
-        <div class="fr-card fr-card--grey">
-          <div class="fr-card__body">
-            <div class="fr-card__content">
-              <h3 class="fr-card__title">Simulez votre projet</h3>
-              <p class="fr-card__desc">Obtenez une évaluation rapide grâce à notre simulateur</p>
-            </div>
-
-            <div class="fr-card__footer">
-              <a href="{% url 'moulinette_home' %}"
-                 class="fr-btn fr-fi-arrow-right-line fr-btn--icon-left">Découvrir le simulateur</a>
-            </div>
-          </div>
-        </div>
+        <a href=""
+           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line">Simuler un projet</a>
+        <br>
+        <span class="fr-hint-text">Durée : 30 seconds</span>
       </div>
 
-      <div class="fr-col-md-6">
-        <div class="fr-card fr-card--grey">
-          <div class="fr-card__body">
-            <div class="fr-card__content">
-              <h3 class="fr-card__title">Vous êtes un service ADS ?</h3>
-              <p class="fr-card__desc">EnvErgo vous accompagne grâce à l'évaluation manuelle de votre projet</p>
-            </div>
+      <div class="fr-col">
+        <img src="{% static 'images/city-hall.svg' %}" alt="">
+        <h2>
+          Vous êtes un service <abbr title="Autorisation du Droit des Sols">ADS</abbr> et instruisez un projet de <abbr title="Permis de construire">PC</abbr> ou de <abbr title="Permis d'aménager">PA</abbr> ?
+        </h2>
+        <ul class="fr-tags-group fr-mb-2w">
+          <li>
+            <span class="fr-tag">Instructeur ADS</span>
+          </li>
+        </ul>
+        <p class="fr-text--lead fr-mb-2w">Déterminez si le projet est soumis à une réglementation environnementale.</p>
+        <ul class="fr-mb-3w">
+          <li>
+            Nos <strong>chargés d’études</strong> examinent le projet
+          </li>
+          <li>
+            Un avis vous est rendu <strong>sous 72h</strong>
+          </li>
+          <li>
+            En option : Nous notifions directement le porteur de projet avec un <strong>avis réglementaire</strong> du Ministère de la Transition Écologique
+          </li>
+          <li>
+            Nous <strong>accompagnons</strong> le porteur de projet dans la compréhension de ses obligations.
+          </li>
+        </ul>
 
-            <div class="fr-card__footer">
-              <a class="fr-btn fr-fi-arrow-right-line fr-btn--icon-left"
-                 href="{% url 'request_eval_wizard_reset' %}">Commencer la demande</a>
-            </div>
-          </div>
-        </div>
+        <a href=""
+           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line">Demander un avis réglementaire</a>
+        <br>
+        <span class="fr-hint-text">Durée : 1 min 30</span>
       </div>
-
     </div>
   </div>
 {% endblock %}
