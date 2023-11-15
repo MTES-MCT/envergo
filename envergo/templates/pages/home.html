@@ -36,7 +36,7 @@
             EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
           </p>
 
-          <a href=""
+          <a href="#decouvrir"
              class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w">Découvrir EnvErgo</a>
 
           <br />
@@ -53,7 +53,7 @@
     </div>
   </section>
 
-  <section class="fr-container">
+  <section id="decouvrir" class="fr-container">
     <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
       <div class="fr-col">
         <img src="{% static 'images/simu.svg' %}" alt="">
@@ -88,7 +88,7 @@
           </li>
         </ul>
 
-        <a href=""
+        <a href="#moulinette"
            class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line">Simuler un projet</a>
         <br>
         <span class="fr-hint-text">Durée : 30 seconds</span>
@@ -120,7 +120,7 @@
           </li>
         </ul>
 
-        <a href=""
+        <a href="{% url 'request_evaluation' %}"
            class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line">Demander un avis réglementaire</a>
         <br>
         <span class="fr-hint-text">Durée : 1 min 30</span>
@@ -128,7 +128,7 @@
     </div>
   </section>
 
-  <section class="moulinette fr-pt-8w fr-pb-5w">
+  <section id="moulinette" class="moulinette fr-pt-8w fr-pb-5w">
     <div class="fr-container">
       <h2 class="fr-h3">Simulez votre projet en phase amont !</h2>
       {% include 'moulinette/_form.html' with form=form columns="true" %}
