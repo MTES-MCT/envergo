@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import (
     AvailabilityInfo,
+    HomeView,
     LegalMentionsView,
     NewsFeed,
     NewsView,
@@ -12,7 +13,7 @@ from envergo.pages.views import (
 )
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path("", HomeView.as_view(), name="home"),
     path(_("stats/"), include("envergo.stats.urls")),
     path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(

@@ -1035,14 +1035,40 @@ main.home {
     margin-top: 0 !important;
   }
 
-  div.hero {
+  section.hero {
     background: linear-gradient(180deg, rgba(217, 217, 217, 0) 0%, rgba(237, 238, 238, 0.3) 100%);
-
 
     .fr-grid-row {
       align-items: center;
     }
   }
 
-  img.home-illustration {}
+  section.moulinette {
+    background-color: #E8EDFF;
+
+    h2 {
+      text-align: center;
+      color: #000091;
+      margin-bottom: 3rem;
+    }
+
+    form {
+      display: flex;
+
+      div.first-section {
+        flex: 1;
+        padding: 0 3rem 0 6rem;
+      }
+
+      div.last-section {
+        flex: 1;
+        padding: 0 6rem 0 3rem;
+
+        button {
+          display: block;
+          margin: 3rem auto 0;
+        }
+      }
+    }
+  }
 }

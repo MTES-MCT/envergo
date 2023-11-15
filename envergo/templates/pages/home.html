@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load static %}
+{% load static l10n %}
 
 {% block title %}
   EnvErgo : évaluez à quelles réglementations environnementales est soumis un projet de construction
@@ -10,7 +10,7 @@
 
 {% block container %}
 
-  <div class="hero">
+  <section class="hero">
 
     <div class="fr-container fr-py-8w">
 
@@ -51,9 +51,9 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="fr-container">
+  <section class="fr-container">
     <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
       <div class="fr-col">
         <img src="{% static 'images/simu.svg' %}" alt="">
@@ -126,9 +126,16 @@
         <span class="fr-hint-text">Durée : 1 min 30</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="fr-py-8w alt">
+  <section class="moulinette fr-pt-8w fr-pb-5w">
+    <div class="fr-container">
+      <h2 class="fr-h3">Simulez votre projet en phase amont !</h2>
+      {% include 'moulinette/_form.html' with form=form columns="true" %}
+    </div>
+  </section>
+
+  <section class="fr-py-8w alt">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
@@ -141,5 +148,34 @@
       </div>
     </div>
 
-  </div>
+  </section>
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {# djlint:off #}
+  <script>
+    var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var VISITOR_ID = '{{ visitor_id }}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var EVENTS_URL = "{% url 'events' %}";
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
+    var SIMULATION_FORM_ID = "moulinette-form";
+</script>
+  {% include 'moulinette/_form_scripts.html' %}
+  {# djlint:on #}
 {% endblock %}

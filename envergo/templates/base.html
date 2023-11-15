@@ -131,7 +131,9 @@
       window.addEventListener("load", function() {
         const header = document.querySelector('.fr-header.header-legacy')
         const slimHeader = document.querySelector('.fr-header.header-popup');
-        const options = {threshold: 0};
+        const options = {
+          threshold: 0
+        };
 
         const callback = ([entry], observer) => {
           const ratio = entry.intersectionRatio;
@@ -163,7 +165,9 @@
       </header>
     {% endblock %}
 
-    <main role="main" id="contenu" class="{% block main-classes %}{% endblock %}">
+    <main role="main"
+          id="contenu"
+          class="{% block main-classes %}{% endblock %}">
       {% block main %}
 
         {% block top-bar %}
@@ -198,7 +202,7 @@
       {% endblock %}
     </main>
 
-    <footer role="contentinfo" class="fr-footer fr-mt-15w" id="footer">
+    <footer role="contentinfo" class="fr-footer" id="footer">
       {% block footer %}
         {% include '_footer.html' %}
 
