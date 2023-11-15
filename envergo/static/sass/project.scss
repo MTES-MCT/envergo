@@ -1066,9 +1066,17 @@ main.home {
 
         button {
           display: block;
-          margin: 3rem auto 0;
+          margin: 3rem auto 0 auto;
         }
       }
     }
   }
+}
+
+li.btn-link {
+  margin-left: auto;
+  display: flex;
+  justify-content: center;
+
+  a {}
 }
