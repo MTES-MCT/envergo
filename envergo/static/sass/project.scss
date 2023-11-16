@@ -1096,16 +1096,25 @@ main.home {
     }
 
     form {
-      display: flex;
+      @media (min-width: 62em) {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+      }
 
-      div.first-section {
-        flex: 1;
-        padding: 0 3rem 0 6rem;
+
+      div.moulinette-col {
+        width: 100;
+        max-width: 390px;
+        margin: 0 auto;
+
+        @media (min-width: 62em) {
+          flex: 1;
+          margin: 0 3rem;
+        }
       }
 
       div.last-section {
-        flex: 1;
-        padding: 0 6rem 0 3rem;
 
         button {
           display: block;
