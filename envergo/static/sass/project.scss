@@ -1123,3 +1123,10 @@ li.btn-link {
 
   a {}
 }
+
+// Missing classes from the dsfr
+@media (min-width: 62em) {
+  .fr-ml-lg-0 {
+    margin-left: 0 !important;
+  }
+}
