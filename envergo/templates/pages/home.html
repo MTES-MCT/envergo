@@ -11,45 +11,48 @@
 {% block container %}
 
   <section class="hero">
+    <div class="fr-container">
 
-    <div class="fr-container fr-py-8w">
+      {% comment %}
+      The main hero section illustration moves up and down the document depending on the screen width.
 
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col fr-col-md-7">
-          <h1 class="fr-h1">
-            Simplifier la prise en compte de la réglementation environnementale dans les projets d’aménagement et de construction.
-          </h1>
+      Since a full css solution was getting really hackish and complicated, it's just much easier and cleaner to use three different img elements, and hide or display them using media queries.
+      {% endcomment %}
 
-          <ul class="fr-badge-group fr-my-3w">
-            <li>
-              <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
-            </li>
-            <li>
-              <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
-            </li>
-            <li>
-              <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
-            </li>
-          </ul>
+      <img src="{% static 'images/image_produit.png' %}"
+           alt=""
+           class="home-illustration fr-hidden fr-unhidden-lg">
 
-          <p class="fr-text--lead">
-            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
-          </p>
+      <h1>
+        Simplifier la prise en compte de la réglementation environnementale dans les projets d’aménagement et de construction.
+      </h1>
 
-          <a href="#decouvrir"
-             class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w">Découvrir EnvErgo</a>
+      <img src="{% static 'images/image_produit.png' %}"
+           alt=""
+           class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg">
 
-          <br />
+      <ul class="fr-badge-group fr-my-3w">
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+        </li>
+      </ul>
+      <p class="fr-text--lead">
+        EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
+      </p>
+      <a href="#decouvrir"
+         class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w">Découvrir EnvErgo</a>
+      <br />
+      <span>Accessible sans créer de compte</span>
 
-          <span>Accessible sans créer de compte</span>
-
-        </div>
-        <div class="fr-col-md-5">
-          <img src="{% static 'images/image_produit.png' %}"
-               alt=""
-               class="home-illustration fr-responsive-img">
-        </div>
-      </div>
+      <img src="{% static 'images/image_produit.png' %}"
+           alt=""
+           class="home-illustration fr-hidden-md fr-mt-3w">
     </div>
   </section>
 
