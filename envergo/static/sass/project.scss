@@ -1061,7 +1061,10 @@ main.home {
 
 
     img.home-illustration {
-      max-width: 100%;
+      width: 100%;
+      max-width: 420px;
+      display: block;
+      margin: 0 auto;
 
       @media (min-width: 48em) {
         float: right;
