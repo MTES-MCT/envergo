@@ -1138,3 +1138,17 @@ li.btn-link {
     margin-left: 0 !important;
   }
 }
+
+.dark-only {
+  display: none;
+}
+
+:root[data-fr-theme=dark] {
+  .dark-only {
+    display: inherit;
+  }
+
+  .light-only {
+    display: none;
+  }
+}
