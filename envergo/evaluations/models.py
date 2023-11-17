@@ -630,7 +630,7 @@ class RegulatoryNoticeLog(models.Model):
     evaluation = models.ForeignKey(
         "Evaluation",
         verbose_name="Avis",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="regulatory_notice_logs",
     )
     sender = models.ForeignKey(
