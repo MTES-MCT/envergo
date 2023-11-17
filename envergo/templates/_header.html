@@ -50,8 +50,8 @@
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'moulinette_home' "Porteurs de projet" %}</li>
         <li class="fr-nav__item">{% evalreq_menu %}</li>
-        <li class="fr-nav__item fr-hidden fr-unhidden-xl">{% faq_menu %}</li>
-        <li class="fr-nav__item fr-hidden fr-unhidden-lg">{% evaluation_menu %}</li>
+        <li class="fr-nav__item fr-hidden-lg fr-unhidden-xl">{% faq_menu %}</li>
+        <li class="fr-nav__item ">{% evaluation_menu %}</li>
         <li class="fr-nav__item fr-hidden-lg">
           <a href="{% url 'request_evaluation' %}" class="fr-nav__link">Demander un avis réglementaire</a>
         </li>
