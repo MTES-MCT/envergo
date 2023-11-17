@@ -1088,10 +1088,11 @@ main.home {
 
   section.moulinette {
     background-color: #E8EDFF;
+    background-color: var(--info-950-100);
 
     h2 {
       text-align: center;
-      color: #000091;
+      color: var(--blue-france-sun-113-625);
       margin-bottom: 3rem;
     }
 
