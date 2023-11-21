@@ -1107,6 +1107,12 @@ main.home {
   }
 
   section#decouvrir {
+    abbr {
+      text-decoration-style: dotted;
+      text-decoration-color: var(--text-mention-grey);
+      text-decoration-thickness: 2px;
+    }
+
     @media (min-width: 78em) {
 
       div.fr-col:first-child {
