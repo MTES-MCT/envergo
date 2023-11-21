@@ -984,6 +984,24 @@ div.hero-alt {
       }
     }
 
+    /**
+     * The main cta must be displayed like a classic button.
+     */
+    .fr-btn.main-cta {
+      background-color: var(--background-action-high-blue-france);
+      color: var(--text-inverted-blue-france);
+      --hover: var(--background-action-high-blue-france-hover);
+      --active: var(--background-action-high-blue-france-active);
+
+      &:hover {
+        background-color: var(--hover-tint);
+      }
+
+      &:active {
+        background-color: var(--active-tint);
+      }
+    }
+
     .fr-header__service {
       padding: .75rem 1rem;
     }

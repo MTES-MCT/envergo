@@ -27,7 +27,7 @@
         <div class="fr-header__tools-links">
           <ul class="fr-btns-group">
             <li>
-              <a class="fr-btn" href="{% url 'moulinette_home' %}">Simulateur</a>
+              <a class="fr-btn" href="{% url 'moulinette_home' %}">Porteurs de projet</a>
             </li>
             <li>
               <a class="fr-btn" href="{% url 'request_evaluation' %}">Services urbanisme</a>
@@ -35,16 +35,10 @@
             <li>
               <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
             </li>
-
-            {% if user.is_authenticated %}
-              <li>
-                <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
-              </li>
-            {% else %}
-              <li>
-                <a class="fr-btn fr-fi-lock-line" href="{% url 'login' %}">Se connecter</a>
-              </li>
-            {% endif %}
+            <li>
+              <a href="{% url 'request_evaluation' %}"
+                 class="fr-btn fr-btn--sm main-cta">Demander un avis réglementaire</a>
+            </li>
           </ul>
         </div>
       </div>
