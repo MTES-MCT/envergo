@@ -1053,7 +1053,7 @@ main.home {
     margin-top: 0 !important;
   }
 
-  section.hero {
+  section#hero {
     background-color: var(--background-alt-grey);
 
     .fr-container {
@@ -1076,7 +1076,6 @@ main.home {
         padding-bottom: 4rem;
       }
     }
-
 
     .home-illustration {
       width: 100%;
@@ -1107,7 +1106,20 @@ main.home {
     }
   }
 
-  section.moulinette {
+  section#decouvrir {
+    @media (min-width: 78em) {
+
+      div.fr-col:first-child {
+        padding-right: 4.5rem !important;
+      }
+
+      div.fr-col:last-child {
+        padding-left: 4.5rem !important;
+      }
+    }
+  }
+
+  section#moulinette {
     background-color: #E8EDFF;
     background-color: var(--info-950-100);
 
