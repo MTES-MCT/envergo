@@ -1078,11 +1078,14 @@ main.home {
     }
 
 
-    img.home-illustration {
+    .home-illustration {
       width: 100%;
       max-width: 420px;
-      display: block;
       margin: 0 auto;
+
+      img {
+        max-width: 100%;
+      }
 
       @media (min-width: 48em) {
         float: right;

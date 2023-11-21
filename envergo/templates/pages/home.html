@@ -19,17 +19,27 @@
       Since a full css solution was getting really hackish and complicated, it's just much easier and cleaner to use three different img elements, and hide or display them using media queries.
       {% endcomment %}
 
-      <img src="{% static 'images/image_produit.png' %}"
-           alt=""
-           class="home-illustration fr-hidden fr-unhidden-lg">
+      <div class="home-illustration fr-hidden fr-unhidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
 
       <h1>
         Simplifier la prise en compte de la réglementation environnementale dans les projets d’aménagement et de construction.
       </h1>
 
-      <img src="{% static 'images/image_produit.png' %}"
-           alt=""
-           class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg">
+      <div class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg fr-hidden fr-unhidden-md fr-hidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
 
       <ul class="fr-badge-group fr-my-3w">
         <li>
@@ -50,9 +60,14 @@
       <br />
       <span>Accessible sans créer de compte</span>
 
-      <img src="{% static 'images/image_produit.png' %}"
-           alt=""
-           class="home-illustration fr-hidden-md fr-mt-3w">
+      <div class="home-illustration fr-hidden-md fr-mt-3w fr-hidden-md fr-mt-3w">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
     </div>
   </section>
 
