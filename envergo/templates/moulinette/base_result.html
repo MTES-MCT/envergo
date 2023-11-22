@@ -6,9 +6,11 @@
 
 {% block container %}
 
-  <div id="moulinette-container" class="fr-container {{ source }} fr-mb-5w">
+  <div id="moulinette-container"
+       class="fr-container {{ source }} fr-pt-5w fr-mb-5w">
     <div class="fr-grid-row fr-grid-row--gutters">
-      <div id="form-col">
+
+      <div id="form-col" class="fr-col fr-col-lg-5 fr-col-xl-4">
         {% block form-col %}
 
           <h2>Saisissez les caractéristiques du projet</h2>
@@ -19,31 +21,12 @@
         {% endblock %}
       </div>
 
-      <article id="content-col">
+      <article id="content-col" class="fr-col-lg-7 fr-col-xl-8">
         {% block top_result %}{% endblock %}
         {% block result %}{% endblock %}
       </article>
     </div>
   </div>
-
-  <section class="fr-py-8w alt hide-print">
-    <div class="fr-container">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
-
-          {% block bottom_alt %}
-
-            <h2>Pour en savoir plus…</h2>
-
-            <p>
-              Consultez notre <a href="{% url 'faq' %}">page d'information</a>
-              ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
-            </p>
-          {% endblock %}
-        </div>
-      </div>
-    </div>
-  </section>
 
 {% endblock %}
 
