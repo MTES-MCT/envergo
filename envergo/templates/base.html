@@ -177,15 +177,13 @@
         {% block before-content %}
           <div id="before-content" class="fr-container">
             {% block messages %}
-
               {% include '_messages.html' %}
-
             {% endblock %}
           </div>
         {% endblock %}
 
         {% block container %}
-          <div id="main-container" class="fr-container fr-pb-6w fr-mb-8w">
+          <div id="main-container" class="fr-container fr-pt-5w fr-pb-6w fr-mb-8w">
             {% block content %}
               <div class="fr-grid-row fr-grid-row--center">
                 <article class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
@@ -196,7 +194,21 @@
           </div>
         {% endblock %}
 
-        {% block after-content %}{% endblock %}
+        {% block after-content %}
+          <section class="fr-py-8w alt">
+            <div class="fr-container">
+              <div class="fr-grid-row fr-grid-row--center">
+                <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+                  <h2>Pour en savoir plus…</h2>
+                  <p>
+                    Consultez notre <a href="{% url 'faq' %}">page d'information</a>
+                    ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        {% endblock %}
 
       {% endblock %}
     </main>

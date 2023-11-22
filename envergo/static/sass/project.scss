@@ -1048,6 +1048,7 @@ div.hero-alt {
   }
 }
 
+// Home page styles
 main.home {
   div#before-content.fr-mt-5w {
     margin-top: 0 !important;
@@ -1134,36 +1135,39 @@ main.home {
       color: var(--blue-france-sun-113-625);
       margin-bottom: 3rem;
     }
+  }
+}
 
-    form {
+.moulinette-columns {
+  form {
+    @media (min-width: 62em) {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+    }
+
+
+    div.moulinette-col {
+      width: 100;
+      max-width: 390px;
+      margin: 0 auto;
+
       @media (min-width: 62em) {
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: center;
+        flex: 1;
+        margin: 0 3rem;
       }
+    }
 
+    div.last-section {
 
-      div.moulinette-col {
-        width: 100;
-        max-width: 390px;
-        margin: 0 auto;
-
-        @media (min-width: 62em) {
-          flex: 1;
-          margin: 0 3rem;
-        }
-      }
-
-      div.last-section {
-
-        button {
-          display: block;
-          margin: 3rem auto 0 auto;
-        }
+      button {
+        display: block;
+        margin: 3rem auto 0 auto;
       }
     }
   }
 }
+
 
 li.btn-link {
   margin-left: auto;
@@ -1190,4 +1194,12 @@ li.btn-link {
   .light-only {
     display: none;
   }
+}
+
+.centered {
+  text-align: center;
+}
+
+main.contrast-bg {
+  background-color: var(--info-950-100);
 }

@@ -150,27 +150,14 @@
     </div>
   </section>
 
-  <section id="moulinette" class="moulinette fr-pt-8w fr-pb-5w">
+  <section id="moulinette"
+           class="moulinette moulinette-columns fr-pt-8w fr-pb-5w">
     <div class="fr-container">
       <h2 class="fr-h3">Simulez votre projet en phase amont !</h2>
-      {% include 'moulinette/_form.html' with form=form columns="true" %}
+      {% include 'moulinette/_form.html' with form=form %}
     </div>
   </section>
 
-  <section class="fr-py-8w alt">
-    <div class="fr-container">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
-          <h2>Pour en savoir plus…</h2>
-          <p>
-            Consultez notre <a href="{% url 'faq' %}">page d'information</a>
-            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
-          </p>
-        </div>
-      </div>
-    </div>
-
-  </section>
 {% endblock %}
 
 {% block extra_css %}
