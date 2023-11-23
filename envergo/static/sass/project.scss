@@ -1114,6 +1114,10 @@ main.home {
 
 .moulinette-columns {
   form {
+    input[type=text] {
+      background-color: var(--background-alt-grey);
+    }
+
     @media (min-width: 62em) {
       display: flex;
       flex-wrap: nowrap;
