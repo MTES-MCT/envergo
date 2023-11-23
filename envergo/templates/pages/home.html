@@ -56,7 +56,10 @@
         EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
       </p>
       <a href="#decouvrir"
-         class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w">Découvrir EnvErgo</a>
+         class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w"
+         data-event-category="HomePage"
+         data-event-action="DiscoverClick"
+         data-event-name="Main">Découvrir EnvErgo</a>
       <br />
       <span>Accessible sans créer de compte</span>
 
@@ -108,7 +111,10 @@
         </ul>
 
         <a href="#moulinette"
-           class="fr-btn fr-btn--lg fr-btn--icon-down fr-icon-arrow-down-line">Simuler un projet</a>
+           class="fr-btn fr-btn--lg fr-btn--icon-down fr-icon-arrow-down-line"
+           data-event-category="HomePage"
+           data-event-action="ToSimulationClick"
+           data-event-name="Main">Simuler un projet</a>
         <br>
         <span class="fr-hint-text">Durée : 30 secondes</span>
       </div>
@@ -143,7 +149,10 @@
         </ul>
 
         <a href="{% url 'request_evaluation' %}"
-           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line">Demander un avis réglementaire</a>
+           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line"
+           data-event-category="HomePage"
+           data-event-action="RequestClick"
+           data-event-name="Main">Demander un avis réglementaire</a>
         <br>
         <span class="fr-hint-text">Durée : 1 min 30</span>
       </div>

@@ -7,31 +7,39 @@ from envergo.moulinette.models import MoulinetteConfig
 register = template.Library()
 
 
-def nav_link(route, label, aria_current=False):
+def nav_link(route, label, *event_data, aria_current=False):
     url = reverse(route)
     aria_current = 'aria-current="page"' if aria_current else ""
+
+    data_attrs = ""
+    if event_data:
+        data_attrs = f"""
+        data-event-category={event_data[0]}
+        data-event-action={event_data[1]}
+        data-event-name={event_data[2]}
+    """
+
     return mark_safe(
-        f"""<a class="fr-nav__link" href="{url}" {aria_current}>
+        f"""<a class="fr-nav__link" href="{url}" {aria_current} {data_attrs}>
             {label}
         </a>"""
     )
 
 
 @register.simple_tag(takes_context=True)
-def menu_item(context, route, label, subroutes=[]):
+def menu_item(context, route, label, *event_data, subroutes=[]):
     """Generate html for a main menu item.
 
     If you pass a list of subroutes, the menu item will be highlighted
     if the current url is any on the main route or subroutes.
     """
-
     try:
         current_route = context.request.resolver_match.url_name
     except AttributeError:
         current_route = ""
 
     aria_current = route == current_route or current_route in subroutes
-    return nav_link(route, label, aria_current)
+    return nav_link(route, label, *event_data, aria_current=aria_current)
 
 
 @register.simple_tag(takes_context=True)
@@ -57,7 +65,7 @@ def sidemenu_item(context, route, label):
 
 
 @register.simple_tag(takes_context=True)
-def evalreq_menu(context):
+def evalreq_menu(context, *event_data):
     """Generate html for the "Services urbanisme" collapsible menu."""
 
     link_route = "request_evaluation"
@@ -68,7 +76,7 @@ def evalreq_menu(context):
         "request_eval_wizard_step_3",
         "request_success",
     ]
-    return menu_item(context, link_route, link_label, subroutes)
+    return menu_item(context, link_route, link_label, *event_data, subroutes=subroutes)
 
 
 @register.simple_tag(takes_context=True)
@@ -82,7 +90,7 @@ def faq_menu(context):
         "faq_natura_2000",
         "faq_eval_env",
     ]
-    return menu_item(context, link_route, link_label, subroutes)
+    return menu_item(context, link_route, link_label, subroutes=subroutes)
 
 
 @register.simple_tag(takes_context=True)
@@ -98,7 +106,10 @@ def evaluation_menu(context):
         ("evaluation_search", "Retrouver un avis"),
         ("dashboard", "Tableau de bord"),
     )
-    links_html = [nav_link(url, label, url == current_route) for url, label in links]
+    links_html = [
+        nav_link(url, label, aria_current=(url == current_route))
+        for url, label in links
+    ]
 
     # urls for the menu items
     routes = list(dict(links).keys())
