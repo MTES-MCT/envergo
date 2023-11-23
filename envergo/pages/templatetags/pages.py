@@ -14,9 +14,9 @@ def nav_link(route, label, *event_data, aria_current=False):
     data_attrs = ""
     if event_data:
         data_attrs = f"""
-        data-event-category={event_data[0]}
-        data-event-action={event_data[1]}
-        data-event-name={event_data[2]}
+        data-event-category="{event_data[0]}"
+        data-event-action="{event_data[1]}"
+        data-event-name="{event_data[2]}"
     """
 
     return mark_safe(
