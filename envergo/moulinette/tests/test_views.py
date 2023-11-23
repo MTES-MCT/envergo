@@ -7,7 +7,7 @@ from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 pytestmark = pytest.mark.django_db
 
 
-HOME_TITLE = "À quelles réglementations environnementales votre projet de construction est-il soumis ?"
+HOME_TITLE = "Simulez votre projet en phase amont"
 RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
