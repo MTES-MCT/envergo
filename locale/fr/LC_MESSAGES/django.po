@@ -382,7 +382,7 @@ msgid ""
 "newlines)."
 msgstr ""
 "Apparaîtra dans la page d'avis, sous le titre « Commentaires de l'équipe "
-"Envergo ». Utilisez du markdown simple (*gras*, _italique_, [liens](https://"
+"Envergo ». Utilisez du markdown simple (**gras**, _italique_, [liens](https://"
 "url), retours à la ligne)."
 
 #: envergo/evaluations/models.py:167
@@ -399,7 +399,7 @@ msgid ""
 "            Only simple markdown (*bold*, _italic_, [links](https://url), "
 "newlines)."
 msgstr ""
-"Apparaîtra dans l'e-mail d'avis. Utilisez du markdown simple (*gras*, "
+"Apparaîtra dans l'e-mail d'avis. Utilisez du markdown simple (**gras**, "
 "_italique_, [liens](https://url), retours à la ligne)."
 
 #: envergo/evaluations/models.py:176
