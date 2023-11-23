@@ -174,7 +174,6 @@
 {% endblock %}
 
 {% block extra_js %}
-  {# djlint:off #}
   <script>
     var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
     var FEEDBACK_BUTTONS = '.feedback-buttons button';
@@ -193,7 +192,7 @@
       var MOULINETTE_DATA = {{ moulinette_summary|safe }};
     {% endif %}
     var SIMULATION_FORM_ID = "moulinette-form";
-</script>
+  </script>
   {% include 'moulinette/_form_scripts.html' %}
-  {# djlint:on #}
+  <script defer src="{% static 'js/libs/home_analytics.js' %}"></script>
 {% endblock %}
