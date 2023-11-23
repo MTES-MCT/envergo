@@ -1084,6 +1084,10 @@ main.home {
       text-decoration-thickness: 2px;
     }
 
+    a.fr-icon-arrow-down-line::before {
+      margin-right: 0.5rem;
+    }
+
     @media (min-width: 78em) {
 
       div.fr-col:first-child {
