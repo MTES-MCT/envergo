@@ -15,7 +15,7 @@ pytestmark = pytest.mark.django_db
 def loisurleau_criteria(france_map):  # noqa
     MoulinetteConfigFactory(
         is_activated=True,
-        ddtm_contact_email="ddtm_email_test@example.org",
+        ddtm_water_police_email="ddtm_email_test@example.org",
     )
     lse = RegulationFactory(regulation="loi_sur_leau")
     n2000 = RegulationFactory(regulation="natura2000")
@@ -58,5 +58,5 @@ def test_zh_medium_footprint_inside_wetlands(moulinette_data):
     moulinette.evaluate()
 
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
-    assert moulinette.natura2000.iota.result == "a_verifier"
+    assert moulinette.natura2000.iota.result == "iota_a_verifier"
     assert moulinette.natura2000.result == "iota_a_verifier"

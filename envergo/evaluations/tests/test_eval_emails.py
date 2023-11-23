@@ -28,7 +28,9 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
     MoulinetteConfigFactory(
         department=loire_atlantique_department,
         is_activated=True,
-        ddtm_contact_email="ddtm_email_test@example.org",
+        ddtm_water_police_email="ddtm_email_test@example.org",
+        ddtm_n2000_email="ddtm_n2000@example.org",
+        dreal_eval_env_email="dreal_evalenv@example.org",
     )
     regulation = RegulationFactory()
     PerimeterFactory(
@@ -59,132 +61,17 @@ def moulinette_url(footprint):
     return f"https://envergo.beta.gouv.fr?{url}"
 
 
-@pytest.mark.parametrize("footprint", [1200])
-def test_instructor_dont_transmit_soumis(rf, moulinette_url):
-    """Test email when evalreq is:
-    - created by an instructor
-    - the eval result is "soumis"
-    - the "send to sponsor" checkbox is not checked
-    """
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.instructor,
-        moulinette_url=moulinette_url,
-        send_eval_to_sponsor=False,
-    )
-    moulinette = eval.get_moulinette()
-    assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
-
-    req = rf.get("/")
-    email = eval.get_evaluation_email(req)
-    assert email.to == ["instructor@example.org"]
-    assert email.cc == []
-    assert email.bcc == []
-
-    body = email.body
-    assert "À transmettre au porteur" in body
-
-
-@pytest.mark.parametrize("footprint", [1200])
-def test_instructor_transmit_soumis(rf, moulinette_url):
-    """Test email when evalreq is:
-    - created by an instructor
-    - the eval result is "soumis"
-    - the "send to sponsor" checkbox is checked
-    """
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.instructor,
-        moulinette_url=moulinette_url,
-        send_eval_to_sponsor=True,
-    )
-    moulinette = eval.get_moulinette()
-    assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
-
-    req = rf.get("/")
-    email = eval.get_evaluation_email(req)
-    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
-    assert email.cc == ["instructor@example.org"]
-    assert email.bcc == ["ddtm_email_test@example.org"]
-
-    body = email.body
-    assert "À transmettre au porteur" not in body
-
-
-@pytest.mark.parametrize("footprint", [800])
-def test_instructor_transmit_action_requise(rf, moulinette_url):
-    """Test email when evalreq is:
-    - created by an instructor
-    - the eval result is "action requise"
-    - the "send to sponsor" checkbox is checked
-    """
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.instructor,
-        moulinette_url=moulinette_url,
-        send_eval_to_sponsor=True,
-    )
-    moulinette = eval.get_moulinette()
-    assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
-
-    req = rf.get("/")
-    email = eval.get_evaluation_email(req)
-    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
-    assert email.cc == ["instructor@example.org"]
-    assert email.bcc == []
-
-    body = email.body
-    assert "À transmettre au porteur" not in body
-
-
-@pytest.mark.parametrize("footprint", [50])
-def test_instructor_transmit_non_soumis(rf, moulinette_url):
-    """Test email when evalreq is:
-    - created by an instructor
-    - the eval result is "non soumis"
-    - the "send to sponsor" checkbox is checked
-    """
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.instructor,
-        moulinette_url=moulinette_url,
-        send_eval_to_sponsor=True,
-    )
-    moulinette = eval.get_moulinette()
-    assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
-
-    req = rf.get("/")
-    email = eval.get_evaluation_email(req)
-    assert email.to == ["instructor@example.org"]
-    assert email.cc == []
-    assert email.bcc == []
-
-    body = email.body
-    assert "À transmettre au porteur" not in body
-
-
-@pytest.mark.parametrize("footprint", [1200])
-def test_petitioner(rf, moulinette_url):
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.petitioner,
-        moulinette_url=moulinette_url,
-        send_eval_to_sponsor=False,
-    )
-    req = rf.get("/")
-    email = eval.get_evaluation_email(req)
-
-    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
-    assert email.cc == []
-    assert email.bcc == []
-
-    body = email.body
-    assert "À transmettre au porteur" not in body
-
-
-def fake_moulinette(url, lse, n2000, evalenv, sage):
+def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
     """Create a moulinette with custom regulation results."""
 
-    eval = EvaluationFactory(
-        user_type=USER_TYPES.instructor,
-        moulinette_url=url,
-        send_eval_to_sponsor=True,
-    )
+    eval_params = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": url,
+        "send_eval_to_sponsor": True,
+    }
+    eval_params.update(eval_kwargs)
+
+    eval = EvaluationFactory(**eval_params)
     moulinette = eval.get_moulinette()
 
     # We create mocks based on a real regulation, so it's easier to fake results
@@ -228,6 +115,199 @@ def fake_moulinette(url, lse, n2000, evalenv, sage):
 
 
 @pytest.mark.parametrize("footprint", [1200])
+def test_instructor_dont_transmit_soumis(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "soumis"
+    - the "send to sponsor" checkbox is not checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": False,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["instructor@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_instructor_transmit_soumis(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "soumis"
+    - the "send to sponsor" checkbox is checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == ["instructor@example.org"]
+    assert email.bcc == ["ddtm_email_test@example.org"]
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_instructor_transmit_n2000_evalenv_soumis(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "soumis"
+    - the "send to sponsor" checkbox is checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "soumis",
+        "systematique",
+        "soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == ["instructor@example.org"]
+
+    assert email.bcc == [
+        "ddtm_email_test@example.org",
+        "ddtm_n2000@example.org",
+        "dreal_evalenv@example.org",
+    ]
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+
+
+@pytest.mark.parametrize("footprint", [800])
+def test_instructor_transmit_action_requise(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "action requise"
+    - the "send to sponsor" checkbox is checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "action_requise",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == ["instructor@example.org"]
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_instructor_transmit_non_soumis(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "non soumis"
+    - the "send to sponsor" checkbox is checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["instructor@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_petitioner(rf, moulinette_url):
+    eval_kwargs = {
+        "user_type": USER_TYPES.petitioner,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": False,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
 def test_moulinette_global_result(moulinette_url):
     expected_results = [
         (("soumis", "non_soumis", "non_concerne", "interdit"), "interdit"),
@@ -255,7 +335,8 @@ def test_lse_soumis_content(rf, moulinette_url):
         moulinette_url, "soumis", "non_soumis", "non_soumis", "non_soumis"
     )
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
     assert "Le projet est soumis à la Loi sur l'eau" in body
     assert "Le projet est soumis à Natura 2000" not in body
@@ -269,7 +350,8 @@ def test_n2000_soumis_content(rf, moulinette_url):
         moulinette_url, "non_soumis", "soumis", "non_soumis", "non_soumis"
     )
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "Le projet est soumis à la Loi sur l'eau" not in body
@@ -284,7 +366,8 @@ def test_evalenv_cas_par_cas_content(rf, moulinette_url):
         moulinette_url, "non_soumis", "non_soumis", "cas_par_cas", "non_soumis"
     )
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "Le projet est soumis à la Loi sur l'eau" not in body
@@ -299,7 +382,8 @@ def test_evalenv_systematique_content(rf, moulinette_url):
         moulinette_url, "non_soumis", "non_soumis", "systematique", "non_soumis"
     )
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "Le projet est soumis à la Loi sur l'eau" not in body
@@ -319,7 +403,8 @@ def test_required_action_lse(rf, moulinette_url):
     ]
 
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "ce projet est susceptible d'être interdit" not in body
@@ -345,7 +430,8 @@ def test_required_action_n2000(rf, moulinette_url):
     ]
 
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "ce projet est susceptible d'être interdit" not in body
@@ -373,7 +459,8 @@ def test_required_action_interdit(rf, moulinette_url):
     moulinette.regulations[3].required_actions_soumis.return_value = []
 
     req = rf.get("/")
-    email = eval.get_evaluation_email(req)
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
     body = email.alternatives[0][0]
 
     assert "ce projet est susceptible d'être interdit" in body

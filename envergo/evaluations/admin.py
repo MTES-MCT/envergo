@@ -263,16 +263,20 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def evaluation_email(self, request, object_id):
         evaluation = self.get_object(request, unquote(object_id))
+        evaluation_email = evaluation.get_evaluation_email()
 
         try:
-            eval_email = evaluation.get_evaluation_email(request)
+            eval_email = evaluation_email.get_email(request)
         except Exception as error:  # noqa
             # There was an error generating the email
             url = reverse("admin:evaluations_evaluation_change", args=[object_id])
             response = HttpResponseRedirect(url)
             self.message_user(
                 request,
-                f"Impossible de générer l'avis réglementaire -> {error}",
+                f"""
+                Impossible de générer l'avis réglementaire. Communiquez ce message à l'équipe dev :
+                {error}
+                """,
                 messages.ERROR,
             )
             return response
@@ -564,9 +568,6 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
         return False
 
     def has_add_permission(self, request):

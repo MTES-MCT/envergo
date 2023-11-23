@@ -158,9 +158,15 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated"]
     form = MoulinetteConfigForm
     inlines = [MoulinetteTemplateInline]
+    list_filter = ["is_activated"]
 
 
 @admin.register(MoulinetteTemplate)
 class MoulinetteTemplateAdmin(admin.ModelAdmin):
     list_display = ["config", "key"]
     search_fields = ["content"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.order_by("department")
+        return qs
