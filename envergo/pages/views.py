@@ -7,13 +7,14 @@ from django.contrib.syndication.views import Feed
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
-from django.views.generic import ListView, TemplateView
+from django.views.generic import FormView, ListView, TemplateView
 
 from envergo.moulinette.models import MoulinetteConfig
+from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 
 
-class HomeView(TemplateView):
+class HomeView(MoulinetteMixin, FormView):
     template_name = "pages/home.html"
 
 

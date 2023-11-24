@@ -116,19 +116,25 @@ article {
 
 #moulinette-container {
 
-  max-width: none;
-
-  div.fr-grid-row {
-    justify-content: flex-start;
-  }
-
   #form-col {
-    width: 100%;
     order: 2;
   }
 
   #content-col {
     order: 1;
+  }
+
+  @media (min-width: 48em) {
+    #form-col {
+      order: 1;
+    }
+
+    #content-col {
+      order: 2;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
 
   article>img {
@@ -148,45 +154,9 @@ article {
     }
   }
 
-
   .share-btn {
     text-align: center;
   }
-
-  @media (min-width: 1144px) {
-
-    #form-col {
-      flex: 0 0 calc(400% / 12);
-      width: calc(400% / 12);
-      max-width: 520px;
-      padding: 0 16px 0 8px;
-      order: 1;
-    }
-
-    #content-col {
-      flex: 0 0 calc(800% / 12);
-      width: calc(800% / 12);
-      max-width: 820px;
-      padding: 0 8px 0 16px;
-      order: 2;
-    }
-  }
-
-  @media (min-width: 1248px) {
-    padding: 0 3rem;
-
-    #form-col {
-      padding: 0 24px;
-      max-width: 548px;
-    }
-
-    #content-col {
-      padding: 0 24px;
-      max-width: 723px;
-      margin: 0 auto;
-    }
-  }
-
 }
 
 nav#evaluation-summary {
@@ -231,7 +201,7 @@ nav#evaluation-summary {
   }
 
   p.hint-header {
-    color: var(--text-mention-grey);
+    color: var(--text-default-info);
   }
 
   #form-group-created_surface,
@@ -984,6 +954,24 @@ div.hero-alt {
       }
     }
 
+    /**
+     * The main cta must be displayed like a classic button.
+     */
+    .fr-btn.main-cta {
+      background-color: var(--background-action-high-blue-france);
+      color: var(--text-inverted-blue-france);
+      --hover: var(--background-action-high-blue-france-hover);
+      --active: var(--background-action-high-blue-france-active);
+
+      &:hover {
+        background-color: var(--hover-tint);
+      }
+
+      &:active {
+        background-color: var(--active-tint);
+      }
+    }
+
     .fr-header__service {
       padding: .75rem 1rem;
     }
@@ -1028,4 +1016,168 @@ div.hero-alt {
     font-size: inherit;
     line-height: inherit;
   }
+}
+
+// Home page styles
+main.home {
+  div#before-content.fr-mt-5w {
+    margin-top: 0 !important;
+  }
+
+  section#hero {
+    background-color: var(--background-alt-grey);
+
+    .fr-container {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+
+      &::after {
+        content: "";
+        display: block;
+        clear: both;
+      }
+
+      @media (min-width: 48em) {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+      }
+
+      @media (min-width: 48em) {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+      }
+    }
+
+    .home-illustration {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+
+      img {
+        max-width: 100%;
+      }
+
+      @media (min-width: 48em) {
+        float: right;
+        max-width: 320px;
+        margin-left: 2rem;
+        margin-top: -2.5rem;
+      }
+
+      @media (min-width: 62em) {
+        max-width: 420px;
+        margin-left: 2.5rem;
+        margin-top: 0;
+      }
+
+      @media (min-width: 78em) {
+        max-width: 480px;
+        margin-left: 3rem;
+      }
+    }
+  }
+
+  section#decouvrir {
+    abbr {
+      text-decoration-style: dotted;
+      text-decoration-color: var(--text-mention-grey);
+      text-decoration-thickness: 2px;
+    }
+
+    a.fr-icon-arrow-down-line::before {
+      margin-right: 0.5rem;
+    }
+
+    @media (min-width: 78em) {
+
+      div.fr-col:first-child {
+        padding-right: 4.5rem !important;
+      }
+
+      div.fr-col:last-child {
+        padding-left: 4.5rem !important;
+      }
+    }
+  }
+
+  section#simulateur {
+    background-color: #E8EDFF;
+    background-color: var(--info-950-100);
+
+    h2 {
+      text-align: center;
+      color: var(--blue-france-sun-113-625);
+      margin-bottom: 3rem;
+    }
+  }
+}
+
+.moulinette-columns {
+  form {
+    input[type=text] {
+      background-color: var(--background-alt-grey);
+    }
+
+    @media (min-width: 62em) {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+    }
+
+
+    div.moulinette-col {
+      width: 100;
+      max-width: 390px;
+      margin: 0 auto;
+
+      @media (min-width: 62em) {
+        flex: 1;
+        margin: 0 3rem;
+      }
+    }
+
+    div.last-section {
+
+      button {
+        display: block;
+        margin: 3rem auto 0 auto;
+      }
+    }
+  }
+}
+
+
+li.btn-link {
+  margin-left: auto;
+  display: flex;
+  justify-content: center;
+}
+
+// Missing classes from the dsfr
+@media (min-width: 62em) {
+  .fr-ml-lg-0 {
+    margin-left: 0 !important;
+  }
+}
+
+.dark-only {
+  display: none;
+}
+
+:root[data-fr-theme=dark] {
+  .dark-only {
+    display: inherit;
+  }
+
+  .light-only {
+    display: none;
+  }
+}
+
+.centered {
+  text-align: center;
+}
+
+main.contrast-bg {
+  background-color: var(--info-950-100);
 }

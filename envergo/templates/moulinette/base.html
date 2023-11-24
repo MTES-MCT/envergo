@@ -4,32 +4,6 @@
 
 {% block title %}Simulation réglementaire du projet{% endblock %}
 
-{% block container %}
-
-  <div id="moulinette-container"
-       class="fr-container {{ source }} fr-pt-5w fr-mb-5w">
-    <div class="fr-grid-row fr-grid-row--gutters">
-
-      <div id="form-col" class="fr-col fr-col-lg-5 fr-col-xl-4">
-        {% block form-col %}
-
-          <h2>Saisissez les caractéristiques du projet</h2>
-
-          {% include 'moulinette/_form.html' with form=form %}
-
-          {% block extra-form-col %}{% endblock %}
-        {% endblock %}
-      </div>
-
-      <article id="content-col" class="fr-col-lg-7 fr-col-xl-8">
-        {% block top_result %}{% endblock %}
-        {% block result %}{% endblock %}
-      </article>
-    </div>
-  </div>
-
-{% endblock %}
-
 {% block extra_css %}
   {% include 'moulinette/_form_styles.html' %}
 

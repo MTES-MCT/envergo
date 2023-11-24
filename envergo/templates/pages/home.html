@@ -1,31 +1,198 @@
 {% extends 'base.html' %}
 
-{% load static %}
+{% load static l10n %}
 
-{% block title %}Accueil{% endblock %}
+{% block title %}
+  EnvErgo : évaluez à quelles réglementations environnementales est soumis un projet de construction
+{% endblock %}
 
-{% block article %}
-  <h1>Demandez un avis réglementaire pour un projet</h1>
+{% block main-classes %}home{% endblock %}
 
-  <p class="fr-text--lead">
-    EnvErgo vous aide à déterminer si un projet de construction
-    est soumis à la Loi sur l'eau. Recevez une réponse dans les trois jours ouvrés.
-  </p>
+{% block container %}
 
-  <p>
-    Faites-nous parvenir le Cerfa et les pièces complémentaires utiles à l'évaluation (plan de masse, autres documents…) à l'adresse suivante :
-  </p>
+  <section id="hero">
+    <div class="fr-container">
 
-  <p class="fr-grid-row fr-grid-row--center">
-    <a class="fr-btn fr-btn--info fr-my-4w"
-       href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
-  </p>
+      {% comment %}
+      The main hero section illustration moves up and down the document depending on the screen width.
 
-  <div class="fr-alert fr-alert--info fr-mt-6w">
-    <p class="fr-alert__title">Vous connaissez déjà votre référence EnvErgo ?</p>
-    <p>
-      <a href="{% url 'evaluation_search' %}">Retrouvez votre avis réglementaire.</a>
-    </p>
-  </div>
+      Since a full css solution was getting really hackish and complicated, it's just much easier and cleaner to use three different img elements, and hide or display them using media queries.
+      {% endcomment %}
 
+      <div class="home-illustration fr-hidden fr-unhidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <h1>
+        Simplifier la prise en compte de la réglementation environnementale dans les projets d’aménagement et de construction.
+      </h1>
+
+      <div class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg fr-hidden fr-unhidden-md fr-hidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <ul class="fr-badge-group fr-my-3w">
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+        </li>
+      </ul>
+      <p class="fr-text--lead">
+        EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction.
+      </p>
+      <a href="#decouvrir"
+         class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w"
+         data-event-category="HomePage"
+         data-event-action="DiscoverClick"
+         data-event-name="Main">Découvrir EnvErgo</a>
+      <br />
+      <span>Accessible sans créer de compte</span>
+
+      <div class="home-illustration fr-hidden-md fr-mt-3w fr-hidden-md fr-mt-3w">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+    </div>
+  </section>
+
+  <section id="decouvrir" class="fr-container">
+    <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
+      <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
+        <img src="{% static 'images/simu-light.svg' %}" alt="" class="light-only">
+        <img src="{% static 'images/simu-dark.svg' %}" alt="" class="dark-only">
+        <h2>Vous êtes porteur d'un projet en phase initiale ?</h2>
+        <ul class="fr-tags-group fr-mb-2w">
+          <li>
+            <span class="fr-tag">Lotisseurs</span>
+          </li>
+          <li>
+            <span class="fr-tag">Promoteurs</span>
+          </li>
+          <li>
+            <span class="fr-tag">Géomètres</span>
+          </li>
+          <li>
+            <span class="fr-tag">Architectes</span>
+          </li>
+        </ul>
+        <p class="fr-text--lead fr-mb-2w">Planifiez vos études et procédures en ne manquant aucune obligation légale.</p>
+        <p class="fr-mb-1w">
+          En un clic et <strong>anonymement</strong> obtenez :
+        </p>
+        <ul class="fr-mb-3w">
+          <li>
+            Les <strong>réglementations environnementales</strong> auxquelles votre projet est soumis : loi sur l’eau, Natura 2000, cas par cas…
+          </li>
+          <li>
+            Les <strong>études</strong> à mener
+          </li>
+          <li>
+            Les <strong>procédures administratives</strong> à suivre, en plus du dépôt de permis de construire ou d’aménager
+          </li>
+        </ul>
+
+        <a href="#simulateur"
+           class="fr-btn fr-btn--lg fr-btn--icon-down fr-icon-arrow-down-line"
+           data-event-category="HomePage"
+           data-event-action="SimulationClick"
+           data-event-name="Main">Simuler un projet</a>
+        <br>
+        <span class="fr-hint-text">Durée : 30 secondes</span>
+      </div>
+
+      <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
+        <img src="{% static 'images/service-light.svg' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/service-dark.svg' %}" alt="" class="dark-only">
+        <h2>
+          Vous êtes un service <abbr title="Autorisations du Droit des Sols">ADS</abbr> et instruisez un projet de <abbr title="Permis de construire">PC</abbr> ou de <abbr title="Permis d'aménager">PA</abbr> ?
+        </h2>
+        <ul class="fr-tags-group fr-mb-2w">
+          <li>
+            <span class="fr-tag">Instructeurs ADS</span>
+          </li>
+        </ul>
+        <p class="fr-text--lead fr-mb-2w">Déterminez si le projet est soumis à une réglementation environnementale.</p>
+        <ul class="fr-mb-3w">
+          <li>
+            Nos <strong>chargés d’études</strong> examinent le projet
+          </li>
+          <li>
+            Un avis vous est rendu <strong>sous 72h</strong>
+          </li>
+          <li>
+            En option : Nous notifions directement le porteur de projet avec un <strong>avis réglementaire</strong> du Ministère de la Transition Écologique
+          </li>
+          <li>
+            Nous <strong>accompagnons</strong> le porteur de projet dans la compréhension de ses obligations.
+          </li>
+        </ul>
+
+        <a href="{% url 'request_evaluation' %}"
+           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line"
+           data-event-category="HomePage"
+           data-event-action="RequestClick"
+           data-event-name="Main">Demander un avis réglementaire</a>
+        <br>
+        <span class="fr-hint-text">Durée : 1 min 30</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="simulateur"
+           class="moulinette moulinette-columns fr-pt-8w fr-pb-5w">
+    <div class="fr-container">
+      <h2 class="fr-h3">Simulez votre projet en phase amont !</h2>
+      {% include 'moulinette/_form.html' with form=form %}
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var VISITOR_ID = '{{ visitor_id }}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var EVENTS_URL = "{% url 'events' %}";
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
+    var SIMULATION_FORM_ID = "moulinette-form";
+  </script>
+  {% include 'moulinette/_form_scripts.html' %}
+  <script defer src="{% static 'js/libs/home_analytics.js' %}"></script>
 {% endblock %}

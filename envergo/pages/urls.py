@@ -1,10 +1,11 @@
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import TemplateView
 
 from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import (
     AvailabilityInfo,
+    HomeView,
     LegalMentionsView,
     NewsFeed,
     NewsView,
@@ -12,11 +13,7 @@ from envergo.pages.views import (
 )
 
 urlpatterns = [
-    path(
-        "",
-        RedirectView.as_view(pattern_name="moulinette_home", query_string=True),
-        name="home",
-    ),
+    path("", HomeView.as_view(), name="home"),
     path(_("stats/"), include("envergo.stats.urls")),
     path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(
