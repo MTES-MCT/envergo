@@ -277,15 +277,27 @@ class Regulation(models.Model):
         Such an authorization is required if the projet is a "lotissement" or if the
         answer to the "autorisation d'urbanisme" question is anything other than "no".
         """
-        lotissement = self.get_criterion("lotissement")
-        autorisation_urba = self.get_criterion("autorisation_urba")
+        try:
+            lotissement_form = self.get_criterion("lotissement").get_form()
+            if (
+                lotissement_form.is_valid()
+                and lotissement_form.cleaned_data["is_lotissement"] == "oui"
+            ):
+                return True
+        except AttributeError:
+            pass
 
-        return any(
-            (
-                lotissement and lotissement.result == "soumis",
-                autorisation_urba and autorisation_urba.result != "non_soumis",
-            )
-        )
+        try:
+            autor_urba_form = self.get_criterion("autorisation_urba").get_form()
+            if (
+                autor_urba_form.is_valid()
+                and autor_urba_form.cleaned_data["autorisation_urba"] != "none"
+            ):
+                return True
+        except AttributeError:
+            pass
+
+        return False
 
     @cached_property
     def perimeter(self):
