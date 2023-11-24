@@ -112,7 +112,7 @@ def test_moulinette_result_form_error(client):
     res = client.get(full_url)
 
     assert res.status_code == 302
-    assert res.url.endswith("/simulateur/")
+    assert res.url.endswith("/simulateur/formulaire/")
 
 
 def test_moulinette_home_form_error(client):
