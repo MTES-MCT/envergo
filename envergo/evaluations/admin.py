@@ -12,6 +12,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -290,6 +291,25 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
 
         if request.method == "POST":
+
+            latest_log = (
+                RegulatoryNoticeLog.objects.filter(evaluation=evaluation)
+                .order_by("-sent_at")
+                .first()
+            )
+            if latest_log:
+                delta = timezone.now() - latest_log.sent_at
+                if delta.seconds < 10:
+                    self.message_user(
+                        request,
+                        "Il s'est écoulé moins de 10 secondes depuis le dernier envoi. L'envoi de l'avis a été bloqué.",
+                        messages.WARNING,
+                    )
+                    url = reverse(
+                        "admin:evaluations_evaluation_email_avis", args=[object_id]
+                    )
+                    return HttpResponseRedirect(url)
+
             eval_email.send()
             # We need to store the message id from the esp, but in local dev or testing,
             # there is no such sing.
