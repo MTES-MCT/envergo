@@ -483,12 +483,6 @@ class Perimeter(models.Model):
         _("Backend name"), help_text=_("For admin usage only"), max_length=256
     )
     name = models.CharField(_("Name"), max_length=256)
-    long_name = models.CharField(
-        _("Long name"),
-        max_length=256,
-        blank=True,
-        help_text=_("Displayed below the regulation title"),
-    )
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Check if all criteria have been set"),
@@ -528,7 +522,7 @@ class Perimeter(models.Model):
     @property
     def contact(self):
         """Format an address string."""
-        lines = [f"<strong>{self.contact_name or self.long_name or self.name}</strong>"]
+        lines = [f"<strong>{self.contact_name or self.name}</strong>"]
         if self.contact_phone:
             lines.append(
                 f'Téléphone : <a href="tel:{self.contact_phone}">{self.contact_phone.as_national}</a>'
