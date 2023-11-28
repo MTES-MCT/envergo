@@ -1113,35 +1113,31 @@ main.home {
 }
 
 .moulinette-columns {
-  form {
-    input[type=text] {
-      background-color: var(--background-alt-grey);
-    }
+  input[type=text] {
+    background-color: var(--background-alt-grey);
+  }
 
-    @media (min-width: 62em) {
-      display: flex;
-      flex-wrap: nowrap;
-      justify-content: center;
-    }
-
+  #form-groups {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    margin: -1em;
 
     div.moulinette-col {
-      width: 100;
-      max-width: 390px;
-      margin: 0 auto;
+      flex: 1;
+      width: 100%;
+      min-width: 320px;
+      max-width: 410px;
+      padding: 1em;
 
-      @media (min-width: 62em) {
-        flex: 1;
-        margin: 0 3rem;
-      }
     }
+  }
 
-    div.last-section {
+  div.last-section {
 
-      button {
-        display: block;
-        margin: 3rem auto 0 auto;
-      }
+    button {
+      display: block;
+      margin: 3rem auto 0 auto;
     }
   }
 }
