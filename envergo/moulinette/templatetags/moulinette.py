@@ -82,3 +82,18 @@ def moulinette_template(context, template_key, **kwargs):
 @register.simple_tag()
 def debug(stuff):
     raise 0
+
+
+@register.simple_tag()
+def perimeter_long_name(regulation, perimeter):
+    """Display a long name for a given perimeter.
+
+    It will displayed in this kind of sentence:
+    "Le projet se trouve dans le périmètre {{ long name }}."
+    """
+    templates = [
+        f"moulinette/{regulation.slug}/_perimeter_long_name.html",
+        "moulinette/_perimeter_long_name.html",
+    ]
+    long_name = render_to_string(templates, {"perimeter": perimeter})
+    return long_name

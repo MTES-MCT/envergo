@@ -6,14 +6,7 @@
   </h2>
 
   {% if regulation.display_perimeter %}
-    <p>
-      Le projet se trouve dans le périmètre
-      {% if regulation.perimeter.url %}
-        <a href="{{ regulation.perimeter.url }}" target="_blank" rel="noopener">{{ regulation.perimeter.long_name|default:regulation.perimeter.name }}</a>.
-      {% else %}
-        {{ regulation.perimeter.long_name|default:regulation.perimeter.name }}.
-      {% endif %}
-    </p>
+    {% include 'moulinette/_perimeter_snippet.html' with regulation=regulation perimeter=regulation.perimeter %}
   {% endif %}
 
   {% if regulation.display_map %}
