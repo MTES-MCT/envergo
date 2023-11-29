@@ -1,6 +1,8 @@
 {% block content %}
 {% if to_be_transmitted %}À transmettre au porteur de projet.
 
+{% endif %}{% if icpe_not_transmitted %}{% include 'evaluations/admin/_icpe_not_transmitted_mention.txt' %}
+
 {% endif %}Bonjour,
 
 {% block greetings %}Ceci est un avis réglementaire du Ministère de la Transition Écologique.

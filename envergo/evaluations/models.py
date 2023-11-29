@@ -309,6 +309,13 @@ class EvaluationEmail:
                 not evaluation.send_eval_to_sponsor,
             )
         )
+        icpe_not_transmitted = all(
+            (
+                evaluation.is_icpe,
+                evaluation.send_eval_to_sponsor,
+                evaluation.user_type == USER_TYPES.instructor,
+            )
+        )
         context = {
             "evaluation": evaluation,
             "is_icpe": evaluation.is_icpe,
@@ -319,6 +326,7 @@ class EvaluationEmail:
                 evaluation.get_absolute_url()
             ),
             "to_be_transmitted": to_be_transmitted,
+            "icpe_not_transmitted": icpe_not_transmitted,
             "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
             "required_actions_interdit": list(
                 moulinette.all_required_actions_interdit()
