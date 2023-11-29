@@ -303,6 +303,7 @@ class EvaluationEmail:
         html_mail_template = f"evaluations/admin/eval_email_{result}.html"
         to_be_transmitted = all(
             (
+                not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
                 not evaluation.send_eval_to_sponsor,
@@ -310,6 +311,7 @@ class EvaluationEmail:
         )
         context = {
             "evaluation": evaluation,
+            "is_icpe": evaluation.is_icpe,
             "rr_mention_md": evaluation.rr_mention_md,
             "rr_mention_html": evaluation.rr_mention_html,
             "moulinette": moulinette,
@@ -348,7 +350,7 @@ class EvaluationEmail:
         result = self.moulinette.result
 
         if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_sponsor:
+            if evaluation.send_eval_to_sponsor and not evaluation.is_icpe:
                 if result in ("interdit", "soumis", "action_requise"):
                     recipients = evaluation.project_sponsor_emails
                 else:
@@ -366,8 +368,10 @@ class EvaluationEmail:
         result = self.moulinette.result
 
         cc_recipients = []
+
         if all(
             (
+                not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
                 evaluation.send_eval_to_sponsor,
                 result in ("interdit", "soumis", "action_requise"),
@@ -384,9 +388,12 @@ class EvaluationEmail:
 
         bcc_recipients = []
 
-        if (
-            evaluation.user_type == USER_TYPES.instructor
-            and evaluation.send_eval_to_sponsor
+        if all(
+            (
+                not evaluation.is_icpe,
+                evaluation.user_type == USER_TYPES.instructor,
+                evaluation.send_eval_to_sponsor,
+            )
         ):
             if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
                 if config.ddtm_water_police_email:
