@@ -365,19 +365,15 @@ class EvaluationEmail:
         evaluation = self.evaluation
         result = self.moulinette.result
 
-        if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_sponsor:
-                if result in ("interdit", "soumis"):
-                    cc_recipients = evaluation.contact_emails
-                elif result == "action_requise":
-                    cc_recipients = evaluation.contact_emails
-                else:
-                    cc_recipients = []
-            else:
-                cc_recipients = []
-
-        else:
-            cc_recipients = []
+        cc_recipients = []
+        if all(
+            (
+                evaluation.user_type == USER_TYPES.instructor,
+                evaluation.send_eval_to_sponsor,
+                result in ("interdit", "soumis", "action_requise"),
+            )
+        ):
+            cc_recipients = evaluation.contact_emails
 
         return cc_recipients
 
