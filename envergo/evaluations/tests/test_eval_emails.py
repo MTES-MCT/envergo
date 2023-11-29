@@ -474,3 +474,122 @@ def test_required_action_interdit(rf, moulinette_url):
     )
     assert "action attendue du porteur" not in body
     assert "action requise interdit" in body
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_instructor_icpe_send_to_sponsor(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the "icpe" checkbox is checked
+    - send eval to sponsor is checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": True,
+        "is_icpe": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["instructor@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+    assert (
+        "Le projet semble être une Installation Classée pour la Protection de l’Environnement (ICPE)"
+        in body
+    )
+    assert (
+        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        in body
+    )
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_instructor_icpe_dont_send_to_sponsor(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the "icpe" checkbox is checked
+    - send eval to sponsor is not checked
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": False,
+        "is_icpe": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["instructor@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+    assert (
+        "Le projet semble être une Installation Classée pour la Protection de l’Environnement (ICPE)"
+        in body
+    )
+    assert (
+        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        not in body
+    )
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_petitioner_icpe(rf, moulinette_url):
+    eval_kwargs = {
+        "user_type": USER_TYPES.petitioner,
+        "is_icpe": True,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_sponsor": False,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+    assert (
+        "Le projet semble être une Installation Classée pour la Protection de l’Environnement (ICPE)"
+        in body
+    )
+    assert (
+        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        not in body
+    )
