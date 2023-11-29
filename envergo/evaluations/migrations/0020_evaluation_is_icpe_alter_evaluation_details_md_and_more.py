@@ -15,33 +15,4 @@ class Migration(migrations.Migration):
             name="is_icpe",
             field=models.BooleanField(default=False, verbose_name="Is ICPE?"),
         ),
-        migrations.AlterField(
-            model_name="evaluation",
-            name="details_md",
-            field=models.TextField(
-                blank=True,
-                help_text="Will be included in the notice page.\n            Only simple markdown (*bold*, _italic_, [links](https://url), newlines).",
-                verbose_name="Notice additional mention",
-            ),
-        ),
-        migrations.AlterField(
-            model_name="evaluation",
-            name="request",
-            field=models.OneToOneField(
-                blank=True,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                to="evaluations.request",
-                verbose_name="Demande associée",
-            ),
-        ),
-        migrations.AlterField(
-            model_name="evaluation",
-            name="rr_mention_md",
-            field=models.TextField(
-                blank=True,
-                help_text="Will be included in the RR email.\n            Only simple markdown (*bold*, _italic_, [links](https://url), newlines).",
-                verbose_name="Email additional mention",
-            ),
-        ),
     ]
