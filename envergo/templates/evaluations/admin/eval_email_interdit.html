@@ -13,7 +13,9 @@
     {% include 'evaluations/admin/_icpe_mention.html' %}
   {% endif %}
 
-  {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
+  {% if rr_mention_html %}
+    <div class="rr_mention" style="font-style: italic;">{{ rr_mention_html|safe }}</div>
+  {% endif %}
 
   <p>Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.</p>
 
