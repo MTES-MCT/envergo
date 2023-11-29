@@ -19,6 +19,11 @@
     <li>ni à Natura 2000 ;</li>
     <li>ni à évaluation environnementale au titre de la rubrique 39 (construction et aménagement).</li>
   </ul>
+
+  {% if is_icpe %}
+    {% include 'evaluations/admin/_icpe_mention.html' %}
+  {% endif %}
+
   {% if rr_mention_html %}{{ rr_mention_html|safe }}{% endif %}
 
   <p>Plus de détails sur cet avis réglementaire :</p>
