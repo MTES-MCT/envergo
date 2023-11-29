@@ -119,12 +119,25 @@
       </li>
     {% endif %}
 
-
   </ul>
 
   <h2 class="fr-h3">Réglementations environnementales</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
+
+  {% if evaluation.is_icpe %}
+    <div class="alt fr-p-3w fr-mb-5w">
+      <p>
+        ⚠️ Le projet semble être une <strong>Installation Classée pour la Protection de l’Environnement (ICPE)</strong>. Cela peut modifier les autres procédures environnementales auxquelles le projet est soumis. EnvErgo ne se prononce pas avec exactitude sur ces cas particuliers.
+      </p>
+
+      <p>
+        <i>Le présent avis n’est donc pas valable sur les procédures à suivre.</i>
+      </p>
+
+      <p>Le porteur doit se rapprocher de l’Unité Départementale de la DREAL, qui est en charge des instructions ICPE.</p>
+    </div>
+  {% endif %}
 
   {% if evaluation.details_html %}
     <div class="fr-callout evaluation-comment fr-mb-5w">
