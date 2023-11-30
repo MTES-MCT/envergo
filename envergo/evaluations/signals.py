@@ -8,13 +8,23 @@ from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
 
 logger = logging.getLogger(__name__)
 
-# Those are the events we want to receive fro mthe ESP and track
+# Those are the events we want to receive from the ESP and track
 # There is also an order of priority, and the latest status in not
 # necessarily the one we want to keep
 # E.g if a message is already "clicked", and later the recipient
 # opens it again and we receive an "opened" event, we want the status
 # to stay "clicked"
 TRACKED_EVENTS = ["queued", "delivered", "opened", "clicked"]
+
+# Those are the events that mean the message was not delivered
+ERROR_EVENTS = [
+    "soft_bounce",
+    "hard_bounce",
+    "invalid_email",
+    "error",
+]
+
+ALL_EVENTS = TRACKED_EVENTS + ERROR_EVENTS
 
 
 @receiver(tracking)
@@ -25,7 +35,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     timestamp = event.timestamp
 
     logger.info(f"Received event {event.event_type} for message id {message_id}")
-    if event_name not in TRACKED_EVENTS:
+    if event_name not in ALL_EVENTS:
         return
 
     try:
@@ -37,14 +47,19 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     logger.info(
         f"Received event {event_name} for {recipient} on notice {regulatory_notice_log.pk}"
     )
+    on_error = event_name in ERROR_EVENTS
     status, _created = RecipientStatus.objects.get_or_create(
         regulatory_notice_log=regulatory_notice_log,
         recipient=recipient,
-        defaults={"status": event_name, "latest_status": timestamp},
+        defaults={
+            "status": event_name,
+            "latest_status": timestamp,
+            "on_error": on_error,
+        },
     )
 
-    status_index = TRACKED_EVENTS.index(event_name)
-    current_status_index = TRACKED_EVENTS.index(status.status)
+    status_index = ALL_EVENTS.index(event_name)
+    current_status_index = ALL_EVENTS.index(status.status)
     if status_index > current_status_index:
         status.status = event_name
         status.latest_status = timestamp
@@ -55,5 +70,8 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     elif event_name == "clicked":
         status.nb_clicked = F("nb_clicked") + 1
         status.latest_clicked = timestamp
+
+    if on_error:
+        status.on_error = True
 
     status.save()
