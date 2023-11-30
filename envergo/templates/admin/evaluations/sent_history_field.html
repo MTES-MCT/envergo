@@ -38,9 +38,15 @@
                 </thead>
                 <tbody>
                   {% for recipient in log.recipient_statuses.all %}
-                    <tr class="sent_history_recipient_row">
+                    <tr class="sent_history_recipient_row{% if recipient.on_error %} error{% endif %}">
                       <td>{{ recipient.recipient }}</td>
-                      <td>{{ recipient.status }}</td>
+                      {% if recipient.on_error %}
+                        <td>
+                          <abbr title="{{ recipient.status }}">❗️ Non délivré</abbr>
+                        </td>
+                      {% else %}
+                        <td>{{ recipient.status }}</td>
+                      {% endif %}
                       <td>{{ recipient.latest_status|date:'SHORT_DATETIME_FORMAT' }}</td>
                       <td>{{ recipient.nb_opened }}</td>
                       <td>{{ recipient.latest_opened|date:'SHORT_DATETIME_FORMAT' }}</td>
