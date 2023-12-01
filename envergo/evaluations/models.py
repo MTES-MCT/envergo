@@ -369,7 +369,7 @@ class EvaluationEmail:
         else:
             recipients = evaluation.project_sponsor_emails
 
-        return recipients
+        return list(set(recipients))
 
     def get_cc_recipients(self):
         evaluation = self.evaluation
@@ -387,7 +387,7 @@ class EvaluationEmail:
         ):
             cc_recipients = evaluation.contact_emails
 
-        return cc_recipients
+        return list(set(cc_recipients))
 
     def get_bcc_recipients(self):
         evaluation = self.evaluation
@@ -424,7 +424,7 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la DREAL pôle Éval Env")
 
-        return bcc_recipients
+        return list(set(bcc_recipients))
 
 
 CRITERIONS = Choices(
