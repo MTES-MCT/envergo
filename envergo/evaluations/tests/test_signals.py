@@ -34,7 +34,9 @@ def test_webhook_event_catching(event):
     assert not log_event.on_error
 
 
-def test_webhook_error_catching(event):
+def test_webhook_error_catching(event, mailoutbox):
+    assert len(mailoutbox) == 0
+
     event.event_type = "hard_bounce"
 
     statuses_qs = RecipientStatus.objects.all()
@@ -48,3 +50,8 @@ def test_webhook_error_catching(event):
     assert log_event.recipient == event.recipient
     assert log_event.regulatory_notice_log == log
     assert log_event.on_error
+    assert len(mailoutbox) == 1
+
+    mail = mailoutbox[0]
+    assert mail.subject == "Erreur d'envoi d'AR à example@domain.com"
+    assert "Un avis réglementaire n'a pas pu être délivré" in mail.body

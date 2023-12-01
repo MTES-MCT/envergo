@@ -5,6 +5,7 @@ from django.db.models import F
 from django.dispatch import receiver
 
 from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
+from envergo.evaluations.tasks import warn_admin_of_email_error
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +49,14 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         f"Received event {event_name} for {recipient} on notice {regulatory_notice_log.pk}"
     )
     on_error = event_name in ERROR_EVENTS
+    warn_of_email_error = False
     status, _created = RecipientStatus.objects.get_or_create(
         regulatory_notice_log=regulatory_notice_log,
         recipient=recipient,
         defaults={
             "status": event_name,
             "latest_status": timestamp,
-            "on_error": on_error,
+            "on_error": False,
         },
     )
 
@@ -72,6 +74,12 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         status.latest_clicked = timestamp
 
     if on_error:
-        status.on_error = True
+        # We only warn admin if it's the first time we receive an error status
+        if not status.on_error:
+            warn_of_email_error = True
+            status.on_error = True
 
     status.save()
+
+    if warn_of_email_error:
+        warn_admin_of_email_error.delay(status.id)

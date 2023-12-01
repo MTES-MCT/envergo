@@ -5,15 +5,16 @@ import requests
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core import mail
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.serializers.json import Serializer as JSONSerializer
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from config.celery_app import app
-from envergo.evaluations.models import Evaluation, Request
+from envergo.evaluations.models import Evaluation, RecipientStatus, Request
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
+from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -133,3 +134,36 @@ def post_evalreq_to_automation(request_id, host):
     res = requests.post(webhook_url, json=payload)
     if res.status_code != 200:
         logger.error(f"Error while posting data to make.com: {res.text}")
+
+
+@app.task
+def warn_admin_of_email_error(recipient_status_id):
+    status = RecipientStatus.objects.select_related(
+        "regulatory_notice_log__evaluation", "regulatory_notice_log__sender"
+    ).get(id=recipient_status_id)
+
+    log = status.regulatory_notice_log
+    evaluation = log.evaluation
+    sender = log.sender
+    base_url = get_base_url()
+    eval_url = reverse(
+        "admin:evaluations_evaluation_change",
+        args=[evaluation.reference],
+    )
+    full_eval_url = f"{base_url}{eval_url}"
+
+    context = {
+        "status": status,
+        "evaluation": evaluation,
+        "log": log,
+        "eval_url": full_eval_url,
+    }
+    template = "admin/evaluations/emails/eval_email_error.txt"
+    body = render_to_string(template, context)
+    send_mail(
+        f"Erreur d'envoi d'AR à {status.recipient}",
+        body,
+        recipient_list=[sender.email],
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        fail_silently=False,
+    )

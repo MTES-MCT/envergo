@@ -1,0 +1,13 @@
+Un avis réglementaire n'a pas pu être délivré.
+
+{{ eval_url }}
+
+L'avis :
+ - {{ evaluation.reference }}
+ - {{ evaluation.address|safe|default:"Pas d'adresse" }}
+
+ L'email d'AR :
+  - envoyé le {{ log.sent_at }}
+  - à {{ status.recipient }}
+  - erreur {{ status.status }}
+  - le {{ status.latest_status }}
