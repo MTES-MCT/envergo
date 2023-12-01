@@ -291,7 +291,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
 
         if request.method == "POST":
-
             latest_log = (
                 RegulatoryNoticeLog.objects.filter(evaluation=evaluation)
                 .order_by("-sent_at")
@@ -302,7 +301,8 @@ class EvaluationAdmin(admin.ModelAdmin):
                 if delta.seconds < 10:
                     self.message_user(
                         request,
-                        "Il s'est écoulé moins de 10 secondes depuis le dernier envoi. L'envoi de l'avis a été bloqué.",
+                        """Il s'est écoulé moins de 10 secondes depuis le dernier envoi.
+                        L'envoi de l'avis en double a été bloqué.""",
                         messages.WARNING,
                     )
                     url = reverse(
