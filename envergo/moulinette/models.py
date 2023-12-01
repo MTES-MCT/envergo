@@ -575,9 +575,7 @@ class MoulinetteConfig(models.Model):
     )
     ddtm_n2000_email = models.EmailField("E-mail DDT(M) Natura 2000", blank=True)
     dreal_eval_env_email = models.EmailField("E-mail DREAL pôle eval env", blank=True)
-    dreal_department_unit_url = models.URLField(
-        "Unité départementale de la DREAL", blank=True
-    )
+    dreal_department_unit_url = models.URLField("Url UD DREAL", blank=True)
     lse_contact_ddtm = models.TextField("LSE > Contact DDTM")
     lse_free_mention = models.TextField(
         "LSE > Mention libre « autres rubriques »", blank=True
