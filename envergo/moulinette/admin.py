@@ -29,6 +29,12 @@ class RegulationAdmin(admin.ModelAdmin):
 
 
 class CriterionAdminForm(forms.ModelForm):
+    header = forms.CharField(
+        label=_("Header"),
+        required=False,
+        widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+    )
+
     def get_initial_for_field(self, field, field_name):
         """Prevent Evaluator choice to be instanciated.
 
