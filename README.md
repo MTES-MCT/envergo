@@ -85,18 +85,46 @@ Pour VSCode, il est recommandé d'utiliser la configuration suivante.
 Installer les extensions :
 
  - [EditorConfig pour vscode](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
-  - [External formatter](https://marketplace.visualstudio.com/items?itemName=SteefH.external-formatters) (pour djhtml)
+  - [Flake8 pour le linting](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
+  - [Black pour le formattage](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter)
+  - [Isort pour l'organisation des imports](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
 
-Pour activer le formatage à l'enregistrement et correctement affecter les bons "linters" aux bons types de fichiers :
+
+Voici un fichier `settings.json` à enregistres dans `.vscode/settings.json` pour configurer
+correctement VSCode :
 
 ```json
 {
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": true
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
+    "editor.rulers": [
+      88
+    ],
   },
-  "files.trimFinalNewlines": true,
-  "files.trimTrailingWhitespace": true,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[django-html]": {
+    "editor.rulers": [
+      120,
+    ],
+    "editor.defaultFormatter": "monosans.djlint",
+    "editor.wordWrap": "wordWrapColumn"
+  },
+  "[css][scss][less]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "isort.args": [
+    "--profile",
+    "black"
+  ],
+  "black-formatter.args": [
+    "--line-length=88"
+  ],
   "files.associations": {
     "**/templates/*.html": "django-html",
     "**/templates/*": "django-txt",
@@ -105,43 +133,6 @@ Pour activer le formatage à l'enregistrement et correctement affecter les bons 
   "emmet.includeLanguages": {
     "django-html": "html"
   },
-  "[django-html]": {
-    "editor.defaultFormatter": "SteefH.external-formatters"
-  },
-  "externalFormatters.languages": {
-    "django-html": {
-      "command": "djhtml",
-        "arguments": [
-          "-t 2"
-        ],
-    },
-  },
-  "beautify.language": {
-    "html": [
-      "htm",
-      "html",
-      "django-html"
-    ]
-  },
-  "beautify.config": {
-    "brace_style": "collapse,preserve-inline",
-    "indent_size": 2,
-    "indent_style": "space",
-  },
-  "[python]": {
-    "pythonPath": ".venv/bin/python",
-    "linting.enabled": true,
-    "linting.flake8Enabled": true,
-    "linting.pylintEnabled": false,
-    "formatting.provider": "black",
-    "formatting.blackArgs": [
-      "--line-length=88"
-    ],
-    "sortImports.args": [
-      "--profile",
-      "black"
-    ],
-  }
 }
 ```
 

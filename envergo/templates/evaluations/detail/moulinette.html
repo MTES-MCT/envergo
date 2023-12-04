@@ -119,12 +119,33 @@
       </li>
     {% endif %}
 
-
   </ul>
 
   <h2 class="fr-h3">Réglementations environnementales</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
+
+  {% if evaluation.is_icpe %}
+    <div class="alt fr-p-3w fr-mb-5w">
+      <p>
+        ⚠️ Le projet semble être une <strong>Installation Classée pour la Protection de l’Environnement (ICPE)</strong>. Cela peut modifier les autres procédures environnementales auxquelles le projet est soumis. EnvErgo ne se prononce pas avec exactitude sur ces cas particuliers.
+      </p>
+
+      <p>
+        <i> Les procédures à suivre décrites dans le présent avis pourraient être impactées. </i>
+      </p>
+
+      {% if config.dreal_department_unit_url %}
+        <p>
+          Le porteur doit se rapprocher de <a href="{{ config.dreal_department_unit_url }}"
+    target="_blank"
+    rel="noopener">l’Unité Départementale de la DREAL</a>, qui est en charge des instructions ICPE.
+        </p>
+      {% else %}
+        <p>Le porteur doit se rapprocher de l’Unité Départementale de la DREAL, qui est en charge des instructions ICPE.</p>
+      {% endif %}
+    </div>
+  {% endif %}
 
   {% if evaluation.details_html %}
     <div class="fr-callout evaluation-comment fr-mb-5w">

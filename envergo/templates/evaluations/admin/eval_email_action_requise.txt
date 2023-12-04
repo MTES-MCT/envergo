@@ -27,6 +27,7 @@ Pour s'assurer que le projet n'est pas soumis à Natura 2000, le porteur doit me
 {% endfor %}
 {% endif %}
 {% endif %}
+{% if is_icpe %}{% include 'evaluations/admin/_icpe_mention.txt' %}{% endif %}
 {% if rr_mention_md %}{{ rr_mention_md }}{% endif %}
 
 Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.

@@ -213,7 +213,7 @@ class Evaluation(models.Model):
     send_eval_to_sponsor = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
-
+    is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
@@ -303,13 +303,22 @@ class EvaluationEmail:
         html_mail_template = f"evaluations/admin/eval_email_{result}.html"
         to_be_transmitted = all(
             (
+                not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
                 not evaluation.send_eval_to_sponsor,
             )
         )
+        icpe_not_transmitted = all(
+            (
+                evaluation.is_icpe,
+                evaluation.send_eval_to_sponsor,
+                evaluation.user_type == USER_TYPES.instructor,
+            )
+        )
         context = {
             "evaluation": evaluation,
+            "is_icpe": evaluation.is_icpe,
             "rr_mention_md": evaluation.rr_mention_md,
             "rr_mention_html": evaluation.rr_mention_html,
             "moulinette": moulinette,
@@ -317,6 +326,7 @@ class EvaluationEmail:
                 evaluation.get_absolute_url()
             ),
             "to_be_transmitted": to_be_transmitted,
+            "icpe_not_transmitted": icpe_not_transmitted,
             "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
             "required_actions_interdit": list(
                 moulinette.all_required_actions_interdit()
@@ -348,7 +358,7 @@ class EvaluationEmail:
         result = self.moulinette.result
 
         if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_sponsor:
+            if evaluation.send_eval_to_sponsor and not evaluation.is_icpe:
                 if result in ("interdit", "soumis", "action_requise"):
                     recipients = evaluation.project_sponsor_emails
                 else:
@@ -365,19 +375,17 @@ class EvaluationEmail:
         evaluation = self.evaluation
         result = self.moulinette.result
 
-        if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_sponsor:
-                if result in ("interdit", "soumis"):
-                    cc_recipients = evaluation.contact_emails
-                elif result == "action_requise":
-                    cc_recipients = evaluation.contact_emails
-                else:
-                    cc_recipients = []
-            else:
-                cc_recipients = []
+        cc_recipients = []
 
-        else:
-            cc_recipients = []
+        if all(
+            (
+                not evaluation.is_icpe,
+                evaluation.user_type == USER_TYPES.instructor,
+                evaluation.send_eval_to_sponsor,
+                result in ("interdit", "soumis", "action_requise"),
+            )
+        ):
+            cc_recipients = evaluation.contact_emails
 
         return cc_recipients
 
@@ -388,9 +396,12 @@ class EvaluationEmail:
 
         bcc_recipients = []
 
-        if (
-            evaluation.user_type == USER_TYPES.instructor
-            and evaluation.send_eval_to_sponsor
+        if all(
+            (
+                not evaluation.is_icpe,
+                evaluation.user_type == USER_TYPES.instructor,
+                evaluation.send_eval_to_sponsor,
+            )
         ):
             if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
                 if config.ddtm_water_police_email:

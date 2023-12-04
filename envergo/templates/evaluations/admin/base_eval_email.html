@@ -5,6 +5,8 @@
   <p>
     <strong>À transmettre au porteur de projet</strong>
   </p>
+{% endif %}{% if icpe_not_transmitted %}
+  {% include 'evaluations/admin/_icpe_not_transmitted_mention.html' %}
 {% endif %}{% endblock %}
 {# djlint:on #}
 
