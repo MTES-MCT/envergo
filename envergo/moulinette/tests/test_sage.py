@@ -22,7 +22,6 @@ def sage_criteria(france_map):  # noqa
     criteria = [
         CriterionFactory(
             title="Zone humide",
-            slug="zone_humide",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.sage.ZoneHumideVieJaunay85",
             activation_map=france_map,

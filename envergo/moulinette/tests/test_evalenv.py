@@ -13,21 +13,18 @@ def evalenv_criteria(france_map):  # noqa
     criteria = [
         CriterionFactory(
             title="Emprise",
-            slug="emprise",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.Emprise",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="Surface Plancher",
-            slug="surface_plancher",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.SurfacePlancher",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="Terrain d'assiette",
-            slug="terrain_assiette",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
             activation_map=france_map,
