@@ -18,6 +18,7 @@ LIGHTBLUE = "lightblue"
 
 class ZoneHumide(CriterionEvaluator):
     choice_label = "Natura 2000 > Zone humide"
+    slug = "zone_humide"
 
     CODES = [
         "soumis",
@@ -165,6 +166,7 @@ class ZoneHumide44(ZoneHumide):
 
 class ZoneInondable(CriterionEvaluator):
     choice_label = "Natura 2000 > Zone inondable"
+    slug = "zone_inondable"
 
     CODES = ["soumis", "non_soumis", "non_concerne"]
 
@@ -237,6 +239,7 @@ class ZoneInondable44(ZoneInondable):
 
 class IOTA(CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
+    slug = "iota"
 
     CODES = ["soumis", "non_soumis", "iota_a_verifier"]
 
@@ -270,6 +273,7 @@ class LotissementForm(forms.Form):
 
 class Lotissement(CriterionEvaluator):
     choice_label = "Natura 2000 > Lotissement"
+    slug = "lotissement"
     form_class = LotissementForm
 
     CODES = [
@@ -341,6 +345,7 @@ class AutorisationUrbanismeForm(forms.Form):
 
 class AutorisationUrbanisme(CriterionEvaluator):
     choice_label = "Natura 2000 > Autorisation urba"
+    slug = "autorisation_urba"
     form_class = AutorisationUrbanismeForm
 
     CODES = ["soumis", "a_verifier", "non_soumis"]

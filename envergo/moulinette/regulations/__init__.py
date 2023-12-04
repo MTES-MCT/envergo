@@ -133,6 +133,10 @@ class CriterionEvaluator(ABC):
             moulinette (Moulinette): The moulinette instance.
             distance (int): The distance to the queried coordinates.
         """
+        if not hasattr(self, "slug"):
+            raise RuntimeError(
+                f"CriterionEvaluator {type(self).__name__} must have a `slug` attribute."
+            )
         self.moulinette = moulinette
         self.distance = distance
         self.moulinette.catalog.update(self.get_catalog_data())

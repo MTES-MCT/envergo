@@ -70,13 +70,11 @@ class CriterionAdminForm(forms.ModelForm):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
-        "slug",
         "regulation",
         "activation_map",
         "activation_distance",
         "evaluator_column",
     ]
-    prepopulated_fields = {"slug": ["title"]}
     readonly_fields = ["unique_slug"]
     autocomplete_fields = ["activation_map"]
     form = CriterionAdminForm

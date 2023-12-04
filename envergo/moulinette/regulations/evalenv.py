@@ -42,6 +42,7 @@ class EmpriseForm(forms.Form):
 
 class Emprise(CriterionEvaluator):
     choice_label = "Éval Env > Emprise"
+    slug = "emprise"
     form_class = EmpriseForm
 
     CODES = ["systematique", "cas_par_cas", "non_soumis"]
@@ -91,6 +92,7 @@ class SurfacePlancherForm(forms.Form):
 
 class SurfacePlancher(CriterionEvaluator):
     choice_label = "Éval Env > Surface Plancher"
+    slug = "surface_plancher"
     form_class = SurfacePlancherForm
 
     CODES = ["cas_par_cas", "non_soumis", "non_disponible"]
@@ -141,6 +143,7 @@ class TerrainAssietteForm(forms.Form):
 
 class TerrainAssiette(CriterionEvaluator):
     choice_label = "Éval Env > Terrain d'assiette"
+    slug = "terrain_assiette"
     form_class = TerrainAssietteForm
 
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
@@ -173,6 +176,7 @@ class TerrainAssiette(CriterionEvaluator):
 
 class OtherCriteria(CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
+    slug = "autres_rubriques"
 
     CODES = ["non_disponible"]
 
