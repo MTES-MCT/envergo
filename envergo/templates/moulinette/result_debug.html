@@ -177,11 +177,20 @@
         var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
         var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 22,
-          maxNativeZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        }).addTo(map);
+        L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      }).addTo(map);
 
         var coords = JSON.parse('{% to_geojson coords %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
@@ -209,11 +218,20 @@
         var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
         var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 22,
-          maxNativeZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        }).addTo(map);
+        L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      }).addTo(map);
 
         var coords = JSON.parse('{% to_geojson coords %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
@@ -241,11 +259,20 @@
         var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
         var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 22,
-          maxNativeZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        }).addTo(map);
+        L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      }).addTo(map);
 
         var coords = JSON.parse('{% to_geojson coords %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
