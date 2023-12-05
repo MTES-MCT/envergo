@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import requests
 from django.conf import settings
@@ -61,7 +61,8 @@ class Outlinks(TemplateView):
             raise RuntimeError("No matomo token configured")
 
         today = date.today()
-        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=month&date={today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"  # noqa
+        last_month = today - timedelta(days=30)
+        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=range&date={last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"  # noqa
         data = requests.get(data_url).json()
 
         links = []
