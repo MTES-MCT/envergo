@@ -22,7 +22,7 @@
       {% if ANALYTICS.TRACKER_URL_2 %}
       var secondaryTracker = "{{ ANALYTICS.TRACKER_URL_2 }}" + "matomo.php";
       var secondarySiteId = "{{ ANALYTICS.SITE_ID_2 }}";
-      _paq.push(['addTracker', secondaryTracker, secondaryWebsiteId]);
+      _paq.push(['addTracker', secondaryTracker, secondarySiteId]);
       {% endif %}
       var d = document,
       g = d.createElement('script'),
