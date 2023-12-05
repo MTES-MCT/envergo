@@ -298,6 +298,8 @@ ANALYTICS = {
     "TRACKER_ENABLED": env("DJANGO_TRACKER_ENABLED", default=False),
     "TRACKER_URL": env("DJANGO_TRACKER_URL", default=""),
     "SITE_ID": env("DJANGO_SITE_ID", default=""),
+    "TRACKER_URL_2": env("DJANGO_TRACKER_URL_2", default=""),
+    "SITE_ID_2": env("DJANGO_SITE_ID_2", default=""),
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
