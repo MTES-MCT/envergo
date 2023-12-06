@@ -113,7 +113,7 @@ class MoulinetteMixin:
             # By default, show all metropolitan france in map
             context["display_marker"] = False
             context["center_map"] = [1.7000, 47.000]
-            context["default_zoom"] = 6
+            context["default_zoom"] = 5
 
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
