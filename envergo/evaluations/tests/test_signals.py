@@ -21,6 +21,7 @@ def event():
 
 
 def test_webhook_event_catching(event):
+    event["event_type"] = "unique_opened"
     statuses_qs = RecipientStatus.objects.all()
     assert statuses_qs.count() == 0
 
@@ -31,7 +32,14 @@ def test_webhook_event_catching(event):
     log_event = statuses_qs[0]
     assert log_event.recipient == event.recipient
     assert log_event.regulatory_notice_log == log
+    assert log_event.nb_opened == 1
     assert not log_event.on_error
+
+    event["event_type"] = "opened"
+    tracking.send(sender=None, event=event, esp_name="sendinblue")
+    tracking.send(sender=None, event=event, esp_name="sendinblue")
+    log_event.refresh_from_db()
+    assert log_event.nb_opened == 3
 
 
 def test_webhook_error_catching(event, mailoutbox):

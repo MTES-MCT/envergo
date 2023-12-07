@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # E.g if a message is already "clicked", and later the recipient
 # opens it again and we receive an "opened" event, we want the status
 # to stay "clicked"
-TRACKED_EVENTS = ["queued", "delivered", "opened", "clicked"]
+TRACKED_EVENTS = ["queued", "delivered", "unique_opened", "opened", "clicked"]
 
 # Those are the events that mean the message was not delivered
 ERROR_EVENTS = [
@@ -66,7 +66,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         status.status = event_name
         status.latest_status = timestamp
 
-    if event_name == "opened":
+    if event_name in ("unique_opened", "opened"):
         status.nb_opened = F("nb_opened") + 1
         status.latest_opened = timestamp
     elif event_name == "clicked":
