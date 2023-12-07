@@ -19,10 +19,10 @@ TRACKED_EVENTS = ["queued", "delivered", "opened", "clicked"]
 
 # Those are the events that mean the message was not delivered
 ERROR_EVENTS = [
-    "soft_bounce",
-    "hard_bounce",
-    "invalid_email",
-    "error",
+    "deferred",
+    "rejected",
+    "bounced",
+    "failed",
 ]
 
 ALL_EVENTS = TRACKED_EVENTS + ERROR_EVENTS
@@ -34,6 +34,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     recipient = event.recipient
     message_id = event.message_id
     timestamp = event.timestamp
+    reject_reason = event.reject_reason
 
     logger.info(f"Received event {event.event_type} for message id {message_id}")
     if event_name not in ALL_EVENTS:
@@ -74,6 +75,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         status.latest_clicked = timestamp
 
     if on_error:
+        status.reject_reason = reject_reason
         # We only warn admin if it's the first time we receive an error status
         if not status.on_error:
             warn_of_email_error = True

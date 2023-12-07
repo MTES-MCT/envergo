@@ -738,6 +738,7 @@ class RecipientStatus(models.Model):
     nb_clicked = models.IntegerField(_("Nb clicked"), default=0)
     latest_clicked = models.DateTimeField(_("Latest clicked"), null=True)
     on_error = models.BooleanField(_("On error"), default=False)
+    reject_reason = models.CharField(_("Reject reason"), max_length=64, blank=True)
 
     class Meta:
         verbose_name = _("Recipient status")
