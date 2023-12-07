@@ -9,5 +9,5 @@ L'avis :
  L'email d'AR :
   - envoyé le {{ log.sent_at }}
   - à {{ status.recipient }}
-  - erreur {{ status.status }}
+  - erreur {{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})
   - le {{ status.latest_status }}
