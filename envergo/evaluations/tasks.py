@@ -160,7 +160,7 @@ def warn_admin_of_email_error(recipient_status_id):
     template = "admin/evaluations/emails/eval_email_error.txt"
     body = render_to_string(template, context)
     send_mail(
-        f"Erreur d'envoi d'AR à {status.recipient}",
+        f"⚠️ [{evaluation.reference}] Erreur d'envoi email AR",
         body,
         recipient_list=[settings.DEFAULT_FROM_EMAIL],
         from_email=settings.DEFAULT_FROM_EMAIL,
