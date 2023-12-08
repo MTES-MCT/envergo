@@ -14,7 +14,6 @@ from config.celery_app import app
 from envergo.evaluations.models import Evaluation, Request
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
-from envergo.utils.notion import post_request
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +36,6 @@ def confirm_request_to_admin(request_id, host):
     )
     logger.info(f"[mattermost] message body {message_body}")
     notify(message_body)
-
-
-@app.task
-def post_request_to_notion(request_id, host):
-    """Send request data to Notion."""
-
-    logger.info(f"[notion] Sending notification {request_id} {host}")
-    request = Request.objects.get(id=request_id)
-    post_request(request, host)
 
 
 @app.task
