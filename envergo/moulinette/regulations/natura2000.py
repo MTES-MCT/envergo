@@ -340,7 +340,7 @@ class AutorisationUrbanismeForm(forms.Form):
 
 
 class AutorisationUrbanisme(CriterionEvaluator):
-    choice_label = "Natural 2000 > Autorisation d'urbanisme"
+    choice_label = "Natura 2000 > Autorisation urba"
     form_class = AutorisationUrbanismeForm
 
     CODES = ["soumis", "a_verifier", "non_soumis"]
