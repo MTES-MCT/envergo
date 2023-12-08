@@ -144,6 +144,7 @@ def warn_admin_of_email_error(recipient_status_id):
 
     log = status.regulatory_notice_log
     evaluation = log.evaluation
+    evalreq = evaluation.request
     base_url = get_base_url()
     eval_url = reverse(
         "admin:evaluations_evaluation_change",
@@ -160,7 +161,7 @@ def warn_admin_of_email_error(recipient_status_id):
     template = "admin/evaluations/emails/eval_email_error.txt"
     body = render_to_string(template, context)
     send_mail(
-        f"⚠️ [{evaluation.reference}] Erreur d'envoi email AR",
+        f"⚠️ [{evalreq.id}] Erreur d'envoi email AR",
         body,
         recipient_list=[settings.DEFAULT_FROM_EMAIL],
         from_email=settings.DEFAULT_FROM_EMAIL,
