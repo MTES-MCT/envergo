@@ -27,7 +27,6 @@ class CriterionFactory(DjangoModelFactory):
         model = Criterion
 
     title = "Zone humide"
-    slug = "zone_humide"
     regulation = factory.SubFactory(RegulationFactory)
     activation_map = factory.SubFactory(MapFactory)
     evaluator = "envergo.moulinette.regulations.loisurleau.ZoneHumide"

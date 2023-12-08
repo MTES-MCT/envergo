@@ -16,6 +16,7 @@ BLACK = "#000000"
 
 class ZoneHumideVieJaunay85(CriterionEvaluator):
     choice_label = "85 - Zone humide Vie & Jaunay"
+    slug = "zone_humide_vie_jaunay_85"
 
     CODES = [
         "interdit",
@@ -140,6 +141,7 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
 
 class ZoneHumideGMRE56(CriterionEvaluator):
     choice_label = "56 - Zone humide GMRE"
+    slug = "zone_humide_gmre_56"
 
     CODES = [
         "interdit",

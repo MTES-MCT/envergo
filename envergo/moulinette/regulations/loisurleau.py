@@ -16,6 +16,7 @@ BLACK = "#000000"
 
 class ZoneHumide(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone humide"
+    slug = "zone_humide"
 
     CODES = [
         "soumis",
@@ -163,6 +164,7 @@ class ZoneHumide(CriterionEvaluator):
 
 class ZoneInondable(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
+    slug = "zone_inondable"
 
     CODES = ["soumis", "action_requise", "non_soumis", "non_concerne"]
 
@@ -238,6 +240,7 @@ class ZoneInondable(CriterionEvaluator):
 
 class Ruissellement(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Ruissellement"
+    slug = "ruissellement"
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
@@ -270,6 +273,7 @@ class Ruissellement(CriterionEvaluator):
 
 class OtherCriteria(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Autres rubriques"
+    slug = "autres_rubriques"
 
     CODES = ["non_disponible"]
 

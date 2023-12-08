@@ -22,14 +22,12 @@ def loisurleau_criteria(france_map):  # noqa
     criteria = [
         CriterionFactory(
             title="Zone humide",
-            slug="zone_humide",
             regulation=lse,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="IOTA",
-            slug="iota",
             regulation=n2000,
             evaluator="envergo.moulinette.regulations.natura2000.IOTA",
             activation_map=france_map,

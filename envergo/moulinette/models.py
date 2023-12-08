@@ -357,7 +357,6 @@ class Criterion(models.Model):
     title = models.CharField(
         _("Title"), help_text=_("For frontend usage"), max_length=256
     )
-    slug = models.SlugField(_("Slug"), max_length=256)
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
     regulation = models.ForeignKey(
@@ -404,6 +403,10 @@ class Criterion(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def slug(self):
+        return self.evaluator.slug
 
     @property
     def unique_slug(self):

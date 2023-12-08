@@ -18,7 +18,7 @@
 
     {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
       <li>
-        ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;
+        ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique <a href="#criterion-{{ regulation.autorisation_urba.unique_slug }}">{{ regulation.autorisation_urba }}</a> » ci-dessous ;
       </li>
     {% endif %}
 
@@ -32,7 +32,7 @@
     <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
     <ul>
       <li>
-        dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique « Autorisation d’urbanisme » ci-dessous ;
+        dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique <a href="#criterion-{{ regulation.autorisation_urba.unique_slug }}">{{ regulation.autorisation_urba }}</a> » ci-dessous ;
       </li>
       <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.</li>
     </ul>

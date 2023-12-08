@@ -13,21 +13,18 @@ def loisurleau_criteria(france_map):  # noqa
     criteria = [
         CriterionFactory(
             title="Zone humide",
-            slug="zone_humide",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="Zone inondable",
-            slug="zone_inondable",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneInondable",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="Ruissellement",
-            slug="ruissellement",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.Ruissellement",
             activation_map=france_map,
