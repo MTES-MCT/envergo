@@ -154,8 +154,17 @@ article {
     }
   }
 
+  button[type=submit] {
+    margin-right: 1rem;
+  }
+
   .share-btn {
     text-align: center;
+  }
+
+  .submit-feedback-hint-text {
+    white-space: nowrap;
+    display: inline;
   }
 }
 
@@ -1138,6 +1147,12 @@ main.home {
     button {
       display: block;
       margin: 3rem auto 0 auto;
+    }
+
+    .submit-feedback-hint-text {
+      display: block;
+      margin: 1rem auto 0 auto;
+      text-align: center;
     }
   }
 }

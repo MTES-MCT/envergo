@@ -14,13 +14,11 @@
 
   SimulationForm.prototype.onFormSubmit = function (evt) {
     this.buttonElt.disabled = true;
-    this.buttonElt.classList.add("fr-mr-1w");
 
     let textElt = document.createElement('span');
     textElt.innerHTML = 'Simulation en cours…';
-    textElt.style.display = "inline";
-    textElt.style.whiteSpace = "nowrap";
     textElt.classList.add("fr-hint-text");
+    textElt.classList.add("submit-feedback-hint-text");
     this.buttonElt.insertAdjacentElement("afterend", textElt);
   };
 
