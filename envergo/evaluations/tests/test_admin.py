@@ -102,7 +102,7 @@ def test_form_validation_contact_field_with_moulinette_url(form_data):
     assert form.is_valid()
 
 
-def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
+def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
     MoulinetteConfigFactory()
@@ -119,3 +119,27 @@ def test_regulatory_notice_sending(admin_client, evaluation, mailoutbox):
 
     log = RegulatoryNoticeLog.objects.first()
     assert log.evaluation == evaluation
+
+
+def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
+    # Make sure the "loi sur l'eau" result will be set
+    CriterionFactory()
+    MoulinetteConfigFactory()
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    res = admin_client.post(url)
+    assert len(mailoutbox) == 1
+    assert RegulatoryNoticeLog.objects.count() == 1
+
+    res = admin_client.post(url, follow=True)
+    assert len(mailoutbox) == 1
+    assert RegulatoryNoticeLog.objects.count() == 1
+    assert (
+        "Il s&#x27;est écoulé moins de 10 secondes depuis le dernier envoi"
+        in res.content.decode()
+    )
