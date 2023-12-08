@@ -15,6 +15,7 @@ def event():
         "recipient": "example@domain.com",
         "message_id": "test_message_id",
         "timestamp": timezone.now(),
+        "reject_reason": "",
     }
     event = AnymailTrackingEvent(**data)
     return event
@@ -37,7 +38,7 @@ def test_webhook_event_catching(event):
 def test_webhook_error_catching(event, mailoutbox):
     assert len(mailoutbox) == 0
 
-    event.event_type = "hard_bounce"
+    event.event_type = "bounced"
 
     statuses_qs = RecipientStatus.objects.all()
     assert statuses_qs.count() == 0
@@ -53,5 +54,5 @@ def test_webhook_error_catching(event, mailoutbox):
     assert len(mailoutbox) == 1
 
     mail = mailoutbox[0]
-    assert mail.subject == "Erreur d'envoi d'AR à example@domain.com"
-    assert "Un avis réglementaire n'a pas pu être délivré" in mail.body
+    assert "Erreur d'envoi email AR" in mail.subject
+    assert "Un email d'avis réglementaire n'a pas pu être délivré" in mail.body
