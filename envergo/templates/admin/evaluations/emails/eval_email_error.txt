@@ -10,7 +10,7 @@ L'avis :
  Destinataire en erreur :
 
  - à {{ status.recipient }}
- - erreur {{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})
+ - erreur : {{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})
  - envoi du {{ log.sent_at }}
 
  Chargé·e d'études : {{ log.sender }}
