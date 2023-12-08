@@ -369,7 +369,7 @@ class EvaluationEmail:
         else:
             recipients = evaluation.project_sponsor_emails
 
-        return recipients
+        return list(set(recipients))
 
     def get_cc_recipients(self):
         evaluation = self.evaluation
@@ -387,7 +387,7 @@ class EvaluationEmail:
         ):
             cc_recipients = evaluation.contact_emails
 
-        return cc_recipients
+        return list(set(cc_recipients))
 
     def get_bcc_recipients(self):
         evaluation = self.evaluation
@@ -424,7 +424,7 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la DREAL pôle Éval Env")
 
-        return bcc_recipients
+        return list(set(bcc_recipients))
 
 
 CRITERIONS = Choices(
@@ -737,6 +737,8 @@ class RecipientStatus(models.Model):
     latest_opened = models.DateTimeField(_("Latest opened"), null=True)
     nb_clicked = models.IntegerField(_("Nb clicked"), default=0)
     latest_clicked = models.DateTimeField(_("Latest clicked"), null=True)
+    on_error = models.BooleanField(_("On error"), default=False)
+    reject_reason = models.CharField(_("Reject reason"), max_length=64, blank=True)
 
     class Meta:
         verbose_name = _("Recipient status")

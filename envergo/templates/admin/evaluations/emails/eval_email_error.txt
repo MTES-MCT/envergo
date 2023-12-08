@@ -1,0 +1,16 @@
+Un email d'avis réglementaire n'a pas pu être délivré.
+
+{{ eval_url }}
+
+L'avis :
+
+ - {{ evaluation.reference }}
+ - {{ evaluation.address|safe|default:"Pas d'adresse" }}
+
+ Destinataire en erreur :
+
+ - à {{ status.recipient }}
+ - erreur : {{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})
+ - envoi du {{ log.sent_at }}
+
+ Chargé·e d'études : {{ log.sender }}

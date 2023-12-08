@@ -1192,3 +1192,7 @@ li.btn-link {
 main.contrast-bg {
   background-color: var(--info-950-100);
 }
+
+#top-bar {
+  filter: drop-shadow(var(--raised-shadow));
+}

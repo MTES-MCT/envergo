@@ -37,15 +37,21 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for recipient in log.recipient_statuses.all %}
-                    <tr class="sent_history_recipient_row">
-                      <td>{{ recipient.recipient }}</td>
-                      <td>{{ recipient.status }}</td>
-                      <td>{{ recipient.latest_status|date:'SHORT_DATETIME_FORMAT' }}</td>
-                      <td>{{ recipient.nb_opened }}</td>
-                      <td>{{ recipient.latest_opened|date:'SHORT_DATETIME_FORMAT' }}</td>
-                      <td>{{ recipient.nb_clicked }}</td>
-                      <td>{{ recipient.latest_clicked|date:'SHORT_DATETIME_FORMAT' }}</td>
+                  {% for status in log.recipient_statuses.all %}
+                    <tr class="sent_history_recipient_row{% if status.on_error %} error{% endif %}">
+                      <td>{{ status.recipient }}</td>
+                      {% if status.on_error %}
+                        <td>
+                          <abbr title="{{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})">❗️ Non délivré</abbr>
+                        </td>
+                      {% else %}
+                        <td>{{ status.status }}</td>
+                      {% endif %}
+                      <td>{{ status.latest_status|date:'SHORT_DATETIME_FORMAT' }}</td>
+                      <td>{{ status.nb_opened }}</td>
+                      <td>{{ status.latest_opened|date:'SHORT_DATETIME_FORMAT' }}</td>
+                      <td>{{ status.nb_clicked }}</td>
+                      <td>{{ status.latest_clicked|date:'SHORT_DATETIME_FORMAT' }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>
