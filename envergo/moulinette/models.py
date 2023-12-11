@@ -513,7 +513,7 @@ class Perimeter(models.Model):
     contact_email = models.EmailField(_("Contact email"), blank=True)
 
     map_legend = models.CharField(_("Map legend"), max_length=256, blank=True)
-    rules_url = models.URLField(_("Rules url"))
+    rules_url = models.URLField(_("Rules url"), blank=True)
 
     class Meta:
         verbose_name = _("Perimeter")
