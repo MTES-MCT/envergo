@@ -310,7 +310,27 @@ class EvaluationAdmin(admin.ModelAdmin):
                     )
                     return HttpResponseRedirect(url)
 
+            # Override email recipients with the ones from the form
+            to = request.POST.getlist("to")
+            cc = request.POST.getlist("cc")
+            bcc = request.POST.getlist("bcc")
+            all = to + cc + bcc
+            if len(all) == 0:
+                self.message_user(
+                    request,
+                    "Vous devez spécifier au moins un destinataire.",
+                    messages.ERROR,
+                )
+                url = reverse(
+                    "admin:evaluations_evaluation_email_avis", args=[object_id]
+                )
+                return HttpResponseRedirect(url)
+
+            eval_email.to = to
+            eval_email.cc = cc
+            eval_email.bcc = bcc
             eval_email.send()
+
             # We need to store the message id from the esp, but in local dev or testing,
             # there is no such sing.
             try:
@@ -319,6 +339,9 @@ class EvaluationAdmin(admin.ModelAdmin):
             except AttributeError as e:
                 logger.warning(f"Impossible de récupérer le message id: {e}")
                 message_id = ""
+
+            # Log the sent email event. We will later tracke events from the ESP
+            # and log individual emails statuses for each recipients
             RegulatoryNoticeLog.objects.create(
                 evaluation=evaluation,
                 sender=request.user,

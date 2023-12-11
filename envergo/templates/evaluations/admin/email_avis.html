@@ -36,22 +36,59 @@
     {% csrf_token %}
 
     <fieldset class="module">
+      <legend>Destinataires</legend>
+
+      {% for email in email.to %}
+        <div class="form-row">
+          <div class="flexbox-container checkbox-row">
+            <input id="to_{{ email }}"
+                   type="checkbox"
+                   name="to"
+                   value="{{ email }}"
+                   checked>
+            <label for="to_{{ email }}">
+              <strong>À :</strong> {{ email }}
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% for email in email.cc %}
+        <div class="form-row">
+          <div class="flexbox-container checkbox-row">
+            <input id="cc_{{ email }}"
+                   type="checkbox"
+                   name="cc"
+                   value="{{ email }}"
+                   checked>
+            <label for="cc_{{ email }}">
+              <strong>Copie :</strong> {{ email }}
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% for email in email.bcc %}
+        <div class="form-row">
+          <div class="flexbox-container checkbox-row">
+            <input id="bcc_{{ email }}"
+                   type="checkbox"
+                   name="bcc"
+                   value="{{ email }}"
+                   checked>
+            <label for="bcc_{{ email }}">
+              <strong>Copie cachée :</strong> {{ email }}
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="module">
       <ul class="rr-preview">
         <li>
           <strong>De :</strong>
           {{ email.from_email }}
-        </li>
-        <li>
-          <strong>À :</strong>
-          {{ email.to|join:", " }}
-        </li>
-        <li>
-          <strong>Copie :</strong>
-          {{ email.cc|join:", " }}
-        </li>
-        <li>
-          <strong>Copie cachée :</strong>
-          {{ email.bcc|join:", " }}
         </li>
         <li style="font-size: 120%">
           <strong>Objet :</strong>
