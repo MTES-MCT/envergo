@@ -1,12 +1,15 @@
 {% with perimeter=regulation.perimeter %}
   {% if perimeter %}
-    <p>Le règlement du SAGE « {{ perimeter.name }} » sera prochainement pris en compte par EnvErgo.</p>
 
-    <p>
-      {% if perimeter.rules_url %}
+    {% if perimeter.rules_url %}
+      <p>Le règlement du SAGE « {{ perimeter.name }} » sera prochainement pris en compte par EnvErgo.</p>
+
+      <p>
         <a target="_blank" rel="noopener" href="{{ perimeter.rules_url }}">Le règlement complet du SAGE « {{ perimeter.name }} »</a> est consultable en ligne.
-      {% endif %}
-    </p>
+      </p>
+    {% else %}
+      <p>Le SAGE « {{ perimeter.name }} » ne dispose pas de règlement.</p>
+    {% endif %}
 
     {% if perimeter.has_contact %}
       <p>
