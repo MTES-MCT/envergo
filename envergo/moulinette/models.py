@@ -522,6 +522,15 @@ class Perimeter(models.Model):
     def __str__(self):
         return self.name
 
+    def has_contact(self):
+        return any(
+            (
+                self.contact_url,
+                self.contact_phone,
+                self.contact_email,
+            )
+        )
+
     @property
     def contact(self):
         """Format an address string."""
