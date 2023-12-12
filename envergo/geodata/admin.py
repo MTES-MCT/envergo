@@ -110,6 +110,24 @@ class MapAdmin(gis_admin.GISModelAdmin):
 
         return qs
 
+    def get_deleted_objects(self, objs, request):
+        """Get data for the deletion confirmation page.
+
+        We needed to override this, because maps are often associated with
+        hundreds of thousands of zones, and the default page was too memory intensive
+        and would crash the entire server.
+        """
+        zone_count = Zone.objects.filter(map__in=objs).count()
+        deleted_objects = [str(map) for map in objs]
+        deleted_objects.append(f"{zone_count} zones associées")
+        model_count = {
+            "Cartes": len(objs),
+            "Zones": zone_count,
+        }
+        perms_needed = set()
+        protected = {}
+        return deleted_objects, model_count, perms_needed, protected
+
     @admin.display(ordering="map_type", description=_("Type"))
     def col_map_type(self, obj):
         short_map_type = SHORT_MAP_TYPES.get(obj.map_type, obj.get_map_type_display())
