@@ -487,7 +487,37 @@ form {
 /**
  * Custom display of the evaluation request contact form
  */
-form#request-evaluation-form {}
+form#request-evaluation-form {
+  fieldset legend {
+    color: #666;
+  }
+
+  &[data-user-type="instructor"] {
+    &[data-send-eval="false"] {
+
+      #element-project_sponsor_emails,
+      #element-project_sponsor_phone_number {
+        display: none;
+      }
+    }
+  }
+
+  &[data-user-type="petitioner"] {
+    fieldset#instructor-fieldset {
+      display: none;
+    }
+
+    fieldset#petitioner-fieldset legend {
+      display: none;
+    }
+
+    #element-send_eval_to_sponsor {
+      display: none;
+    }
+  }
+
+}
+
 
 /**
  * Autocomplete fields

@@ -3,16 +3,6 @@ window.addEventListener('load', function () {
   var form = document.getElementById("request-evaluation-form");
   var contactSection = document.getElementById("contact-section");
 
-  var DISPLAY_FIELDS = {
-    instructor: ['contact_emails', 'contact_phone', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
-    petitioner: ['project_sponsor_emails', 'project_sponsor_phone_number'],
-  };
-
-  var DISPLAY_FIELDSETS = {
-    instructor: ['instructor-fieldset', 'petitioner-fieldset'],
-    petitioner: ['petitioner-fieldset'],
-  }
-
   var FIELDS_SETUP = {
     instructor: {
       contact_emails: {
@@ -43,33 +33,14 @@ window.addEventListener('load', function () {
     return input.value;
   };
 
-  var toggleContactFields = function (userType) {
-    var fieldsToDisplay = DISPLAY_FIELDS[userType];
-    var allFieldsDivs = contactSection.querySelectorAll('div[id^=form-group-]')
-    allFieldsDivs.forEach(function (fieldDiv) {
-      var divId = fieldDiv.id;
-      var fieldName = divId.replace('form-group-', '');
-      var fieldMustBeDisplayed = (fieldsToDisplay.indexOf(fieldName) >= 0);
-      if (fieldMustBeDisplayed) {
-        fieldDiv.classList.remove('fr-hidden');
-      } else {
-        fieldDiv.classList.add('fr-hidden');
-      }
-    });
+  var getSendEval = function () {
+    var checkbox = form.querySelector('[name=send_eval_to_sponsor]');
+    return checkbox.checked;
   };
 
-  var toggleFieldsets = function (userType) {
-    var fieldsetsToDisplay = DISPLAY_FIELDSETS[userType];
-    var allFieldsets = contactSection.querySelectorAll('fieldset');
-    allFieldsets.forEach(function (fieldset) {
-      var id = fieldset.id;
-      var fieldsetMustBeDisplayed = (fieldsetsToDisplay.indexOf(id) >= 0);
-      if (fieldsetMustBeDisplayed) {
-        fieldset.classList.remove('fr-hidden');
-      } else {
-        fieldset.classList.add('fr-hidden');
-      }
-    });
+  var updateForm = function (userType, sendEval) {
+    form.dataset.userType = userType;
+    form.dataset.sendEval = sendEval;
   };
 
   var updateFieldLabels = function (userType) {
@@ -93,8 +64,8 @@ window.addEventListener('load', function () {
 
   var renderContactSection = function () {
     var userType = getUserType();
-    toggleContactFields(userType);
-    toggleFieldsets(userType);
+    var sendEval = getSendEval();
+    updateForm(userType, sendEval);
     updateFieldLabels(userType);
   };
 
