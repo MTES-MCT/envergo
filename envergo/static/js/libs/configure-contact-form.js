@@ -1,15 +1,23 @@
 window.addEventListener('load', function () {
 
-  var form = document.getElementById(FORM_ID);
-  var contactSection = document.getElementById(CONTACT_SECTION_ID);
+  var form = document.getElementById("request-evaluation-form");
+  var contactSection = document.getElementById("contact-section");
 
   var DISPLAY_FIELDS = {
-    instructor: ['contact_emails', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
+    instructor: ['contact_emails', 'contact_phone', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
     petitioner: ['project_sponsor_emails', 'project_sponsor_phone_number'],
   };
 
+  var DISPLAY_FIELDSETS = {
+    instructor: ['instructor-fieldset', 'petitioner-fieldset'],
+    petitioner: ['petitioner-fieldset'],
+  }
+
   var FIELDS_SETUP = {
     instructor: {
+      contact_emails: {
+        label: 'Adresse(s) e-mail',
+      },
       project_sponsor_emails: {
         label: 'Adresse(s) e-mail du porteur de projet',
         help_text: "Pétitionnaire, maître d'œuvre…",
@@ -50,6 +58,20 @@ window.addEventListener('load', function () {
     });
   };
 
+  var toggleFieldsets = function (userType) {
+    var fieldsetsToDisplay = DISPLAY_FIELDSETS[userType];
+    var allFieldsets = contactSection.querySelectorAll('fieldset');
+    allFieldsets.forEach(function (fieldset) {
+      var id = fieldset.id;
+      var fieldsetMustBeDisplayed = (fieldsetsToDisplay.indexOf(id) >= 0);
+      if (fieldsetMustBeDisplayed) {
+        fieldset.classList.remove('fr-hidden');
+      } else {
+        fieldset.classList.add('fr-hidden');
+      }
+    });
+  };
+
   var updateFieldLabels = function (userType) {
     var fieldsSetup = FIELDS_SETUP[userType];
     var allFieldsDivs = contactSection.querySelectorAll('div[id^=form-group-]')
@@ -72,6 +94,7 @@ window.addEventListener('load', function () {
   var renderContactSection = function () {
     var userType = getUserType();
     toggleContactFields(userType);
+    toggleFieldsets(userType);
     updateFieldLabels(userType);
   };
 
