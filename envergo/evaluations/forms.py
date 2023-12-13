@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -100,7 +101,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
 class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
     user_type = forms.ChoiceField(
-        label="Vous êtes :",
+        label=mark_safe('<h2 class="fr-h6">Je suis :</h2>'),
         required=True,
         choices=USER_TYPES,
         initial=USER_TYPES.instructor,

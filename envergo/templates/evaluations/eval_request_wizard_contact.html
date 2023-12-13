@@ -30,16 +30,23 @@
     {% include '_radio_snippet.html' with field=form.user_type %}
 
     <div id="contact-section">
-      {% include '_field_snippet.html' with field=form.contact_emails %}
+      <h2 class="fr-h6">Destinataire de l'avis :</h2>
 
-      <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'avis réglementaire à ces coordonnées.</p>
-      </div>
+      <fieldset class="fr-fieldset fr-mb-3w">
+        <legend class="fr-fieldset__legend">Service urbanisme</legend>
 
-      {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
-      {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
-      {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
+        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.contact_emails %}</div>
+      </fieldset>
 
+      <fieldset class="fr-fieldset fr-mb-3w">
+        <legend class="fr-fieldset__legend">Porteur de projet</legend>
+
+        <div class="fr-fieldset__element">{% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}</div>
+        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.project_sponsor_emails %}</div>
+        <div class="fr-fieldset__element">
+          {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
+        </div>
+      </fieldset>
     </div>
 
     <button type="submit"
