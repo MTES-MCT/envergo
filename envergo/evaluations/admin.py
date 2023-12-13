@@ -430,6 +430,7 @@ class RequestAdmin(admin.ModelAdmin):
         "application_number",
         "user_type",
         "contact_emails",
+        "contact_phone",
         "project_sponsor_phone_number",
         "evaluation_link",
     ]
@@ -466,6 +467,7 @@ class RequestAdmin(admin.ModelAdmin):
                 "fields": (
                     "user_type",
                     "contact_emails",
+                    "contact_phone",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
                     "send_eval_to_sponsor",

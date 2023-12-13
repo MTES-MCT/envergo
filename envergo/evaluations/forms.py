@@ -39,6 +39,12 @@ class EvaluationFormMixin(forms.Form):
             if "contact_emails" in data:
                 del data["contact_emails"]
 
+            self.fields["contact_phone"].required = False
+            if "contact_phone" in self._errors:
+                del self._errors["contact_phone"]
+            if "contact_phone" in data:
+                del data["contact_phone"]
+
         return data
 
 
@@ -112,6 +118,11 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
+    contact_phone = PhoneNumberField(
+        label=_("Urbanism department phone number"),
+        region="FR",
+        required=False,
+    )
     project_sponsor_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Project sponsor email address(es)"),
@@ -135,6 +146,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         fields = [
             "user_type",
             "contact_emails",
+            "contact_phone",
             "project_sponsor_emails",
             "project_sponsor_phone_number",
             "send_eval_to_sponsor",
@@ -176,6 +188,7 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "project_description",
             "user_type",
             "contact_emails",
+            "contact_phone",
             "project_sponsor_emails",
             "project_sponsor_phone_number",
             "send_eval_to_sponsor",

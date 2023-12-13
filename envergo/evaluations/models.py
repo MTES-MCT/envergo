@@ -198,6 +198,9 @@ class Evaluation(models.Model):
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
+    contact_phone = PhoneNumberField(
+        _("Urbanism department phone number"), max_length=20, blank=True
+    )
 
     # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
@@ -574,6 +577,9 @@ class Request(models.Model):
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
+    contact_phone = PhoneNumberField(
+        _("Urbanism department phone number"), max_length=20, blank=True
+    )
 
     # TODO rename the inexact word "sponsor"
     project_sponsor_emails = ArrayField(
@@ -653,6 +659,7 @@ class Request(models.Model):
         evaluation = Evaluation.objects.create(
             reference=self.reference,
             contact_emails=self.contact_emails,
+            contact_phone=self.contact_phone,
             request=self,
             application_number=self.application_number,
             address=self.address,
