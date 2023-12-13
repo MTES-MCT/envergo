@@ -15,7 +15,6 @@ window.addEventListener('load', function () {
       project_sponsor_phone_number: {
         label: "Téléphone du porteur de projet",
       }
-
     },
     petitioner: {
       project_sponsor_emails: {

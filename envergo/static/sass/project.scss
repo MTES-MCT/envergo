@@ -519,8 +519,18 @@ form#request-evaluation-form {
     }
   }
 
-}
+  #id_send_eval_to_sponsor+.fr-label .fr-hint-text {
+    color: var(--info-425-625) !important;
+  }
 
+  #id_send_eval_to_sponsor:checked+.fr-label .if-unchecked {
+    display: none;
+  }
+
+  #id_send_eval_to_sponsor:not(:checked)+.fr-label .if-checked {
+    display: none;
+  }
+}
 
 /**
  * Autocomplete fields

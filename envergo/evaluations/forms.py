@@ -136,9 +136,16 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Send evaluation to project sponsor"),
         initial=True,
         required=False,
-        help_text=_(
-            "If you uncheck this box, you will be the only recipient of the evaluation."
-        ),
+        help_text="""
+        <span class="if-checked">
+            Si vous décochez cette case, le porteur de projet
+            ne recevra pas l'avis réglementaire.</span>
+        <span class="if-unchecked">
+            Si vous cochez cette case, et s'il est concerné par une réglementation
+            environnementale, le porteur de projet recevra automatiquement un avis
+            réglementaire.
+        </span>
+        """,
     )
 
     class Meta:
