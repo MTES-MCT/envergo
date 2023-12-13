@@ -48,21 +48,27 @@
           {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
         </div>
 
-        <div id="element-{{ form.project_sponsor_emails.name }}"
-             class="fr-fieldset__element">
+        <div class="only-if-send-eval-checked fr-fieldset__element">
           {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
         </div>
-        <div id="element-{{ form.project_sponsor_phone_number.name }}"
-             class="fr-fieldset__element">
+        <div class="only-if-send-eval-checked fr-fieldset__element">
           {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
+        </div>
+
+        <div class="only-if-send-eval-checked fr-fieldset__element">
+          <p class="fr-hint">
+            L'avis réglementaire sera envoyé au porteur s'il est concerné par une réglementation environnementale.
+          </p>
         </div>
       </fieldset>
     </div>
 
-    <button type="submit"
-            class="fr-mt-6w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
-      Poursuivre votre demande d'avis réglementaire
-    </button>
+    <div class="right-button">
+      <button type="submit"
+              class="fr-mt-3w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+        Poursuivre votre demande d'avis réglementaire
+      </button>
+    </div>
 
   </form>
 

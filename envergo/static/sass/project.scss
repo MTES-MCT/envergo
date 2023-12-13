@@ -492,11 +492,14 @@ form#request-evaluation-form {
     color: #666;
   }
 
+  div.right-button {
+    text-align: right;
+  }
+
   &[data-user-type="instructor"] {
     &[data-send-eval="false"] {
 
-      #element-project_sponsor_emails,
-      #element-project_sponsor_phone_number {
+      .only-if-send-eval-checked {
         display: none;
       }
     }
