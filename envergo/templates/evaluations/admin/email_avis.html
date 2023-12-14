@@ -35,9 +35,10 @@
   <form method="post" action="">
     {% csrf_token %}
 
-    <fieldset class="module">
-      <legend>Destinataires</legend>
-
+    <fieldset class="module recipients">
+      <legend>
+        <strong>À :</strong>
+      </legend>
       {% for email in email.to %}
         <div class="form-row">
           <div class="flexbox-container checkbox-row">
@@ -46,13 +47,16 @@
                    name="to"
                    value="{{ email }}"
                    checked>
-            <label for="to_{{ email }}">
-              <strong>À :</strong> {{ email }}
-            </label>
+            <label for="to_{{ email }}">{{ email }}</label>
           </div>
         </div>
       {% endfor %}
+    </fieldset>
 
+    <fieldset class="module recipients">
+      <legend>
+        <strong>Copie :</strong>
+      </legend>
       {% for email in email.cc %}
         <div class="form-row">
           <div class="flexbox-container checkbox-row">
@@ -67,7 +71,12 @@
           </div>
         </div>
       {% endfor %}
+    </fieldset>
 
+    <fieldset class="module recipients">
+      <legend>
+        <strong>Copie cachée :</strong>
+      </legend>
       {% for email in email.bcc %}
         <div class="form-row">
           <div class="flexbox-container checkbox-row">
