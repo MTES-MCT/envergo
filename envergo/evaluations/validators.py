@@ -1,7 +1,6 @@
 import re
 
 from django.core.validators import RegexValidator
-from django.utils.translation import gettext_lazy as _
 
 # fmt: off
 PERMIT_NUMBER_RE = (
@@ -17,6 +16,7 @@ PERMIT_NUMBER_RE = (
 
 application_number_validator = RegexValidator(
     regex=PERMIT_NUMBER_RE,
-    message=_('The application number format is invalid.'),
-    flags=re.I
+    flags=re.I,
+    message="""Le numéro de dossier doit être constitué de quinze
+    caractères et commencer par « PA », « PC », « DP » ou « CU »""",
 )

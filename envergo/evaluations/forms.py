@@ -62,6 +62,12 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
         label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
+        error_messages={
+            "required": """
+                Ce champ est obligatoire. Si le projet n'a pas d'adresse,
+                cochez la case ci-dessous.
+            """
+        },
     )
     no_address = forms.BooleanField(
         label=_("This project is not linked to an address"),
