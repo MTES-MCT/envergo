@@ -496,6 +496,13 @@ form#request-evaluation-form {
     text-align: right;
   }
 
+  #form-group-additional_files {
+    .fr-hint-text {
+      color: var(--info-425-625);
+      margin-bottom: 1rem;
+    }
+  }
+
   &[data-user-type="instructor"] {
     &[data-send-eval="false"] {
 
@@ -520,7 +527,7 @@ form#request-evaluation-form {
   }
 
   #id_send_eval_to_sponsor+.fr-label .fr-hint-text {
-    color: var(--info-425-625) !important;
+    color: var(--info-425-625);
   }
 
   #id_send_eval_to_sponsor:checked+.fr-label .if-unchecked {
