@@ -5,10 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator
 
-# Only ask the "emprise" question if created surface is greater or equal than
+# Only ask the "emprise" question if final surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
 
-# Only ask the "Zone u" question if created surface is greater or equal than
+# Only ask the "Zone u" question if final surface is greater or equal than
 ZONE_U_THRESHOLD = 40000
 
 
@@ -31,12 +31,12 @@ class EmpriseForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        created_surface = int(self.data["created_surface"])
+        final_surface = int(self.data["final_surface"])
 
-        if created_surface < ZONE_U_THRESHOLD:
+        if final_surface < ZONE_U_THRESHOLD:
             del self.fields["zone_u"]
 
-        if created_surface < EMPRISE_THRESHOLD:
+        if final_surface < EMPRISE_THRESHOLD:
             del self.fields["emprise"]
 
 
@@ -58,15 +58,16 @@ class Emprise(CriterionEvaluator):
 
     def get_result_data(self):
         emprise = self.catalog.get("emprise", 0)
-        if emprise >= ZONE_U_THRESHOLD:
-            emprise_threshold = "40000"
-        elif emprise >= EMPRISE_THRESHOLD:
-            emprise_threshold = "10000"
+        final_surface = self.catalog.get("final_surface", 0)
+        if emprise >= ZONE_U_THRESHOLD and final_surface >= ZONE_U_THRESHOLD:
+            surface = "40000"
+        elif emprise >= EMPRISE_THRESHOLD and final_surface >= EMPRISE_THRESHOLD:
+            surface = "10000"
         else:
-            emprise_threshold = "0"
+            surface = "0"
 
         zone_u = self.catalog.get("zone_u", "non")
-        return emprise_threshold, zone_u
+        return surface, zone_u
 
 
 SURFACE_PLANCHER_THRESHOLD = 3000
