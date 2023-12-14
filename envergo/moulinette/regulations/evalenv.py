@@ -120,12 +120,6 @@ class TerrainAssietteForm(forms.Form):
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
-    is_lotissement = forms.ChoiceField(
-        label=_("Le projet concerne-t-il un lotissement ?"),
-        widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
-        required=True,
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -139,7 +133,6 @@ class TerrainAssietteForm(forms.Form):
 
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
-            del self.fields["is_lotissement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
@@ -150,29 +143,21 @@ class TerrainAssiette(CriterionEvaluator):
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        ("0", "non"): "non_soumis",
-        ("0", "oui"): "non_soumis",
-        ("10000", "non"): "non_concerne",
-        ("10000", "oui"): "non_soumis",
-        ("50000", "non"): "non_concerne",
-        ("50000", "oui"): "cas_par_cas",
-        ("100000", "non"): "non_concerne",
-        ("100000", "oui"): "systematique",
+        "10000": "non_soumis",
+        "50000": "cas_par_cas",
+        "100000": "systematique",
     }
 
     def get_result_data(self):
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
-        is_lotissement = self.catalog.get("is_lotissement", "non")
 
         if terrain_assiette >= TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD:
             assiette_thld = "100000"
         elif terrain_assiette >= TERRAIN_ASSIETTE_CASPARCAS_THRESHOLD:
             assiette_thld = "50000"
-        elif terrain_assiette >= TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
-            assiette_thld = "10000"
         else:
-            assiette_thld = "0"
-        return assiette_thld, is_lotissement
+            assiette_thld = "10000"
+        return assiette_thld
 
 
 class OtherCriteria(CriterionEvaluator):
