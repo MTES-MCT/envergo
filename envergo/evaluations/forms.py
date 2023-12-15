@@ -147,9 +147,9 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             Si vous décochez cette case, le porteur de projet
             ne recevra pas l'avis réglementaire.</span>
         <span class="if-unchecked">
-            Si vous cochez cette case, et s'il est concerné par une réglementation
-            environnementale, le porteur de projet recevra automatiquement un avis
-            réglementaire.
+            Si vous cochez cette case, et si le porteur de projet est concerné par une
+            réglementation environnementale, EnvErgo lui enverra l'avis réglementaire.
+            Vous serez en copie.
         </span>
         """,
     )

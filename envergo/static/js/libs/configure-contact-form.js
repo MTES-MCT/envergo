@@ -9,7 +9,7 @@ window.addEventListener('load', function () {
         label: 'Adresse(s) e-mail',
       },
       project_sponsor_emails: {
-        label: 'Adresse(s) e-mail du porteur de projet',
+        label: 'Adresse(s) e-mail',
         help_text: "Pétitionnaire, maître d'œuvre…",
       },
       project_sponsor_phone_number: {
@@ -18,7 +18,7 @@ window.addEventListener('load', function () {
     },
     petitioner: {
       project_sponsor_emails: {
-        label: "Adresse(s) e-mail à qui adresser l'évaluation",
+        label: "Adresse(s) e-mail",
         help_text: "Porteur de projet, maître d'œuvre…",
       },
       project_sponsor_phone_number: {
