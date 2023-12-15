@@ -39,7 +39,7 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
     )
-    send_eval_to_sponsor = forms.BooleanField(
+    send_eval_to_petitioner = forms.BooleanField(
         label="Envoyer directement au porteur de projet",
         required=False,
     )
@@ -49,7 +49,7 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    project_sponsor_emails = SimpleArrayField(
+    petitioner_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Project sponsor email(s)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
@@ -187,9 +187,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "user_type",
                     "contact_emails",
                     "contact_phone",
-                    "project_sponsor_emails",
-                    "project_sponsor_phone_number",
-                    "send_eval_to_sponsor",
+                    "petitioner_emails",
+                    "petitioner_phone",
+                    "send_eval_to_petitioner",
                 )
             },
         ),
@@ -432,7 +432,7 @@ class RequestAdmin(admin.ModelAdmin):
         "user_type",
         "contact_emails",
         "contact_phone",
-        "project_sponsor_phone_number",
+        "petitioner_phone",
         "evaluation_link",
     ]
     readonly_fields = [
@@ -469,9 +469,9 @@ class RequestAdmin(admin.ModelAdmin):
                     "user_type",
                     "contact_emails",
                     "contact_phone",
-                    "project_sponsor_emails",
-                    "project_sponsor_phone_number",
-                    "send_eval_to_sponsor",
+                    "petitioner_emails",
+                    "petitioner_phone",
+                    "send_eval_to_petitioner",
                 )
             },
         ),

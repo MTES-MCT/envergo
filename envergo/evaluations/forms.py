@@ -21,8 +21,8 @@ class EvaluationFormMixin(forms.Form):
         application_number_validator(clean_number)
         return clean_number
 
-    def clean_project_sponsor_phone_number(self):
-        phone = self.cleaned_data["project_sponsor_phone_number"]
+    def clean_petitioner_phone(self):
+        phone = self.cleaned_data["petitioner_phone"]
         return str(phone)
 
     def clean(self):
@@ -129,16 +129,16 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         region="FR",
         required=False,
     )
-    project_sponsor_emails = SimpleArrayField(
+    petitioner_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
-    project_sponsor_phone_number = PhoneNumberField(
+    petitioner_phone = PhoneNumberField(
         label=_("Project sponsor phone number"), region="FR"
     )
-    send_eval_to_sponsor = forms.BooleanField(
+    send_eval_to_petitioner = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
         initial=True,
         required=False,
@@ -160,9 +160,9 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             "user_type",
             "contact_emails",
             "contact_phone",
-            "project_sponsor_emails",
-            "project_sponsor_phone_number",
-            "send_eval_to_sponsor",
+            "petitioner_emails",
+            "petitioner_phone",
+            "send_eval_to_petitioner",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -170,7 +170,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["contact_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-        self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
+        self.fields["petitioner_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
 
@@ -202,9 +202,9 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "user_type",
             "contact_emails",
             "contact_phone",
-            "project_sponsor_emails",
-            "project_sponsor_phone_number",
-            "send_eval_to_sponsor",
+            "petitioner_emails",
+            "petitioner_phone",
+            "send_eval_to_petitioner",
         ]
 
 

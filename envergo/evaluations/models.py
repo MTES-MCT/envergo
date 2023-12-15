@@ -202,18 +202,17 @@ class Evaluation(models.Model):
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
-    # TODO rename the inexact word "sponsor"
-    project_sponsor_emails = ArrayField(
+    petitioner_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
         blank=True,
         default=list,
     )
-    project_sponsor_phone_number = PhoneNumberField(
+    petitioner_phone = PhoneNumberField(
         _("Project sponsor phone number"), max_length=20, blank=True
     )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
-    send_eval_to_sponsor = models.BooleanField(
+    send_eval_to_petitioner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
@@ -309,13 +308,13 @@ class EvaluationEmail:
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
-                not evaluation.send_eval_to_sponsor,
+                not evaluation.send_eval_to_petitioner,
             )
         )
         icpe_not_transmitted = all(
             (
                 evaluation.is_icpe,
-                evaluation.send_eval_to_sponsor,
+                evaluation.send_eval_to_petitioner,
                 evaluation.user_type == USER_TYPES.instructor,
             )
         )
@@ -361,16 +360,16 @@ class EvaluationEmail:
         result = self.moulinette.result
 
         if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_sponsor and not evaluation.is_icpe:
+            if evaluation.send_eval_to_petitioner and not evaluation.is_icpe:
                 if result in ("interdit", "soumis", "action_requise"):
-                    recipients = evaluation.project_sponsor_emails
+                    recipients = evaluation.petitioner_emails
                 else:
                     recipients = evaluation.contact_emails
 
             else:
                 recipients = evaluation.contact_emails
         else:
-            recipients = evaluation.project_sponsor_emails
+            recipients = evaluation.petitioner_emails
 
         # We have to sort results to make the tests pass
         return sorted(list(set(recipients)))
@@ -385,7 +384,7 @@ class EvaluationEmail:
             (
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
-                evaluation.send_eval_to_sponsor,
+                evaluation.send_eval_to_petitioner,
                 result in ("interdit", "soumis", "action_requise"),
             )
         ):
@@ -404,7 +403,7 @@ class EvaluationEmail:
             (
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
-                evaluation.send_eval_to_sponsor,
+                evaluation.send_eval_to_petitioner,
             )
         ):
             if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
@@ -582,17 +581,17 @@ class Request(models.Model):
     )
 
     # TODO rename the inexact word "sponsor"
-    project_sponsor_emails = ArrayField(
+    petitioner_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
         blank=True,
         default=list,
     )
-    project_sponsor_phone_number = PhoneNumberField(
+    petitioner_phone = PhoneNumberField(
         _("Project sponsor phone number"), max_length=20, blank=True
     )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
-    send_eval_to_sponsor = models.BooleanField(
+    send_eval_to_petitioner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
 
@@ -665,10 +664,10 @@ class Request(models.Model):
             address=self.address,
             project_description=self.project_description,
             user_type=self.user_type,
-            project_sponsor_emails=self.project_sponsor_emails,
-            project_sponsor_phone_number=self.project_sponsor_phone_number,
+            petitioner_emails=self.petitioner_emails,
+            petitioner_phone=self.petitioner_phone,
             other_contacts=self.other_contacts,
-            send_eval_to_sponsor=self.send_eval_to_sponsor,
+            send_eval_to_petitioner=self.send_eval_to_petitioner,
         )
         return evaluation
 
