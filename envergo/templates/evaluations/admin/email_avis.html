@@ -65,9 +65,7 @@
                    name="cc"
                    value="{{ email }}"
                    checked>
-            <label for="cc_{{ email }}">
-              <strong>Copie :</strong> {{ email }}
-            </label>
+            <label for="cc_{{ email }}">{{ email }}</label>
           </div>
         </div>
       {% endfor %}
@@ -85,9 +83,7 @@
                    name="bcc"
                    value="{{ email }}"
                    checked>
-            <label for="bcc_{{ email }}">
-              <strong>Copie cachée :</strong> {{ email }}
-            </label>
+            <label for="bcc_{{ email }}">{{ email }}</label>
           </div>
         </div>
       {% endfor %}
@@ -96,15 +92,6 @@
     <fieldset class="module">
       <ul class="rr-preview">
         <li>
-          <strong>De :</strong>
-          {{ email.from_email }}
-        </li>
-        <li style="font-size: 120%">
-          <strong>Objet :</strong>
-          {{ email.subject }}
-        </li>
-        <li>
-          <strong>Contenu (html) :</strong>
           <div class="rr-content">
             <iframe class="mail-content"
                     width="800px"

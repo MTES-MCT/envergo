@@ -367,7 +367,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             context = {
                 **self.admin_site.each_context(request),
                 "title": "E-mail d'avis réglementaire",
-                "subtitle": str(evaluation),
+                "subtitle": eval_email.subject,
                 "object_id": object_id,
                 "evaluation": evaluation,
                 "email": eval_email,
