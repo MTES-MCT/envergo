@@ -186,6 +186,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": (
                     "user_type",
                     "contact_emails",
+                    "contact_phone",
                     "project_sponsor_emails",
                     "project_sponsor_phone_number",
                     "send_eval_to_sponsor",
