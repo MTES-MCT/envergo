@@ -580,7 +580,6 @@ class Request(models.Model):
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
-    # TODO rename the inexact word "sponsor"
     petitioner_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),

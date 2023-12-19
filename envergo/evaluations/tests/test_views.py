@@ -62,6 +62,7 @@ def test_eval_request_wizard_step_2(client):
         "project_description": "Bla bla bla",
         "user_type": "instructor",
         "contact_emails": ["contact@example.org"],
+        "send_eval_to_petitioner": True,
         "petitioner_emails": "sponsor1@example.org,sponsor2@example.org",
         "petitioner_phone": "0612345678",
     }
@@ -74,6 +75,35 @@ def test_eval_request_wizard_step_2(client):
 
     data = session[DATA_KEY]
     assert data["project_description"] == ["Bla bla bla"]
+    assert qs.count() == 0
+
+
+def test_eval_request_wizard_step_2_missing_petitioner_data(client):
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_emails": ["contact@example.org"],
+        "send_eval_to_petitioner": True,
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 200
+    assert "Ce champ est obligatoire" in res.content.decode()
+
+    data["petitioner_emails"] = "petitioner@example.com"
+    data["petitioner_phone"] = "0612345678"
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    DATA_KEY = "REQUEST_WIZARD_DATA"
+    session = client.session
+    assert DATA_KEY in session
+
+    data = session[DATA_KEY]
+    assert data["petitioner_emails"] == ["petitioner@example.com"]
     assert qs.count() == 0
 
 

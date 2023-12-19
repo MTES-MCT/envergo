@@ -45,6 +45,21 @@ class EvaluationFormMixin(forms.Form):
             if "contact_phone" in data:
                 del data["contact_phone"]
 
+        if user_type == USER_TYPES.instructor:
+            send_eval_to_petitioner = data.get("send_eval_to_petitioner", False)
+            if not send_eval_to_petitioner:
+                self.fields["petitioner_emails"].required = False
+                if "petitioner_emails" in self._errors:
+                    del self._errors["petitioner_emails"]
+                if "petitioner_emails" in data:
+                    del data["petitioner_emails"]
+
+                self.fields["petitioner_phone"].required = False
+                if "petitioner_phone" in self._errors:
+                    del self._errors["petitioner_phone"]
+                if "petitioner_phone" in data:
+                    del data["petitioner_phone"]
+
         return data
 
 
