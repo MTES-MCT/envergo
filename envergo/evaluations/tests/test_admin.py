@@ -113,10 +113,25 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
 
-    res = admin_client.post(url)
-    assert len(mailoutbox) == 1
-    assert RegulatoryNoticeLog.objects.count() == 1
+    email = evaluation.get_evaluation_email()
+    to = email.get_recipients()
+    cc = email.get_cc_recipients()
+    bcc = email.get_bcc_recipients()
+    assert to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert cc == ["instructor@example.org"]
+    assert bcc == []
 
+    data = {"to": to, "cc": cc, "bcc": bcc}
+
+    res = admin_client.post(url, data=data)
+    assert len(mailoutbox) == 1
+
+    mail = mailoutbox[0]
+    assert mail.to == to
+    assert mail.cc == cc
+    assert mail.bcc == bcc
+
+    assert RegulatoryNoticeLog.objects.count() == 1
     log = RegulatoryNoticeLog.objects.first()
     assert log.evaluation == evaluation
 
@@ -132,14 +147,64 @@ def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
 
-    res = admin_client.post(url)
+    email = evaluation.get_evaluation_email()
+    to = email.get_recipients()
+    cc = email.get_cc_recipients()
+    bcc = email.get_bcc_recipients()
+    data = {"to": to, "cc": cc, "bcc": bcc}
+
+    res = admin_client.post(url, data=data)
     assert len(mailoutbox) == 1
     assert RegulatoryNoticeLog.objects.count() == 1
 
-    res = admin_client.post(url, follow=True)
+    res = admin_client.post(url, data=data, follow=True)
     assert len(mailoutbox) == 1
     assert RegulatoryNoticeLog.objects.count() == 1
     assert (
         "Il s&#x27;est écoulé moins de 10 secondes depuis le dernier envoi"
         in res.content.decode()
     )
+
+
+def test_evaluation_email_recipient_overriding(admin_client, evaluation, mailoutbox):
+    # Make sure the "loi sur l'eau" result will be set
+    CriterionFactory()
+    MoulinetteConfigFactory()
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    to = ["sponsor1@example.org"]
+    cc = []
+    bcc = []
+    data = {"to": to, "cc": cc, "bcc": bcc}
+    res = admin_client.post(url, data=data)
+    assert len(mailoutbox) == 1
+
+    mail = mailoutbox[0]
+    assert mail.to == to
+    assert mail.cc == cc
+    assert mail.bcc == bcc
+
+
+def test_evaluation_email_with_empty_recipients(admin_client, evaluation, mailoutbox):
+    # Make sure the "loi sur l'eau" result will be set
+    CriterionFactory()
+    MoulinetteConfigFactory()
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    to = []
+    cc = []
+    bcc = []
+    data = {"to": to, "cc": cc, "bcc": bcc}
+    res = admin_client.post(url, data=data, follow=True)
+    assert len(mailoutbox) == 0
+    assert "Vous devez spécifier au moins un destinataire" in res.content.decode()
