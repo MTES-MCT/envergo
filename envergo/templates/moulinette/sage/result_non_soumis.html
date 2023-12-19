@@ -9,27 +9,25 @@
       </p>
 
       {% if perimeter.has_contact %}
-      <p>
-        <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-      </p>
+        <p>
+          <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
+        </p>
 
-      {{ perimeter.contact }}
-      {% endif %}  
+        {{ perimeter.contact }}
+      {% endif %}
 
     {% else %}
       <p>Le SAGE « {{ perimeter.name }} » ne dispose pas de règlement.</p>
 
       {% if perimeter.has_contact %}
-      <p>
-        <strong>Le porteur peut se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-      </p>
+        <p>
+          <strong>Le porteur peut se rapprocher de la structure en charge de l’animation du SAGE :</strong>
+        </p>
 
-      {{ perimeter.contact }}
+        {{ perimeter.contact }}
       {% endif %}
 
     {% endif %}
-
-    
 
   {% endif %}
 {% endwith %}
