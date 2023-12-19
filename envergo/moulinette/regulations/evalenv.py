@@ -5,10 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator
 
-# Only ask the "emprise" question if created surface is greater or equal than
+# Only ask the "emprise" question if final surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
 
-# Only ask the "Zone u" question if created surface is greater or equal than
+# Only ask the "Zone u" question if final surface is greater or equal than
 ZONE_U_THRESHOLD = 40000
 
 
@@ -31,12 +31,12 @@ class EmpriseForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        created_surface = int(self.data["created_surface"])
+        final_surface = int(self.data["final_surface"])
 
-        if created_surface < ZONE_U_THRESHOLD:
+        if final_surface < ZONE_U_THRESHOLD:
             del self.fields["zone_u"]
 
-        if created_surface < EMPRISE_THRESHOLD:
+        if final_surface < EMPRISE_THRESHOLD:
             del self.fields["emprise"]
 
 
@@ -58,15 +58,16 @@ class Emprise(CriterionEvaluator):
 
     def get_result_data(self):
         emprise = self.catalog.get("emprise", 0)
-        if emprise >= ZONE_U_THRESHOLD:
-            emprise_threshold = "40000"
-        elif emprise >= EMPRISE_THRESHOLD:
-            emprise_threshold = "10000"
+        final_surface = self.catalog.get("final_surface", 0)
+        if emprise >= ZONE_U_THRESHOLD and final_surface >= ZONE_U_THRESHOLD:
+            surface = "40000"
+        elif emprise >= EMPRISE_THRESHOLD and final_surface >= EMPRISE_THRESHOLD:
+            surface = "10000"
         else:
-            emprise_threshold = "0"
+            surface = "0"
 
         zone_u = self.catalog.get("zone_u", "non")
-        return emprise_threshold, zone_u
+        return surface, zone_u
 
 
 SURFACE_PLANCHER_THRESHOLD = 3000
@@ -119,12 +120,6 @@ class TerrainAssietteForm(forms.Form):
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
     )
-    is_lotissement = forms.ChoiceField(
-        label=_("Le projet concerne-t-il un lotissement ?"),
-        widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
-        required=True,
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -138,7 +133,6 @@ class TerrainAssietteForm(forms.Form):
 
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
-            del self.fields["is_lotissement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
@@ -149,29 +143,21 @@ class TerrainAssiette(CriterionEvaluator):
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        ("0", "non"): "non_soumis",
-        ("0", "oui"): "non_soumis",
-        ("10000", "non"): "non_concerne",
-        ("10000", "oui"): "non_soumis",
-        ("50000", "non"): "non_concerne",
-        ("50000", "oui"): "cas_par_cas",
-        ("100000", "non"): "non_concerne",
-        ("100000", "oui"): "systematique",
+        "10000": "non_soumis",
+        "50000": "cas_par_cas",
+        "100000": "systematique",
     }
 
     def get_result_data(self):
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
-        is_lotissement = self.catalog.get("is_lotissement", "non")
 
         if terrain_assiette >= TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD:
             assiette_thld = "100000"
         elif terrain_assiette >= TERRAIN_ASSIETTE_CASPARCAS_THRESHOLD:
             assiette_thld = "50000"
-        elif terrain_assiette >= TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
-            assiette_thld = "10000"
         else:
-            assiette_thld = "0"
-        return assiette_thld, is_lotissement
+            assiette_thld = "10000"
+        return assiette_thld
 
 
 class OtherCriteria(CriterionEvaluator):
