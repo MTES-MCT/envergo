@@ -22,7 +22,7 @@ def form_data():
         "user_type": "instructor",
         "address": "Sunny side of the street",
         "contact_emails": ["test@example.org"],
-        "petitioner_emails": ["sponsor@example.org"],
+        "project_owner_emails": ["sponsor@example.org"],
     }
 
 

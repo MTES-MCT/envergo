@@ -39,7 +39,7 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
     )
-    send_eval_to_petitioner = forms.BooleanField(
+    send_eval_to_project_owner = forms.BooleanField(
         label="Envoyer directement au porteur de projet",
         required=False,
     )
@@ -49,9 +49,9 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    petitioner_emails = SimpleArrayField(
+    project_owner_emails = SimpleArrayField(
         forms.EmailField(),
-        label=_("Project sponsor email(s)"),
+        label=_("Project owner email(s)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
@@ -187,9 +187,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "user_type",
                     "contact_emails",
                     "contact_phone",
-                    "petitioner_emails",
-                    "petitioner_phone",
-                    "send_eval_to_petitioner",
+                    "project_owner_emails",
+                    "project_owner_phone",
+                    "send_eval_to_project_owner",
                 )
             },
         ),
@@ -432,7 +432,7 @@ class RequestAdmin(admin.ModelAdmin):
         "user_type",
         "contact_emails",
         "contact_phone",
-        "petitioner_phone",
+        "project_owner_phone",
         "evaluation_link",
     ]
     readonly_fields = [
@@ -469,9 +469,9 @@ class RequestAdmin(admin.ModelAdmin):
                     "user_type",
                     "contact_emails",
                     "contact_phone",
-                    "petitioner_emails",
-                    "petitioner_phone",
-                    "send_eval_to_petitioner",
+                    "project_owner_emails",
+                    "project_owner_phone",
+                    "send_eval_to_project_owner",
                 )
             },
         ),

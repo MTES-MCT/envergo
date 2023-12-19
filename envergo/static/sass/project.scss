@@ -521,20 +521,20 @@ form#request-evaluation-form {
       display: none;
     }
 
-    #element-send_eval_to_petitioner {
+    #element-send_eval_to_project_owner {
       display: none;
     }
   }
 
-  #id_send_eval_to_petitioner+.fr-label .fr-hint-text {
+  #id_send_eval_to_project_owner+.fr-label .fr-hint-text {
     color: var(--info-425-625);
   }
 
-  #id_send_eval_to_petitioner:checked+.fr-label .if-unchecked {
+  #id_send_eval_to_project_owner:checked+.fr-label .if-unchecked {
     display: none;
   }
 
-  #id_send_eval_to_petitioner:not(:checked)+.fr-label .if-checked {
+  #id_send_eval_to_project_owner:not(:checked)+.fr-label .if-checked {
     display: none;
   }
 }

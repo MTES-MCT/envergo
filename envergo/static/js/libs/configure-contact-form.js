@@ -8,20 +8,20 @@ window.addEventListener('load', function () {
       contact_emails: {
         label: 'Adresse(s) e-mail',
       },
-      petitioner_emails: {
+      project_owner_emails: {
         label: 'Adresse(s) e-mail',
         help_text: "Pétitionnaire, maître d'œuvre…",
       },
-      petitioner_phone: {
+      project_owner_phone: {
         label: "Téléphone du porteur de projet",
       }
     },
     petitioner: {
-      petitioner_emails: {
+      project_owner_emails: {
         label: "Adresse(s) e-mail",
         help_text: "Porteur de projet, maître d'œuvre…",
       },
-      petitioner_phone: {
+      project_owner_phone: {
         label: "Contact téléphonique",
       }
     }
@@ -33,7 +33,7 @@ window.addEventListener('load', function () {
   };
 
   var getSendEval = function () {
-    var checkbox = form.querySelector('[name=send_eval_to_petitioner]');
+    var checkbox = form.querySelector('[name=send_eval_to_project_owner]');
     return checkbox.checked;
   };
 

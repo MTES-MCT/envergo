@@ -36,6 +36,8 @@ EPSG_WGS84 = 4326
 # Good for working in meters
 EPSG_MERCATOR = 3857
 
+
+# XXX rename petitioner to project owner
 USER_TYPES = Choices(
     ("instructor", "Un service instruction urbanisme"),
     ("petitioner", "Un porteur de projet ou maître d'œuvre"),
@@ -185,7 +187,7 @@ class Evaluation(models.Model):
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
     moulinette_data = models.JSONField(_("Moulinette metadata"), null=True, blank=True)
 
-    # Petitioner data
+    # Project owner data
     user_type = models.CharField(
         choices=USER_TYPES,
         default=USER_TYPES.instructor,
@@ -202,17 +204,17 @@ class Evaluation(models.Model):
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
-    petitioner_emails = ArrayField(
+    project_owner_emails = ArrayField(
         models.EmailField(),
-        verbose_name=_("Project sponsor email(s)"),
+        verbose_name=_("Project owner email(s)"),
         blank=True,
         default=list,
     )
-    petitioner_phone = PhoneNumberField(
-        _("Project sponsor phone number"), max_length=20, blank=True
+    project_owner_phone = PhoneNumberField(
+        _("Project owner phone"), max_length=20, blank=True
     )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
-    send_eval_to_petitioner = models.BooleanField(
+    send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
@@ -308,13 +310,13 @@ class EvaluationEmail:
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
                 result != "non_soumis",
-                not evaluation.send_eval_to_petitioner,
+                not evaluation.send_eval_to_project_owner,
             )
         )
         icpe_not_transmitted = all(
             (
                 evaluation.is_icpe,
-                evaluation.send_eval_to_petitioner,
+                evaluation.send_eval_to_project_owner,
                 evaluation.user_type == USER_TYPES.instructor,
             )
         )
@@ -360,16 +362,16 @@ class EvaluationEmail:
         result = self.moulinette.result
 
         if evaluation.user_type == USER_TYPES.instructor:
-            if evaluation.send_eval_to_petitioner and not evaluation.is_icpe:
+            if evaluation.send_eval_to_project_owner and not evaluation.is_icpe:
                 if result in ("interdit", "soumis", "action_requise"):
-                    recipients = evaluation.petitioner_emails
+                    recipients = evaluation.project_owner_emails
                 else:
                     recipients = evaluation.contact_emails
 
             else:
                 recipients = evaluation.contact_emails
         else:
-            recipients = evaluation.petitioner_emails
+            recipients = evaluation.project_owner_emails
 
         # We have to sort results to make the tests pass
         return sorted(list(set(recipients)))
@@ -384,7 +386,7 @@ class EvaluationEmail:
             (
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
-                evaluation.send_eval_to_petitioner,
+                evaluation.send_eval_to_project_owner,
                 result in ("interdit", "soumis", "action_requise"),
             )
         ):
@@ -403,7 +405,7 @@ class EvaluationEmail:
             (
                 not evaluation.is_icpe,
                 evaluation.user_type == USER_TYPES.instructor,
-                evaluation.send_eval_to_petitioner,
+                evaluation.send_eval_to_project_owner,
             )
         ):
             if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
@@ -520,7 +522,7 @@ def additional_data_file_format(instance, filename):
 
 
 class Request(models.Model):
-    """An evaluation request by a petitioner."""
+    """An evaluation request by a project owner."""
 
     reference = models.CharField(
         _("Reference"),
@@ -580,17 +582,17 @@ class Request(models.Model):
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
-    petitioner_emails = ArrayField(
+    project_owner_emails = ArrayField(
         models.EmailField(),
         verbose_name=_("Project sponsor email(s)"),
         blank=True,
         default=list,
     )
-    petitioner_phone = PhoneNumberField(
+    project_owner_phone = PhoneNumberField(
         _("Project sponsor phone number"), max_length=20, blank=True
     )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
-    send_eval_to_petitioner = models.BooleanField(
+    send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
 
@@ -663,10 +665,10 @@ class Request(models.Model):
             address=self.address,
             project_description=self.project_description,
             user_type=self.user_type,
-            petitioner_emails=self.petitioner_emails,
-            petitioner_phone=self.petitioner_phone,
+            project_owner_emails=self.project_owner_emails,
+            project_owner_phone=self.project_owner_phone,
             other_contacts=self.other_contacts,
-            send_eval_to_petitioner=self.send_eval_to_petitioner,
+            send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
 
