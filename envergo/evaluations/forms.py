@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -20,8 +21,8 @@ class EvaluationFormMixin(forms.Form):
         application_number_validator(clean_number)
         return clean_number
 
-    def clean_project_sponsor_phone_number(self):
-        phone = self.cleaned_data["project_sponsor_phone_number"]
+    def clean_project_owner_phone(self):
+        phone = self.cleaned_data["project_owner_phone"]
         return str(phone)
 
     def clean(self):
@@ -37,6 +38,27 @@ class EvaluationFormMixin(forms.Form):
                 del self._errors["contact_emails"]
             if "contact_emails" in data:
                 del data["contact_emails"]
+
+            self.fields["contact_phone"].required = False
+            if "contact_phone" in self._errors:
+                del self._errors["contact_phone"]
+            if "contact_phone" in data:
+                del data["contact_phone"]
+
+        if user_type == USER_TYPES.instructor:
+            send_eval_to_project_owner = data.get("send_eval_to_project_owner", False)
+            if not send_eval_to_project_owner:
+                self.fields["project_owner_emails"].required = False
+                if "project_owner_emails" in self._errors:
+                    del self._errors["project_owner_emails"]
+                if "project_owner_emails" in data:
+                    del data["project_owner_emails"]
+
+                self.fields["project_owner_phone"].required = False
+                if "project_owner_phone" in self._errors:
+                    del self._errors["project_owner_phone"]
+                if "project_owner_phone" in data:
+                    del data["project_owner_phone"]
 
         return data
 
@@ -55,6 +77,12 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
         label=_("What is the project's address?"),
         help_text=_("Type in a few characters to see suggestions"),
+        error_messages={
+            "required": """
+                Ce champ est obligatoire. Si le projet n'a pas d'adresse,
+                cochez la case ci-dessous.
+            """
+        },
     )
     no_address = forms.BooleanField(
         label=_("This project is not linked to an address"),
@@ -100,7 +128,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
 class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
     user_type = forms.ChoiceField(
-        label="Vous êtes :",
+        label=mark_safe('<h2 class="fr-h6">Je suis :</h2>'),
         required=True,
         choices=USER_TYPES,
         initial=USER_TYPES.instructor,
@@ -111,22 +139,34 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
-    project_sponsor_emails = SimpleArrayField(
+    contact_phone = PhoneNumberField(
+        label=_("Urbanism department phone number"),
+        region="FR",
+        required=False,
+    )
+    project_owner_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
-    project_sponsor_phone_number = PhoneNumberField(
+    project_owner_phone = PhoneNumberField(
         label=_("Project sponsor phone number"), region="FR"
     )
-    send_eval_to_sponsor = forms.BooleanField(
+    send_eval_to_project_owner = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
         initial=True,
         required=False,
-        help_text=_(
-            "If you uncheck this box, you will be the only recipient of the evaluation."
-        ),
+        help_text="""
+        <span class="if-checked">
+            Si vous décochez cette case, le porteur de projet
+            ne recevra pas l'avis réglementaire.</span>
+        <span class="if-unchecked">
+            Si vous cochez cette case, et si le porteur de projet est concerné par une
+            réglementation environnementale, EnvErgo lui enverra l'avis réglementaire.
+            Vous serez en copie.
+        </span>
+        """,
     )
 
     class Meta:
@@ -134,9 +174,10 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         fields = [
             "user_type",
             "contact_emails",
-            "project_sponsor_emails",
-            "project_sponsor_phone_number",
-            "send_eval_to_sponsor",
+            "contact_phone",
+            "project_owner_emails",
+            "project_owner_phone",
+            "send_eval_to_project_owner",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -144,7 +185,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["contact_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-        self.fields["project_sponsor_emails"].widget.attrs["placeholder"] = _(
+        self.fields["project_owner_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
 
@@ -175,9 +216,10 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "project_description",
             "user_type",
             "contact_emails",
-            "project_sponsor_emails",
-            "project_sponsor_phone_number",
-            "send_eval_to_sponsor",
+            "contact_phone",
+            "project_owner_emails",
+            "project_owner_phone",
+            "send_eval_to_project_owner",
         ]
 
 

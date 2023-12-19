@@ -67,7 +67,7 @@ def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
     eval_params = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
     }
     eval_params.update(eval_kwargs)
 
@@ -124,7 +124,7 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": False,
+        "send_eval_to_project_owner": False,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -156,7 +156,7 @@ def test_instructor_transmit_soumis(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -188,7 +188,7 @@ def test_instructor_transmit_n2000_evalenv_soumis(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -225,7 +225,7 @@ def test_instructor_transmit_action_requise(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -257,7 +257,7 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -284,7 +284,7 @@ def test_petitioner(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.petitioner,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": False,
+        "send_eval_to_project_owner": False,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -486,7 +486,7 @@ def test_instructor_icpe_send_to_sponsor(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": True,
+        "send_eval_to_project_owner": True,
         "is_icpe": True,
     }
     eval, moulinette = fake_moulinette(
@@ -527,7 +527,7 @@ def test_instructor_icpe_dont_send_to_sponsor(rf, moulinette_url):
     eval_kwargs = {
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": False,
+        "send_eval_to_project_owner": False,
         "is_icpe": True,
     }
     eval, moulinette = fake_moulinette(
@@ -564,7 +564,7 @@ def test_petitioner_icpe(rf, moulinette_url):
         "user_type": USER_TYPES.petitioner,
         "is_icpe": True,
         "moulinette_url": moulinette_url,
-        "send_eval_to_sponsor": False,
+        "send_eval_to_project_owner": False,
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,

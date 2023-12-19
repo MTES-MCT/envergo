@@ -487,7 +487,57 @@ form {
 /**
  * Custom display of the evaluation request contact form
  */
-form#request-evaluation-form {}
+form#request-evaluation-form {
+  fieldset legend {
+    color: #666;
+  }
+
+  div.right-button {
+    text-align: right;
+  }
+
+  #form-group-additional_files {
+    .fr-hint-text {
+      color: var(--info-425-625);
+      margin-bottom: 1rem;
+    }
+  }
+
+  &[data-user-type="instructor"] {
+    &[data-send-eval="false"] {
+
+      .only-if-send-eval-checked {
+        display: none;
+      }
+    }
+  }
+
+  &[data-user-type="petitioner"] {
+    fieldset#instructor-fieldset {
+      display: none;
+    }
+
+    fieldset#petitioner-fieldset legend {
+      display: none;
+    }
+
+    #element-send_eval_to_project_owner {
+      display: none;
+    }
+  }
+
+  #id_send_eval_to_project_owner+.fr-label .fr-hint-text {
+    color: var(--info-425-625);
+  }
+
+  #id_send_eval_to_project_owner:checked+.fr-label .if-unchecked {
+    display: none;
+  }
+
+  #id_send_eval_to_project_owner:not(:checked)+.fr-label .if-checked {
+    display: none;
+  }
+}
 
 /**
  * Autocomplete fields

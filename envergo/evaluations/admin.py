@@ -39,7 +39,7 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 1}),
     )
-    send_eval_to_sponsor = forms.BooleanField(
+    send_eval_to_project_owner = forms.BooleanField(
         label="Envoyer directement au porteur de projet",
         required=False,
     )
@@ -49,9 +49,9 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    project_sponsor_emails = SimpleArrayField(
+    project_owner_emails = SimpleArrayField(
         forms.EmailField(),
-        label=_("Project sponsor email(s)"),
+        label=_("Project owner email(s)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
@@ -186,9 +186,10 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "fields": (
                     "user_type",
                     "contact_emails",
-                    "project_sponsor_emails",
-                    "project_sponsor_phone_number",
-                    "send_eval_to_sponsor",
+                    "contact_phone",
+                    "project_owner_emails",
+                    "project_owner_phone",
+                    "send_eval_to_project_owner",
                 )
             },
         ),
@@ -430,7 +431,8 @@ class RequestAdmin(admin.ModelAdmin):
         "application_number",
         "user_type",
         "contact_emails",
-        "project_sponsor_phone_number",
+        "contact_phone",
+        "project_owner_phone",
         "evaluation_link",
     ]
     readonly_fields = [
@@ -466,9 +468,10 @@ class RequestAdmin(admin.ModelAdmin):
                 "fields": (
                     "user_type",
                     "contact_emails",
-                    "project_sponsor_emails",
-                    "project_sponsor_phone_number",
-                    "send_eval_to_sponsor",
+                    "contact_phone",
+                    "project_owner_emails",
+                    "project_owner_phone",
+                    "send_eval_to_project_owner",
                 )
             },
         ),

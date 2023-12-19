@@ -2,6 +2,8 @@
 
 {% load evaluations leaflet_tags static %}
 
+{% block top-bar %}{% endblock %}
+
 {% block title %}Demander un avis réglementaire{% endblock %}
 
 {% block article %}
@@ -30,31 +32,50 @@
     {% include '_radio_snippet.html' with field=form.user_type %}
 
     <div id="contact-section">
-      {% include '_field_snippet.html' with field=form.contact_emails %}
+      <h2 class="fr-h6">Destinataires de l'avis :</h2>
 
-      <div class="fr-mb-3w fr-alert fr-alert--info">
-        <p>Nous enverrons l'avis réglementaire à ces coordonnées.</p>
-      </div>
+      <fieldset id="instructor-fieldset" class="fr-fieldset fr-mb-3w">
+        <legend class="fr-fieldset__legend">Service urbanisme</legend>
 
-      {% include '_field_snippet.html' with field=form.project_sponsor_emails %}
-      {% include '_field_snippet.html' with field=form.project_sponsor_phone_number %}
-      {% include '_checkbox_snippet.html' with field=form.send_eval_to_sponsor %}
+        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.contact_emails %}</div>
+        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.contact_phone %}</div>
 
+      </fieldset>
+
+      <fieldset id="petitioner-fieldset" class="fr-fieldset fr-mb-3w">
+        <legend class="fr-fieldset__legend">Porteur de projet</legend>
+
+        <div id="element-{{ form.send_eval_to_project_owner.name }}"
+             class="fr-fieldset__element">
+          {% include '_checkbox_snippet.html' with field=form.send_eval_to_project_owner %}
+        </div>
+
+        <div class="only-if-send-eval-checked fr-fieldset__element">
+          {% include '_field_snippet.html' with field=form.project_owner_emails %}
+        </div>
+        <div class="only-if-send-eval-checked fr-fieldset__element">
+          {% include '_field_snippet.html' with field=form.project_owner_phone %}
+        </div>
+
+        <div class="only-if-send-eval-checked fr-fieldset__element">
+          <p class="fr-hint">
+            L'avis réglementaire sera envoyé au porteur s'il est concerné par une réglementation environnementale. Vous serez en copie.
+          </p>
+        </div>
+      </fieldset>
     </div>
 
-    <button type="submit"
-            class="fr-mt-6w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
-      Poursuivre votre demande d'avis réglementaire
-    </button>
+    <div class="right-button">
+      <button type="submit"
+              class="fr-mt-3w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+        Poursuivre votre demande d'avis réglementaire
+      </button>
+    </div>
 
   </form>
 
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    FORM_ID = 'request-evaluation-form';
-    CONTACT_SECTION_ID = 'contact-section';
-  </script>
   <script defer src="{% static 'js/libs/configure-contact-form.js' %}"></script>
 {% endblock %}

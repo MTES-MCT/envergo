@@ -23,7 +23,7 @@ class EvaluationFactory(DjangoModelFactory):
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
     user_type = "instructor"
     contact_emails = ["instructor@example.org"]
-    project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
+    project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
     # Legacy data
     result = "soumis"
@@ -70,7 +70,7 @@ class RequestFactory(DjangoModelFactory):
     project_description = factory.Faker("text")
     user_type = "instructor"
     contact_emails = ["instructor@example.org"]
-    project_sponsor_emails = ["sponsor1@example.org", "sponsor2@example.org"]
+    project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
     @factory.post_generation
     def parcels(self, create, extracted, **kwargs):

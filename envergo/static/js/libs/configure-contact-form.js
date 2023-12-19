@@ -1,30 +1,27 @@
 window.addEventListener('load', function () {
 
-  var form = document.getElementById(FORM_ID);
-  var contactSection = document.getElementById(CONTACT_SECTION_ID);
-
-  var DISPLAY_FIELDS = {
-    instructor: ['contact_emails', 'project_sponsor_emails', 'project_sponsor_phone_number', 'send_eval_to_sponsor'],
-    petitioner: ['project_sponsor_emails', 'project_sponsor_phone_number'],
-  };
+  var form = document.getElementById("request-evaluation-form");
+  var contactSection = document.getElementById("contact-section");
 
   var FIELDS_SETUP = {
     instructor: {
-      project_sponsor_emails: {
-        label: 'Adresse(s) e-mail du porteur de projet',
+      contact_emails: {
+        label: 'Adresse(s) e-mail',
+      },
+      project_owner_emails: {
+        label: 'Adresse(s) e-mail',
         help_text: "Pétitionnaire, maître d'œuvre…",
       },
-      project_sponsor_phone_number: {
+      project_owner_phone: {
         label: "Téléphone du porteur de projet",
       }
-
     },
     petitioner: {
-      project_sponsor_emails: {
-        label: "Adresse(s) e-mail à qui adresser l'évaluation",
+      project_owner_emails: {
+        label: "Adresse(s) e-mail",
         help_text: "Porteur de projet, maître d'œuvre…",
       },
-      project_sponsor_phone_number: {
+      project_owner_phone: {
         label: "Contact téléphonique",
       }
     }
@@ -35,19 +32,14 @@ window.addEventListener('load', function () {
     return input.value;
   };
 
-  var toggleContactFields = function (userType) {
-    var fieldsToDisplay = DISPLAY_FIELDS[userType];
-    var allFieldsDivs = contactSection.querySelectorAll('div[id^=form-group-]')
-    allFieldsDivs.forEach(function (fieldDiv) {
-      var divId = fieldDiv.id;
-      var fieldName = divId.replace('form-group-', '');
-      var fieldMustBeDisplayed = (fieldsToDisplay.indexOf(fieldName) >= 0);
-      if (fieldMustBeDisplayed) {
-        fieldDiv.classList.remove('fr-hidden');
-      } else {
-        fieldDiv.classList.add('fr-hidden');
-      }
-    });
+  var getSendEval = function () {
+    var checkbox = form.querySelector('[name=send_eval_to_project_owner]');
+    return checkbox.checked;
+  };
+
+  var updateForm = function (userType, sendEval) {
+    form.dataset.userType = userType;
+    form.dataset.sendEval = sendEval;
   };
 
   var updateFieldLabels = function (userType) {
@@ -71,7 +63,8 @@ window.addEventListener('load', function () {
 
   var renderContactSection = function () {
     var userType = getUserType();
-    toggleContactFields(userType);
+    var sendEval = getSendEval();
+    updateForm(userType, sendEval);
     updateFieldLabels(userType);
   };
 
