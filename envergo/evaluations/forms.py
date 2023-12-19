@@ -21,8 +21,8 @@ class EvaluationFormMixin(forms.Form):
         application_number_validator(clean_number)
         return clean_number
 
-    def clean_petitioner_phone(self):
-        phone = self.cleaned_data["petitioner_phone"]
+    def clean_project_owner_phone(self):
+        phone = self.cleaned_data["project_owner_phone"]
         return str(phone)
 
     def clean(self):
@@ -46,19 +46,19 @@ class EvaluationFormMixin(forms.Form):
                 del data["contact_phone"]
 
         if user_type == USER_TYPES.instructor:
-            send_eval_to_petitioner = data.get("send_eval_to_petitioner", False)
-            if not send_eval_to_petitioner:
-                self.fields["petitioner_emails"].required = False
-                if "petitioner_emails" in self._errors:
-                    del self._errors["petitioner_emails"]
-                if "petitioner_emails" in data:
-                    del data["petitioner_emails"]
+            send_eval_to_project_owner = data.get("send_eval_to_project_owner", False)
+            if not send_eval_to_project_owner:
+                self.fields["project_owner_emails"].required = False
+                if "project_owner_emails" in self._errors:
+                    del self._errors["project_owner_emails"]
+                if "project_owner_emails" in data:
+                    del data["project_owner_emails"]
 
-                self.fields["petitioner_phone"].required = False
-                if "petitioner_phone" in self._errors:
-                    del self._errors["petitioner_phone"]
-                if "petitioner_phone" in data:
-                    del data["petitioner_phone"]
+                self.fields["project_owner_phone"].required = False
+                if "project_owner_phone" in self._errors:
+                    del self._errors["project_owner_phone"]
+                if "project_owner_phone" in data:
+                    del data["project_owner_phone"]
 
         return data
 
@@ -144,16 +144,16 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         region="FR",
         required=False,
     )
-    petitioner_emails = SimpleArrayField(
+    project_owner_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
-    petitioner_phone = PhoneNumberField(
+    project_owner_phone = PhoneNumberField(
         label=_("Project sponsor phone number"), region="FR"
     )
-    send_eval_to_petitioner = forms.BooleanField(
+    send_eval_to_project_owner = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
         initial=True,
         required=False,
@@ -175,9 +175,9 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             "user_type",
             "contact_emails",
             "contact_phone",
-            "petitioner_emails",
-            "petitioner_phone",
-            "send_eval_to_petitioner",
+            "project_owner_emails",
+            "project_owner_phone",
+            "send_eval_to_project_owner",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -185,7 +185,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         self.fields["contact_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
-        self.fields["petitioner_emails"].widget.attrs["placeholder"] = _(
+        self.fields["project_owner_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
 
@@ -217,9 +217,9 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "user_type",
             "contact_emails",
             "contact_phone",
-            "petitioner_emails",
-            "petitioner_phone",
-            "send_eval_to_petitioner",
+            "project_owner_emails",
+            "project_owner_phone",
+            "send_eval_to_project_owner",
         ]
 
 

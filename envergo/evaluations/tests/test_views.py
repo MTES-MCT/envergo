@@ -62,9 +62,9 @@ def test_eval_request_wizard_step_2(client):
         "project_description": "Bla bla bla",
         "user_type": "instructor",
         "contact_emails": ["contact@example.org"],
-        "send_eval_to_petitioner": True,
-        "petitioner_emails": "sponsor1@example.org,sponsor2@example.org",
-        "petitioner_phone": "0612345678",
+        "send_eval_to_project_owner": True,
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
     }
     res = client.post(url, data=data)
     assert res.status_code == 302
@@ -87,14 +87,14 @@ def test_eval_request_wizard_step_2_missing_petitioner_data(client):
         "project_description": "Bla bla bla",
         "user_type": "instructor",
         "contact_emails": ["contact@example.org"],
-        "send_eval_to_petitioner": True,
+        "send_eval_to_project_owner": True,
     }
     res = client.post(url, data=data)
     assert res.status_code == 200
     assert "Ce champ est obligatoire" in res.content.decode()
 
-    data["petitioner_emails"] = "petitioner@example.com"
-    data["petitioner_phone"] = "0612345678"
+    data["project_owner_emails"] = "petitioner@example.com"
+    data["project_owner_phone"] = "0612345678"
     res = client.post(url, data=data)
     assert res.status_code == 302
 
@@ -103,7 +103,7 @@ def test_eval_request_wizard_step_2_missing_petitioner_data(client):
     assert DATA_KEY in session
 
     data = session[DATA_KEY]
-    assert data["petitioner_emails"] == ["petitioner@example.com"]
+    assert data["project_owner_emails"] == ["petitioner@example.com"]
     assert qs.count() == 0
 
 
@@ -115,8 +115,8 @@ def test_eval_request_wizard_step_2_petitioner(client):
     data = {
         "project_description": "Bla bla bla",
         "user_type": "petitioner",
-        "petitioner_emails": "sponsor1@example.org,sponsor2@example.org",
-        "petitioner_phone": "0612345678",
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
     }
     res = client.post(url, data=data)
     assert res.status_code == 302
@@ -149,8 +149,8 @@ def test_eval_wizard_all_steps(
         "project_description": "Bla bla bla",
         "user_type": "instructor",
         "contact_emails": ["contact@example.org"],
-        "petitioner_emails": "sponsor1@example.org,sponsor2@example.org",
-        "petitioner_phone": "0612345678",
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
     }
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
@@ -182,8 +182,8 @@ def test_eval_wizard_all_steps_with_test_email(
         "project_description": "Bla bla bla",
         "user_type": "instructor",
         "contact_emails": [settings.TEST_EMAIL],
-        "petitioner_emails": "sponsor1@example.org,sponsor2@example.org",
-        "petitioner_phone": "0612345678",
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
     }
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
