@@ -126,7 +126,7 @@ class CriterionEvaluator(ABC):
     # Associate a result code with a single result
     RESULT_MATRIX = {}
 
-    def __init__(self, moulinette, distance):
+    def __init__(self, moulinette, distance, settings):
         """Initialize the evaluator.
 
         Args:
@@ -140,6 +140,7 @@ class CriterionEvaluator(ABC):
         self.moulinette = moulinette
         self.distance = distance
         self.moulinette.catalog.update(self.get_catalog_data())
+        self.settings = settings
 
     @property
     def catalog(self):
@@ -231,7 +232,3 @@ class CriterionEvaluator(ABC):
         else:
             form = None
         return form
-
-    def get_settings_form_class(self):
-        form_class = getattr(self, "settings_form_class", None)
-        return form_class

@@ -376,7 +376,7 @@ class Criterion(models.Model):
     )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     evaluator_settings = models.JSONField(
-        _("Evaluator settings"), default=dict, null=True, blank=True
+        _("Evaluator settings"), default=dict, blank=True
     )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
@@ -417,7 +417,7 @@ class Criterion(models.Model):
 
     def evaluate(self, moulinette, distance):
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance)
+        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
 
     @property
