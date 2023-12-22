@@ -375,6 +375,9 @@ class Criterion(models.Model):
         _("Activation distance"), default=0
     )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
+    evaluator_settings = models.JSONField(
+        _("Evaluator settings"), default=dict, null=True, blank=True
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),

@@ -231,3 +231,7 @@ class CriterionEvaluator(ABC):
         else:
             form = None
         return form
+
+    def get_settings_form_class(self):
+        form_class = getattr(self, "settings_form_class", None)
+        return form_class
