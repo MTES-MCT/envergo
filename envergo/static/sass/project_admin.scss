@@ -21,3 +21,15 @@ fieldset.recipients {
     margin: auto;
   }
 }
+
+ul.messagelist li ul {
+  padding-left: 1rem;
+
+  li {
+    margin: 0;
+    padding: 0;
+    background: unset;
+    background-size: unset;
+    color: inherit;
+  }
+}

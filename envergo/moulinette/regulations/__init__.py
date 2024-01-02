@@ -126,6 +126,12 @@ class CriterionEvaluator(ABC):
     # Associate a result code with a single result
     RESULT_MATRIX = {}
 
+    # The form class to use to ask the end user for additional data
+    form_class = None
+
+    # The form class to use to ask the admin for necessary settings
+    settings_form_class = None
+
     def __init__(self, moulinette, distance, settings):
         """Initialize the evaluator.
 
@@ -223,13 +229,21 @@ class CriterionEvaluator(ABC):
         """Returns a `Map` object."""
         return None
 
-    def get_form_class(self):
-        form_class = getattr(self, "form_class", None)
-        return form_class
-
     def get_form(self):
-        if hasattr(self, "form_class"):
+        form_class = getattr(self, "form_class", None)
+        if form_class:
             form = self.form_class(self.moulinette.raw_data)
+        else:
+            form = None
+        return form
+
+    def get_settings_form(self):
+        settings_form_class = getattr(self, "settings_form_class", None)
+        if settings_form_class:
+            if self.settings:
+                form = self.settings_form_class(self.settings)
+            else:
+                form = self.settings_form_class()
         else:
             form = None
         return form

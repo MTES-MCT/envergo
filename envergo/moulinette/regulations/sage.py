@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
@@ -270,9 +271,17 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         return impact
 
 
+class ImpactZHSettings(forms.Form):
+    threshold = forms.IntegerField(
+        label="Seuil d'impact (en m²)",
+        help_text="Si le projet impacte plus de ce nombre de m² de zone humide, il sera interdit.",
+    )
+
+
 class ImpactZoneHumide(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH"
     slug = "interdiction_impact_zh"
+    settings_form_class = ImpactZHSettings
 
     CODES = [
         "interdit",

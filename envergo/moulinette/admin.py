@@ -79,9 +79,23 @@ class CriterionAdmin(admin.ModelAdmin):
     autocomplete_fields = ["activation_map"]
     form = CriterionAdminForm
 
+    class Media:
+        css = {
+            "all": ["css/project_admin.css"],
+        }
+
     @admin.display(description=_("Evaluator"))
     def evaluator_column(self, obj):
         return obj.evaluator.choice_label
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        criterion = obj
+        settings_form = criterion.get_settings_form()
+        context.update({"settings_form": settings_form})
+        res = super().render_change_form(request, context, add, change, form_url, obj)
+        return res
 
 
 class PerimeterAdminForm(forms.ModelForm):

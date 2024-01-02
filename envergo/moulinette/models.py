@@ -465,13 +465,24 @@ class Criterion(models.Model):
                 "Criterion must be evaluated before accessing the form class."
             )
 
-        return self._evaluator.get_form_class()
+        return self._evaluator.form_class
 
     def get_form(self):
         if not hasattr(self, "_evaluator"):
             raise RuntimeError("Criterion must be evaluated before accessing the form.")
 
         return self._evaluator.get_form()
+
+    def get_settings_form(self):
+        settings_form_class = getattr(self.evaluator, "settings_form_class", None)
+        if settings_form_class:
+            if self.evaluator_settings:
+                form = settings_form_class(self.evaluator_settings)
+            else:
+                form = settings_form_class()
+        else:
+            form = None
+        return form
 
 
 class Perimeter(models.Model):
