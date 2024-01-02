@@ -132,6 +132,7 @@ class CriterionEvaluator(ABC):
         Args:
             moulinette (Moulinette): The moulinette instance.
             distance (int): The distance to the queried coordinates.
+            settings (dict): Custom settings required for computing the result, set in the admin.
         """
         if not hasattr(self, "slug"):
             raise RuntimeError(
