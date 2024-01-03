@@ -136,13 +136,15 @@
 
     {% for regulation in moulinette.regulations %}
       <h3>
-        {{ regulation.title }} : {% result_tag regulation.result %}
+        {{ regulation.title }} : {% result_tag regulation.result_code %}
         <small>({{ regulation.result }})</small>
       </h3>
 
       <ul>
-        {% for criterion in regulation.criterions %}
-          <li>{{ criterion.title }} : {% result_tag criterion.result %}</li>
+        {% for criterion in regulation.criteria.all %}
+          <li>
+            {{ criterion.title }} : {% result_tag criterion.result %} <small>({{ criterion.result_code }})</small>
+          </li>
         {% endfor %}
       </ul>
     {% endfor %}
