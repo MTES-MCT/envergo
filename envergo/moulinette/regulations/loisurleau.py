@@ -1,13 +1,7 @@
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import (
-    CriterionEvaluator,
-    Map,
-    MapPolygon,
-    RequiredAction,
-    Stake,
-)
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
@@ -152,15 +146,6 @@ class ZoneHumide(CriterionEvaluator):
 
         return criterion_map
 
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.SOUMIS,
-                text="n'impacte pas plus de 1 000 m² de zone humide",
-            )
-        return action
-
 
 class ZoneInondable(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
@@ -228,15 +213,6 @@ class ZoneInondable(CriterionEvaluator):
 
         return criterion_map
 
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.SOUMIS,
-                text="n'impacte pas plus de 400m² de zone inondable",
-            )
-        return action
-
 
 class Ruissellement(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Ruissellement"
@@ -259,16 +235,6 @@ class Ruissellement(CriterionEvaluator):
             project_size = "small"
 
         return project_size
-
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.SOUMIS,
-                text="a une surface totale, augmentée de l'aire d'écoulement d'eaux de "
-                "pluie interceptée, inférieure à 1 ha",
-            )
-        return action
 
 
 class OtherCriteria(CriterionEvaluator):

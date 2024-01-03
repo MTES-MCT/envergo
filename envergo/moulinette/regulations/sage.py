@@ -2,13 +2,7 @@ from django import forms
 from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import (
-    CriterionEvaluator,
-    Map,
-    MapPolygon,
-    RequiredAction,
-    Stake,
-)
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
@@ -120,24 +114,6 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
-
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.INTERDIT,
-                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
-            )
-        return action
-
-    def project_impact(self):
-        impact = None
-        if self.result == RESULTS.interdit:
-            impact = """
-                impacte plus de 1 000 m² de l’une des zones humides référencées
-                dans le règlement du SAGE Vie et Jaunay.
-            """
-        return impact
 
 
 class ZoneHumideGMRE56(CriterionEvaluator):
@@ -254,21 +230,6 @@ class ZoneHumideGMRE56(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
-
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.INTERDIT,
-                text="n’impacte aucun m² de zone humide",
-            )
-        return action
-
-    def project_impact(self):
-        impact = None
-        if self.result == RESULTS.interdit:
-            impact = "impacte une zone humide dans le périmètre du SAGE Golfe du Morbihan & Ria d'Etel."
-        return impact
 
 
 class ImpactZHSettings(forms.Form):
@@ -422,27 +383,6 @@ class ImpactZoneHumide(CriterionEvaluator):
 
         return criterion_map
 
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            settings_form = self.get_settings_form()
-            settings_form.is_valid()
-
-            action = RequiredAction(
-                stake=Stake.INTERDIT,
-                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
-            )
-        return action
-
-    def project_impact(self):
-        impact = None
-        if self.result == RESULTS.interdit:
-            impact = """
-                impacte plus de 1 000 m² de l’une des zones humides référencées
-                dans le règlement du SAGE Vie et Jaunay.
-            """
-        return impact
-
 
 class ImpactZoneHumideStrict(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH (strict)"
@@ -554,21 +494,3 @@ class ImpactZoneHumideStrict(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
-
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.INTERDIT,
-                text="n’impacte pas plus 1 000 m² de zone humide référencée dans le règlement du SAGE Vie et Jaunay",
-            )
-        return action
-
-    def project_impact(self):
-        impact = None
-        if self.result == RESULTS.interdit:
-            impact = """
-                impacte plus de 1 000 m² de l’une des zones humides référencées
-                dans le règlement du SAGE Vie et Jaunay.
-            """
-        return impact
