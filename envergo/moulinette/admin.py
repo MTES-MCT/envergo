@@ -91,9 +91,10 @@ class CriterionAdmin(admin.ModelAdmin):
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
     ):
-        criterion = obj
-        settings_form = criterion.get_settings_form()
-        context.update({"settings_form": settings_form})
+        if obj:
+            criterion = obj
+            settings_form = criterion.get_settings_form()
+            context.update({"settings_form": settings_form})
         res = super().render_change_form(request, context, add, change, form_url, obj)
         return res
 
