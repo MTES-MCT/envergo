@@ -185,17 +185,37 @@ class CriterionEvaluator(ABC):
         return result
 
     def evaluate(self):
+        """Perform the criterion check.
+
+        This method is called once and saves the result codes.
+
+        The result code is a unique code used to select the template to render.
+        The result is a somewhat standard value like "non_soumis", "action_requise", etc.
+        """
+
+        # Before performing the check, we need to make sure we have all the data
+        # we need.
+        # We might require additional data:
+        # - from the user, using an "additional data" form
+        # - from the admin, using a "settings" form
         form = self.get_form()
-        if (form and form.is_valid()) or form is None:
-            result_data = self.get_result_data()
-            result_code = self.get_result_code(result_data)
-            result = self.get_result(result_code)
-            self._result_code, self._result = result_code, result
-        else:
+        settings_form = self.get_settings_form()
+        if not all(
+            (
+                form is None or form.is_valid(),
+                settings_form is None or settings_form.is_valid(),
+            )
+        ):
             self._result_code, self._result = (
                 RESULTS.non_disponible,
                 RESULTS.non_disponible,
             )
+            return
+
+        result_data = self.get_result_data()
+        result_code = self.get_result_code(result_data)
+        result = self.get_result(result_code)
+        self._result_code, self._result = result_code, result
 
     @property
     def result_code(self):
