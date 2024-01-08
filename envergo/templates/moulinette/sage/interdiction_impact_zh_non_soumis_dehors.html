@@ -12,9 +12,13 @@
   </p>
 {% endif %}
 
-<p>
-  Au vu des informations saisies, le projet est hors des zones humides référencées dans le règlement du SAGE. Il n’est donc pas concerné par cette disposition.
-</p>
+{% if criterion.evaluator.zh_strict %}
+  <p>
+    Au vu des informations saisies, le projet est hors des zones humides référencées dans le règlement du SAGE. Il n’est donc pas concerné par cette disposition.
+  </p>
+{% else %}
+  <p>Le projet est hors d'une zone humide. Il n’est donc pas concerné par cette disposition.</p>
+{% endif %}
 
 <p>
   <strong>Quel impact environnemental ?</strong>

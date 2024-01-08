@@ -248,6 +248,7 @@ class ImpactZoneHumide(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
+    zh_strict = False
 
     CODES = [
         "interdit",
@@ -391,8 +392,9 @@ class ImpactZoneHumide(CriterionEvaluator):
 
 class ImpactZoneHumideStrict(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH (strict)"
-    slug = "interdiction_impact_zh_strict"
+    slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
+    zh_strict = True
 
     CODES = [
         "interdit",

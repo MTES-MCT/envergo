@@ -55,17 +55,19 @@
   {% endif %}
 {% endif %}
 
-<p>
-  <strong>Comment déterminer si le projet est en zone humide ?</strong>
-</p>
+{% if not criterion.evaluator.zh_strict %}
+  <p>
+    <strong>Comment déterminer si le projet est en zone humide ?</strong>
+  </p>
 
-<p>
-  Toute zone humide, <em>même non inventoriée</em>, est soumise à cette règle du SAGE.
-</p>
+  <p>
+    Toute zone humide, <em>même non inventoriée</em>, est soumise à cette règle du SAGE.
+  </p>
 
-<p>
-  La recherche de zones humides se fait nécessairement par une étude de terrain, confiée en pratique à un bureau d'études spécialisé. Celui-ci examine les espèces végétales présentes, le type de sol, et le profil d'humidité sous la surface.
-</p>
+  <p>
+    La recherche de zones humides se fait nécessairement par une étude de terrain, confiée en pratique à un bureau d'études spécialisé. Celui-ci examine les espèces végétales présentes, le type de sol, et le profil d'humidité sous la surface.
+  </p>
+{% endif %}
 
 <p>
   <strong>Quel impact environnemental ?</strong>

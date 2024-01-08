@@ -6,9 +6,13 @@
   Le règlement du SAGE {{ regulation.perimeter }}, approuvé par arrêté préfectoral, interdit sur son périmètre les projets impactant plus de {{ criterion.evaluator_settings.threshold }} m² de zone humide.
 </p>
 
-<p>
-  Au vu des informations saisies, le projet est hors des zones humides référencées dans le règlement du SAGE. Il n’est donc pas concerné par cette disposition.
-</p>
+{% if criterion.evaluator.zh_strict %}
+  <p>
+    Au vu des informations saisies, le projet est hors des zones humides référencées dans le règlement du SAGE. Il n’est donc pas concerné par cette disposition.
+  </p>
+{% else %}
+  <p>Le projet est hors d'une zone humide. Il n’est donc pas concerné par cette disposition.</p>
+{% endif %}
 
 <p>
   <strong>Quel impact environnemental ?</strong>
