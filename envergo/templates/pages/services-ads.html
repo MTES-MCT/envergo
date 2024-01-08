@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% load static l10n %}
+
+{% block title %}
+  Service Ads : déterminez si le projet est soumis à une réglementation environnementale.
+{% endblock %}
+
+{% block main-classes %}home{% endblock %}
+
+{% block container %}
+
+  <section id="hero">
+    <div class="fr-container">
+
+      {% comment %}
+      The main hero section illustration moves up and down the document depending on the screen width.
+
+      Since a full css solution was getting really hackish and complicated, it's just much easier and cleaner to use three different img elements, and hide or display them using media queries.
+      {% endcomment %}
+
+      <div class="home-illustration fr-hidden fr-unhidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <h1>
+        Service Ads : déterminez si un projet est soumis à une réglementation environnementale.       </h1>
+
+      <div class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg fr-hidden fr-unhidden-md fr-hidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <ul class="fr-badge-group fr-my-3w">
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">🌱 Natura 2000</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+        </li>
+      </ul>
+      <p class="fr-text--lead">
+        EnvErgo est un service public gratuit destiné aux collectivités locales et a leurs services Autorisation du Droit des Sols.
+      </p>
+      <a href="{% url 'request_evaluation' %}"
+         class="fr-btn fr-btn--lg  fr-mb-1w fr-btn--icon-right fr-icon-arrow-right-line"
+         data-event-category="HomePage"
+         data-event-action="DiscoverClick"
+         data-event-name="Main">Demander un avis réglementaire</a>
+      <br />
+      <span>Accessible sans créer de compte. Durée : 1 min 30</span>
+
+      <div class="home-illustration fr-hidden-md fr-mt-3w fr-hidden-md fr-mt-3w">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+    </div>
+  </section>
+
+  <section id="decouvrir" class="fr-container">
+    <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
+
+        <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
+            <img src="{% static 'images/service-dark.svg' %}" alt="" class="dark-only">
+            <h2>
+              Vous êtes en service <abbr title="Autorisations du Droit des Sols">ADS</abbr> et instruisez un projet de <abbr title="Permis de construire">PC</abbr> ou de <abbr title="Permis d'aménager">PA</abbr> ?
+            </h2>
+    
+            <p class="fr-text--lead fr-mb-2w">Déterminez si le projet est soumis à une réglementation environnementale.</p>
+            <ul class="fr-mb-3w">
+              <li>
+                Nos <strong>chargés d’études</strong> examinent le projet
+              </li>
+              <li>
+                Un avis vous est rendu <strong>sous 72h</strong>
+              </li>
+              <li>
+                En option : Nous notifions directement le porteur de projet avec un <strong>avis réglementaire</strong> du Ministère de la Transition Écologique
+              </li>
+              <li>
+                Nous <strong>accompagnons</strong> le porteur de projet dans la compréhension de ses obligations.
+              </li>
+            </ul>
+
+          </div>
+
+      <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
+        <div class="alt hero-alt fr-py-3w fr-mb-5w">
+            <h2 class="fr-h3">Pourquoi demander un avis réglementaire ?</h2>
+            <ul class="roomy">
+              <li>
+                <strong>Le projet est examiné par un chargé d’études EnvErgo</strong>, au sein du Ministère de la Transition Écologique
+              </li>
+              <li>
+                <strong>Un avis réglementaire est envoyé directement au porteur de projet</strong>, ainsi informé de ses obligations réglementaires
+              </li>
+              <li>
+                <strong>L’équipe EnvErgo accompagne le porteur de projet</strong> dans sa compréhension de l'avis et des démarches à engager
+              </li>
+            </ul>
+          </div>
+      </div>
+    </div>
+  </section>
+
+  <section  id="howto" class="fr-container">
+    <h2>Comment se déroule la demande ?
+    </h2>
+
+    <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w card-steps">
+       
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+          <div class="fr-card fr-card--shadow fr-card--no-arrow">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <p class="fr-card__desc">
+                  1. Vous remplissez le formulaire en 1 min 30 : description du projet (localisation et documents), informations de contact.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+          <div class="fr-card fr-card--shadow fr-card--no-arrow">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <p class="fr-card__desc">2. Dans les trois jours, un membre de l’équipe EnvErgo examine le projet.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+          <div class="fr-card fr-card--shadow fr-card--no-arrow">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <p class="fr-card__desc">
+                  3. Si le projet est soumis à une réglementation environnementale, un avis réglementaire est envoyé au porteur de projet.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3">
+          <div class="fr-card fr-card--shadow fr-card--no-arrow">
+            <div class="fr-card__body">
+              <div class="fr-card__content">
+                <p class="fr-card__desc">
+                  4. Deux semaines plus tard, l’équipe EnvErgo recontacte le porteur par téléphone pour s’assurer de sa prise en compte de l'avis réglementaire.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <h2>
+À ajouter : 
+<ul>
+    
+    <li> ✅logos des departements qui utilisent envergo</li>
+    <li>✅verbatims d'usager content d'envergo</li>
+    <li>✅FAQ pour les service ads</li>
+    <li>✅ CTA secondaire : inscription webinaire ? a la place d'en savoir plus ... ?</li>
+
+
+</ul>
+  </h2>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var VISITOR_ID = '{{ visitor_id }}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var EVENTS_URL = "{% url 'events' %}";
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
+    var SIMULATION_FORM_ID = "moulinette-form";
+  </script>
+
+  <script defer src="{% static 'js/libs/home_analytics.js' %}"></script>
+{% endblock %}
