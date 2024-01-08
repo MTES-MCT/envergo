@@ -9,22 +9,49 @@
 </p>
 
 {% if criterion.evaluator_settings.threshold == 0 %}
+
+  {# djlint:off #}
   <p>
-    Le règlement du SAGE {{ regulation.perimeter }}, approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide.
+    Le règlement du SAGE {{ regulation.perimeter }}, approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
   </p>
+  {# djlint:on #}
 
   <p>Le projet se situe dans une zone humide potentielle. Il est donc possible qu’une zone humide soit impactée</p>
+
 {% else %}
+
+  {# djlint:off #}
   <p>
-    Le règlement du SAGE {{ regulation.perimeter }}, approuvé par arrêté préfectoral, interdit sur son périmètre les projets impactant plus de {{ criterion.evaluator_settings.threshold }} m² de zone humide.
+    Le règlement du SAGE {{ regulation.perimeter }}, approuvé par arrêté préfectoral, interdit sur son périmètre les projets impactant plus de {{ criterion.evaluator_settings.threshold }} m² de zone humide{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
   </p>
+  {# djlint:on #}
+
   <p>
     Le projet se situe dans une zone humide potentielle. Au vu des informations saisies, la surface impactée est supérieure à {{ criterion.evaluator_settings.threshold }} m².
   </p>
+
   <p>
     Il est donc possible que plus de {{ criterion.evaluator_settings.threshold }} m² de zone humide soient impactés par le projet, qui serait alors <strong>interdit</strong>.
   </p>
 
+{% endif %}
+
+{% if criterion.evaluator_settings.exceptions %}
+  <p>
+    <strong>Quelles sont les exceptions à cette interdiction ?</strong>
+  </p>
+
+  <p>En cas d’impact avéré, le projet peut être tout de même autorisé à certaines conditions, et en particulier :</p>
+
+  {{ criterion.evaluator_settings.exceptions|safe }}
+
+  {% if regulation.perimeter.rules_url %}
+    <p>
+      Le porteur doit consulter le <a href="{{ regulation.perimeter.rules_url }}"
+    target="_blank"
+    rel="noopener">texte officiel et complet du règlement du SAGE</a>.
+    </p>
+  {% endif %}
 {% endif %}
 
 <p>

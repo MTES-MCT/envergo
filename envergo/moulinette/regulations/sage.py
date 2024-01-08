@@ -237,6 +237,11 @@ class ImpactZHSettings(forms.Form):
         label="Seuil d'impact (en m²)",
         help_text="Si le projet impacte plus de ce nombre de m² de zone humide, il sera interdit.",
     )
+    exceptions = forms.CharField(
+        label="Texte exceptions (html)",
+        help_text="Indiquez la liste des exceptions mentionnées dans l'arrêté préfectoral d'interdiction.",
+        required=False,
+    )
 
 
 class ImpactZoneHumide(CriterionEvaluator):
