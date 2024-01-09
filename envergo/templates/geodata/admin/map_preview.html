@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% load static moulinette %}
+
+{% block title %}Carte{% endblock %}
+
+{% block breadcrumbs %}
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+    <button class="fr-breadcrumb__button"
+            aria-expanded="false"
+            aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
+    <div class="fr-collapse" id="breadcrumb-1">
+      <ol class="fr-breadcrumb__list">
+        <li>
+          <a class="fr-breadcrumb__link" href="/">Accueil</a>
+        </li>
+        <li>
+          <a class="fr-breadcrumb__link" aria-current="page">Carte</a>
+        </li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block article %}
+  <h1>{{ map }}</h1>
+
+  <figure class="fr-content-media" role="group">
+    <div class="ratio-1x1">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+  </figure>
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+  <script>
+  window.addEventListener('load', function() {
+
+    var map = L.map('map', {maxZoom: 21});
+    var coordsStyles = {'color': 'orange', 'fillColor': 'orange'};
+    var polygonStyles = {'color': 'none', 'fillColor': 'blue'};
+
+    L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+    "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+    "&STYLE=normal" +
+    "&TILEMATRIXSET=PM" +
+    "&FORMAT=image/png" +
+    "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+    "&TILEMATRIX={z}" +
+    "&TILEROW={y}" +
+    "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    }).addTo(map);
+
+    var polygon = JSON.parse('{% to_geojson map.geometry %}');
+    var polygonGeoJSON = L.geoJSON(polygon, {style: polygonStyles});
+    polygonGeoJSON.addTo(map);
+
+    var bounds = L.latLngBounds();
+    bounds.extend(polygonGeoJSON.getBounds());
+
+    map.fitBounds(bounds);
+  });
+  </script>
+{% endblock %}
