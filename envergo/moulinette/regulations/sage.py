@@ -361,18 +361,26 @@ class ImpactZoneHumide(CriterionEvaluator):
         map_polygons = []
 
         wetlands_qs = [
+            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
+
+        forbidden_wetlands_qs = [
             zone
             for zone in self.catalog["forbidden_wetlands"]
             if zone.map.display_for_user
         ]
-        if wetlands_qs:
-            map_polygons.append(MapPolygon(wetlands_qs, BLACK, "Zone humide"))
+        if forbidden_wetlands_qs:
+            map_polygons.append(MapPolygon(forbidden_wetlands_qs, BLUE, "Zone humide"))
 
-        if self.catalog["forbidden_wetlands_within_25m"]:
+        wetland_status, _project_size = self.get_result_data()
+        if wetland_status == "inside":
             caption = "Le projet se situe dans une zone humide référencée."
-
-        elif self.catalog["forbidden_wetlands_within_100m"]:
+        elif wetland_status == "close_to":
             caption = "Le projet se situe à proximité d'une zone humide référencée."
+        elif wetland_status == "potential":
+            caption = "le projet se situe dans une zone humide potentielle."
         else:
             caption = "Le projet ne se situe pas dans une zone humide référencée."
 
