@@ -57,7 +57,8 @@
           {% include '_field_snippet.html' with field=form.project_owner_phone %}
         </div>
 
-        <div class="only-if-send-eval-checked fr-fieldset__element">
+        <div id="send-eval-hint"
+             class="only-if-send-eval-checked fr-fieldset__element">
           <p class="fr-hint">
             L'avis réglementaire sera envoyé au porteur s'il est concerné par une réglementation environnementale. Vous serez en copie.
           </p>

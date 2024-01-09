@@ -517,13 +517,12 @@ form#request-evaluation-form {
       display: none;
     }
 
-    fieldset#petitioner-fieldset legend {
+    fieldset#petitioner-fieldset legend,
+    #element-send_eval_to_project_owner,
+    #send-eval-hint {
       display: none;
     }
 
-    #element-send_eval_to_project_owner {
-      display: none;
-    }
   }
 
   #id_send_eval_to_project_owner+.fr-label .fr-hint-text {
