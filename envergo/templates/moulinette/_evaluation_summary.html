@@ -6,10 +6,17 @@
       <li>
         <a class="summary-link"
            href="#regulation_{{ regulation.slug }}"
-           data-regulation="{{ regulation.title }}"
-           title="Voir le détail de la réglementation « {{ regulation.title }} »">
+           data-regulation="{{ regulation }}"
+           title="Voir le détail de la réglementation « {{ regulation }} »">
 
-          <span>{{ regulation.title }}</span>
+          <span>{{ regulation }}
+
+            {# This is a hack that should be removed one day #}
+            {% if regulation.regulation == "eval_env" and regulation.result == "non_soumis" %}
+              <br />
+              <span class="fr-text--sm">(rubrique 39)</span>
+            {% endif %}
+          </span>
 
           <span>
             {% result_tag regulation.result %}
