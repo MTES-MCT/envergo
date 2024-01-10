@@ -82,6 +82,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "expected_zones",
         "imported_zones",
         "import_status",
+        "import_date",
         "task_status",
         "import_error_msg",
     ]

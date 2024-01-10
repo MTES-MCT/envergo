@@ -1,6 +1,7 @@
 import logging
 
 from django.db import transaction
+from django.utils import timezone
 
 from config.celery_app import app
 from envergo.geodata.models import STATUSES, Map
@@ -45,6 +46,7 @@ def process_shapefile_map(task, map_id):
 
     map.task_id = None
     map.imported_zones = nb_imported_zones
+    map.import_date = timezone.now()
     map.save()
 
 
