@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n %}
+
+{% block object-tools-items %}
+  {% if original.geometry %}
+    <li>
+      <a href="{% url 'admin:geodata_map_preview' original.id %}">Voir la carte</a>
+    </li>
+  {% endif %}
+  {% if has_absolute_url %}
+    <li>
+      <a href="{{ absolute_url }}" class="viewsitelink">{% translate "View on site" %}</a>
+    </li>
+  {% endif %}
+{% endblock %}

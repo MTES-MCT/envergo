@@ -2,31 +2,21 @@
 
 {% load static moulinette %}
 
-{% block title %}Carte{% endblock %}
+{% block title %}Carte {{ map }}{% endblock %}
 
-{% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
-    <button class="fr-breadcrumb__button"
-            aria-expanded="false"
-            aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
-    <div class="fr-collapse" id="breadcrumb-1">
-      <ol class="fr-breadcrumb__list">
-        <li>
-          <a class="fr-breadcrumb__link" href="/">Accueil</a>
-        </li>
-        <li>
-          <a class="fr-breadcrumb__link" aria-current="page">Carte</a>
-        </li>
-      </ol>
-    </div>
-  </nav>
-{% endblock %}
+{% block header %}{% endblock %}
 
-{% block article %}
-  <h1>{{ map }}</h1>
+{% block content %}
 
-  <figure class="fr-content-media" role="group">
-    <div class="ratio-1x1">
+  <div class="title-line">
+    <h1 class="fr-h6">Carte {{ map }}</h1>
+    <small>
+      <a href="{% url 'admin:geodata_map_change' map.id %}">Revenir à l'admin</a>
+    </small>
+  </div>
+
+  <figure class="fr-content-media fr-mt-0" role="group">
+    <div class="ratio-16x9">
       <div class="ratio-content">
         <div class="leaflet-container">
           <div id="map"></div>

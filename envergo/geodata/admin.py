@@ -248,7 +248,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
             path(
                 "<path:object_id>/preview/",
                 self.admin_site.admin_view(self.map_preview),
-                name="geodata_maps_map_detail",
+                name="geodata_map_preview",
             ),
         ]
         return custom_urls + urls
