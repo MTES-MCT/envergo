@@ -1,0 +1,5 @@
+{% load moulinette %}
+
+{% with template_key='autorisation_urba_'|add:autorisation_urba|add:'_lotissement' %}
+  {% moulinette_template template_key %}
+{% endwith %}

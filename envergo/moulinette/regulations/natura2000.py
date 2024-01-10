@@ -383,6 +383,15 @@ class AutorisationUrbanismeExcLotissement(AutorisationUrbanisme):
     choice_label = "Natura 2000 > Autorisation urba (exception lotissement)"
     form_class = AutorisationUrbanismeExcLotissementForm
 
+    CODES = ["soumis", "a_verifier", "non_soumis", "non_soumis_lotissement"]
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "a_verifier": RESULTS.a_verifier,
+        "non_soumis": RESULTS.non_soumis,
+        "non_soumis_lotissement": RESULTS.non_soumis,
+    }
+
     def get_result_data(self):
         autorisation_urba = self.catalog["autorisation_urba"]
         is_lotissement = self.catalog["is_lotissement"]
@@ -394,7 +403,7 @@ class AutorisationUrbanismeExcLotissement(AutorisationUrbanisme):
         # Check for the exception case
         autorisation_urba, is_lotissement = result_data
         if autorisation_urba == "pa" and is_lotissement == "oui":
-            result_code = "non_soumis"
+            result_code = "non_soumis_lotissement"
         else:
             result_code = super().get_result_code(autorisation_urba)
 
