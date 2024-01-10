@@ -629,6 +629,7 @@ class MoulinetteConfig(models.Model):
 
 TEMPLATE_KEYS = Choices(
     "autorisation_urba_pa",
+    "autorisation_urba_pa_lotissement",
     "autorisation_urba_pc",
     "autorisation_urba_amenagement_dp",
     "autorisation_urba_construction_dp",
