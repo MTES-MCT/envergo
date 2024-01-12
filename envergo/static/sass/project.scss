@@ -231,6 +231,10 @@ nav#evaluation-summary {
     display: none;
   }
 
+  #additional-forms {
+    margin-bottom: 1.5rem;
+  }
+
   #additional-forms.unbound {
     background-color: #fef7da;
     padding: 1rem;
@@ -1250,4 +1254,10 @@ main.contrast-bg {
 
 #top-bar {
   filter: drop-shadow(var(--raised-shadow));
+}
+
+.title-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
 }

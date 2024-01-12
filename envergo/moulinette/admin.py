@@ -86,7 +86,8 @@ class CriterionAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Evaluator"))
     def evaluator_column(self, obj):
-        return obj.evaluator.choice_label
+        label = obj.evaluator.choice_label if obj.evaluator else "ND"
+        return label
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None

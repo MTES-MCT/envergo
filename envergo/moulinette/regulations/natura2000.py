@@ -341,6 +341,10 @@ class AutorisationUrbanisme(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
     }
 
+    def get_result_data(self):
+        autorisation_urba = self.catalog["autorisation_urba"]
+        return autorisation_urba
+
     def get_result_code(self, result_data):
         """For this criterion, the result will depend on the department."""
 
@@ -356,6 +360,51 @@ class AutorisationUrbanisme(CriterionEvaluator):
 
         return result_code
 
+
+class AutorisationUrbanismeExcLotissementForm(
+    LotissementForm, AutorisationUrbanismeForm
+):
+    pass
+
+
+class AutorisationUrbanismeExcLotissement(AutorisationUrbanisme):
+    """Custom evaluator with a special rule that only applies in some depts.
+
+    In some departments (91 & 77 right now), this special rule applies:
+    « Tous les projets soumis à PA sont soumis à EIN sauf la catégorie la plus
+    fréquente et la plus impactante : les lotissements. »
+
+    This is a weird rule, but that's life.
+
+    In addition to the question 'Is the project subject to autorisation d'urabanisme,'
+    it is necessary to ask the supplementary question 'Is the project a lotissement?'
+    """
+
+    choice_label = "Natura 2000 > Autorisation urba (exception lotissement)"
+    form_class = AutorisationUrbanismeExcLotissementForm
+
+    CODES = ["soumis", "a_verifier", "non_soumis", "non_soumis_lotissement"]
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "a_verifier": RESULTS.a_verifier,
+        "non_soumis": RESULTS.non_soumis,
+        "non_soumis_lotissement": RESULTS.non_soumis,
+    }
+
     def get_result_data(self):
         autorisation_urba = self.catalog["autorisation_urba"]
-        return autorisation_urba
+        is_lotissement = self.catalog["is_lotissement"]
+        return autorisation_urba, is_lotissement
+
+    def get_result_code(self, result_data):
+        """For this criterion, the result will depend on the department."""
+
+        # Check for the exception case
+        autorisation_urba, is_lotissement = result_data
+        if autorisation_urba == "pa" and is_lotissement == "oui":
+            result_code = "non_soumis_lotissement"
+        else:
+            result_code = super().get_result_code(autorisation_urba)
+
+        return result_code
