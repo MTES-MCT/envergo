@@ -464,7 +464,7 @@ def test_required_action_interdit(rf, moulinette_url):
     body = email.alternatives[0][0]
 
     assert "ce projet est susceptible d'être interdit" in body
-    assert "Le porteur doit mener les études pour s'assurer que le projet" in body
+    assert "Celui-ci doit mener les études pour s'assurer que le projet" in body
     assert (
         "Pour s'assurer que le projet n'est pas soumis à la <b>Loi sur l'eau</b>"
         not in body
