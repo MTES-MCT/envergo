@@ -399,7 +399,7 @@ class ImpactZoneHumide(CriterionEvaluator):
 
 
 class ImpactZoneHumideStrict(CriterionEvaluator):
-    choice_label = "SAGE > Interdiction impact ZH (strict)"
+    choice_label = "SAGE > Interdiction impact ZH (carte stricte)"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
     zh_strict = True
