@@ -203,7 +203,7 @@ class Map(models.Model):
     import_status = models.CharField(
         _("Import status"), max_length=32, choices=STATUSES, null=True
     )
-    import_date = models.DateTimeField(_("Import date"), null=True, blank=True)
+    import_date = models.DateTimeField(_("Latest status date"), null=True, blank=True)
     task_id = models.CharField(
         _("Celery task id"), max_length=256, null=True, blank=True
     )
