@@ -4,13 +4,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import (
-    CriterionEvaluator,
-    Map,
-    MapPolygon,
-    RequiredAction,
-    Stake,
-)
+from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 BLUE = "blue"
 LIGHTBLUE = "lightblue"
@@ -149,15 +143,6 @@ class ZoneHumide(CriterionEvaluator):
 
         return criterion_map
 
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.SOUMIS,
-                text="n'impacte pas plus de 100 m² de zone humide",
-            )
-        return action
-
 
 # Only for legacy purpose and not breaking existing data
 class ZoneHumide44(ZoneHumide):
@@ -222,15 +207,6 @@ class ZoneInondable(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
-
-    def required_action(self):
-        action = None
-        if self.result == RESULTS.action_requise:
-            action = RequiredAction(
-                stake=Stake.SOUMIS,
-                text="n'impacte pas plus de 200m² de zone inondable",
-            )
-        return action
 
 
 class ZoneInondable44(ZoneInondable):

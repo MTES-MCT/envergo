@@ -1,0 +1,29 @@
+<p>
+  <strong>Pourquoi le projet n'est-il pas concerné ?</strong>
+</p>
+
+{% if criterion.evaluator_settings.threshold == 0 %}
+  <p>
+    Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide.
+  </p>
+{% else %}
+  <p>
+    Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre les projets impactant plus de {{ criterion.evaluator_settings.threshold }} m² de zone humide.
+  </p>
+{% endif %}
+
+{% if criterion.evaluator.zh_strict %}
+  <p>
+    Au vu des informations saisies, le projet est hors des zones humides référencées dans le règlement du SAGE. Il n’est donc pas concerné par cette disposition.
+  </p>
+{% else %}
+  <p>Le projet est hors d'une zone humide. Il n’est donc pas concerné par cette disposition.</p>
+{% endif %}
+
+<p>
+  <strong>Quel impact environnemental ?</strong>
+</p>
+
+<p>
+  Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles permettent le développement de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et réduisent les impacts des inondations par leur effet « tampon » sur le niveau des rivières.
+</p>

@@ -1,0 +1,64 @@
+<p>
+  <strong>Action requise :</strong>
+</p>
+
+<p>Démontrer que le projet {{ criterion.required_action }}.</p>
+
+<p>
+  <strong>Pourquoi cette action est-elle requise ?</strong>
+</p>
+
+{# djlint:off #}
+<p>
+  Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre les projets impactant plus de {{ criterion.evaluator_settings.threshold }} m² de
+  zone humide{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
+</p>
+{# djlint:on #}
+
+<p>
+  Le projet se situe dans une zone humide référencée. Au vu des informations saisies, il est possible que plus de {{ criterion.evaluator_settings.threshold }} m² de la zone humide référencée soient impactés par le projet, qui serait alors <strong>interdit</strong>.
+</p>
+
+{% if criterion.evaluator_settings.exceptions %}
+  <p>
+    <strong>Quelles sont les exceptions à cette interdiction ?</strong>
+  </p>
+
+  <p>En cas d’impact avéré, le projet peut être tout de même autorisé à certaines conditions, et en particulier :</p>
+
+  {{ criterion.evaluator_settings.exceptions|safe }}
+
+  {% if regulation.perimeter.rules_url %}
+    <p>
+      Le porteur doit consulter le <a href="{{ regulation.perimeter.rules_url }}"
+    target="_blank"
+    rel="noopener">texte officiel et complet du règlement du SAGE</a>.
+    </p>
+  {% endif %}
+{% endif %}
+
+{% if not criterion.evaluator.zh_strict %}
+  <p>
+    <strong>Comment déterminer si le projet est en zone humide ?</strong>
+  </p>
+
+  <p>
+    Toute zone humide, <em>même non inventoriée</em>, est soumise à cette règle du SAGE.
+  </p>
+
+  <p>
+    La recherche de zones humides se fait nécessairement par une étude de terrain, confiée en pratique à un bureau d'études spécialisé. Celui-ci examine les espèces végétales présentes, le type de sol, et le profil d'humidité sous la surface.
+  </p>
+
+  <p>
+    Les cartographies de zones humides potentielles servent d'alerte et d'aide aux porteurs de projet et administrations dans la recherche de zones humides.
+  </p>
+{% endif %}
+
+<p>
+  <strong>Quel impact environnemental ?</strong>
+</p>
+
+<p>
+  Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles permettent le développement de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et réduisent les impacts des inondations par leur effet « tampon » sur le niveau des rivières.
+</p>

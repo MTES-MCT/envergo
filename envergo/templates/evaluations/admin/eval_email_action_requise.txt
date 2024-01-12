@@ -3,13 +3,14 @@
 {% block detail %}
 
 {% if required_actions_interdit %}
-Au vu des informations qui nous ont été transmises, il apparaît que ce projet est susceptible d'être interdit. Une action du porteur de projet est requise.
+Au vu des informations qui nous ont été transmises, il apparaît que ce projet est susceptible d'être interdit au titre du règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux).
+
+Une action du porteur de projet est requise. Celui-ci doit mener les études pour s'assurer que le projet :
 {% else %}
 Au vu des informations qui nous ont été transmises, il apparaît qu'une action du porteur de projet est requise.
 {% endif %}
 
 {% if required_actions_interdit %}
-Le porteur doit mener les études pour s'assurer que le projet :
 {% for action in required_actions_interdit %}
  - {{ action }}
 {% endfor %}

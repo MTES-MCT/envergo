@@ -1,0 +1,46 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+
+  {% if settings_form %}
+    <ul class="messagelist">
+
+      {% if settings_form.is_valid %}
+        <li>Ce critère nécessite de spécifier des paramètres d'évaluateur, et est correctement configuré.</li>
+      {% else %}
+
+        {% if settings_form.is_bound %}
+          <li class="error">
+            Ce critère nécessite de spécifier des paramètres d'évaluateur et n'est pas correctement configuré.
+            <ul>
+              {% for field in settings_form %}
+                <li>
+                  <strong>{{ field.name }}</strong> : {{ field.label }}
+                  -> {{ field.errors.0 }}
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+
+        {% else %}
+          <li class="warning">
+            Ce critère nécessite de spécifier des paramètres d'évaluateur :
+            <ul>
+              {% for field in settings_form %}
+                <li>
+                  <strong>{{ field.name }}</strong> : {{ field.label }}
+                  -> {{ field.help_text }}
+                </li>
+              {% endfor %}
+            </ul>
+
+          </li>
+        {% endif %}
+
+      {% endif %}
+
+    </ul>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}

@@ -3,7 +3,7 @@
 {% block detail %}
 Au vu des informations qui nous ont été transmises, il apparaît que ce projet est interdit.
 
-Ceci en raison d'un article du règlement de Schéma d'Aménagement et de Gestion des Eaux (SAGE) qui interdit les impacts sur certaines zones humides référencées.
+Ceci en raison d'un article du règlement de Schéma d'Aménagement et de Gestion des Eaux (SAGE) qui interdit certains impacts sur zones humides.
 
 {% if is_icpe %}{% include 'evaluations/admin/_icpe_mention.txt' %}{% endif %}
 {% if rr_mention_md %}{{ rr_mention_md }}{% endif %}

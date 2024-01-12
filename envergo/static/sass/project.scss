@@ -268,6 +268,7 @@ section.regulation {
   h2 {
     display: flex;
     align-items: center;
+    line-height: 2rem;
 
     &:before {
       content: "• ";
@@ -276,6 +277,11 @@ section.regulation {
     span.content {
       margin-right: .5em;
       white-space: nowrap;
+
+      .undertitle {
+        font-weight: normal;
+        font-size: 65%;
+      }
     }
 
     span.fr-tag {

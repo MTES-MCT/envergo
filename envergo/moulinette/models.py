@@ -375,6 +375,9 @@ class Criterion(models.Model):
         _("Activation distance"), default=0
     )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
+    evaluator_settings = models.JSONField(
+        _("Evaluator settings"), default=dict, blank=True
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -414,7 +417,7 @@ class Criterion(models.Model):
 
     def evaluate(self, moulinette, distance):
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance)
+        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
 
     @property
@@ -462,13 +465,24 @@ class Criterion(models.Model):
                 "Criterion must be evaluated before accessing the form class."
             )
 
-        return self._evaluator.get_form_class()
+        return self._evaluator.form_class
 
     def get_form(self):
         if not hasattr(self, "_evaluator"):
             raise RuntimeError("Criterion must be evaluated before accessing the form.")
 
         return self._evaluator.get_form()
+
+    def get_settings_form(self):
+        settings_form_class = getattr(self.evaluator, "settings_form_class", None)
+        if settings_form_class:
+            if self.evaluator_settings:
+                form = settings_form_class(self.evaluator_settings)
+            else:
+                form = settings_form_class()
+        else:
+            form = None
+        return form
 
 
 class Perimeter(models.Model):

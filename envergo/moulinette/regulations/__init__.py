@@ -126,12 +126,19 @@ class CriterionEvaluator(ABC):
     # Associate a result code with a single result
     RESULT_MATRIX = {}
 
-    def __init__(self, moulinette, distance):
+    # The form class to use to ask the end user for additional data
+    form_class = None
+
+    # The form class to use to ask the admin for necessary settings
+    settings_form_class = None
+
+    def __init__(self, moulinette, distance, settings):
         """Initialize the evaluator.
 
         Args:
             moulinette (Moulinette): The moulinette instance.
             distance (int): The distance to the queried coordinates.
+            settings (dict): Custom settings required for computing the result, set in the admin.
         """
         if not hasattr(self, "slug"):
             raise RuntimeError(
@@ -140,6 +147,7 @@ class CriterionEvaluator(ABC):
         self.moulinette = moulinette
         self.distance = distance
         self.moulinette.catalog.update(self.get_catalog_data())
+        self.settings = settings
 
     @property
     def catalog(self):
@@ -177,17 +185,37 @@ class CriterionEvaluator(ABC):
         return result
 
     def evaluate(self):
+        """Perform the criterion check.
+
+        This method is called once and saves the result codes.
+
+        The result code is a unique code used to select the template to render.
+        The result is a somewhat standard value like "non_soumis", "action_requise", etc.
+        """
+
+        # Before performing the check, we need to make sure we have all the data
+        # we need.
+        # We might require additional data:
+        # - from the user, using an "additional data" form
+        # - from the admin, using a "settings" form
         form = self.get_form()
-        if (form and form.is_valid()) or form is None:
-            result_data = self.get_result_data()
-            result_code = self.get_result_code(result_data)
-            result = self.get_result(result_code)
-            self._result_code, self._result = result_code, result
-        else:
+        settings_form = self.get_settings_form()
+        if not all(
+            (
+                form is None or form.is_valid(),
+                settings_form is None or settings_form.is_valid(),
+            )
+        ):
             self._result_code, self._result = (
                 RESULTS.non_disponible,
                 RESULTS.non_disponible,
             )
+            return
+
+        result_data = self.get_result_data()
+        result_code = self.get_result_code(result_data)
+        result = self.get_result(result_code)
+        self._result_code, self._result = result_code, result
 
     @property
     def result_code(self):
@@ -221,13 +249,21 @@ class CriterionEvaluator(ABC):
         """Returns a `Map` object."""
         return None
 
-    def get_form_class(self):
-        form_class = getattr(self, "form_class", None)
-        return form_class
-
     def get_form(self):
-        if hasattr(self, "form_class"):
+        form_class = getattr(self, "form_class", None)
+        if form_class:
             form = self.form_class(self.moulinette.raw_data)
+        else:
+            form = None
+        return form
+
+    def get_settings_form(self):
+        settings_form_class = getattr(self, "settings_form_class", None)
+        if settings_form_class:
+            if self.settings:
+                form = self.settings_form_class(self.settings)
+            else:
+                form = self.settings_form_class()
         else:
             form = None
         return form
