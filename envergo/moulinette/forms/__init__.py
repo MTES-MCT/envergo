@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
 from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.utils import compute_surfaces
 
 
 class MoulinetteForm(forms.Form):
@@ -45,24 +46,12 @@ class MoulinetteForm(forms.Form):
         if self.errors:
             return data
 
+        data.update(compute_surfaces(data))
         created_surface = data.get("created_surface")
-        existing_surface = data.get("existing_surface")
         final_surface = data.get("final_surface")
 
-        # The user MUST provide the total final surface
-        # However, in a previous version of the form, the user
-        # would provide the existing surface and the created surface, and
-        # the final surface was computed.
-        # So we have to accomodate for bookmarked simulation with the old
-        # data format
-
-        # Both are missing
-        if existing_surface is None and final_surface is None:
+        if final_surface is None:
             self.add_error("final_surface", _("This field is required"))
-
-        # Old version, project surface is missing
-        elif final_surface is None:
-            data["final_surface"] = created_surface + existing_surface
 
         # New version, project surface is provided
         # If existing_surface is missing, we compute it
@@ -73,9 +62,6 @@ class MoulinetteForm(forms.Form):
                     "final_surface",
                     _("The total surface must be greater than the created surface"),
                 )
-            else:
-                if existing_surface is None:
-                    data["existing_surface"] = final_surface - created_surface
         return data
 
 
