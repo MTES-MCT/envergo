@@ -2,7 +2,16 @@
 
 <section class="regulation fr-mb-5w" id="regulation_{{ regulation.slug }}">
   <h2>
-    <span class="content">{{ regulation.title }}</span> {% result_tag regulation.result %}
+    <span class="content">
+      {{ regulation.title }}
+      {# This is a hack that should be removed one day #}
+      {% if regulation.regulation == "eval_env" and regulation.result == "non_soumis" %}
+        <br />
+        <span class="undertitle">(rubrique 39)</span>
+      {% endif %}
+    </span>
+    {% result_tag regulation.result %}
+
   </h2>
 
   {% if regulation.display_perimeter %}
