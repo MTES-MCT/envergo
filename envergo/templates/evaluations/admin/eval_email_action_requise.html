@@ -17,8 +17,6 @@
   {% endif %}
 
   {% if required_actions_interdit %}
-    <p>Le porteur doit mener les études pour s'assurer que le projet :</p>
-
     <ul>
       {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
     </ul>
