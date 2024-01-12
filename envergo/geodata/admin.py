@@ -1,9 +1,12 @@
 from celery.result import AsyncResult
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
@@ -79,6 +82,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         "expected_zones",
         "imported_zones",
         "import_status",
+        "import_date",
         "task_status",
         "import_error_msg",
     ]
@@ -238,6 +242,25 @@ class MapAdmin(gis_admin.GISModelAdmin):
         except (TypeError, AttributeError, IndexError, KeyError):
             status = "ND"
         return status
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/preview/",
+                self.admin_site.admin_view(self.map_preview),
+                name="geodata_map_preview",
+            ),
+        ]
+        return custom_urls + urls
+
+    def map_preview(self, request, object_id):
+        map = self.get_object(request, unquote(object_id))
+        context = {
+            "map": map,
+        }
+        response = TemplateResponse(request, "geodata/admin/map_preview.html", context)
+        return response
 
 
 @admin.register(Zone)

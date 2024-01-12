@@ -1251,3 +1251,9 @@ main.contrast-bg {
 #top-bar {
   filter: drop-shadow(var(--raised-shadow));
 }
+
+.title-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
