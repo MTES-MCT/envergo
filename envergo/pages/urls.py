@@ -68,6 +68,12 @@ urlpatterns = [
             ]
         ),
     ),
+
+    path(
+        _("services-ads/"),
+        TemplateView.as_view(template_name="pages/services-ads.html"),
+        name="services_ads",
+    ),
     path(
         _("map/"),
         TemplateView.as_view(template_name="pages/map.html"),
