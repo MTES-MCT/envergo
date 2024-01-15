@@ -45,7 +45,10 @@ class MoulinetteMixin:
             moulinette_data = self.request.POST
 
         if moulinette_data:
-            kwargs.update({"data": moulinette_data})
+            # Let's make sure all surface values (created, existing, final) are available
+            mutable_data = moulinette_data.copy()
+            mutable_data.update(compute_surfaces(moulinette_data))
+            kwargs.update({"data": mutable_data})
 
         return kwargs
 
@@ -133,11 +136,9 @@ class MoulinetteMixin:
 
     def get_additional_forms(self, moulinette):
         form_classes = moulinette.additional_form_classes()
-        kwargs = self.get_form_kwargs()
-        kwargs["data"].update(compute_surfaces(kwargs["data"]))
         forms = []
         for Form in form_classes:
-            form = Form(**kwargs)
+            form = Form(**self.get_form_kwargs())
             if form.fields:
                 form.is_valid()
                 forms.append(form)

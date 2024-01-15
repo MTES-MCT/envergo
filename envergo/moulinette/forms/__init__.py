@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
 from envergo.moulinette.regulations import CriterionEvaluator
-from envergo.moulinette.utils import compute_surfaces
 
 
 class MoulinetteForm(forms.Form):
@@ -46,7 +45,6 @@ class MoulinetteForm(forms.Form):
         if self.errors:
             return data
 
-        data.update(compute_surfaces(data))
         created_surface = data.get("created_surface")
         final_surface = data.get("final_surface")
 

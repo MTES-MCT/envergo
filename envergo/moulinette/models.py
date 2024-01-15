@@ -18,7 +18,6 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
-from envergo.moulinette.utils import compute_surfaces
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -690,7 +689,6 @@ class Moulinette:
 
     def __init__(self, data, raw_data):
         self.raw_data = raw_data
-        self.raw_data.update(compute_surfaces(raw_data))
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
         self.department = self.get_department()
