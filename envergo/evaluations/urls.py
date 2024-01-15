@@ -14,6 +14,7 @@ from envergo.evaluations.views import (
     RequestEvalWizardStep3,
     RequestEvalWizardStep3Upload,
     RequestSuccess,
+    SelfDeclaration,
 )
 
 urlpatterns = [
@@ -75,5 +76,10 @@ urlpatterns = [
         "<slug:reference>/",
         EvaluationDetail.as_view(),
         name="evaluation_detail",
+    ),
+    path(
+        "<slug:reference>/conformite/",
+        SelfDeclaration.as_view(),
+        name="self_declaration",
     ),
 ]

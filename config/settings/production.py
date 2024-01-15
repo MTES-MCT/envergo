@@ -234,3 +234,5 @@ CELERY_CACHE_BACKEND = "django-cache"
 # ------------------------------------------------------------------------------
 
 ENV_NAME = env("ENV_NAME")
+
+SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID", "mRPz2Q")
