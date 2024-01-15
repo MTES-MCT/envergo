@@ -13,6 +13,7 @@ from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
 from envergo.moulinette.models import FakeMoulinette, Moulinette
+from envergo.moulinette.utils import compute_surfaces
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -44,7 +45,10 @@ class MoulinetteMixin:
             moulinette_data = self.request.POST
 
         if moulinette_data:
-            kwargs.update({"data": moulinette_data})
+            # Let's make sure all surface values (created, existing, final) are available
+            mutable_data = moulinette_data.copy()
+            mutable_data.update(compute_surfaces(moulinette_data))
+            kwargs.update({"data": mutable_data})
 
         return kwargs
 
@@ -132,10 +136,9 @@ class MoulinetteMixin:
 
     def get_additional_forms(self, moulinette):
         form_classes = moulinette.additional_form_classes()
-        kwargs = self.get_form_kwargs()
         forms = []
         for Form in form_classes:
-            form = Form(**kwargs)
+            form = Form(**self.get_form_kwargs())
             if form.fields:
                 form.is_valid()
                 forms.append(form)

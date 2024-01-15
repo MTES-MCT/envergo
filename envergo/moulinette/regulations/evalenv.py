@@ -32,7 +32,6 @@ class EmpriseForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         final_surface = int(self.data["final_surface"])
-
         if final_surface < ZONE_U_THRESHOLD:
             del self.fields["zone_u"]
 
@@ -124,13 +123,7 @@ class TerrainAssietteForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.data.get("final_surface", None):
-            final_surface = int(self.data["final_surface"])
-        else:
-            created_surface = int(self.data["created_surface"])
-            existing_surface = int(self.data["existing_surface"])
-            final_surface = created_surface + existing_surface
-
+        final_surface = int(self.data["final_surface"])
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
 

@@ -1,4 +1,5 @@
 from envergo.moulinette.forms import MoulinetteForm
+from envergo.moulinette.utils import compute_surfaces
 
 
 def test_total_surface_is_inferred():
@@ -9,6 +10,7 @@ def test_total_surface_is_inferred():
         "lng": 1.234567,
         "lat": 1.234567,
     }
+    data.update(compute_surfaces(data))
 
     form = MoulinetteForm(data)
     assert form.is_valid()
@@ -26,6 +28,7 @@ def test_existing_surface_is_inferred():
         "lng": 1.234567,
         "lat": 1.234567,
     }
+    data.update(compute_surfaces(data))
 
     form = MoulinetteForm(data)
     assert form.is_valid()
@@ -42,6 +45,7 @@ def test_existing_surface_or_final_surface_is_required():
         "lng": 1.234567,
         "lat": 1.234567,
     }
+    data.update(compute_surfaces(data))
 
     form = MoulinetteForm(data)
     assert not form.is_valid()
@@ -56,6 +60,7 @@ def test_existing_surface_can_be_zero():
         "lng": 1.234567,
         "lat": 1.234567,
     }
+    data.update(compute_surfaces(data))
 
     form = MoulinetteForm(data)
     assert form.is_valid()
@@ -73,7 +78,8 @@ def test_existing_surface_cannot_be_negative():
         "lng": 1.234567,
         "lat": 1.234567,
     }
+    data.update(compute_surfaces(data))
 
     form = MoulinetteForm(data)
     assert not form.is_valid()
-    assert "final_surface" in form.errors
+    assert "existing_surface" in form.errors
