@@ -1261,3 +1261,28 @@ main.contrast-bg {
   align-items: baseline;
   justify-content: space-between;
 }
+
+#self-declaration-cta {
+  margin: 1.5rem auto;
+  padding: 1.5rem 0;
+  max-width: 30em;
+  text-align: center;
+  font-style: italic;
+  border-top: 1px solid #E4E4E4;
+  border-bottom: 1px solid #E4E4E4;
+
+  h2 {
+    margin-bottom: 1rem;
+
+    .icon {
+      font-style: normal;
+    }
+  }
+
+  .button-with-help {
+    text-align: left;
+    display: inline-block;
+    font-style: normal;
+  }
+
+}

@@ -291,6 +291,23 @@ class Evaluation(models.Model):
     def get_evaluation_email(self):
         return EvaluationEmail(self)
 
+    def is_eligible_to_self_declaration(self):
+        moulinette = self.get_moulinette()
+        for regulation in moulinette.regulations:
+            if regulation.result in (
+                RESULTS.interdit,
+                RESULTS.systematique,
+                RESULTS.cas_par_cas,
+                RESULTS.soumis,
+                RESULTS.action_requise,
+                RESULTS.a_verifier,
+                RESULTS.iota_a_verifier,
+            ):
+                eligible = True
+                break
+            eligible = False
+        return eligible
+
 
 class EvaluationEmail:
     """A custom object dedicated to handling "avis réglementaires" emails for evaluations."""
