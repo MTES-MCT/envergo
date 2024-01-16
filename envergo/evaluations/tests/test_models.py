@@ -60,6 +60,8 @@ def test_call_to_action_action(moulinette_url):
     moulinette = evaluation.get_moulinette()
     regulation = RegulationFactory()
 
+    assert not evaluation.is_icpe
+
     moulinette.regulations = [Mock(regulation, wraps=regulation, result="non_soumis")]
     assert moulinette.result == "non_soumis"
     assert not evaluation.is_eligible_to_self_declaration()
@@ -77,3 +79,7 @@ def test_call_to_action_action(moulinette_url):
     moulinette.regulations = [Mock(regulation, wraps=regulation, result="interdit")]
     assert moulinette.result == "interdit"
     assert evaluation.is_eligible_to_self_declaration()
+
+    evaluation.is_icpe = True
+    evaluation.save()
+    assert not evaluation.is_eligible_to_self_declaration()

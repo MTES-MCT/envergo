@@ -296,6 +296,10 @@ class Evaluation(models.Model):
         return EvaluationEmail(self)
 
     def is_eligible_to_self_declaration(self):
+        """Should we display the "self declare" call to action?"""
+        if self.is_icpe:
+            return False
+
         moulinette = self.get_moulinette()
         for regulation in moulinette.regulations:
             if regulation.result in (
