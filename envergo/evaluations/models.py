@@ -277,8 +277,10 @@ class Evaluation(models.Model):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.forms import MoulinetteForm
         from envergo.moulinette.models import Moulinette
+        from envergo.moulinette.utils import compute_surfaces
 
         raw_params = self.moulinette_params
+        raw_params.update(compute_surfaces(raw_params))
         form = MoulinetteForm(raw_params)
         form.is_valid()
         params = form.cleaned_data
