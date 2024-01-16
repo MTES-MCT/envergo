@@ -5,9 +5,11 @@ from envergo.evaluations.tests.factories import CriterionFactory, EvaluationFact
 
 pytestmark = pytest.mark.django_db
 
+# Here, we test the legacy format of the evaluations, with criteria results set in admin
+# Now, we use the moulinette to compute the results.
+
 
 def test_evaluation_status_soumis():
-
     evaluation = EvaluationFactory(result=None, criterions=[])
     CriterionFactory(
         evaluation=evaluation,
@@ -27,7 +29,6 @@ def test_evaluation_status_soumis():
 
 
 def test_evaluation_status_soumis_2():
-
     evaluation = EvaluationFactory(result=None, criterions=[])
     CriterionFactory(
         evaluation=evaluation,
@@ -45,7 +46,6 @@ def test_evaluation_status_soumis_2():
 
 
 def test_evaluation_status_soumis_3():
-
     evaluation = EvaluationFactory(result=None, criterions=[])
     CriterionFactory(
         evaluation=evaluation,
@@ -65,7 +65,6 @@ def test_evaluation_status_soumis_3():
 
 
 def test_evaluation_status_non_soumis():
-
     evaluation = EvaluationFactory(result=None, criterions=[])
     CriterionFactory(
         evaluation=evaluation,
@@ -85,7 +84,6 @@ def test_evaluation_status_non_soumis():
 
 
 def test_evaluation_status_action_requise():
-
     evaluation = EvaluationFactory(result=None, criterions=[])
     CriterionFactory(
         evaluation=evaluation,
