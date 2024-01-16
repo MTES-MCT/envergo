@@ -1,6 +1,7 @@
 import logging
 import secrets
 import uuid
+from functools import lru_cache
 from os.path import splitext
 from urllib.parse import urlparse
 
@@ -271,6 +272,7 @@ class Evaluation(models.Model):
         department = Department.objects.filter(geometry__contains=coords).first()
         return department.moulinette_config if department else None
 
+    @lru_cache
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.forms import MoulinetteForm
