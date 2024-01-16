@@ -284,12 +284,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             return response
 
         moulinette = evaluation.get_moulinette()
-        txt_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.txt"
-        )
-        html_mail_template = (
-            f"evaluations/admin/rr_email_{moulinette.loi_sur_leau.result}.html"
-        )
+        txt_mail_template = f"evaluations/admin/rr_email_{moulinette.result}.txt"
+        html_mail_template = f"evaluations/admin/rr_email_{moulinette.result}.html"
 
         if request.method == "POST":
             latest_log = (
