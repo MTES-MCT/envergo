@@ -163,6 +163,10 @@
 
   {% endfor %}
 
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/_self_declaration_cta.html' %}
+  {% endif %}
+
   <div class="fr-alert fr-alert--info fr-my-5w">
     <p>
       EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
