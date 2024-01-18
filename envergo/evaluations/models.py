@@ -354,6 +354,9 @@ class EvaluationEmail:
             "evaluation_link": request.build_absolute_uri(
                 evaluation.get_absolute_url()
             ),
+            "self_declaration_link": request.build_absolute_uri(
+                reverse("self_declaration", args=[evaluation.reference])
+            ),
             "to_be_transmitted": to_be_transmitted,
             "icpe_not_transmitted": icpe_not_transmitted,
             "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
