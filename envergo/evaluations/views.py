@@ -546,6 +546,16 @@ class RequestSuccess(TemplateView):
 class SelfDeclaration(EvaluationDetailMixin, DetailView):
     template_name = "evaluations/self_declaration.html"
 
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+        evaluation = self.object
+        metadata = {
+            "reference": evaluation.reference,
+            "source": request.GET.get("source", ""),
+        }
+        log_event("compliance", "form-visit", request, **metadata)
+        return res
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["tally_form_id"] = settings.SELF_DECLARATION_FORM_ID
