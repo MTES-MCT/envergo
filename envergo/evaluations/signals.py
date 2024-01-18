@@ -85,3 +85,6 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
 
     if warn_of_email_error:
         warn_admin_of_email_error.delay(status.id)
+
+    if event_name == "clicked":
+        logger.info(event)
