@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from envergo.analytics.utils import log_event
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
     EVAL_RESULTS,
@@ -288,6 +289,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         html_mail_template = f"evaluations/admin/rr_email_{moulinette.result}.html"
 
         if request.method == "POST":
+            # Let's make sure the user doesn't send the same email twice
             latest_log = (
                 RegulatoryNoticeLog.objects.filter(evaluation=evaluation)
                 .order_by("-sent_at")
@@ -353,11 +355,22 @@ class EvaluationAdmin(admin.ModelAdmin):
                 moulinette_result=moulinette.result_data(),
                 message_id=message_id,
             )
+
+            # Update user related data to crisp
             url = reverse("eval_admin_short_url", args=[evaluation.reference])
             full_url = request.build_absolute_uri(url)
             crisp.update_contacts_data(
                 eval_email.to + eval_email.cc, evaluation.reference, full_url
             )
+
+            # Log the analytics events
+            if evaluation.is_eligible_to_self_declaration():
+                metadata = {
+                    "reference": evaluation.reference,
+                    "message_id": message_id,
+                }
+                log_event("compliance", "email-sent", request, **metadata)
+
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             response = HttpResponseRedirect(url)
         else:
