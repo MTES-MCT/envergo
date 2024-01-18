@@ -27,5 +27,21 @@
     window.addEventListener("load", function() {
       Tally.loadEmbeds();
     });
+
+    window.addEventListener('message', (e) => {
+      if (e?.data?.includes('Tally.FormSubmitted')) {
+        const payload = JSON.parse(e.data).payload;
+        let url = EVENTS_URL;
+        let token = CSRF_TOKEN;
+        let headers = { "X-CSRFToken": token };
+        let data = new FormData();
+        data.append("category", "compliance");
+        data.append("action", "form-submit");
+        data.append("metadata", JSON.stringify({
+          "reference": "{{ object.reference }}"
+        }));
+        fetch(url, { headers: headers, body: data, method: 'POST' });
+      }
+    });
   </script>
 {% endblock %}
