@@ -61,4 +61,8 @@
       </td>
     </tr>
   </table>
+
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/admin/_self_declaration_cta.html' %}
+  {% endif %}
 {% endblock %}
