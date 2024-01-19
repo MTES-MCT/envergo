@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.contrib import messages
@@ -540,3 +541,25 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
 
 class RequestSuccess(TemplateView):
     template_name = "evaluations/request_success.html"
+
+
+class SelfDeclaration(EvaluationDetailMixin, DetailView):
+    template_name = "evaluations/self_declaration.html"
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+        evaluation = self.object
+        metadata = {
+            "reference": evaluation.reference,
+            "source": request.GET.get("source", ""),
+        }
+        log_event("compliance", "form-visit", request, **metadata)
+        return res
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tally_form_id"] = settings.SELF_DECLARATION_FORM_ID
+        context["reference"] = self.object.reference
+        context["address"] = quote_plus(self.object.address, safe="")
+        context["application_number"] = self.object.application_number
+        return context

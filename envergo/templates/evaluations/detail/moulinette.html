@@ -154,10 +154,18 @@
     </div>
   {% endif %}
 
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/_self_declaration_cta.html' %}
+  {% endif %}
+
   {% for regulation in moulinette.regulations %}
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
 
   {% endfor %}
+
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/_self_declaration_cta.html' %}
+  {% endif %}
 
   <div class="fr-alert fr-alert--info fr-my-5w">
     <p>

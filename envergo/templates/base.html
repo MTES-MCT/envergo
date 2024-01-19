@@ -52,6 +52,10 @@
               type="text/javascript"
               nomodule
               src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.nomodule.min.js' %}"></script>
+      <script>
+        var EVENTS_URL = "{% url 'events' %}";
+        var CSRF_TOKEN = '{{ csrf_token }}';
+      </script>
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
       {% include '_chatbox.html' %}

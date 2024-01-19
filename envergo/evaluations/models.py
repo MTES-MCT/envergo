@@ -1,6 +1,7 @@
 import logging
 import secrets
 import uuid
+from functools import lru_cache
 from os.path import splitext
 from urllib.parse import urlparse
 
@@ -271,12 +272,15 @@ class Evaluation(models.Model):
         department = Department.objects.filter(geometry__contains=coords).first()
         return department.moulinette_config if department else None
 
+    @lru_cache
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.forms import MoulinetteForm
         from envergo.moulinette.models import Moulinette
+        from envergo.moulinette.utils import compute_surfaces
 
         raw_params = self.moulinette_params
+        raw_params.update(compute_surfaces(raw_params))
         form = MoulinetteForm(raw_params)
         form.is_valid()
         params = form.cleaned_data
@@ -290,6 +294,27 @@ class Evaluation(models.Model):
 
     def get_evaluation_email(self):
         return EvaluationEmail(self)
+
+    def is_eligible_to_self_declaration(self):
+        """Should we display the "self declare" call to action?"""
+        if self.is_icpe:
+            return False
+
+        moulinette = self.get_moulinette()
+        for regulation in moulinette.regulations:
+            if regulation.result in (
+                RESULTS.interdit,
+                RESULTS.systematique,
+                RESULTS.cas_par_cas,
+                RESULTS.soumis,
+                RESULTS.action_requise,
+                RESULTS.a_verifier,
+                RESULTS.iota_a_verifier,
+            ):
+                eligible = True
+                break
+            eligible = False
+        return eligible
 
 
 class EvaluationEmail:
@@ -328,6 +353,9 @@ class EvaluationEmail:
             "moulinette": moulinette,
             "evaluation_link": request.build_absolute_uri(
                 evaluation.get_absolute_url()
+            ),
+            "self_declaration_link": request.build_absolute_uri(
+                reverse("self_declaration", args=[evaluation.reference])
             ),
             "to_be_transmitted": to_be_transmitted,
             "icpe_not_transmitted": icpe_not_transmitted,

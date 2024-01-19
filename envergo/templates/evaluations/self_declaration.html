@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% load evaluations static l10n %}
+
+{% block title %}Avis réglementaire{% endblock %}
+
+{% block article %}
+  <h1>Mon projet est déjà conforme</h1>
+
+  <noscript>
+    <p>Cette page nécessite un navigateur avec Javascript activé.</p>
+  </noscript>
+
+  <iframe data-tally-src="https://tally.so/embed/{{ tally_form_id }}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&ref_envergo={{ reference }}&adresse={{ address }}&num_demande_permis={{ application_number }}"
+          loading="lazy"
+          width="100%"
+          height="500"
+          frameborder="0"
+          marginheight="0"
+          marginwidth="0"
+          title="Mon projet est déjà conforme"></iframe>
+{% endblock %}
+
+{% block bottom_js %}
+  <script defer src="https://tally.so/widgets/embed.js"></script>
+  <script>
+    window.addEventListener("load", function() {
+      Tally.loadEmbeds();
+    });
+
+    window.addEventListener('message', (e) => {
+      if (e?.data?.includes('Tally.FormSubmitted')) {
+        const payload = JSON.parse(e.data).payload;
+        let url = EVENTS_URL;
+        let token = CSRF_TOKEN;
+        let headers = { "X-CSRFToken": token };
+        let data = new FormData();
+        data.append("category", "compliance");
+        data.append("action", "form-submit");
+        data.append("metadata", JSON.stringify({
+          "reference": "{{ object.reference }}"
+        }));
+        fetch(url, { headers: headers, body: data, method: 'POST' });
+      }
+    });
+  </script>
+{% endblock %}

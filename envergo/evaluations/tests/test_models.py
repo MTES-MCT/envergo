@@ -1,104 +1,85 @@
+from unittest.mock import Mock
+from urllib.parse import urlencode
+
 import pytest
 
-from envergo.evaluations.models import CRITERION_RESULTS, RESULTS
-from envergo.evaluations.tests.factories import CriterionFactory, EvaluationFactory
+from envergo.evaluations.tests.factories import EvaluationFactory
+from envergo.geodata.conftest import loire_atlantique_department  # noqa
+from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    MoulinetteConfigFactory,
+    PerimeterFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
 
-def test_evaluation_status_soumis():
-
-    evaluation = EvaluationFactory(result=None, criterions=[])
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="rainwater_runoff",
-        result=CRITERION_RESULTS.soumis,
+@pytest.fixture(autouse=True)
+def moulinette_config(france_map, loire_atlantique_department):  # noqa
+    MoulinetteConfigFactory(
+        department=loire_atlantique_department,
+        is_activated=True,
+        ddtm_water_police_email="ddtm_email_test@example.org",
+        ddtm_n2000_email="ddtm_n2000@example.org",
+        dreal_eval_env_email="dreal_evalenv@example.org",
     )
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="flood_zone",
-        result=CRITERION_RESULTS.non_soumis,
+    regulation = RegulationFactory(regulation="loi_sur_leau")
+    PerimeterFactory(
+        regulation=regulation,
+        activation_map=france_map,
     )
-    CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=CRITERION_RESULTS.non_soumis
-    )
-
-    assert evaluation.compute_result() == RESULTS.soumis
-
-
-def test_evaluation_status_soumis_2():
-
-    evaluation = EvaluationFactory(result=None, criterions=[])
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="rainwater_runoff",
-        result=CRITERION_RESULTS.soumis,
-    )
-    CriterionFactory(
-        evaluation=evaluation, criterion="flood_zone", result=CRITERION_RESULTS.soumis
-    )
-    CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=CRITERION_RESULTS.soumis
-    )
-
-    assert evaluation.compute_result() == RESULTS.soumis
+    classes = [
+        "envergo.moulinette.regulations.loisurleau.ZoneHumide",
+        "envergo.moulinette.regulations.loisurleau.ZoneInondable",
+        "envergo.moulinette.regulations.loisurleau.Ruissellement",
+    ]
+    for path in classes:
+        CriterionFactory(
+            regulation=regulation, activation_map=france_map, evaluator=path
+        )
 
 
-def test_evaluation_status_soumis_3():
-
-    evaluation = EvaluationFactory(result=None, criterions=[])
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="rainwater_runoff",
-        result=CRITERION_RESULTS.soumis,
-    )
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="flood_zone",
-        result=CRITERION_RESULTS.action_requise,
-    )
-    CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=CRITERION_RESULTS.non_soumis
-    )
-
-    assert evaluation.compute_result() == RESULTS.soumis
+@pytest.fixture
+def moulinette_url(footprint):
+    params = {
+        # Somewhere south of Nantes, 44
+        "lat": 47.08285,
+        "lng": -1.66259,
+        "created_surface": footprint,
+        "final_surface": footprint,
+    }
+    url = urlencode(params)
+    return f"https://envergo.beta.gouv.fr?{url}"
 
 
-def test_evaluation_status_non_soumis():
+@pytest.mark.parametrize("footprint", [1200])
+def test_call_to_action_action(moulinette_url):
+    evaluation = EvaluationFactory(moulinette_url=moulinette_url)
+    moulinette = evaluation.get_moulinette()
+    regulation = RegulationFactory()
 
-    evaluation = EvaluationFactory(result=None, criterions=[])
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="rainwater_runoff",
-        result=CRITERION_RESULTS.non_soumis,
-    )
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="flood_zone",
-        result=CRITERION_RESULTS.non_soumis,
-    )
-    CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=CRITERION_RESULTS.non_soumis
-    )
+    assert not evaluation.is_icpe
 
-    assert evaluation.compute_result() == RESULTS.non_soumis
+    moulinette.regulations = [Mock(regulation, wraps=regulation, result="non_soumis")]
+    assert moulinette.result == "non_soumis"
+    assert not evaluation.is_eligible_to_self_declaration()
 
+    moulinette.regulations = [
+        Mock(regulation, wraps=regulation, result="action_requise")
+    ]
+    assert moulinette.result == "action_requise"
+    assert evaluation.is_eligible_to_self_declaration()
 
-def test_evaluation_status_action_requise():
+    moulinette.regulations = [Mock(regulation, wraps=regulation, result="soumis")]
+    assert moulinette.result == "soumis"
+    assert evaluation.is_eligible_to_self_declaration()
 
-    evaluation = EvaluationFactory(result=None, criterions=[])
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="rainwater_runoff",
-        result=CRITERION_RESULTS.action_requise,
-    )
-    CriterionFactory(
-        evaluation=evaluation,
-        criterion="flood_zone",
-        result=CRITERION_RESULTS.non_soumis,
-    )
-    CriterionFactory(
-        evaluation=evaluation, criterion="wetland", result=CRITERION_RESULTS.non_soumis
-    )
+    moulinette.regulations = [Mock(regulation, wraps=regulation, result="interdit")]
+    assert moulinette.result == "interdit"
+    assert evaluation.is_eligible_to_self_declaration()
 
-    assert evaluation.compute_result() == RESULTS.action_requise
+    evaluation.is_icpe = True
+    evaluation.save()
+    assert not evaluation.is_eligible_to_self_declaration()

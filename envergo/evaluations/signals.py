@@ -3,7 +3,9 @@ import logging
 from anymail.signals import tracking
 from django.db.models import F
 from django.dispatch import receiver
+from django.urls import reverse
 
+from envergo.analytics.models import Event
 from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
 from envergo.evaluations.tasks import warn_admin_of_email_error
 
@@ -30,6 +32,14 @@ ALL_EVENTS = TRACKED_EVENTS + ERROR_EVENTS
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
+    """Handle events received from Brevo.
+
+    The events we are trackinrg are related to the evaluations emails ("avis réglementaires").
+    We track events so:
+     - we know what is the latest email status (received, clicket…) for each recipient
+     - we can warn the admin sender if an email was not delivered
+     - we can track clicks on the "self declaration" button
+    """
     event_name = event.event_type
     recipient = event.recipient
     message_id = event.message_id
@@ -85,3 +95,25 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
 
     if warn_of_email_error:
         warn_admin_of_email_error.delay(status.id)
+
+    # Log the click ("self declaration" button only)
+    if event_name == "clicked":
+        raw_event = event.esp_event
+        clicked_link = raw_event["link"]
+        reference = regulatory_notice_log.evaluation.reference
+        self_declaration_url = reverse("self_declaration", args=[reference])
+
+        # We have to check the value of the clicked link, because we are logging
+        # specific events for the "self declaration" button
+        if self_declaration_url in clicked_link:
+            metadata = {
+                "reference": regulatory_notice_log.evaluation.reference,
+                "message_id": message_id,
+                "email": raw_event["email"],
+            }
+            Event.objects.create(
+                category="compliance",
+                event="email-click",
+                session_key=message_id,
+                metadata=metadata,
+            )
