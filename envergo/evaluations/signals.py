@@ -90,7 +90,9 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     # Log the click ("self declaration" button only)
     if event_name == "clicked":
         raw_event = event.esp_event
-        logger.info("Clicked event", raw_event)
+        import json
+
+        logger.info(f"Clicked event {json.dumps(raw_event)}")
         metadata = {
             "reference": regulatory_notice_log.evaluation.reference,
             "message_id": message_id,
