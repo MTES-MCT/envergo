@@ -1,0 +1,9 @@
+Nous vous conseillons de prendre contact avec un bureau d'études environnement en lui transmettant ces éléments.
+
+**Vous connaissez déjà ces obligations ?**
+
+Si vous avez déjà déposé un dossier ou réalisé les études environnementales nécessaires, vous pouvez nous l'indiquer ici :
+
+{{ self_declaration_link }}?mtm_campaign=email-ar&source=email-ar&mtm_kwd={{ evaluation.reference }}
+
+(Durée 3 minutes)
