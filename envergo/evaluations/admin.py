@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.analytics.utils import log_event
+from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
     EVAL_RESULTS,
@@ -369,7 +369,12 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "reference": evaluation.reference,
                     "message_id": message_id,
                 }
-                log_event("compliance", "email-send", request, **metadata)
+                Event.objects.create(
+                    category="compliance",
+                    event="email-send",
+                    session_key="admin",
+                    metadata=metadata,
+                )
 
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             response = HttpResponseRedirect(url)
