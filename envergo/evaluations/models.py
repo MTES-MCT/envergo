@@ -300,6 +300,7 @@ class Evaluation(models.Model):
         if self.is_icpe:
             return False
 
+        eligible = False
         moulinette = self.get_moulinette()
         for regulation in moulinette.regulations:
             if regulation.result in (
@@ -313,7 +314,6 @@ class Evaluation(models.Model):
             ):
                 eligible = True
                 break
-            eligible = False
         return eligible
 
 
