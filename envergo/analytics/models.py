@@ -12,7 +12,7 @@ class Event(models.Model):
     event = models.CharField(_("Event"), max_length=128)
 
     # Connect several events by the same user
-    session_key = models.CharField(_("Session key"), max_length=40)
+    session_key = models.CharField(_("Session key"), max_length=128)
 
     # Add additional info to describe the event
     metadata = models.JSONField(_("Metadata"), null=True, blank=True)
