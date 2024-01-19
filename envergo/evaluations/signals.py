@@ -4,6 +4,7 @@ from anymail.signals import tracking
 from django.db.models import F
 from django.dispatch import receiver
 
+from envergo.analytics.models import Event
 from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
 from envergo.evaluations.tasks import warn_admin_of_email_error
 
@@ -86,5 +87,18 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     if warn_of_email_error:
         warn_admin_of_email_error.delay(status.id)
 
+    # Log the click ("self declaration" button only)
     if event_name == "clicked":
-        logger.info(event)
+        raw_event = event.esp_event
+        logger.info("Clicked event", raw_event)
+        metadata = {
+            "reference": regulatory_notice_log.evaluation.reference,
+            "message_id": message_id,
+            "email": raw_event["email"],
+        }
+        Event.objects.create(
+            category="compliance",
+            event="email-click",
+            session_key=message_id,
+            metadata=metadata,
+        )
