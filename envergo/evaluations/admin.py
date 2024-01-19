@@ -369,7 +369,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "reference": evaluation.reference,
                     "message_id": message_id,
                 }
-                log_event("compliance", "email-sent", request, **metadata)
+                log_event("compliance", "email-send", request, **metadata)
 
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
             response = HttpResponseRedirect(url)
