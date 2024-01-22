@@ -78,6 +78,14 @@ class CriterionAdmin(admin.ModelAdmin):
     readonly_fields = ["unique_slug"]
     autocomplete_fields = ["activation_map"]
     form = CriterionAdminForm
+    search_fields = [
+        "backend_title",
+        "title",
+        "regulation__regulation",
+        "activation_map__name",
+    ]
+    list_filter = ["regulation", "evaluator"]
+    sortable_by = ["backend_title", "activation_map", "activation_distance"]
 
     class Media:
         css = {
