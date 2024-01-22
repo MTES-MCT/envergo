@@ -1,6 +1,15 @@
 (function (exports, L) {
   'use strict';
 
+  // Prevent scrolling to the map when clicking on the zoom button
+  // See https://stackoverflow.com/questions/57184529/how-to-prevent-leaflet-from-scrolling-the-page-when-clicking-the-zoom-buttons/57186116#57186116
+  L.Control.prototype._refocusOnMap = function _refocusOnMap(ev) {
+    // if map exists and event is not a keyboard event
+    if (this._map && ev && ev.screenX > 0 && ev.screenY > 0) {
+      this._map.getContainer().focus({ preventScroll: true });
+    }
+  };
+
   /**
    * Settings and behavior for the moulinette form map widget.
    */
