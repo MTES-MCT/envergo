@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from django.urls import reverse
 
+from envergo.confs.models import Setting
 from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
 
@@ -160,6 +161,46 @@ def test_eval_wizard_all_steps(
     assert qs.count() == 1
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
+    assert "Vous recevrez une réponse dans les trois jours ouvrés" in mailoutbox[0].body
+
+
+@patch("envergo.utils.mattermost.requests.post")
+def test_confirmation_email_override(
+    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+):
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+
+    Setting.objects.create(
+        setting="evalreq_confirmation_email_delay_mention",
+        value="Vous recevrez une réponse quand les poules auront des dentiers",
+    )
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_emails": ["contact@example.org"],
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
+    }
+    with django_capture_on_commit_callbacks(execute=True):
+        res = client.post(url, data=data)
+
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert (
+        "Vous recevrez une réponse dans les trois jours ouvrés"
+        not in mailoutbox[0].body
+    )
+    assert (
+        "Vous recevrez une réponse quand les poules auront des dentiers"
+        in mailoutbox[0].body
+    )
 
 
 @patch("envergo.utils.mattermost.requests.post")
