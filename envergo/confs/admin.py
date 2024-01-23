@@ -3,7 +3,7 @@ from textwrap import shorten
 from django import forms
 from django.contrib import admin
 
-from envergo.confs.models import TopBar
+from envergo.confs.models import Setting, TopBar
 
 
 class TopBarAdminForm(forms.ModelForm):
@@ -31,3 +31,9 @@ class TopBarAdmin(admin.ModelAdmin):
 
     def message_summary(self, obj):
         return shorten(obj.message_md, width=50, placeholder="…")
+
+
+@admin.register(Setting)
+class SettingAdmin(admin.ModelAdmin):
+    list_display = ["setting", "value"]
+    fields = ("setting", "value")
