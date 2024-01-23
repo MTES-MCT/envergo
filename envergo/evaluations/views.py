@@ -150,6 +150,13 @@ class EvaluationDetailMoulinette(
         # also calls the `log_moulinette_event` method with different
         # arguments.
         res = super().get(request, *args, **kwargs)
+
+        # When a tally form is redirected, we use this variable to display
+        # a success message.
+        tally = request.GET.get("tally", "")
+        if tally:
+            messages.success(request, "Nous avons bien reçu votre réponse.")
+
         if not is_request_from_a_bot(request):
             self.log_moulinette_event(
                 self.moulinette, request_reference=self.object.reference
