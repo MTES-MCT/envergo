@@ -119,12 +119,12 @@ class BetterJsonSerializer(JSONSerializer):
 def post_evalreq_to_automation(request_id, host):
     """Send request data to Make.com."""
 
-    logger.info(f"Sending data to make.com {request_id} {host}")
     webhook_url = settings.MAKE_COM_WEBHOOK
     if not webhook_url:
         logger.warning("No make.com webhook configured. Doing nothing.")
         return
 
+    logger.info(f"Sending data to make.com {request_id} {host}")
     request = Request.objects.get(id=request_id)
     serialized = BetterJsonSerializer().serialize([request])
     json_data = json.loads(serialized)[0]
