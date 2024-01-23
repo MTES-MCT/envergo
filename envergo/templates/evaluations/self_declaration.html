@@ -5,7 +5,12 @@
 {% block title %}Avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>Mon projet est déjà conforme</h1>
+  <h1>Déclarer des démarches déjà effectuées sur un projet</h1>
+
+  <p>Référence EnvErgo : {{ reference }}</p>
+  <p>
+    <a href="{% url 'evaluation_detail' reference %}">→ Consultez l'avis réglementaire pour ce projet</a>
+  </p>
 
   <noscript>
     <p>Cette page nécessite un navigateur avec Javascript activé.</p>
@@ -18,7 +23,7 @@
           frameborder="0"
           marginheight="0"
           marginwidth="0"
-          title="Mon projet est déjà conforme"></iframe>
+          title="Déclarer des démarches déjà effectuées sur un projet"></iframe>
 {% endblock %}
 
 {% block bottom_js %}
