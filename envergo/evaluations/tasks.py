@@ -42,6 +42,9 @@ def confirm_request_to_admin(request_id, host):
 
 @app.task
 def confirm_request_to_requester(request_id, host):
+    """Send a confirmation email to the requester."""
+
+    logger.info(f"Sending confirmation email to requester {request_id}")
     request = Request.objects.filter(id=request_id).first()
     delay_mention = get_setting("evalreq_confirmation_email_delay_mention")
     user_emails = request.contact_emails
