@@ -73,7 +73,9 @@ def confirm_request_to_requester(request_id, host):
         to=user_emails,
     )
     email.attach_alternative(html_body, "text/html")
-    email.send()
+    logger.info("Sending now")
+    res = email.send()
+    logger.info(f"Sent {res}")
 
 
 @app.task
