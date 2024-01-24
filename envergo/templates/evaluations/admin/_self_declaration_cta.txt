@@ -6,4 +6,4 @@ Si vous avez déjà déposé un dossier ou réalisé les études environnemental
 
 {{ self_declaration_link }}?mtm_campaign=email-ar&source=email-ar&mtm_kwd={{ evaluation.reference }}
 
-(Durée 3 minutes)
+(Durée : 3 minutes)
