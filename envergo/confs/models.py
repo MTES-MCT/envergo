@@ -27,9 +27,18 @@ class TopBar(models.Model):
 SETTINGS = Choices(
     (
         "evalreq_confirmation_email_delay_mention",
-        "E-mail de confirmation de demande d'éval., mention de la délai de réponse",
+        "Accusé de réception demande d’AR, mention délai réponse",
     ),
 )
+
+SETTINGS_HELP = {
+    "Accusé de réception demande d’AR, mention délai réponse": """
+    <p>Paragraphe qui remplace la mention par défaut du délai de traitement des demandes d’avis.</p>
+    <p>Utile pour les périodes de vacances.</p>
+    <p>Mention par défaut : « Vous recevrez une réponse dans les trois jours ouvrés. »</p>
+    <p>(Juste du texte brut, avec éventuels retours à la ligne.)</p>
+""",
+}
 
 
 class Setting(models.Model):
