@@ -2,7 +2,7 @@ import json
 import logging
 
 from django import template
-from django.template import Template
+from django.template import Context, Template
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
@@ -34,15 +34,27 @@ def show_regulation_body(context, regulation):
 
 @register.simple_tag(takes_context=True)
 def show_criterion_body(context, regulation, criterion):
-    template_name = (
-        f"moulinette/{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
-    )
+    """Render a single criterion content.
+
+    We use templates to render the content of a single criterion for a given result code.
+
+    Templates are by default stored on the file system, but can be overriden with
+    MoulinetteConfig templates.
+    """
+    template_name = f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
+    full_template_name = f"moulinette/{template_name}"
     context_data = context.flatten()
     context_data.update({"regulation": regulation, "criterion": criterion})
-    try:
-        content = render_to_string(template_name, context_data)
-    except TemplateDoesNotExist:
-        content = ""
+
+    moulinette_templates = context["moulinette"].templates
+    if template_name in moulinette_templates:
+        template_content = moulinette_templates[template_name].content
+        content = Template(template_content).render(Context(context_data))
+    else:
+        try:
+            content = render_to_string((full_template_name,), context_data)
+        except TemplateDoesNotExist:
+            content = ""
 
     return content
 
