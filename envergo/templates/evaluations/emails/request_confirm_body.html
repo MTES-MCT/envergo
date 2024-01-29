@@ -11,7 +11,11 @@
     sous la référence {{ reference }}.
   </p>
 
-  <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
+  {% if delay_mention %}
+    {{ delay_mention|linebreaks }}
+  {% else %}
+    <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
+  {% endif %}
 
   <p>Vous pouvez ajouter ou retirer des documents à votre demande :</p>
 

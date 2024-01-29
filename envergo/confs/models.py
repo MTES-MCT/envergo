@@ -1,12 +1,13 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
 
 from envergo.utils.markdown import markdown_to_html
 
 
 class TopBar(models.Model):
-    """A singleton object to configure the top bar in admin."""
+    """An object to configure the main message top bars."""
 
     message_md = models.TextField(_("Message"))
     message_html = models.TextField(_("Message (html)"), blank=True)
@@ -21,3 +22,33 @@ class TopBar(models.Model):
         striped = paragraph.removeprefix("<p>").removesuffix("</p>")
         self.message_html = striped
         super().save(*args, **kwargs)
+
+
+SETTINGS = Choices(
+    (
+        "evalreq_confirmation_email_delay_mention",
+        "Accusé de réception demande d’AR, mention délai réponse",
+    ),
+)
+
+SETTINGS_HELP = {
+    "Accusé de réception demande d’AR, mention délai réponse": """
+    <p>Paragraphe qui remplace la mention par défaut du délai de traitement des demandes d’avis.</p>
+    <p>Utile pour les périodes de vacances.</p>
+    <p>Mention par défaut : « Vous recevrez une réponse dans les trois jours ouvrés. »</p>
+    <p>(Juste du texte brut, avec éventuels retours à la ligne.)</p>
+""",
+}
+
+
+class Setting(models.Model):
+    """A single option."""
+
+    setting = models.CharField(
+        _("Setting"), max_length=256, choices=SETTINGS, unique=True
+    )
+    value = models.TextField(_("Value"), max_length=256)
+
+    class Meta:
+        verbose_name = _("Setting")
+        verbose_name_plural = _("Settings")

@@ -3,7 +3,7 @@ from textwrap import shorten
 from django import forms
 from django.contrib import admin
 
-from envergo.confs.models import TopBar
+from envergo.confs.models import SETTINGS_HELP, Setting, TopBar
 
 
 class TopBarAdminForm(forms.ModelForm):
@@ -31,3 +31,15 @@ class TopBarAdmin(admin.ModelAdmin):
 
     def message_summary(self, obj):
         return shorten(obj.message_md, width=50, placeholder="…")
+
+
+@admin.register(Setting)
+class SettingAdmin(admin.ModelAdmin):
+    list_display = ["setting", "value"]
+    fields = ("setting", "value")
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        context.update({"settings_help": SETTINGS_HELP})
+        return super().render_change_form(request, context, add, change, form_url, obj)

@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from config.celery_app import app
+from envergo.confs.utils import get_setting
 from envergo.evaluations.models import Evaluation, RecipientStatus, Request
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -41,13 +42,18 @@ def confirm_request_to_admin(request_id, host):
 
 @app.task
 def confirm_request_to_requester(request_id, host):
+    """Send a confirmation email to the requester."""
+
+    logger.info(f"Sending confirmation email to requester {request_id}")
     request = Request.objects.filter(id=request_id).first()
+    delay_mention = get_setting("evalreq_confirmation_email_delay_mention")
     user_emails = request.contact_emails
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
     file_upload_url = reverse("request_eval_wizard_step_3", args=[request.reference])
     context = {
         "application_number": request.application_number,
+        "delay_mention": delay_mention,
         "reference": request.reference,
         "faq_url": f"https://{host}{faq_url}",
         "contact_url": f"https://{host}{contact_url}",
@@ -67,7 +73,9 @@ def confirm_request_to_requester(request_id, host):
         to=user_emails,
     )
     email.attach_alternative(html_body, "text/html")
-    email.send()
+    logger.info("Sending now")
+    res = email.send()
+    logger.info(f"Sent {res}")
 
 
 @app.task
@@ -119,12 +127,12 @@ class BetterJsonSerializer(JSONSerializer):
 def post_evalreq_to_automation(request_id, host):
     """Send request data to Make.com."""
 
-    logger.info(f"Sending data to make.com {request_id} {host}")
     webhook_url = settings.MAKE_COM_WEBHOOK
     if not webhook_url:
         logger.warning("No make.com webhook configured. Doing nothing.")
         return
 
+    logger.info(f"Sending data to make.com {request_id} {host}")
     request = Request.objects.get(id=request_id)
     serialized = BetterJsonSerializer().serialize([request])
     json_data = json.loads(serialized)[0]

@@ -2,7 +2,7 @@ Bonjour,
 
 Nous avons bien enregistré votre demande d'avis réglementaire EnvErgo{% if application_number %} (numéro de demande de permis : {{ application_number }}){% endif %} sous la référence {{ reference }}.
 
-Vous recevrez une réponse dans les trois jours ouvrés.
+{% if delay_mention %}{{ delay_mention }}{% else %}Vous recevrez une réponse dans les trois jours ouvrés.{% endif %}
 
 Vous pouvez ajouter ou retirer des documents à votre demande :
 
