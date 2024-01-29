@@ -18,6 +18,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.utils import list_criteria_templates
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -627,7 +628,7 @@ class MoulinetteConfig(models.Model):
         return self.department.get_department_display()
 
 
-TEMPLATE_KEYS = Choices(
+TEMPLATE_KEYS = [
     "autorisation_urba_pa",
     "autorisation_urba_pa_lotissement",
     "autorisation_urba_pc",
@@ -635,7 +636,12 @@ TEMPLATE_KEYS = Choices(
     "autorisation_urba_construction_dp",
     "autorisation_urba_none",
     "autorisation_urba_other",
-)
+]
+
+
+def get_all_template_keys():
+    tpls = TEMPLATE_KEYS + list(list_criteria_templates())
+    return zip(tpls, tpls)
 
 
 class MoulinetteTemplate(models.Model):
@@ -647,7 +653,7 @@ class MoulinetteTemplate(models.Model):
         on_delete=models.PROTECT,
         related_name="templates",
     )
-    key = models.CharField(_("Key"), choices=TEMPLATE_KEYS, max_length=64)
+    key = models.CharField(_("Key"), choices=get_all_template_keys(), max_length=512)
     content = models.TextField(_("Content"), blank=True, default="")
 
     class Meta:
