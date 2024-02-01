@@ -431,6 +431,10 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
             self.request,
             request_reference=request.reference,
             request_url=reverse("admin:evaluations_request_change", args=[request.id]),
+            mtm_campaign=self.request.session.get("mtm_campaign", ""),
+            mtm_source=self.request.session.get("mtm_source", ""),
+            mtm_medium=self.request.session.get("mtm_medium", ""),
+            mtm_kwd=self.request.session.get("mtm_kwd", ""),
         )
         self.reset_data()
 
