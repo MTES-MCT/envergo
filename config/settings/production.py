@@ -1,6 +1,7 @@
 import logging
 
 import sentry_sdk
+from autologging import TRACE
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
@@ -182,7 +183,9 @@ LOGGING = {
             "format": "%(levelname)s %(asctime)s %(module)s "
             "%(process)d %(thread)d %(message)s"
         },
-        "moulinette": {"format": "[moulinette] %(levelname)s %(asctime)s %(message)s"},
+        "moulinette": {
+            "format": "[moulinette] %(asctime)s %(process)s %(thread)s %(name)s:%(funcName)s() %(message)s"
+        },
     },
     "handlers": {
         "console": {
@@ -191,7 +194,7 @@ LOGGING = {
             "formatter": "verbose",
         },
         "moulinette": {
-            "level": "DEBUG",
+            "level": TRACE,
             "class": "logging.StreamHandler",
             "formatter": "moulinette",
         },
@@ -210,8 +213,8 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
-        "moulinette": {
-            "level": "INFO",
+        "envergo.moulinette": {
+            "level": TRACE,
             "handlers": ["moulinette"],
             "propagate": False,
         },
