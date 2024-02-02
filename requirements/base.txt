@@ -12,6 +12,8 @@ argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 asgiref==3.7.2
     # via django
+autologging==1.3.2
+    # via -r base.in
 billiard==4.1.0
     # via celery
 build==0.10.0

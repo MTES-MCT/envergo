@@ -22,6 +22,8 @@ astroid==2.15.6
     # via pylint
 asttokens==2.2.1
     # via stack-data
+autologging==1.3.2
+    # via -r base.txt
 backcall==0.2.0
     # via ipython
 billiard==4.1.0

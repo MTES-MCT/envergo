@@ -1,5 +1,8 @@
 import logging
+from functools import cache
+from random import randint
 
+from autologging import logged, traced
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -54,6 +57,8 @@ def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
 
 
+@logged
+@traced
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
@@ -125,6 +130,8 @@ class Regulation(models.Model):
         for criterion in self.criteria.all():
             criterion.evaluate(moulinette, criterion.distance)
 
+        return self.result
+
     @property
     def slug(self):
         return self.regulation
@@ -133,6 +140,7 @@ class Regulation(models.Model):
     def title(self):
         return self.get_regulation_display()
 
+    @cache
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
 
@@ -347,6 +355,8 @@ class Regulation(models.Model):
         return all((self.is_activated(), self.show_map, self.map))
 
 
+@logged
+@traced
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
 
@@ -421,6 +431,8 @@ class Criterion(models.Model):
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
 
+        return self.result_code, self.result
+
     @property
     def result_code(self):
         """Return the criterion result code."""
@@ -468,6 +480,7 @@ class Criterion(models.Model):
 
         return self._evaluator.form_class
 
+    @cache
     def get_form(self):
         if not hasattr(self, "_evaluator"):
             raise RuntimeError("Criterion must be evaluated before accessing the form.")
@@ -685,6 +698,8 @@ class MoulinetteCatalog(dict):
         return value
 
 
+@logged
+@traced
 class Moulinette:
     """Automatic environment law evaluation processing tool.
 
@@ -694,6 +709,12 @@ class Moulinette:
     """
 
     def __init__(self, data, raw_data):
+        # There is a strange issue where certain users, sometimes, on a perfectly random
+        # and non reproductible manner, see a completely wrong result for some criteria.
+        # This unique id is meant to be added to the log, so I (you beloved dev) can
+        # try to understand what the F is going on.
+        self._moulinette_id = randint(0, 999999)
+
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
@@ -711,11 +732,13 @@ class Moulinette:
             "raw_data": self.raw_data,
             "result": self.result_data(),
         }
-        logger.info(log_data)
+        self.__log.info(f"init done {log_data}")
 
     def evaluate(self):
+        self.__log.info("Starting evaluation")
         for regulation in self.regulations:
-            regulation.evaluate(self)
+            result = regulation.evaluate(self)
+            self.__log.info(f"Regulation {regulation} evaluated {result}")
 
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
@@ -868,6 +891,7 @@ class Moulinette:
         )
         return zones
 
+    @cache
     def has_config(self):
         config = getattr(self.department, "moulinette_config", None)
         return bool(config)
