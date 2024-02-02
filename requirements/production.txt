@@ -18,6 +18,8 @@ asgiref==3.7.2
     # via
     #   -r base.txt
     #   django
+autologging==1.3.2
+    # via -r base.txt
 billiard==4.1.0
     # via
     #   -r base.txt
