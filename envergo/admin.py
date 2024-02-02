@@ -6,6 +6,10 @@ class EnvergoAdminConfig(AdminConfig):
     default_site = "envergo.admin.EnvergoAdminSite"
 
 
+# Exclude those models from the main list, but don't disable the admin module entirely
+EXCLUDED_MODELS = ("MoulinetteTemplate",)
+
+
 class EnvergoAdminSite(admin.AdminSite):
     def get_app_list(self, request, app_label=None):
         """Reorder the apps in the admin site.
@@ -61,5 +65,13 @@ class EnvergoAdminSite(admin.AdminSite):
             apps[evaluations]["models"][demande_index],
             apps[evaluations]["models"][avis_index],
         )
+
+        # Now, we want to filter out some modules from the main list
+        for app in apps:
+            app["models"] = [
+                model
+                for model in app["models"]
+                if model["object_name"] not in EXCLUDED_MODELS
+            ]
 
         return apps

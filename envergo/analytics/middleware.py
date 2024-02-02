@@ -36,3 +36,28 @@ class SetVisitorIdCookie:
             set_visitor_id_cookie(response, visitor_id)
 
         return response
+
+
+# Parameters that we want to store in session
+MTM_PARAMETERS = (
+    "mtm_campaign",
+    "mtm_source",
+    "mtm_medium",
+    "mtm_kwd",
+)
+
+
+class StoreMtmValues:
+    """Make sure the mtm values are stored until we need them."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        GET_values = request.GET.copy()
+        for key, val in GET_values.items():
+            if key in MTM_PARAMETERS:
+                request.session[key] = val
+
+        response = self.get_response(request)
+        return response
