@@ -701,7 +701,7 @@ class Moulinette:
         # and non reproductible manner, see a completely wrong result for some criteria.
         # This unique id is meant to be added to the log, so I (you beloved dev) can
         # try to understand what the F is going on.
-        self._moulinette_id = randint()
+        self._moulinette_id = randint(0, 999999)
 
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
