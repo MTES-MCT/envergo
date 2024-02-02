@@ -1,5 +1,7 @@
 import logging
+from random import randint
 
+from autologging import traced
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -685,6 +687,7 @@ class MoulinetteCatalog(dict):
         return value
 
 
+@traced(logging.getLogger("moulinette"))
 class Moulinette:
     """Automatic environment law evaluation processing tool.
 
@@ -694,6 +697,12 @@ class Moulinette:
     """
 
     def __init__(self, data, raw_data):
+        # There is a strange issue where certain users, sometimes, on a perfectly random
+        # and non reproductible manner, see a completely wrong result for some criteria.
+        # This unique id is meant to be added to the log, so I (you beloved dev) can
+        # try to understand what the F is going on.
+        self._moulinette_id = randint()
+
         self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())

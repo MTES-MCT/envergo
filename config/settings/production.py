@@ -181,14 +181,20 @@ LOGGING = {
         "verbose": {
             "format": "%(levelname)s %(asctime)s %(module)s "
             "%(process)d %(thread)d %(message)s"
-        }
+        },
+        "moulinette": {"format": "[moulinette] %(levelname)s %(asctime)s %(message)s"},
     },
     "handlers": {
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-        }
+        },
+        "moulinette": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "moulinette",
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
@@ -202,6 +208,11 @@ LOGGING = {
         "django.security.DisallowedHost": {
             "level": "ERROR",
             "handlers": ["console"],
+            "propagate": False,
+        },
+        "moulinette": {
+            "level": "INFO",
+            "handlers": ["moulinette"],
             "propagate": False,
         },
     },
