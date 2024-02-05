@@ -250,6 +250,8 @@ class CriterionEvaluator(ABC):
         return None
 
     def get_form(self):
+        """Get the form to ask the user for additional data."""
+
         form_class = getattr(self, "form_class", None)
         if form_class:
             form = self.form_class(self.moulinette.raw_data)
@@ -258,6 +260,8 @@ class CriterionEvaluator(ABC):
         return form
 
     def get_settings_form(self):
+        """Get the form to ask the admin for necessary settings."""
+
         settings_form_class = getattr(self, "settings_form_class", None)
         if settings_form_class:
             if self.settings:
