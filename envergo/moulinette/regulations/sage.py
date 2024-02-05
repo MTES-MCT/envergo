@@ -509,3 +509,254 @@ class ImpactZoneHumideStrict(CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
+
+
+class ImpactZoneHumideIOTA(CriterionEvaluator):
+    choice_label = "SAGE > Interdiction impact ZH si IOTA"
+    slug = "interdiction_impact_zh_iota"
+    zh_strict = False
+
+    CODES = [
+        "interdit",
+        "a_verifier",
+        "action_requise_interdit",
+        "action_requise_proche_interdit",
+        "action_requise_dans_doute_interdit",
+        "non_soumis",
+        "non_soumis_dehors",
+    ]
+
+    CODE_MATRIX = {
+        ("inside", "soumis"): "interdit",
+        ("inside", "action_requise"): "a_verifier",
+        ("inside", "non_soumis"): "non_soumis",
+        ("close_to", "inside"): "action_requise_proche_interdit",
+        ("close_to", "action_requise"): "action_requise_interdit",
+        ("close_to", "non_soumis"): "non_soumis",
+        ("potential", "inside"): "action_requise_dans_doute_interdit",
+        ("potential", "action_requise"): "action_requise_interdit",
+        ("potential", "non_soumis"): "non_soumis",
+        ("outside", "inside"): "non_soumis_dehors",
+        ("outside", "action_requise"): "non_soumis_dehors",
+        ("outside", "non_soumis"): "non_soumis_dehors",
+    }
+
+    RESULT_MATRIX = {
+        "interdit": RESULTS.interdit,
+        "a_verifier": RESULTS.a_verifier,
+        "action_requise_interdit": RESULTS.action_requise,
+        "action_requise_proche_interdit": RESULTS.action_requise,
+        "action_requise_dans_doute_interdit": RESULTS.action_requise,
+        "non_soumis": RESULTS.non_soumis,
+        "non_soumis_dehors": RESULTS.non_soumis,
+    }
+
+    def get_catalog_data(self):
+        data = {}
+        wetlands = self.catalog["forbidden_wetlands"]
+
+        if "wetlands_25" not in self.catalog:
+            data["wetlands_25"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
+            ]
+            data["wetlands_within_25m"] = bool(data["wetlands_25"])
+
+        if "wetlands_100" not in self.catalog:
+            data["wetlands_100"] = [
+                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
+            ]
+            data["wetlands_within_100m"] = bool(data["wetlands_100"])
+
+        if "potential_wetlands_0" not in self.catalog:
+            data["potential_wetlands_0"] = [
+                zone
+                for zone in self.catalog["potential_wetlands"]
+                if zone.distance <= D(m=0)
+            ]
+            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
+
+        if "forbidden_wetlands_25" not in self.catalog:
+            data["forbidden_wetlands_25"] = [
+                zone for zone in wetlands if zone.distance <= D(m=25)
+            ]
+            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
+
+        if "forbidden_wetlands_100" not in self.catalog:
+            data["forbidden_wetlands_100"] = [
+                zone for zone in wetlands if zone.distance <= D(m=100)
+            ]
+            data["forbidden_wetlands_within_100m"] = bool(
+                data["forbidden_wetlands_100"]
+            )
+
+        return data
+
+    def get_result_data(self):
+        """Evaluate the project and return the different parameter results.
+
+        For this criterion, the evaluation results depends on the project size
+        and wether it will impact known wetlands.
+        """
+        if (
+            self.catalog["wetlands_within_25m"]
+            or self.catalog["forbidden_wetlands_within_25m"]
+        ):
+            wetland_status = "inside"
+        elif (
+            self.catalog["wetlands_within_100m"]
+            or self.catalog["forbidden_wetlands_within_100m"]
+        ):
+            wetland_status = "close_to"
+        elif self.catalog["potential_wetlands_within_0m"]:
+            wetland_status = "potential"
+        else:
+            wetland_status = "outside"
+
+        iota_result = self.moulinette.loi_sur_leau.result
+
+        return wetland_status, iota_result
+
+    def get_map(self):
+        map_polygons = []
+
+        wetlands_qs = [
+            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
+
+        forbidden_wetlands_qs = [
+            zone
+            for zone in self.catalog["forbidden_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if forbidden_wetlands_qs:
+            map_polygons.append(MapPolygon(forbidden_wetlands_qs, BLUE, "Zone humide"))
+
+        wetland_status, _project_size = self.get_result_data()
+        if wetland_status == "inside":
+            caption = "Le projet se situe dans une zone humide référencée."
+        elif wetland_status == "close_to":
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
+        elif wetland_status == "potential":
+            caption = "le projet se situe dans une zone humide potentielle."
+        else:
+            caption = "Le projet ne se situe pas dans une zone humide référencée."
+
+        if map_polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                entries=map_polygons,
+                caption=caption,
+                truncate=False,
+                zoom=18,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
+
+
+class ImpactZoneHumideIOTAStrict(CriterionEvaluator):
+    choice_label = "SAGE > Interdiction impact ZH si IOTA (carte stricte)"
+    slug = "interdiction_impact_zh_iota"
+    zh_strict = True
+
+    CODES = [
+        "interdit",
+        "a_verifier",
+        "action_requise_interdit",
+        "action_requise_proche_interdit",
+        "non_soumis",
+        "non_soumis_dehors",
+    ]
+
+    CODE_MATRIX = {
+        ("inside", "soumis"): "interdit",
+        ("inside", "action_requise"): "a_verifier",
+        ("inside", "non_soumis"): "non_soumis",
+        ("close_to", "soumis"): "action_requise_proche_interdit",
+        ("close_to", "action_requise"): "action_requise_interdit",
+        ("close_to", "non_soumis"): "non_soumis",
+        ("outside", "soumis"): "non_soumis_dehors",
+        ("outside", "action_requise"): "non_soumis_dehors",
+        ("outside", "non_soumis"): "non_soumis_dehors",
+    }
+
+    RESULT_MATRIX = {
+        "interdit": RESULTS.interdit,
+        "a_verifier": RESULTS.a_verifier,
+        "action_requise_interdit": RESULTS.action_requise,
+        "action_requise_proche_interdit": RESULTS.action_requise,
+        "non_soumis": RESULTS.non_soumis,
+        "non_soumis_dehors": RESULTS.non_soumis,
+    }
+
+    def get_catalog_data(self):
+        data = {}
+        wetlands = self.catalog["forbidden_wetlands"]
+
+        if "forbidden_wetlands_25" not in self.catalog:
+            data["forbidden_wetlands_25"] = [
+                zone for zone in wetlands if zone.distance <= D(m=25)
+            ]
+            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
+
+        if "forbidden_wetlands_100" not in self.catalog:
+            data["forbidden_wetlands_100"] = [
+                zone for zone in wetlands if zone.distance <= D(m=100)
+            ]
+            data["forbidden_wetlands_within_100m"] = bool(
+                data["forbidden_wetlands_100"]
+            )
+
+        return data
+
+    def get_result_data(self):
+        """Evaluate the project and return the different parameter results.
+
+        For this criterion, the evaluation results depends on the project size
+        and wether it will impact known wetlands.
+        """
+        if self.catalog["forbidden_wetlands_within_25m"]:
+            wetland_status = "inside"
+        elif self.catalog["forbidden_wetlands_within_100m"]:
+            wetland_status = "close_to"
+        else:
+            wetland_status = "outside"
+
+        iota_result = self.moulinette.loi_sur_leau.result
+
+        return wetland_status, iota_result
+
+    def get_map(self):
+        map_polygons = []
+
+        wetlands_qs = [
+            zone
+            for zone in self.catalog["forbidden_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLACK, "Zone humide"))
+
+        if self.catalog["forbidden_wetlands_within_25m"]:
+            caption = "Le projet se situe dans une zone humide référencée."
+
+        elif self.catalog["forbidden_wetlands_within_100m"]:
+            caption = "Le projet se situe à proximité d'une zone humide référencée."
+        else:
+            caption = "Le projet ne se situe pas dans une zone humide référencée."
+
+        if map_polygons:
+            criterion_map = Map(
+                center=self.catalog["coords"],
+                entries=map_polygons,
+                caption=caption,
+                truncate=False,
+                zoom=18,
+            )
+        else:
+            criterion_map = None
+
+        return criterion_map
