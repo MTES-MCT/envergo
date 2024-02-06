@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-26 10:48+0000\n"
+"POT-Creation-Date: 2024-02-06 10:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -217,7 +217,7 @@ msgstr "Ancien format d'avis réglementaire"
 msgid "Request"
 msgstr "Demande"
 
-#: envergo/evaluations/admin.py:252 envergo/moulinette/models.py:523
+#: envergo/evaluations/admin.py:252 envergo/moulinette/models.py:524
 msgid "Url"
 msgstr "Url"
 
@@ -469,12 +469,12 @@ msgid "Evaluation"
 msgstr "Évaluation"
 
 #: envergo/evaluations/models.py:506 envergo/geodata/models.py:111
-#: envergo/moulinette/models.py:60 envergo/moulinette/models.py:381
+#: envergo/moulinette/models.py:61 envergo/moulinette/models.py:382
 #: envergo/stats/models.py:8
 msgid "Order"
 msgstr "Ordre"
 
-#: envergo/evaluations/models.py:509 envergo/moulinette/models.py:383
+#: envergo/evaluations/models.py:509 envergo/moulinette/models.py:384
 msgid "Required action"
 msgstr "Action requise"
 
@@ -483,7 +483,7 @@ msgid "Probability"
 msgstr "Probabilité"
 
 #: envergo/evaluations/models.py:517 envergo/evaluations/models.py:525
-#: envergo/moulinette/models.py:404
+#: envergo/moulinette/models.py:405
 msgid "Criterion"
 msgstr "Critère"
 
@@ -497,7 +497,7 @@ msgid "Description (html)"
 msgstr " Description (html)"
 
 #: envergo/evaluations/models.py:520 envergo/geodata/models.py:216
-#: envergo/moulinette/models.py:516
+#: envergo/moulinette/models.py:517
 msgid "Map"
 msgstr "Carte"
 
@@ -542,7 +542,7 @@ msgid "File"
 msgstr "Fichier"
 
 #: envergo/evaluations/models.py:728 envergo/geodata/models.py:164
-#: envergo/moulinette/models.py:502
+#: envergo/moulinette/models.py:503
 msgid "Name"
 msgstr "Nom"
 
@@ -911,11 +911,11 @@ msgid "Zones"
 msgstr "Zones"
 
 #: envergo/geodata/models.py:265 envergo/geodata/models.py:273
-#: envergo/moulinette/forms/__init__.py:76 envergo/moulinette/models.py:579
+#: envergo/moulinette/forms/__init__.py:76 envergo/moulinette/models.py:580
 msgid "Department"
 msgstr "Département"
 
-#: envergo/geodata/urls.py:7 envergo/pages/urls.py:72
+#: envergo/geodata/urls.py:7 envergo/pages/urls.py:76
 msgid "map/"
 msgstr "carte/"
 
@@ -931,11 +931,11 @@ msgstr "Aucun fichier .shp trouvé dans l'archive"
 msgid "Regulation slug"
 msgstr "Slug réglementation"
 
-#: envergo/moulinette/admin.py:33 envergo/moulinette/models.py:361
+#: envergo/moulinette/admin.py:33 envergo/moulinette/models.py:362
 msgid "Header"
 msgstr "En-tête"
 
-#: envergo/moulinette/admin.py:95 envergo/moulinette/models.py:377
+#: envergo/moulinette/admin.py:95 envergo/moulinette/models.py:378
 msgid "Evaluator"
 msgstr "Évaluateur"
 
@@ -977,161 +977,161 @@ msgstr ""
 "La surface impactée totale doit être au moins égale à celle des nouveaux "
 "impacts"
 
-#: envergo/moulinette/models.py:59 envergo/moulinette/models.py:75
-#: envergo/moulinette/models.py:364 envergo/moulinette/models.py:510
+#: envergo/moulinette/models.py:60 envergo/moulinette/models.py:76
+#: envergo/moulinette/models.py:365 envergo/moulinette/models.py:511
 msgid "Regulation"
 msgstr "Réglementation"
 
-#: envergo/moulinette/models.py:63
+#: envergo/moulinette/models.py:64
 msgid "Has perimeters"
 msgstr "Lié à des périmètres ?"
 
-#: envergo/moulinette/models.py:65
+#: envergo/moulinette/models.py:66
 msgid "Is this regulation linked to local perimetres?"
 msgstr "Cette réglementation dépend-elle de périmètres ?"
 
-#: envergo/moulinette/models.py:68
+#: envergo/moulinette/models.py:69
 msgid "Show perimeter map"
 msgstr "Afficher la carte du périmètre"
 
-#: envergo/moulinette/models.py:69
+#: envergo/moulinette/models.py:70
 msgid "The perimeter's map will be displayed, if it exists"
 msgstr "La carte du périmètre sera affichée, si elle existe"
 
-#: envergo/moulinette/models.py:72
+#: envergo/moulinette/models.py:73
 msgid "Polygon color"
 msgstr "Couleur du polygone"
 
-#: envergo/moulinette/models.py:76
+#: envergo/moulinette/models.py:77
 msgid "Regulations"
 msgstr "Réglementations"
 
-#: envergo/moulinette/models.py:353
+#: envergo/moulinette/models.py:354
 msgid "Admin title"
 msgstr "Titre (admin)"
 
-#: envergo/moulinette/models.py:354
+#: envergo/moulinette/models.py:355
 msgid "For backend usage only"
 msgstr "Affiché dans l'admin uniquement"
 
-#: envergo/moulinette/models.py:358 envergo/pages/models.py:11
+#: envergo/moulinette/models.py:359 envergo/pages/models.py:11
 #: envergo/stats/models.py:6
 msgid "Title"
 msgstr "Titre"
 
-#: envergo/moulinette/models.py:358
+#: envergo/moulinette/models.py:359
 msgid "For frontend usage"
 msgstr "Titre affiché côté front"
 
-#: envergo/moulinette/models.py:360
+#: envergo/moulinette/models.py:361
 msgid "Subtitle"
 msgstr "Sous-titre"
 
-#: envergo/moulinette/models.py:370
+#: envergo/moulinette/models.py:371
 msgid "Activation map"
 msgstr "Carte d'activation"
 
-#: envergo/moulinette/models.py:375 envergo/moulinette/models.py:521
+#: envergo/moulinette/models.py:376 envergo/moulinette/models.py:522
 msgid "Activation distance"
 msgstr "Distance d'activation (m)"
 
-#: envergo/moulinette/models.py:379
+#: envergo/moulinette/models.py:380
 msgid "Evaluator settings"
 msgstr "Paramètre d'évaluateur"
 
-#: envergo/moulinette/models.py:389
+#: envergo/moulinette/models.py:390
 msgid "Required action stake"
 msgstr "Enjeu de l'action requise"
 
-#: envergo/moulinette/models.py:392
+#: envergo/moulinette/models.py:393
 msgid "Project impact"
 msgstr "Impact du projet"
 
-#: envergo/moulinette/models.py:398
+#: envergo/moulinette/models.py:399
 msgid "Discussion contact (html)"
 msgstr "Contact pour discussion (html)"
 
-#: envergo/moulinette/models.py:405
+#: envergo/moulinette/models.py:406
 msgid "Criteria"
 msgstr "Critères"
 
-#: envergo/moulinette/models.py:500
+#: envergo/moulinette/models.py:501
 msgid "Backend name"
 msgstr "Nom (admin)"
 
-#: envergo/moulinette/models.py:500
+#: envergo/moulinette/models.py:501
 msgid "For admin usage only"
 msgstr "Affiché dans l'admin uniquement"
 
-#: envergo/moulinette/models.py:504 envergo/moulinette/models.py:584
+#: envergo/moulinette/models.py:505 envergo/moulinette/models.py:585
 msgid "Is activated"
 msgstr "Est actif"
 
-#: envergo/moulinette/models.py:505
+#: envergo/moulinette/models.py:506
 msgid "Check if all criteria have been set"
 msgstr "Cochez si tous les critères ont été modelisés"
 
-#: envergo/moulinette/models.py:524
+#: envergo/moulinette/models.py:525
 msgid "Contact name"
 msgstr "Nom / intitulé de contact"
 
-#: envergo/moulinette/models.py:525
+#: envergo/moulinette/models.py:526
 msgid "Contact url"
 msgstr "Site web de contact"
 
-#: envergo/moulinette/models.py:526
+#: envergo/moulinette/models.py:527
 msgid "Contact phone"
 msgstr "Téléphone de contact"
 
-#: envergo/moulinette/models.py:527
+#: envergo/moulinette/models.py:528
 msgid "Contact email"
 msgstr "E-mail de contact"
 
-#: envergo/moulinette/models.py:529
+#: envergo/moulinette/models.py:530
 msgid "Map legend"
 msgstr "Légende de la carte"
 
-#: envergo/moulinette/models.py:530
+#: envergo/moulinette/models.py:531
 msgid "Rules url"
 msgstr "Url du réglement"
 
-#: envergo/moulinette/models.py:533
+#: envergo/moulinette/models.py:534
 msgid "Perimeter"
 msgstr "Périmètre"
 
-#: envergo/moulinette/models.py:534
+#: envergo/moulinette/models.py:535
 msgid "Perimeters"
 msgstr "Périmètres"
 
-#: envergo/moulinette/models.py:585
+#: envergo/moulinette/models.py:586
 msgid "Is the moulinette available for this department?"
 msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
-#: envergo/moulinette/models.py:623
+#: envergo/moulinette/models.py:624
 msgid "Moulinette config"
 msgstr "Config moulinette"
 
-#: envergo/moulinette/models.py:624
+#: envergo/moulinette/models.py:625
 msgid "Moulinette configs"
 msgstr "Configs moulinette"
 
-#: envergo/moulinette/models.py:646
+#: envergo/moulinette/models.py:652
 msgid "Config"
 msgstr "Config"
 
-#: envergo/moulinette/models.py:650
+#: envergo/moulinette/models.py:656
 msgid "Key"
 msgstr "Clé"
 
-#: envergo/moulinette/models.py:651 envergo/pages/models.py:12
+#: envergo/moulinette/models.py:657 envergo/pages/models.py:12
 msgid "Content"
 msgstr "Contenu"
 
-#: envergo/moulinette/models.py:654
+#: envergo/moulinette/models.py:660
 msgid "Moulinette template"
 msgstr "Gabarit moulinette"
 
-#: envergo/moulinette/models.py:655
+#: envergo/moulinette/models.py:661
 msgid "Moulinette templates"
 msgstr "Gabarits moulinette"
 
@@ -1159,51 +1159,59 @@ msgstr "Actualité"
 msgid "News items"
 msgstr "Actualités"
 
-#: envergo/pages/urls.py:17
+#: envergo/pages/urls.py:19
 msgid "stats/"
 msgstr "stats/"
 
-#: envergo/pages/urls.py:18
+#: envergo/pages/urls.py:20
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls.py:20
+#: envergo/pages/urls.py:21
+msgid "tos/"
+msgstr "cgu/"
+
+#: envergo/pages/urls.py:22
+msgid "privacy/"
+msgstr "politique-de-confidentialité/"
+
+#: envergo/pages/urls.py:24
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls.py:25
+#: envergo/pages/urls.py:29
 msgid "contact-us/"
 msgstr "contact/"
 
-#: envergo/pages/urls.py:30
+#: envergo/pages/urls.py:34
 msgid "faq/"
 msgstr "foire-aux-questions/"
 
-#: envergo/pages/urls.py:39
+#: envergo/pages/urls.py:43
 msgid "loi-sur-leau/"
 msgstr "loi-sur-leau/"
 
-#: envergo/pages/urls.py:44
+#: envergo/pages/urls.py:48
 msgid "natura-2000/"
 msgstr "natura-2000/"
 
-#: envergo/pages/urls.py:49
+#: envergo/pages/urls.py:53
 msgid "eval-env/"
 msgstr "eval-env/"
 
-#: envergo/pages/urls.py:54
+#: envergo/pages/urls.py:58
 msgid "envergo-news/"
 msgstr "envergo-news/"
 
-#: envergo/pages/urls.py:59
+#: envergo/pages/urls.py:63
 msgid "envergo-news/feed/"
 msgstr "envergo-news/feed/"
 
-#: envergo/pages/urls.py:64
+#: envergo/pages/urls.py:68
 msgid "available-departments/"
 msgstr "departments-disponibles/"
 
-#: envergo/pages/urls.py:77
+#: envergo/pages/urls.py:81
 msgid "parcels.geojson"
 msgstr "parcels.geojson"
 
@@ -1228,6 +1236,8 @@ msgstr "Voir sur le site"
 #: envergo/templates/admin/evaluations/regulatorynoticelogs/mail_body.html:19
 #: envergo/templates/evaluations/admin/email_avis.html:19
 #: envergo/templates/pages/legal_mentions.html:15
+#: envergo/templates/pages/privacy.html:15
+#: envergo/templates/pages/terms_of_service.html:15
 msgid "Home"
 msgstr "Accueil"
 
@@ -1245,7 +1255,6 @@ msgstr "Supprimer"
 
 #: envergo/templates/pages/legal_mentions.html:3
 #: envergo/templates/pages/legal_mentions.html:18
-#: envergo/templates/pages/legal_mentions.html:26
 msgid "Legal mentions"
 msgstr "Mentions légales"
 
