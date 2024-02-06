@@ -2,7 +2,7 @@
   <strong>Action requise :</strong>
 </p>
 
-<p>Déterminer si le projet est soumis à la Loi sur l’eau et s’il impacte une zone humide.</p>
+<p>Démontrer que le projet n’impacte aucun m² de zone humide.</p>
 
 <p>
   <strong>Pourquoi cette action est-elle requise ?</strong>
@@ -10,20 +10,13 @@
 
 {# djlint:off #}
 <p>
-  Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide s'il est soumis à la Loi sur l'eau{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
+  Le règlement du SAGE « {{ regulation.perimeter }} » approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide s'il est soumis à la Loi sur l'eau{% if criterion.evaluator_settings.exceptions %}, à l’exception
+  de quelques cas précisés ci-dessous{% endif %}.
 </p>
 {# djlint:on #}
 
 <p>
-  Or le projet est susceptible d’être soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>).
-</p>
-
-<p>
-  Ill se situe par ailleurs à proximité d’une zone humide référencée ou dans une zone humide potentielle. Il est donc possible qu’une zone humide soit impactée par le projet.
-</p>
-
-<p>
-  Si le projet s’avère soumis à la Loi sur l’eau et s’il impacte une zone humide, il sera alors <strong>interdit</strong>.
+  Or, au vu des informations saisies, le projet est soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>) et il situe à proximité d’une zone humide référencée. Il est donc possible que celle-ci soit impactée par le projet, qui serait alors <strong>interdit</strong>.
 </p>
 
 {% if criterion.evaluator_settings.exceptions %}
@@ -32,7 +25,7 @@
   </p>
 
   <p>
-    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
+    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
   </p>
 
   {{ criterion.evaluator_settings.exceptions|safe }}

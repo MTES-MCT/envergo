@@ -1,39 +1,25 @@
-<p>
-  <strong>Action requise :</strong>
-</p>
-
-<p>Déterminer si le projet est soumis à la Loi sur l’eau et s’il impacte une zone humide.</p>
+{% load leaflet_tags moulinette %}
 
 <p>
-  <strong>Pourquoi cette action est-elle requise ?</strong>
+  <strong>Pourquoi le projet est-il interdit ?</strong>
 </p>
 
 {# djlint:off #}
-<p>
-  Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide s'il est soumis à la Loi sur l'eau{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
-</p>
+  <p>
+    Le règlement du SAGE « {{ regulation.perimeter }} » approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide s'il est soumis à la Loi sur l'eau{% if criterion.evaluator_settings.exceptions %}, à l'exceptions de quelques cas précisés ci-dessous{% endif %}.
+  </p>
+
+  <p>
+    Au vu des informations saisies, le projet est soumis à la Loi sur l'eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>), et il se situe dans une zone humide référencée. Il est donc interdit{% if criterion.evaluator_settings.exceptions %}, sauf s'il appartient aux cas ci-dessous{% endif %}.
+  </p>
 {# djlint:on #}
-
-<p>
-  Or le projet est susceptible d’être soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>).
-</p>
-
-<p>
-  Ill se situe par ailleurs à proximité d’une zone humide référencée ou dans une zone humide potentielle. Il est donc possible qu’une zone humide soit impactée par le projet.
-</p>
-
-<p>
-  Si le projet s’avère soumis à la Loi sur l’eau et s’il impacte une zone humide, il sera alors <strong>interdit</strong>.
-</p>
 
 {% if criterion.evaluator_settings.exceptions %}
   <p>
     <strong>Quelles sont les exceptions à cette interdiction ?</strong>
   </p>
 
-  <p>
-    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
-  </p>
+  <p>Le projet peut être tout de même autorisé dans certains cas, et en particulier :</p>
 
   {{ criterion.evaluator_settings.exceptions|safe }}
 
@@ -57,10 +43,6 @@
 
   <p>
     La recherche de zones humides se fait nécessairement par une étude de terrain, confiée en pratique à un bureau d'études spécialisé. Celui-ci examine les espèces végétales présentes, le type de sol, et le profil d'humidité sous la surface.
-  </p>
-
-  <p>
-    Les cartographies de zones humides potentielles servent d'alerte et d'aide aux porteurs de projet et administrations dans la recherche de zones humides.
   </p>
 {% endif %}
 
