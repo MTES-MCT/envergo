@@ -511,9 +511,18 @@ class ImpactZoneHumideStrict(CriterionEvaluator):
         return criterion_map
 
 
+class ImpactZHIOTASettings(forms.Form):
+    exceptions = forms.CharField(
+        label="Texte exceptions (html)",
+        help_text="Indiquez la liste des exceptions mentionnées dans l'arrêté préfectoral d'interdiction.",
+        required=False,
+    )
+
+
 class ImpactZoneHumideIOTA(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH si IOTA"
     slug = "interdiction_impact_zh_iota"
+    settings_form_class = ImpactZHIOTASettings
     zh_strict = False
 
     CODES = [
@@ -660,6 +669,7 @@ class ImpactZoneHumideIOTA(CriterionEvaluator):
 class ImpactZoneHumideIOTAStrict(CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH si IOTA (carte stricte)"
     slug = "interdiction_impact_zh_iota"
+    settings_form_class = ImpactZHIOTASettings
     zh_strict = True
 
     CODES = [
