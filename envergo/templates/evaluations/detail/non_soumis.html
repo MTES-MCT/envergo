@@ -5,7 +5,7 @@
 {% block title %}Consultez l'avis réglementaire pour votre projet{% endblock %}
 
 {% block breadcrumbs %}
-  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
+  <nav role="navigation" class="fr-breadcrumb" aria-label="vous êtes ici :">
     <button class="fr-breadcrumb__button"
             aria-expanded="false"
             aria-controls="breadcrumb-1">Voir le fil d'Ariane</button>
@@ -38,7 +38,7 @@
           </p>
           <h3>Projet de construction</h3>
           <ul>
-            <li>Adresse : {{ evaluation.address }}</li>
+            <li>Adresse : {{ evaluation.address }}</li>
             {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
           </ul>
           <div class="fr-alert fr-alert--success fr-my-8w">
@@ -86,7 +86,7 @@
 
           {% if criterions %}
             <p>
-              Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :
+              Le projet <strong>a les impacts suivants</strong> (cliquez sur chaque élément pour voir les détails) :
             </p>
 
             <div id="evaluation-accordion" class="fr-mb-3w">

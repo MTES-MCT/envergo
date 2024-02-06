@@ -10,7 +10,7 @@
     une action du porteur de projet est requise.
   </p>
 
-  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
+  <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
   <ul>
     <li>
       s’il s’avère soumis à la Loi sur l’eau – <a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> sur cette page ;
@@ -18,7 +18,7 @@
 
     {% if moulinette.natura2000.autorisation_urba.result == 'a_verifier' %}
       <li>
-        ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique <a href="#criterion-{{ regulation.autorisation_urba.unique_slug }}">{{ regulation.autorisation_urba }}</a> » ci-dessous ;
+        ou dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique <a href="#criterion-{{ regulation.autorisation_urba.unique_slug }}">{{ regulation.autorisation_urba }}</a> » ci-dessous ;
       </li>
     {% endif %}
 
@@ -34,7 +34,7 @@
       <li>
         dans certains cas, s’il est soumis à une autorisation d’urbanisme – voir rubrique <a href="#criterion-{{ regulation.autorisation_urba.unique_slug }}">{{ regulation.autorisation_urba }}</a> » ci-dessous ;
       </li>
-      <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.</li>
+      <li>s’il a certains impacts sur le milieu ; une action du porteur de projet est requise à ce titre.</li>
     </ul>
 
   {% else %}
@@ -64,12 +64,12 @@
 {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
   <p>
-    <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
+    <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
   </p>
 
   <ul>
     <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
-    <li>Délai d'instruction : 2 mois.</li>
+    <li>Délai d'instruction : 2 mois.</li>
   </ul>
 
   <p>
@@ -140,7 +140,7 @@
     </p>
 
     <p>
-      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction Loi sur l'eau :
+      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction Loi sur l'eau :
     </p>
 
     <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
@@ -148,7 +148,7 @@
     {% if is_lotissement == 'oui' %}
 
       <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
+        <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
       </p>
 
       <p>L'EIN est à déposer en mairie, avec la demande de permis d'aménager.</p>
@@ -156,10 +156,10 @@
     {% else %}
 
       <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
+        <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
       </p>
 
-      <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
+      <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
 
       <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
 
@@ -213,7 +213,7 @@
 
       <p>
         <em>Si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
-        elle est examinée en même temps que celui-ci. La procédure d'instruction n'en est pas modifiée, et garde le même délai :
+        elle est examinée en même temps que celui-ci. La procédure d'instruction n'en est pas modifiée, et garde le même délai :
         2 mois, extensible en cas de demande de compléments.
       </p>
 
