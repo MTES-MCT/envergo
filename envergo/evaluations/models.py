@@ -1,7 +1,6 @@
 import logging
 import secrets
 import uuid
-from functools import lru_cache
 from os.path import splitext
 from urllib.parse import urlparse
 
@@ -272,20 +271,21 @@ class Evaluation(models.Model):
         department = Department.objects.filter(geometry__contains=coords).first()
         return department.moulinette_config if department else None
 
-    @lru_cache
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.forms import MoulinetteForm
         from envergo.moulinette.models import Moulinette
         from envergo.moulinette.utils import compute_surfaces
 
-        raw_params = self.moulinette_params
-        raw_params.update(compute_surfaces(raw_params))
-        form = MoulinetteForm(raw_params)
-        form.is_valid()
-        params = form.cleaned_data
-        moulinette = Moulinette(params, raw_params)
-        return moulinette
+        if not hasattr(self, "_moulinette"):
+            raw_params = self.moulinette_params
+            raw_params.update(compute_surfaces(raw_params))
+            form = MoulinetteForm(raw_params)
+            form.is_valid()
+            params = form.cleaned_data
+            self._moulinette = Moulinette(params, raw_params)
+
+        return self._moulinette
 
     def can_send_regulatory_reminder(self):
         """Return True if a regulatory reminder can be sent for this evaluation."""
