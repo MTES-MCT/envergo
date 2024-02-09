@@ -384,12 +384,24 @@ class ImpactZoneHumide(CriterionEvaluator):
                 MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
             )
 
-        wetland_status, _project_size = self.get_result_data()
-        if wetland_status == "inside":
+        if (
+            self.catalog["wetlands_within_25m"]
+            or self.catalog["forbidden_wetlands_within_25m"]
+        ):
             caption = "Le projet se situe dans une zone humide référencée."
-        elif wetland_status == "close_to":
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            or self.catalog["forbidden_wetlands_within_100m"]
+        ) and not self.catalog["potential_wetlands_within_0m"]:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-        elif wetland_status == "potential":
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            or self.catalog["forbidden_wetlands_within_100m"]
+        ) and self.catalog["potential_wetlands_within_0m"]:
+            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+        elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
             caption = "Le projet ne se situe pas dans une zone humide référencée."
@@ -662,13 +674,25 @@ class ImpactZoneHumideIOTA(CriterionEvaluator):
                 MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
             )
 
-        wetland_status, _project_size = self.get_result_data()
-        if wetland_status == "inside":
+        if (
+            self.catalog["wetlands_within_25m"]
+            or self.catalog["forbidden_wetlands_within_25m"]
+        ):
             caption = "Le projet se situe dans une zone humide référencée."
-        elif wetland_status == "close_to":
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            or self.catalog["forbidden_wetlands_within_100m"]
+        ) and not self.catalog["potential_wetlands_within_0m"]:
             caption = "Le projet se situe à proximité d'une zone humide référencée."
-        elif wetland_status == "potential":
-            caption = "le projet se situe dans une zone humide potentielle."
+
+        elif (
+            self.catalog["wetlands_within_100m"]
+            or self.catalog["forbidden_wetlands_within_100m"]
+        ) and self.catalog["potential_wetlands_within_0m"]:
+            caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
+        elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
+            caption = "Le projet se situe dans une zone humide potentielle."
         else:
             caption = "Le projet ne se situe pas dans une zone humide référencée."
 
