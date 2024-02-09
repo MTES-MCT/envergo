@@ -55,25 +55,7 @@
 
   {% endfor %}
 
-  <section class="regulation fr-mb-5w" id="regulation_especes_protegees">
-    <h2>
-      <span class="content">Espèces protégées</span>
-    </h2>
-    <p>
-      Tout projet qui détruit ou perturbe une espèce animale ou végétale protégée est interdit, et ne peut être réalisé qu'à condition d’obtenir une <em>dérogation</em> « espèces protégées ». C'est également le cas des projets qui impactent certains habitats de ces espèces.
-    </p>
-    <p>
-      Cette réglementation s'applique en toutes circonstances, même si le projet n'est soumis à aucune autre réglementation environnementale ou procédure, telle qu’étude d'impact ou évaluation des incidences Natura 2000.
-    </p>
-
-    {% if moulinette.department.department == "35" %}
-      <p>
-        La DDTM d'Ille-et-Vilaine met à disposition un <a href="https://www.ille-et-vilaine.gouv.fr/contenu/telechargement/56441/383553/file/Réglementation espèces protégées_Inventaires projets.pdf"
-    target="_blank"
-    ref="noopener">guide sur la réglementation espèces protégées</a>.
-      </p>
-    {% endif %}
-  </section>
+  {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
 
   <div class="fr-alert fr-alert--info fr-my-5w">
     <p>

@@ -18,9 +18,11 @@
   Or le projet est susceptible d’être soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>).
 </p>
 
+{# djlint:off #}
 <p>
-  Il se situe par ailleurs à proximité d’une zone humide référencée ou dans une zone humide potentielle. Il est donc possible qu’une zone humide soit impactée par le projet.
+  Il se situe par ailleurs à proximité d’une zone humide référencée{% if not criterion.evaluator.zh_strict %} ou dans une zone humide potentielle{% endif %}. Il est donc possible qu’une zone humide soit impactée par le projet.
 </p>
+{# djlint:on #}
 
 <p>
   Si le projet s’avère soumis à la Loi sur l’eau et s’il impacte une zone humide, il sera alors <strong>interdit</strong>.
@@ -32,7 +34,7 @@
   </p>
 
   <p>
-    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
+    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
   </p>
 
   {{ criterion.evaluator_settings.exceptions|safe }}

@@ -188,6 +188,10 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
     inlines = [MoulinetteTemplateInline]
     list_filter = ["is_activated"]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.order_by("department__department")
+
 
 @admin.register(MoulinetteTemplate)
 class MoulinetteTemplateAdmin(admin.ModelAdmin):

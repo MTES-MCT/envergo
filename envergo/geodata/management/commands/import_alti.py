@@ -1,6 +1,5 @@
 import random
 import statistics
-from functools import lru_cache
 from queue import Queue
 
 import matplotlib.pyplot as plt
@@ -172,7 +171,8 @@ class Mnt:
 
         This is a very classic Breadth-first search algorithm.
 
-        See https://www.redblobgames.com/pathfinding/a-star/introduction.html#breadth-first-search"""
+        See https://www.redblobgames.com/pathfinding/a-star/introduction.html#breadth-first-search
+        """
 
         start = (0, 0)
         frontier = Queue()
@@ -219,7 +219,6 @@ class Mnt:
         val = self.attributes["alti"].get(self.coords(cell))
         return self.randomize(val)
 
-    @lru_cache
     def randomize(self, val):
         delta = random.uniform(-0.2, 0.2)
         return val + delta
