@@ -38,6 +38,24 @@
 
   </ul>
 
+  {% if required_actions_interdit %}
+    <p>
+      Le <strong>projet est susceptible d'être interdit</strong> au titre du <strong>règlement de SAGE</strong> (Schéma d’Aménagement et de Gestion des Eaux). <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur de projet est requise.</strong> Des études doivent être menées pour s’assurer que le projet :
+    </p>
+    <ul>
+      {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if required_actions_soumis %}
+    <p>
+      Par ailleurs, le projet est susceptible d'être soumis à la <strong>Loi sur l’eau</strong>. <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur du projet est requise.</strong> Celui-ci doit mener les études prouvant que le projet :
+    </p>
+    <ul>
+      {% for action in required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
   {% if is_icpe %}
     {% include 'evaluations/admin/_icpe_mention.html' %}
   {% endif %}
