@@ -16,6 +16,19 @@ Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à l
     Le porteur de projet doit faire réaliser une étude d'impact.
 
 {% endif %}
+{% if required_actions_interdit %}
+Le projet est susceptible d'être interdit au titre du règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux). Une action du porteur de projet est requise. Des études doivent être menées pour s’assurer que le projet :
+
+{% for action in required_actions_interdit %}  - {{ action }}
+
+{% endfor %}
+{% endif %}{% if required_actions_soumis %}
+Par ailleurs, le projet est susceptible d'être soumis à la Loi sur l’eau. Une action du porteur du projet est requise. Celui-ci doit mener les études prouvant que le projet :
+
+{% for action in required_actions_soumis %}  - {{ action }}
+
+{% endfor %}
+{% endif %}
 {% if is_icpe %}{% include 'evaluations/admin/_icpe_mention.txt' %}{% endif %}
 {% if rr_mention_md %}{{ rr_mention_md }}
 {% endif %}
