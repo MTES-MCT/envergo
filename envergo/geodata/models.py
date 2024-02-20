@@ -276,3 +276,13 @@ class Department(models.Model):
 
     def __str__(self):
         return self.get_department_display()
+
+
+class CatchmentAreaTile(models.Model):
+    """A raster tile with catchment area data."""
+
+    data = gis_models.RasterField(_("Data"))
+
+    class Meta:
+        verbose_name = _("Catchment area tile")
+        verbose_name_plural = _("Catchment area tiles")
