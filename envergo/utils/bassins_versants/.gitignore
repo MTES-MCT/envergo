@@ -1,0 +1,7 @@
+__pycache__/
+# too big
+alti_data/
+alti_data_29/
+alti_data_39/
+# always different
+output/
