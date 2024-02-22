@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% load static evaluations l10n %}
+
+{% block title %}Carte{% endblock %}
+
+{% block content %}
+  <article>
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col">
+          <form method="get" action="">
+            {{ form.lng.as_hidden }}
+            {{ form.lat.as_hidden }}
+            <label class="step">
+              Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+              l'emplacement du projet.
+            </label>
+
+            <div class="ratio-4x3 fr-my-3w">
+              <div class="ratio-content">
+                <div id="map"></div>
+              </div>
+            </div>
+
+            <button type="submit" class="fr-btn">Valider</button>
+          </form>
+        </div>
+        <div class="fr-col">Coucou</div>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/2150_map.js' %}"></script>
+
+  <script>
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+  </script>
+
+{% endblock %}
