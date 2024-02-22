@@ -184,3 +184,25 @@ Il y a également un argparse à l'intérieur de mass carto creator pour exécut
 
 ## parameters_benchmark.py
 [parameters_benchmark.py](utils/parameters_benchmark.py) permet d'effectuer des calculs de cartographies pour des paramètres et tuiles de cartographie d'altimétrie données, puis de lancer les comparaisons entre certaines des cartographies produites.
+
+## Processing des fichiers générés par mass_carto_creations.py
+
+Les fichiers générés par le script de création de carto ne sont pas directement importables mais nécessitent un post-traitement.
+
+ATTENTION les commandes suivantes modifient les fichers directement, il est conseillé d'en avoir une copie de sauvegarde auparavent.
+
+```shell
+# dans le répertoire contenant les fichiers ASC
+
+# les lignes d'entête ne doivent pas commencer par un « # »
+sed 's/^# \(.*\)/\1/' *.ASC -i
+
+# supprime les lignes vides
+sed '/^$/d' *.ASC -i
+
+# génère des raster tif à partir des fichiers asc
+# cette étape est nécessaire pour spécifier un système de coordonnées
+for f in *.ASC; do
+    gdal_translate -of GTiff -a_srs EPSG:2154 "$f" "${f%.*}".tif
+done
+```
