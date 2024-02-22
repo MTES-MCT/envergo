@@ -281,7 +281,7 @@ class Department(models.Model):
 class CatchmentAreaTile(models.Model):
     """A raster tile with catchment area data."""
 
-    data = gis_models.RasterField(_("Data"))
+    data = gis_models.RasterField(_("Data"), srid=2154)
 
     class Meta:
         verbose_name = _("Catchment area tile")
