@@ -281,6 +281,7 @@ class Department(models.Model):
 class CatchmentAreaTile(models.Model):
     """A raster tile with catchment area data."""
 
+    filename = models.CharField(_("Filename"), max_length=256)
     data = gis_models.RasterField(_("Data"), srid=2154)
 
     class Meta:
