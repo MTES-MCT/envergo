@@ -117,7 +117,7 @@ def save_array_to_carto(array, file_name, info):
     header += "nodata_value %s\n" % info["nodata_value"]
     array[np.isnan(array) | (array is None)] = float(info["nodata_value"])
 
-    np.savetxt(file_name, array, header=header, fmt="%1.2f")
+    np.savetxt(file_name, array, header=header, fmt="%1.2f", comments="")
 
 
 def create_quadrants(carto_precision, inner_radius, radii, quadrants_nb):
