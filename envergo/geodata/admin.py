@@ -300,4 +300,4 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(CatchmentAreaTile)
 class CatchmentAreaTileAdmin(admin.ModelAdmin):
-    list_display = ["id"]
+    list_display = ["filename"]
