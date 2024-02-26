@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load static evaluations l10n %}
+{% load static l10n evaluations moulinette %}
 
 {% block title %}Démonstrateur 2150{% endblock %}
 
@@ -69,15 +69,25 @@
             {% endif %}
           </ul>
 
-          <table>
-            {% for row in areas %}
-              <tr>
-                {% for number in row %}<td>{{ number|stringformat:"d" }}</td>{% endfor %}
-              </tr>
-            {% endfor %}
-          </table>
-        {% endif %}
-      </div>
+          <section class="fr-accordion">
+            <h3 class="fr-accordion__title">
+              <button class="fr-accordion__btn"
+                      aria-expanded="false"
+                      aria-controls="accordion-detail">Détails du calcul</button>
+            </h3>
+            <div class="fr-collapse" id="accordion-detail">
+              <table>
+                <legend>Les surfaces d'écoulement calculées autour des coordonnées, sur une grille de 20m.</legend>
+                {% for row in areas %}
+                  <tr>
+                    {% for number in row %}<td>{{ number|stringformat:"d" }}</td>{% endfor %}
+                  </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </section>
+        </div>
+      {% endif %}
     </div>
   </article>
 {% endblock %}
@@ -98,6 +108,7 @@
     var DEFAULT_ZOOM = {{ default_zoom }};
     var LAT_FIELD_ID = 'id_lat';
     var LNG_FIELD_ID = 'id_lng';
+    var POLYGONS = {{ polygons|safe }};
   </script>
 
 {% endblock %}
