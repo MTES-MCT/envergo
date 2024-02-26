@@ -2,31 +2,81 @@
 
 {% load static evaluations l10n %}
 
-{% block title %}Carte{% endblock %}
+{% block title %}Démonstrateur 2150{% endblock %}
+
+{% block main-classes %}demonstrateur_2150{% endblock %}
 
 {% block content %}
   <article>
-    <div class="fr-container">
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col">
-          <form method="get" action="">
-            {{ form.lng.as_hidden }}
-            {{ form.lat.as_hidden }}
-            <label class="step">
-              Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-              l'emplacement du projet.
-            </label>
+    <h1>Démonstrateur 2.1.5.0</h1>
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-7">
+        <form method="get" action="">
+          {{ form.lng.as_hidden }}
+          {{ form.lat.as_hidden }}
+          <label class="step">
+            Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+            l'emplacement du projet.
+          </label>
 
-            <div class="ratio-4x3 fr-my-3w">
-              <div class="ratio-content">
-                <div id="map"></div>
-              </div>
+          <div class="ratio-4x3 fr-my-3w">
+            <div class="ratio-content">
+              <div id="map"></div>
             </div>
+          </div>
 
-            <button type="submit" class="fr-btn">Valider</button>
-          </form>
-        </div>
-        <div class="fr-col">Coucou</div>
+          <button type="submit" class="fr-btn">Valider</button>
+        </form>
+      </div>
+      <div class="fr-col-5">
+        {% if result_available %}
+          <h2 class="fr-h4">Résultat du calcul</h2>
+          <p>
+            Indicateur de bassin versant : <span class="fr-tag surface">{{ catchment_area_500 }}</span> m²
+          </p>
+
+          <h2 class="fr-h4">Ce que le simulateur EnvErgo pourrait répondre</h2>
+
+          <p>
+            Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2150 de la Loi sur l'eau, selon la surface qu'il artificialise.
+          </p>
+
+          <ul>
+            {% if value_action_requise > 0 %}
+              <li>
+                Pour un projet qui artificialise entre 0 et <span class="fr-tag surface">{{ value_action_requise }}</span> m² :
+                <span class="fr-tag probability probability-non_soumis">Non soumis</span>
+              </li>
+            {% endif %}
+
+            {% if value_soumis > 0 %}
+              <li>
+                Pour un projet qui artificialise entre <span class="fr-tag surface">{{ value_action_requise }}</span> et <span class="fr-tag">{{ value_soumis }}</span> m² :
+                <span class="fr-tag probability probability-action_requise">Action requise</span>
+                <br />
+                « le porteur doit mener les études pour déterminer si la surface du projet, ajoutée à celle de l'aire d'écoulement d'eaux pluviales interceptée, dépasse 10 000m2 »
+              </li>
+
+              <li>
+                Pour un projet qui artificialise plus de <span class="fr-tag surface">{{ value_soumis }}</span> m² :
+                <span class="fr-tag probability probability-soumis">Soumis</span>
+              </li>
+            {% else %}
+              <li>
+                L'aire d'écoulement d'eaux pluviales interceptée est supérieure au seuil de 1 ha de la rubrique 2150 de la Loi sur l'eau :
+                <span class="fr-tag probability probability-soumis">Soumis</span>
+              </li>
+            {% endif %}
+          </ul>
+
+          <table>
+            {% for row in areas %}
+              <tr>
+                {% for number in row %}<td>{{ number|stringformat:"d" }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% endif %}
       </div>
     </div>
   </article>

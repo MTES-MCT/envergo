@@ -37,12 +37,13 @@
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
-    L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+    L.tileLayer("https://data.geopf.fr/private/wmts?" +
+      "apikey=ign_scan_ws" +
       "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
       "&STYLE=normal" +
       "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/png" +
-      "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+      "&FORMAT=image/jpeg" +
+      "&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR" +
       "&TILEMATRIX={z}" +
       "&TILEROW={y}" +
       "&TILECOL={x}", {
