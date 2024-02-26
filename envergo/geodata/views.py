@@ -3,6 +3,7 @@ import logging
 import requests
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.serializers import serialize
+from django.db import connection
 from django.http import JsonResponse
 from django.http.response import HttpResponse
 from django.utils.decorators import method_decorator
@@ -78,6 +79,37 @@ class CatchmentAreaDebug(FormView):
             context["display_marker"] = False
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 5
+
+        if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
+            lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
+
+            # EPSG_WGS84 = 4326
+            # EPSG_MERCATOR = 3857
+            # lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+            # coords = lng_lat.transform(EPSG_MERCATOR, clone=True)
+            # tiles = CatchmentAreaTile.objects.filter(data__contains=coords)
+
+            with connection.cursor() as cursor:
+                query = """
+                SELECT ST_Neighborhood(tiles.data, point, 1, 1)
+                FROM geodata_catchmentareatile AS tiles
+                CROSS JOIN ST_Transform(ST_Point(%s, %s, 4326), 2154) AS point
+                WHERE ST_Intersects(tiles.data, point)
+                """
+                cursor.execute(query, [lng, lat])
+                row = cursor.fetchone()
+                areas = row[0]
+                catchment_area = int(areas[1][1])
+                catchment_area_500 = round(catchment_area / 500) * 500
+                value_action_requise = max(0, 7000 - catchment_area_500)
+                value_soumis = max(0, 12000 - catchment_area_500)
+
+                context["result_available"] = True
+                context["areas"] = areas
+                context["catchment_area"] = catchment_area
+                context["catchment_area_500"] = catchment_area_500
+                context["value_action_requise"] = value_action_requise
+                context["value_soumis"] = value_soumis
 
         return context
 
