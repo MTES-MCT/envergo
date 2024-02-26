@@ -1,3 +1,4 @@
+import json
 import logging
 
 import requests
@@ -104,12 +105,41 @@ class CatchmentAreaDebug(FormView):
                 value_action_requise = max(0, 7000 - catchment_area_500)
                 value_soumis = max(0, 12000 - catchment_area_500)
 
+                query = """
+                SELECT (gv).x, (gv).y, (gv).val, ST_AsGeoJSON( ST_Transform( (gv).geom, 4326 ) ) geom
+                FROM
+                (
+                    SELECT
+                    (
+                        ST_PixelAsPolygons(
+                        ST_Clip(
+                            tiles.data,
+                            ST_Envelope(
+                            ST_Buffer(point, 80)
+                            )
+                        )
+                        )
+                    ).*
+                    FROM
+                    geodata_catchmentareatile AS tiles CROSS
+                    JOIN ST_Transform(
+                        ST_Point(%s, %s, 4326),
+                        2154
+                    ) AS point
+                    WHERE
+                    ST_Intersects(tiles.data, point)
+                ) gv;
+                """
+                cursor.execute(query, [lng, lat])
+                polygons = cursor.fetchall()
+
                 context["result_available"] = True
                 context["areas"] = areas
                 context["catchment_area"] = catchment_area
                 context["catchment_area_500"] = catchment_area_500
                 context["value_action_requise"] = value_action_requise
                 context["value_soumis"] = value_soumis
+                context["polygons"] = json.dumps(polygons)
 
         return context
 
