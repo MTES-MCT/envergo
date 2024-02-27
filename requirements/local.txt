@@ -237,6 +237,7 @@ nodeenv==1.8.0
 numpy==1.25.2
     # via
     #   -r base.txt
+    #   scipy
     #   shapely
 oauthlib==3.2.2
     # via
@@ -372,6 +373,8 @@ rjsmin==1.2.1
     # via
     #   -r base.txt
     #   django-compressor
+scipy==1.12.0
+    # via -r base.txt
 shapely==2.0.1
     # via -r base.txt
 six==1.16.0
