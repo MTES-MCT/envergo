@@ -31,7 +31,7 @@
       keyboard: !mapData["fixed"]
     }).setView(centerCoords, mapData['zoom']);
 
-    L.tileLayer("https://wxs.ign.fr/essentiels/geoportail/wmts?" +
+    L.tileLayer("https://data.geopf.fr/wmts?" +
       "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
       "&STYLE=normal" +
       "&TILEMATRIXSET=PM" +
