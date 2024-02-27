@@ -145,6 +145,7 @@ markdown==3.4.4
 numpy==1.25.2
     # via
     #   -r base.txt
+    #   scipy
     #   shapely
 oauthlib==3.2.2
     # via
@@ -227,6 +228,8 @@ rjsmin==1.2.1
     #   django-compressor
 s3transfer==0.6.2
     # via boto3
+scipy==1.12.0
+    # via -r base.txt
 sentry-sdk==1.29.2
     # via -r production.in
 shapely==2.0.1
