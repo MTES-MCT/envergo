@@ -106,29 +106,30 @@ class CatchmentAreaDebug(FormView):
                 value_soumis = max(0, 12000 - catchment_area_500)
 
                 query = """
-                SELECT (gv).x, (gv).y, (gv).val, ST_AsGeoJSON( ST_Transform( (gv).geom, 4326 ) ) geom
+                SELECT (gv).x, (gv).y, (gv).val, ST_AsGeoJSON(ST_Transform((gv).geom, 4326)) geom
                 FROM
-                (
+                  (
                     SELECT
-                    (
+                      (
                         ST_PixelAsPolygons(
-                        ST_Clip(
+                          ST_Clip(
                             tiles.data,
                             ST_Envelope(
-                            ST_Buffer(point, 80)
-                            )
+                              ST_Buffer(point, 50)
+                            ),
+                            false
+                          )
                         )
-                        )
-                    ).*
+                      ).*
                     FROM
-                    geodata_catchmentareatile AS tiles CROSS
-                    JOIN ST_Transform(
+                      geodata_catchmentareatile AS tiles CROSS
+                      JOIN ST_Transform(
                         ST_Point(%s, %s, 4326),
                         2154
-                    ) AS point
+                      ) AS point
                     WHERE
-                    ST_Intersects(tiles.data, point)
-                ) gv;
+                      ST_Intersects(tiles.data, point)
+                  ) gv;
                 """
                 cursor.execute(query, [lng, lat])
                 polygons = cursor.fetchall()
