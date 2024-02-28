@@ -68,24 +68,6 @@
               </li>
             {% endif %}
           </ul>
-
-          <section class="fr-accordion">
-            <h3 class="fr-accordion__title">
-              <button class="fr-accordion__btn"
-                      aria-expanded="false"
-                      aria-controls="accordion-detail">Détails du calcul</button>
-            </h3>
-            <div class="fr-collapse" id="accordion-detail">
-              <table>
-                <legend>Les surfaces d'écoulement calculées autour des coordonnées, sur une grille de 20m.</legend>
-                {% for row in areas %}
-                  <tr>
-                    {% for number in row %}<td>{{ number|stringformat:"d" }}</td>{% endfor %}
-                  </tr>
-                {% endfor %}
-              </table>
-            </div>
-          </section>
         </div>
       {% endif %}
     </div>
