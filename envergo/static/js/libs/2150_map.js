@@ -21,6 +21,7 @@
     this.drawPolygons();
     this.addLegend();
     this.addControl();
+    this.addScaleControl();
 
     if (this.options.displayMarker) {
       this.marker.addTo(this.map);
@@ -186,6 +187,10 @@
     };
 
     this.info.addTo(this.map);
+  };
+
+  Map.prototype.addScaleControl = function () {
+    L.control.scale({ imperial: false }).addTo(this.map);
   };
 
   Map.prototype.setMarkerPosition = function (latLng, zoomLevel) {
