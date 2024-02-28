@@ -69,6 +69,15 @@
             {% endif %}
           </ul>
         </div>
+      {% else %}
+        <h2>Département non disponible</h2>
+        <p>
+          Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.74092&lat=45.20164">Isère (38)</a>.
+        </p>
+        <h2>Pour en savoir plus</h2>
+        <p>
+          Consultez <a href="https://docs.google.com/presentation/d/1O1Q4Z9Cj00v6gyuvoigPes2yX32vp7n1OMr_IVEU86g/edit#slide=id.p">le document d'explication</a> (mode d'emploi et description de l'algorithme de calcul).
+        </p>
       {% endif %}
     </div>
   </article>
@@ -90,7 +99,7 @@
     var DEFAULT_ZOOM = {{ default_zoom }};
     var LAT_FIELD_ID = 'id_lat';
     var LNG_FIELD_ID = 'id_lng';
-    var POLYGONS = {{ polygons|safe }};
+    var POLYGONS = {{ polygons|default:"[]"|safe }};
   </script>
 
 {% endblock %}
