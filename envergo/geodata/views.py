@@ -154,7 +154,7 @@ class CatchmentAreaDebug(FormView):
               SELECT
                 (ST_PixelAsPoints(
                   ST_Clip(
-                    tiles.data,
+                    tiles.rast,
                     ST_Envelope(
                       ST_Buffer(point, 30)
                     )
@@ -168,7 +168,7 @@ class CatchmentAreaDebug(FormView):
                     2154
                 ) AS point
               WHERE
-                ST_Intersects(tiles.data, point)
+                ST_Intersects(tiles.rast, point)
               ) points;
             """
             cursor.execute(query, [lng, lat])
@@ -208,7 +208,7 @@ class CatchmentAreaDebug(FormView):
                   (
                     ST_PixelAsPolygons(
                       ST_Clip(
-                        tiles.data,
+                        tiles.rast,
                         ST_Envelope(
                           ST_Buffer(
                             ST_Translate(point, 10, -10),
@@ -227,7 +227,7 @@ class CatchmentAreaDebug(FormView):
                     2154
                   ) AS point
                 WHERE
-                  ST_Intersects(tiles.data, point)
+                  ST_Intersects(tiles.rast, point)
               ) gv;
             """
             cursor.execute(query, [lng, lat])
