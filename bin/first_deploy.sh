@@ -16,6 +16,7 @@ PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table=spatial_ref_sys --exc
 $HOME/bin/pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
 $HOME/bin/pg_restore $PG_OPTIONS --dbname $DATABASE_URL /tmp/dump.pgsql
 $HOME/bin/psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
+$HOME/bin/psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS postgis_raster;'
 # psql -d $DATABASE_URL -c 'CREATE EXTENSION IF NOT EXISTS unaccent;'
 
 # Clean dump file
