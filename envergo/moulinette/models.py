@@ -751,7 +751,7 @@ class Moulinette:
             return all(
                 (
                     zone.map.map_type == "zone_humide",
-                    zone.map.data_type == "certain",
+                    zone.map.data_type in ("certain", "forbidden"),
                 )
             )
 
