@@ -81,10 +81,9 @@ class CatchmentAreaDebug(FormView):
             context["center_map"] = [lng, lat]
             context["default_zoom"] = 16
         else:
-            # By default, show all metropolitan france in map
             context["display_marker"] = False
-            context["center_map"] = [1.7000, 47.000]
-            context["default_zoom"] = 5
+            context["center_map"] = [-4.03177, 48.38986]  # Somewhere in Finistère
+            context["default_zoom"] = 8
 
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
