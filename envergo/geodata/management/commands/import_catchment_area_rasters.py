@@ -37,5 +37,5 @@ class Command(BaseCommand):
 
     def import_file(self, file):
         raster = GDALRaster(file, write=True)
-        tile = CatchmentAreaTile(filename=file.name, data=raster)
+        tile = CatchmentAreaTile(filename=file.name, rast=raster)
         tile.save()
