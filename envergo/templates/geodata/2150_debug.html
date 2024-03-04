@@ -29,6 +29,7 @@
         </form>
       </div>
       <div class="fr-col-5">
+
         {% if result_available %}
           <h2 class="fr-h4">Résultat du calcul</h2>
           <p>
@@ -38,27 +39,27 @@
           <h2 class="fr-h4">Ce que le simulateur EnvErgo pourrait répondre</h2>
 
           <p>
-            Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2150 de la Loi sur l'eau, selon la surface qu'il artificialise.
+            Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2.1.5.0. de la Loi sur l'eau, le simulateur répondrait – selon la surface du projet :
           </p>
 
           <ul>
             {% if value_action_requise > 0 %}
               <li>
-                Pour un projet qui artificialise entre 0 et <span class="fr-tag surface">{{ value_action_requise }}</span> m² :
+                projet qui artificialise entre 0 et <span class="fr-tag surface">{{ value_action_requise }}</span> m² :
                 <span class="fr-tag probability probability-non_soumis">Non soumis</span>
               </li>
             {% endif %}
 
             {% if value_soumis > 0 %}
               <li>
-                Pour un projet qui artificialise entre <span class="fr-tag surface">{{ value_action_requise }}</span> et <span class="fr-tag">{{ value_soumis }}</span> m² :
+                projet qui artificialise entre <span class="fr-tag surface">{{ value_action_requise }}</span> et <span class="fr-tag">{{ value_soumis }}</span> m² :
                 <span class="fr-tag probability probability-action_requise">Action requise</span>
                 <br />
-                « le porteur doit mener les études pour déterminer si la surface du projet, ajoutée à celle de l'aire d'écoulement d'eaux pluviales interceptée, dépasse 10 000m2 »
+                « le porteur doit mener les études pour déterminer si la surface du projet, ajoutée à celle de l'aire d'écoulement d'eaux pluviales interceptée, dépasse 10 000 m² »
               </li>
 
               <li>
-                Pour un projet qui artificialise plus de <span class="fr-tag surface">{{ value_soumis }}</span> m² :
+                projet qui artificialise plus de <span class="fr-tag surface">{{ value_soumis }}</span> m² :
                 <span class="fr-tag probability probability-soumis">Soumis</span>
               </li>
             {% else %}
@@ -68,17 +69,20 @@
               </li>
             {% endif %}
           </ul>
-        </div>
-      {% else %}
-        <h2>Département non disponible</h2>
+        {% else %}
+          <h2 class="fr-h4">Département non disponible</h2>
+          <p>
+            Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
+          </p>
+        {% endif %}
+
+        <h2 class="fr-h4">Pour en savoir plus</h2>
         <p>
-          Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
+          Consultez <a href="https://docs.google.com/presentation/d/1O1Q4Z9Cj00v6gyuvoigPes2yX32vp7n1OMr_IVEU86g/edit#slide=id.p"
+    target="_blank"
+    rel="noopener">le document d'explication</a> (mode d'emploi et description de l'algorithme de calcul).
         </p>
-        <h2>Pour en savoir plus</h2>
-        <p>
-          Consultez <a href="https://docs.google.com/presentation/d/1O1Q4Z9Cj00v6gyuvoigPes2yX32vp7n1OMr_IVEU86g/edit#slide=id.p">le document d'explication</a> (mode d'emploi et description de l'algorithme de calcul).
-        </p>
-      {% endif %}
+      </div>
     </div>
   </article>
 {% endblock %}
