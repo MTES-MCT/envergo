@@ -242,8 +242,10 @@ class CatchmentAreaDebug(FormView):
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
         }
+
+        if "lat" in self.request.GET and "lng" in self.request.GET:
+            kwargs["data"] = self.request.GET
 
         return kwargs
 

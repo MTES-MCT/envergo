@@ -64,13 +64,17 @@
               </li>
             {% else %}
               <li>
-                L'aire d'écoulement d'eaux pluviales interceptée est supérieure au seuil de 1 ha de la rubrique 2150 de la Loi sur l'eau :
+                tout projet quelle que soit sa surface :
                 <span class="fr-tag probability probability-soumis">Soumis</span>
               </li>
             {% endif %}
           </ul>
         {% else %}
-          <h2 class="fr-h4">Département non disponible</h2>
+          {% if form.is_bound %}
+            <h2 class="fr-h4">Département non disponible</h2>
+          {% else %}
+            <h2 class="fr-h4">Essayez notre démonstrateur</h2>
+          {% endif %}
           <p>
             Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
           </p>
