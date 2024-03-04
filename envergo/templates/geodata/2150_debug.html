@@ -86,9 +86,20 @@
     target="_blank"
     rel="noopener">le document d'explication</a> (mode d'emploi et description de l'algorithme de calcul).
         </p>
+
+        <div class="share-btn hide-print fr-my-8w">
+          <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+                  data-fr-opened="false"
+                  aria-controls="share-modal"
+                  data-btn="bottom">Partager cette page par email</button>
+        </div>
       </div>
     </div>
   </article>
+{% endblock %}
+
+{% block extra_body %}
+  {% include '_share_url_modal.html' %}
 {% endblock %}
 
 {% block extra_css %}
@@ -100,6 +111,8 @@
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/2150_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+
 
   <script>
     var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};

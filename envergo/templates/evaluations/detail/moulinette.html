@@ -200,7 +200,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include 'moulinette/_share_notice_modal.html' %}
+  {% include '_share_url_modal.html' with title="Partager cet avis réglementaire" %}
 
 {% endblock %}
 
@@ -225,6 +225,6 @@
   <script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>
   <script defer src="{% static 'js/libs/map_widget_events.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
-  <script defer src="{% static 'js/libs/moulinette_share_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 {% endblock %}

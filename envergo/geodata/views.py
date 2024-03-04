@@ -74,6 +74,10 @@ class CatchmentAreaDebug(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        current_url = self.request.build_absolute_uri()
+        tracked_url = f"{current_url}&mtm_source=shareBtn"
+        context["current_url"] = tracked_url
+
         form = context["form"]
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]

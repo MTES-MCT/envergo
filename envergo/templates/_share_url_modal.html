@@ -12,7 +12,7 @@
                     aria-controls="share-modal">Fermer</button>
           </div>
           <div class="fr-modal__content">
-            <h1 id="share-modal-title" class="fr-modal__title">Partager cet avis réglementaire</h1>
+            <h1 id="share-modal-title" class="fr-modal__title">{{ title|default:"Partager cette page" }}</h1>
             <p class="fr-mb-3w">Copiez-collez le lien ci-dessous dans un e-mail adressé à votre destinataire.</p>
 
             <div id="form-group-share-modal-email" class="fr-input-group">
@@ -23,6 +23,15 @@
             </div>
 
             <button type="submit" class="fr-btn fr-mb-3w">Copier le lien dans le presse-papier</button>
+
+            {% if content %}
+              {{ content }}
+            {% else %}
+              <p>
+                Avec ce lien le destinataire pourra directement consulter cette
+                page web présentant les mêmes caractéristiques et les mêmes données.
+              </p>
+            {% endif %}
           </div>
         </div>
       </div>
