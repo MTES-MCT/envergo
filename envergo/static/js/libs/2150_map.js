@@ -264,6 +264,7 @@
       lngFieldId: LNG_FIELD_ID,
       polygons: POLYGONS,
     }
+    console.log("Initializing 2150 map");
     map = new Map(options);
   });
 })();
