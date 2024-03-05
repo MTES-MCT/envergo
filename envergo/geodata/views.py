@@ -16,6 +16,7 @@ from shapely.ops import unary_union
 
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.models import Zone
+from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class CatchmentAreaDebug(FormView):
         context = super().get_context_data(**kwargs)
 
         current_url = self.request.build_absolute_uri()
-        tracked_url = f"{current_url}&mtm_source=shareBtn"
+        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         context["current_url"] = tracked_url
 
         form = context["form"]

@@ -14,6 +14,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
 from envergo.moulinette.models import FakeMoulinette, Moulinette
 from envergo.moulinette.utils import compute_surfaces
+from envergo.utils.urls import update_qs
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -247,7 +248,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         current_url = self.request.build_absolute_uri()
-        tracked_url = f"{current_url}&mtm_source=shareBtn"
+        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         context["current_url"] = tracked_url
 
         moulinette = context.get("moulinette", None)
