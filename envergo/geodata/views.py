@@ -113,8 +113,12 @@ class CatchmentAreaDebug(FormView):
             catchment_area_500 = round(catchment_area / 500) * 500
 
             # Compute values relevant to the moulinette result
-            value_action_requise = max(0, 7000 - catchment_area_500)
-            value_soumis = max(0, 12000 - catchment_area_500)
+            if catchment_area_500 < 7000:
+                value_action_requise = max(0, 7000 - catchment_area_500)
+                value_soumis = 10000
+            else:
+                value_action_requise = 1000
+                value_soumis = 10000
 
             context["result_available"] = True
             context["catchment_area"] = catchment_area
