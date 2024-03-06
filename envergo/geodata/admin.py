@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.models import Department, Map, Parcel, Zone
+from envergo.geodata.models import CatchmentAreaTile, Department, Map, Parcel, Zone
 from envergo.geodata.tasks import generate_map_preview, process_shapefile_map
 from envergo.geodata.utils import count_features, extract_shapefile
 
@@ -296,3 +296,8 @@ class DepartmentAdmin(admin.ModelAdmin):
     readonly_fields = ["department"]
     fields = ["department"]
     form = DepartmentForm
+
+
+@admin.register(CatchmentAreaTile)
+class CatchmentAreaTileAdmin(admin.ModelAdmin):
+    list_display = ["filename"]

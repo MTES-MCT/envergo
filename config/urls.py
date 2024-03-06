@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 
 from envergo.evaluations.views import ShortUrlAdminRedirectView
+from envergo.geodata.views import CatchmentAreaDebug
 
 # We redefine django auth patterns for better customization
 auth_patterns = [
@@ -65,6 +66,7 @@ urlpatterns = [
     path("avis/", include("envergo.evaluations.urls")),
     path(_("moulinette/"), include("envergo.moulinette.urls")),
     path(_("geo/"), include("envergo.geodata.urls")),
+    path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
     path(_("analytics/"), include("envergo.analytics.urls")),
     path(_("feedback/"), include("envergo.analytics.urls")),
     path(settings.ADMIN_URL, admin.site.urls),
