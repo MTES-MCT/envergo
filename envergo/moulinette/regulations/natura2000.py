@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
-from envergo.moulinette.regulations.mixins import ZoneHumideMixin
+from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "blue"
 LIGHTBLUE = "lightblue"
@@ -125,7 +125,7 @@ class ZoneHumide44(ZoneHumide):
     choice_label = "Natura 2000 > 44 - Zone humide (obsolète)"
 
 
-class ZoneInondable(CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone inondable"
     slug = "zone_inondable"
 
@@ -137,16 +137,6 @@ class ZoneInondable(CriterionEvaluator):
         ("outside", "big"): RESULTS.non_concerne,
         ("outside", "small"): RESULTS.non_concerne,
     }
-
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-
-        if "flood_zones_12" not in self.catalog:
-            data["flood_zones_12"] = [
-                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
-            ]
-            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
-        return data
 
     def get_result_data(self):
         if self.catalog["flood_zones_within_12m"]:
