@@ -1,15 +1,15 @@
 from django import forms
-from django.contrib.gis.measure import Distance as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations.mixins import ZoneHumideMixin
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
 
 
-class ZoneHumideVieJaunay85(CriterionEvaluator):
+class ZoneHumideVieJaunay85(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "85 - Zone humide Vie & Jaunay"
     slug = "zone_humide_vie_jaunay_85"
 
@@ -39,26 +39,6 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-        wetlands = self.catalog["forbidden_wetlands"]
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone for zone in wetlands if zone.distance <= D(m=25)
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone for zone in wetlands if zone.distance <= D(m=100)
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -116,7 +96,7 @@ class ZoneHumideVieJaunay85(CriterionEvaluator):
         return criterion_map
 
 
-class ZoneHumideGMRE56(CriterionEvaluator):
+class ZoneHumideGMRE56(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "56 - Zone humide GMRE"
     slug = "zone_humide_gmre_56"
 
@@ -140,31 +120,6 @@ class ZoneHumideGMRE56(CriterionEvaluator):
         "action_requise_dans_doute_interdit": RESULTS.action_requise,
         "non_soumis": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-
-        if "wetlands_25" not in self.catalog:
-            data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
-            ]
-            data["wetlands_within_25m"] = bool(data["wetlands_25"])
-
-        if "wetlands_100" not in self.catalog:
-            data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
-            ]
-            data["wetlands_within_100m"] = bool(data["wetlands_100"])
-
-        if "potential_wetlands_0" not in self.catalog:
-            data["potential_wetlands_0"] = [
-                zone
-                for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= D(m=0)
-            ]
-            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results."""
@@ -244,7 +199,7 @@ class ImpactZHSettings(forms.Form):
     )
 
 
-class ImpactZoneHumide(CriterionEvaluator):
+class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
@@ -282,46 +237,6 @@ class ImpactZoneHumide(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-        wetlands = self.catalog["forbidden_wetlands"]
-
-        if "wetlands_25" not in self.catalog:
-            data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
-            ]
-            data["wetlands_within_25m"] = bool(data["wetlands_25"])
-
-        if "wetlands_100" not in self.catalog:
-            data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
-            ]
-            data["wetlands_within_100m"] = bool(data["wetlands_100"])
-
-        if "potential_wetlands_0" not in self.catalog:
-            data["potential_wetlands_0"] = [
-                zone
-                for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= D(m=0)
-            ]
-            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone for zone in wetlands if zone.distance <= D(m=25)
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone for zone in wetlands if zone.distance <= D(m=100)
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -420,7 +335,7 @@ class ImpactZoneHumide(CriterionEvaluator):
         return criterion_map
 
 
-class ImpactZoneHumideStrict(CriterionEvaluator):
+class ImpactZoneHumideStrict(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH (carte stricte)"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
@@ -453,26 +368,6 @@ class ImpactZoneHumideStrict(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-        wetlands = self.catalog["forbidden_wetlands"]
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone for zone in wetlands if zone.distance <= D(m=25)
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone for zone in wetlands if zone.distance <= D(m=100)
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -541,7 +436,7 @@ class ImpactZHIOTASettings(forms.Form):
     )
 
 
-class ImpactZoneHumideIOTA(CriterionEvaluator):
+class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH si IOTA"
     slug = "interdiction_impact_zh_iota"
     settings_form_class = ImpactZHIOTASettings
@@ -581,46 +476,6 @@ class ImpactZoneHumideIOTA(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-        wetlands = self.catalog["forbidden_wetlands"]
-
-        if "wetlands_25" not in self.catalog:
-            data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
-            ]
-            data["wetlands_within_25m"] = bool(data["wetlands_25"])
-
-        if "wetlands_100" not in self.catalog:
-            data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
-            ]
-            data["wetlands_within_100m"] = bool(data["wetlands_100"])
-
-        if "potential_wetlands_0" not in self.catalog:
-            data["potential_wetlands_0"] = [
-                zone
-                for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= D(m=0)
-            ]
-            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone for zone in wetlands if zone.distance <= D(m=25)
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone for zone in wetlands if zone.distance <= D(m=100)
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -710,7 +565,7 @@ class ImpactZoneHumideIOTA(CriterionEvaluator):
         return criterion_map
 
 
-class ImpactZoneHumideIOTAStrict(CriterionEvaluator):
+class ImpactZoneHumideIOTAStrict(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH si IOTA (carte stricte)"
     slug = "interdiction_impact_zh_iota"
     settings_form_class = ImpactZHIOTASettings
@@ -745,26 +600,6 @@ class ImpactZoneHumideIOTAStrict(CriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    def get_catalog_data(self):
-        data = {}
-        wetlands = self.catalog["forbidden_wetlands"]
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone for zone in wetlands if zone.distance <= D(m=25)
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone for zone in wetlands if zone.distance <= D(m=100)
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.

@@ -751,7 +751,7 @@ class Moulinette:
             return all(
                 (
                     zone.map.map_type == "zone_humide",
-                    zone.map.data_type == "certain",
+                    zone.map.data_type in ("certain", "forbidden"),
                 )
             )
 
@@ -786,6 +786,18 @@ class Moulinette:
             )
 
         catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
+
+        def potential_flood_zones_filter(zone):
+            return all(
+                (
+                    zone.map.map_type == "zone_inondable",
+                    zone.map.data_type == "uncertain",
+                )
+            )
+
+        catalog["potential_flood_zones"] = list(
+            filter(potential_flood_zones_filter, zones)
+        )
 
         return catalog
 

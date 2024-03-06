@@ -1,14 +1,14 @@
-from django.contrib.gis.measure import Distance as D
-
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
+PINK = "#FF9575"
 
 
-class ZoneHumide(CriterionEvaluator):
+class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone humide"
     slug = "zone_humide"
 
@@ -44,31 +44,6 @@ class ZoneHumide(CriterionEvaluator):
         "action_requise_proche": RESULTS.action_requise,
         "action_requise_dans_doute": RESULTS.action_requise,
     }
-
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-
-        if "wetlands_25" not in self.catalog:
-            data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
-            ]
-            data["wetlands_within_25m"] = bool(data["wetlands_25"])
-
-        if "wetlands_100" not in self.catalog:
-            data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
-            ]
-            data["wetlands_within_100m"] = bool(data["wetlands_100"])
-
-        if "potential_wetlands_0" not in self.catalog:
-            data["potential_wetlands_0"] = [
-                zone
-                for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= D(m=0)
-            ]
-            data["potential_wetlands_within_0m"] = bool(data["potential_wetlands_0"])
-
-        return data
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -147,36 +122,39 @@ class ZoneHumide(CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
     CODES = ["soumis", "action_requise", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        ("inside", "big"): RESULTS.soumis,
-        ("inside", "medium"): RESULTS.action_requise,
-        ("inside", "small"): RESULTS.non_soumis,
-        ("outside", "big"): RESULTS.non_concerne,
-        ("outside", "medium"): RESULTS.non_concerne,
-        ("outside", "small"): RESULTS.non_soumis,
+        ("inside", "big"): "soumis",
+        ("inside", "medium"): "action_requise",
+        ("inside", "small"): "non_soumis",
+        ("inside_potential", "big"): "action_requise_dans_doute",
+        ("inside_potential", "medium"): "non_soumis",
+        ("inside_potential", "small"): "non_soumis",
+        ("outside", "big"): "non_concerne",
+        ("outside", "medium"): "non_concerne",
+        ("outside", "small"): "non_concerne",
     }
 
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-
-        if "flood_zones_12" not in self.catalog:
-            data["flood_zones_12"] = [
-                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
-            ]
-            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
-        return data
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "non_soumis": RESULTS.non_soumis,
+        "non_concerne": RESULTS.non_concerne,
+        "action_requise": RESULTS.action_requise,
+        "action_requise_dans_doute": RESULTS.action_requise,
+    }
 
     def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
 
         if self.catalog["flood_zones_within_12m"]:
             flood_zone_status = "inside"
+        elif self.catalog["potential_flood_zones_within_0m"]:
+            flood_zone_status = "inside_potential"
         else:
             flood_zone_status = "outside"
 
@@ -190,17 +168,32 @@ class ZoneInondable(CriterionEvaluator):
         return flood_zone_status, project_size
 
     def get_map(self):
+        map_polygons = []
+
         zone_qs = [
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
-
         if zone_qs:
-            if self.catalog["flood_zones_within_12m"]:
-                caption = "Le projet se situe dans une zone inondable."
-            else:
-                caption = "Le projet ne se situe pas en zone inondable."
+            map_polygons.append(MapPolygon(zone_qs, "red", "Zone inondable"))
 
-            map_polygons = [MapPolygon(zone_qs, "red", "Zone inondable")]
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_flood_zones"]
+            if zone.map.display_for_user
+        ]
+        if potential_qs:
+            map_polygons.append(
+                MapPolygon(potential_qs, PINK, "Zone inondable potentielle")
+            )
+
+        if self.catalog["flood_zones_within_12m"]:
+            caption = "Le projet se situe dans une zone inondable."
+        elif self.catalog["potential_flood_zones_within_0m"]:
+            caption = "Le projet se situe dans une zone inondable potentielle."
+        else:
+            caption = "Le projet ne se situe pas en zone inondable."
+
+        if map_polygons:
             criterion_map = Map(
                 center=self.catalog["coords"],
                 entries=map_polygons,
