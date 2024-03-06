@@ -5,6 +5,7 @@ from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondable
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
+PINK = "#FF9575"
 
 
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
@@ -182,7 +183,7 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         ]
         if potential_qs:
             map_polygons.append(
-                MapPolygon(potential_qs, "pink", "Zone inondable potentielle")
+                MapPolygon(potential_qs, PINK, "Zone inondable potentielle")
             )
 
         if self.catalog["flood_zones_within_12m"]:
