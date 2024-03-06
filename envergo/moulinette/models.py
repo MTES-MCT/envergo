@@ -789,7 +789,10 @@ class Moulinette:
 
         def potential_flood_zones_filter(zone):
             return all(
-                (zone.map.map_type == "zone_humide", zone.map.data_type == "uncertain")
+                (
+                    zone.map.map_type == "zone_inondable",
+                    zone.map.data_type == "uncertain",
+                )
             )
 
         catalog["potential_flood_zones"] = list(
