@@ -192,6 +192,15 @@ def test_3220_medium_footprint_outside_flood_zones(moulinette_data):
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
 
 
+@pytest.mark.parametrize("footprint", [200])
+def test_3220_small_footprint_outside_flood_zones(moulinette_data):
+    """Project with small footprint outside a flood zone."""
+
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
+
+
 @pytest.mark.parametrize("footprint", [400])
 def test_3220_large_footprint_within_flood_zones(moulinette_data):
     """Project with footprint >= 400m² within a flood zone."""
@@ -202,7 +211,7 @@ def test_3220_large_footprint_within_flood_zones(moulinette_data):
     assert moulinette.loi_sur_leau.zone_inondable.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [300])
+@pytest.mark.parametrize("footprint", [400])
 def test_3220_large_footprint_outside_flood_zones(moulinette_data):
     """Project with footprint >= 400m² outside a flood zone."""
 
@@ -210,3 +219,24 @@ def test_3220_large_footprint_outside_flood_zones(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
+
+
+@pytest.mark.parametrize("footprint", [400])
+def test_3220_large_footprint_within_potential_flood_zones(moulinette_data):
+    """Project with footprint >= 400m² within a potential flood zone."""
+
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.catalog["potential_flood_zones_within_0m"] = True
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise_dans_doute"
+
+
+@pytest.mark.parametrize("footprint", [300])
+def test_3220_medium_footprint_within_potential_flood_zones(moulinette_data):
+    """Project with footprint >= 400m² outside a flood zone."""
+
+    # Make sure the project in in a flood zone
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.catalog["potential_flood_zones_within_0m"] = True
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"

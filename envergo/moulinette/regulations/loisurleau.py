@@ -130,12 +130,15 @@ class ZoneInondable(CriterionEvaluator):
     CODES = ["soumis", "action_requise", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        ("inside", "big"): RESULTS.soumis,
-        ("inside", "medium"): RESULTS.action_requise,
-        ("inside", "small"): RESULTS.non_soumis,
-        ("outside", "big"): RESULTS.non_concerne,
-        ("outside", "medium"): RESULTS.non_concerne,
-        ("outside", "small"): RESULTS.non_soumis,
+        ("inside", "big"): "soumis",
+        ("inside", "medium"): "action_requise",
+        ("inside", "small"): "non_soumis",
+        ("inside_potential", "big"): "action_requise_dans_doute",
+        ("inside_potential", "medium"): "non_soumis",
+        ("inside_potential", "small"): "non_soumis",
+        ("outside", "big"): "non_concerne",
+        ("outside", "medium"): "non_concerne",
+        ("outside", "small"): "non_concerne",
     }
 
     def get_catalog_data(self):
@@ -146,6 +149,17 @@ class ZoneInondable(CriterionEvaluator):
                 zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
             ]
             data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
+
+        if "potential_flood_zones_0" not in self.catalog:
+            data["potential_flood_zones_0"] = [
+                zone
+                for zone in self.catalog["potential_flood_zones"]
+                if zone.distance <= D(m=0)
+            ]
+            data["potential_flood_zones_within_0m"] = bool(
+                data["potential_flood_zones_0"]
+            )
+
         return data
 
     def get_result_data(self):
@@ -153,6 +167,8 @@ class ZoneInondable(CriterionEvaluator):
 
         if self.catalog["flood_zones_within_12m"]:
             flood_zone_status = "inside"
+        elif self.catalog["potential_flood_zones_within_0m"]:
+            flood_zone_status = "inside_potential"
         else:
             flood_zone_status = "outside"
 
