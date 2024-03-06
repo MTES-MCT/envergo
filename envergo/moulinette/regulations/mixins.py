@@ -4,7 +4,6 @@ from django.contrib.gis.measure import Distance as D
 class ZoneHumideMixin:
     def get_catalog_data(self):
         data = {}
-
         if "wetlands_25" not in self.catalog:
             data["wetlands_25"] = [
                 zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
@@ -41,6 +40,29 @@ class ZoneHumideMixin:
             ]
             data["forbidden_wetlands_within_100m"] = bool(
                 data["forbidden_wetlands_100"]
+            )
+
+        return data
+
+
+class ZoneInondableMixin:
+    def get_catalog_data(self):
+        data = super().get_catalog_data()
+
+        if "flood_zones_12" not in self.catalog:
+            data["flood_zones_12"] = [
+                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
+            ]
+            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
+
+        if "potential_flood_zones_0" not in self.catalog:
+            data["potential_flood_zones_0"] = [
+                zone
+                for zone in self.catalog["potential_flood_zones"]
+                if zone.distance <= D(m=0)
+            ]
+            data["potential_flood_zones_within_0m"] = bool(
+                data["potential_flood_zones_0"]
             )
 
         return data

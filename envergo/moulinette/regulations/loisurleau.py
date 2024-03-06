@@ -1,8 +1,6 @@
-from django.contrib.gis.measure import Distance as D
-
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
-from envergo.moulinette.regulations.mixins import ZoneHumideMixin
+from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
@@ -123,7 +121,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
@@ -141,26 +139,13 @@ class ZoneInondable(CriterionEvaluator):
         ("outside", "small"): "non_concerne",
     }
 
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-
-        if "flood_zones_12" not in self.catalog:
-            data["flood_zones_12"] = [
-                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
-            ]
-            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
-
-        if "potential_flood_zones_0" not in self.catalog:
-            data["potential_flood_zones_0"] = [
-                zone
-                for zone in self.catalog["potential_flood_zones"]
-                if zone.distance <= D(m=0)
-            ]
-            data["potential_flood_zones_within_0m"] = bool(
-                data["potential_flood_zones_0"]
-            )
-
-        return data
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "non_soumis": RESULTS.non_soumis,
+        "non_concerne": RESULTS.non_concerne,
+        "action_requise": RESULTS.action_requise,
+        "action_requise_dans_doute": RESULTS.action_requise,
+    }
 
     def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
@@ -182,17 +167,32 @@ class ZoneInondable(CriterionEvaluator):
         return flood_zone_status, project_size
 
     def get_map(self):
+        map_polygons = []
+
         zone_qs = [
             zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
         ]
-
         if zone_qs:
-            if self.catalog["flood_zones_within_12m"]:
-                caption = "Le projet se situe dans une zone inondable."
-            else:
-                caption = "Le projet ne se situe pas en zone inondable."
+            map_polygons.append(MapPolygon(zone_qs, "red", "Zone inondable"))
 
-            map_polygons = [MapPolygon(zone_qs, "red", "Zone inondable")]
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_flood_zones"]
+            if zone.map.display_for_user
+        ]
+        if potential_qs:
+            map_polygons.append(
+                MapPolygon(potential_qs, "pink", "Zone inondable potentielle")
+            )
+
+        if self.catalog["flood_zones_within_12m"]:
+            caption = "Le projet se situe dans une zone inondable."
+        elif self.catalog["potential_flood_zones_within_0m"]:
+            caption = "Le projet se situe dans une zone inondable potentielle."
+        else:
+            caption = "Le projet ne se situe pas en zone inondable."
+
+        if map_polygons:
             criterion_map = Map(
                 center=self.catalog["coords"],
                 entries=map_polygons,
