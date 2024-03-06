@@ -228,7 +228,7 @@ def test_3220_large_footprint_within_potential_flood_zones(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["potential_flood_zones_within_0m"] = True
     moulinette.evaluate()
-    assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise_dans_doute"
+    assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [300])
