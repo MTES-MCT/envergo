@@ -187,7 +187,7 @@ def to_geojson(obj, geometry_field="geometry"):
 
 
 def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
-    url = f"https://wxs.ign.fr/essentiels/geoportail/geocodage/rest/0.1/reverse?lon={lng}&lat={lat}&index={index}&limit=1"  # noqa
+    url = f"https://data.geopf.fr/geocodage/reverse?lon={lng}&lat={lat}&index={index}&limit=1"  # noqa
 
     data = None
     try:
