@@ -573,4 +573,5 @@ class SelfDeclaration(EvaluationDetailMixin, DetailView):
         context["reference"] = self.object.reference
         context["address"] = quote_plus(self.object.address, safe="")
         context["application_number"] = self.object.application_number
+        context["redirect_url"] = f"{self.object.get_absolute_url()}?tally=ok"
         return context

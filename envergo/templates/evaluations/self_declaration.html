@@ -35,6 +35,15 @@
 
     window.addEventListener('message', (e) => {
       if (e?.data?.includes('Tally.FormSubmitted')) {
+
+        // We set a timeout before redirecting to the evaluation detail page
+        // We had to do this because the form submission event could not be
+        // tracked in time before the page was redirected.
+        // Yes I know it's ugly.
+        setTimeout(function() {
+          window.location.href = "{{ redirect_url }}";
+        }, 350);
+
         const payload = JSON.parse(e.data).payload;
         let url = EVENTS_URL;
         let token = CSRF_TOKEN;
