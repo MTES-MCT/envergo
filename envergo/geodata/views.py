@@ -1,6 +1,7 @@
 import json
 import logging
 
+import numpy as np
 import requests
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.serializers import serialize
@@ -90,16 +91,24 @@ class CatchmentAreaDebug(FormView):
             context["center_map"] = [-4.03177, 48.38986]  # Somewhere in Finistère
             context["default_zoom"] = 8
 
+        context["result_available"] = False
         if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
 
             lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
             lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
-            pixels = self.get_pixel_values(lng, lat)
-            polygons = self.get_pixel_polygons(lng, lat)
 
+            # Fetch the grid of values to display on the map
+            polygons = self.get_pixel_polygons(lng, lat)
+            context["polygons"] = json.dumps(polygons)
+
+            # Fetch the envelope that is used to clip raster values
+            # (for debug purpose only)
+            envelope = self.get_envelope(lng, lat)
+            context["envelope"] = json.dumps(envelope)
+
+            pixels = self.get_pixel_values(lng, lat)
             if not pixels:
-                context["result_available"] = False
                 return context
 
             coords = [(x, y) for x, y, v in pixels]
@@ -107,6 +116,10 @@ class CatchmentAreaDebug(FormView):
             interpolated_area = griddata(coords, values, lamb93_coords, method="cubic")[
                 0
             ]
+            # If the interpolation fails because of missing data, we don't display anything
+            # it should not happen so we don't bother display a real error message
+            if np.isnan(interpolated_area):
+                return context
 
             # The value we display is actually rounded to the nearest 500m²
             catchment_area = int(interpolated_area)
@@ -126,7 +139,6 @@ class CatchmentAreaDebug(FormView):
             context["interpolated_area"] = interpolated_area
             context["value_action_requise"] = value_action_requise
             context["value_soumis"] = value_soumis
-            context["polygons"] = json.dumps(polygons)
 
         return context
 
@@ -164,9 +176,7 @@ class CatchmentAreaDebug(FormView):
                 (ST_PixelAsPoints(
                   ST_Clip(
                     tiles.rast,
-                    ST_Envelope(
-                      ST_Buffer(point, 30)
-                    )
+                    envelope
                   )
               )).*
               FROM
@@ -176,8 +186,12 @@ class CatchmentAreaDebug(FormView):
                     ST_Point(%s, %s, 4326),
                     2154
                 ) AS point
+                CROSS JOIN
+                  ST_Envelope(
+                    ST_Buffer(point, 30)
+                  ) AS envelope
               WHERE
-                ST_Intersects(tiles.rast, point)
+                ST_Intersects(tiles.rast, envelope)
               ) points;
             """
             cursor.execute(query, [lng, lat])
@@ -218,12 +232,7 @@ class CatchmentAreaDebug(FormView):
                     ST_PixelAsPolygons(
                       ST_Clip(
                         tiles.rast,
-                        ST_Envelope(
-                          ST_Buffer(
-                            ST_Translate(point, 10, -10),
-                            50
-                          )
-                        ),
+                        envelope,
                         false
                       )
                     )
@@ -235,13 +244,42 @@ class CatchmentAreaDebug(FormView):
                     ST_Point(%s, %s, 4326),
                     2154
                   ) AS point
+                CROSS JOIN
+                  ST_Envelope(
+                    ST_Buffer(
+                      ST_Translate(point, 10, -10),
+                      50
+                    )
+                  ) AS envelope
                 WHERE
-                  ST_Intersects(tiles.rast, point)
+                  ST_Intersects(tiles.rast, envelope)
               ) gv;
             """
             cursor.execute(query, [lng, lat])
             polygons = cursor.fetchall()
         return polygons
+
+    def get_envelope(self, lng, lat):
+        envelope = {}
+        with connection.cursor() as cursor:
+            query = """
+            SELECT
+              ST_AsGeoJSON(
+                ST_Transform(
+                  ST_Envelope(
+                    ST_Buffer(point, 50)
+                  ),
+                  4326
+                ))
+                FROM
+                  ST_Transform(
+                    ST_Point(%s, %s, 4326),
+                    2154
+                  ) AS point;
+            """
+            cursor.execute(query, [lng, lat])
+            envelope = cursor.fetchall()[0]
+        return envelope
 
     def get_initial(self):
         return self.request.GET
