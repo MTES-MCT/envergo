@@ -18,6 +18,9 @@
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
+    if (this.options.debug) {
+      this.drawEnvelope();
+    }
     this.drawPolygons();
     this.addLegend();
     this.addControl();
@@ -88,7 +91,6 @@
 
   Map.prototype.drawPolygons = function () {
 
-
     var style = function (polygon) {
       return {
         fillColor: getColor(polygon.properties.value),
@@ -125,6 +127,19 @@
         { style: style, onEachFeature: onEachFeature.bind(this) });
 
       geoJSON.addTo(this.map);
+    }
+  };
+
+  Map.prototype.drawEnvelope = function () {
+    if (this.options.envelope) {
+      var envelope = JSON.parse(this.options.envelope);
+      var style = {
+        weight: 2,
+        opacity: 1,
+        color: 'black',
+        fillOpacity: 0,
+      };
+      L.geoJSON(envelope, { style: style }).addTo(this.map);
     }
   };
 
@@ -263,8 +278,9 @@
       latFieldId: LAT_FIELD_ID,
       lngFieldId: LNG_FIELD_ID,
       polygons: POLYGONS,
+      envelope: ENVELOPE,
+      debug: DEBUG,
     }
-    console.log("Initializing 2150 map");
     map = new Map(options);
   });
 })();
