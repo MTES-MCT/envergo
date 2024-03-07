@@ -131,6 +131,8 @@
     var LAT_FIELD_ID = 'id_lat';
     var LNG_FIELD_ID = 'id_lng';
     var POLYGONS = {{ polygons|default:"[]"|safe }};
+    var ENVELOPE = {{ envelope|safe }};
+    var DEBUG = {{ debug|yesno:'true,false' }};
   </script>
 
 {% endblock %}
