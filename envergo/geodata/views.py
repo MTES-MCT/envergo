@@ -94,7 +94,7 @@ class CatchmentAreaDebug(FormView):
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
 
             lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-            lamp93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
+            lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
             pixels = self.get_pixel_values(lng, lat)
             polygons = self.get_pixel_polygons(lng, lat)
 
@@ -104,7 +104,7 @@ class CatchmentAreaDebug(FormView):
 
             coords = [(x, y) for x, y, v in pixels]
             values = [v for x, y, v in pixels]
-            interpolated_area = griddata(coords, values, lamp93_coords, method="cubic")[
+            interpolated_area = griddata(coords, values, lamb93_coords, method="cubic")[
                 0
             ]
 
