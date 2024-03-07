@@ -15,6 +15,20 @@ from envergo.moulinette.models import (
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
+class MapDepartmentsListFilter(DepartmentsListFilter):
+    title = _("Departments")
+    parameter_name = "departments"
+    template = "admin/choice_filter.html"
+
+    def queryset(self, request, queryset):
+        lookup_value = self.value()
+        if lookup_value:
+            queryset = queryset.filter(
+                activation_map__departments__contains=[lookup_value]
+            )
+        return queryset
+
+
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
     list_display = ["get_regulation_display", "regulation_slug", "has_perimeters"]
@@ -84,7 +98,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "regulation__regulation",
         "activation_map__name",
     ]
-    list_filter = ["regulation", "evaluator"]
+    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
 
     class Media:
@@ -124,20 +138,6 @@ class PerimeterAdminForm(forms.ModelForm):
         if callable(value) and not getattr(value, "do_not_call_in_templates", False):
             value = value()
         return value
-
-
-class MapDepartmentsListFilter(DepartmentsListFilter):
-    title = _("Departments")
-    parameter_name = "departments"
-    template = "admin/choice_filter.html"
-
-    def queryset(self, request, queryset):
-        lookup_value = self.value()
-        if lookup_value:
-            queryset = queryset.filter(
-                activation_map__departments__contains=[lookup_value]
-            )
-        return queryset
 
 
 @admin.register(Perimeter)
