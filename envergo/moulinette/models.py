@@ -652,6 +652,14 @@ class MoulinetteTemplate(models.Model):
         verbose_name=_("Config"),
         on_delete=models.PROTECT,
         related_name="templates",
+        null=True,
+    )
+    criterion = models.ForeignKey(
+        "moulinette.Criterion",
+        verbose_name=_("Criterion"),
+        on_delete=models.PROTECT,
+        related_name="templates",
+        null=True,
     )
     key = models.CharField(_("Key"), choices=get_all_template_keys(), max_length=512)
     content = models.TextField(_("Content"), blank=True, default="")
