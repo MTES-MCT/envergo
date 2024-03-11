@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, Prefetch, When
+from django.db.models import Case, F, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
@@ -645,7 +645,11 @@ def get_all_template_keys():
 
 
 class MoulinetteTemplate(models.Model):
-    """A custom moulinette template that can be admin edited."""
+    """A custom moulinette template that can be admin edited.
+
+    Templates can be associated to departments (through MoulinetteConfig) or
+    criteria.
+    """
 
     config = models.ForeignKey(
         "moulinette.MoulinetteConfig",
@@ -668,7 +672,23 @@ class MoulinetteTemplate(models.Model):
         verbose_name = _("Moulinette template")
         verbose_name_plural = _("Moulinette templates")
         constraints = [
-            models.UniqueConstraint("config", "key", name="unique_template_config_key"),
+            # Make sure the template is associated with a single related object
+            models.CheckConstraint(
+                check=Q(config__isnull=False, criterion=None)
+                | Q(criterion__isnull=False, config=None),
+                name="relation_to_single_object",
+            ),
+            # Make sure each criterion / config cannot have duplicate templates
+            models.UniqueConstraint(
+                fields=["config", "key"],
+                condition=Q(config__isnull=False),
+                name="unique_template_config_key",
+            ),
+            models.UniqueConstraint(
+                fields=["criterion", "key"],
+                condition=Q(criterion__isnull=False),
+                name="unique_template_criterion_key",
+            ),
         ]
 
 
