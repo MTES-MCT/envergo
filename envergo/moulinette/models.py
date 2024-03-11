@@ -417,6 +417,13 @@ class Criterion(models.Model):
         return f"{self.regulation.slug}__{self.slug}"
 
     def evaluate(self, moulinette, distance):
+        """Initialize and run the actual evaluator."""
+
+        # Before the evaluation, let's create a `MoulinetteTemplate` dict
+        # It would make more sense to do this in the `__init__` method, but
+        # the templates would have not be prefetched yet.
+        self._templates = {t.key: t for t in self.templates.all()}
+
         self.moulinette = moulinette
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
@@ -484,6 +491,9 @@ class Criterion(models.Model):
         else:
             form = None
         return form
+
+    def get_template(self, template_key):
+        return self._templates.get(template_key, None)
 
 
 class Perimeter(models.Model):
@@ -852,6 +862,7 @@ class Moulinette:
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
+            .prefetch_related("templates")
             .defer("activation_map__geometry")
         )
         return criteria

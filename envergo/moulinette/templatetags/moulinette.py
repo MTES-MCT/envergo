@@ -74,7 +74,7 @@ def criterion_value(config, criterion, field):
 
 @register.simple_tag(takes_context=True)
 def moulinette_template(context, template_key, **kwargs):
-    """Render a moulinette template.
+    """Render a department-level moulinette template.
 
     This template is rendered with the current context.
     """
