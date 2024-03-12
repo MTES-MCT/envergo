@@ -152,6 +152,32 @@ class TerrainAssiette(CriterionEvaluator):
         return assiette_thld
 
 
+class AireDeStationnementForm(forms.Form):
+    evalenv_rubrique_41_soumis = forms.ChoiceField(
+        label="Rubrique 41 : aires de stationnement",
+        required=True,
+        help_text="""Seuil du cas par cas : plus de 50 places ouvertes au public
+                     (construites après le 16 mai 2017)
+        """,
+        widget=forms.RadioSelect,
+        choices=(("oui", "Soumis"), ("non", "Non soumis")),
+    )
+
+
+class AireDeStationnement(CriterionEvaluator):
+    choice_label = "Éval Env > Aire de stationnement"
+    slug = "aire_de_stationnement"
+    form_class = AireDeStationnementForm
+    CODE_MATRIX = {
+        "oui": "cas_par_cas",
+        "non": "non_soumis",
+    }
+
+    def get_result_data(self):
+        soumis = self.catalog.get("rubrique_41_soumis")
+        return soumis
+
+
 class OtherCriteria(CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
     slug = "autres_rubriques"
