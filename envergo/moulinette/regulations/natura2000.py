@@ -289,7 +289,7 @@ class AutorisationUrbanismeSettingsForm(forms.Form):
     result_code_matrix = forms.fields.JSONField(
         label="Codes de résultat (JSON)",
         help_text="Résultat du critère en fonction de la valeur d'autorisation urba",
-        required=False,
+        required=True,
     )
 
 
@@ -331,7 +331,7 @@ class AutorisationUrbanisme(CriterionEvaluator):
             result_code = urba_code_matrix[result_data]
             if result_code not in self.RESULT_MATRIX.keys():
                 raise ValueError
-        except (KeyError, ValueError):
+        except (TypeError, KeyError, ValueError):
             result_code = super().get_result_code(result_data)
 
         return result_code
