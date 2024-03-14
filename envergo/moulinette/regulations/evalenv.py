@@ -156,8 +156,9 @@ class AireDeStationnementForm(forms.Form):
     evalenv_rubrique_41_soumis = forms.ChoiceField(
         label="Rubrique 41 : aires de stationnement",
         required=True,
-        help_text="""Seuil du cas par cas : plus de 50 places ouvertes au public
-                     (construites après le 16 mai 2017)
+        help_text="""
+            Seuil du cas par cas : plus de 50 places ouvertes au public
+            (construites après le 16 mai 2017)
         """,
         widget=forms.RadioSelect,
         choices=(("oui", "Soumis"), ("non", "Non soumis")),
