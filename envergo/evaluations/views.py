@@ -164,6 +164,9 @@ class EvaluationDetailMoulinette(
 
         return res
 
+    def should_activate_optional_criteria(self):
+        return True
+
 
 class EvaluationDetailLegacy(FormView, DetailView):
     """The legacy evaluation detail view.

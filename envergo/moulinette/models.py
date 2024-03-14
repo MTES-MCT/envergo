@@ -380,6 +380,11 @@ class Criterion(models.Model):
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
     )
+    is_optional = models.BooleanField(
+        _("Is optional"),
+        default=False,
+        help_text=_("Only show this criterion to admin users"),
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -739,6 +744,7 @@ class Moulinette:
             self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
+        self.activate_optional_criteria = activate_optional_criteria
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
             self.config = self.catalog["config"] = self.department.moulinette_config
@@ -869,6 +875,11 @@ class Moulinette:
             .prefetch_related("templates")
             .defer("activation_map__geometry")
         )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
         return criteria
 
     def get_perimeters(self):

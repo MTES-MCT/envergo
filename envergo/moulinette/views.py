@@ -75,7 +75,9 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(form.cleaned_data, form.data)
+            moulinette = Moulinette(
+                form.cleaned_data, form.data, self.should_activate_optional_criteria()
+            )
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
@@ -277,6 +279,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
 
         return context
+
+    def should_activate_optional_criteria(self):
+        return self.request.user.is_superuser
 
 
 class MoulinetteDebug(FormView):

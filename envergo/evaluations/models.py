@@ -283,7 +283,10 @@ class Evaluation(models.Model):
             form = MoulinetteForm(raw_params)
             form.is_valid()
             params = form.cleaned_data
-            self._moulinette = Moulinette(params, raw_params)
+            activate_optional_criteria = True
+            self._moulinette = Moulinette(
+                params, raw_params, activate_optional_criteria
+            )
 
         return self._moulinette
 
