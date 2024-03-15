@@ -40,72 +40,95 @@
         {% if result_available %}
           <h2 class="fr-h4">Résultat du calcul</h2>
           <p>
-            Indicateur de bassin versant : <span class="fr-tag surface">{{ catchment_area_500 }}</span> m²
-          </p>
-
-          <h2 class="fr-h4">Ce que le simulateur EnvErgo pourrait répondre</h2>
-
-          <p>
-            Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2.1.5.0. de la Loi sur l'eau, le simulateur répondrait – selon la surface du projet :
-          </p>
-
-          <ul>
-            {% if value_action_requise > 0 %}
-              <li>
-                projet qui artificialise entre 0 et <span class="fr-tag surface">{{ value_action_requise }}</span> m² :
-                <span class="fr-tag probability probability-non_soumis">Non soumis</span>
-              </li>
-            {% endif %}
-
-            {% if value_soumis > 0 %}
-              <li>
-                projet qui artificialise entre <span class="fr-tag surface">{{ value_action_requise }}</span> et <span class="fr-tag surface">{{ value_soumis }}</span> m² :
-                <span class="fr-tag probability probability-action_requise">Action requise</span>
-                <br />
-                « le porteur doit mener les études pour déterminer si la surface du projet, ajoutée à celle de l'aire d'écoulement d'eaux pluviales interceptée, dépasse 10 000 m² »
-              </li>
-
-              <li>
-                projet qui artificialise plus de <span class="fr-tag surface">{{ value_soumis }}</span> m² :
-                <span class="fr-tag probability probability-soumis">Soumis</span>
-              </li>
+            Indicateur de bassin versant : <span class="fr-tag surface">
+            {% if debug %}
+              {{ catchment_area }}
             {% else %}
-              <li>
-                tout projet quelle que soit sa surface :
-                <span class="fr-tag probability probability-soumis">Soumis</span>
-              </li>
+              {{ catchment_area_500 }}
             {% endif %}
-          </ul>
-        {% else %}
-          {% if form.is_bound %}
-            <h2 class="fr-h4">Département non disponible</h2>
-          {% else %}
-            <h2 class="fr-h4">Essayez notre démonstrateur</h2>
+          </span> m²
+        </p>
+
+        <h2 class="fr-h4">Ce que le simulateur EnvErgo pourrait répondre</h2>
+
+        <p>
+          Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2.1.5.0. de la Loi sur l'eau, le simulateur répondrait – selon la surface du projet :
+        </p>
+
+        <ul>
+          {% if value_action_requise > 0 %}
+            <li>
+              projet qui artificialise entre 0 et <span class="fr-tag surface">{{ value_action_requise }}</span> m² :
+              <span class="fr-tag probability probability-non_soumis">Non soumis</span>
+            </li>
           {% endif %}
-          <p>
-            Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
-          </p>
+
+          {% if value_soumis > 0 %}
+            <li>
+              projet qui artificialise entre <span class="fr-tag surface">{{ value_action_requise }}</span> et <span class="fr-tag surface">{{ value_soumis }}</span> m² :
+              <span class="fr-tag probability probability-action_requise">Action requise</span>
+              <br />
+              « le porteur doit mener les études pour déterminer si la surface du projet, ajoutée à celle de l'aire d'écoulement d'eaux pluviales interceptée, dépasse 10 000 m² »
+            </li>
+
+            <li>
+              projet qui artificialise plus de <span class="fr-tag surface">{{ value_soumis }}</span> m² :
+              <span class="fr-tag probability probability-soumis">Soumis</span>
+            </li>
+          {% else %}
+            <li>
+              tout projet quelle que soit sa surface :
+              <span class="fr-tag probability probability-soumis">Soumis</span>
+            </li>
+          {% endif %}
+        </ul>
+      {% else %}
+        {% if form.is_bound %}
+          <h2 class="fr-h4">Département non disponible</h2>
+        {% else %}
+          <h2 class="fr-h4">Essayez notre démonstrateur</h2>
+        {% endif %}
+        <p>
+          Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
+        </p>
+      {% endif %}
+
+      {% if debug %}
+        <h2 class="fr-h4">Données de calcul</h2>
+
+        {% if values %}
+          <table class="fr-table">
+            {% for row in values %}
+              <tr>
+                {% for value in row %}<td>{{ value }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% elif flat_values %}
+          {% for value in flat_values %}<span>{{ value }}&nbsp;</span>{% endfor %}
         {% endif %}
 
-        <h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
+      {% endif %}
 
-        <p>
-          Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
-        </p>
+      <h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
 
-        <p>
-          Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
-        </p>
+      <p>
+        Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+      </p>
 
-        <div class="share-btn hide-print fr-my-8w">
-          <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill"
-                  data-fr-opened="false"
-                  aria-controls="share-modal"
-                  data-btn="bottom">Partager cette page par email</button>
-        </div>
+      <p>
+        Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
+      </p>
+
+      <div class="share-btn hide-print fr-my-8w">
+        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill"
+                data-fr-opened="false"
+                aria-controls="share-modal"
+                data-btn="bottom">Partager cette page par email</button>
       </div>
     </div>
-  </article>
+  </div>
+</article>
 {% endblock %}
 
 {% block extra_body %}

@@ -1,5 +1,6 @@
 import json
 import logging
+from math import sqrt
 
 import numpy as np
 import requests
@@ -113,7 +114,7 @@ class CatchmentAreaDebug(FormView):
                 return context
 
             coords = [(x, y) for x, y, v in pixels]
-            values = [v for x, y, v in pixels]
+            values = [int(v) for x, y, v in pixels]
             interpolated_area = griddata(coords, values, lamb93_coords, method="cubic")[
                 0
             ]
@@ -121,6 +122,17 @@ class CatchmentAreaDebug(FormView):
             # it should not happen so we don't bother display a real error message
             if np.isnan(interpolated_area):
                 return context
+
+            # We get the values as a 1D array, we want to display as a 2D grid
+            # for debug purpose
+            try:
+                values_grid_width = int(sqrt(len(pixels)))
+                context["values"] = (
+                    np.array(values).reshape(values_grid_width, -1).tolist()
+                )
+            except ValueError:
+                # We are missing data so we can't display a nice grid
+                context["flat_values"] = values
 
             # The value we display is actually rounded to the nearest 500m²
             catchment_area = int(interpolated_area)
