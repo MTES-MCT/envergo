@@ -71,6 +71,12 @@ class CriterionAdminForm(forms.ModelForm):
             value = value()
         return value
 
+    def clean_evaluator_settings(self):
+        """Ensure an empty value can be converted to an empty json dict."""
+        value = self.cleaned_data["evaluator_settings"]
+        value = {} if value is None else value
+        return value
+
     def clean(self):
         """Ensure required action and stake are both set if one is set."""
 
