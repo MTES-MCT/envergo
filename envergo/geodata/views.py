@@ -115,9 +115,9 @@ class CatchmentAreaDebug(FormView):
 
             coords = [(x, y) for x, y, v in pixels]
             values = [int(v) for x, y, v in pixels]
-            interpolated_area = griddata(coords, values, lamb93_coords, method="cubic")[
-                0
-            ]
+            interpolated_area = griddata(
+                coords, values, lamb93_coords, method="linear"
+            )[0]
             # If the interpolation fails because of missing data, we don't display anything
             # it should not happen so we don't bother display a real error message
             if np.isnan(interpolated_area):
