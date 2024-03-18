@@ -285,10 +285,19 @@ class AutorisationUrbanismeForm(forms.Form):
     )
 
 
+class AutorisationUrbanismeSettingsForm(forms.Form):
+    result_code_matrix = forms.fields.JSONField(
+        label="Codes de résultat (JSON)",
+        help_text="Résultat du critère en fonction de la valeur d'autorisation urba",
+        required=True,
+    )
+
+
 class AutorisationUrbanisme(CriterionEvaluator):
     choice_label = "Natura 2000 > Autorisation urba"
     slug = "autorisation_urba"
     form_class = AutorisationUrbanismeForm
+    settings_form_class = AutorisationUrbanismeSettingsForm
 
     CODES = ["soumis", "a_verifier", "non_soumis"]
 
@@ -314,14 +323,15 @@ class AutorisationUrbanisme(CriterionEvaluator):
     def get_result_code(self, result_data):
         """For this criterion, the result will depend on the department."""
 
-        # Get custom `data to result code` matrix from moulinette config
-        config = self.moulinette.config
-        urba_code_matrix = config.n2000_autorisation_urba_result
+        # Get custom `data to result code` matrix from settings form
+        settings_form = self.get_settings_form()
+        settings_form.is_valid()
+        urba_code_matrix = settings_form.cleaned_data.get("result_code_matrix", {})
         try:
             result_code = urba_code_matrix[result_data]
             if result_code not in self.RESULT_MATRIX.keys():
                 raise ValueError
-        except (KeyError, ValueError):
+        except (TypeError, KeyError, ValueError):
             result_code = super().get_result_code(result_data)
 
         return result_code

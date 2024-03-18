@@ -73,17 +73,15 @@ def criterion_value(config, criterion, field):
 
 
 @register.simple_tag(takes_context=True)
-def moulinette_template(context, template_key, **kwargs):
-    """Render a moulinette template.
+def criterion_template(context, template_key, **kwargs):
+    """Render a criterion-level moulinette template.
 
     This template is rendered with the current context.
     """
-    moulinette = context["moulinette"]
-    template_obj = moulinette.get_template(template_key)
+    criterion = context["criterion"]
+    template_obj = criterion.get_template(template_key)
     if not template_obj:
-        logger.warning(
-            f"Template {template_key} not found for config {moulinette.config}."
-        )
+        logger.warning(f"Template {template_key} not found for criterion {criterion}.")
         return ""
 
     template = Template(template_obj.content)

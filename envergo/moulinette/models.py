@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, Prefetch, When
+from django.db.models import Case, F, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
@@ -417,6 +417,13 @@ class Criterion(models.Model):
         return f"{self.regulation.slug}__{self.slug}"
 
     def evaluate(self, moulinette, distance):
+        """Initialize and run the actual evaluator."""
+
+        # Before the evaluation, let's create a `MoulinetteTemplate` dict
+        # It would make more sense to do this in the `__init__` method, but
+        # the templates would have not be prefetched yet.
+        self._templates = {t.key: t for t in self.templates.all()}
+
         self.moulinette = moulinette
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
@@ -484,6 +491,9 @@ class Criterion(models.Model):
         else:
             form = None
         return form
+
+    def get_template(self, template_key):
+        return self._templates.get(template_key, None)
 
 
 class Perimeter(models.Model):
@@ -645,13 +655,25 @@ def get_all_template_keys():
 
 
 class MoulinetteTemplate(models.Model):
-    """A custom moulinette template that can be admin edited."""
+    """A custom moulinette template that can be admin edited.
+
+    Templates can be associated to departments (through MoulinetteConfig) or
+    criteria.
+    """
 
     config = models.ForeignKey(
         "moulinette.MoulinetteConfig",
         verbose_name=_("Config"),
         on_delete=models.PROTECT,
         related_name="templates",
+        null=True,
+    )
+    criterion = models.ForeignKey(
+        "moulinette.Criterion",
+        verbose_name=_("Criterion"),
+        on_delete=models.PROTECT,
+        related_name="templates",
+        null=True,
     )
     key = models.CharField(_("Key"), choices=get_all_template_keys(), max_length=512)
     content = models.TextField(_("Content"), blank=True, default="")
@@ -660,7 +682,23 @@ class MoulinetteTemplate(models.Model):
         verbose_name = _("Moulinette template")
         verbose_name_plural = _("Moulinette templates")
         constraints = [
-            models.UniqueConstraint("config", "key", name="unique_template_config_key"),
+            # Make sure the template is associated with a single related object
+            models.CheckConstraint(
+                check=Q(config__isnull=False, criterion=None)
+                | Q(criterion__isnull=False, config=None),
+                name="relation_to_single_object",
+            ),
+            # Make sure each criterion / config cannot have duplicate templates
+            models.UniqueConstraint(
+                fields=["config", "key"],
+                condition=Q(config__isnull=False),
+                name="unique_template_config_key",
+            ),
+            models.UniqueConstraint(
+                fields=["criterion", "key"],
+                condition=Q(criterion__isnull=False),
+                name="unique_template_criterion_key",
+            ),
         ]
 
 
@@ -824,6 +862,7 @@ class Moulinette:
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
+            .prefetch_related("templates")
             .defer("activation_map__geometry")
         )
         return criteria

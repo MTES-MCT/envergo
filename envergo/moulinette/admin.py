@@ -15,6 +15,12 @@ from envergo.moulinette.models import (
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
+class MoulinetteTemplateInline(admin.StackedInline):
+    model = MoulinetteTemplate
+    extra = 0
+    fields = ["key", "content"]
+
+
 class MapDepartmentsListFilter(DepartmentsListFilter):
     title = _("Departments")
     parameter_name = "departments"
@@ -65,6 +71,12 @@ class CriterionAdminForm(forms.ModelForm):
             value = value()
         return value
 
+    def clean_evaluator_settings(self):
+        """Ensure an empty value can be converted to an empty json dict."""
+        value = self.cleaned_data["evaluator_settings"]
+        value = {} if value is None else value
+        return value
+
     def clean(self):
         """Ensure required action and stake are both set if one is set."""
 
@@ -100,6 +112,7 @@ class CriterionAdmin(admin.ModelAdmin):
     ]
     list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
+    inlines = [MoulinetteTemplateInline]
 
     class Media:
         css = {
@@ -174,11 +187,6 @@ class MoulinetteConfigForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["n2000_lotissement_proximite"].strip = False
-
-
-class MoulinetteTemplateInline(admin.StackedInline):
-    model = MoulinetteTemplate
-    extra = 0
 
 
 @admin.register(MoulinetteConfig)
