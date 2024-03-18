@@ -744,6 +744,8 @@ class Moulinette:
             self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
+
+        # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
@@ -953,7 +955,7 @@ class Moulinette:
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
-                if form:
+                if form and not criterion.is_optional:
                     form_errors.append(not form.is_valid())
 
         return any(form_errors)
