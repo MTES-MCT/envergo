@@ -175,7 +175,7 @@ class AireDeStationnement(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        soumis = self.catalog.get("rubrique_41_soumis")
+        soumis = self.catalog.get("evalenv_rubrique_41_soumis")
         return soumis
 
 
