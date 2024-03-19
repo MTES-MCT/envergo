@@ -45,6 +45,7 @@ def moulinette_data(footprint):
     }
 
 
+# ETQ Admin, je peux voir l'option d'activer un critère optionnel
 def test_admin_see_optional_criterion_additional_question(admin_client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -61,6 +62,7 @@ def test_admin_see_optional_criterion_additional_question(admin_client):
     assert "Aire de stationnement" not in res.content.decode()
 
 
+# ETQ User, je ne peux pas voir l'option d'activer un critère optionnel
 def test_users_cannot_see_optional_criterion_additional_question(client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -75,3 +77,31 @@ def test_users_cannot_see_optional_criterion_additional_question(client):
 
     # The criterion is  not activated
     assert "Aire de stationnement" not in res.content.decode()
+
+
+# ETQ Admin, je peux consulter une similation avec un critère optionnel
+def test_admin_see_optional_criterion_result(admin_client):
+    url = reverse("moulinette_result")
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41_soumis=soumis"
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    # The question exists in the sidebar
+    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
+
+    # The criterion is activated
+    assert "Aire de stationnement" in res.content.decode()
+
+
+# ETQ User, je ne peux pas consulter une similation avec un critère optionnel
+def test_users_cannot_see_optional_criterion_results(client):
+    url = reverse("moulinette_result")
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41_soumis=soumis"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 302
+    assert "evalenv_rubrique_41_soumis" not in res["Location"]
