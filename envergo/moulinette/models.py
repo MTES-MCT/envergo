@@ -454,6 +454,13 @@ class Criterion(models.Model):
 
         return self._evaluator.result
 
+    def should_be_displayed(self):
+        """Should the criterion result be displayed?
+
+        When their result is not available, optional criteria should not be displayed.
+        """
+        return not (self.is_optional and self.result == RESULTS.non_disponible)
+
     @property
     def map(self):
         """Returns a map to be displayed for a single criterion.
