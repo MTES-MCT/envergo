@@ -1016,9 +1016,23 @@ class Moulinette:
 
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
-                form_class = criterion.get_form_class()
-                if form_class:
-                    forms.append(form_class)
+                if not criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class:
+                        forms.append(form_class)
+
+        return forms
+
+    def optional_form_classes(self):
+        """Return the list of forms for optional questions."""
+        forms = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class:
+                        forms.append(form_class)
 
         return forms
 

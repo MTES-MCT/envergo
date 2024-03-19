@@ -84,6 +84,7 @@ class MoulinetteMixin:
             if moulinette.is_evaluation_available() or self.request.user.is_superuser:
                 context["additional_forms"] = self.get_additional_forms(moulinette)
                 context["additional_fields"] = self.get_additional_fields(moulinette)
+                context["optional_forms"] = self.get_optional_forms(moulinette)
 
                 # We need to display a different form style when the "additional forms"
                 # first appears, but the way this feature is designed, said forms
@@ -164,6 +165,17 @@ class MoulinetteMixin:
 
         return fields
 
+    def get_optional_forms(self, moulinette):
+        form_classes = moulinette.optional_form_classes()
+        forms = []
+        for Form in form_classes:
+            form = Form(**self.get_form_kwargs())
+            if form.fields:
+                form.is_valid()
+                forms.append(form)
+
+        return forms
+
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
@@ -176,7 +188,9 @@ class MoulinetteMixin:
         form_data.pop("existing_surface")
         get.update(form_data)
 
-        moulinette = Moulinette(form_data, form.data)
+        moulinette = Moulinette(
+            form_data, form.data, self.should_activate_optional_criteria()
+        )
         additional_forms = self.get_additional_forms(moulinette)
         for form in additional_forms:
             form.is_valid()  # trigger form validation

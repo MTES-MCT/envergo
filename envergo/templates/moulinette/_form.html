@@ -77,13 +77,36 @@
               {% include '_field_snippet.html' with field=field %}
             {% endif %}
           {% endfor %}
-          {% if additional_forms and moulinette.has_missing_data %}
+          {% if additional_forms and moulinette.has_missing_data and not optional_forms %}
             <button type="submit" class="fr-btn">Compléter la simulation</button>
           {% endif %}
         </div>
       {% endif %}
+
+      {% if optional_forms %}
+        <div id="optional-forms">
+          <p>
+            <strong>Question(s) optionnelle(s)</strong>
+            <small>for admin eyes only</small>
+          </p>
+          {% for form in optional_forms %}
+            {% for field in form %}
+              {% if field|is_checkbox %}
+                {% include '_checkbox_snippet.html' with field=field %}
+              {% elif field|is_radio %}
+                {% include '_radio_snippet.html' with field=field %}
+              {% elif field|is_input_file %}
+                {% include '_input_file_snippet.html' with field=field %}
+              {% else %}
+                {% include '_field_snippet.html' with field=field %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <div class="hide-print">
-        {% if additional_forms and moulinette.has_missing_data %}
+        {% if additional_forms and moulinette.has_missing_data and not optional_forms %}
         {% elif moulinette %}
           <button type="submit" class="fr-btn">Renouveler la simulation</button>
         {% else %}
