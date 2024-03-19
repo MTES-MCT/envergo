@@ -79,7 +79,7 @@ def test_users_cannot_see_optional_criterion_additional_question(client):
     assert "Aire de stationnement" not in res.content.decode()
 
 
-# ETQ Admin, je peux consulter une similation avec un critère optionnel
+# ETQ Admin, je peux consulter une simulation avec un critère optionnel
 def test_admin_see_optional_criterion_result(admin_client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41_soumis=soumis"
@@ -96,7 +96,7 @@ def test_admin_see_optional_criterion_result(admin_client):
     assert "Aire de stationnement" in res.content.decode()
 
 
-# ETQ User, je ne peux pas consulter une similation avec un critère optionnel
+# ETQ User, je ne peux pas consulter une simulation avec un critère optionnel
 def test_users_cannot_see_optional_criterion_results(client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41_soumis=soumis"

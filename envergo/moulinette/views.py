@@ -196,6 +196,12 @@ class MoulinetteMixin:
             form.is_valid()  # trigger form validation
             get.update(form.cleaned_data)
 
+        if self.should_activate_optional_criteria():
+            optional_forms = self.get_optional_forms(moulinette)
+            for form in optional_forms:
+                form.is_valid()  # trigger form validation
+                get.update(form.cleaned_data)
+
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
