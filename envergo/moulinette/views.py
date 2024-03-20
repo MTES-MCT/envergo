@@ -1,5 +1,6 @@
 import json
 from collections import OrderedDict
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.db.models import Value as V
@@ -184,20 +185,17 @@ class MoulinetteMixin:
 
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
-        form_data.pop("address")
-        form_data.pop("existing_surface")
+        form_data.pop("address", None)
+        form_data.pop("existing_surface", None)
         get.update(form_data)
 
-        moulinette = Moulinette(
-            form_data, form.data, self.should_activate_optional_criteria()
-        )
-        additional_forms = self.get_additional_forms(moulinette)
+        additional_forms = self.get_additional_forms(self.moulinette)
         for form in additional_forms:
             form.is_valid()  # trigger form validation
             get.update(form.cleaned_data)
 
         if self.should_activate_optional_criteria():
-            optional_forms = self.get_optional_forms(moulinette)
+            optional_forms = self.get_optional_forms(self.moulinette)
             for form in optional_forms:
                 form.is_valid()  # trigger form validation
                 get.update(form.cleaned_data)
@@ -259,12 +257,29 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         res = self.render_to_response(context)
         moulinette = self.moulinette
         if moulinette:
+
+            if not self.validate_results_url(request, context):
+                return HttpResponseRedirect(self.get_results_url(context["form"]))
+
             if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
                 self.log_moulinette_event(moulinette)
 
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
+
+    def validate_results_url(self, request, context):
+        """Check that the url parameter does not contain any unexpected parameter.
+
+        This is useful for cleaning urls from optional criteria parameters.
+        """
+        expected_url = self.get_results_url(context["form"])
+        expected_qs = parse_qs(urlparse(expected_url).query)
+        expected_params = set(expected_qs.keys())
+        current_url = request.get_full_path()
+        current_qs = parse_qs(urlparse(current_url).query)
+        current_params = set(current_qs.keys())
+        return expected_params == current_params
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
