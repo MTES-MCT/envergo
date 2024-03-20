@@ -189,13 +189,20 @@ class MoulinetteMixin:
         form_data.pop("existing_surface", None)
         get.update(form_data)
 
-        additional_forms = self.get_additional_forms(self.moulinette)
+        if hasattr(self, "moulinette"):
+            moulinette = self.moulinette
+        else:
+            moulinette = Moulinette(
+                form_data, form.data, self.should_activate_optional_criteria()
+            )
+
+        additional_forms = self.get_additional_forms(moulinette)
         for form in additional_forms:
             form.is_valid()  # trigger form validation
             get.update(form.cleaned_data)
 
         if self.should_activate_optional_criteria():
-            optional_forms = self.get_optional_forms(self.moulinette)
+            optional_forms = self.get_optional_forms(moulinette)
             for form in optional_forms:
                 form.is_valid()  # trigger form validation
                 get.update(form.cleaned_data)
