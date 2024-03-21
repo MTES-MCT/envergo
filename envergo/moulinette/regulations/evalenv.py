@@ -153,16 +153,31 @@ class TerrainAssiette(CriterionEvaluator):
 
 
 class AireDeStationnementForm(forms.Form):
-    evalenv_rubrique_41_soumis = forms.ChoiceField(
+    prefix = "evalenv_rubrique_41"
+
+    activate = forms.BooleanField(
         label="Rubrique 41 : aires de stationnement",
-        required=True,
         help_text="""
             Seuil du cas par cas : plus de 50 places ouvertes au public
             (construites après le 16 mai 2017)
         """,
+        required=False,
+        widget=forms.CheckboxInput,
+    )
+    soumis = forms.ChoiceField(
+        label="Soumis / non-soumis",
+        required=False,
         widget=forms.RadioSelect,
         choices=(("oui", "Soumis"), ("non", "Non soumis")),
     )
+
+    def clean(self):
+        data = super().clean()
+        activate = data.get("activate", False)
+        soumis = data.get("soumis", None)
+        if activate and not soumis:
+            self.add_error("soumis", "Ce champ est obligatoire")
+        return data
 
 
 class AireDeStationnement(CriterionEvaluator):
@@ -175,7 +190,7 @@ class AireDeStationnement(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        soumis = self.catalog.get("evalenv_rubrique_41_soumis")
+        soumis = self.catalog.get("evalenv_rubrique_41-soumis")
         return soumis
 
 
