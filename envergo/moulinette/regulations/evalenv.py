@@ -161,23 +161,15 @@ class AireDeStationnementForm(forms.Form):
             Seuil du cas par cas : plus de 50 places ouvertes au public
             (construites après le 16 mai 2017)
         """,
-        required=False,
+        required=True,
         widget=forms.CheckboxInput,
     )
     soumis = forms.ChoiceField(
         label="Soumis / non-soumis",
-        required=False,
+        required=True,
         widget=forms.RadioSelect,
         choices=(("oui", "Soumis"), ("non", "Non soumis")),
     )
-
-    def clean(self):
-        data = super().clean()
-        activate = data.get("activate", False)
-        soumis = data.get("soumis", None)
-        if activate and not soumis:
-            self.add_error("soumis", "Ce champ est obligatoire")
-        return data
 
 
 class AireDeStationnement(CriterionEvaluator):
