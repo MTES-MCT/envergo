@@ -181,7 +181,15 @@ class MoulinetteMixin:
         return HttpResponseRedirect(self.get_results_url(form))
 
     def get_results_url(self, form):
-        """Generates the GET url corresponding to the POST'ed moulinette query."""
+        """Generates the GET url corresponding to the POST'ed moulinette query.
+
+        We submit the form via a POST method (TBH I don't remember why but there was a reason).
+        But since we want the moulinette result to have a distinct url, we immediately redirect
+        to the full url.
+
+        We only want to keep useful parameters, i.e the ones that are actually used
+        by the moulinette forms.
+        """
 
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
@@ -198,20 +206,19 @@ class MoulinetteMixin:
 
         additional_forms = self.get_additional_forms(moulinette)
         for form in additional_forms:
-            form.is_valid()  # trigger form validation
-            get.update(form.cleaned_data)
+            for field in form:
+                get.setlist(field.html_name, form.data.getlist(field.html_name))
 
         if self.should_activate_optional_criteria():
             optional_forms = self.get_optional_forms(moulinette)
             for form in optional_forms:
-                form.is_valid()  # trigger form validation
-                get.update(form.cleaned_data)
+                for field in form:
+                    get.setlist(field.html_name, form.data.getlist(field.html_name))
 
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
-        # We add the `#` at the end to reset the accordions' states
-        url_with_params = f"{url}?{url_params}#"
+        url_with_params = f"{url}?{url_params}"
         return url_with_params
 
 
