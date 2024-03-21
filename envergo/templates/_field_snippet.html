@@ -1,6 +1,6 @@
 {% load utils %}
 
-<div id="form-group-{{ field.name }}"
+<div id="form-group-{{ field.html_name }}"
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
   {% include '_label.html' %}
