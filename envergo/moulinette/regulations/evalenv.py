@@ -182,7 +182,11 @@ class AireDeStationnement(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        soumis = self.catalog.get("evalenv_rubrique_41-soumis")
+        form = self.get_form()
+        if form.is_valid():
+            soumis = form.cleaned_data.get("soumis")
+        else:
+            soumis = None
         return soumis
 
 
