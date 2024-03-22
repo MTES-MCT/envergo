@@ -4,11 +4,33 @@
   <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
 
   <ul>
+
+    {% if moulinette.eval_env.result == "systematique" %}
+      <li>
+        <strong style="background-color: #ffb7a5;">Le projet est soumis à évaluation environnementale</strong>.
+        <br />
+        Le porteur de projet doit faire réaliser une étude d'impact.
+      </li>
+    {% elif moulinette.eval_env.result == "cas_par_cas" %}
+      <li>
+        <strong style="background-color: #ffd3a6;">Le projet est soumis à examen au cas par cas</strong>.
+        <br />
+        Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+      </li>
+    {% endif %}
+
     {% if moulinette.loi_sur_leau.result == "soumis" %}
       <li>
         <strong style="background-color: #ffb7a5;">Le projet est soumis à la Loi sur l'eau</strong>.
         <br />
         Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).
+      </li>
+    {% elif required_actions_soumis %}
+      <li>
+        Le projet est susceptible d'être soumis à la <strong>Loi sur l’eau</strong>. <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur du projet est requise.</strong> Celui-ci doit mener les études prouvant que le projet :
+        <ul>
+          {% for action in required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+        </ul>
       </li>
     {% endif %}
 
@@ -20,41 +42,16 @@
       </li>
     {% endif %}
 
-    {% if moulinette.eval_env.result == "cas_par_cas" %}
+    {% if required_actions_interdit %}
       <li>
-        <strong style="background-color: #ffd3a6;">Le projet est soumis à examen au cas par cas</strong>.
-        <br />
-        Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
-      </li>
-    {% endif %}
-
-    {% if moulinette.eval_env.result == "systematique" %}
-      <li>
-        <strong style="background-color: #ffb7a5;">Le projet est soumis à évaluation environnementale</strong>.
-        <br />
-        Le porteur de projet doit faire réaliser une étude d'impact.
+        Le <strong>projet est susceptible d'être interdit</strong> au titre du <strong>règlement de SAGE</strong> (Schéma d’Aménagement et de Gestion des Eaux). <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur de projet est requise.</strong> Des études doivent être menées pour s’assurer que le projet :
+        <ul>
+          {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
+        </ul>
       </li>
     {% endif %}
 
   </ul>
-
-  {% if required_actions_interdit %}
-    <p>
-      Le <strong>projet est susceptible d'être interdit</strong> au titre du <strong>règlement de SAGE</strong> (Schéma d’Aménagement et de Gestion des Eaux). <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur de projet est requise.</strong> Des études doivent être menées pour s’assurer que le projet :
-    </p>
-    <ul>
-      {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
-    </ul>
-  {% endif %}
-
-  {% if required_actions_soumis %}
-    <p>
-      Par ailleurs, le projet est susceptible d'être soumis à la <strong>Loi sur l’eau</strong>. <strong style="font-weight: bold; background-color: #fee7a0">Une action du porteur du projet est requise.</strong> Celui-ci doit mener les études prouvant que le projet :
-    </p>
-    <ul>
-      {% for action in required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
-    </ul>
-  {% endif %}
 
   {% if is_icpe %}
     {% include 'evaluations/admin/_icpe_mention.html' %}
