@@ -171,6 +171,24 @@ class AireDeStationnementForm(forms.Form):
         choices=(("oui", "Soumis"), ("non", "Non soumis")),
     )
 
+    @property
+    def prefixed_cleaned_data(self):
+        """Return cleaned data but use prefixed keys.
+
+        During the evaluation, the moulinette injects all criteria's cleaned data in
+        the moulinette catalog.
+
+        When we use prefixed form, it can cause conflicts since cleaned_data uses
+        non-prefixed field names, but we need each field name to be unique in the
+        global catalog.
+        """
+        data = self.cleaned_data
+        prefixed = {}
+        for key, val in data.items():
+            prefixed[self.add_prefix(key)] = val
+
+        return prefixed
+
 
 class AireDeStationnement(CriterionEvaluator):
     choice_label = "Éval Env > Aire de stationnement"
@@ -183,10 +201,8 @@ class AireDeStationnement(CriterionEvaluator):
 
     def get_result_data(self):
         form = self.get_form()
-        if form.is_valid():
-            soumis = form.cleaned_data.get("soumis")
-        else:
-            soumis = None
+        form.is_valid()
+        soumis = form.cleaned_data.get("soumis")
         return soumis
 
 

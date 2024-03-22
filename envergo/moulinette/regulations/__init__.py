@@ -75,9 +75,11 @@ class Map:
                 "zoom": self.zoom,
                 "polygons": [
                     {
-                        "polygon": to_geojson(entry.geometry.intersection(buffer))
-                        if self.truncate
-                        else to_geojson(entry.geometry),
+                        "polygon": (
+                            to_geojson(entry.geometry.intersection(buffer))
+                            if self.truncate
+                            else to_geojson(entry.geometry)
+                        ),
                         "color": entry.color,
                         "label": entry.label,
                     }
@@ -159,7 +161,10 @@ class CriterionEvaluator(ABC):
 
         form = self.get_form()
         if form and form.is_valid():
-            data = form.cleaned_data
+            if hasattr(form, "prefixed_cleaned_data"):
+                data = form.prefixed_cleaned_data
+            else:
+                data = form.cleaned_data
         else:
             data = {}
 
