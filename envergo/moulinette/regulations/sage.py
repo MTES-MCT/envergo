@@ -263,7 +263,11 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "outside"
 
         threshold = settings_form.cleaned_data["threshold"]
-        if self.catalog["created_surface"] >= threshold:
+        # Special case: whenever the surface is zero, the project is "non soumis",
+        # even if the threshold is also zero.
+        if self.catalog["created_surface"] == 0:
+            project_size = "small"
+        elif self.catalog["created_surface"] >= threshold:
             project_size = "big"
         elif self.catalog["created_surface"] >= threshold * 0.7:
             project_size = "medium"
@@ -386,7 +390,11 @@ class ImpactZoneHumideStrict(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "outside"
 
         threshold = settings_form.cleaned_data["threshold"]
-        if self.catalog["created_surface"] >= threshold:
+        # Special case: whenever the surface is zero, the project is "non soumis",
+        # even if the threshold is also zero.
+        if self.catalog["created_surface"] == 0:
+            project_size = "small"
+        elif self.catalog["created_surface"] >= threshold:
             project_size = "big"
         elif self.catalog["created_surface"] >= threshold * 0.7:
             project_size = "medium"
