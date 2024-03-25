@@ -40,6 +40,11 @@
 
   {% include 'moulinette/_evaluation_summary.html' %}
 
+  <p class="fr-hint-text fr-mb-3w">
+    EnvErgo est un service d'information. Il ne se substitue pas aux positions de l'administration.
+    <a href="#liability-info">En savoir plus.</a>
+  </p>
+
   {% for regulation in moulinette.regulations %}
 
     {% if forloop.counter0 != 0 %}
@@ -57,12 +62,15 @@
 
   {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
 
-  <div class="fr-alert fr-alert--info fr-my-5w">
+  <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
     <p>
       EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
     </p>
     <p>
-      <i>Les avis rendus ne valent pas position de l'administration</i>. Ils ne couvrent pas l'exhaustivité des réglementations spécifiques à certains projets.
+      Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
+    </p>
+    <p>
+      Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
     </p>
   </div>
 

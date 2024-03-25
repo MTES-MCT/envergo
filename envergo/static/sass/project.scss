@@ -166,6 +166,10 @@ article {
     white-space: nowrap;
     display: inline;
   }
+
+  .fr-hint-text a {
+    color: var(--text-default-info);
+  }
 }
 
 nav#evaluation-summary {
