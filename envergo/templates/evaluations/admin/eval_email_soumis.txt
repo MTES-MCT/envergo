@@ -12,16 +12,16 @@ Le porteur de projet doit déposer une demande d'examen au cas par cas à la DRE
 {% endif %}{% if moulinette.loi_sur_leau.result == "soumis" %}  - Le projet est soumis à la Loi sur l'eau.
 Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).
 
-{% elif required_actions_soumis %}  - Le projet est susceptible d'être soumis à la Loi sur l’eau. Une action du porteur du projet est requise. Celui-ci doit mener les études prouvant que le projet :
+{% elif moulinette.loi_sur_leau.required_actions_soumis %}  - Le projet est susceptible d'être soumis à la Loi sur l’eau. Une action du porteur du projet est requise. Celui-ci doit mener les études prouvant que le projet :
 
-{% for action in required_actions_soumis %}    - {{ action }}
+{% for action in moulinette.loi_sur_leau.required_actions_soumis %}    - {{ action }}
 
 {% endfor %}{% endif %}{% if moulinette.natura2000.result == "soumis" and not moulinette.natura2000.iota_only %}  - Le projet est soumis à Natura 2000.
     Le porteur de projet doit réaliser une évaluation des incidences Natura 2000.
 
-{% endif %}{% if required_actions_interdit %}  - Le projet est susceptible d'être interdit au titre du règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux). Une action du porteur de projet est requise. Des études doivent être menées pour s’assurer que le projet :
+{% endif %}{% if moulinette.sage.required_actions_interdit %}  - Le projet est susceptible d'être interdit au titre du règlement de SAGE (Schéma d’Aménagement et de Gestion des Eaux). Une action du porteur de projet est requise. Des études doivent être menées pour s’assurer que le projet :
 
-{% for action in required_actions_interdit %}    - {{ action }}
+{% for action in moulinette.sage.required_actions_interdit %}    - {{ action }}
 
 {% endfor %}
 {% endif %}
