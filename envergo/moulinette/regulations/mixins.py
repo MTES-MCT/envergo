@@ -17,7 +17,7 @@ class ZoneHumideMixin:
             data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
         if "potential_wetlands_10" not in self.catalog:
-            data["potential_wetlands_0"] = [
+            data["potential_wetlands_10"] = [
                 zone
                 for zone in self.catalog["potential_wetlands"]
                 if zone.distance <= D(m=10)
