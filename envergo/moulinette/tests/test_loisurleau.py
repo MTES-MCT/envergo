@@ -105,7 +105,7 @@ def test_3310_medium_footprint_inside_potential_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
-    moulinette.catalog["potential_wetlands_within_0m"] = True
+    moulinette.catalog["potential_wetlands_within_10m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
@@ -147,7 +147,7 @@ def test_3310_large_footprint_inside_potential_wetland(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
-    moulinette.catalog["potential_wetlands_within_0m"] = True
+    moulinette.catalog["potential_wetlands_within_10m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
