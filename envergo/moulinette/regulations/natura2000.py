@@ -7,8 +7,8 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
-BLUE = "blue"
-LIGHTBLUE = "lightblue"
+BLUE = "#0000FF"
+LIGHTBLUE = "#00BFFF"
 
 
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
