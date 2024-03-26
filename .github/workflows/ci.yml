@@ -40,7 +40,7 @@ jobs:
     # Configure the database service
     services:
       database:
-        image: postgis/postgis:13-master
+        image: postgis/postgis:14-master
         env:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
@@ -58,6 +58,12 @@ jobs:
       - name: Update package list
         run: |
           sudo apt update
+
+      - name: Set up the database
+        run: |
+          psql -d postgresql://envergo:envergo@localhost/template1 -c 'CREATE EXTENSION IF NOT EXISTS postgis_raster;'
+        env:
+          PGPASSWORD: envergo
 
       - name: Install french locale
         run: |
