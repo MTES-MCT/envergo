@@ -114,7 +114,6 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -199,7 +198,6 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
