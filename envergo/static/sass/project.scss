@@ -1327,3 +1327,15 @@ main.demonstrateur_2150 {
     text-align: center;
   }
 }
+
+// Some dsfr related fixes
+.fr-hint-text a.fr-link:has(span[class^="fr-icon-"]) {
+  text-decoration: none;
+  background-image: none;
+  color: inherit;
+  font-size: inherit;
+
+  span[class^="fr-icon-"]::before {
+    --icon-size: 1rem;
+  }
+}

@@ -15,6 +15,8 @@
 
     {% if nest_field_class %}</div>{% endif %}
 
+  {% if field.help_text and bottom_help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+
   {% if field.errors %}
     <p class="fr-error-text">
       ↑
