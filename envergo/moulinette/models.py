@@ -134,6 +134,30 @@ class Regulation(models.Model):
     def title(self):
         return self.get_regulation_display()
 
+    @property
+    def subtitle(self):
+        subtitle_property = f"{self.regulation}_subtitle"
+        sub = getattr(self, subtitle_property, None)
+        return sub
+
+    @property
+    def eval_env_subtitle(self):
+        """Custom subtitle for EvalEnv.
+
+        When an Eval Env evaluation is "non soumis", we need to displayed that not
+        all "rubriques" have been evaluated.
+        """
+        if self.result != "non_soumis":
+            return None
+
+        optional_criteria = [
+            c
+            for c in self.criteria.all()
+            if c.is_optional and c.result != "non_disponible"
+        ]
+        subtitle = "(rubrique 39)" if not optional_criteria else None
+        return subtitle
+
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
 
