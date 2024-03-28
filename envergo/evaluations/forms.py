@@ -98,14 +98,13 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         required=False,
         widget=forms.Textarea,
         help_text="""
-            <a class="fr-link" aria-describedby="tooltip-project-description" href="#">
+            <a class="fr-link" aria-describedby="tooltip-project-description" href="#" onclick="return false">
                 Précautions liées au contenu
-                <span class="fr-icon-question-line" aria-hidden="true"></span>
             </a>
             <span class="fr-tooltip fr-placement" id="tooltip-project-description" role="tooltip" aria-hidden="true">
                 Merci de ne fournir que les informations utiles à la compréhension de la demande d’avis.<br />
                 Attention à ne pas mentionner de propos diffamatoires ou d’informations sensibles
-                (opinions philosophiques, syndicales, politiques, religieuses, données de santé, …).
+                (opinions philosophiques, syndicales, politiques, religieuses, données de santé…).
             </span>
         """,
     )
