@@ -153,6 +153,60 @@ class TerrainAssiette(CriterionEvaluator):
         return assiette_thld
 
 
+class AireDeStationnementForm(forms.Form):
+    prefix = "evalenv_rubrique_41"
+
+    activate = forms.BooleanField(
+        label="Rubrique 41 : aires de stationnement",
+        help_text="""
+            Seuil du cas par cas : plus de 50 places ouvertes au public
+            (construites après le 16 mai 2017)
+        """,
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    soumis = forms.ChoiceField(
+        label="Soumis / non-soumis",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(("oui", "Soumis"), ("non", "Non soumis")),
+    )
+
+    @property
+    def prefixed_cleaned_data(self):
+        """Return cleaned data but use prefixed keys.
+
+        During the evaluation, the moulinette injects all criteria's cleaned data in
+        the moulinette catalog.
+
+        When we use prefixed form, it can cause conflicts since cleaned_data uses
+        non-prefixed field names, but we need each field name to be unique in the
+        global catalog.
+        """
+        data = self.cleaned_data
+        prefixed = {}
+        for key, val in data.items():
+            prefixed[self.add_prefix(key)] = val
+
+        return prefixed
+
+
+class AireDeStationnement(CriterionEvaluator):
+    choice_label = "Éval Env > Aire de stationnement"
+    slug = "aire_de_stationnement"
+    form_class = AireDeStationnementForm
+    CODE_MATRIX = {
+        "oui": "cas_par_cas",
+        "non": "non_soumis",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        soumis = form.cleaned_data.get("soumis")
+        return soumis
+
+
 class OtherCriteria(CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
     slug = "autres_rubriques"

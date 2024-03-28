@@ -1,13 +1,13 @@
 {% load utils %}
 
-<div id="form-group-{{ field.name }}"
+<div id="form-group-{{ field.html_name }}"
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
   <fieldset class="fr-fieldset {{ field.field.widget.fieldset_class }} {% if field.errors %}fr-fieldset--error{% endif %}"
             role="group"
-            {% if field.errors %}aria-labelledby="legend-{{ field.name }} error-text-{{ field.name }}"{% endif %}>
+            {% if field.errors %}aria-labelledby="legend-{{ field.html_name }} error-text-{{ field.html_name }}"{% endif %}>
 
     <legend class="fr-fieldset__legend fr-text--regular"
-            id="legend-{{ field.name }}">
+            id="legend-{{ field.html_name }}">
       {{ field.label }}
       {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
     </legend>
@@ -26,7 +26,7 @@
     </div>
 
     {% if field.errors %}
-      <p id="error-text-{{ field.name }}" class="fr-error-text">
+      <p id="error-text-{{ field.html_name }}" class="fr-error-text">
         ↑
         {{ field.errors.0 }}
         ↑

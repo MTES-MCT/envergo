@@ -4,10 +4,9 @@
   <h2>
     <span class="content">
       {{ regulation.title }}
-      {# This is a hack that should be removed one day #}
-      {% if regulation.regulation == "eval_env" and regulation.result == "non_soumis" %}
+      {% if regulation.subtitle %}
         <br />
-        <span class="undertitle">(rubrique 39)</span>
+        <span class="undertitle">{{ regulation.subtitle }}</span>
       {% endif %}
     </span>
     {% result_tag regulation.result %}
@@ -29,8 +28,9 @@
       <h3>Détail des rubriques</h3>
 
       {% for criterion in regulation.criteria.all %}
-        {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
-
+        {% if criterion.should_be_displayed %}
+          {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
+        {% endif %}
       {% endfor %}
     </div>
   {% endif %}

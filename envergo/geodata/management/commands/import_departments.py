@@ -8,14 +8,13 @@ class Command(BaseCommand):
     """Process departments from a shapefile.
 
     Data source:
-    https://www.data.gouv.fr/fr/datasets/contours-des-departements-francais-issus-d-openstreetmap/
+    https://geoservices.ign.fr/adminexpress
 
-    File url:
-    https://www.data.gouv.fr/fr/datasets/r/eb36371a-761d-44a8-93ec-3d728bec17ce
+    You have to download the "France entière" edition, then extract the file and
+    find the DEPARTMENT.* files.
 
-    WARNING! This task is not meant to be called several times, since
-    metadata can be associated with Department objects in admin after they
-    where first imported.
+    This task loads data from  a shapefile, and updates existing `Department` objects
+    with a new geometry data.
 
     """
 
@@ -27,8 +26,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         shapefile = options["shapefile"]
         mapping = {
-            "department": "code_insee",
+            "department": "INSEE_DEP",
             "geometry": "POLYGON",
         }
-        lm = LayerMapping(Department, shapefile, mapping)
-        lm.save(strict=True)
+        lm = LayerMapping(Department, shapefile, mapping, unique="department")
+        lm.save(strict=True, verbose=True)

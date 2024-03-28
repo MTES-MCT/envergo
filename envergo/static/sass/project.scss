@@ -190,6 +190,11 @@ nav#evaluation-summary {
       text-decoration: underline;
       font-weight: 500;
     }
+
+    .undertitle {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
   }
 }
 
@@ -262,6 +267,22 @@ nav#evaluation-summary {
 
       .fr-input {
         box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+      }
+    }
+  }
+
+  #optional-forms {
+    background-color: var(--background-contrast-grey);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+
+    .optional-form {
+      &>fieldset {
+        display: none;
+      }
+
+      &.active>fieldset {
+        display: inherit !important;
       }
     }
   }

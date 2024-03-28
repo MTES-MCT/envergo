@@ -297,6 +297,13 @@ class DepartmentAdmin(admin.ModelAdmin):
     fields = ["department"]
     form = DepartmentForm
 
+    def get_queryset(self, request):
+        """Don't load useless and huge geometry objects."""
+
+        qs = super().get_queryset(request)
+        qs = qs.defer("geometry")
+        return qs
+
 
 @admin.register(CatchmentAreaTile)
 class CatchmentAreaTileAdmin(admin.ModelAdmin):
