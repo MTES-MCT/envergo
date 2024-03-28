@@ -166,6 +166,10 @@ article {
     white-space: nowrap;
     display: inline;
   }
+
+  .fr-hint-text a {
+    color: var(--text-default-info);
+  }
 }
 
 nav#evaluation-summary {
@@ -1177,6 +1181,10 @@ main.home {
       color: var(--blue-france-sun-113-625);
       margin-bottom: 3rem;
     }
+
+    #liability-warning {
+      padding: 0 1rem;
+    }
   }
 }
 
@@ -1322,4 +1330,9 @@ main.demonstrateur_2150 {
   .share-btn {
     text-align: center;
   }
+}
+
+// Some dsfr related fixes
+.fr-hint-text a.fr-link:has(+span.fr-tooltip) {
+  font-size: inherit;
 }
