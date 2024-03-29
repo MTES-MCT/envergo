@@ -561,7 +561,7 @@ class SelfDeclaration(EvaluationDetailMixin, DetailView):
         res = super().get(request, *args, **kwargs)
         evaluation = self.object
         metadata = {
-            "reference": evaluation.reference,
+            "request_reference": evaluation.reference,
             "source": request.GET.get("source", ""),
         }
         log_event("compliance", "form-visit", request, **metadata)
