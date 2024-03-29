@@ -12,7 +12,7 @@
 
   - ni à Natura 2000 ;
 
-  - ni à évaluation environnementale au titre de la rubrique 39 (construction et aménagement).
+  - ni à examen au cas par cas ou à évaluation environnementale.
 
   {% if is_icpe %}{% include 'evaluations/admin/_icpe_mention.txt' %}{% endif %}
   {% if rr_mention_md %}{{ rr_mention_md }}{% endif %}
