@@ -107,7 +107,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         # specific events for the "self declaration" button
         if self_declaration_url in clicked_link:
             metadata = {
-                "reference": regulatory_notice_log.evaluation.reference,
+                "request_reference": regulatory_notice_log.evaluation.reference,
                 "message_id": message_id,
                 "email": raw_event["email"],
             }
