@@ -82,6 +82,7 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         return HttpResponseBadRequest(f"{form.errors}")
 
 
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="post")
 class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
     """Process the feedback modal form."""
 
