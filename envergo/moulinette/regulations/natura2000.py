@@ -57,7 +57,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "inside"
         elif self.catalog["wetlands_within_100m"]:
             wetland_status = "close_to"
-        elif self.catalog["potential_wetlands_within_0m"]:
+        elif self.catalog["potential_wetlands_within_10m"]:
             wetland_status = "inside_potential"
         else:
             wetland_status = "outside"
@@ -93,16 +93,16 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
 
         elif (
             self.catalog["wetlands_within_100m"]
-            and not self.catalog["potential_wetlands_within_0m"]
+            and not self.catalog["potential_wetlands_within_10m"]
         ):
             caption = "Le projet se situe à proximité d'une zone humide référencée."
 
         elif (
             self.catalog["wetlands_within_100m"]
-            and self.catalog["potential_wetlands_within_0m"]
+            and self.catalog["potential_wetlands_within_10m"]
         ):
             caption = "Le projet se situe à proximité d'une zone humide référencée et dans une zone humide potentielle."
-        elif self.catalog["potential_wetlands_within_0m"] and potential_qs:
+        elif self.catalog["potential_wetlands_within_10m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
             caption = "Le projet ne se situe pas dans une zone humide référencée."
