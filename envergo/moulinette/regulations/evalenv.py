@@ -152,25 +152,7 @@ class TerrainAssiette(CriterionEvaluator):
         return assiette_thld
 
 
-class AireDeStationnementForm(forms.Form):
-    prefix = "evalenv_rubrique_41"
-
-    activate = forms.BooleanField(
-        label="Rubrique 41 : aires de stationnement",
-        help_text="""
-            Seuil du cas par cas : plus de 50 places ouvertes au public
-            (construites après le 16 mai 2017)
-        """,
-        required=True,
-        widget=forms.CheckboxInput,
-    )
-    soumis = forms.ChoiceField(
-        label="Soumis / non-soumis",
-        required=True,
-        widget=forms.RadioSelect,
-        choices=(("oui", "Soumis"), ("non", "Non soumis")),
-    )
-
+class OptionalFormMixin:
     @property
     def prefixed_cleaned_data(self):
         """Return cleaned data but use prefixed keys.
@@ -188,6 +170,123 @@ class AireDeStationnementForm(forms.Form):
             prefixed[self.add_prefix(key)] = val
 
         return prefixed
+
+
+class RoutesForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_06"
+
+    activate = forms.BooleanField(
+        label="Rubrique 6 : routes",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    route_publique = forms.ChoiceField(
+        label="Route publique",
+        help_text="""
+            Construite, ou rétrocédée au domaine public.
+            Cumul autorisé depuis le 16 mai 2017
+        """,
+        choices=(
+            ("aucune", "Aucune"),
+            ("lt_10km", "< 10km (dès le premier mètre)"),
+            ("gte_10km", "≥ 10km"),
+        ),
+        widget=forms.RadioSelect,
+        required=True,
+    )
+    route_privee = forms.ChoiceField(
+        label="Route privée",
+        help_text="""
+            Cumul autorisé depuis le 16 mai 2017
+        """,
+        choices=(
+            ("lt_3km", "0 à 3km"),
+            ("gte_3km", "≥ 3km"),
+        ),
+        widget=forms.RadioSelect,
+        required=True,
+    )
+    piste_cyclable = forms.ChoiceField(
+        label="Piste cyclable ou voie verte",
+        help_text="""
+        Cumul autorisé depuis le 16 mai 2017
+        """,
+        choices=(
+            ("lt_10km", "< 10km"),
+            ("gte_10km", "≥ 10km"),
+        ),
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+
+class RoutesPubliques(CriterionEvaluator):
+    choice_label = "Éval Env > Routes publiques"
+    slug = "routes_publiques"
+    form_class = RoutesForm
+    CODE_MATRIX = {
+        "aucune": "non_soumis",
+        "lt_10km": "cas_par_cas",
+        "gte_10km": "systematique",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        result = form.cleaned_data.get("route_publique")
+        return result
+
+
+class RoutesPrivées(CriterionEvaluator):
+    choice_label = "Éval Env > Routes privées"
+    slug = "routes_privees"
+    form_class = RoutesForm
+    CODE_MATRIX = {
+        "lt_3km": "non_soumis",
+        "gte_3km": "cas_par_cas",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        result = form.cleaned_data.get("route_privee")
+        return result
+
+
+class PistesCyclables(CriterionEvaluator):
+    choice_label = "Éval Env > Pistes cyclables"
+    slug = "pistes_cyclables"
+    form_class = RoutesForm
+    CODE_MATRIX = {
+        "lt_10km": "non_soumis",
+        "gte_10km": "cas_par_cas",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        result = form.cleaned_data.get("piste_cyclable")
+        return result
+
+
+class AireDeStationnementForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_41"
+
+    activate = forms.BooleanField(
+        label="Rubrique 41 : aires de stationnement",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    soumis = forms.ChoiceField(
+        label="Soumis / non-soumis",
+        help_text="""
+            Seuil du cas par cas : plus de 50 places ouvertes au public
+            (construites après le 16 mai 2017)
+        """,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(("oui", "Soumis"), ("non", "Non soumis")),
+    )
 
 
 class AireDeStationnement(CriterionEvaluator):
