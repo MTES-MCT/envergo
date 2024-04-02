@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib import admin
+from django.template.defaultfilters import truncatechars
+from django.urls import reverse
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -97,8 +99,8 @@ class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
         "regulation",
-        "activation_map",
-        "activation_distance",
+        "activation_map_column",
+        "activation_distance_column",
         "evaluator_column",
     ]
     readonly_fields = ["unique_slug"]
@@ -123,6 +125,22 @@ class CriterionAdmin(admin.ModelAdmin):
     def evaluator_column(self, obj):
         label = obj.evaluator.choice_label if obj.evaluator else "ND"
         return label
+
+    @admin.display(
+        ordering="activation_distance",
+        description=mark_safe(
+            '<abbr title="Distance d\'activation (m)">Dist. act.</abbr>'
+        ),
+    )
+    def activation_distance_column(self, obj):
+        return obj.activation_distance
+
+    @admin.display(ordering="activation_map__name", description="Carte d'activation")
+    def activation_map_column(self, obj):
+        url = reverse("admin:geodata_map_change", args=[obj.activation_map.pk])
+        content = truncatechars(obj.activation_map.name, 45)
+        html = f"<a href='{url}'>{content}</a>"
+        return mark_safe(html)
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None

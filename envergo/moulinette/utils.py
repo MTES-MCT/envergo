@@ -7,15 +7,15 @@ from django.http import QueryDict
 def compute_surfaces(data: QueryDict):
     """Compute all moulinette form surfaces.
 
-    In the legacy version of the moulinette, the user would provide the existing_surface
+    In the legacy version of the moulinette, the user would provide the existing surface
     and created surface, and the final surface would be computed.
 
-    The form has evoldved and now, the user has to provide the created_surface and
+    The form has evolved and now, the user has to provide the created_surface and
     final surface.
 
     Since we still need to accomodate for the existing evaluations with legacy format
     form urls, this utility method makes sure all the required surfaces are computed
-    and provided to the
+    and provided to the moulinette
     """
     created_surface = data.get("created_surface")
     existing_surface = data.get("existing_surface")

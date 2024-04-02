@@ -49,7 +49,7 @@ window.addEventListener('load', function () {
     data.append("category", "compliance");
     data.append("action", "page-click");
     data.append("metadata", JSON.stringify({
-      "reference": reference,
+      "request_reference": reference,
     }));
     fetch(url, { headers: headers, body: data, method: 'POST' });
   }));

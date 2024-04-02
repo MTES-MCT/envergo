@@ -52,7 +52,7 @@
         data.append("category", "compliance");
         data.append("action", "form-submit");
         data.append("metadata", JSON.stringify({
-          "reference": "{{ object.reference }}"
+          "request_reference": "{{ object.reference }}"
         }));
         fetch(url, { headers: headers, body: data, method: 'POST' });
       }

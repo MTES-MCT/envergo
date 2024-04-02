@@ -366,7 +366,7 @@ class EvaluationAdmin(admin.ModelAdmin):
             # Log the analytics events
             if evaluation.is_eligible_to_self_declaration():
                 metadata = {
-                    "reference": evaluation.reference,
+                    "request_reference": evaluation.reference,
                     "message_id": message_id,
                 }
                 Event.objects.create(

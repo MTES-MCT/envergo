@@ -84,9 +84,8 @@ class SurfacePlancherForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        created_surface = int(self.data["created_surface"])
-
-        if created_surface < SURFACE_PLANCHER_THRESHOLD:
+        final_surface = int(self.data["final_surface"])
+        if final_surface < SURFACE_PLANCHER_THRESHOLD:
             del self.fields["surface_plancher_sup_thld"]
 
 
