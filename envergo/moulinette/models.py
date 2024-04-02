@@ -1052,7 +1052,7 @@ class Moulinette:
                     if form_class:
                         forms.append(form_class)
 
-        return forms
+        return list(set(forms))
 
     def optional_form_classes(self):
         """Return the list of forms for optional questions."""
@@ -1065,7 +1065,7 @@ class Moulinette:
                     if form_class:
                         forms.append(form_class)
 
-        return forms
+        return list(set(forms))
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
