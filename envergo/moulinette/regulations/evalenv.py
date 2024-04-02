@@ -269,6 +269,80 @@ class PistesCyclables(CriterionEvaluator):
         return result
 
 
+class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_30"
+
+    activate = forms.BooleanField(
+        label="Rubrique 30 : photovoltaïque",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    puissance = forms.ChoiceField(
+        label="Puissance",
+        choices=(
+            ("lt_300kWc", "< 300 kWc"),
+            ("300_1000kWc", "300 à 1000 kWc"),
+            ("gte_1000kWc", "≥ 1000 kWc"),
+        ),
+        widget=forms.RadioSelect,
+        required=True,
+    )
+    localisation = forms.ChoiceField(
+        label="Localisation des panneaux",
+        choices=(
+            ("sol", "Au sol, y compris agrivoltaïsme"),
+            ("aire_arti", "Sur aire de stationnement artificialisée"),
+            ("aire_non_arti", "Sur aire de stationnement non artificialisée"),
+            ("batiment_clos", "Sur bâtiment 4 murs clos, y compris serre et hangar"),
+            ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
+            ("aucun", "Aucun panneau"),
+        ),
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+
+class Photovoltaique(CriterionEvaluator):
+    choice_label = "Éval Env > Photovoltaïque"
+    slug = "photovoltaique"
+    form_class = PhotovoltaiqueForm
+    CODE_MATRIX = {
+        ("lt_300kWc", "sol"): "non_soumis",
+        ("lt_300kWc", "aire_arti"): "non_soumis",
+        ("lt_300kWc", "aire_non_arti"): "non_soumis",
+        ("lt_300kWc", "batiment_clos"): "non_soumis",
+        ("lt_300kWc", "batiment_ouvert"): "non_soumis",
+        ("lt_300kWc", "aucun"): "non_soumis",
+        ("300_1000kWc", "sol"): "cas_par_cas_sol",
+        ("300_1000kWc", "aire_arti"): "non_soumis_ombriere",
+        ("300_1000kWc", "aire_non_arti"): "cas_par_cas_sol",
+        ("300_1000kWc", "batiment_clos"): "non_soumis_toiture",
+        ("300_1000kWc", "batiment_ouvert"): "cas_par_cas_toiture",
+        ("300_1000kWc", "aucun"): "non_soumis",
+        ("gte_1000kWc", "sol"): "systematique_sol",
+        ("gte_1000kWc", "aire_arti"): "non_soumis_ombriere",
+        ("gte_1000kWc", "aire_non_arti"): "systematique_sol",
+        ("gte_1000kWc", "batiment_clos"): "non_soumis_toiture",
+        ("gte_1000kWc", "batiment_ouvert"): "systematique_toiture",
+        ("gte_1000kWc", "aucun"): "non_soumis",
+    }
+    RESULT_MATRIX = {
+        "non_soumis_ombriere": "non_soumis",
+        "non_soumis_toiture": "non_soumis",
+        "cas_par_cas_sol": "cas_par_cas",
+        "cas_par_cas_toiture": "cas_par_cas",
+        "systematique_sol": "systematique",
+        "systematique_toiture": "systematique",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        puissance = form.cleaned_data.get("puissance")
+        localisation = form.cleaned_data.get("localisation")
+        return puissance, localisation
+
+
 class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_41"
 
