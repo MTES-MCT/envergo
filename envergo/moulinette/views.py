@@ -46,8 +46,7 @@ class MoulinetteMixin:
             moulinette_data = self.request.POST
 
         if moulinette_data:
-            # Let's make sure all surface values (created, existing, final) are available
-            mutable_data = moulinette_data.copy().dict()
+            mutable_data = moulinette_data.copy()
             mutable_data.update(compute_surfaces(moulinette_data))
             kwargs.update({"data": mutable_data})
 
