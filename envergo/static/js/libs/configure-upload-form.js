@@ -27,7 +27,7 @@ window.addEventListener('load', function () {
     dictRemoveFile: "Supprimer",
     dictFileTooBig: "Ce fichier est tros volumineux ({{filesize}} Mo). Maximum : {{maxFilesize}} Mo.",
     dictInvalidFileType: "Ce type de fichier n'est pas autorisé.",
-    dictResponseError: "Erreur du serveur {{statusCode}}.",
+    dictResponseError: "Ce fichier n'a pas pu être envoyé à cause d'une erreur du serveur.",
     dictCancelUpload: "Annuler l'envoi",
     dictCancelUploadConfirmation: "Êtes vous certain·e de vouloir annuler l'envoi ?",
     dictMaxFilesExceeded: "Vous ne pouvez pas envoyer plus de fichiers.",

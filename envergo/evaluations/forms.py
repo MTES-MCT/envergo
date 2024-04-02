@@ -93,6 +93,21 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("If an application number was already submitted."),
         max_length=64,
     )
+    project_description = forms.CharField(
+        label=_("Project description, comments"),
+        required=False,
+        widget=forms.Textarea,
+        help_text="""
+            <a class="fr-link" aria-describedby="tooltip-project-description" href="#" onclick="return false">
+                Précautions liées au contenu
+            </a>
+            <span class="fr-tooltip fr-placement" id="tooltip-project-description" role="tooltip" aria-hidden="true">
+                Merci de ne fournir que les informations utiles à la compréhension de la demande d’avis.<br />
+                Attention à ne pas mentionner de propos diffamatoires ou d’informations sensibles
+                (opinions philosophiques, syndicales, politiques, religieuses, données de santé…).
+            </span>
+        """,
+    )
 
     class Meta:
         model = Request
