@@ -8,6 +8,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Case, F, Prefetch, Q, When
 from django.db.models.functions import Cast
+from django.http import QueryDict
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -732,7 +733,10 @@ class Moulinette:
     """
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
-        self.raw_data = raw_data.dict()
+        if isinstance(raw_data, QueryDict):
+            self.raw_data = raw_data.dict()
+        else:
+            self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
         self.department = self.get_department()
