@@ -1049,10 +1049,10 @@ class Moulinette:
             for criterion in regulation.criteria.all():
                 if not criterion.is_optional:
                     form_class = criterion.get_form_class()
-                    if form_class:
+                    if form_class and form_class not in forms:
                         forms.append(form_class)
 
-        return list(set(forms))
+        return forms
 
     def optional_form_classes(self):
         """Return the list of forms for optional questions."""
@@ -1062,10 +1062,10 @@ class Moulinette:
             for criterion in regulation.criteria.all():
                 if criterion.is_optional:
                     form_class = criterion.get_form_class()
-                    if form_class:
+                    if form_class and form_class not in forms:
                         forms.append(form_class)
 
-        return list(set(forms))
+        return forms
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
