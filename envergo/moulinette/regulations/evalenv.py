@@ -379,6 +379,153 @@ class AireDeStationnement(CriterionEvaluator):
         return soumis
 
 
+class CampingForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_42"
+
+    activate = forms.BooleanField(
+        label="Rubrique 42 : camping",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    nb_emplacements = forms.ChoiceField(
+        label="Nombre d'emplacements",
+        help_text="""
+            De tentes, caravanes, résidences mobiles ou habitations légères de loisirs.
+            Cumul autorisé après le 16 mai 2017.
+        """,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("0_6", "De 0 à 6"),
+            ("7_199", "De 7 à 199"),
+            ("gte_200", "200 et plus"),
+        ),
+    )
+
+
+class Camping(CriterionEvaluator):
+    choice_label = "Éval Env > Camping"
+    slug = "camping"
+    form_class = CampingForm
+    CODE_MATRIX = {
+        "0_6": "non_soumis",
+        "7_199": "cas_par_cas",
+        "gte_200": "systematique",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        nb_emplacements = form.cleaned_data.get("nb_emplacements")
+        return nb_emplacements
+
+
+class EquipementSportifForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_44"
+
+    activate = forms.BooleanField(
+        label="Rubrique 42 : sport / loisirs / culture",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    nature = forms.ChoiceField(
+        label="Nature du projet",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("sport", "Équipement sportif"),
+            ("loisir", "Parc de loisirs"),
+            ("culture", "Équipement culturel"),
+            ("autre", "Autre"),
+        ),
+    )
+
+
+class EquipementSportif(CriterionEvaluator):
+    choice_label = "Éval Env > Equipement sportif"
+    slug = "sport_loisir_culture"
+    form_class = EquipementSportifForm
+    CODE_MATRIX = {
+        "sport": "non_soumis",
+        "loisir": "cas_par_cas",
+        "culture": "cas_par_cas",
+        "autre": "cas_par_cas",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        nature = form.cleaned_data.get("nature")
+        return nature
+
+
+class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_rubrique_47"
+
+    activate = forms.BooleanField(
+        label="Rubrique 47 : défrichement / boisement",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    defrichement_deboisement = forms.ChoiceField(
+        label="Défrichement ou déboisement",
+        help_text="""
+            Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
+        """,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("lt_05ha", "< 0,5 ha"),
+            ("gte_05ha", "≥ 0,5 ha"),
+        ),
+    )
+    premier_boisement = forms.ChoiceField(
+        label="Premier boisement",
+        help_text="""
+            Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.
+             Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
+        """,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("lt_05ha", "< 0,5 ha"),
+            ("gte_05ha", "≥ 0,5 ha"),
+        ),
+    )
+
+
+class DefrichementDeboisement(CriterionEvaluator):
+    choice_label = "Éval Env > Défrichement ou déboisement"
+    slug = "defrichement_deboisement"
+    form_class = DefrichementBoisementForm
+    CODE_MATRIX = {
+        "lt_05ha": "non_soumis",
+        "gte_05ha": "cas_par_cas",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        defrichement_deboisement = form.cleaned_data.get("defrichement_deboisement")
+        return defrichement_deboisement
+
+
+class PremierBoisement(CriterionEvaluator):
+    choice_label = "Éval Env > Premier boisement"
+    slug = "premier_boisement"
+    form_class = DefrichementBoisementForm
+    CODE_MATRIX = {
+        "lt_05ha": "non_soumis",
+        "gte_05ha": "cas_par_cas",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        premier_boisement = form.cleaned_data.get("premier_boisement")
+        return premier_boisement
+
+
 class OtherCriteria(CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
     slug = "autres_rubriques"
