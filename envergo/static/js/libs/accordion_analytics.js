@@ -48,7 +48,9 @@ var _paq = window._paq || [];
    */
   AccordionAnalytics.prototype.openSection = function(sectionId) {
     let element = document.getElementById(sectionId);
-    dsfr(element).collapse.disclose();
+    if (element) {
+      dsfr(element).collapse.disclose();
+    }
   };
 
   AccordionAnalytics.prototype.untrackAccordionDisplay = function() {
