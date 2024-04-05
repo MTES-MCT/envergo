@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
+from django.core.validators import RegexValidator
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
@@ -63,6 +64,9 @@ class EvaluationFormMixin(forms.Form):
         return data
 
 
+REFERENCE_VALIDATOR = rf"^[A-Z0-9]{{{settings.ENVERGO_REFERENCE_LENGTH}}}$"
+
+
 class EvaluationSearchForm(forms.Form):
     """Search for a single evaluation."""
 
@@ -70,6 +74,7 @@ class EvaluationSearchForm(forms.Form):
         label=_("EnvErgo reference"),
         help_text=_("The value you received when you requested a regulatory notice."),
         max_length=64,
+        validators=[RegexValidator(REFERENCE_VALIDATOR)],
     )
 
 
