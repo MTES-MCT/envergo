@@ -148,7 +148,12 @@ class CriterionAdmin(admin.ModelAdmin):
         if obj:
             criterion = obj
             settings_form = criterion.get_settings_form()
-            context.update({"settings_form": settings_form})
+            context.update(
+                {
+                    "settings_form": settings_form,
+                    "subtitle": criterion.backend_title,
+                }
+            )
         res = super().render_change_form(request, context, add, change, form_url, obj)
         return res
 
