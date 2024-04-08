@@ -157,6 +157,15 @@ class CriterionAdmin(admin.ModelAdmin):
         res = super().render_change_form(request, context, add, change, form_url, obj)
         return res
 
+    def render_delete_form(self, request, context):
+        criterion = context["object"]
+        context.update(
+            {
+                "subtitle": criterion.backend_title,
+            }
+        )
+        return super().render_delete_form(request, context)
+
 
 class PerimeterAdminForm(forms.ModelForm):
     def get_initial_for_field(self, field, field_name):
