@@ -703,7 +703,7 @@ class Request(models.Model):
 
 def request_file_format(instance, filename):
     _, extension = splitext(filename)
-    return f"requests/{instance.request_id}{extension}"
+    return f"requests/{instance.request.reference}/{uuid.uuid4()}{extension}"
 
 
 def get_upload_storage():
