@@ -281,6 +281,11 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
 
     .optional-form {
+
+      .fr-input-group[id$="activate"] span.label-content {
+        font-weight: bold;
+      }
+
       &>fieldset {
         display: none;
       }
