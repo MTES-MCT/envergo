@@ -194,8 +194,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         required=True,
     )
-    route_privee = forms.ChoiceField(
-        label="Route privée",
+    voie_privee = forms.ChoiceField(
+        label="Voie privée",
         help_text="""
             Cumul autorisé depuis le 16 mai 2017
         """,
@@ -220,9 +220,9 @@ class RoutesForm(OptionalFormMixin, forms.Form):
     )
 
 
-class RoutesPubliques(CriterionEvaluator):
-    choice_label = "Éval Env > Routes publiques"
-    slug = "routes_publiques"
+class RoutePublique(CriterionEvaluator):
+    choice_label = "Éval Env > Route publique"
+    slug = "route_publique"
     form_class = RoutesForm
     CODE_MATRIX = {
         "aucune": "non_soumis",
@@ -237,9 +237,9 @@ class RoutesPubliques(CriterionEvaluator):
         return result
 
 
-class RoutesPrivées(CriterionEvaluator):
-    choice_label = "Éval Env > Routes privées"
-    slug = "routes_privees"
+class VoiePrivée(CriterionEvaluator):
+    choice_label = "Éval Env > Voie privée"
+    slug = "voie_privee"
     form_class = RoutesForm
     CODE_MATRIX = {
         "lt_3km": "non_soumis",
@@ -249,13 +249,13 @@ class RoutesPrivées(CriterionEvaluator):
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
-        result = form.cleaned_data.get("route_privee")
+        result = form.cleaned_data.get("voie_privee")
         return result
 
 
-class PistesCyclables(CriterionEvaluator):
-    choice_label = "Éval Env > Pistes cyclables"
-    slug = "pistes_cyclables"
+class PisteCyclable(CriterionEvaluator):
+    choice_label = "Éval Env > Piste cyclable"
+    slug = "piste_cyclable"
     form_class = RoutesForm
     CODE_MATRIX = {
         "lt_10km": "non_soumis",
