@@ -279,6 +279,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     )
     puissance = forms.ChoiceField(
         label="Puissance",
+        help_text="Cumul autorisé depuis le 16 mai 2017",
         choices=(
             ("lt_300kWc", "< 300 kWc"),
             ("300_1000kWc", "300 à 1000 kWc"),
@@ -351,15 +352,17 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    soumis = forms.ChoiceField(
-        label="Soumis / non-soumis",
+    nb_emplacements = forms.ChoiceField(
+        label="Nombre d'emplacements ouverts au public",
         help_text="""
-            Seuil du cas par cas : plus de 50 places ouvertes au public
-            (construites après le 16 mai 2017)
+            Cumul autorisé après le 16 mai 2017
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=(("oui", "Soumis"), ("non", "Non soumis")),
+        choices=(
+            ("0_49", "De 0 à 49"),
+            ("gte_50", "50 et plus"),
+        ),
     )
 
 
@@ -368,15 +371,15 @@ class AireDeStationnement(CriterionEvaluator):
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
     CODE_MATRIX = {
-        "oui": "cas_par_cas",
-        "non": "non_soumis",
+        "0_49": "non_soumis",
+        "gte_50": "cas_par_cas",
     }
 
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
-        soumis = form.cleaned_data.get("soumis")
-        return soumis
+        nb_emplacements = form.cleaned_data.get("nb_emplacements")
+        return nb_emplacements
 
 
 class CampingForm(OptionalFormMixin, forms.Form):
