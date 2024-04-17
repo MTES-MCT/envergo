@@ -183,7 +183,7 @@ class RoutesForm(OptionalFormMixin, forms.Form):
     route_publique = forms.ChoiceField(
         label="Route publique",
         help_text="""
-            Construite, ou rétrocédée au domaine public.
+            Construite, élargie, ou rétrocédée au domaine public.
             Cumul autorisé depuis le 16 mai 2017
         """,
         choices=(
@@ -294,7 +294,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
             ("sol", "Au sol, y compris agrivoltaïsme"),
             ("aire_arti", "Sur aire de stationnement artificialisée"),
             ("aire_non_arti", "Sur aire de stationnement non artificialisée"),
-            ("batiment_clos", "Sur bâtiment 4 murs clos, y compris serre et hangar"),
+            ("batiment_clos", "Sur bâtiment 4 murs clos ou serre ou hangar"),
             ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
             ("aucun", "Aucun panneau"),
         ),
