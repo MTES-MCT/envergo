@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load evaluations static l10n %}
+{% load evaluations static l10n moulinette %}
 
 {% block title %}Avis réglementaire{% endblock %}
 
@@ -119,6 +119,19 @@
       </li>
     {% endif %}
 
+    {% for key, field in additional_fields.items %}
+      <li>{% field_summary field %}</li>
+    {% endfor %}
+
+    {% for form in optional_forms %}
+      {% if form.is_activated %}
+        {% for field in form %}
+          {% if field.name != "activate" %}
+            <li>{% field_summary field %}</li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
   </ul>
 
   <div class="fr-alert fr-alert--info fr-mt-3w fr-mb-5w">

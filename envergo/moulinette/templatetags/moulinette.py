@@ -107,3 +107,24 @@ def perimeter_long_name(regulation, perimeter):
     ]
     long_name = render_to_string(templates, {"perimeter": perimeter})
     return long_name
+
+
+@register.simple_tag()
+def field_summary(field):
+    """User friendly display of the field value.
+
+    The evaluation page displays a summary of all the user provided data that
+    lead to the evaluation result.
+
+    This tag is used to format a single field from the additional or optional forms.
+    """
+    if hasattr(field.field, "choices"):
+        value = dict(field.field.choices).get(field.value(), field.value())
+    else:
+        value = field.value()
+
+    html = f"<strong>{field.label}</strong>: {value}"
+    if field.help_text:
+        html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
+
+    return mark_safe(html)

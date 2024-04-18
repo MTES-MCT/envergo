@@ -171,6 +171,11 @@ class OptionalFormMixin:
 
         return prefixed
 
+    def is_activated(self):
+        """Did the user checked the "activate" checkbox?"""
+
+        return self.is_bound and self.cleaned_data.get("activate", False)
+
 
 class RoutesForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_06"
