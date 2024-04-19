@@ -116,6 +116,14 @@ class Regulation(models.Model):
             logger.warning(f"Criterion {criterion_slug} not found.")
         return criterion
 
+    def get_optional_criteria(self):
+        optional_criteria = [
+            c
+            for c in self.criteria.all()
+            if c.is_optional and c.result != "non_disponible"
+        ]
+        return optional_criteria
+
     def evaluate(self, moulinette):
         """Evaluate the regulation and all its criterions.
 
@@ -144,7 +152,7 @@ class Regulation(models.Model):
     def eval_env_subtitle(self):
         """Custom subtitle for EvalEnv.
 
-        When an Eval Env evaluation is "non soumis", we need to displayed that not
+        When an Eval Env evaluation is "non soumis", we need to display that not
         all "rubriques" have been evaluated.
         """
         if self.result != "non_soumis":
@@ -483,7 +491,11 @@ class Criterion(models.Model):
 
         When their result is not available, optional criteria should not be displayed.
         """
-        return not (self.is_optional and self.result == RESULTS.non_disponible)
+        if hasattr(self._evaluator, "should_be_displayed"):
+            result = self._evaluator.should_be_displayed()
+        else:
+            result = not (self.is_optional and self.result == RESULTS.non_disponible)
+        return result
 
     @property
     def map(self):

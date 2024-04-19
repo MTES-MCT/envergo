@@ -542,3 +542,7 @@ class OtherCriteria(CriterionEvaluator):
 
     def evaluate(self):
         self._result_code, self._result = RESULTS.non_disponible, RESULTS.non_disponible
+
+    def should_be_displayed(self):
+        optional_criteria = self.moulinette.eval_env.get_optional_criteria()
+        return not bool(optional_criteria)
