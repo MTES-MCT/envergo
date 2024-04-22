@@ -88,7 +88,6 @@ class ZoneHumideVieJaunay85(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -179,7 +178,6 @@ class ZoneHumideGMRE56(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -331,7 +329,6 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -428,7 +425,6 @@ class ImpactZoneHumideStrict(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -565,7 +561,6 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None
@@ -651,7 +646,6 @@ class ImpactZoneHumideIOTAStrict(ZoneHumideMixin, CriterionEvaluator):
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
-                zoom=18,
             )
         else:
             criterion_map = None

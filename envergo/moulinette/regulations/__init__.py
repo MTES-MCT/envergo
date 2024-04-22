@@ -60,7 +60,7 @@ class Map:
     entries: list  # List of `MapPolygon` objects
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
-    zoom: int = 16  # the map zoom to pass to leaflet
+    zoom: int = 17  # the map zoom to pass to leaflet
     ratio: str = "4x3"  # Check for "project.scss" for available ratios
     fixed: bool = True  # Is the map fixed or can it be zoomed and dragged?
 
