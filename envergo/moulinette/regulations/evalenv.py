@@ -242,7 +242,7 @@ class RoutePublique(CriterionEvaluator):
         return result
 
 
-class VoiePrivée(CriterionEvaluator):
+class VoiePrivee(CriterionEvaluator):
     choice_label = "Éval Env > Voie privée"
     slug = "voie_privee"
     form_class = RoutesForm
