@@ -19,6 +19,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         "action_requise",
         "action_requise_proche",
         "action_requise_dans_doute",
+        "action_requise_tout_dpt",
     ]
 
     CODE_MATRIX = {
@@ -31,6 +32,9 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         ("inside_potential", "big"): "action_requise_dans_doute",
         ("inside_potential", "medium"): "non_soumis",
         ("inside_potential", "small"): "non_soumis",
+        ("inside_wetlands_dpt", "big"): "action_requise_tout_dpt",
+        ("inside_wetlands_dpt", "medium"): "non_soumis",
+        ("inside_wetlands_dpt", "small"): "non_soumis",
         ("outside", "big"): "non_concerne",
         ("outside", "medium"): "non_concerne",
         ("outside", "small"): "non_concerne",
@@ -43,6 +47,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         "action_requise": RESULTS.action_requise,
         "action_requise_proche": RESULTS.action_requise,
         "action_requise_dans_doute": RESULTS.action_requise,
+        "action_requise_tout_dpt": RESULTS.action_requise,
     }
 
     def get_result_data(self):
@@ -58,6 +63,8 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "close_to"
         elif self.catalog["potential_wetlands_within_10m"]:
             wetland_status = "inside_potential"
+        elif self.catalog["within_potential_wetlands_department"]:
+            wetland_status = "inside_wetlands_dpt"
         else:
             wetland_status = "outside"
 
