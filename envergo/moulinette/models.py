@@ -678,6 +678,7 @@ class MoulinetteConfig(models.Model):
     criteria_values = models.JSONField(
         "Valeurs des critères", default=dict, null=True, blank=True
     )
+    zh_doubt = models.BooleanField("Tout le département en ZH doute", default=False)
 
     class Meta:
         verbose_name = _("Moulinette config")
