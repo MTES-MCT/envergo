@@ -14,7 +14,7 @@ def test_searching_inexisting_eval(client):
     """Searching an eval that does not exist returns an error message."""
 
     search_url = reverse("evaluation_search")
-    reference = "PC05112321D0123"
+    reference = "ABCDEF"
     res = client.post(search_url, data={"reference": reference}, follow=True)
     assert res.status_code == 404
 

@@ -229,6 +229,9 @@ class MoulinetteMixin:
         url_with_params = f"{url}?{url_params}"
         return url_with_params
 
+    def should_activate_optional_criteria(self):
+        return self.request.user.is_superuser
+
 
 class MoulinetteHome(MoulinetteMixin, FormView):
     template_name = "moulinette/home.html"
@@ -336,9 +339,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
 
         return context
-
-    def should_activate_optional_criteria(self):
-        return self.request.user.is_superuser
 
 
 class MoulinetteDebug(FormView):
