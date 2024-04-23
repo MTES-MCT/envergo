@@ -36,7 +36,7 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
-    list_display = ["email", "name", "is_superuser"]
+    list_display = ["email", "name", "is_superuser", "is_staff"]
     readonly_fields = ["last_login", "date_joined"]
     search_fields = ["name", "email"]
     ordering = ["email"]
