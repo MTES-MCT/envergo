@@ -116,6 +116,14 @@ class Regulation(models.Model):
             logger.warning(f"Criterion {criterion_slug} not found.")
         return criterion
 
+    def get_optional_criteria(self):
+        optional_criteria = [
+            c
+            for c in self.criteria.all()
+            if c.is_optional and c.result != "non_disponible"
+        ]
+        return optional_criteria
+
     def evaluate(self, moulinette):
         """Evaluate the regulation and all its criterions.
 
@@ -133,6 +141,30 @@ class Regulation(models.Model):
     @property
     def title(self):
         return self.get_regulation_display()
+
+    @property
+    def subtitle(self):
+        subtitle_property = f"{self.regulation}_subtitle"
+        sub = getattr(self, subtitle_property, None)
+        return sub
+
+    @property
+    def eval_env_subtitle(self):
+        """Custom subtitle for EvalEnv.
+
+        When an Eval Env evaluation is "non soumis", we need to display that not
+        all "rubriques" have been evaluated.
+        """
+        if self.result != "non_soumis":
+            return None
+
+        optional_criteria = [
+            c
+            for c in self.criteria.all()
+            if c.is_optional and c.result != "non_disponible"
+        ]
+        subtitle = "(rubrique 39)" if not optional_criteria else None
+        return subtitle
 
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
@@ -380,6 +412,11 @@ class Criterion(models.Model):
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
     )
+    is_optional = models.BooleanField(
+        _("Is optional"),
+        default=False,
+        help_text=_("Only show this criterion to admin users"),
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -448,6 +485,17 @@ class Criterion(models.Model):
             )
 
         return self._evaluator.result
+
+    def should_be_displayed(self):
+        """Should the criterion result be displayed?
+
+        When their result is not available, optional criteria should not be displayed.
+        """
+        if hasattr(self._evaluator, "should_be_displayed"):
+            result = self._evaluator.should_be_displayed()
+        else:
+            result = not (self.is_optional and self.result == RESULTS.non_disponible)
+        return result
 
     @property
     def map(self):
@@ -739,6 +787,9 @@ class Moulinette:
             self.raw_data = raw_data
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
+
+        # Some criteria must be hidden to normal users in the
+        self.activate_optional_criteria = activate_optional_criteria
         self.department = self.get_department()
         if hasattr(self.department, "moulinette_config"):
             self.config = self.catalog["config"] = self.department.moulinette_config
@@ -869,6 +920,11 @@ class Moulinette:
             .prefetch_related("templates")
             .defer("activation_map__geometry")
         )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
         return criteria
 
     def get_perimeters(self):
@@ -942,7 +998,7 @@ class Moulinette:
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
-                if form:
+                if form and not criterion.is_optional:
                     form_errors.append(not form.is_valid())
 
         return any(form_errors)
@@ -1003,9 +1059,23 @@ class Moulinette:
 
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
-                form_class = criterion.get_form_class()
-                if form_class:
-                    forms.append(form_class)
+                if not criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in forms:
+                        forms.append(form_class)
+
+        return forms
+
+    def optional_form_classes(self):
+        """Return the list of forms for optional questions."""
+        forms = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in forms:
+                        forms.append(form_class)
 
         return forms
 

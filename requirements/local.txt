@@ -282,10 +282,12 @@ prompt-toolkit==3.0.39
     #   -r base.txt
     #   click-repl
     #   ipython
-psycopg[binary]==3.1.10
-    # via -r local.in
-psycopg-binary==3.1.10
-    # via psycopg
+psycopg[binary]==3.1.18
+    # via -r base.txt
+psycopg-binary==3.1.18
+    # via
+    #   -r base.txt
+    #   psycopg
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
@@ -409,8 +411,9 @@ types-pytz==2023.3.0.1
     # via django-stubs
 types-pyyaml==6.0.12.11
     # via django-stubs
-typing-extensions==4.7.1
+typing-extensions==4.10.0
     # via
+    #   -r base.txt
     #   django-stubs
     #   django-stubs-ext
     #   mypy

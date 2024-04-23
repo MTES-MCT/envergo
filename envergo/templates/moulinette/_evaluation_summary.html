@@ -10,11 +10,9 @@
            title="Voir le détail de la réglementation « {{ regulation }} »">
 
           <span>{{ regulation }}
-
-            {# This is a hack that should be removed one day #}
-            {% if regulation.regulation == "eval_env" and regulation.result == "non_soumis" %}
+            {% if regulation.subtitle %}
               <br />
-              <span class="fr-text--sm">(rubrique 39)</span>
+              <span class="undertitle">{{ regulation.subtitle }}</span>
             {% endif %}
           </span>
 

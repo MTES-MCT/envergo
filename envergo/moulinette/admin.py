@@ -98,10 +98,12 @@ class CriterionAdminForm(forms.ModelForm):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
+        "is_optional",
         "regulation",
         "activation_map_column",
         "activation_distance_column",
         "evaluator_column",
+        "weight",
     ]
     readonly_fields = ["unique_slug"]
     autocomplete_fields = ["activation_map"]
@@ -112,7 +114,8 @@ class CriterionAdmin(admin.ModelAdmin):
         "regulation__regulation",
         "activation_map__name",
     ]
-    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
+    list_editable = ["weight"]
+    list_filter = ["regulation", "is_optional", MapDepartmentsListFilter, "evaluator"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 

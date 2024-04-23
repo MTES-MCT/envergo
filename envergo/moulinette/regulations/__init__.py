@@ -60,7 +60,7 @@ class Map:
     entries: list  # List of `MapPolygon` objects
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
-    zoom: int = 16  # the map zoom to pass to leaflet
+    zoom: int = 17  # the map zoom to pass to leaflet
     ratio: str = "4x3"  # Check for "project.scss" for available ratios
     fixed: bool = True  # Is the map fixed or can it be zoomed and dragged?
 
@@ -75,9 +75,11 @@ class Map:
                 "zoom": self.zoom,
                 "polygons": [
                     {
-                        "polygon": to_geojson(entry.geometry.intersection(buffer))
-                        if self.truncate
-                        else to_geojson(entry.geometry),
+                        "polygon": (
+                            to_geojson(entry.geometry.intersection(buffer))
+                            if self.truncate
+                            else to_geojson(entry.geometry)
+                        ),
                         "color": entry.color,
                         "label": entry.label,
                     }
@@ -159,7 +161,10 @@ class CriterionEvaluator(ABC):
 
         form = self.get_form()
         if form and form.is_valid():
-            data = form.cleaned_data
+            if hasattr(form, "prefixed_cleaned_data"):
+                data = form.prefixed_cleaned_data
+            else:
+                data = form.cleaned_data
         else:
             data = {}
 

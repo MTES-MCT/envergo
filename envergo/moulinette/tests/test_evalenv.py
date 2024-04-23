@@ -1,8 +1,14 @@
 import pytest
+from django.urls import reverse
+from pytest_django.asserts import assertTemplateUsed
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Moulinette
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    MoulinetteConfigFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -28,6 +34,13 @@ def evalenv_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
             activation_map=france_map,
+        ),
+        CriterionFactory(
+            title="Aire de stationnement",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.evalenv.AireDeStationnement",
+            activation_map=france_map,
+            is_optional=True,
         ),
     ]
     return criteria
@@ -206,3 +219,51 @@ def test_evalenv_terrain_assiette_systematique(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.eval_env.terrain_assiette.result == "systematique"
+
+
+def test_evalenv_non_soumis_no_optional_criteria(admin_client):
+    MoulinetteConfigFactory()
+
+    url = reverse("moulinette_result")
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
+        "de surface plancher, d'emprise au sol et de terrain d'assiette."
+        in res.content.decode()
+    )
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        not in res.content.decode()
+    )
+
+
+def test_evalenv_non_soumis_optional_criteria(admin_client):
+    MoulinetteConfigFactory()
+
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=0_49"
+    )
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
+        "de surface plancher, d'emprise au sol et de terrain d'assiette."
+        not in res.content.decode()
+    )
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        in res.content.decode()
+    )
