@@ -13,7 +13,9 @@ class TopBarAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["message_md"].widget.attrs["rows"] = 5
+
+        if "message_md" in self.fields:
+            self.fields["message_md"].widget.attrs["rows"] = 5
 
     def clean_message_md(self):
         """Join the message in a single line."""
