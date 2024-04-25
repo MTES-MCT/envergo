@@ -7,6 +7,7 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
+from django.core.exceptions import PermissionDenied
 from django.db.models import Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
@@ -265,6 +266,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def evaluation_email(self, request, object_id):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+
         evaluation = self.get_object(request, unquote(object_id))
         evaluation_email = evaluation.get_evaluation_email()
 
