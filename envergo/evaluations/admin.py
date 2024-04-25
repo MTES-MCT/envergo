@@ -654,6 +654,9 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def mail_body(self, request, object_id):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+
         log = self.get_object(request, unquote(object_id))
         context = {
             **self.admin_site.each_context(request),
