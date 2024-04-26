@@ -40,7 +40,7 @@ class EmpriseForm(forms.Form):
 
 
 class Emprise(CriterionEvaluator):
-    choice_label = "Éval Env > Emprise"
+    choice_label = "Éval Env > Rubrique 39 (emprise)"
     slug = "emprise"
     form_class = EmpriseForm
 
@@ -90,7 +90,7 @@ class SurfacePlancherForm(forms.Form):
 
 
 class SurfacePlancher(CriterionEvaluator):
-    choice_label = "Éval Env > Surface Plancher"
+    choice_label = "Éval Env > Rubrique 39 (surface plancher)"
     slug = "surface_plancher"
     form_class = SurfacePlancherForm
 
@@ -128,7 +128,7 @@ class TerrainAssietteForm(forms.Form):
 
 
 class TerrainAssiette(CriterionEvaluator):
-    choice_label = "Éval Env > Terrain d'assiette"
+    choice_label = "Éval Env > Rubrique 39 (terrain d'assiette)"
     slug = "terrain_assiette"
     form_class = TerrainAssietteForm
 
