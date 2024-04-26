@@ -193,8 +193,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         """,
         choices=(
             ("aucune", "Aucune"),
-            ("lt_10km", "< 10km (dès le premier mètre)"),
-            ("gte_10km", "≥ 10km"),
+            ("lt_10km", "< 10 km (dès le premier mètre)"),
+            ("gte_10km", "≥ 10 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
@@ -205,8 +205,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
             Cumul autorisé depuis le 16 mai 2017
         """,
         choices=(
-            ("lt_3km", "0 à 3km"),
-            ("gte_3km", "≥ 3km"),
+            ("lt_3km", "Aucune ou < 3 km"),
+            ("gte_3km", "≥ 3 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
@@ -217,8 +217,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         Cumul autorisé depuis le 16 mai 2017
         """,
         choices=(
-            ("lt_10km", "< 10km"),
-            ("gte_10km", "≥ 10km"),
+            ("lt_10km", "Aucune ou < 10 km"),
+            ("gte_10km", "≥ 10 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
