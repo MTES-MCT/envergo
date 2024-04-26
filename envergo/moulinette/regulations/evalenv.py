@@ -432,7 +432,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
 
     activate = forms.BooleanField(
-        label="Rubrique 42 : sport / loisirs / culture",
+        label="Rubrique 44 : sport / loisirs / culture",
         required=True,
         widget=forms.CheckboxInput,
     )
