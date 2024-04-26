@@ -495,6 +495,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     defrichement_deboisement = forms.ChoiceField(
         label="Défrichement ou déboisement",
         help_text="""
+            Uniquement en cas de changement de destination du terrain.
             Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
         """,
         required=True,
