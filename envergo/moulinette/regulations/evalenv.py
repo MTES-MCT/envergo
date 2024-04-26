@@ -441,10 +441,19 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=(
+            ("creation", "Création d'un équipement"),
+            ("modification", "Modification d'un équipement"),
+        ),
+    )
+    type = forms.ChoiceField(
+        label="Type d'équipement",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
             ("sport", "Équipement sportif"),
             ("loisir", "Parc de loisirs"),
             ("culture", "Équipement culturel"),
-            ("autre", "Autre"),
+            ("autre", "Autre (hors nomenclature)"),
         ),
     )
 
@@ -454,17 +463,25 @@ class EquipementSportif(CriterionEvaluator):
     slug = "sport_loisir_culture"
     form_class = EquipementSportifForm
     CODE_MATRIX = {
-        "sport": "non_soumis",
-        "loisir": "cas_par_cas",
-        "culture": "cas_par_cas",
-        "autre": "cas_par_cas",
+        ("creation", "sport"): "cas_par_cas",
+        ("creation", "loisir"): "cas_par_cas",
+        ("creation", "culture"): "cas_par_cas",
+        ("creation", "autre"): "non_soumis",
+        ("modification", "sport"): "non_soumis_modification",
+        ("modification", "loisir"): "non_soumis_modification",
+        ("modification", "culture"): "non_soumis_modification",
+        ("modification", "autre"): "non_soumis_modification",
+    }
+    RESULT_MATRIX = {
+        "non_soumis_modification": "non_soumis",
     }
 
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
         nature = form.cleaned_data.get("nature")
-        return nature
+        type = form.cleaned_data.get("type")
+        return nature, type
 
 
 class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
