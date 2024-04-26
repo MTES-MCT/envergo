@@ -226,7 +226,7 @@ class RoutesForm(OptionalFormMixin, forms.Form):
 
 
 class RoutePublique(CriterionEvaluator):
-    choice_label = "Éval Env > Route publique"
+    choice_label = "Éval Env > Rubrique 6 (route publique)"
     slug = "route_publique"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -243,7 +243,7 @@ class RoutePublique(CriterionEvaluator):
 
 
 class VoiePrivee(CriterionEvaluator):
-    choice_label = "Éval Env > Voie privée"
+    choice_label = "Éval Env > Rubrique 6 (voie privée)"
     slug = "voie_privee"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -259,7 +259,7 @@ class VoiePrivee(CriterionEvaluator):
 
 
 class PisteCyclable(CriterionEvaluator):
-    choice_label = "Éval Env > Piste cyclable"
+    choice_label = "Éval Env > Rubrique 6 (piste cyclable)"
     slug = "piste_cyclable"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -309,7 +309,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
 
 
 class Photovoltaique(CriterionEvaluator):
-    choice_label = "Éval Env > Photovoltaïque"
+    choice_label = "Éval Env > Rubrique 30 (PV)"
     slug = "photovoltaique"
     form_class = PhotovoltaiqueForm
     CODE_MATRIX = {
@@ -372,7 +372,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
 
 
 class AireDeStationnement(CriterionEvaluator):
-    choice_label = "Éval Env > Aire de stationnement"
+    choice_label = "Éval Env > Rubrique 41 (stationnement)"
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
     CODE_MATRIX = {
@@ -412,7 +412,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
 
 
 class Camping(CriterionEvaluator):
-    choice_label = "Éval Env > Camping"
+    choice_label = "Éval Env > Rubrique 42 (camping)"
     slug = "camping"
     form_class = CampingForm
     CODE_MATRIX = {
@@ -459,7 +459,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
 
 
 class EquipementSportif(CriterionEvaluator):
-    choice_label = "Éval Env > Equipement sportif"
+    choice_label = "Éval Env > Rubrique 44 (équipement sportif)"
     slug = "sport_loisir_culture"
     form_class = EquipementSportifForm
     CODE_MATRIX = {
@@ -520,7 +520,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
 
 
 class DefrichementDeboisement(CriterionEvaluator):
-    choice_label = "Éval Env > Défrichement ou déboisement"
+    choice_label = "Éval Env > Rubrique 47 (déboisement)"
     slug = "defrichement_deboisement"
     form_class = DefrichementBoisementForm
     CODE_MATRIX = {
@@ -536,7 +536,7 @@ class DefrichementDeboisement(CriterionEvaluator):
 
 
 class PremierBoisement(CriterionEvaluator):
-    choice_label = "Éval Env > Premier boisement"
+    choice_label = "Éval Env > Rubrique 47 (premier boisement)"
     slug = "premier_boisement"
     form_class = DefrichementBoisementForm
     CODE_MATRIX = {
