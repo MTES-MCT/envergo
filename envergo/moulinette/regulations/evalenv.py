@@ -40,7 +40,7 @@ class EmpriseForm(forms.Form):
 
 
 class Emprise(CriterionEvaluator):
-    choice_label = "Éval Env > Emprise"
+    choice_label = "Éval Env > Rubrique 39 (emprise)"
     slug = "emprise"
     form_class = EmpriseForm
 
@@ -90,7 +90,7 @@ class SurfacePlancherForm(forms.Form):
 
 
 class SurfacePlancher(CriterionEvaluator):
-    choice_label = "Éval Env > Surface Plancher"
+    choice_label = "Éval Env > Rubrique 39 (surface plancher)"
     slug = "surface_plancher"
     form_class = SurfacePlancherForm
 
@@ -128,7 +128,7 @@ class TerrainAssietteForm(forms.Form):
 
 
 class TerrainAssiette(CriterionEvaluator):
-    choice_label = "Éval Env > Terrain d'assiette"
+    choice_label = "Éval Env > Rubrique 39 (terrain d'assiette)"
     slug = "terrain_assiette"
     form_class = TerrainAssietteForm
 
@@ -193,8 +193,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         """,
         choices=(
             ("aucune", "Aucune"),
-            ("lt_10km", "< 10km (dès le premier mètre)"),
-            ("gte_10km", "≥ 10km"),
+            ("lt_10km", "< 10 km (dès le premier mètre)"),
+            ("gte_10km", "≥ 10 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
@@ -205,8 +205,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
             Cumul autorisé depuis le 16 mai 2017
         """,
         choices=(
-            ("lt_3km", "0 à 3km"),
-            ("gte_3km", "≥ 3km"),
+            ("lt_3km", "Aucune ou < 3 km"),
+            ("gte_3km", "≥ 3 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
@@ -217,8 +217,8 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         Cumul autorisé depuis le 16 mai 2017
         """,
         choices=(
-            ("lt_10km", "< 10km"),
-            ("gte_10km", "≥ 10km"),
+            ("lt_10km", "Aucune ou < 10 km"),
+            ("gte_10km", "≥ 10 km"),
         ),
         widget=forms.RadioSelect,
         required=True,
@@ -226,7 +226,7 @@ class RoutesForm(OptionalFormMixin, forms.Form):
 
 
 class RoutePublique(CriterionEvaluator):
-    choice_label = "Éval Env > Route publique"
+    choice_label = "Éval Env > Rubrique 6 (route publique)"
     slug = "route_publique"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -243,7 +243,7 @@ class RoutePublique(CriterionEvaluator):
 
 
 class VoiePrivee(CriterionEvaluator):
-    choice_label = "Éval Env > Voie privée"
+    choice_label = "Éval Env > Rubrique 6 (voie privée)"
     slug = "voie_privee"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -259,7 +259,7 @@ class VoiePrivee(CriterionEvaluator):
 
 
 class PisteCyclable(CriterionEvaluator):
-    choice_label = "Éval Env > Piste cyclable"
+    choice_label = "Éval Env > Rubrique 6 (piste cyclable)"
     slug = "piste_cyclable"
     form_class = RoutesForm
     CODE_MATRIX = {
@@ -309,7 +309,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
 
 
 class Photovoltaique(CriterionEvaluator):
-    choice_label = "Éval Env > Photovoltaïque"
+    choice_label = "Éval Env > Rubrique 30 (PV)"
     slug = "photovoltaique"
     form_class = PhotovoltaiqueForm
     CODE_MATRIX = {
@@ -372,7 +372,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
 
 
 class AireDeStationnement(CriterionEvaluator):
-    choice_label = "Éval Env > Aire de stationnement"
+    choice_label = "Éval Env > Rubrique 41 (stationnement)"
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
     CODE_MATRIX = {
@@ -412,7 +412,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
 
 
 class Camping(CriterionEvaluator):
-    choice_label = "Éval Env > Camping"
+    choice_label = "Éval Env > Rubrique 42 (camping)"
     slug = "camping"
     form_class = CampingForm
     CODE_MATRIX = {
@@ -432,7 +432,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
 
     activate = forms.BooleanField(
-        label="Rubrique 42 : sport / loisirs / culture",
+        label="Rubrique 44 : sport / loisirs / culture",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -441,30 +441,47 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=(
+            ("creation", "Création d'un équipement"),
+            ("modification", "Modification d'un équipement"),
+        ),
+    )
+    type = forms.ChoiceField(
+        label="Type d'équipement",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
             ("sport", "Équipement sportif"),
             ("loisir", "Parc de loisirs"),
             ("culture", "Équipement culturel"),
-            ("autre", "Autre"),
+            ("autre", "Autre (hors nomenclature)"),
         ),
     )
 
 
 class EquipementSportif(CriterionEvaluator):
-    choice_label = "Éval Env > Equipement sportif"
+    choice_label = "Éval Env > Rubrique 44 (équipement sportif)"
     slug = "sport_loisir_culture"
     form_class = EquipementSportifForm
     CODE_MATRIX = {
-        "sport": "non_soumis",
-        "loisir": "cas_par_cas",
-        "culture": "cas_par_cas",
-        "autre": "cas_par_cas",
+        ("creation", "sport"): "cas_par_cas",
+        ("creation", "loisir"): "cas_par_cas",
+        ("creation", "culture"): "cas_par_cas",
+        ("creation", "autre"): "non_soumis",
+        ("modification", "sport"): "non_soumis_modification",
+        ("modification", "loisir"): "non_soumis_modification",
+        ("modification", "culture"): "non_soumis_modification",
+        ("modification", "autre"): "non_soumis_modification",
+    }
+    RESULT_MATRIX = {
+        "non_soumis_modification": "non_soumis",
     }
 
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
         nature = form.cleaned_data.get("nature")
-        return nature
+        type = form.cleaned_data.get("type")
+        return nature, type
 
 
 class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
@@ -478,6 +495,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     defrichement_deboisement = forms.ChoiceField(
         label="Défrichement ou déboisement",
         help_text="""
+            Uniquement en cas de changement de destination du terrain.
             Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
         """,
         required=True,
@@ -503,7 +521,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
 
 
 class DefrichementDeboisement(CriterionEvaluator):
-    choice_label = "Éval Env > Défrichement ou déboisement"
+    choice_label = "Éval Env > Rubrique 47 (déboisement)"
     slug = "defrichement_deboisement"
     form_class = DefrichementBoisementForm
     CODE_MATRIX = {
@@ -519,7 +537,7 @@ class DefrichementDeboisement(CriterionEvaluator):
 
 
 class PremierBoisement(CriterionEvaluator):
-    choice_label = "Éval Env > Premier boisement"
+    choice_label = "Éval Env > Rubrique 47 (premier boisement)"
     slug = "premier_boisement"
     form_class = DefrichementBoisementForm
     CODE_MATRIX = {
