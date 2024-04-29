@@ -113,7 +113,14 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         elif self.catalog["potential_wetlands_within_10m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
-            caption = "Le projet ne se situe pas dans une zone humide référencée."
+            if self.result_code == "action_requise_tout_dpt":
+                caption = """
+                    Le projet se situe hors des zones humides listées dans les cartographies
+                    existantes. Cependant, seul un inventaire de terrain à la parcelle permet
+                    d'écarter la présence d'une zone humide (doctrine DDT(M) du département).
+                """
+            else:
+                caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
