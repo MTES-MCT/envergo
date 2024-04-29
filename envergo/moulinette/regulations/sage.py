@@ -208,6 +208,7 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         "action_requise_interdit",
         "action_requise_proche_interdit",
         "action_requise_dans_doute_interdit",
+        "action_requise_tout_dpt_interdit",
         "non_soumis",
         "non_soumis_dehors",
     ]
@@ -222,6 +223,9 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         ("potential", "big"): "action_requise_dans_doute_interdit",
         ("potential", "medium"): "non_soumis",
         ("potential", "small"): "non_soumis",
+        ("inside_wetlands_dpt", "big"): "action_requise_tout_dpt_interdit",
+        ("inside_wetlands_dpt", "medium"): "non_soumis",
+        ("inside_wetlands_dpt", "small"): "non_soumis",
         ("outside", "big"): "non_soumis_dehors",
         ("outside", "medium"): "non_soumis_dehors",
         ("outside", "small"): "non_soumis_dehors",
@@ -232,6 +236,7 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         "action_requise_interdit": RESULTS.action_requise,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "action_requise_dans_doute_interdit": RESULTS.action_requise,
+        "action_requise_tout_dpt_interdit": RESULTS.action_requise,
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
@@ -257,6 +262,8 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "close_to"
         elif self.catalog["potential_wetlands_within_10m"]:
             wetland_status = "potential"
+        elif self.catalog["within_potential_wetlands_department"]:
+            wetland_status = "inside_wetlands_dpt"
         else:
             wetland_status = "outside"
 
@@ -321,7 +328,14 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         elif self.catalog["potential_wetlands_within_10m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
-            caption = "Le projet ne se situe pas dans une zone humide référencée."
+            if self.result_code == "action_requise_tout_dpt_interdit":
+                caption = """
+                    Le projet se situe hors des zones humides listées dans les cartographies
+                    existantes. Cependant, seul un inventaire de terrain à la parcelle permet
+                    d'écarter la présence d'une zone humide (doctrine DDT(M) du département).
+                """
+            else:
+                caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
@@ -452,6 +466,7 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
         "action_requise_interdit",
         "action_requise_proche_interdit",
         "action_requise_dans_doute_interdit",
+        "action_requise_tout_dpt_interdit",
         "non_soumis",
         "non_soumis_dehors",
     ]
@@ -466,6 +481,9 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
         ("potential", "soumis"): "action_requise_dans_doute_interdit",
         ("potential", "action_requise"): "action_requise_interdit",
         ("potential", "non_soumis"): "non_soumis",
+        ("inside_wetlands_dpt", "soumis"): "action_requise_tout_dpt_interdit",
+        ("inside_wetlands_dpt", "action_requise"): "action_requise_interdit",
+        ("inside_wetlands_dpt", "non_soumis"): "non_soumis",
         ("outside", "soumis"): "non_soumis_dehors",
         ("outside", "action_requise"): "non_soumis_dehors",
         ("outside", "non_soumis"): "non_soumis_dehors",
@@ -477,6 +495,7 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
         "action_requise_interdit": RESULTS.action_requise,
         "action_requise_proche_interdit": RESULTS.action_requise,
         "action_requise_dans_doute_interdit": RESULTS.action_requise,
+        "action_requise_tout_dpt_interdit": RESULTS.action_requise,
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
@@ -499,6 +518,8 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
             wetland_status = "close_to"
         elif self.catalog["potential_wetlands_within_10m"]:
             wetland_status = "potential"
+        elif self.catalog["within_potential_wetlands_department"]:
+            wetland_status = "inside_wetlands_dpt"
         else:
             wetland_status = "outside"
 
@@ -553,7 +574,14 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
         elif self.catalog["potential_wetlands_within_10m"] and potential_qs:
             caption = "Le projet se situe dans une zone humide potentielle."
         else:
-            caption = "Le projet ne se situe pas dans une zone humide référencée."
+            if self.result_code == "action_requise_tout_dpt_interdit":
+                caption = """
+                    Le projet se situe hors des zones humides listées dans les cartographies
+                    existantes. Cependant, seul un inventaire de terrain à la parcelle permet
+                    d'écarter la présence d'une zone humide (doctrine DDT(M) du département).
+                """
+            else:
+                caption = "Le projet ne se situe pas dans une zone humide référencée."
 
         if map_polygons:
             criterion_map = Map(
