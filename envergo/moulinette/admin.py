@@ -226,10 +226,10 @@ class MoulinetteConfigForm(forms.ModelForm):
 
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
-    list_display = ["department", "is_activated"]
+    list_display = ["department", "is_activated", "zh_doubt"]
     form = MoulinetteConfigForm
     inlines = [MoulinetteTemplateInline]
-    list_filter = ["is_activated"]
+    list_filter = ["is_activated", "zh_doubt"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

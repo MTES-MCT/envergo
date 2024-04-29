@@ -650,6 +650,7 @@ class MoulinetteConfig(models.Model):
         blank=True,
         default=list,
     )
+    zh_doubt = models.BooleanField("Tout le département en ZH doute", default=False)
     ddtm_water_police_email = models.EmailField(
         "E-mail DDT(M) police de l'eau", blank=True
     )

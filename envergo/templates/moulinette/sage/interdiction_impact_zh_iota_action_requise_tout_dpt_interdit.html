@@ -1,0 +1,70 @@
+<p>
+  <strong>Action requise :</strong>
+</p>
+
+<p>Démontrer que le projet {{ criterion.required_action }}.</p>
+
+<p>
+  <strong>Pourquoi cette action est-elle requise ?</strong>
+</p>
+
+{# djlint:off #}
+<p>
+  Le règlement du SAGE « {{ regulation.perimeter }} », approuvé par arrêté préfectoral, interdit sur son périmètre tout projet impactant une zone humide s'il est soumis à la Loi sur l'eau{% if criterion.evaluator_settings.exceptions %}, à l'exception de quelques cas précisés ci-dessous{% endif %}.
+</p>
+{# djlint:on #}
+
+<p>
+  Au vu des informations saisies, le projet est soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>). S’il impacte une zone humide, il sera alors <strong>interdit</strong>.
+</p>
+
+<p>
+  ⚠️ Le projet est hors de zones humides potentielles listées, mais selon la doctrine de la DDT(M) du département, <em>seul un inventaire de terrain à la parcelle permet d’écarter avec fiabilité la présence de zones humides</em>.
+</p>
+
+<p>
+  Les cartographies de zones humides potentielles servent uniquement d'alerte et d’aide aux porteurs et aux administrations dans la recherche de zones humides. De même, les inventaires communaux n’ont généralement pas une résolution assez fine pour détecter les petites zones humides ; ils sont utiles à l’échelle de la planification urbaine, moins à celle du projet.
+</p>
+
+{% if criterion.evaluator_settings.exceptions %}
+  <p>
+    <strong>Quelles sont les exceptions à cette interdiction ?</strong>
+  </p>
+
+  <p>
+    Un projet soumis à la Loi sur l’eau impactant une zone humide peut être tout de même autorisé à certaines conditions, et en particulier :
+  </p>
+
+  {{ criterion.evaluator_settings.exceptions|safe }}
+
+  {% if regulation.perimeter.rules_url %}
+    <p>
+      Le porteur doit consulter le <a href="{{ regulation.perimeter.rules_url }}"
+    target="_blank"
+    rel="noopener">texte officiel et complet du règlement du SAGE</a>.
+    </p>
+  {% endif %}
+{% endif %}
+
+{% if not criterion.evaluator.zh_strict %}
+  <p>
+    <strong>Comment déterminer si le projet est en zone humide ?</strong>
+  </p>
+
+  <p>
+    Toute zone humide, <em>même non inventoriée</em>, est concernée par cette règle du SAGE.
+  </p>
+
+  <p>
+    La recherche de zones humides se fait nécessairement par des études sur le terrain, confiées en pratique à des bureaux d'études spécialisés. Ils examinent les espèces végétales présentes, le type de sol, et le profil d'humidité sous la surface.
+  </p>
+
+{% endif %}
+
+<p>
+  <strong>Quel impact environnemental ?</strong>
+</p>
+
+<p>
+  Les zones humides ont un rôle primordial dans la préservation de la ressource en eau. Elles permettent le développement de la biodiversité ; elles préservent la qualité de l'eau en jouant un rôle de filtre ; et réduisent les impacts des inondations par leur effet « tampon » sur le niveau des rivières.
+</p>

@@ -42,6 +42,14 @@ class ZoneHumideMixin:
                 data["forbidden_wetlands_100"]
             )
 
+        if "within_potential_wetlands_department" not in self.catalog:
+            if self.moulinette.config:
+                data[
+                    "within_potential_wetlands_department"
+                ] = self.moulinette.config.zh_doubt
+            else:
+                data["within_potential_wetlands_department"] = False
+
         return data
 
 

@@ -2,7 +2,11 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Moulinette
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    MoulinetteConfigFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -159,6 +163,17 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
+
+
+@pytest.mark.parametrize("footprint", [1500])
+def test_3310_large_footprint_inside_doubt_department(moulinette_data):
+    """Project with footprint > 1000m² inside a whole zh department."""
+
+    MoulinetteConfigFactory(zh_doubt=True)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette.catalog["within_potential_wetlands_deprartment"] = True
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [299])

@@ -283,7 +283,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         moulinette = self.moulinette
         if moulinette:
 
-            if not self.validate_results_url(request, context):
+            if "debug" not in self.request.GET and not self.validate_results_url(
+                request, context
+            ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
             if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
