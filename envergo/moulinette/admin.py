@@ -221,7 +221,9 @@ class MoulinetteConfigForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["n2000_lotissement_proximite"].strip = False
+
+        if "n2000_lotissement_proximity" in self.fields:
+            self.fields["n2000_lotissement_proximite"].strip = False
 
 
 @admin.register(MoulinetteConfig)

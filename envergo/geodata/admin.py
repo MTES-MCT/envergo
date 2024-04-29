@@ -3,7 +3,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.gis import admin as gis_admin
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.template.response import TemplateResponse
 from django.urls import path
@@ -255,6 +255,9 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return custom_urls + urls
 
     def map_preview(self, request, object_id):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+
         map = self.get_object(request, unquote(object_id))
         context = {
             "map": map,
