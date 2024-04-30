@@ -272,7 +272,7 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
         "npoints",
     ]
     readonly_fields = ["map", "created_at", "area", "npoints"]
-    list_filter = ["map__map_type", "map__data_type", "map"]
+    list_filter = ["map__map_type", "map__data_type"]
 
     @admin.display(description=_("Data type"))
     def map_type(self, obj):
@@ -284,7 +284,7 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.defer("geometry")
+        return qs.defer("geometry", "map__geometry")
 
 
 @admin.register(Department)
