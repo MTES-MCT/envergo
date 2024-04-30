@@ -82,7 +82,7 @@ class MoulinetteMixin:
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
-            if moulinette.is_evaluation_available() or self.request.user.is_superuser:
+            if moulinette.is_evaluation_available() or self.request.user.is_staff:
                 context["additional_forms"] = self.get_additional_forms(moulinette)
                 context["additional_fields"] = self.get_additional_fields(moulinette)
                 context["optional_forms"] = self.get_optional_forms(moulinette)
@@ -230,7 +230,7 @@ class MoulinetteMixin:
         return url_with_params
 
     def should_activate_optional_criteria(self):
-        return self.request.user.is_superuser
+        return self.request.user.is_staff
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
@@ -254,7 +254,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
-        is_admin = self.request.user.is_superuser
+        is_admin = self.request.user.is_staff
 
         if moulinette is None:
             template_name = "moulinette/home.html"
@@ -378,9 +378,9 @@ class MoulinetteDebug(FormView):
         """Check wich template to use depending on the moulinette result."""
 
         moulinette = getattr(self, "moulinette", None)
-        is_superuser = self.request.user.is_superuser
+        is_admin = self.request.user.is_staff
 
-        if moulinette and (moulinette.is_evaluation_available() or is_superuser):
+        if moulinette and (moulinette.is_evaluation_available() or is_admin):
             template_name = "moulinette/debug_result.html"
         elif moulinette:
             template_name = "moulinette/debug_result_non_disponible.html"
