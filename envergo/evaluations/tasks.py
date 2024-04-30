@@ -27,13 +27,11 @@ def confirm_request_to_admin(request_id, host):
     logger.info(f"[mattermost] Sending notification {request_id} {host}")
     request = Request.objects.get(id=request_id)
     request_url = reverse("admin:evaluations_request_change", args=[request_id])
-    parcel_map_url = request.get_parcel_map_url()
     message_body = render_to_string(
         "evaluations/eval_request_notification.txt",
         context={
             "request": request,
             "request_url": f"https://{host}{request_url}",
-            "parcel_map_url": f"https://{host}{parcel_map_url}",
         },
     )
     logger.info(f"[mattermost] message body {message_body}")

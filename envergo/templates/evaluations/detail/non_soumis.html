@@ -76,12 +76,6 @@
                 <span class="fr-text--light">Somme des emprises au sol de toutes les installations existantes avant le projet (bâtiment, voirie, remblais, noue, serre, bassin…)</span>
               </li>
             {% endif %}
-
-            {% if evaluation.request %}
-              <li>
-                Voir <a href="{{ evaluation.request.get_parcel_map_url }}">la carte des parcelles concernées</a>
-              </li>
-            {% endif %}
           </ul>
 
           {% if criterions %}

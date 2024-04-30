@@ -567,7 +567,6 @@ class Request(models.Model):
     # Project localisation
     address = models.TextField(_("Address"))
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
-    parcels = models.ManyToManyField("geodata.Parcel", verbose_name=_("Parcels"))
 
     # Project specs
     application_number = models.CharField(
@@ -650,28 +649,6 @@ class Request(models.Model):
     def is_from_instructor(self):
         """Shortcut property"""
         return self.user_type == USER_TYPES.instructor
-
-    def get_parcel_map_url(self):
-        """Return an url to a parcel visualization map."""
-
-        parcel_refs = [parcel.reference for parcel in self.parcels.all()]
-        qd = QueryDict(mutable=True)
-        qd.setlist("parcel", parcel_refs)
-        map_url = reverse("map")
-
-        url = f"{map_url}?{qd.urlencode()}"
-        return url
-
-    def get_parcel_geojson_export_url(self):
-        """Return an url to download the parcels in geojson."""
-
-        parcel_refs = [parcel.reference for parcel in self.parcels.all()]
-        qd = QueryDict(mutable=True)
-        qd.setlist("parcel", parcel_refs)
-        map_url = reverse("parcels_export")
-
-        url = f"{map_url}?{qd.urlencode()}"
-        return url
 
     def create_evaluation(self):
         """Create an evaluation from this evaluation request."""

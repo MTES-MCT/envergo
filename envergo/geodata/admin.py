@@ -17,12 +17,6 @@ from envergo.geodata.tasks import generate_map_preview, process_shapefile_map
 from envergo.geodata.utils import count_features, extract_shapefile
 
 
-@admin.register(Parcel)
-class ParcelAdmin(admin.ModelAdmin):
-    list_display = ["commune", "prefix", "section", "order"]
-    search_fields = ["commune", "prefix", "section", "order"]
-
-
 class MapForm(forms.ModelForm):
     def clean_file(self):
         """Check that the given file is a valid shapefile archive.

@@ -457,9 +457,6 @@ class RequestAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "summary",
-        "parcels",
-        "parcels_map",
-        "parcels_geojson",
     ]
     inlines = [RequestFileInline]
     search_fields = [
@@ -495,30 +492,12 @@ class RequestAdmin(admin.ModelAdmin):
         ),
         (_("Meta info"), {"fields": ("created_at",)}),
     )
-    exclude = ["parcels"]
     actions = ["make_evaluation"]
     change_form_template = "evaluations/admin/request_change_form.html"
 
     def get_queryset(self, request):
-        qs = (
-            super()
-            .get_queryset(request)
-            .select_related("evaluation")
-            .prefetch_related("parcels")
-        )
+        qs = super().get_queryset(request).select_related("evaluation")
         return qs
-
-    @admin.display(description=_("Lien vers la carte des parcelles"))
-    def parcels_map(self, obj):
-        parcel_map_url = obj.get_parcel_map_url()
-        link = f"<a href='{parcel_map_url}'>Voir la carte</a>"
-        return mark_safe(link)
-
-    @admin.display(description=_("Exporter vers QGis ou autre"))
-    def parcels_geojson(self, obj):
-        parcel_export_url = obj.get_parcel_geojson_export_url()
-        link = f"<a href='{parcel_export_url}'>Télécharger en geojson</a>"
-        return mark_safe(link)
 
     @admin.display(description="Avis", ordering="evaluation")
     def evaluation_link(self, obj):
