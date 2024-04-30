@@ -16,7 +16,6 @@ from envergo.pages.views import (
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
-    path(_("stats/"), include("envergo.stats.urls")),
     path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(_("privacy/"), PrivacyView.as_view(), name="privacy"),
