@@ -28,7 +28,9 @@ def create_contact(email):
         message = error["message"]
 
         # If the error is that the contact already exists, we can safely ignore it
-        if message != "people_exists":
+        if message == "people_exists":
+            logger.info(f"CRISP contact already exists: {email}")
+        else:
             raise e
 
 
@@ -37,11 +39,15 @@ def update_contacts_data(emails, reference, url):
         return
 
     for email in emails:
+        logger.info(f"Updating CRISP contact data for {email}")
+
+        now = timezone.now()
+        key = f"{reference}-{now:%y%m%d}"
+        data = {"data": {key: url}}
+
         try:
+            # First, we create the contact in the CRISP db. Then we save the useful data.
             create_contact(email)
-            now = timezone.now()
-            key = f"{reference}-{now:%y%m%d}"
-            data = {"data": {key: url}}
             client.website.update_people_data(settings.CRISP_WEBSITE_ID, email, data)
         except Exception as e:
-            logger.warning(f"Error while updating CRISP contact data {email}: {str(e)}")
+            logger.warning(f"Error while saving CRISP contact data {email}: {str(e)}")
