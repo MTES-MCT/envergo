@@ -295,6 +295,10 @@ def simplify_map(map):
 
 
 def fill_polygon_stats():
+    """Update the main obj with stats from the geometry field.
+
+    This is only used manually when the need arises, for debugging purpose.
+    """
     with connection.cursor() as cursor:
         cursor.execute(
             """
