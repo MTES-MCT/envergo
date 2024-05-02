@@ -45,13 +45,7 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function () {
-    const map = L.map('map', {
-      maxZoom: 21,
-      scrollWheelZoom: this.options.isStatic ? 'center' : true
-    }).setView(this.options.centerMap, this.options.defaultZoom);
-    map.doubleClickZoom.disable();
-
-    L.tileLayer("https://data.geopf.fr/wmts?" +
+    const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
       "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
       "&STYLE=normal" +
       "&TILEMATRIXSET=PM" +
@@ -64,7 +58,37 @@
       maxNativeZoom: 19,
       tileSize: 256,
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    }).addTo(map);
+    });
+
+    const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/jpeg" +
+      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    });
+
+    const map = L.map('map', {
+      maxZoom: 21,
+      scrollWheelZoom: this.options.isStatic ? 'center' : true,
+      layers: [planLayer],
+    }).setView(this.options.centerMap, this.options.defaultZoom);
+    map.doubleClickZoom.disable();
+
+    const baseMaps = {
+      "Vue IGN classique": planLayer,
+      "Vue aérienne satellite": satelliteLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps);
+    layerControl.addTo(map);
 
     return map;
   };
