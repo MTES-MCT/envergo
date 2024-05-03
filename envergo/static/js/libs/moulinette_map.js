@@ -176,7 +176,6 @@
   MoulinetteMap.prototype.setupAnalytics = function () {
     this.map.on('baselayerchange', function (e) {
       _paq.push(['trackEvent', this.options.mapType, 'MapSwitchLayer', e.name]);
-      console.log('MapSwitchLayer', this.options.mapType);
     }.bind(this));
   };
 

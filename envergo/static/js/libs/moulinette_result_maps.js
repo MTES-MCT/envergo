@@ -127,7 +127,6 @@
         action = "PerimeterMapSwitchLayer";
       }
       _paq.push(['trackEvent', 'Content', action, e.name]);
-      console.log('Layer changed to ' + action + " " + e.name);
     });
 
     return map;
