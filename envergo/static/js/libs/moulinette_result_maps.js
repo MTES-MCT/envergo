@@ -1,4 +1,4 @@
-(function (exports, L) {
+(function (exports, L, _paq) {
   'use strict';
 
   /**
@@ -117,10 +117,23 @@
       }
     });
 
+    // Track some events to Matomo
+    map.on('baselayerchange', function (e) {
+      let mapType = mapData["type"];  // criterion or regulation
+      let action;
+      if (mapType === "criterion") {
+        action = "MilieuMapSwitchLayer";
+      } else {
+        action = "PerimeterMapSwitchLayer";
+      }
+      _paq.push(['trackEvent', 'Content', action, e.name]);
+      console.log('Layer changed to ' + action + " " + e.name);
+    });
+
     return map;
   };
 
-})(this, L);
+})(this, L, window._paq || []);
 
 window.addEventListener('load', function () {
   var MAPS = window.MAPS || {};

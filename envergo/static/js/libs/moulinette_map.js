@@ -1,4 +1,4 @@
-(function (exports, L) {
+(function (exports, L, _paq) {
   'use strict';
 
   // Prevent scrolling to the map when clicking on the zoom button
@@ -28,6 +28,8 @@
     } else {
       this.registerEvents();
     }
+
+    this.setupAnalytics();
   };
   exports.MoulinetteMap = MoulinetteMap;
 
@@ -171,7 +173,14 @@
 
   };
 
-})(this, L);
+  MoulinetteMap.prototype.setupAnalytics = function () {
+    this.map.on('baselayerchange', function (e) {
+      _paq.push(['trackEvent', this.options.mapType, 'MapSwitchLayer', e.name]);
+      console.log('MapSwitchLayer', this.options.mapType);
+    }.bind(this));
+  };
+
+})(this, L, window._paq || []);
 
 
 (function () {
@@ -185,6 +194,7 @@
       latFieldId: LAT_FIELD_ID,
       lngFieldId: LNG_FIELD_ID,
       isStatic: IS_MAP_STATIC,
+      mapType: MAP_TYPE,
     }
     moulinetteMap = new MoulinetteMap(options);
   });

@@ -63,6 +63,7 @@ class Map:
     zoom: int = 17  # the map zoom to pass to leaflet
     ratio: str = "4x3"  # Check for "project.scss" for available ratios
     fixed: bool = True  # Is the map fixed or can it be zoomed and dragged?
+    type: str = "criterion"  # Can be "criterion" or "regulation"
 
     def to_json(self):
         # Don't display full polygons
@@ -71,6 +72,7 @@ class Map:
 
         data = json.dumps(
             {
+                "type": self.type,
                 "center": to_geojson(self.center),
                 "zoom": self.zoom,
                 "polygons": [
