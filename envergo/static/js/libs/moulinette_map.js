@@ -83,8 +83,8 @@
     map.doubleClickZoom.disable();
 
     const baseMaps = {
-      "Vue IGN classique": planLayer,
-      "Vue aérienne satellite": satelliteLayer
+      "Plan": planLayer,
+      "Satellite": satelliteLayer
     };
 
     const layerControl = L.control.layers(baseMaps);
