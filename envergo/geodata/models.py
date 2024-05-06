@@ -1,4 +1,6 @@
 import logging
+import os
+import tempfile
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
@@ -163,3 +165,56 @@ class CatchmentAreaTile(models.Model):
     class Meta:
         verbose_name = _("Catchment area tile")
         verbose_name_plural = _("Catchment area tiles")
+
+
+class RGEAltiDptProcess(models.Model):
+    """Keep a record of the RGE Alti Dept that were imported.
+
+    This is just a helper tool.
+    The `mass_carto_creation` script processes a single RGE alti department archive at a time,
+    and it's a long process (a whole night on my main workstation).
+
+    This model is used to keep track of the process, and to be able to restart it it fails.
+
+    This code is not meant to make it to production, and will only be used locally.
+    """
+
+    department = models.CharField(
+        _("Department"), max_length=3, choices=DEPARTMENT_CHOICES
+    )
+    filename = models.CharField(_("Filename"), max_length=256, blank=True)
+    done = models.BooleanField(_("Done"), default=False)
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    ended_at = models.DateTimeField(_("Date ended"), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("RGE Alti Dept process")
+        verbose_name_plural = _("RGE Alti Dept processes")
+
+    def start(self, output_dir):
+        """Start the process.
+
+        We need to unpack the data archive, run the script, then clean everything up."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+
+            # Extract the 7z archive to a temporary directory
+            os.system(f"7z x {self.filename} -o{tmpdir}")
+            data_directory = None
+            for root, dirs, files in os.walk(tmpdir):
+                if self.data_directory_name in dirs:
+                    data_directory = os.path.join(root, self.data_directory_name)
+                    break
+            if data_directory is None:
+                raise RuntimeError("Data directory not found in archive")
+
+            output = os.system(
+                f"python envergo/utils/bassins_versants/mass_carto_creation.py --input-folder {data_directory} --output-folder {output_dir}"  # noqa
+            )
+            if output == 0:
+                self.done = True
+                self.ended_at = timezone.now()
+                self.save()
+
+    @property
+    def data_directory_name(self):
+        return f"RGEALTI_MNT_5M_ASC_LAMB93_IGN69_D0{self.department}"
