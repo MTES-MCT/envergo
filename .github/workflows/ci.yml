@@ -70,10 +70,7 @@ jobs:
 
       - name: Set up the database
         run: |
-          psql -d postgresql://envergo:envergo@localhost/envergo -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
-          psql -d postgresql://envergo:envergo@localhost/envergo -c 'CREATE EXTENSION IF NOT EXISTS postgis_raster;'
-        env:
-          PGPASSWORD: envergo
+          psql -d postgresql://envergo:envergo@localhost/envergo -c 'CREATE EXTENSION postgis_raster;'
 
       - name: Install dependencies
         run: |
