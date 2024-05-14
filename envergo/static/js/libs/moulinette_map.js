@@ -175,7 +175,17 @@
 
   MoulinetteMap.prototype.setupAnalytics = function () {
     this.map.on('baselayerchange', function (e) {
-      _paq.push(['trackEvent', this.options.mapType, 'MapSwitchLayer', e.name]);
+      // This script is called to display the map on both the moulinette form,
+      // and the eval result page, but we need to trigger different analytics
+      // events when the map layer is changed
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', e.name]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', e.name]);
+          break;
+      }
     }.bind(this));
   };
 
