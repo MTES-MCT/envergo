@@ -8,7 +8,6 @@ from envergo.evaluations.models import (
     RegulatoryNoticeLog,
     Request,
 )
-from envergo.geodata.tests.factories import ParcelFactory
 
 
 class EvaluationFactory(DjangoModelFactory):
@@ -71,17 +70,6 @@ class RequestFactory(DjangoModelFactory):
     user_type = "instructor"
     contact_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
-
-    @factory.post_generation
-    def parcels(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            for parcel in extracted:
-                self.parcels.add(parcel)
-        else:
-            self.parcels.add(ParcelFactory())
 
 
 class RegulatoryNoticeLogFactory(DjangoModelFactory):

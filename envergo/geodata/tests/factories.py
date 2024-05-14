@@ -4,11 +4,10 @@ from string import ascii_uppercase
 import factory
 from django.contrib.gis.geos import MultiPolygon, Polygon
 from factory import Faker as factory_Faker
-from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from envergo.geodata.models import Department, Map, Parcel, Zone
+from envergo.geodata.models import Department, Map, Zone
 
 
 def generate_section():
@@ -72,16 +71,6 @@ class FuzzyMultiPolygon(factory.fuzzy.BaseFuzzyAttribute):
     def fuzz(self):
         polygons = [FuzzyPolygon().fuzz() for __ in range(self.length)]
         return MultiPolygon(*polygons)
-
-
-class ParcelFactory(DjangoModelFactory):
-    class Meta:
-        model = Parcel
-
-    commune = fuzzy.FuzzyInteger(10000, 90000)
-    section = factory.LazyFunction(generate_section)
-    prefix = "000"
-    order = fuzzy.FuzzyInteger(1, 9999)
 
 
 class MapFactory(DjangoModelFactory):
