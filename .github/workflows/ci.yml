@@ -96,8 +96,5 @@ jobs:
       - name: Build assets
         run:  bash bin/build_assets.sh
 
-      - name: Run DB Migrations
-        run:  bash bin/post_deploy.sh
-
       - name: Run Django Tests
         run:  pytest
