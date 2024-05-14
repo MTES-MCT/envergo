@@ -1,8 +1,5 @@
-// Use Matomo API for analytics
-var _paq = window._paq || [];
-
 // This module handles the "Is this evaluation useful" feedback form
-(function (exports) {
+(function (exports, _paq) {
   'use strict';
 
   const FeedbackModal = function (dialogElt) {
@@ -37,7 +34,7 @@ var _paq = window._paq || [];
     _paq.push(['trackEvent', 'FeedbackDialog', 'FormSubmit']);
   };
 
-})(this);
+})(this, window._paq);
 
 window.addEventListener('load', function () {
   const dialogs = document.querySelectorAll(FEEDBACK_MODAL_DIALOGS);

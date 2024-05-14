@@ -189,7 +189,7 @@
     }.bind(this));
   };
 
-})(this, L, window._paq || []);
+})(this, L, window._paq);
 
 
 (function () {

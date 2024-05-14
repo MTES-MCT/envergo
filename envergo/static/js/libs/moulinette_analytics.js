@@ -1,5 +1,3 @@
-var _paq = window._paq || [];
-
 // Track an event when a regulation main "read more" btn is clicked
 window.addEventListener('load', function () {
   const showMoreBtns = document.querySelectorAll('.read-more-btn');

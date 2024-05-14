@@ -132,7 +132,7 @@
     return map;
   };
 
-})(this, L, window._paq || []);
+})(this, L, window._paq);
 
 window.addEventListener('load', function () {
   var MAPS = window.MAPS || {};

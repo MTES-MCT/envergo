@@ -1,7 +1,7 @@
-{% if ANALYTICS.TRACKER_ENABLED %}
-  <script type="text/javascript">
-    var _paq = window._paq = window._paq || [];
+<script type="text/javascript">
+  var _paq = window._paq = window._paq || [];
 
+  {% if ANALYTICS.TRACKER_ENABLED %}
     if (typeof MATOMO_CUSTOM_URL === "string") {
       _paq.push(['setCustomUrl', MATOMO_CUSTOM_URL]);
     }
@@ -33,5 +33,5 @@
       g.src = u + 'matomo.js';
       s.parentNode.insertBefore(g, s);
     })();
-  </script>
-{% endif %}
+  {% endif %}
+</script>
