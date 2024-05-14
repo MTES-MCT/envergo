@@ -1,5 +1,3 @@
-var _paq = window._paq || [];
-
 /**
  * Make the accordion-organized content analytics friendly.
  *
@@ -10,7 +8,7 @@ var _paq = window._paq || [];
  * events, so we use MutationObservers to detect whenever a section is
  * opened.
  */
-(function (exports) {
+(function (exports, _paq) {
   'use strict';
 
   const AccordionAnalytics = function (accordionElt) {
@@ -57,4 +55,4 @@ var _paq = window._paq || [];
     history.replaceState(null, '', '#');
   };
 
-})(this);
+})(this, window._paq);

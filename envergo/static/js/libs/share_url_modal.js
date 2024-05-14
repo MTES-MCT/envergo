@@ -1,30 +1,28 @@
-var _paq = window._paq || [];
-
-(function(exports) {
+(function (exports, _paq) {
   'use strict';
 
-  const ShareModal = function(dialogElt) {
+  const ShareModal = function (dialogElt) {
     this.dialogElt = dialogElt;
     this.urlInput = dialogElt.querySelector("input[type=url]");
     this.shareBtn = dialogElt.querySelector("button[type=submit]");
   };
   exports.ShareModal = ShareModal;
 
-  ShareModal.prototype.init = function() {
+  ShareModal.prototype.init = function () {
     this.shareBtn.addEventListener('click', this.copyUrlToClipboard.bind(this));
     this.dialogElt.addEventListener('dsfr.disclose', this.onModalDisclose.bind(this));
     this.dialogElt.addEventListener('dsfr.conceal', this.onModalConceal.bind(this));
   };
 
-  ShareModal.prototype.onModalDisclose = function() {
+  ShareModal.prototype.onModalDisclose = function () {
     _paq.push(['trackEvent', 'ShareDialog', 'Disclose']);
   };
 
-  ShareModal.prototype.onModalConceal = function() {
+  ShareModal.prototype.onModalConceal = function () {
     _paq.push(['trackEvent', 'ShareDialog', 'Conceal']);
   };
 
-  ShareModal.prototype.copyUrlToClipboard = function() {
+  ShareModal.prototype.copyUrlToClipboard = function () {
     this.urlInput.focus();
     this.urlInput.select();
     document.execCommand("copy");
@@ -36,9 +34,9 @@ var _paq = window._paq || [];
     _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
   };
 
-})(this);
+})(this, window._paq);
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
   const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
   var shareModal = new ShareModal(dialogElt);
   shareModal.init();

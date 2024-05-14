@@ -364,6 +364,7 @@ class Regulation(models.Model):
         if perimeter:
             polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
             map = Map(
+                type="regulation",
                 center=self.moulinette.catalog["coords"],
                 entries=[polygon],
                 truncate=False,

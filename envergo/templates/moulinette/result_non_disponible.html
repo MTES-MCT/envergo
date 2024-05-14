@@ -30,13 +30,10 @@
 {% block extra_js %}
   {{ block.super }}
   <script>
-    var _paq = window._paq || [];
-
     // Track a moulinette result page load
     window.addEventListener('load', function() {
       _paq.push(['trackEvent', 'Simulation', 'Result', '{{ department.department }}']);
     });
 
   </script>
-
 {% endblock %}

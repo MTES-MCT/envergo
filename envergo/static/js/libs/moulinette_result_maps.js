@@ -1,4 +1,4 @@
-(function (exports, L) {
+(function (exports, L, _paq) {
   'use strict';
 
   /**
@@ -19,19 +19,7 @@
     const mapData = this.maps[mapId];
     const center = mapData.center;
 
-    // Damn this constant lat and lng order mixing
-    const centerCoords = [center.coordinates[1], center.coordinates[0]];
-    const map = L.map(mapId, {
-      maxZoom: 21,
-      zoomControl: !mapData["fixed"],
-      dragging: !mapData["fixed"],
-      doubleClickZoom: !mapData["fixed"],
-      scrollWheelZoom: !mapData["fixed"],
-      touchZoom: !mapData["fixed"],
-      keyboard: !mapData["fixed"]
-    }).setView(centerCoords, mapData['zoom']);
-
-    L.tileLayer("https://data.geopf.fr/wmts?" +
+    const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
       "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
       "&STYLE=normal" +
       "&TILEMATRIXSET=PM" +
@@ -44,7 +32,44 @@
       maxNativeZoom: 19,
       tileSize: 256,
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    }).addTo(map);
+    });
+
+    const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/jpeg" +
+      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    });
+
+    // Damn this constant lat and lng order mixing
+    const centerCoords = [center.coordinates[1], center.coordinates[0]];
+    const map = L.map(mapId, {
+      maxZoom: 21,
+      zoomControl: !mapData["fixed"],
+      dragging: !mapData["fixed"],
+      doubleClickZoom: !mapData["fixed"],
+      scrollWheelZoom: !mapData["fixed"],
+      touchZoom: !mapData["fixed"],
+      keyboard: !mapData["fixed"],
+      layers: [planLayer],
+    }).setView(centerCoords, mapData['zoom']);
+
+    // Display layer switching control
+    const baseMaps = {
+      "Plan": planLayer,
+      "Satellite": satelliteLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps);
+    layerControl.addTo(map);
 
     // Display the project's coordinates as a maker
     const marker = L.marker(centerCoords);
@@ -92,10 +117,22 @@
       }
     });
 
+    // Track some events to Matomo
+    map.on('baselayerchange', function (e) {
+      let mapType = mapData["type"];  // criterion or regulation
+      let action;
+      if (mapType === "criterion") {
+        action = "MilieuMapSwitchLayer";
+      } else {
+        action = "PerimeterMapSwitchLayer";
+      }
+      _paq.push(['trackEvent', 'Content', action, e.name]);
+    });
+
     return map;
   };
 
-})(this, L);
+})(this, L, window._paq);
 
 window.addEventListener('load', function () {
   var MAPS = window.MAPS || {};

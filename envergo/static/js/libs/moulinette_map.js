@@ -1,4 +1,4 @@
-(function (exports, L) {
+(function (exports, L, _paq) {
   'use strict';
 
   // Prevent scrolling to the map when clicking on the zoom button
@@ -28,6 +28,8 @@
     } else {
       this.registerEvents();
     }
+
+    this.setupAnalytics();
   };
   exports.MoulinetteMap = MoulinetteMap;
 
@@ -45,13 +47,7 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function () {
-    const map = L.map('map', {
-      maxZoom: 21,
-      scrollWheelZoom: this.options.isStatic ? 'center' : true
-    }).setView(this.options.centerMap, this.options.defaultZoom);
-    map.doubleClickZoom.disable();
-
-    L.tileLayer("https://data.geopf.fr/wmts?" +
+    const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
       "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
       "&STYLE=normal" +
       "&TILEMATRIXSET=PM" +
@@ -64,7 +60,37 @@
       maxNativeZoom: 19,
       tileSize: 256,
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    }).addTo(map);
+    });
+
+    const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/jpeg" +
+      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    });
+
+    const map = L.map('map', {
+      maxZoom: 21,
+      scrollWheelZoom: this.options.isStatic ? 'center' : true,
+      layers: [planLayer],
+    }).setView(this.options.centerMap, this.options.defaultZoom);
+    map.doubleClickZoom.disable();
+
+    const baseMaps = {
+      "Plan": planLayer,
+      "Satellite": satelliteLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps);
+    layerControl.addTo(map);
 
     return map;
   };
@@ -147,7 +173,23 @@
 
   };
 
-})(this, L);
+  MoulinetteMap.prototype.setupAnalytics = function () {
+    this.map.on('baselayerchange', function (e) {
+      // This script is called to display the map on both the moulinette form,
+      // and the eval result page, but we need to trigger different analytics
+      // events when the map layer is changed
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', e.name]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', e.name]);
+          break;
+      }
+    }.bind(this));
+  };
+
+})(this, L, window._paq);
 
 
 (function () {
@@ -161,6 +203,7 @@
       latFieldId: LAT_FIELD_ID,
       lngFieldId: LNG_FIELD_ID,
       isStatic: IS_MAP_STATIC,
+      mapType: MAP_TYPE,
     }
     moulinetteMap = new MoulinetteMap(options);
   });

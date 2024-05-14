@@ -192,11 +192,11 @@
     var LAT_FIELD_ID = 'id_lat';
     var LNG_FIELD_ID = 'id_lng';
     var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
-    var EVENTS_URL = "{% url 'events' %}";
     {% if moulinette_summary %}
       var MOULINETTE_DATA = {{ moulinette_summary|safe }};
     {% endif %}
     var SIMULATION_FORM_ID = "moulinette-form";
+    var MAP_TYPE = "Form";  // This is only for analytics purpose
   </script>
   {% include 'moulinette/_form_scripts.html' %}
   <script defer src="{% static 'js/libs/home_analytics.js' %}"></script>
