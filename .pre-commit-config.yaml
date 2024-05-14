@@ -24,7 +24,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
-        args: ['--config=setup.cfg']
+        args: ['--config=flake8_setup.cfg']
         additional_dependencies: [flake8-isort]
 
   - repo: https://github.com/Riverside-Healthcare/djLint
