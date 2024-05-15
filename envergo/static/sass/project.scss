@@ -1027,6 +1027,11 @@ div.hero-alt {
     display: none;
   }
 
+  // Make sure leaflet controls are not printed
+  .leaflet-control {
+    display: none;
+  }
+
 }
 
 .fr-header {
