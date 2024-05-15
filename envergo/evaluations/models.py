@@ -213,6 +213,9 @@ class Evaluation(models.Model):
     project_owner_phone = PhoneNumberField(
         _("Project owner phone"), max_length=20, blank=True
     )
+    project_owner_company = models.CharField(
+        _("Project owner company"), max_length=128, blank=True
+    )
     other_contacts = models.TextField(_("Other contacts"), blank=True)
     send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
