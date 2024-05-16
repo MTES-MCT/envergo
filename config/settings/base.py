@@ -1,6 +1,7 @@
 """
 Base settings to build other settings files upon.
 """
+
 from pathlib import Path
 
 import environ
@@ -344,3 +345,5 @@ CRISP_WEBSITE_ID = env("DJANGO_CRISP_WEBSITE_ID", default=None)
 MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", default=None)
 
 SELF_DECLARATION_FORM_ID = "mDzXgX"
+
+TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
