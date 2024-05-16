@@ -191,6 +191,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "contact_phone",
                     "project_owner_emails",
                     "project_owner_phone",
+                    "project_owner_company",
                     "send_eval_to_project_owner",
                 )
             },
