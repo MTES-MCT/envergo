@@ -125,6 +125,7 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
         "user_type": USER_TYPES.instructor,
         "moulinette_url": moulinette_url,
         "send_eval_to_project_owner": False,
+        "project_owner_emails": [],
     }
     eval, moulinette = fake_moulinette(
         moulinette_url,
@@ -144,6 +145,42 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
 
     body = email.body
     assert "À transmettre au porteur" in body
+    assert "Acceptez-vous que nous lui transmettions cet avis ?" not in body
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_instructor_self_transmit_soumis(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "soumis"
+    - the "send to sponsor" checkbox is not checked
+    - the "project owner" emails is filled
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_project_owner": False,
+        "project_owner_emails": ["owner@example.org"],
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["instructor@example.org"]
+    assert email.cc == []
+    assert email.bcc == []
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
+    assert "Acceptez-vous que nous lui transmettions cet avis ?" in body
 
 
 @pytest.mark.parametrize("footprint", [1200])
