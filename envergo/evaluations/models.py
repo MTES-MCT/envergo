@@ -2,7 +2,7 @@ import logging
 import secrets
 import uuid
 from os.path import splitext
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
@@ -336,6 +336,8 @@ class EvaluationEmail:
         result = moulinette.result
         txt_mail_template = f"evaluations/admin/eval_email_{result}.txt"
         html_mail_template = f"evaluations/admin/eval_email_{result}.html"
+
+        # Should we display the "à transmettre au porteur" mention?
         to_be_transmitted = all(
             (
                 not evaluation.is_icpe,
@@ -344,6 +346,23 @@ class EvaluationEmail:
                 not evaluation.send_eval_to_project_owner,
             )
         )
+        # Should we display the links to self-transfer to the project owner?
+        display_transfer_links = all(
+            (
+                to_be_transmitted,
+                evaluation.project_owner_emails,
+            )
+        )
+        # Those as parameters to pass on to the Tally form
+        transfer_form_params = {
+            "societe": evaluation.project_owner_company,
+            "telephone": evaluation.project_owner_phone,
+            "email": ", ".join(evaluation.project_owner_emails),
+            "ref_envergo": evaluation.reference,
+            "adresse": evaluation.address,
+            "num_demande_permis": evaluation.application_number,
+        }
+        # Should we display the custom warning for icpe projects?
         icpe_not_transmitted = all(
             (
                 evaluation.is_icpe,
@@ -364,6 +383,9 @@ class EvaluationEmail:
                 reverse("self_declaration", args=[evaluation.reference])
             ),
             "to_be_transmitted": to_be_transmitted,
+            "display_transfer_links": display_transfer_links,
+            "transfer_eval_email_form_id": settings.TRANSFER_EVAL_EMAIL_FORM_ID,
+            "transfer_form_params": urlencode(transfer_form_params),
             "icpe_not_transmitted": icpe_not_transmitted,
             "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
             "required_actions_interdit": list(

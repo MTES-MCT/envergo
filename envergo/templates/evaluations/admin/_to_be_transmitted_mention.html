@@ -1,0 +1,31 @@
+{% if display_transfer_links %}
+  <p>Bonjour,</p>
+
+  <p>Veuillez trouver ci-dessous l’avis réglementaire {{ evaluation.reference }} dont vous avez fait la demande.</p>
+
+  <p>
+    ⚠️ Le pétitionnaire a des obligations au titre d’une réglementation environnementale. Acceptez-vous que nous lui transmettions cet avis ? Cela nous permettra de l’accompagner dans ses démarches.
+  </p>
+
+  <p>Coordonnées que nous avons identifiées :</p>
+
+  <ul>
+    {% if evaluation.project_owner_company %}<li>Société : {{ evaluation.project_owner_company }}</li>{% endif %}
+    <li>Email (s)  : {{ evaluation.project_owner_emails|join:", " }}</li>
+    {% if evaluation.project_owner_phone %}<li>Tél. : {{ evaluation.project_owner_phone }}</li>{% endif %}
+  </ul>
+
+  <p>
+    👌 <a href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Oui, j'autorise la transmission de l'avis au pétitionnaire"|urlencode:""|iriencode }}">Oui, j’autorise la transmission au pétitionnaire</a>
+  </p>
+  <p>
+    ✏️ <a href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}">J’autorise la transmission mais ce ne sont pas les bonnes coordonnées</a>
+  </p>
+  <p>
+    ❌ <a href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par EnvErgo"|urlencode:""|iriencode }}">Non, je ne souhaite pas que le pétitionnaire soit contacté par EnvErgo</a>
+  </p>
+{% else %}
+  <p>
+    <strong>À transmettre au porteur de projet.</strong>
+  </p>
+{% endif %}
