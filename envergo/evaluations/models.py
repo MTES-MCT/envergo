@@ -323,6 +323,31 @@ class Evaluation(models.Model):
         return eligible
 
 
+class EvaluationVersion(models.Model):
+    """An evaluation version with a fixed content.
+
+    By design, an evaluation is dynamic, the content is generated and displayed
+    everytime it is rendered.
+
+    However, we need evaluation results and content to be fixed in time, because they
+    will now be considered legal documents.
+    """
+
+    evaluation = models.ForeignKey(
+        "Evaluation",
+        on_delete=models.CASCADE,
+        verbose_name=_("Evaluation"),
+        related_name="versions",
+    )
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    content = models.TextField(_("Content"))
+
+    class Meta:
+        verbose_name = _("Evaluation version")
+        verbose_name_plural = _("Evaluation versions")
+        ordering = ("-created_at",)
+
+
 class EvaluationEmail:
     """A custom object dedicated to handling "avis réglementaires" emails for evaluations."""
 
