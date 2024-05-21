@@ -23,6 +23,7 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -160,7 +161,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
-    readonly_fields = ["reference", "request", "sent_history"]
+    readonly_fields = ["reference", "request", "sent_history", "versions"]
 
     fieldsets = (
         (
@@ -203,6 +204,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         (
             _("Sent emails"),
             {"fields": ("rr_mention_md", "sent_history")},
+        ),
+        (
+            _("Versions"),
+            {"fields": ("versions",)},
         ),
         (
             _("Legacy regulatory notice data"),
@@ -427,6 +432,14 @@ class EvaluationAdmin(admin.ModelAdmin):
                 "evaluation": obj,
                 "logs": logs,
             },
+        )
+        return mark_safe(content)
+
+    @admin.display(description=_("Versions"))
+    def versions(self, obj):
+        content = render_to_string(
+            "admin/evaluations/versions.html",
+            {"evaluation": obj, "versions": obj.versions.all()},
         )
         return mark_safe(content)
 
