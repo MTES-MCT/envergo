@@ -340,6 +340,12 @@ class EvaluationVersion(models.Model):
         related_name="versions",
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.PROTECT,
+        verbose_name=_("Created by"),
+        related_name="evaluation_versions",
+    )
     content = models.TextField(_("Content"))
 
     class Meta:

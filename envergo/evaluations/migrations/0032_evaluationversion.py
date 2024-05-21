@@ -7,7 +7,7 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("evaluations", "0031_evaluation_project_owner_company"),
+        ("evaluations", "0030_remove_request_parcels"),
     ]
 
     operations = [
