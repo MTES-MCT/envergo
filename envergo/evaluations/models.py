@@ -323,9 +323,16 @@ class Evaluation(models.Model):
         return eligible
 
     def create_version(self, author):
-        content = "XXX"
+        content = self.render_content()
         version = EvaluationVersion(evaluation=self, created_by=author, content=content)
         return version
+
+    def render_content(self):
+        moulinette = self.get_moulinette()
+        template = "evaluation/detail.html"
+        context = {}
+        content = render_to_string(template, context)
+        return content
 
 
 class EvaluationVersion(models.Model):
