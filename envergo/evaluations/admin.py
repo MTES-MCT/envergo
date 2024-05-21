@@ -8,7 +8,7 @@ from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -23,7 +23,6 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
-    EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -151,6 +150,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "result",
         "contact_emails",
         "request_link",
+        "nb_versions",
     ]
     form = EvaluationAdminForm
     inlines = [CriterionInline]
@@ -241,8 +241,17 @@ class EvaluationAdmin(admin.ModelAdmin):
             evaluation.save()
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("request")
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related("request")
+            .annotate(nb_versions=Count("versions"))
+        )
         return qs
+
+    @admin.display(description=_("Versions"), ordering="nb_versions")
+    def nb_versions(self, obj):
+        return obj.nb_versions
 
     @admin.display(description=_("Request"), ordering="request")
     def request_link(self, obj):
