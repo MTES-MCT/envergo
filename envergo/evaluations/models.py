@@ -322,6 +322,11 @@ class Evaluation(models.Model):
                 break
         return eligible
 
+    def create_version(self, author):
+        content = "XXX"
+        version = EvaluationVersion(evaluation=self, created_by=author, content=content)
+        return version
+
 
 class EvaluationVersion(models.Model):
     """An evaluation version with a fixed content.

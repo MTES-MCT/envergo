@@ -162,6 +162,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "contact_emails",
     ]
     readonly_fields = ["reference", "request", "sent_history", "versions"]
+    actions = ["create_version"]
 
     fieldsets = (
         (
@@ -451,6 +452,36 @@ class EvaluationAdmin(admin.ModelAdmin):
             {"evaluation": obj, "versions": obj.versions.all()},
         )
         return mark_safe(content)
+
+    @admin.action(description=_("Create a new version for this evaluation"))
+    def create_version(self, request, queryset):
+        if queryset.count() > 1:
+            error = _("Please, select one and only one evaluation for this action.")
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        evaluation = queryset[0]
+        try:
+            version = evaluation.create_version(request.user)
+            version.save()
+        except Exception as e:
+            error = _("There was an error creating a new version: %(error)s") % {
+                "error": e
+            }
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        admin_url = reverse(
+            "admin:evaluations_evaluation_change", args=[evaluation.uid]
+        )
+        msg = _(
+            '<a href="%(admin_url)s">The new version for evaluation %(reference)s has been created.</a>'
+        ) % {
+            "admin_url": admin_url,
+            "reference": evaluation.reference,
+        }
+        self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
+        return
 
 
 class RequestFileInline(admin.TabularInline):
