@@ -9,11 +9,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     DetailView,
@@ -27,24 +25,16 @@ from django.views.generic.detail import BaseDetailView
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
-    EvaluationShareForm,
     RequestForm,
     WizardAddressForm,
     WizardContactForm,
     WizardFilesForm,
 )
-from envergo.evaluations.models import (
-    RESULTS,
-    Criterion,
-    Evaluation,
-    Request,
-    RequestFile,
-)
+from envergo.evaluations.models import Criterion, Evaluation, Request, RequestFile
 from envergo.evaluations.tasks import (
     confirm_request_to_admin,
     confirm_request_to_requester,
     post_evalreq_to_automation,
-    share_evaluation_by_email,
 )
 from envergo.moulinette.views import MoulinetteResult
 
