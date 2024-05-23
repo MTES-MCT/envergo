@@ -4,15 +4,27 @@
   <p>Veuillez trouver ci-dessous l’avis réglementaire {{ evaluation.reference }} dont vous avez fait la demande.</p>
 
   <p>
-    ⚠️ Le pétitionnaire a des obligations au titre d’une réglementation environnementale. Acceptez-vous que nous lui transmettions cet avis ? Cela nous permettra de l’accompagner dans ses démarches.
+    ⚠️ Le pétitionnaire a des obligations au titre d’une réglementation environnementale. <strong>Acceptez-vous que nous lui transmettions cet avis ?</strong> Cela nous permettra de l’accompagner dans ses démarches.
   </p>
 
-  <p>Coordonnées que nous avons identifiées :</p>
+  <p>
+    <i>Coordonnées que nous avons identifiées :</i>
+  </p>
 
   <ul>
-    {% if evaluation.project_owner_company %}<li>Société : {{ evaluation.project_owner_company }}</li>{% endif %}
-    <li>Email (s)  : {{ evaluation.project_owner_emails|join:", " }}</li>
-    {% if evaluation.project_owner_phone %}<li>Tél. : {{ evaluation.project_owner_phone }}</li>{% endif %}
+    {% if evaluation.project_owner_company %}
+      <li>
+        <i>Société</i> : {{ evaluation.project_owner_company }}
+      </li>
+    {% endif %}
+    <li>
+      <i>Email</i> : {{ evaluation.project_owner_emails|join:", " }}
+    </li>
+    {% if evaluation.project_owner_phone %}
+      <li>
+        <i>Tél.</i> : {{ evaluation.project_owner_phone }}
+      </li>
+    {% endif %}
   </ul>
 
   <p>
