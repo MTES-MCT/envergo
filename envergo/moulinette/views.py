@@ -232,6 +232,12 @@ class MoulinetteMixin:
     def should_activate_optional_criteria(self):
         return self.request.user.is_staff
 
+    def log_moulinette_event(self, moulinette, **kwargs):
+        export = moulinette.summary()
+        export.update(kwargs)
+        export["url"] = self.request.build_absolute_uri()
+        log_event(self.event_category, self.event_action, self.request, **export)
+
 
 class MoulinetteHome(MoulinetteMixin, FormView):
     template_name = "moulinette/home.html"
@@ -270,12 +276,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/result.html"
 
         return [template_name]
-
-    def log_moulinette_event(self, moulinette, **kwargs):
-        export = moulinette.summary()
-        export.update(kwargs)
-        export["url"] = self.request.build_absolute_uri()
-        log_event(self.event_category, self.event_action, self.request, **export)
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
