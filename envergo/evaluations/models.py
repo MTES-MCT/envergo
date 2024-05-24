@@ -328,9 +328,18 @@ class Evaluation(models.Model):
         return version
 
     def render_content(self):
+        """Render the evaluation as a static HTML document.
+
+        The html is just the main html content, i.e the content that should
+        be inserted in the main `article` html tag in the base.html template.
+        """
         moulinette = self.get_moulinette()
-        template = "evaluation/detail.html"
-        context = {}
+        template = "evaluations/_content.html"
+        context = {
+            "evaluation": self,
+            "moulinette": moulinette,
+        }
+        context.update(moulinette.catalog)
         content = render_to_string(template, context)
         return content
 
