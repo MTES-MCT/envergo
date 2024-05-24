@@ -95,7 +95,10 @@ class EvaluationDetailMixin:
             Evaluation.objects.exclude(moulinette_url="")
             .select_related("request")
             .prefetch_related(
-                Prefetch("criterions", queryset=Criterion.objects.order_by("order"))
+                Prefetch(
+                    "versions",
+                    queryset=EvaluationVersion.objects.order_by("-created_at"),
+                )
             )
         )
         return qs
