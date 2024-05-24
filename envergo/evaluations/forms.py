@@ -26,42 +26,23 @@ class EvaluationFormMixin(forms.Form):
         phone = self.cleaned_data["project_owner_phone"]
         return str(phone)
 
-    def clean(self):
-        """Custom form field validation.
+    def full_clean(self):
+        """Update validation rules depending on user type.
 
-        Some contact fields are removed depending on the user type.
+        Depending on the user type (instructor or petitioner), some fields are required or not.
         """
-        data = super().clean()
+        data = self.data
         user_type = data.get("user_type", None)
+
         if user_type == USER_TYPES.petitioner:
             self.fields["contact_emails"].required = False
-            if "contact_emails" in self._errors:
-                del self._errors["contact_emails"]
-            if "contact_emails" in data:
-                del data["contact_emails"]
-
-            self.fields["contact_phone"].required = False
-            if "contact_phone" in self._errors:
-                del self._errors["contact_phone"]
-            if "contact_phone" in data:
-                del data["contact_phone"]
 
         if user_type == USER_TYPES.instructor:
             send_eval_to_project_owner = data.get("send_eval_to_project_owner", False)
             if not send_eval_to_project_owner:
                 self.fields["project_owner_emails"].required = False
-                if "project_owner_emails" in self._errors:
-                    del self._errors["project_owner_emails"]
-                if "project_owner_emails" in data:
-                    del data["project_owner_emails"]
 
-                self.fields["project_owner_phone"].required = False
-                if "project_owner_phone" in self._errors:
-                    del self._errors["project_owner_phone"]
-                if "project_owner_phone" in data:
-                    del data["project_owner_phone"]
-
-        return data
+        return super().full_clean()
 
 
 REFERENCE_VALIDATOR = rf"^[A-Z0-9]{{{settings.ENVERGO_REFERENCE_LENGTH}}}$"
