@@ -5,6 +5,7 @@ from factory.django import DjangoModelFactory
 from envergo.evaluations.models import (
     Criterion,
     Evaluation,
+    EvaluationVersion,
     RegulatoryNoticeLog,
     Request,
 )
@@ -31,20 +32,29 @@ class EvaluationFactory(DjangoModelFactory):
     contact_md = factory.Faker("text")
 
     @factory.post_generation
-    def criterions(self, create, extracted, **kwargs):
+    def versions(self, create, extracted, **kwargs):
         if not create:
             return
 
         if extracted is not None:
-            for criterion in extracted:
-                self.criterions.add(criterion)
+            for version in extracted:
+                self.versions.add(version)
         else:
-            self.criterions.add(CriterionFactory(evaluation=self))
+            self.versions.add(VersionFactory(evaluation=self))
 
     @factory.lazy_attribute
     def moulinette_url(self):
         moulinette_url = f"http://envergo/?created_surface={self.created_surface}&existing_surface={self.existing_surface}&lng=-1.30933&lat=47.11971"  # noqa
         return moulinette_url
+
+
+class VersionFactory(DjangoModelFactory):
+    class Meta:
+        model = EvaluationVersion
+
+    evaluation = factory.SubFactory(EvaluationFactory)
+    created_by = factory.SubFactory("envergo.users.tests.factories.UserFactory")
+    content = factory.Faker("text")
 
 
 class CriterionFactory(DjangoModelFactory):
