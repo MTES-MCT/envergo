@@ -131,6 +131,13 @@ class EvaluationDetail(
         context = super().get_context_data(**kwargs)
         context["is_map_static"] = True
         context["source"] = "evaluation"
+
+        latest_version = self.object.versions.first()
+        if latest_version:
+            evaluation_content = latest_version.content
+        else:
+            evaluation_content = self.object.render_content()
+        context["evaluation_content"] = evaluation_content
         return context
 
     def get(self, request, *args, **kwargs):
