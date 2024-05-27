@@ -23,6 +23,7 @@ from envergo.evaluations.models import (
     EVAL_RESULTS,
     Criterion,
     Evaluation,
+    EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -230,6 +231,20 @@ class EvaluationAdmin(admin.ModelAdmin):
             obj.reference = obj.request.reference
         super().save_model(request, obj, form, change)
 
+        # We want to pro-render the evaluation content and save the result in a new
+        # version.
+        # But since it's a work-in-progress, the indermediate development step is that
+        # we just keep a single version and just override it everytime the evaluation
+        # is updated
+        latest_version = obj.versions.first()
+        evaluation_content = obj.render_content()
+        if latest_version:
+            latest_version.content = evaluation_content
+        else:
+            latest_version = obj.create_version(request.user)
+
+        latest_version.save()
+
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
 
@@ -247,6 +262,12 @@ class EvaluationAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related("request")
             .annotate(nb_versions=Count("versions"))
+            .prefetch_related(
+                Prefetch(
+                    "versions",
+                    queryset=EvaluationVersion.objects.order_by("-created_at"),
+                )
+            )
         )
         return qs
 
