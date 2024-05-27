@@ -35,9 +35,8 @@ def test_search_existing_eval(client, evaluation):
         follow=True,
     )
     assert res.status_code == 200
-
-    content = res.content.decode("utf-8")
-    assert "<h1>Avis réglementaire</h1>" in content
+    redirect_url = res.redirect_chain[0][0]
+    assert redirect_url == f"/avis/{evaluation.reference}/"
 
 
 def test_eval_request_wizard_step_1(client):
