@@ -1,11 +1,17 @@
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils.timezone import get_current_timezone
 
 from envergo.confs.models import Setting
 from envergo.evaluations.models import Request
-from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.evaluations.tests.factories import (
+    EvaluationFactory,
+    RequestFactory,
+    VersionFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -284,3 +290,48 @@ def test_users_can_see_dashboard_menu(user, client):
 
     assert res.status_code == 200
     assert "Tableau de bord" in res.content.decode()
+
+
+def test_eval_detail_shows_version_content(client):
+    """The eval detail page shows the stored evaluation version content."""
+
+    version = VersionFactory(content="This is a version")
+    eval = EvaluationFactory(versions=[version])
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "This is a version" in res.content.decode()
+    assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
+
+
+def test_eval_detail_shows_latest_version_content(client):
+    """The eval detail page shows the most recent version content."""
+
+    tz = get_current_timezone()
+    versions = [
+        VersionFactory(
+            content="This is version 1", created_at=datetime(2024, 1, 1, tzinfo=tz)
+        ),
+        VersionFactory(
+            content="This is version 3", created_at=datetime(2024, 1, 3, tzinfo=tz)
+        ),
+        VersionFactory(
+            content="This is version 2", created_at=datetime(2024, 1, 2, tzinfo=tz)
+        ),
+    ]
+    eval = EvaluationFactory(versions=versions)
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "This is version 3" in res.content.decode()
+
+
+def test_eval_detail_without_versions_renders_content(client):
+    """When there is no existing version, the eval detail page renders the content dynamically."""
+    eval = EvaluationFactory(versions=[])
+    assert eval.versions.count() == 0
+
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
