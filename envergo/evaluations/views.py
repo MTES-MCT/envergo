@@ -9,6 +9,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import Prefetch
 from django.http.response import Http404, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.decorators import method_decorator
@@ -147,18 +148,28 @@ class EvaluationDetail(
         # This is important because the `MoulinetteResult.get` method
         # also calls the `log_moulinette_event` method with different
         # arguments.
-        res = super().get(request, *args, **kwargs)
 
-        # When a tally form is redirected, we use this variable to display
-        # a success message.
-        tally = request.GET.get("tally", "")
-        if tally:
-            messages.success(request, "Nous avons bien reçu votre réponse.")
+        try:
+            self.object = self.get_object()
+            context = self.get_context_data(object=self.object)
+            res = self.render_to_response(context)
+        except Http404:
+            self.object = None
+            context = {"reference": kwargs.get("reference")}
+            res = render(request, "evaluations/not_found.html", context, status=404)
 
-        if not is_request_from_a_bot(request):
-            self.log_moulinette_event(
-                self.moulinette, request_reference=self.object.reference
-            )
+        if self.object:
+
+            # When a tally form is redirected, we use this variable to display
+            # a success message.
+            tally = request.GET.get("tally", "")
+            if tally:
+                messages.success(request, "Nous avons bien reçu votre réponse.")
+
+            if not is_request_from_a_bot(request):
+                self.log_moulinette_event(
+                    self.moulinette, request_reference=self.object.reference
+                )
 
         return res
 
