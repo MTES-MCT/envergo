@@ -6,7 +6,7 @@ from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
@@ -255,6 +255,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         map = self.get_object(request, unquote(object_id))
         context = {
             "map": map,
+            "back_url": reverse("admin:geodata_map_change", args=[object_id]),
         }
         response = TemplateResponse(request, "geodata/admin/map_preview.html", context)
         return response
@@ -300,3 +301,26 @@ class DepartmentAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.defer("geometry")
         return qs
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/preview/",
+                self.admin_site.admin_view(self.map_preview),
+                name="geodata_department_preview",
+            ),
+        ]
+        return custom_urls + urls
+
+    def map_preview(self, request, object_id):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+
+        map = self.get_object(request, unquote(object_id))
+        context = {
+            "map": map,
+            "back_url": reverse("admin:geodata_department_change", args=[object_id]),
+        }
+        response = TemplateResponse(request, "geodata/admin/map_preview.html", context)
+        return response

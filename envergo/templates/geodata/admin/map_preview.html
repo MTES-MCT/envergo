@@ -11,7 +11,7 @@
   <div class="title-line">
     <h1 class="fr-h6">Carte {{ map }}</h1>
     <small>
-      <a href="{% url 'admin:geodata_map_change' map.id %}">Revenir à l'admin</a>
+      <a href="{{ back_url }}">Revenir à l'admin</a>
     </small>
   </div>
 
