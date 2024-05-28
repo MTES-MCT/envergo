@@ -62,7 +62,7 @@ Ainsi, après une simulation, un porteur de projet pourra recevoir une informati
  - liste des actions requises dans le cadre de l'instruction du dossier Loi sur l'eau.
 
 
-### Critère
+### Critère
 
 L'évaluation au titre d'une réglementation nécessite d'évaluer les différents
 critères qui la composent.
