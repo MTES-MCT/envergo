@@ -107,7 +107,7 @@ d'indiquer des informations de contact distinctes.
 
 Certaines réglementations fonctionnent par périmètres, d'autres non.
 
-Si la réglementation fonctionne par périmètre (e.g), alors elle n'est évaluée
+Si la réglementation fonctionne par périmètre (e.g SAGE), alors elle n'est évaluée
 que dans le cas ou le projet se trouve au sein d'un périmètre donné.
 
 
@@ -158,67 +158,33 @@ via des formulaires injectés dans la page présentée à l'utilisateur.
 
 ## Données optionnelles
 
-Dans le simulateur, les admins ont accès à des critères supplémentaires qui
+Dans le simulateur, les admins peuvent activer des critères supplémentaires qui
 resteront invisibles et ne seront pas pris en compte par les utilisateurs.
 
 En revanche, ces critères apparaissent dans les avis réglementaires.
 
 
-## Disponibilité de la Moulinette
-
-Comme la Moulinette nécessite des données géographiques pour fonctionner, elle
-n'est active que dans certains départements tests.
-
-Pour vérifier si la moulinette est active ou non, on effectue une requête
-géographique pour récupérer dans quel département se trouve le projet. On
-considère que la Moulinette est active si les données de contact sont disponibles
-pour ce département.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/models.py#L228-L235
-
-
-## Fonctionnement des évaluateurs
-
-Le calcul des critères se fait en fonction de plusieurs éléments :
-
- - les données par l'utilisateur ;
- - les données géographiques trouvées en base ;
- - éventuellement, le résultat du calcul d'autres critères.
-
-Pour réaliser le calcul des différents critères, on vérifie si le projet se
-trouve dans une zone humide, une zone inondable, une zone Natura 2000, etc.
-
-Ces données sont contenues dans la classe `Map`.
-
-https://github.com/MTES-MCT/envergo/blob/main/envergo/geodata/models.py#L154
-
-Cette classe permet aux admins d'importer des fichiers shapefile. Une carte
-est associée à un type de zone (humide, inondable…) et éventuellement un niveau
-de certitude (zone humide certaine ou zone humide probable…)
-
-Les véritables données géographique sont stockés dans les objets `Zone`. Une
-zone est liée à une carte et contient un polygone.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/geodata/models.py#L202
-
-Comme il serait coûteux d'effectuer une requête géographique en base pour
-chaque critère, on récupère en une seule requête toutes les zones à proximité des
-coordonnées du projet.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/models.py#L153-L162
-
-Note : on récupère aussi les zones proches mais ne contenant pas directement
-les coordonnées du projet parce que ces zones seront potentiellement affichées
-sur les cartes Leaflet dans le template.
-
-
-## Calcul du résultat
+## Calcul du résultat critère
 
 Les évaluateurs fonctionnent de la façon suivante :
 
  - récupération des données nécessaires au calcul ;
  - génération d'un code de résultat unique, e.g `action_requise_dans_doute` ;
  - conversion en code d'affichage de résultat, e.g `action_requise` ;
+
+
+## Résultat d'évaluation
+
+On obtient le résultat d'une réglementation en appliquant une règle de priorité
+aux résultats des critères qui la composent.
+
+Par exemple, si une règlementation à un critère « soumis » et deux critères
+« action requise », le résultat sera « soumis ».
+
+Si une réglementation à un critère « action requise » et un critère « non soumis »,
+le résultat sera « action requise ».
+
+Etc.
 
 
 ## Affichage des résultats
