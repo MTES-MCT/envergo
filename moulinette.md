@@ -3,12 +3,15 @@
 Le simulateur (affectueusement dénommé en interne « la Moulinette ») est un
 composant essentiel d'EnvErgo.
 
-Cette page en dresse une rapide présentation technique.
+Cette page en dresse une rapide présentation technique. Elle est a destination des
+personnes qui veulent acquérir une compréhension technique de son fonctionnement.
 
 
-## Moulinette, gentille moulinette…
+## Description sommaire
 
-La moulinette est un algorithme qui prends en entrée les paramètres d'un projet
+> Moulinette, gentille moulinette…
+
+La moulinette est un algorithme qui prend en entrée les paramètres d'un projet
 d'urbanisation (coordonnées du projet et différentes surfaces) et retourne,
 pour diverses réglementations, si le projet peut être soumis ou non.
 
@@ -18,7 +21,7 @@ Exemples de réglementations :
  - Natura 2000
  - Évaluation environnementale
 
-Chaque réglementation est composée de plusieurs critères.
+Chaque réglementation est évaluée sur plusieurs critères.
 
 Exemples de critères pour la réglementation « Loi sur l'eau » :
 
@@ -40,12 +43,91 @@ réglementation.
 Par exemple, la réglementation « Natura 2000 » dispose d'un critère « IOTA »
 qui sera « soumis » si la réglementation « Loi sur l'eau » est « soumis ».
 
+## Composants individuels
 
-## Données complémentaires
+Pour fonctionner, la Moulinette s'appuie sur un certains nombre de composants.
 
-En fonction des données du projet, la Moulinette peut avoir besoin de données
-complémentaires pour réaliser une évaluation. Ces données seront récupérées
-via des formulaires injectés dans la page présentée à l'utilisateur.
+
+### Réglementation
+
+Une Réglementation est le plus haut niveau d'information que l'on affiche aux
+utilisateurs de la moulinette.
+
+Chaque réglementation configurée est évaluée et reçoit un code de résultat unique,
+ainsi qu'un texte pédagogique associé.
+
+Ainsi, après une simulation, un porteur de projet pourra recevoir une information :
+
+ - Loi sur l'eau -> Action requise
+ - liste des actions requises dans le cadre de l'instruction du dossier Loi sur l'eau.
+
+
+### Critère
+
+L'évaluation au titre d'une réglementation nécessite d'évaluer les différents
+critères qui la composent.
+
+Ainsi, l'évaluation au titre de la réglementation environnementale nécessitent
+d'évaluer les critères :
+
+ - Emprise
+ - Surface plancher
+ - Terrain d'assiette
+ - Camping
+ - Aire de stationnement
+ - etc.
+
+Un critère est la combinaison d'une carte d'activation (la zone géographique où
+le critère doit être évalué) et un évaluateur (cf. ci-dessous).
+
+
+### Évaluateur
+
+Un évaluateur est le code effectif qui réalise le calcul du résultat d'un
+critère.
+
+C'est une classe Python qui effectue un calcul sur les données fournies par
+le formulaire d'évaluation.
+
+Exemple de calcul :
+
+`Si le projet est dans une zone humide référencée ET la surface finale du projet
+est supérieure à 1000 m² ALORS le résultat du critère est SOUMIS.`
+
+
+### Périmètre
+
+Un périmètre est une entité administrative distincte délimitée par une zone
+géographique distincte.
+
+Exemple de périmètre : SAGE Bas Léon
+
+Un périmètre concerne une réglementation, est associé à une carte et permet
+d'indiquer des informations de contact distinctes.
+
+Certaines réglementations fonctionnent par périmètres, d'autres non.
+
+Si la réglementation fonctionne par périmètre (e.g), alors elle n'est évaluée
+que dans le cas ou le projet se trouve au sein d'un périmètre donné.
+
+
+### Config
+
+Certains paramètres de configuration de l'évaluateur sont configurés à l'échelle
+du département. Pour ces éléments, on utilise les objets « Moulinette Config ».
+
+
+### Carte
+
+Dans l'admin, une carte est une zone géographique associée à un nom.
+
+Une carte peut être uniquement une zone géographique (par exemple, pour configurer
+un périmètre) ou une zone typée (e.g une zone humide, une zh potentielle, etc.)
+
+
+### Zone
+
+Une carte est simplement une collection de polygones appelés « zones ».
 
 
 ## Fonctionnement global
@@ -54,22 +136,32 @@ Le calcul de la Moulinette s'effectue en plusieurs étapes :
 
  1. on vérifie si la Moulinette est disponible pour le département du
  projet ;
- 2. on récupère la liste des critères qui doivent être calculés
- individuellement ;
- 3. on récupère la liste des zones dans lesquelles se trouve le projet ;
+ 2. on récupère la liste des périmètres contenant le projet ;
+ 2. on récupère la liste des critères pour lesquels le projet est dans la carte d'activation ;
+ 3. on récupère la liste des zones (zh, zi, etc.) dans lesquelles se trouve le projet ;
  4. on calcule le résultat de l'évaluation pour chaque réglementation
  en fonction des résultats des critères qui la composent.
 
-Il faut donc noter qu'il y a deux étapes avec une requête géographiques :
-la récupération des critères à calculer d'abord, la liste des zones (zone humide,
-zone inondable, zone Natura 2000…) ensuite.
+Il faut donc noter qu'il y a deux étapes d'un point de vue géographique :
+ - d'abord on vérifie quels critères on va devoir évaluer
+ (e.g faut-il calculer le critère LSE > ZH à cet emplacement ?)
+  - ensuite on vérifie l'existence de zones humides, zones inondables, etc. pour
+  réaliser l'évaluation).
 
-Par exemple, on peut configurer la Moulinette de façon à ce que :
 
- 1. le critère `Loi sur l'eau > Zone Inondable` soit évalué sur tout le
- département 44 ;
- 2. la carte des zones inondables définisse certains polygones spécifiques dans
- le département.
+## Données complémentaires
+
+En fonction des données du projet, la Moulinette peut avoir besoin de données
+complémentaires pour réaliser une évaluation. Ces données seront récupérées
+via des formulaires injectés dans la page présentée à l'utilisateur.
+
+
+## Données optionnelles
+
+Dans le simulateur, les admins ont accès à des critères supplémentaires qui
+resteront invisibles et ne seront pas pris en compte par les utilisateurs.
+
+En revanche, ces critères apparaissent dans les avis réglementaires.
 
 
 ## Disponibilité de la Moulinette
@@ -85,27 +177,11 @@ pour ce département.
 https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/models.py#L228-L235
 
 
-## Périmètres réglementaires et activation des critères
-
-Dans certains cas, il n'est tout simplement pas pertinent de calculer un critère
-donné. On doit donc configurer manuellement dans l'admin dans quelles zones
-chaque critère doit être calculé ou non.
-
-Pour ce faire, on utilise les objets `Perimeter` qui permettent d'associer une
-carte et une classe Python héritant de la classe `Criterion`.
-
-Important : les critères peuvent définir une distance d'activation. Par exemple,
-on calcule les critères Natura 2000 si un projet se trouve à moins de 500m d'une
-zone Natura 2000.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/models.py#L196-L212
-
-
-## Calcul des critères individuels
+## Fonctionnement des évaluateurs
 
 Le calcul des critères se fait en fonction de plusieurs éléments :
 
- - les données d'entrées fournies par l'utilisateur ;
+ - les données par l'utilisateur ;
  - les données géographiques trouvées en base ;
  - éventuellement, le résultat du calcul d'autres critères.
 
@@ -136,46 +212,13 @@ les coordonnées du projet parce que ces zones seront potentiellement affichées
 sur les cartes Leaflet dans le template.
 
 
-## Organisation du code
-
-Les données géographique sont définies dans les modèles du module `geodata`.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/geodata/models.py
-
-Les modèles du module `moulinette` contiennent deux classes importantes :
-
- - `Perimeter` décrit plus haut ;
- - `Moulinette` le point d'entrée de l'algorithme.
-
-La classe Moulinette récupère les données nécessaires aux différents calculs,
-mais délègue ensuite ces calculs à des classes héritant de `MoulinetteRegulation`.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/regulations/__init__.py#L9
-
-Chaque `MoulinetteRegulation` récupère à son tour la liste des résultats pour des
-objets héritant de `MoulinetteCriterion`.
-
-https://github.com/MTES-MCT/envergo/blob/2c92d89bc56f2af29f9a6fe3f6e2d10d3e326165/envergo/moulinette/regulations/__init__.py#L146
-
-Chaque réglementation et ses critères sont définies dans un fichier distinct
-du répertoire `regulations`.
-
-
 ## Calcul du résultat
 
-Chaque critère effectue un calcul à partir des données fournies par la Moulinette,
-et renvoie un code de résultat unique.
+Les évaluateurs fonctionnent de la façon suivante :
 
-Par exemple, le critère `Loi sur l'eau > Zone humide` peut retourner les codes
-`action_requise`, `action_requise_proche`, `action_requise_dans_doute`…
-
-Ce code de résultat est ensuite converti en code d'affichage.
-
-Par exemple, les codes `action_requise`, `action_requise_proche`,
-`action_requise_dans_doute` correspondent tous à un résultat « Action requise ».
-
-Il est toutefois nécessaire de distinguer ces codes uniques parce que les
-templates utilisés pour afficher le résultat du critères seront distincts.
+ - récupération des données nécessaires au calcul ;
+ - génération d'un code de résultat unique, e.g `action_requise_dans_doute` ;
+ - conversion en code d'affichage de résultat, e.g `action_requise` ;
 
 
 ## Affichage des résultats
