@@ -18,6 +18,7 @@ from shapely.ops import unary_union
 
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.models import Zone
+from envergo.geodata.utils import get_catchment_area_pixel_values
 from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ class CatchmentAreaDebug(FormView):
             envelope = self.get_envelope(lng, lat)
             context["envelope"] = json.dumps(envelope)
 
-            pixels = self.get_pixel_values(lng, lat)
+            pixels = get_catchment_area_pixel_values(lng, lat)
             if not pixels:
                 return context
 
@@ -154,62 +155,6 @@ class CatchmentAreaDebug(FormView):
             context["value_soumis"] = value_soumis
 
         return context
-
-    def get_pixel_values(self, lng, lat):
-        # It took me a week to come up with the following queries, so here is
-        # a bit of explanation.
-
-        # In the database, we have a raster storing catchment area values for
-        # various coordinates, arranged in a 20x20m grid, and stored in a
-        # Lambert93 projection.
-        # The user provides a lat/lng coordinate, and we want to know the
-        # catchment area at this point.
-
-        # Here is the catch: we don't just want to get the nearest value, since
-        # there can be huge variations from one cell to the other.
-        # So we have to use bilinear interpolaton to "smooth" the values.
-
-        # I couldn't find a way to do this directly in PostGIS, so the actual
-        # interpolation has to be performed in Python. It means we need to
-        # fetch a grid of coordinates / values around the point from the db.
-
-        # The usual raster querying methods ST_Value, ST_NearestValue and
-        # ST_Neighborhood return value from the raster, but not the coordinates.
-        # So we have to use the alternative ST_PixelAsPoints, which converts
-        # the raster values into Point geometries, alongside the associated values.
-
-        # To only get the relevant values, we clip the raster with a bounding box
-        # around our point using ST_Clip(ST_Envelope(ST_Buffer(…
-        pixels = []
-        with connection.cursor() as cursor:
-            query = """
-            SELECT ST_X(geom), ST_Y(geom), val
-            FROM (
-              SELECT
-                (ST_PixelAsPoints(
-                  ST_Clip(
-                    tiles.rast,
-                    envelope
-                  )
-              )).*
-              FROM
-                geodata_catchmentareatile AS tiles
-                CROSS JOIN
-                  ST_Transform(
-                    ST_Point(%s, %s, 4326),
-                    2154
-                ) AS point
-                CROSS JOIN
-                  ST_Envelope(
-                    ST_Buffer(point, 30)
-                  ) AS envelope
-              WHERE
-                ST_Intersects(tiles.rast, envelope)
-              ) points;
-            """
-            cursor.execute(query, [lng, lat])
-            pixels = cursor.fetchall()
-        return pixels
 
     def get_pixel_polygons(self, lng, lat):
         # This next query only exists to gather data for the map display.
