@@ -219,9 +219,9 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         return criterion_map
 
 
-class Ruissellement(CriterionEvaluator):
-    choice_label = "Loi sur l'eau > Ruissellement"
-    slug = "ruissellement"
+class EcoulementSansBV(CriterionEvaluator):
+    choice_label = "Loi sur l'eau > Écoulement EP sans BV"
+    slug = "ecoulement_sans_bv"
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
@@ -240,6 +240,12 @@ class Ruissellement(CriterionEvaluator):
             project_size = "small"
 
         return project_size
+
+
+# This was the old evaluator name
+# it has to stay here for compatibility reasons
+class Ruissellement(EcoulementSansBV):
+    choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
 
 
 class OtherCriteria(CriterionEvaluator):
