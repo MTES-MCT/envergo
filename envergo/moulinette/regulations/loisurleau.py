@@ -1,3 +1,5 @@
+import logging
+
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
@@ -7,6 +9,9 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
 PINK = "#FF9575"
+
+
+logger = logging.getLogger(__name__)
 
 
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
@@ -282,7 +287,13 @@ class EcoulementAvecBV(CriterionEvaluator):
 
         # If we cannot compute the catchment area surface, we have to consider
         # the value is 0
-        surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"]) or 0
+        surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"])
+        if surface is None:
+            surface = 0
+            logger.error(
+                f"Pas de données bassin versant {self.catalog['lng']}, {self.catalog['lat']}"
+            )
+
         total_surface = surface + self.catalog["final_surface"]
 
         data["catchment_surface"] = surface
