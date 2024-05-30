@@ -279,9 +279,14 @@ class EcoulementAvecBV(CriterionEvaluator):
 
     def get_catalog_data(self):
         data = {}
-        surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"])
+
+        # If we cannot compute the catchment area surface, we have to consider
+        # the value is 0
+        surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"]) or 0
+        total_surface = surface + self.catalog["final_surface"]
+
         data["catchment_surface"] = surface
-        data["total_catchment_surface"] = surface + self.catalog["final_surface"]
+        data["total_catchment_surface"] = total_surface
         return data
 
     def get_result_data(self):
