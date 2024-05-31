@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+
+### Create the postgres RASTER extension.
+###
+### Usage:
+###     $ docker-compose -f <environment>.yml (exec |run --rm) postgres create_raster
+
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+working_dir="$(dirname ${0})"
+source "${working_dir}/_sourced/messages.sh"
+
+
+message_welcome "Creating the postgis raster extension for the '${POSTGRES_DB}' database..."
+
+
+export PGHOST="${POSTGRES_HOST}"
+export PGPORT="${POSTGRES_PORT}"
+export PGUSER="${POSTGRES_USER}"
+export PGPASSWORD="${POSTGRES_PASSWORD}"
+export PGDATABASE="${POSTGRES_DB}"
+
+psql -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
+psql -c 'CREATE EXTENSION IF NOT EXISTS postgis_raster;'
+
+
+message_success "Postgis raster extension created for the '${POSTGRES_DB}' database."

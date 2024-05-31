@@ -54,6 +54,22 @@ $ npm install
 $ python manage.py collectstatic
 ```
 
+#### Résoudre l'erreur "raster does not exist"
+
+Dans les versions les plus récentes de postgis, il est nécessaire [d'installer l'extension "raster"](https://docs.djangoproject.com/fr/5.0/ref/contrib/gis/install/postgis/#post-installation).
+Si, lors du `docker-compose up` ci-dessus vous avez ce type d'erreur :
+
+    envergo_postgres  | 2024-05-13 14:35:21.651 UTC [35] ERROR:  type "raster" does not exist at character 118
+
+il vous faudra créer cette extension (dans un autre terminal, avec le `docker-compose up` qui tourne en parallèle) :
+
+```bash
+$ docker-compose run --rm postgres create_raster
+```
+
+puis interrompre et relancer le `docker-compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
+
+
 ### Qualité du code
 
 De nombreux outils sont mis en place pour garantir la qualité et l'homogénéité du code.
