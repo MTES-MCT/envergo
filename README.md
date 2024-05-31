@@ -34,9 +34,14 @@ Pour développer en local, deux solutions :
 
 Il est recommandé de se baser sur la version docker.
 
+
+#### Avec Docker
+
 Pour lancer l'environnement rapidement :
 
 ```bash
+$ git clone … && cd envergo
+$ touch .env
 $ docker-compose build
 $ docker-compose up
 ```
@@ -52,7 +57,25 @@ Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 ```bash
 $ npm install
 $ python manage.py collectstatic
+
 ```
+
+#### En local
+
+```bash
+$ git clone … && cd envergo
+$ touch .env
+$ python -m venv .venv
+$ source .venv/bin/activate
+$ pip install pip-tools
+$ pip-sync requirements/local.txt
+```
+
+Remplir le fichier `.env` avec des valeurs appropriées.
+
+Il est nécessaire d'avoir au préalable configuré un utilisateur dans postgres avec
+les droits de création de base et d'extension.
+
 
 #### Résoudre l'erreur "raster does not exist"
 
@@ -61,13 +84,13 @@ Si, lors du `docker-compose up` ci-dessus vous avez ce type d'erreur :
 
     envergo_postgres  | 2024-05-13 14:35:21.651 UTC [35] ERROR:  type "raster" does not exist at character 118
 
-il vous faudra créer cette extension (dans un autre terminal, avec le `docker-compose up` qui tourne en parallèle) :
+Il vous faudra créer cette extension (dans un autre terminal, avec le `docker-compose up` qui tourne en parallèle) :
 
 ```bash
 $ docker-compose run --rm postgres create_raster
 ```
 
-puis interrompre et relancer le `docker-compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
+Puis interrompre et relancer le `docker-compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
 
 
 ### Qualité du code
@@ -89,6 +112,7 @@ pre-commit install
 ### Intégration continue
 
 L'intégration continue est [réalisée par des actions Github](https://github.com/MTES-MCT/envergo/blob/main/.github/workflows/ci.yml).
+
 
 ## Configurer son environnement
 
@@ -193,9 +217,12 @@ docker-compose run --rm django pytest
 
 Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement, il suffit de pousser de nouveaux commits sur la branche `prod`.
 
+Le déploiement se lancera automatiquement si les actions github sont au vert.
+
 Le point d'entrée se trouve dans le fichier `Procfile`.
 
 Les scripts utilisés sont dans le répertoire `bin`.
+
 
 ### Installation des dépendances Géo sur Scalingo
 
