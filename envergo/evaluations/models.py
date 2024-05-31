@@ -16,7 +16,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
@@ -221,19 +220,6 @@ class Evaluation(models.Model):
         self.rr_mention_html = markdown_to_html(self.rr_mention_md)
         self.moulinette_data = params_from_url(self.moulinette_url)
         super().save(*args, **kwargs)
-
-    def compute_result(self):
-        """Compute evaluation result depending on eval criterions."""
-
-        results = [criterion.result for criterion in self.criterions.all()]
-
-        if CRITERION_RESULTS.soumis in results:
-            result = RESULTS.soumis
-        elif CRITERION_RESULTS.action_requise in results:
-            result = RESULTS.action_requise
-        else:
-            result = RESULTS.non_soumis
-        return result
 
     @property
     def application_number_display(self):
@@ -520,90 +506,6 @@ class EvaluationEmail:
                     logger.warning("Manque l'email de la DREAL pôle Éval Env")
 
         return sorted(list(set(bcc_recipients)))
-
-
-CRITERIONS = Choices(
-    (
-        "rainwater_runoff",
-        "<strong>Impact sur l'écoulement des eaux pluviales</strong><br /> Seuil de déclaration : 1 ha",
-    ),
-    (
-        "flood_zone",
-        "<strong>Impact sur une zone inondable</strong><br /> Seuil de déclaration : 400 m²",
-    ),
-    (
-        "wetland",
-        "<strong>Impact sur une zone humide</strong><br /> Seuil de déclaration : 1 000 m²",
-    ),
-)
-
-
-ACTIONS = Choices(
-    ("surface_lt_1000", "n'impacte pas plus de 1000 m² de zone humide"),
-    ("surface_lt_400", "n'impacte pas plus de 400 m² de zone inondable"),
-    (
-        "runoff_lt_10000",
-        "a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha",
-    ),
-)
-
-
-CRITERION_RESULTS = Choices(
-    ("soumis", _("Seuil franchi")),
-    ("non_soumis", _("Seuil non franchi")),
-    ("action_requise", _("Action requise")),
-    ("non_applicable", _("Non concerné")),
-)
-
-
-class Criterion(models.Model):
-    """A single evaluation item."""
-
-    evaluation = models.ForeignKey(
-        "Evaluation",
-        on_delete=models.CASCADE,
-        verbose_name=_("Evaluation"),
-        related_name="criterions",
-    )
-    order = models.PositiveIntegerField(_("Order"), default=0)
-    result = models.CharField(_("Result"), max_length=32, choices=CRITERION_RESULTS)
-    required_action = models.TextField(
-        _("Required action"), choices=ACTIONS, blank=True
-    )
-    probability = models.IntegerField(
-        _("Probability"),
-        choices=PROBABILITIES,
-        null=True,
-        blank=True,
-    )
-    criterion = models.CharField(_("Criterion"), max_length=128, choices=CRITERIONS)
-    description_md = models.TextField(_("Description"))
-    description_html = models.TextField(_("Description (html)"))
-    map = models.ImageField(_("Map"), null=True, blank=True)
-    legend_md = models.TextField(_("Legend"), blank=True)
-    legend_html = models.TextField(_("Legend (html)"), blank=True)
-
-    class Meta:
-        verbose_name = _("Criterion")
-        verbose_name_plural = _("Criterions")
-        unique_together = [("evaluation", "criterion")]
-
-    def __str__(self):
-        return mark_safe(self.get_criterion_display())
-
-    def save(self, *args, **kwargs):
-        self.description_html = markdown_to_html(self.description_md)
-        self.legend_html = markdown_to_html(self.legend_md)
-        super().save(*args, **kwargs)
-
-    def get_law_code(self):
-        """Return the water law code describing this criterion."""
-
-        return {
-            "rainwater_runoff": "2.1.5.0",
-            "flood_zone": "3.2.2.0",
-            "wetland": "3.3.1.0",
-        }.get(self.criterion)
 
 
 def additional_data_file_format(instance, filename):

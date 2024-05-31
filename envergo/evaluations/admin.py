@@ -20,8 +20,6 @@ from django.utils.translation import gettext_lazy as _
 from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
-    EVAL_RESULTS,
-    Criterion,
     Evaluation,
     EvaluationVersion,
     RecipientStatus,
@@ -94,25 +92,6 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class CriterionAdminForm(forms.ModelForm):
-    pass
-
-
-class CriterionInline(admin.StackedInline):
-    model = Criterion
-    classes = ["collapse"]
-    fields = (
-        "order",
-        "criterion",
-        "result",
-        "required_action",
-        "probability",
-        "description_md",
-        "map",
-        "legend_md",
-    )
-
-
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
     class Media:
@@ -130,7 +109,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         "nb_versions",
     ]
     form = EvaluationAdminForm
-    inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
     search_fields = [
