@@ -4,6 +4,7 @@ from string import ascii_uppercase
 import factory
 from django.contrib.gis.geos import MultiPolygon, Polygon
 from factory import Faker as factory_Faker
+from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
@@ -33,7 +34,7 @@ france_polygon = Polygon(
 france_multipolygon = MultiPolygon([france_polygon])
 
 
-class FuzzyPolygon(factory.fuzzy.BaseFuzzyAttribute):
+class FuzzyPolygon(fuzzy.BaseFuzzyAttribute):
     """Yields random polygon"""
 
     def __init__(self, length=None, **kwargs):
@@ -57,7 +58,7 @@ class FuzzyPolygon(factory.fuzzy.BaseFuzzyAttribute):
         return Polygon([prefix] + coords + [suffix])
 
 
-class FuzzyMultiPolygon(factory.fuzzy.BaseFuzzyAttribute):
+class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
     """Yields random multipolygon"""
 
     def __init__(self, length=None, **kwargs):

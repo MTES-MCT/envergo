@@ -1,8 +1,6 @@
 import pytest
-from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
-from envergo.evaluations.admin import EvaluationAdmin
 from envergo.evaluations.models import (
     Evaluation,
     RegulatoryNoticeLog,
@@ -76,30 +74,6 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
         in res.content.decode()
     )
     assert qs.count() == 1
-
-
-def test_form_validation_without_moulinette_url(form_data):
-    """Test field constraints when moulinette url is not set."""
-
-    del form_data["moulinette_url"]
-
-    admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    EvaluationForm = admin.get_form(request=None, obj=None)
-    form = EvaluationForm(form_data)
-
-    assert not form.is_valid()
-    assert "created_surface" in form.errors
-    assert "contact_md" in form.errors
-
-
-def test_form_validation_contact_field_with_moulinette_url(form_data):
-    """Test field constraints when moulinette url is set."""
-
-    admin = EvaluationAdmin(model=Evaluation, admin_site=AdminSite())
-    EvaluationForm = admin.get_form(request=None, obj=None)
-    form = EvaluationForm(form_data)
-
-    assert form.is_valid()
 
 
 def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):

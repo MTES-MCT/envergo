@@ -196,9 +196,8 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
     def get_evaluations(self):
         user_email = self.request.user.email
-        result_isnull = Q(result__isnull=True)
         url_isnull = Q(moulinette_url="")
-        invalid_evals = result_isnull & url_isnull
+        invalid_evals = url_isnull
 
         evals = (
             Evaluation.objects.filter(contact_emails__contains=[user_email])
