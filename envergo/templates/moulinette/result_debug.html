@@ -18,6 +18,16 @@
       </li>
     </ul>
 
+    {% if total_catchment_surface %}
+      <h2>Bassin versant intercepté</h2>
+
+      <p>Estimation de bassin versant intercepté : {{ total_catchment_surface }} m².</p>
+
+      <p>
+        <a href="{% url '2150_debug' %}?lat={{ lat|stringformat:"f" }}&lng={{ lng|stringformat:"f" }}">Lien vers le démonstrateur BV.</a>
+      </p>
+    {% endif %}
+
     <h2>Périmètres activés</h2>
 
     {% regroup grouped_perimeters by activation_map as map_list %}
