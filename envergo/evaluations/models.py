@@ -148,21 +148,6 @@ class Evaluation(models.Model):
     )
 
     address = models.TextField(_("Address"))
-    created_surface = models.IntegerField(
-        _("Created surface"),
-        help_text=_("In square meters"),
-        null=True,
-        blank=True,
-    )
-    existing_surface = models.IntegerField(
-        _("Existing surface"),
-        null=True,
-        blank=True,
-        help_text=_("In square meters"),
-    )
-    result = models.CharField(
-        _("Result"), max_length=32, choices=EVAL_RESULTS, null=True
-    )
     details_md = models.TextField(
         _("Notice additional mention"),
         blank=True,
@@ -181,11 +166,9 @@ class Evaluation(models.Model):
         ),
     )
     rr_mention_html = models.TextField(_("Regulatory reminder mention"), blank=True)
-    contact_md = models.TextField(_("Contact"), blank=True)
-    contact_html = models.TextField(_("Contact (html)"), blank=True)
 
-    moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
-    moulinette_data = models.JSONField(_("Moulinette metadata"), null=True, blank=True)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=1024)
+    moulinette_data = models.JSONField(_("Moulinette metadata"), null=True)
 
     # Project owner data
     user_type = models.CharField(
@@ -234,7 +217,6 @@ class Evaluation(models.Model):
         return reverse("evaluation_detail", args=[self.reference])
 
     def save(self, *args, **kwargs):
-        self.contact_html = markdown_to_html(self.contact_md)
         self.details_html = markdown_to_html(self.details_md)
         self.rr_mention_html = markdown_to_html(self.rr_mention_md)
         self.moulinette_data = params_from_url(self.moulinette_url)
@@ -651,15 +633,6 @@ class Request(models.Model):
         blank=True,
         max_length=15,
         validators=[application_number_validator],
-    )
-    created_surface = models.IntegerField(
-        _("Created surface"),
-        null=True,
-        blank=True,
-        help_text=_("In square meters"),
-    )
-    existing_surface = models.IntegerField(
-        _("Existing surface"), null=True, blank=True, help_text=_("In square meters")
     )
     project_description = models.TextField(
         _("Project description, comments"), blank=True

@@ -74,22 +74,11 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         initial=generate_reference,
         max_length=64,
     )
-    result = forms.ChoiceField(
-        label=_("Result"),
-        choices=[("", "---")] + EVAL_RESULTS,
-        required=False,
-        help_text=_(
-            "If the result can be computed from criterions, this value will be erased."
-        ),
-    )
 
     def clean(self):
         cleaned_data = super().clean()
 
         moulinette_url = cleaned_data.get("moulinette_url", None)
-        contact_md = cleaned_data.get("contact_md", None)
-        created_surface = cleaned_data.get("created_surface", None)
-
         if moulinette_url:
             parsed_url = urlparse(moulinette_url)
             query = QueryDict(parsed_url.query)
@@ -101,18 +90,6 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
                         self.add_error(
                             "moulinette_url", mark_safe(f"{field} : {error}")
                         )
-
-        if not moulinette_url and not contact_md:
-            msg = _(
-                "If you don't provide a moulinette url, you must provide contact data."
-            )
-            self.add_error("contact_md", msg)
-
-        if not moulinette_url and not created_surface:
-            msg = _(
-                "If you don't provide a moulinette url, the created surface is required."
-            )
-            self.add_error("created_surface", msg)
 
         return cleaned_data
 
@@ -148,7 +125,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         "created_at",
         "has_moulinette_url",
         "application_number",
-        "result",
         "contact_emails",
         "request_link",
         "nb_versions",
@@ -211,18 +187,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             _("Versions"),
             {"fields": ("versions",)},
         ),
-        (
-            _("Legacy regulatory notice data"),
-            {
-                "fields": (
-                    "created_surface",
-                    "existing_surface",
-                    "result",
-                    "contact_md",
-                ),
-                "classes": ("collapse",),
-            },
-        ),
     )
 
     def save_model(self, request, obj, form, change):
@@ -244,17 +208,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             latest_version = obj.create_version(request.user)
 
         latest_version.save()
-
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-
-        # The evaluation result depends on all the criterions, that's why
-        # we have to save them before.
-        # If the moulinette_url is set, thought, the result must be set manually.
-        evaluation = form.instance
-        if not evaluation.moulinette_url and not evaluation.result:
-            evaluation.result = evaluation.compute_result()
-            evaluation.save()
 
     def get_queryset(self, request):
         qs = (
