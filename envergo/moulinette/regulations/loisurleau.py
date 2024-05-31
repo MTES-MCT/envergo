@@ -293,7 +293,7 @@ class EcoulementAvecBV(CriterionEvaluator):
             logger.error(
                 f"Pas de données bassin versant {self.catalog['lng']}, {self.catalog['lat']}"
             )
-
+        surface = round(surface / 500) * 500
         total_surface = surface + self.catalog["final_surface"]
 
         data["catchment_surface"] = surface

@@ -329,7 +329,7 @@ def get_catchment_area(lng, lat):
     if np.isnan(interpolated_area):
         interpolated_area = None
 
-    return interpolated_area
+    return int(interpolated_area)
 
 
 def get_catchment_area_pixel_values(lng, lat):
