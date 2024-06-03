@@ -49,10 +49,10 @@
           </span> m²
         </p>
 
-        <h2 class="fr-h4">Ce que le simulateur EnvErgo pourrait répondre</h2>
+        <h2 class="fr-h4">Ce que le simulateur EnvErgo répond</h2>
 
         <p>
-          Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2.1.5.0. de la Loi sur l'eau, le simulateur répondrait – selon la surface du projet :
+          Pour évaluer si un projet franchit ou non le seuil de 1 ha de la rubrique 2.1.5.0. de la Loi sur l'eau, le simulateur répond – selon la surface du projet :
         </p>
 
         <ul>
@@ -85,12 +85,11 @@
       {% else %}
         {% if form.is_bound %}
           <h2 class="fr-h4">Département non disponible</h2>
+          <p>Le calcul de bassin versant n'est pas encore disponible dans ce département.</p>
         {% else %}
           <h2 class="fr-h4">Essayez notre démonstrateur</h2>
+          <p>Sélectionnez un point sur la carte et lancez la simulation.</p>
         {% endif %}
-        <p>
-          Le démonstrateur n'est disponible que pour les départements suivants : <a href="{% url '2150_debug' %}?lng=-4.03177&lat=48.38986">Finistère (29)</a> et <a href="{% url '2150_debug' %}?lng=5.63161&lat=45.24054">Isère (38)</a>.
-        </p>
       {% endif %}
 
       {% if debug %}
