@@ -1,10 +1,9 @@
 import factory
-from factory import fuzzy
 from factory.django import DjangoModelFactory
 
 from envergo.evaluations.models import (
-    Criterion,
     Evaluation,
+    EvaluationVersion,
     RegulatoryNoticeLog,
     Request,
 )
@@ -24,39 +23,32 @@ class EvaluationFactory(DjangoModelFactory):
     contact_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
 
-    # Legacy data
-    result = "soumis"
-    created_surface = fuzzy.FuzzyInteger(25, 9999)
-    existing_surface = fuzzy.FuzzyInteger(25, 9999)
-    contact_md = factory.Faker("text")
-
     @factory.post_generation
-    def criterions(self, create, extracted, **kwargs):
+    def versions(self, create, extracted, **kwargs):
         if not create:
             return
 
         if extracted is not None:
-            for criterion in extracted:
-                self.criterions.add(criterion)
+            for version in extracted:
+                self.versions.add(version)
         else:
-            self.criterions.add(CriterionFactory(evaluation=self))
+            self.versions.add(VersionFactory(evaluation=self))
 
     @factory.lazy_attribute
     def moulinette_url(self):
-        moulinette_url = f"http://envergo/?created_surface={self.created_surface}&existing_surface={self.existing_surface}&lng=-1.30933&lat=47.11971"  # noqa
+        created_surface = 1500
+        final_surface = 3000
+        moulinette_url = f"http://envergo/?created_surface={created_surface}&final_surface={final_surface}&lng=-1.30933&lat=47.11971"  # noqa
         return moulinette_url
 
 
-class CriterionFactory(DjangoModelFactory):
+class VersionFactory(DjangoModelFactory):
     class Meta:
-        model = Criterion
+        model = EvaluationVersion
 
     evaluation = factory.SubFactory(EvaluationFactory)
-    probability = fuzzy.FuzzyInteger(1, 4)
-    result = "soumis"
-    criterion = "rainwater_runoff"
-    description_md = factory.Faker("text")
-    description_html = factory.Faker("text")
+    created_by = factory.SubFactory("envergo.users.tests.factories.UserFactory")
+    content = factory.Faker("text")
 
 
 class RequestFactory(DjangoModelFactory):

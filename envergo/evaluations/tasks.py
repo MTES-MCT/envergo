@@ -4,7 +4,6 @@ import logging
 import requests
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core import mail
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.serializers.json import Serializer as JSONSerializer
 from django.template.loader import render_to_string
@@ -12,8 +11,7 @@ from django.urls import reverse
 
 from config.celery_app import app
 from envergo.confs.utils import get_setting
-from envergo.evaluations.models import Evaluation, RecipientStatus, Request
-from envergo.users.models import User
+from envergo.evaluations.models import RecipientStatus, Request
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url
 
@@ -74,36 +72,6 @@ def confirm_request_to_requester(request_id, host):
     logger.info("Sending now")
     res = email.send()
     logger.info(f"Sent {res}")
-
-
-@app.task
-def share_evaluation_by_email(evaluation_reference, host, sender_id, emails):
-    user = User.objects.get(id=sender_id)
-    evaluation = Evaluation.objects.get(reference=evaluation_reference)
-    subject = "[EnvErgo] Simulation réglementaire"
-    url = reverse("evaluation_detail", args=[evaluation_reference])
-    evaluation_url = f"https://{host}{url}?utm_medium=email"
-
-    messages = []
-    for email in emails:
-        context = {
-            "sender_email": user.email,
-            "address": evaluation.address,
-            "application_number": evaluation.application_number,
-            "evaluation_url": evaluation_url,
-        }
-        txt_body = render_to_string(
-            "evaluations/emails/share_evaluation_by_email_body.txt", context=context
-        )
-        html_body = render_to_string(
-            "evaluations/emails/share_evaluation_by_email_body.html", context=context
-        )
-        message = EmailMultiAlternatives(subject, txt_body, to=[email])
-        message.attach_alternative(html_body, "text/html")
-        messages.append(message)
-
-    connection = mail.get_connection()
-    connection.send_messages(messages)
 
 
 class BetterJsonSerializer(JSONSerializer):

@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
@@ -1053,7 +1054,7 @@ class Moulinette:
     def additional_form_classes(self):
         """Return the list of forms for additional questions.
 
-        Some criterions need more data to return an answer. Here, we gather all
+        Some criteria need more data to return an answer. Here, we gather all
         the forms to gather this data.
         """
 
@@ -1068,6 +1069,31 @@ class Moulinette:
 
         return forms
 
+    def additional_forms(self):
+        """Get a list of instanciated additional questions forms."""
+
+        form_classes = self.additional_form_classes()
+        forms = []
+        for form_class in form_classes:
+            form = form_class(self.raw_data)
+
+            # Some forms end up with no fields, depending on the project data
+            # so we just skip them
+            if form.fields:
+                forms.append(form)
+        return forms
+
+    def additional_fields(self):
+        """Get a {field_name: field} dict of all additional questions fields."""
+
+        forms = self.additional_forms()
+        fields = OrderedDict()
+        for form in forms:
+            for field in form:
+                if field.name not in fields:
+                    fields[field.name] = field
+        return fields
+
     def optional_form_classes(self):
         """Return the list of forms for optional questions."""
         forms = []
@@ -1079,6 +1105,15 @@ class Moulinette:
                     if form_class and form_class not in forms:
                         forms.append(form_class)
 
+        return forms
+
+    def optional_forms(self):
+        form_classes = self.optional_form_classes()
+        forms = []
+        for form_class in form_classes:
+            form = form_class(self.raw_data)
+            if form.fields:
+                forms.append(form)
         return forms
 
     def summary(self):

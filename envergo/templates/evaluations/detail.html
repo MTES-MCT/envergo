@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% load evaluations static l10n moulinette %}
+
+{% block title %}Avis réglementaire{% endblock %}
+
+{% block article %}{{ evaluation_content|safe }}{% endblock %}
+
+{% block after-content %}
+  <section class="fr-py-8w alt hide-print">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+
+          <h2>Besoin de partager cet avis réglementaire à un contact ?</h2>
+
+          <p>
+            <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+                    data-fr-opened="false"
+                    aria-controls="share-modal"
+                    data-btn="bottom">Partager cette page par email</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_body %}
+  {% include '_share_url_modal.html' with title="Partager cet avis réglementaire" %}
+
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    var DEPARTMENT = "{{ department.department }}";
+    var MAP_TYPE = "Content";  // This is only for analytics purpose
+  </script>
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/map_widget_events.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+{% endblock %}

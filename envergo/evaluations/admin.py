@@ -8,7 +8,7 @@ from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -20,9 +20,8 @@ from django.utils.translation import gettext_lazy as _
 from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin
 from envergo.evaluations.models import (
-    EVAL_RESULTS,
-    Criterion,
     Evaluation,
+    EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
     Request,
@@ -73,22 +72,11 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         initial=generate_reference,
         max_length=64,
     )
-    result = forms.ChoiceField(
-        label=_("Result"),
-        choices=[("", "---")] + EVAL_RESULTS,
-        required=False,
-        help_text=_(
-            "If the result can be computed from criterions, this value will be erased."
-        ),
-    )
 
     def clean(self):
         cleaned_data = super().clean()
 
         moulinette_url = cleaned_data.get("moulinette_url", None)
-        contact_md = cleaned_data.get("contact_md", None)
-        created_surface = cleaned_data.get("created_surface", None)
-
         if moulinette_url:
             parsed_url = urlparse(moulinette_url)
             query = QueryDict(parsed_url.query)
@@ -101,38 +89,7 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
                             "moulinette_url", mark_safe(f"{field} : {error}")
                         )
 
-        if not moulinette_url and not contact_md:
-            msg = _(
-                "If you don't provide a moulinette url, you must provide contact data."
-            )
-            self.add_error("contact_md", msg)
-
-        if not moulinette_url and not created_surface:
-            msg = _(
-                "If you don't provide a moulinette url, the created surface is required."
-            )
-            self.add_error("created_surface", msg)
-
         return cleaned_data
-
-
-class CriterionAdminForm(forms.ModelForm):
-    pass
-
-
-class CriterionInline(admin.StackedInline):
-    model = Criterion
-    classes = ["collapse"]
-    fields = (
-        "order",
-        "criterion",
-        "result",
-        "required_action",
-        "probability",
-        "description_md",
-        "map",
-        "legend_md",
-    )
 
 
 @admin.register(Evaluation)
@@ -147,12 +104,11 @@ class EvaluationAdmin(admin.ModelAdmin):
         "created_at",
         "has_moulinette_url",
         "application_number",
-        "result",
         "contact_emails",
         "request_link",
+        "nb_versions",
     ]
     form = EvaluationAdminForm
-    inlines = [CriterionInline]
     autocomplete_fields = ["request"]
     ordering = ["-created_at"]
     search_fields = [
@@ -160,7 +116,8 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "contact_emails",
     ]
-    readonly_fields = ["reference", "request", "sent_history"]
+    readonly_fields = ["reference", "request", "sent_history", "versions"]
+    actions = ["create_version"]
 
     fieldsets = (
         (
@@ -205,16 +162,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             {"fields": ("rr_mention_md", "sent_history")},
         ),
         (
-            _("Legacy regulatory notice data"),
-            {
-                "fields": (
-                    "created_surface",
-                    "existing_surface",
-                    "result",
-                    "contact_md",
-                ),
-                "classes": ("collapse",),
-            },
+            _("Versions"),
+            {"fields": ("versions",)},
         ),
     )
 
@@ -224,20 +173,38 @@ class EvaluationAdmin(admin.ModelAdmin):
             obj.reference = obj.request.reference
         super().save_model(request, obj, form, change)
 
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
+        # We want to pro-render the evaluation content and save the result in a new
+        # version.
+        # But since it's a work-in-progress, the indermediate development step is that
+        # we just keep a single version and just override it everytime the evaluation
+        # is updated
+        latest_version = obj.versions.first()
+        evaluation_content = obj.render_content()
+        if latest_version:
+            latest_version.content = evaluation_content
+        else:
+            latest_version = obj.create_version(request.user)
 
-        # The evaluation result depends on all the criterions, that's why
-        # we have to save them before.
-        # If the moulinette_url is set, thought, the result must be set manually.
-        evaluation = form.instance
-        if not evaluation.moulinette_url and not evaluation.result:
-            evaluation.result = evaluation.compute_result()
-            evaluation.save()
+        latest_version.save()
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("request")
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related("request")
+            .annotate(nb_versions=Count("versions"))
+            .prefetch_related(
+                Prefetch(
+                    "versions",
+                    queryset=EvaluationVersion.objects.order_by("-created_at"),
+                )
+            )
+        )
         return qs
+
+    @admin.display(description=_("Versions"), ordering="nb_versions")
+    def nb_versions(self, obj):
+        return obj.nb_versions
 
     @admin.display(description=_("Request"), ordering="request")
     def request_link(self, obj):
@@ -429,6 +396,44 @@ class EvaluationAdmin(admin.ModelAdmin):
             },
         )
         return mark_safe(content)
+
+    @admin.display(description=_("Versions"))
+    def versions(self, obj):
+        content = render_to_string(
+            "admin/evaluations/versions.html",
+            {"evaluation": obj, "versions": obj.versions.all()},
+        )
+        return mark_safe(content)
+
+    @admin.action(description=_("Create a new version for this evaluation"))
+    def create_version(self, request, queryset):
+        if queryset.count() > 1:
+            error = _("Please, select one and only one evaluation for this action.")
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        evaluation = queryset[0]
+        try:
+            version = evaluation.create_version(request.user)
+            version.save()
+        except Exception as e:
+            error = _("There was an error creating a new version: %(error)s") % {
+                "error": e
+            }
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        admin_url = reverse(
+            "admin:evaluations_evaluation_change", args=[evaluation.uid]
+        )
+        msg = _(
+            '<a href="%(admin_url)s">The new version for evaluation %(reference)s has been created.</a>'
+        ) % {
+            "admin_url": admin_url,
+            "reference": evaluation.reference,
+        }
+        self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
+        return
 
 
 class RequestFileInline(admin.TabularInline):

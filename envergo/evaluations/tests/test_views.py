@@ -1,11 +1,17 @@
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils.timezone import get_current_timezone
 
 from envergo.confs.models import Setting
 from envergo.evaluations.models import Request
-from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.evaluations.tests.factories import (
+    EvaluationFactory,
+    RequestFactory,
+    VersionFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -35,9 +41,8 @@ def test_search_existing_eval(client, evaluation):
         follow=True,
     )
     assert res.status_code == 200
-
-    content = res.content.decode("utf-8")
-    assert "<h1>Avis réglementaire</h1>" in content
+    redirect_url = res.redirect_chain[0][0]
+    assert redirect_url == f"/avis/{evaluation.reference}/"
 
 
 def test_eval_request_wizard_step_1(client):
@@ -287,47 +292,46 @@ def test_users_can_see_dashboard_menu(user, client):
     assert "Tableau de bord" in res.content.decode()
 
 
-def test_share_evaluation_by_email_form_for_anonymous(client, legacy_eval, mailoutbox):
-    """Anonymous users cannot share by email."""
+def test_eval_detail_shows_version_content(client):
+    """The eval detail page shows the stored evaluation version content."""
 
-    url = legacy_eval.get_absolute_url()
+    version = VersionFactory(content="This is a version")
+    eval = EvaluationFactory(versions=[version])
+    url = eval.get_absolute_url()
     res = client.get(url)
-    content = res.content.decode()
-
-    assert "Partagez cet avis réglementaire" in content
-    assert (
-        '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
-        not in content
-    )
-    assert (
-        '<input type="text" name="emails" class=" fr-input" required disabled id="id_emails">'
-        in content
-    )
-
-    res = client.post(url, data={"emails": "test@example.org"})
-    assert res.status_code == 405  # method not allowed
-    assert len(mailoutbox) == 0
+    assert res.status_code == 200
+    assert "This is a version" in res.content.decode()
+    assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
 
 
-def test_share_evaluation_by_email_form(client, user, legacy_eval, mailoutbox):
-    """Anonymous users cannot share by email."""
+def test_eval_detail_shows_latest_version_content(client):
+    """The eval detail page shows the most recent version content."""
 
-    client.force_login(user)
-
-    url = legacy_eval.get_absolute_url()
+    tz = get_current_timezone()
+    versions = [
+        VersionFactory(
+            content="This is version 1", created_at=datetime(2024, 1, 1, tzinfo=tz)
+        ),
+        VersionFactory(
+            content="This is version 3", created_at=datetime(2024, 1, 3, tzinfo=tz)
+        ),
+        VersionFactory(
+            content="This is version 2", created_at=datetime(2024, 1, 2, tzinfo=tz)
+        ),
+    ]
+    eval = EvaluationFactory(versions=versions)
+    url = eval.get_absolute_url()
     res = client.get(url)
-    content = res.content.decode()
+    assert res.status_code == 200
+    assert "This is version 3" in res.content.decode()
 
-    assert "Partagez cet avis réglementaire" in content
-    assert (
-        '<button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>'
-        in content
-    )
-    assert (
-        '<input type="text" name="emails" class=" fr-input" required id="id_emails">'
-        in content
-    )
 
-    res = client.post(url, data={"emails": "test@example.org"})
-    assert res.status_code == 302
-    assert len(mailoutbox) == 1
+def test_eval_detail_without_versions_renders_content(client):
+    """When there is no existing version, the eval detail page renders the content dynamically."""
+    eval = EvaluationFactory(versions=[])
+    assert eval.versions.count() == 0
+
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
