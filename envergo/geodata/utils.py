@@ -7,20 +7,23 @@ import zipfile
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
+import numpy as np
 import requests
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+from scipy.interpolate import griddata
 
 from envergo.geodata.models import Zone
 
 logger = logging.getLogger(__name__)
 
 EPSG_WGS84 = 4326
+EPSG_LAMB93 = 2154
 
 
 class CeleryDebugStream:
@@ -308,3 +311,79 @@ def fill_polygon_stats():
             npoints = ST_NPoints(geometry::geometry);
         """
         )
+
+
+def get_catchment_area(lng, lat):
+    """Return the catchment area of a point."""
+
+    pixels = get_catchment_area_pixel_values(lng, lat)
+    if not pixels:
+        return None
+
+    lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+    lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
+
+    coords = [(x, y) for x, y, v in pixels]
+    values = [int(v) for x, y, v in pixels]
+    interpolated_area = griddata(coords, values, lamb93_coords, method="linear")[0]
+    if np.isnan(interpolated_area):
+        interpolated_area = None
+
+    return int(interpolated_area)
+
+
+def get_catchment_area_pixel_values(lng, lat):
+    # It took me a week to come up with the following queries, so here is
+    # a bit of explanation.
+
+    # In the database, we have a raster storing catchment area values for
+    # various coordinates, arranged in a 20x20m grid, and stored in a
+    # Lambert93 projection.
+    # The user provides a lat/lng coordinate, and we want to know the
+    # catchment area at this point.
+
+    # Here is the catch: we don't just want to get the nearest value, since
+    # there can be huge variations from one cell to the other.
+    # So we have to use bilinear interpolaton to "smooth" the values.
+
+    # I couldn't find a way to do this directly in PostGIS, so the actual
+    # interpolation has to be performed in Python. It means we need to
+    # fetch a grid of coordinates / values around the point from the db.
+
+    # The usual raster querying methods ST_Value, ST_NearestValue and
+    # ST_Neighborhood return value from the raster, but not the coordinates.
+    # So we have to use the alternative ST_PixelAsPoints, which converts
+    # the raster values into Point geometries, alongside the associated values.
+
+    # To only get the relevant values, we clip the raster with a bounding box
+    # around our point using ST_Clip(ST_Envelope(ST_Buffer(…
+    pixels = []
+    with connection.cursor() as cursor:
+        query = """
+        SELECT ST_X(geom), ST_Y(geom), val
+        FROM (
+            SELECT
+            (ST_PixelAsPoints(
+                ST_Clip(
+                tiles.rast,
+                envelope
+                )
+            )).*
+            FROM
+            geodata_catchmentareatile AS tiles
+            CROSS JOIN
+                ST_Transform(
+                ST_Point(%s, %s, 4326),
+                2154
+            ) AS point
+            CROSS JOIN
+                ST_Envelope(
+                ST_Buffer(point, 30)
+                ) AS envelope
+            WHERE
+            ST_Intersects(tiles.rast, envelope)
+            ) points;
+        """
+        cursor.execute(query, [lng, lat])
+        pixels = cursor.fetchall()
+    return pixels

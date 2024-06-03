@@ -1,0 +1,50 @@
+<p>
+  🔍 Le seuil de 1 ha est entendu comme la surface totale du projet, y compris l'existant, augmentée de l'aire du bassin versant dont il intercepte les écoulements. Ce n'est pas la surface de la parcelle qui est prise en compte, mais bien celle du projet.
+</p>
+
+<p>
+  <strong>Action requise :</strong>
+</p>
+
+<p>Démontrer que le projet {{ criterion.required_action }}.</p>
+
+<p>
+  <strong>Pourquoi cette action est-elle requise ?</strong>
+</p>
+
+{% if catchment_surface >= 10000 %}
+  <p>
+    Au vu de la topographie du terrain environnant le projet, l’aire du bassin versant intercepté est susceptible de dépasser 1 ha.
+  </p>
+{% else %}
+  <p>La surface totale du projet est de {{ final_surface }} m².</p>
+  <p>
+    Au vu de la topographie du terrain environnant le projet, l’aire du bassin versant intercepté est susceptible d’atteindre {{ catchment_surface }} m².
+  </p>
+{% endif %}
+
+<p>
+  La somme de la surface du projet et de l’aire du bassin versant intercepté est donc susceptible de dépasser le seuil de 10 000 m². Dans ce cas, le projet est soumis à la Loi sur l’eau.
+</p>
+
+<p>
+  <strong>Comment l'aire du bassin versant intercepté est-elle calculée ?</strong>
+</p>
+
+<p>
+  Le calcul précis de bassin versant est complexe et ne peut être automatisé. Il se fonde sur la topographie du lieu et la géométrie des bâtiments et aménagements créés par le projet et déjà existants. Ce travail doit être confié à un bureau d'études spécialisé.
+</p>
+
+<p>
+  L’aire du bassin versant intercepté estimée ici provient d’un <a href="https://docs.google.com/presentation/d/1O1Q4Z9Cj00v6gyuvoigPes2yX32vp7n1OMr_IVEU86g/edit#slide=id.g2c106e56dca_0_72"
+    target="_blank"
+    rel="noopener">module de calcul intégré au simulateur EnvErgo</a>. Elle est approximative, et ne prend notamment pas en compte les ouvrages présents qui pourraient intercepter les écoulements en amont. Son rôle est d’identifier les projets de surface inférieure à 1 ha mais dont le bassin versant intercepté serait susceptible d’être important.
+</p>
+
+<p>
+  <strong>Quel impact environnemental ?</strong>
+</p>
+
+<p>
+  Une surface imperméabilisée ne peut plus absorber l'eau pluviale et les écoulements provenant de l'amont. Les conséquences sont une plus grande quantité d'eau concentrée au point de rejet, entraînant une aggravation du risque d'inondation et de pollution.
+</p>

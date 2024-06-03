@@ -1,4 +1,7 @@
+import logging
+
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
@@ -6,6 +9,9 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
 PINK = "#FF9575"
+
+
+logger = logging.getLogger(__name__)
 
 
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
@@ -219,9 +225,9 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         return criterion_map
 
 
-class Ruissellement(CriterionEvaluator):
-    choice_label = "Loi sur l'eau > Ruissellement"
-    slug = "ruissellement"
+class EcoulementSansBV(CriterionEvaluator):
+    choice_label = "Loi sur l'eau > Écoulement EP sans BV"
+    slug = "ecoulement_sans_bv"
 
     CODES = ["soumis", "action_requise", "non_soumis"]
 
@@ -240,6 +246,78 @@ class Ruissellement(CriterionEvaluator):
             project_size = "small"
 
         return project_size
+
+
+# This was the old evaluator name
+# it has to stay here for compatibility reasons
+class Ruissellement(EcoulementSansBV):
+    choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
+
+
+class EcoulementAvecBV(CriterionEvaluator):
+    choice_label = "Loi sur l'eau > Écoulement EP avec BV"
+    slug = "ecoulement_avec_bv"
+
+    CODES = ["soumis", "action_requise_probable_1ha", "action_requise", "non_soumis"]
+
+    CODE_MATRIX = {
+        ("gt_11000", "gt_1ha"): "soumis",
+        ("gt_11000", "gt_7000"): "action_requise_probable_1ha",
+        ("gt_11000", "gt_500"): "action_requise",
+        ("gt_11000", "lt_100"): "non_soumis",
+        ("gt_9000", "gt_1ha"): "soumis",
+        ("gt_9000", "gt_7000"): "action_requise",
+        ("gt_9000", "gt_500"): "action_requise",
+        ("gt_9000", "lt_100"): "non_soumis",
+        ("lt_9000", "gt_1ha"): "soumis",
+        ("lt_9000", "gt_7000"): "non_soumis",
+        ("lt_9000", "gt_500"): "non_soumis",
+        ("lt_9000", "lt_100"): "non_soumis",
+    }
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "action_requise_probable_1ha": RESULTS.action_requise,
+        "action_requise": RESULTS.action_requise,
+        "non_soumis": RESULTS.non_soumis,
+    }
+
+    def get_catalog_data(self):
+        data = {}
+
+        # If we cannot compute the catchment area surface, we have to consider
+        # the value is 0
+        surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"])
+        if surface is None:
+            surface = 0
+            logger.error(
+                f"Pas de données bassin versant {self.catalog['lng']}, {self.catalog['lat']}"
+            )
+        surface = round(surface / 500) * 500
+        total_surface = surface + self.catalog["final_surface"]
+
+        data["catchment_surface"] = surface
+        data["total_catchment_surface"] = total_surface
+        return data
+
+    def get_result_data(self):
+        if self.catalog["final_surface"] >= 10000:
+            final_surface = "gt_1ha"
+        elif self.catalog["final_surface"] >= 7000:
+            final_surface = "gt_7000"
+        elif self.catalog["final_surface"] >= 500:
+            final_surface = "gt_500"
+        else:
+            final_surface = "lt_500"
+
+        if self.catalog["total_catchment_surface"] >= 11000:
+            catchment_surface = "gt_11000"
+        elif self.catalog["total_catchment_surface"] >= 9000:
+            catchment_surface = "gt_9000"
+        else:
+            catchment_surface = "lt_9000"
+
+        return catchment_surface, final_surface
 
 
 class OtherCriteria(CriterionEvaluator):
