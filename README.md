@@ -56,7 +56,8 @@ Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 
 ```bash
 $ npm install
-$ python manage.py collectstatic
+$ npm  run build
+$ docker-compose run --rm django python manage.py collectstatic
 
 ```
 
