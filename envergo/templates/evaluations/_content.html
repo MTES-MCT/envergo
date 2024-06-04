@@ -6,6 +6,13 @@
   {{ evaluation }}
 </p>
 
+<p class="fr-text print-only">
+  Consultable en ligne à <a title="Partager l'avis réglementaire"
+    href="#"
+    target="_blank"
+    rel="noopener external">{{ light_url }}</a>
+</p>
+
 <h2 class="fr-h3">Caractéristiques du projet</h2>
 
 <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
@@ -61,7 +68,7 @@
 
 <div class="fr-alert fr-alert--info fr-mt-3w fr-mb-5w">
   <p>
-    Cet avis est adressé à titre informatif au porteur de projet. Il ne vaut pas position de l’administration. <a href="#liability-info">En savoir plus.</a>
+    Cet avis est adressé à titre informatif au porteur de projet. Il ne vaut pas position de l’administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
 </div>
 
@@ -122,4 +129,10 @@
   <p>
     Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
   </p>
+</div>
+
+<div class="fr-my-5w print-only">
+  <h2>Nous contacter</h2>
+  <p class="fr-text">Pour une question, remarque, suggestion…</p>
+  {% include '_contact_means.html' %}
 </div>

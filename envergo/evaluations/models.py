@@ -295,7 +295,7 @@ class Evaluation(models.Model):
         version = EvaluationVersion(evaluation=self, created_by=author, content=content)
         return version
 
-    def render_content(self):
+    def render_content(self, context={}):
         """Render the evaluation as a static HTML document.
 
         The html is just the main html content, i.e the content that should
@@ -303,10 +303,8 @@ class Evaluation(models.Model):
         """
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
-        context = {
-            "evaluation": self,
-            "moulinette": moulinette,
-        }
+        context["evaluation"] = self
+        context["moulinette"] = moulinette
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
         return content

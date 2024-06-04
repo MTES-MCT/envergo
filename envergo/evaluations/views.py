@@ -43,6 +43,7 @@ from envergo.evaluations.tasks import (
     post_evalreq_to_automation,
 )
 from envergo.moulinette.views import MoulinetteMixin
+from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -132,12 +133,16 @@ class EvaluationDetail(
         context = super().get_context_data(**kwargs)
         context["is_map_static"] = True
         context["source"] = "evaluation"
+        current_url = self.request.build_absolute_uri()
+        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        context["current_url"] = tracked_url
+        context["light_url"] = current_url
 
         latest_version = self.object.versions.first()
         if latest_version:
             evaluation_content = latest_version.content
         else:
-            evaluation_content = self.object.render_content()
+            evaluation_content = self.object.render_content(context=context)
         context["evaluation_content"] = evaluation_content
         return context
 
