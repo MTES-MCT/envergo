@@ -28,13 +28,18 @@
 {% endblock %}
 
 {% block result %}
-
-  <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
-    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-            data-fr-opened="false"
-            aria-controls="share-modal"
-            data-btn="bottom">Partager cette page par email</button>
-  </div>
+  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left hide-print">
+    <li>
+      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+              data-fr-opened="false"
+              aria-controls="share-modal"
+              data-btn="bottom">Partager cette page par email</button>
+    </li>
+    <li>
+      <button class="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn"
+              onclick="window.print();">Imprimer cette simulation</button>
+    </li>
+  </ul>
 
   <h2 class="fr-h3">Réglementations environnementales</h2>
 
@@ -45,16 +50,6 @@
   </p>
 
   {% for regulation in moulinette.regulations %}
-
-    {% if forloop.counter0 != 0 %}
-      <div class="share-btn fr-mt-3w fr-mb-5w hide-print">
-        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill "
-                data-fr-opened="false"
-                aria-controls="share-modal"
-                data-btn="{{ regulation.slug }}">Partager cette page par email</button>
-      </div>
-    {% endif %}
-
     {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
 
   {% endfor %}
