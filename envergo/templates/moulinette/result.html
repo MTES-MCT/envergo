@@ -1,6 +1,6 @@
 {% extends 'moulinette/base_result.html' %}
 
-{% load evaluations static %}
+{% load evaluations static l10n %}
 
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
@@ -56,14 +56,14 @@
     <ul class="fr-mb-3w">
       {% if moulinette.raw_data.created_surface %}
         <li>
-          <strong>Surface nouvellement impactée par le projet :</strong> {{ moulinette.raw_data.created_surface }} m²
+          <strong>Surface nouvellement impactée par le projet :</strong> {{ moulinette.raw_data.created_surface|localize }} m²
           <br />
           <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
         </li>
       {% endif %}
       {% if moulinette.raw_data.existing_surface %}
         <li>
-          <strong>Surface déjà impactée avant le projet :</strong> {{ moulinette.raw_data.existing_surface }} m²
+          <strong>Surface déjà impactée avant le projet :</strong> {{ moulinette.raw_data.existing_surface|localize }} m²
           <br />
           <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
         </li>
@@ -71,7 +71,7 @@
 
       {% if moulinette.raw_data.final_surface %}
         <li>
-          <strong>Surface impactée totale, y compris l'existant :</strong> {{ moulinette.raw_data.final_surface }} m²
+          <strong>Surface impactée totale, y compris l'existant :</strong> {{ moulinette.raw_data.final_surface|localize }} m²
           <br />
           <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
         </li>
