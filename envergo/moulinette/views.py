@@ -313,6 +313,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         current_url = self.request.build_absolute_uri()
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         context["current_url"] = tracked_url
+        context["envergo_url"] = self.request.get_host()
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
