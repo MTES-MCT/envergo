@@ -35,13 +35,47 @@
             aria-controls="share-modal"
             data-btn="bottom">Partager cette page par email</button>
   </div>
+  <div class="print-only">
+    <h2 class="fr-h3">Caractéristiques du projet</h2>
 
+    {% include '_map_snippet.html' with map=moulinette.map map_id="summary" %}
+
+    <ul class="fr-mb-3w">
+      {% if moulinette.raw_data.created_surface %}
+        <li>
+          <strong>Surface nouvellement impactée par le projet :</strong> {{ moulinette.raw_data.created_surface }} m²
+          <br />
+          <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
+        </li>
+      {% endif %}
+      {% if moulinette.raw_data.existing_surface %}
+        <li>
+          <strong>Surface déjà impactée avant le projet :</strong> {{ moulinette.raw_data.existing_surface }} m²
+          <br />
+          <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
+        </li>
+      {% endif %}
+
+      {% if moulinette.raw_data.final_surface %}
+        <li>
+          <strong>Surface impactée totale, y compris l'existant :</strong> {{ moulinette.raw_data.final_surface }} m²
+          <br />
+          <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
+        </li>
+      {% endif %}
+      {% if moulinette.raw_data.is_lotissement %}
+        <li>
+          <strong>Le projet concerne-t-il un lotissement ?</strong> {{ moulinette.raw_data.is_lotissement }}
+        </li>
+      {% endif %}
+    </ul>
+  </div>
   <h2 class="fr-h3">Réglementations environnementales</h2>
 
   {% include 'moulinette/_evaluation_summary.html' %}
 
   <p class="fr-hint-text fr-mb-3w">
-    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info">En savoir plus.</a>
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
 
   {% for regulation in moulinette.regulations %}

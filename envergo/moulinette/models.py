@@ -1180,6 +1180,21 @@ class Moulinette:
             for required_action in regulation.required_actions_interdit():
                 yield required_action
 
+    @property
+    def map(self):
+        """Returns a map to be displayed
+
+        Returns a `envergo.moulinette.regulations.Map` object.
+        This map object will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        return Map(
+            type="criterion",
+            center=self.catalog["coords"],
+            fixed=False,
+            entries=[],
+        )
+
 
 class FakeMoulinette(Moulinette):
     """This is a custom Moulinette subclass used for debugging purpose.
