@@ -358,9 +358,9 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         widget=forms.CheckboxInput,
     )
     nb_emplacements = forms.ChoiceField(
-        label="Nombre d'emplacements ouverts au public",
+        label="Nombre total de places de stationnement",
         help_text="""
-            Cumul autorisé après le 16 mai 2017
+            Comptabiliser tous les emplacements, ouverts au public ou privés.
         """,
         required=True,
         widget=forms.RadioSelect,
@@ -369,6 +369,12 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
             ("gte_50", "50 et plus"),
         ),
     )
+    has_public_emplacement = forms.ChoiceField(
+        label="L'un de ces emplacements est-il ouvert au public ?",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(("public", "Oui"), ("private_only", "Non")),
+    )
 
 
 class AireDeStationnement(CriterionEvaluator):
@@ -376,15 +382,18 @@ class AireDeStationnement(CriterionEvaluator):
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
     CODE_MATRIX = {
-        "0_49": "non_soumis",
-        "gte_50": "cas_par_cas",
+        ("0_49", "private_only"): "non_soumis",
+        ("gte_50", "private_only"): "non_soumis",
+        ("0_49", "public"): "non_soumis",
+        ("gte_50", "public"): "cas_par_cas",
     }
 
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
         nb_emplacements = form.cleaned_data.get("nb_emplacements")
-        return nb_emplacements
+        has_public_emplacement = form.cleaned_data.get("has_public_emplacement")
+        return nb_emplacements, has_public_emplacement
 
 
 class CampingForm(OptionalFormMixin, forms.Form):
