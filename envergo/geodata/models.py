@@ -211,13 +211,34 @@ class RGEAltiDptProcess(models.Model):
             if data_directory is None:
                 raise RuntimeError("Data directory not found in archive")
 
-            output = os.system(
+            _, _, files = next(os.walk(data_directory))
+            nb_data_files = len(files)
+            _, _, files = next(os.walk(output_dir))
+            nb_output_files = len(files)
+            delta_files = nb_output_files - nb_data_files
+            logger.info(
+                f"Found {nb_data_files} data files and {nb_output_files} output files ({delta_files} delta)"
+            )
+            if nb_output_files == nb_data_files:
+                return
+
+            os.system(
                 f"python envergo/utils/bassins_versants/mass_carto_creation.py --input-folder {data_directory} --output-folder {output_dir}"  # noqa
             )
-            if output == 0:
+
+            _, _, files = next(os.walk(data_directory))
+            nb_data_files = len(files)
+            _, _, files = next(os.walk(output_dir))
+            nb_output_files = len(files)
+            delta_files = nb_output_files - nb_data_files
+            if nb_output_files == nb_data_files:
                 self.done = True
                 self.ended_at = timezone.now()
                 self.save()
+            else:
+                logger.warning(
+                    f"Found {nb_data_files} data files and {nb_output_files} output files ({delta_files} delta)"
+                )
 
     @property
     def data_directory_name(self):
