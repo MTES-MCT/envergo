@@ -328,7 +328,10 @@ class RGEAltiDptProcess(models.Model):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Extract the 7z archive to a temporary directory
-            os.system(f"7z x {self.filename} -o{tmpdir}")
+            output = os.system(f"7z x {self.filename} -o{tmpdir}")
+            if output != 0:
+                raise RuntimeError("Failed to extract archive")
+
             data_directory = None
             for root, dirs, files in os.walk(tmpdir):
                 if self.data_directory_name in dirs:
@@ -341,7 +344,7 @@ class RGEAltiDptProcess(models.Model):
             nb_data_files = len(files)
             _, _, files = next(os.walk(output_dir))
             nb_output_files = len(files)
-            delta_files = nb_output_files - nb_data_files
+            delta_files = nb_data_files - nb_output_files
             logger.info(
                 f"Found {nb_data_files} data files and {nb_output_files} output files ({delta_files} delta)"
             )
@@ -359,9 +362,9 @@ class RGEAltiDptProcess(models.Model):
 
             _, _, files = next(os.walk(output_dir))
             nb_output_files = len(files)
-            delta_files = nb_output_files - nb_data_files
+            delta_files = nb_data_files - nb_output_files
             self.processed_files = nb_output_files
-            if nb_output_files == nb_data_files:
+            if nb_data_files == 0:
                 self.done = True
                 self.ended_at = timezone.now()
             else:

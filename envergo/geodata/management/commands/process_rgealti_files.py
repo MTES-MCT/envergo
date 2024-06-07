@@ -72,7 +72,7 @@ class Command(BaseCommand):
         output_dir = options["output_path"]
 
         for dept in PROCESS_ORDER:
-            self.stdout.write(f"Processing dept {dept}")
+            self.stdout.write(f"\n\n\nProcessing dept {dept}")
             process = RGEAltiDptProcess.objects.filter(department=dept).first()
             # if process and process.done:
             #     self.stdout.write(f"Dept {dept} already processed, skipping")
