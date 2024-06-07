@@ -357,10 +357,25 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    nb_emplacements = forms.ChoiceField(
-        label="Nombre total de places de stationnement",
+    has_public_emplacement = forms.ChoiceField(
+        label="Type de stationnement",
         help_text="""
-            Comptabiliser tous les emplacements, ouverts au public ou privés.
+            Privé : attaché à des logements ou réservé à des employés.
+            Mixte : si au moins une place est ouverte au public
+        """,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("public", "Ouvert au public"),
+            ("private", "Privé"),
+            ("mixed", "Mixte"),
+        ),
+    )
+    nb_emplacements = forms.ChoiceField(
+        label="Nombre total d'emplacements",
+        help_text="""
+            Somme des places privées et publiques.
+            Cumul autorisé après le 16 mai 2017
         """,
         required=True,
         widget=forms.RadioSelect,
@@ -369,12 +384,6 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
             ("gte_50", "50 et plus"),
         ),
     )
-    has_public_emplacement = forms.ChoiceField(
-        label="L'un de ces emplacements est-il ouvert au public ?",
-        required=True,
-        widget=forms.RadioSelect,
-        choices=(("public", "Oui"), ("private_only", "Non")),
-    )
 
 
 class AireDeStationnement(CriterionEvaluator):
@@ -382,8 +391,10 @@ class AireDeStationnement(CriterionEvaluator):
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
     CODE_MATRIX = {
-        ("0_49", "private_only"): "non_soumis",
-        ("gte_50", "private_only"): "non_soumis",
+        ("0_49", "private"): "non_soumis",
+        ("gte_50", "private"): "non_soumis",
+        ("0_49", "mixed"): "non_soumis",
+        ("gte_50", "mixed"): "cas_par_cas",
         ("0_49", "public"): "non_soumis",
         ("gte_50", "public"): "cas_par_cas",
     }
