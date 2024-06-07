@@ -219,7 +219,10 @@ class RGEAltiDptProcess(models.Model):
             logger.info(
                 f"Found {nb_data_files} data files and {nb_output_files} output files ({delta_files} delta)"
             )
-            if nb_output_files == nb_data_files:
+
+            self.done = nb_output_files == nb_data_files
+            self.save()
+            if self.done:
                 return
 
             os.system(
