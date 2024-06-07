@@ -1037,6 +1037,16 @@ div.hero-alt {
     text-decoration: underline;
   }
 
+  // display the url of the link
+  a[target=_blank]::after {
+    content: " (" attr(href) ") ";
+    // these styles are necessary to override some dsfr styles
+    mask-size: auto;
+    mask-image: none;
+    background-color: inherit;
+    --icon-size: inherit;
+  }
+
   // Make sure leaflet controls are not printed
   .leaflet-control {
     display: none;

@@ -295,12 +295,14 @@ class Evaluation(models.Model):
         version = EvaluationVersion(evaluation=self, created_by=author, content=content)
         return version
 
-    def render_content(self, context={}):
+    def render_content(self, context=None):
         """Render the evaluation as a static HTML document.
 
         The html is just the main html content, i.e the content that should
         be inserted in the main `article` html tag in the base.html template.
         """
+        context = context or {}
+
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
         context["evaluation"] = self
