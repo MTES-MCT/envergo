@@ -290,3 +290,6 @@ project_admin.min.css
 *.min.js
 
 data.*
+
+### Jetbrain's IDE
+.idea/
