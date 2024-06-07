@@ -632,6 +632,14 @@ class Request(models.Model):
         )
         return evaluation
 
+    def save(self, *args, **kwargs):
+        # do not store project owner emails and phone if the user does not want to send the eval to the project owner
+        if not self.send_eval_to_project_owner:
+            self.project_owner_emails = []
+            self.project_owner_phone = ""
+
+        super().save(*args, **kwargs)
+
 
 def request_file_format(instance, filename):
     _, extension = splitext(filename)

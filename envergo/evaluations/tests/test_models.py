@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 import pytest
 
+from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
@@ -83,3 +84,27 @@ def test_call_to_action_action(moulinette_url):
     evaluation.is_icpe = True
     evaluation.save()
     assert not evaluation.is_eligible_to_self_declaration()
+
+
+def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_eval():
+    request = Request(
+        address="123 rue de la Paix 75000 Paris",
+        project_owner_phone="+33612345678",
+        project_owner_emails=["test@test.com"],
+        send_eval_to_project_owner=False,
+    )
+    request.save()
+    request.refresh_from_db()
+    assert not request.project_owner_phone
+    assert not request.project_owner_emails
+
+    request = Request(
+        address="123 rue de la Paix 75000 Paris",
+        project_owner_phone="+33612345678",
+        project_owner_emails=["test@test.com"],
+        send_eval_to_project_owner=True,
+    )
+    request.save()
+    request.refresh_from_db()
+    assert request.project_owner_phone == "+33612345678"
+    assert request.project_owner_emails == ["test@test.com"]
