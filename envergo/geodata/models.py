@@ -184,6 +184,8 @@ class RGEAltiDptProcess(models.Model):
     )
     filename = models.CharField(_("Filename"), max_length=256, blank=True)
     done = models.BooleanField(_("Done"), default=False)
+    expected_files = models.IntegerField(_("Expected files"), null=True, blank=True)
+    processed_files = models.IntegerField(_("Processed files"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     started_at = models.DateTimeField(_("Date started"), null=True, blank=True)
     ended_at = models.DateTimeField(_("Date ended"), null=True, blank=True)
@@ -221,6 +223,8 @@ class RGEAltiDptProcess(models.Model):
             )
 
             self.done = nb_output_files == nb_data_files
+            self.expected_files = nb_data_files
+            self.processed_files = nb_output_files
             self.save()
             if self.done:
                 return
@@ -229,19 +233,18 @@ class RGEAltiDptProcess(models.Model):
                 f"python envergo/utils/bassins_versants/mass_carto_creation.py --input-folder {data_directory} --output-folder {output_dir}"  # noqa
             )
 
-            _, _, files = next(os.walk(data_directory))
-            nb_data_files = len(files)
             _, _, files = next(os.walk(output_dir))
             nb_output_files = len(files)
             delta_files = nb_output_files - nb_data_files
+            self.processed_files = nb_output_files
             if nb_output_files == nb_data_files:
                 self.done = True
                 self.ended_at = timezone.now()
-                self.save()
             else:
                 logger.warning(
                     f"Found {nb_data_files} data files and {nb_output_files} output files ({delta_files} delta)"
                 )
+            self.save()
 
     @property
     def data_directory_name(self):

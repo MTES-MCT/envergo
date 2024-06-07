@@ -12,9 +12,21 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.models import Department, Map, Zone
+from envergo.geodata.models import (
+    Department,
+    Map,
+    Parcel,
+    RGEAltiDptProcess,
+    Zone,
+)
 from envergo.geodata.tasks import generate_map_preview, process_map
 from envergo.geodata.utils import count_features, extract_map
+
+
+@admin.register(Parcel)
+class ParcelAdmin(admin.ModelAdmin):
+    list_display = ["commune", "prefix", "section", "order"]
+    search_fields = ["commune", "prefix", "section", "order"]
 
 
 class MapForm(forms.ModelForm):
@@ -327,3 +339,8 @@ class DepartmentAdmin(admin.ModelAdmin):
         }
         response = TemplateResponse(request, "geodata/admin/map_preview.html", context)
         return response
+
+
+@admin.register(RGEAltiDptProcess)
+class ProcessAdmin(admin.ModelAdmin):
+    list_display = ["department", "done", "expected_files", "processed_files"]
