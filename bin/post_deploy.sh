@@ -7,5 +7,6 @@ set -e
 echo ">>> Starting the post_deploy hook"
 
 python manage.py migrate
+python manage.py deploy_environment $SCALINGO_APP_NAME
 
 echo ">>> Leaving the post_deploy hook"
