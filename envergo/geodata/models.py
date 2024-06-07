@@ -185,6 +185,7 @@ class RGEAltiDptProcess(models.Model):
     filename = models.CharField(_("Filename"), max_length=256, blank=True)
     done = models.BooleanField(_("Done"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    started_at = models.DateTimeField(_("Date started"), null=True, blank=True)
     ended_at = models.DateTimeField(_("Date ended"), null=True, blank=True)
 
     class Meta:
@@ -195,8 +196,11 @@ class RGEAltiDptProcess(models.Model):
         """Start the process.
 
         We need to unpack the data archive, run the script, then clean everything up."""
-        with tempfile.TemporaryDirectory() as tmpdir:
 
+        self.started_at = timezone.now()
+        self.save()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
             # Extract the 7z archive to a temporary directory
             os.system(f"7z x {self.filename} -o{tmpdir}")
             data_directory = None
