@@ -210,7 +210,7 @@ class RGEAltiDptProcess(models.Model):
 
             data_directory = None
             for root, dirs, files in os.walk(tmpdir):
-                if self.data_directory_name in dirs:
+                if self.data_directory_name in dirs and "1_DONNEES_LIVRAISON" in root:
                     data_directory = os.path.join(root, self.data_directory_name)
                     break
             if data_directory is None:
