@@ -70,6 +70,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    "envergo.contrib",
     "envergo.users.apps.UsersConfig",
     "envergo.pages",
     "envergo.evaluations",
