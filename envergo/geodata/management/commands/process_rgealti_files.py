@@ -66,12 +66,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("dir_path", type=dir_path)
         parser.add_argument("output_path", type=dir_path)
+        parser.add_argument("department", nargs="*", type=str)
 
     def handle(self, *args, **options):
         alti_files_dir = options["dir_path"]
         output_dir = options["output_path"]
+        departments = options["department"]
 
         for dept in PROCESS_ORDER:
+
+            if departments and dept not in departments:
+                continue
+
             self.stdout.write(f"\n\n\nProcessing dept {dept}")
             process = RGEAltiDptProcess.objects.filter(department=dept).first()
             # if process and process.done:
