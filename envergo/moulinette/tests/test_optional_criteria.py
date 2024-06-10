@@ -85,7 +85,7 @@ def test_users_cannot_see_optional_criterion_additional_question(client):
 # ETQ Admin, je peux consulter une simulation avec un critère optionnel
 def test_admin_see_optional_criterion_result(admin_client):
     url = reverse("moulinette_result")
-    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=gte_50&evalenv_rubrique_41-has_public_emplacement=public"  # noqa
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=gte_50&evalenv_rubrique_41-type_stationnement=public"  # noqa
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 

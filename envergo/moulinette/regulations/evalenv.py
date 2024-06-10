@@ -357,7 +357,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    has_public_emplacement = forms.ChoiceField(
+    type_stationnement = forms.ChoiceField(
         label="Type de stationnement",
         help_text="""
             Privé : attaché à des logements ou réservé à des employés.
@@ -403,8 +403,8 @@ class AireDeStationnement(CriterionEvaluator):
         form = self.get_form()
         form.is_valid()
         nb_emplacements = form.cleaned_data.get("nb_emplacements")
-        has_public_emplacement = form.cleaned_data.get("has_public_emplacement")
-        return nb_emplacements, has_public_emplacement
+        type_stationnement = form.cleaned_data.get("type_stationnement")
+        return nb_emplacements, type_stationnement
 
 
 class CampingForm(OptionalFormMixin, forms.Form):

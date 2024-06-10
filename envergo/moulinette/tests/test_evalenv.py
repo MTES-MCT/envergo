@@ -251,7 +251,7 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
     params = (
         "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
         "&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=0_49"
-        "&evalenv_rubrique_41-has_public_emplacement=public"
+        "&evalenv_rubrique_41-type_stationnement=public"
     )
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
