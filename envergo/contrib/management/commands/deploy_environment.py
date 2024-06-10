@@ -7,7 +7,10 @@ class Command(BaseCommand):
     help = "Set the url of the EnvErgo tool on the new environment."
 
     def add_arguments(self, parser):
-        parser.add_argument("url", nargs=1, type=str)
+        parser.add_argument(
+            "url",
+            help="The url of the new environment.",
+        )
 
     def handle(self, *args, **options):
         if "url" not in options:
