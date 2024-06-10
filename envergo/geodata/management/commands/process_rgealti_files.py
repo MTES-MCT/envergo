@@ -80,9 +80,9 @@ class Command(BaseCommand):
 
             self.stdout.write(f"\n\n\nProcessing dept {dept}")
             process = RGEAltiDptProcess.objects.filter(department=dept).first()
-            # if process and process.done:
-            #     self.stdout.write(f"Dept {dept} already processed, skipping")
-            #     continue
+            if process and process.done:
+                self.stdout.write(f"Dept {dept} already processed, skipping")
+                continue
 
             alti_file_pattern = f"RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D0{dept}_*.7z"
             try:
