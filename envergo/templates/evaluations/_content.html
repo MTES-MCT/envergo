@@ -1,4 +1,4 @@
-{% load evaluations static l10n moulinette %}
+{% load evaluations static moulinette %}
 
 <h1>Avis réglementaire</h1>
 <p class="fr-text--lead">
@@ -37,48 +37,7 @@
   </div>
 </div>
 
-<ul class="fr-mb-3w">
-  <li>
-    <strong>Adresse :</strong> {{ evaluation.address }}
-  </li>
-  {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
-
-  <li>
-    <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²
-    <br />
-    <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-  </li>
-
-  {% if evaluation.moulinette_params.existing_surface %}
-    <li>
-      <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
-    </li>
-  {% endif %}
-
-  {% if evaluation.moulinette_params.final_surface %}
-    <li>
-      <strong>Surface impactée totale, y compris l'existant :</strong> {{ evaluation.moulinette_params.final_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-    </li>
-  {% endif %}
-
-  {% for key, field in moulinette.additional_fields.items %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-
-  {% for form in moulinette.optional_forms %}
-    {% if form.is_valid and form.is_activated %}
-      {% for field in form %}
-        {% if field.name != "activate" %}
-          <li>{% field_summary field %}</li>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endfor %}
-</ul>
+{% include 'evaluations/_specifications.html' with params=evaluation.moulinette_params %}
 
 <div class="fr-alert fr-alert--info fr-mt-3w fr-mb-5w">
   <p>

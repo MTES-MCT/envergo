@@ -56,105 +56,74 @@
 
     <h2 class="fr-h3">Caractéristiques du projet</h2>
     {% include '_map_snippet.html' with map=moulinette.map map_id="summary" %}
+    {% include 'evaluations/_specifications.html' with params=moulinette.raw_data %}
+  </div>
+  <h2 class="fr-h3">Réglementations environnementales</h2>
 
-    <ul class="fr-mb-3w">
-      {% if moulinette.raw_data.created_surface %}
-        <li>
-          <strong>Surface nouvellement impactée par le
-            projet :</strong> {{ moulinette.raw_data.created_surface|localize }} m²
-            <br />
-            <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-          </li>
-        {% endif %}
-        {% if moulinette.raw_data.existing_surface %}
-          <li>
-            <strong>Surface déjà impactée avant le projet :</strong> {{ moulinette.raw_data.existing_surface|localize }} m²
-            <br />
-            <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
-          </li>
-        {% endif %}
+  {% include 'moulinette/_evaluation_summary.html' %}
 
-        {% if moulinette.raw_data.final_surface %}
-          <li>
-            <strong>Surface impactée totale, y compris
-              l'existant :</strong> {{ moulinette.raw_data.final_surface|localize }} m²
-              <br />
-              <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-            </li>
-          {% endif %}
-          {% if moulinette.raw_data.is_lotissement %}
-            <li>
-              <strong>Le projet concerne-t-il un lotissement ?</strong> {{ moulinette.raw_data.is_lotissement }}
-            </li>
-          {% endif %}
-        </ul>
-      </div>
-      <h2 class="fr-h3">Réglementations environnementales</h2>
+  <p class="fr-hint-text fr-mb-3w">
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
+  </p>
 
-      {% include 'moulinette/_evaluation_summary.html' %}
+  {% for regulation in moulinette.regulations %}
+    {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
 
-      <p class="fr-hint-text fr-mb-3w">
-        Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
-      </p>
+  {% endfor %}
 
-      {% for regulation in moulinette.regulations %}
-        {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+  {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
 
-      {% endfor %}
+  <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
+    <p>
+      EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
+    </p>
+    <p>
+      Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
+    </p>
+    <p>
+      Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
+    </p>
+  </div>
 
-      {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
+  <section class="regulation regulation-disabled fr-mb-5w"
+           id="regulation_defrichement">
+    <h2>
+      <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
+    </h2>
+    <p>
+      Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.
+    </p>
+  </section>
 
-      <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
-        <p>
-          EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets.
-        </p>
-        <p>
-          Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
-        </p>
-        <p>
-          Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
-        </p>
-      </div>
+{% endblock %}
 
-      <section class="regulation regulation-disabled fr-mb-5w"
-               id="regulation_defrichement">
-        <h2>
-          <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
-        </h2>
-        <p>
-          Cette réglementation sera prochainement prise en compte dans EnvErgo.
-          Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en priorité</a>.
-        </p>
-      </section>
+{% block bottom_alt %}
+  <h2>Besoin de partager cette simulation à un contact ?</h2>
 
-    {% endblock %}
+  <p>
+    <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+            data-fr-opened="false"
+            aria-controls="share-modal"
+            data-btn="bottom">Partager cette page par email</button>
+  </p>
+  <p>
+    Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.
+  </p>
+{% endblock %}
 
-    {% block bottom_alt %}
-      <h2>Besoin de partager cette simulation à un contact ?</h2>
+{% block extra_body %}
+  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' %}
+  {% if display_feedback_form %}
+    {% include 'analytics/_feedback_modal_useful.html' %}
+    {% include 'analytics/_feedback_modal_useless.html' %}
+  {% endif %}
+{% endblock %}
 
-      <p>
-        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-                data-fr-opened="false"
-                aria-controls="share-modal"
-                data-btn="bottom">Partager cette page par email</button>
-      </p>
-      <p>
-        Le destinataire pourra consulter cette page web avec les mêmes caractéristiques de projet et les mêmes résultats de simulation.
-      </p>
-    {% endblock %}
-
-    {% block extra_body %}
-      {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' %}
-      {% if display_feedback_form %}
-        {% include 'analytics/_feedback_modal_useful.html' %}
-        {% include 'analytics/_feedback_modal_useless.html' %}
-      {% endif %}
-    {% endblock %}
-
-    {% block extra_js %}
-      {{ block.super }}
-      <script>var DEPARTMENT = "{{ moulinette.department.department }}";</script>
-      <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
-      <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
-      <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
-    {% endblock %}
+{% block extra_js %}
+  {{ block.super }}
+  <script>var DEPARTMENT = "{{ moulinette.department.department }}";</script>
+  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+{% endblock %}
