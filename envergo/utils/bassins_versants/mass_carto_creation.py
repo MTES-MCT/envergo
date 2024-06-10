@@ -44,7 +44,7 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
     for file in tqdm(os.listdir(input_folder)):
         info = get_carto_info(f"{input_folder}/{file}")
         bottom_left = (info["xllcorner"], info["yllcorner"])
-        ouptut_file = (
+        output_file = (
             "{}/ENVERGO_BASSSIN_VERSANT_FXX_{:04d}_{:04d}_MNT_LAMB93.ASC".format(
                 output_folder,
                 round(bottom_left[0] / 1000),
@@ -52,13 +52,14 @@ def mass_carto_creation(input_folder, output_folder, output_carto_precision=20):
             )
         )
 
-        create_carto(
-            params,
-            f"{input_folder}/{file}",
-            output_carto_precision,
-            ouptut_file,
-            input_folder,
-        )
+        if not os.path.exists(output_file):
+            create_carto(
+                params,
+                f"{input_folder}/{file}",
+                output_carto_precision,
+                output_file,
+                input_folder,
+            )
 
 
 if __name__ == "__main__":
