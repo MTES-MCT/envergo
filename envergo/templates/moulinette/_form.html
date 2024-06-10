@@ -19,7 +19,7 @@
 
   <div id="form-groups">
     <div id="form-group-coords"
-         class="fr-input-group hide-print moulinette-col first-section">
+         class="fr-input-group moulinette-col first-section">
 
       {{ form.lng.as_hidden }}
       {{ form.lat.as_hidden }}
@@ -31,7 +31,7 @@
         l'emplacement du projet.
       </label>
 
-      <div class="ratio-4x3 fr-mt-1w fr-mb-2w">
+      <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w">
         <div class="ratio-content">
           <div class="leaflet-container">
             <div id="map"></div>

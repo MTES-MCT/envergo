@@ -1060,6 +1060,31 @@ div.hero-alt {
   .print-only{
     display: inherit;
   }
+
+  // display the loaded map outside the form for print
+  #moulinette-container {
+    .fr-grid-row {
+      display: block;
+    }
+
+    #form-col {
+      display: block;
+      flex: unset;
+      max-width: 100%;
+
+      * {
+        display: none;
+      }
+
+      #moulinette-form, #form-groups, #form-group-coords, #map-container, #map-container *    {
+        display: inherit;
+      }
+
+      #map-container .leaflet-control-container {
+        display: none;
+      }
+    }
+  }
 }
 
 .fr-header {
