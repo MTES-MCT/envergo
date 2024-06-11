@@ -166,6 +166,9 @@ class CatchmentAreaTile(models.Model):
 
     filename = models.CharField(_("Filename"), max_length=256)
     rast = gis_models.RasterField(_("Data"), srid=2154)
+    copy_to_staging = models.BooleanField(
+        _("Copy to staging?"), help_text=_("Don't touch this please"), default=False
+    )
 
     class Meta:
         verbose_name = _("Catchment area tile")
