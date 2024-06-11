@@ -1,3 +1,4 @@
+from django.conf import settings
 from django_otp.admin import OTPAdminSite
 
 # Exclude those models from the main list, but don't disable the admin module entirely
@@ -69,3 +70,15 @@ class EnvergoAdminSite(OTPAdminSite):
             ]
 
         return apps
+
+    def has_permission(self, request):
+        """Only allows otp-verified users admin access (if activated)."""
+
+        is_authenticated = request.user.is_active and request.user.is_staff
+        is_verified = request.user.is_verified()
+        if settings.ADMIN_OTP_REQUIRED:
+            permission = is_authenticated and is_verified
+        else:
+            permission = is_authenticated
+
+        return permission
