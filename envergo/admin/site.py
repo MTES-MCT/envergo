@@ -1,10 +1,10 @@
-from django import admin
+from django_otp.admin import OTPAdminSite
 
 # Exclude those models from the main list, but don't disable the admin module entirely
 EXCLUDED_MODELS = ("MoulinetteTemplate",)
 
 
-class EnvergoAdminSite(admin.AdminSite):
+class EnvergoAdminSite(OTPAdminSite):
     def get_app_list(self, request, app_label=None):
         """Reorder the apps in the admin site.
 
