@@ -272,6 +272,8 @@ tomli==2.0.1
     #   build
     #   pip-tools
     #   pyproject-hooks
+tqdm==4.66.4
+    # via -r base.txt
 typing-extensions==4.10.0
     # via
     #   -r base.txt

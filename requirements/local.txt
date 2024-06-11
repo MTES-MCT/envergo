@@ -433,8 +433,10 @@ tomli==2.0.1
     #   pytest
 tomlkit==0.12.1
     # via pylint
-tqdm==4.66.1
-    # via djlint
+tqdm==4.66.4
+    # via
+    #   -r base.txt
+    #   djlint
 traitlets==5.9.0
     # via
     #   ipython
