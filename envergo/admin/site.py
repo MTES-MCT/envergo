@@ -1,10 +1,4 @@
-from django.contrib import admin
-from django.contrib.admin.apps import AdminConfig
-
-
-class EnvergoAdminConfig(AdminConfig):
-    default_site = "envergo.admin.EnvergoAdminSite"
-
+from django import admin
 
 # Exclude those models from the main list, but don't disable the admin module entirely
 EXCLUDED_MODELS = ("MoulinetteTemplate",)
