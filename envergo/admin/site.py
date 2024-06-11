@@ -1,11 +1,21 @@
 from django.conf import settings
+from django.contrib import admin
 from django_otp.admin import OTPAdminSite
 
 # Exclude those models from the main list, but don't disable the admin module entirely
 EXCLUDED_MODELS = ("MoulinetteTemplate",)
 
 
-class EnvergoAdminSite(OTPAdminSite):
+# It's a bit wild, but it works!
+# Note: the OTPAdminSite class overrides AdminSite, and only overrides
+# the login form and the permission checking method
+if settings.ADMIN_OTP_REQUIRED:
+    BaseAdminSite = OTPAdminSite
+else:
+    BaseAdminSite = admin.AdminSite
+
+
+class EnvergoAdminSite(BaseAdminSite):
     def get_app_list(self, request, app_label=None):
         """Reorder the apps in the admin site.
 
@@ -70,15 +80,3 @@ class EnvergoAdminSite(OTPAdminSite):
             ]
 
         return apps
-
-    def has_permission(self, request):
-        """Only allows otp-verified users admin access (if activated)."""
-
-        is_authenticated = request.user.is_active and request.user.is_staff
-        is_verified = request.user.is_verified()
-        if settings.ADMIN_OTP_REQUIRED:
-            permission = is_authenticated and is_verified
-        else:
-            permission = is_authenticated
-
-        return permission
