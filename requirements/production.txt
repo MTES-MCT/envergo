@@ -107,7 +107,7 @@ django-localflavor==4.0
     # via -r base.txt
 django-model-utils==4.5.1
     # via -r base.txt
-django-otp==1.5.0
+django-otp[qrcode]==1.5.0
     # via -r base.txt
 django-phonenumber-field[phonenumbers]==7.3.0
     # via -r base.txt
@@ -167,6 +167,10 @@ pycparser==2.22
     # via
     #   -r base.txt
     #   cffi
+pypng==0.20220715.0
+    # via
+    #   -r base.txt
+    #   qrcode
 pyproj==3.6.1
     # via -r base.txt
 pyproject-hooks==1.1.0
@@ -187,6 +191,10 @@ python-stdnum==1.20
     #   django-localflavor
 pytz==2024.1
     # via -r base.txt
+qrcode==7.4.2
+    # via
+    #   -r base.txt
+    #   django-otp
 rcssmin==1.1.1
     # via
     #   -r base.txt
@@ -228,6 +236,7 @@ typing-extensions==4.12.2
     # via
     #   -r base.txt
     #   psycopg
+    #   qrcode
 tzdata==2024.1
     # via
     #   -r base.txt
