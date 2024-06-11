@@ -11,6 +11,8 @@ DO NOT MANUALLY edit the .txt files, only the .in files.
 
 ## How to install a new package
 
+:memo: If you are using docker, you should run these commands in the django container.
+
 ```bash
 cd requirements
 echo "<package name>" >> (base.in|local.in|production.in)
