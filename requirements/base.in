@@ -28,6 +28,7 @@ django-localflavor
 django-anymail[sendinblue]
 crisp-api
 scipy  # Just for interpolation, revome later
+django-otp
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926

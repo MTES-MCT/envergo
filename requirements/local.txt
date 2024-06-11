@@ -103,6 +103,7 @@ django==4.2
     #   django-leaflet
     #   django-localflavor
     #   django-model-utils
+    #   django-otp
     #   django-phonenumber-field
     #   django-redis
     #   django-stubs
@@ -134,6 +135,8 @@ django-leaflet==0.30.0
 django-localflavor==4.0
     # via -r base.txt
 django-model-utils==4.5.1
+    # via -r base.txt
+django-otp==1.5.0
     # via -r base.txt
 django-phonenumber-field[phonenumbers]==7.3.0
     # via -r base.txt
