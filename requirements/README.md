@@ -11,7 +11,7 @@ DO NOT MANUALLY edit the .txt files, only the .in files.
 
 ## How to install a new package
 
-:memo: If you are using docker, you should run these commands in the django container.
+:memo: If you are using docker, you can run these commands in the django container.
 
 ```bash
 cd requirements
@@ -20,6 +20,9 @@ pip-compile base.in
 pip-compile local.in
 pip-compile production.in
 pip-sync (local.txt|production.txt)
+
+# If you are using docker
+docker compose build
 ```
 
 ## How to upgrade ALL packages

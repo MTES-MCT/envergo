@@ -27,9 +27,9 @@ pyproj
 django-localflavor
 django-anymail[sendinblue]
 crisp-api
-scipy  # Just for interpolation, revome later
+scipy  # Just for interpolation, remove later
 faker
+tqdm
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926
-tqdm

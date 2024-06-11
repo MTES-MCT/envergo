@@ -9,7 +9,5 @@ echo ">>> Starting the post_deploy hook"
 python manage.py migrate
 
 python manage.py deploy_environment $APP.$REGION_NAME.scalingo.io
-echo ENV_NAME=$ENV_NAME
-python manage.py anonymize_database $ENV_NAME -y
 
 echo ">>> Leaving the post_deploy hook"
