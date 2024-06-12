@@ -67,3 +67,42 @@ def test_register_view_works(client, mailoutbox):
 
     user.refresh_from_db()
     assert user.is_active
+
+
+def test_user_access_without_otp(settings, user, client):
+    """Frontend views require authentication but no OTP verification."""
+
+    settings.ADMIN_OTP_REQUIRED = True
+    dashboard_url = reverse("dashboard")
+
+    # Make sure this url requires authentication
+    res = client.get(dashboard_url, follow=False)
+    assert res.status_code == 302
+    assert res.url == "/comptes/connexion/?next=/avis/tableau-de-bord/"
+
+    client.force_login(user)
+    res = client.get(dashboard_url, follow=False)
+    assert res.status_code == 200
+
+    request_user = res.context["user"]
+    assert not request_user.is_verified()
+
+
+def test_admin_access_requires_otp(settings, admin_client):
+    """Admin access requires opt verification."""
+    settings.ADMIN_OTP_REQUIRED = True
+    admin_url = reverse("admin:index")
+
+    res = admin_client.get(admin_url, follow=False)
+    assert res.status_code == 302
+    assert res.url == "/admin/login/?next=/admin/"
+
+
+def test_otp_can_be_deactivated(settings, admin_client):
+    """Otp verification can be deactivated."""
+
+    settings.ADMIN_OTP_REQUIRED = False
+    admin_url = reverse("admin:index")
+
+    res = admin_client.get(admin_url, follow=False)
+    assert res.status_code == 200
