@@ -10,4 +10,7 @@ python manage.py migrate
 
 python manage.py deploy_environment $APP.$REGION_NAME.scalingo.io
 
+# for testing only, to be removed
+python manage.py anonymize_database -y
+
 echo ">>> Leaving the post_deploy hook"
