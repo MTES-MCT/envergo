@@ -1,16 +1,21 @@
+from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin.apps import AdminConfig
-
-
-class EnvergoAdminConfig(AdminConfig):
-    default_site = "envergo.admin.EnvergoAdminSite"
-
+from django_otp.admin import OTPAdminSite
 
 # Exclude those models from the main list, but don't disable the admin module entirely
 EXCLUDED_MODELS = ("MoulinetteTemplate",)
 
 
-class EnvergoAdminSite(admin.AdminSite):
+# It's a bit wild, but it works!
+# Note: the OTPAdminSite class overrides AdminSite, and only overrides
+# the login form and the permission checking method
+if settings.ADMIN_OTP_REQUIRED:
+    BaseAdminSite = OTPAdminSite
+else:
+    BaseAdminSite = admin.AdminSite
+
+
+class EnvergoAdminSite(BaseAdminSite):
     def get_app_list(self, request, app_label=None):
         """Reorder the apps in the admin site.
 
