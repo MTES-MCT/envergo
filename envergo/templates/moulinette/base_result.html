@@ -22,7 +22,6 @@
       </p>
 
       <h2 class="fr-h3">Caractéristiques du projet</h2>
-      {% include 'evaluations/_specifications.html' with params=moulinette.raw_data %}
     </div>
     <div class="fr-grid-row fr-grid-row--gutters">
 
@@ -36,6 +35,8 @@
           {% block extra-form-col %}{% endblock %}
         {% endblock %}
       </div>
+
+      <div class="print-only">{% include 'evaluations/_specifications.html' with params=moulinette.raw_data %}</div>
 
       <article id="content-col" class="fr-col-lg-7 fr-col-xl-8">
         {% block top_result %}{% endblock %}

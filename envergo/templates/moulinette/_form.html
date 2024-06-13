@@ -30,14 +30,15 @@
         Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
         l'emplacement du projet.
       </label>
-
-      <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w">
-        <div class="ratio-content">
-          <div class="leaflet-container">
-            <div id="map"></div>
+      <figure class="fr-content-media">
+        <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w">
+          <div class="ratio-content">
+            <div class="leaflet-container">
+              <div id="map"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </figure>
 
       {% if form.lat.errors or form.lng.errors %}
         <p class="fr-error-text">

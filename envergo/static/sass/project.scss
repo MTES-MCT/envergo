@@ -1076,7 +1076,7 @@ div.hero-alt {
         display: none;
       }
 
-      #moulinette-form, #form-groups, #form-group-coords, #map-container, #map-container *    {
+      #moulinette-form, #form-groups, #form-group-coords, #form-group-coords > figure , #map-container, #map-container * {
         display: inherit;
       }
 
