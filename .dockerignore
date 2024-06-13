@@ -9,4 +9,7 @@
 .travis.yml
 venv
 .git
-.envs/
+.envs
+.vscode
+.ipython
+.pytest_cache/
