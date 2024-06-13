@@ -82,9 +82,9 @@ class FeedbackForm(forms.Form):
 class FeedbackFormUseful(FeedbackForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields[
-            "message"
-        ].label = "Une chose que nous pourrions tout de même améliorer ?"
+        self.fields["message"].label = (
+            "Une chose que nous pourrions tout de même améliorer ?"
+        )
         self.fields["message"].widget.attrs["placeholder"] = ""
 
 

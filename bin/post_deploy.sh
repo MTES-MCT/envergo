@@ -8,4 +8,7 @@ echo ">>> Starting the post_deploy hook"
 
 python manage.py migrate
 
+python manage.py deploy_environment $APP.$REGION_NAME.scalingo.io
+
+
 echo ">>> Leaving the post_deploy hook"
