@@ -142,7 +142,7 @@ class EvaluationDetail(
         if latest_version:
             evaluation_content = latest_version.content
         else:
-            evaluation_content = self.object.render_content(context=context)
+            evaluation_content = self.object.render_content()
         context["evaluation_content"] = evaluation_content
         return context
 

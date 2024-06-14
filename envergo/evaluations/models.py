@@ -23,6 +23,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -295,18 +296,19 @@ class Evaluation(models.Model):
         version = EvaluationVersion(evaluation=self, created_by=author, content=content)
         return version
 
-    def render_content(self, context=None):
+    def render_content(self):
         """Render the evaluation as a static HTML document.
 
         The html is just the main html content, i.e the content that should
         be inserted in the main `article` html tag in the base.html template.
         """
-        context = context or {}
-
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
-        context["evaluation"] = self
-        context["moulinette"] = moulinette
+        context = {
+            "evaluation": self,
+            "moulinette": moulinette,
+            "evaluation_url": f"{get_base_url()}{self.get_absolute_url()}",
+        }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
         return content
