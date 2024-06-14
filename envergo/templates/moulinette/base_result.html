@@ -36,7 +36,9 @@
         {% endblock %}
       </div>
 
-      <div class="print-only">{% include 'evaluations/_specifications.html' with params=moulinette.raw_data %}</div>
+      <div class="print-only">
+        {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address %}
+      </div>
 
       <article id="content-col" class="fr-col-lg-7 fr-col-xl-8">
         {% block top_result %}{% endblock %}

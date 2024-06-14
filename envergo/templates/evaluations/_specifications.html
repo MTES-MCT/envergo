@@ -1,9 +1,9 @@
 {% load l10n moulinette %}
 
 <ul class="fr-mb-3w">
-  {% if evaluation.address %}
+  {% if address %}
     <li>
-      <strong>Adresse :</strong> {{ evaluation.address }}
+      <strong>Adresse :</strong> {{ address }}
     </li>
   {% endif %}
   {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}

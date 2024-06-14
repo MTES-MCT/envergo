@@ -198,7 +198,12 @@ def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
         if res.status_code == 200:
             json = res.json()
             data = json["features"][0]["properties"]
-    except (requests.exceptions.Timeout, KeyError, IndexError):
+    except (
+        requests.exceptions.Timeout,
+        KeyError,
+        IndexError,
+        requests.exceptions.ConnectionError,
+    ):
         pass
 
     return data

@@ -1032,9 +1032,13 @@ div.hero-alt {
     display: none;
   }
 
-  // Underline external links in pdf
-  a[target=_blank] {
+  // Underline links in pdf
+  a {
     text-decoration: underline;
+  }
+
+  a[target=_blank] {
+    color: linktext;
   }
 
   // display the url of the link
@@ -1045,6 +1049,7 @@ div.hero-alt {
     mask-image: none;
     background-color: inherit;
     --icon-size: inherit;
+    display: inherit;
   }
 
   // Make sure leaflet controls are not printed
