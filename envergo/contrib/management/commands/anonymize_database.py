@@ -67,7 +67,7 @@ class Command(BaseCommand):
             exit()
 
         self.anonymize_model(
-            User.objects.filter(is_superuser=False),
+            User.objects.filter(is_staff=False),
             [("email", lambda x: fake.email()), ("name", lambda x: fake.name())],
         )
         self.anonymize_model(
