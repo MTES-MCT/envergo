@@ -102,6 +102,7 @@ def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
             regulation,
             wraps=regulation,
             result=sage,
+            perimeter=Mock(contact_email="sage@example.com"),
             slug="sage",
             do_not_call_in_templates=True,
         ),
@@ -246,6 +247,7 @@ def test_instructor_transmit_n2000_evalenv_soumis(rf, moulinette_url):
         "ddtm_email_test@example.org",
         "ddtm_n2000@example.org",
         "dreal_evalenv@example.org",
+        "sage@example.com",
     ]
 
     body = email.body

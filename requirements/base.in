@@ -30,6 +30,7 @@ crisp-api
 scipy  # Just for interpolation, remove later
 faker
 tqdm
+django-otp[qrcode]
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926

@@ -505,6 +505,24 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la DREAL pôle Éval Env")
 
+        if (
+            evaluation.user_type == USER_TYPES.instructor
+            and evaluation.send_eval_to_project_owner
+            and self.moulinette.sage
+            and self.moulinette.sage.result
+            in (
+                "interdit",
+                "soumis",
+                "action_requise",
+            )
+        ):
+            if self.moulinette.sage.perimeter.contact_email:
+                bcc_recipients.append(self.moulinette.sage.perimeter.contact_email)
+            else:
+                logger.warning(
+                    f"Manque l'email du périmètre de SAGE : {self.moulinette.sage.perimeter.name}"
+                )
+
         return sorted(list(set(bcc_recipients)))
 
 

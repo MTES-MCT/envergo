@@ -1,16 +1,37 @@
-from django.contrib import admin
-from django.contrib.admin.apps import AdminConfig
-
-
-class EnvergoAdminConfig(AdminConfig):
-    default_site = "envergo.admin.EnvergoAdminSite"
-
+from django.conf import settings
+from django.contrib.admin.forms import AdminAuthenticationForm
+from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
 # Exclude those models from the main list, but don't disable the admin module entirely
 EXCLUDED_MODELS = ("MoulinetteTemplate",)
 
 
-class EnvergoAdminSite(admin.AdminSite):
+def get_login_form():
+    """Choose the login form used to authenticate users in the admin site."""
+
+    if settings.ADMIN_OTP_REQUIRED:
+        form = OTPAdminAuthenticationForm
+    else:
+        form = AdminAuthenticationForm
+    return form
+
+
+def get_login_template():
+    """Choose the login template used to authenticate users in the admin site."""
+
+    if settings.ADMIN_OTP_REQUIRED:
+        template = "otp/admin111/login.html"
+    else:
+        template = "admin/login.html"
+    return template
+
+
+class EnvergoAdminSite(OTPAdminSite):
+
+    # We need to dynamically deactivate the otp verification depending on the settings
+    login_form = get_login_form()
+    login_template = get_login_template()
+
     def get_app_list(self, request, app_label=None):
         """Reorder the apps in the admin site.
 
@@ -75,3 +96,15 @@ class EnvergoAdminSite(admin.AdminSite):
             ]
 
         return apps
+
+    def has_permission(self, request):
+        """Only allows otp-verified users admin access (if activated)."""
+
+        is_authenticated = request.user.is_active and request.user.is_staff
+        is_verified = request.user.is_verified()
+        if settings.ADMIN_OTP_REQUIRED:
+            permission = is_authenticated and is_verified
+        else:
+            permission = is_authenticated
+
+        return permission
