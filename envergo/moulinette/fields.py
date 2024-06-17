@@ -19,6 +19,15 @@ def classpath(klass):
     return "{}.{}".format(klass.__module__, klass.__name__)
 
 
+def get_all_evaluators():
+    """Return the list of all available evaluators."""
+
+    evaluators = [
+        (classpath(s), f"{s.choice_label}") for s in get_subclasses(CriterionEvaluator)
+    ]
+    return evaluators
+
+
 # Shamelessly stolen from StackOverflow
 # https://stackoverflow.com/a/3862310/1062495
 def get_subclasses(cls):
@@ -48,7 +57,7 @@ class CriterionEvaluatorChoiceField(models.Field):
     def __init__(self, *args, **kwargs):
         kwargs["max_length"] = 256
         super().__init__(*args, **kwargs)
-        self.choices = self._get_all_evaluators()
+        self.choices = get_all_evaluators()
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
@@ -57,15 +66,6 @@ class CriterionEvaluatorChoiceField(models.Field):
 
     def get_internal_type(self):
         return "CharField"
-
-    def _get_all_evaluators(self):
-        """Return the list of all available evaluators."""
-
-        evaluators = [
-            (classpath(s), f"{s.choice_label}")
-            for s in get_subclasses(CriterionEvaluator)
-        ]
-        return evaluators
 
     def from_db_value(self, value, expression, connection):
         try:

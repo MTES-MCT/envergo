@@ -67,6 +67,8 @@ THIRD_PARTY_APPS = [
     "phonenumber_field",
     "leaflet",
     "localflavor",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
 ]
 
 LOCAL_APPS = [
@@ -79,7 +81,7 @@ LOCAL_APPS = [
     "envergo.moulinette",
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",
-    "envergo.admin.EnvergoAdminConfig",
+    "envergo.admin.config.EnvergoAdminConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -132,6 +134,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -348,3 +351,5 @@ MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", default=None)
 SELF_DECLARATION_FORM_ID = "mDzXgX"
 
 TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
+
+ADMIN_OTP_REQUIRED = False

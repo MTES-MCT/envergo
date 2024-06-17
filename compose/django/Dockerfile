@@ -1,7 +1,4 @@
-ARG PYTHON_VERSION=3.9-slim-bullseye
-
-# define an alias for the specfic python version used in this file.
-FROM python:${PYTHON_VERSION} as python
+FROM docker.io/python:3.12.3-slim-bookworm as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -17,7 +14,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 COPY ./requirements .
 
 # Create Python Dependency and Sub-Dependency Wheels.
-RUN pip wheel --wheel-dir /usr/src/app/wheels  \
+RUN python -m ensurepip --upgrade && pip wheel --wheel-dir /usr/src/app/wheels  \
   -r ${BUILD_ENVIRONMENT}.txt
 
 
@@ -60,7 +57,6 @@ RUN chmod +x /entrypoint
 COPY ./compose/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
-
 
 
 # copy application code to WORKDIR
