@@ -14,13 +14,13 @@ def n2000_criteria(france_map):  # noqa
         CriterionFactory(
             title="Zone humide 44",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.natura2000.ZoneHumide44",
+            evaluator="envergo.moulinette.regulations.natura2000.ZoneHumide",
             activation_map=france_map,
         ),
         CriterionFactory(
             title="Zone inondable 44",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.natura2000.ZoneInondable44",
+            evaluator="envergo.moulinette.regulations.natura2000.ZoneInondable",
             activation_map=france_map,
         ),
         CriterionFactory(
