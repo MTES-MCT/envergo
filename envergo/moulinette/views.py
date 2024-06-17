@@ -342,12 +342,13 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 reverse("moulinette_missing_data")
             )
 
-        lng = moulinette.raw_data.get("lng")
-        lat = moulinette.raw_data.get("lat")
-        if moulinette and lng and lat:
-            address = get_address_from_coords(lng, lat)
-            if address:
-                context["address"] = address
+        if moulinette and moulinette.catalog:
+            lng = moulinette.catalog.get("lng")
+            lat = moulinette.catalog.get("lat")
+            if lng and lat:
+                address = get_address_from_coords(lng, lat)
+                if address:
+                    context["address"] = address
 
         return context
 
