@@ -264,15 +264,15 @@ class EcoulementAvecBV(CriterionEvaluator):
         ("gt_11000", "gt_1ha"): "soumis",
         ("gt_11000", "gt_7000"): "action_requise_probable_1ha",
         ("gt_11000", "gt_500"): "action_requise",
-        ("gt_11000", "lt_100"): "non_soumis",
+        ("gt_11000", "lt_500"): "non_soumis",
         ("gt_9000", "gt_1ha"): "soumis",
         ("gt_9000", "gt_7000"): "action_requise",
         ("gt_9000", "gt_500"): "action_requise",
-        ("gt_9000", "lt_100"): "non_soumis",
+        ("gt_9000", "lt_500"): "non_soumis",
         ("lt_9000", "gt_1ha"): "soumis",
         ("lt_9000", "gt_7000"): "non_soumis",
         ("lt_9000", "gt_500"): "non_soumis",
-        ("lt_9000", "lt_100"): "non_soumis",
+        ("lt_9000", "lt_500"): "non_soumis",
     }
 
     RESULT_MATRIX = {
