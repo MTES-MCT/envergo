@@ -8,6 +8,10 @@ set -exv
 
 echo ">>> Copying catchment area tiles from parent database"
 
+# Scalingo requires you to run this script to update postgres' version
+# Note: dbclient-fetcher installs binary in $HOME/bin
+dbclient-fetcher psql 13
+
 # Clear existing catchment area tile in staging database
 # Watch out! Don't empty $PARENT_DATABASE_URL, it's the production database
 $HOME/bin/psql -d $DATABASE_URL -c "DELETE FROM geodata_catchmentareatile;"
