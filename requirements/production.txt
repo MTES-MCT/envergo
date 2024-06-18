@@ -68,8 +68,6 @@ click-repl==0.3.0
     # via
     #   -r base.txt
     #   celery
-crisp-api==1.1.19
-    # via -r base.txt
 django==4.2.13
     # via
     #   -r base.txt
@@ -206,7 +204,6 @@ redis==5.0.5
 requests==2.32.3
     # via
     #   -r base.txt
-    #   crisp-api
     #   django-anymail
 rjsmin==1.2.1
     # via
