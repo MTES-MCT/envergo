@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +9,7 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import USER_TYPES, Request
 from envergo.evaluations.validators import application_number_validator
+from envergo.geodata.models import Department
 
 
 class EvaluationFormMixin(forms.Form):
@@ -71,6 +73,10 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             """
         },
     )
+    department = forms.CharField(
+        label="Department number",
+        required=False,
+    )
     no_address = forms.BooleanField(
         label=_("This project is not linked to an address"),
         required=False,
@@ -125,6 +131,22 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
                     ),
                 )
 
+        department_input = data.get("department", None)
+        department = (
+            Department.objects.filter(department=department_input)
+            .select_related("moulinette_config")
+            .first()
+        )
+        if not department.is_activated():
+            self.add_error(
+                "department",
+                ValidationError(
+                    "Département non disponible", code="unavailable_department"
+                ),
+            )
+            data["department"] = (
+                department  # adding an error remove the department from cleaned_data, but we need it in the view
+            )
         return data
 
 

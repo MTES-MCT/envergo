@@ -106,6 +106,7 @@
             communeName: val.properties.city,
             citycode: val.properties.citycode,
             coordinates: val.geometry.coordinates,
+            department: val.properties.context?.split(",")[0],
           };
           const event = new CustomEvent('EnvErgo:citycode_selected', { detail: eventData });
           window.dispatchEvent(event);

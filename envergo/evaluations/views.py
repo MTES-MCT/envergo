@@ -278,6 +278,15 @@ class RequestEvalWizardStep1(WizardStepMixin, FormView):
     form_class = WizardAddressForm
     success_url = reverse_lazy("request_eval_wizard_step_2")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_department_available"] = (
+            (not kwargs["form"].has_error("department", code="unavailable_department"))
+            if "form" in kwargs
+            else True
+        )
+        return context
+
 
 class RequestEvalWizardStep2(WizardStepMixin, FormView):
     """Second step of the wizard.

@@ -1,0 +1,15 @@
+{% load pages %}
+
+<div class="fr-alert fr-alert--warning  fr-mb-3w">
+  <p class="fr-alert__title">Département non disponible</p>
+  <p>EnvErgo n'est pas encore disponible dans le département {{ department_name }}.</p>
+  <p>
+    Il est pour l'instant <a href="{% url 'faq_availability_info' %}">disponible dans {% nb_available_depts %} départements</a>
+  </p>
+</div>
+{% include "_department_opt_in.html" %}
+
+<div>
+  <a class="fr-btn fr-btn--secondary fr-fi-arrow-left-line fr-btn--icon-left"
+     href="{% url 'request_eval_wizard_reset' %}">Nouvelle demande d'avis réglementaire</a>
+</div>

@@ -160,6 +160,10 @@ class Department(models.Model):
     def __str__(self):
         return self.get_department_display()
 
+    def is_activated(self):
+        config = getattr(self, "moulinette_config", None)
+        return config and config.is_activated
+
 
 class CatchmentAreaTile(models.Model):
     """A raster tile with catchment area data."""
