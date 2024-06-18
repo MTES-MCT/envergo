@@ -1,0 +1,20 @@
+{% load utils %}
+
+{% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
+
+  {{ field }}
+
+  {% if nest_field_class %}</div>{% endif %}
+
+<label class="fr-label" for="{{ field.id_for_label }}">
+  <span class="label-content">{{ field.label }}</span>
+  {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+</label>
+
+{% if field.errors %}
+  <p class="fr-error-text">
+    ↑
+    {{ field.errors.0 }}
+    ↑
+  </p>
+{% endif %}

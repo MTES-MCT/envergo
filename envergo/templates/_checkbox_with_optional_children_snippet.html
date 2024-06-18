@@ -1,0 +1,11 @@
+{% load utils %}
+
+<div id="form-group-{{ field.html_name }}"
+     class="checkbox-with-optional-children fr-input-group fr-checkbox-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-checkbox-group--error fr-input-group--error{% endif %}">
+
+  {% include '_checkbox_base_snippet.html' %}
+
+  {% for child in children %}
+    <div class="fr-my-3w checkbox-optional-children">{% include '_field_snippet.html' with field=child %}</div>
+  {% endfor %}
+</div>

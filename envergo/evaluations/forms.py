@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
@@ -77,6 +79,10 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         label="Department number",
         required=False,
     )
+    postal_code = forms.CharField(
+        label="Code postal de la commune",
+        help_text="Si le projet se situe sur plusieurs communes indiquer le code postal de la commune principale",
+    )
     no_address = forms.BooleanField(
         label=_("This project is not linked to an address"),
         required=False,
@@ -131,13 +137,37 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
                     ),
                 )
 
+            # override address with postal code if no address is provided
+            postal_code = data.get("postal_code", None)
+            if postal_code:
+                data["address"] = postal_code
+        else:
+            # postal_code is not required if address is provided
+            if "postal_code" in self._errors:
+                del self._errors["postal_code"]
+
+        # first try to get department from api-adresse.data.gouv.fr
         department_input = data.get("department", None)
+        if not department_input:
+            # Then try to export it from postal code
+            postal_code = data.get("postal_code", None)
+            if not postal_code:
+                # then try to get it from the address which have not been picked up in the list
+                # (it can be weirdly formatted)
+                postal_code = self.extract_postal_code(data.get("address", ""))
+
+            if postal_code:
+                department_input = postal_code[:2]
+                if department_input == "97":
+                    # for overseas departments, we need the 3 first digits
+                    department_input = postal_code[:3]
+
         department = (
             Department.objects.filter(department=department_input)
             .select_related("moulinette_config")
             .first()
         )
-        if not department.is_activated():
+        if department and not department.is_activated():
             self.add_error(
                 "department",
                 ValidationError(
@@ -147,7 +177,27 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             data["department"] = (
                 department  # adding an error remove the department from cleaned_data, but we need it in the view
             )
+
+        if not department:
+            self.add_error(
+                None,
+                ValidationError(
+                    "Nous ne parvenons pas à situer votre projet. Merci de vérifier votre saisie.",
+                    code="unknown_department",
+                ),
+            )
+
         return data
+
+    @staticmethod
+    def extract_postal_code(address):
+        # Regular expression pattern to match postal codes in the correct context
+        postal_code_pattern = re.compile(r"\b\d{5}(?!\d)\b")
+        matches = postal_code_pattern.findall(address)
+        if matches:
+            # Returning the last found postal code (in case of multiple matches)
+            return matches[-1]
+        return None
 
 
 class WizardContactForm(EvaluationFormMixin, forms.ModelForm):

@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load utils %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block top-bar %}{% endblock %}
@@ -30,7 +32,7 @@
       {% include '_form_header.html' with form=form %}
 
       {% include '_field_snippet.html' with field=form.address %}
-      {% include '_checkbox_snippet.html' with field=form.no_address %}
+      {% include '_checkbox_with_optional_children_snippet.html' with field=form.no_address children=form.postal_code|to_list %}
       {% include '_field_snippet.html' with field=form.application_number %}
       {% include '_field_snippet.html' with field=form.project_description bottom_help_text=True %}
       {{ form.department.as_hidden }}
