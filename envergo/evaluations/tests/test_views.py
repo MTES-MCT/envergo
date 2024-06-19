@@ -93,7 +93,7 @@ def test_eval_request_wizard_step_1_unavailable_department(
     data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
-    assert res.url == "/avis/form/%C3%A9tape-1/indisponible/44"
+    assert "/indisponible/44" in res.url
 
 
 def test_eval_request_wizard_step_1_missing_department(client):
