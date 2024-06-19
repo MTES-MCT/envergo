@@ -22,9 +22,9 @@ billiard==4.2.0
     # via
     #   -r base.txt
     #   celery
-boto3==1.34.123
+boto3==1.34.124
     # via django-storages
-botocore==1.34.123
+botocore==1.34.124
     # via
     #   boto3
     #   s3transfer
@@ -68,9 +68,7 @@ click-repl==0.3.0
     # via
     #   -r base.txt
     #   celery
-crisp-api==1.1.19
-    # via -r base.txt
-django==4.2
+django==4.2.13
     # via
     #   -r base.txt
     #   django-allauth
@@ -209,7 +207,6 @@ redis==5.0.5
 requests==2.32.3
     # via
     #   -r base.txt
-    #   crisp-api
     #   django-anymail
 rjsmin==1.2.1
     # via

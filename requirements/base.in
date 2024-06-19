@@ -1,4 +1,4 @@
-django<=4.2
+django<4.3
 psycopg[binary]
 urllib3<2
 django-environ
@@ -26,11 +26,10 @@ shapely
 pyproj
 django-localflavor
 django-anymail[sendinblue]
-crisp-api
 scipy  # Just for interpolation, remove later
+django-otp[qrcode]
 faker
 tqdm
-django-otp[qrcode]
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926
