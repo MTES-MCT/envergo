@@ -798,12 +798,6 @@ class Moulinette:
         self.regulations = self.get_regulations()
         self.evaluate()
 
-        log_data = {
-            "raw_data": self.raw_data,
-            "result": self.result_data(),
-        }
-        logger.info(log_data)
-
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
