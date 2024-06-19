@@ -82,13 +82,13 @@
 
 {% for regulation in moulinette.regulations %}
   {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/_self_declaration_cta.html' %}
+  {% endif %}
 {% endfor %}
 
 {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
-
-{% if evaluation.is_eligible_to_self_declaration %}
-  {% include 'evaluations/_self_declaration_cta.html' %}
-{% endif %}
 
 <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
   <p>

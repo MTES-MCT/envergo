@@ -18,6 +18,7 @@
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
+    this.initialLatLng = this.marker.getLatLng();
 
     if (this.options.displayMarker) {
       this.marker.addTo(this.map);
@@ -189,6 +190,10 @@
     }.bind(this));
   };
 
+  MoulinetteMap.prototype.reset = function () {
+    this.setMarkerPosition(this.initialLatLng);
+  };
+
 })(this, L, window._paq);
 
 
@@ -206,6 +211,18 @@
       mapType: MAP_TYPE,
     }
     moulinetteMap = new MoulinetteMap(options);
+  });
+
+  window.addEventListener("pageshow", function (event) {
+    // This event occur when the user navigates back, and the page is
+    // rendered from cache.
+    // In that case, we want to display the initial marker position,
+    // so the widget map and the result maps are in sync.
+    // The "pageshow" event fires after the "load" event, so the map is
+    // already initialized.
+    if (event.persisted && moulinetteMap) {
+      moulinetteMap.reset();
+    }
   });
 
   window.addEventListener('EnvErgo:citycode_selected', function (event) {

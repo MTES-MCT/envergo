@@ -1360,28 +1360,16 @@ main.contrast-bg {
 }
 
 #self-declaration-cta {
-  margin: 1.5rem auto;
-  padding: 1.5rem 0;
-  max-width: 30em;
-  text-align: center;
-  font-style: italic;
-  border-top: 1px solid #E4E4E4;
-  border-bottom: 1px solid #E4E4E4;
+  margin: 3rem auto;
 
-  h2 {
-    margin-bottom: 1rem;
+  div.fr-notice__body {
+    padding-right: 0;
 
-    .icon {
-      font-style: normal;
+    p {
+      font-weight: normal;
+      font-size: 90%;
     }
   }
-
-  .button-with-help {
-    text-align: left;
-    display: inline-block;
-    font-style: normal;
-  }
-
 }
 
 main.demonstrateur_2150 {

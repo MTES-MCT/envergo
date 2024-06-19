@@ -1,4 +1,4 @@
-django<=4.2
+django<4.3
 psycopg[binary]
 urllib3<2
 django-environ
@@ -26,7 +26,6 @@ shapely
 pyproj
 django-localflavor
 django-anymail[sendinblue]
-crisp-api
 scipy  # Just for interpolation, revome later
 django-otp[qrcode]
 
