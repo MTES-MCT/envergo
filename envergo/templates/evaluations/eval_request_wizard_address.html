@@ -21,7 +21,8 @@
       <span class="fr-text--bold">Étape suivante :</span> informations de contact
     </p>
   </div>
-  {% if is_department_available %}
+
+  {% block form %}
     <form action=""
           autocomplete="off"
           method="post"
@@ -51,9 +52,7 @@
       </div>
 
     </form>
-  {% else %}
-    {% include 'evaluations/_unavailable_department.html' with department_name=form.cleaned_data.department %}
-  {% endif %}
+  {% endblock %}
 {% endblock %}
 
 {% block extra_css %}

@@ -7,6 +7,7 @@ from envergo.evaluations.views import (
     Dashboard,
     EvaluationDetail,
     EvaluationSearch,
+    RequestEvalWizardDepartmentUnavailable,
     RequestEvalWizardHome,
     RequestEvalWizardReset,
     RequestEvalWizardStep1,
@@ -45,6 +46,11 @@ urlpatterns = [
                     RedirectView.as_view(
                         pattern_name="request_eval_wizard_step_2", permanent=True
                     ),
+                ),
+                path(
+                    "étape-1/indisponible/<int:department>",
+                    RequestEvalWizardDepartmentUnavailable.as_view(),
+                    name="request_eval_wizard_unavailable_department",
                 ),
                 path(
                     "etape-2/",
