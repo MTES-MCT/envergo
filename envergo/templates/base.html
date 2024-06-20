@@ -54,6 +54,9 @@
       <script>
         var EVENTS_URL = "{% url 'events' %}";
         var CSRF_TOKEN = '{{ csrf_token }}';
+        {% if matomo_custom_url %}
+          var MATOMO_CUSTOM_URL = "{{ matomo_custom_url }}";
+        {% endif %}
       </script>
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
