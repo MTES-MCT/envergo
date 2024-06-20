@@ -40,7 +40,7 @@ EPSG_MERCATOR = 3857
 # XXX rename petitioner to project owner
 USER_TYPES = Choices(
     ("instructor", "Un service instruction urbanisme"),
-    ("petitioner", "Un porteur de projet ou maître d'œuvre"),
+    ("petitioner", "Un porteur de projet ou maître d'oeuvre"),
 )
 
 
