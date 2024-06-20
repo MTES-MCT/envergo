@@ -194,17 +194,20 @@ def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
 
     data = None
     try:
+        logger.info("Requesting ign geocodage api", extra={"lng": lng, "lat": lat})
         res = requests.get(url, timeout=timeout)
         if res.status_code == 200:
             json = res.json()
             data = json["features"][0]["properties"]
     except (
-        requests.exceptions.Timeout,
+        requests.exceptions.RequestException,
         KeyError,
         IndexError,
-        requests.exceptions.ConnectionError,
-    ):
-        pass
+    ) as e:
+        logger.error(
+            "An error occured during the request to ign geocodage api",
+            extra={"exception": e},
+        )
 
     return data
 

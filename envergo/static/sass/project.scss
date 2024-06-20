@@ -1037,12 +1037,12 @@ div.hero-alt {
     text-decoration: underline;
   }
 
-  a[target=_blank] {
+  // for all links but anchors : display in blue with the url in parenthesis
+  a:not([href^="#"]) {
     color: linktext;
   }
 
-  // display the url of the link
-  a[target=_blank]::after {
+  a:not([href^="#"])::after {
     content: " (" attr(href) ") ";
     // these styles are necessary to override some dsfr styles
     mask-size: auto;
@@ -1059,6 +1059,7 @@ div.hero-alt {
 
   // Enforce background color for tags
   .fr-tag {
+    -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 

@@ -347,8 +347,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             lat = moulinette.catalog.get("lat")
             if lng and lat:
                 address = get_address_from_coords(lng, lat)
-                if address:
-                    context["address"] = address
+                context["address"] = address if address else f"{lat}, {lng}"
 
         return context
 
