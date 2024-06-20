@@ -26,8 +26,10 @@ shapely
 pyproj
 django-localflavor
 django-anymail[sendinblue]
-scipy  # Just for interpolation, revome later
+scipy  # Just for interpolation, remove later
 django-otp[qrcode]
+faker
+tqdm
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926
