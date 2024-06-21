@@ -5,6 +5,10 @@
     <li>
       <strong>Adresse :</strong> {{ address }}
     </li>
+  {% elif coords %}
+    <li>
+      <strong>Coordonnées GPS :</strong> {{ coords }}
+    </li>
   {% endif %}
   {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
 
