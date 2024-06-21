@@ -1,4 +1,4 @@
-This empty file is only there to prevent the
+This empty `main.css.map` file is only there to prevent the
 CompressedManifestStaticFilesStorage class to raise an exception during the
 collectstatic command.
 
