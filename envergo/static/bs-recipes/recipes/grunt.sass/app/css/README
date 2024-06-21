@@ -1,0 +1,6 @@
+This empty file is only there to prevent the
+CompressedManifestStaticFilesStorage class to raise an exception during the
+collectstatic command.
+
+The bs-recipes packages have a css file referencing a sourcemapping file that
+does not exists, which was triggering a collectstatic failure.
