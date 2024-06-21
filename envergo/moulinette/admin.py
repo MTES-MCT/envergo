@@ -225,6 +225,12 @@ class MoulinetteConfigForm(forms.ModelForm):
         if "n2000_lotissement_proximity" in self.fields:
             self.fields["n2000_lotissement_proximite"].strip = False
 
+    def clean_criteria_values(self):
+        """Ensure an empty value can be converted to an empty json dict."""
+        value = self.cleaned_data["criteria_values"]
+        value = value or dict()
+        return value
+
 
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):

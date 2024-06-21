@@ -674,7 +674,7 @@ class MoulinetteConfig(models.Model):
     )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
     criteria_values = models.JSONField(
-        "Valeurs des critères", default=dict, null=True, blank=True
+        "Valeurs des critères", default=dict, null=False, blank=True
     )
 
     class Meta:
