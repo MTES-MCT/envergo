@@ -319,7 +319,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
 
         # Url without any query parameters
-        clean_url = self.request.build_absolute_uri(self.request.path)
+        stripped_url = self.request.build_absolute_uri(self.request.path)
         debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")
@@ -354,7 +354,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context["matomo_custom_url"] = missing_data_url
 
         elif moulinette:
-            context["matomo_custom_url"] = clean_url
+            context["matomo_custom_url"] = stripped_url
 
         if moulinette and moulinette.catalog:
             lng = moulinette.catalog.get("lng")
