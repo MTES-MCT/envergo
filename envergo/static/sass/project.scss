@@ -703,8 +703,16 @@ div.leaflet-container {
     }
   }
 
+  // Fix issue with dsfr adding styles to every single links and thus breaking
+  // a lot of stuff.
+  // See https://github.com/GouvernementFR/dsfr/issues/264
   div.leaflet-control-zoom a {
     background-image: unset;
+    background-size: unset;
+    transition: none;
+  }
+
+  div.leaflet-control-layers a {
     background-size: unset;
     transition: none;
   }

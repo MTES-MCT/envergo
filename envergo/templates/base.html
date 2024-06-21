@@ -33,8 +33,7 @@
 
     {% block css %}
       {% compress css %}
-        <link href="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.css' %}"
-              rel="stylesheet">
+        <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
         <link href="{% static '@gouvfr/dsfr/dist/utility/icons/icons.main.css' %}"
               rel="stylesheet">
         <link href="{% static 'css/project.min.css' %}" rel="stylesheet">
@@ -47,11 +46,11 @@
 
       <script defer
               type="module"
-              src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.module.min.js' %}"></script>
+              src="{% static '@gouvfr/dsfr/dist/dsfr.module.min.js' %}"></script>
       <script defer
               type="text/javascript"
               nomodule
-              src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.nomodule.min.js' %}"></script>
+              src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}"></script>
       <script>
         var EVENTS_URL = "{% url 'events' %}";
         var CSRF_TOKEN = '{{ csrf_token }}';
