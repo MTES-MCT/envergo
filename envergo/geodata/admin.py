@@ -275,6 +275,9 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
     readonly_fields = ["map", "created_at", "area", "npoints"]
     list_filter = ["map__map_type", "map__data_type"]
 
+    # Prevent an expensive count query
+    show_full_result_count = False
+
     @admin.display(description=_("Data type"))
     def map_type(self, obj):
         return obj.map.get_map_type_display()
