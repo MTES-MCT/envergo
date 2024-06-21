@@ -3,10 +3,11 @@
   <div class="fr-container">
     <div class="fr-notice__body">
       <p class="fr-notice__title">
-        Vous avez déjà déposé un dossier ou réalisé les études environnementales nécessaires, vous pouvez nous l’indiquer
+        Si vous avez déjà déposé un dossier ou réalisé les études environnementales nécessaires, vous pouvez nous l’indiquer
+        via
         <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
            class="self-declaration-cta"
-           data-reference="{{ evaluation.reference }}">via ce formulaire</a>
+           data-reference="{{ evaluation.reference }}">ce formulaire</a>
         (3 min.)
       </p>
     </div>
