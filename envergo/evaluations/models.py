@@ -23,6 +23,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +307,7 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
+            "evaluation_url": f"{get_base_url()}{self.get_absolute_url()}",
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)

@@ -12,6 +12,7 @@ from django.views.generic import FormView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
 from envergo.moulinette.models import FakeMoulinette, Moulinette
 from envergo.moulinette.utils import compute_surfaces
@@ -313,6 +314,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         current_url = self.request.build_absolute_uri()
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         context["current_url"] = tracked_url
+        context["envergo_url"] = self.request.get_host()
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
@@ -339,6 +341,16 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context["matomo_custom_url"] = self.request.build_absolute_uri(
                 reverse("moulinette_missing_data")
             )
+
+        if moulinette and moulinette.catalog:
+            lng = moulinette.catalog.get("lng")
+            lat = moulinette.catalog.get("lat")
+            if lng and lat:
+                address = get_address_from_coords(lng, lat)
+                if address:
+                    context["address"] = address
+                else:
+                    context["coords"] = f"{lat}, {lng}"
 
         return context
 

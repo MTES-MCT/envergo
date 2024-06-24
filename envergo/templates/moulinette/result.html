@@ -24,7 +24,7 @@
     </div>
   {% endif %}
 
-  <h1 class="fr-mb-5w">Simulation réglementaire du projet</h1>
+  <h1 class="fr-mb-5w hide-print">Simulation réglementaire du projet</h1>
 {% endblock %}
 
 {% block result %}
@@ -46,7 +46,7 @@
   {% include 'moulinette/_evaluation_summary.html' %}
 
   <p class="fr-hint-text fr-mb-3w">
-    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info">En savoir plus.</a>
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
 
   {% for regulation in moulinette.regulations %}

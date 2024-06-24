@@ -967,6 +967,11 @@ div.hero-alt {
 /**
  * Impression
  */
+
+.print-only{
+  display: none;
+}
+
 @media print {
 
   // Reduce font size to a more compact print
@@ -1035,11 +1040,65 @@ div.hero-alt {
     display: none;
   }
 
+  // Underline links in pdf
+  a {
+    text-decoration: underline;
+  }
+
+  // for all links but anchors : display in blue with the url in parenthesis
+  a:not([href^="#"]) {
+    color: linktext;
+  }
+
+  a:not([href^="#"])::after {
+    content: " (" attr(href) ") ";
+    // these styles are necessary to override some dsfr styles
+    mask-size: auto;
+    mask-image: none;
+    background-color: inherit;
+    --icon-size: inherit;
+    display: inherit;
+  }
+
   // Make sure leaflet controls are not printed
   .leaflet-control {
     display: none;
   }
 
+  // Enforce background color for tags
+  .fr-tag {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-only{
+    display: inherit;
+  }
+
+  // display the loaded map outside the form for print
+  #moulinette-container {
+    .fr-grid-row {
+      display: block;
+    }
+
+    #form-col {
+      display: block;
+      flex: unset;
+      max-width: 100%;
+
+      * {
+        display: none;
+      }
+
+      #moulinette-form, #form-groups, #form-group-coords, #form-group-coords > figure , #map-container, #map-container * {
+        display: inherit;
+      }
+
+      #map-container .leaflet-control-container {
+        display: none;
+      }
+    }
+  }
 }
 
 .fr-header {

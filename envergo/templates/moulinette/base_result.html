@@ -6,6 +6,23 @@
 
   <div id="moulinette-container"
        class="fr-container {{ source }} fr-pt-5w fr-mb-5w">
+    <div class="print-only">
+      <h1 class="fr-mb-5w">Simulation réglementaire du projet</h1>
+      <p class="fr-text">
+        Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
+    href="{{ envergo_url }}"
+    target="_blank"
+    rel="noopener external">EnvErgo</a>
+      </p>
+      <p class="fr-text">
+        Cette simulation est <a title="Partager l'avis réglementaire"
+    href="{{ current_url }}"
+    target="_blank"
+    rel="noopener external">consultable en ligne</a>
+      </p>
+
+      <h2 class="fr-h3">Caractéristiques du projet</h2>
+    </div>
     <div class="fr-grid-row fr-grid-row--gutters">
 
       <div id="form-col" class="fr-col fr-col-lg-5 fr-col-xl-4">
@@ -17,6 +34,10 @@
 
           {% block extra-form-col %}{% endblock %}
         {% endblock %}
+      </div>
+
+      <div class="print-only">
+        {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
       </div>
 
       <article id="content-col" class="fr-col-lg-7 fr-col-xl-8">
