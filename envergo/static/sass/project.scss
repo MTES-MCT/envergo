@@ -1371,12 +1371,3 @@ main.demonstrateur_2150 {
 .fr-hint-text a.fr-link:has(+span.fr-tooltip) {
   font-size: inherit;
 }
-
-// Custom class for a checkbox that display children when checked
-.checkbox-optional-children {
-  display: none;
-}
-
-.checkbox-with-optional-children input[type=checkbox]:checked ~ .checkbox-optional-children {
-  display: block;
-}

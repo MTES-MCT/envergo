@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
@@ -10,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import USER_TYPES, Request
+from envergo.evaluations.utils import extract_department
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 
@@ -79,14 +78,6 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         label="Department number",
         required=False,
     )
-    postal_code = forms.CharField(
-        label="Code postal de la commune",
-        help_text="Si le projet se situe sur plusieurs communes indiquer le code postal de la commune principale",
-    )
-    no_address = forms.BooleanField(
-        label=_("This project is not linked to an address"),
-        required=False,
-    )
     application_number = forms.CharField(
         label=_("Application number"),
         help_text=_("If an application number was already submitted."),
@@ -110,7 +101,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ["address", "no_address", "application_number", "project_description"]
+        fields = ["address", "application_number", "project_description"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,45 +113,12 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        no_address = data.get("no_address", False)
-        if no_address:
-            self.fields["address"].required = False
-            if "address" in self._errors:
-                del self._errors["address"]
-
-            address = data.get("address", None)
-            if address:
-                self.add_error(
-                    "no_address",
-                    _(
-                        "You checked this box but still provided an address. Please check your submission."
-                    ),
-                )
-
-            # override address with postal code if no address is provided
-            postal_code = data.get("postal_code", None)
-            if postal_code:
-                data["address"] = postal_code
-        else:
-            # postal_code is not required if address is provided
-            if "postal_code" in self._errors:
-                del self._errors["postal_code"]
 
         # first try to get department from api-adresse.data.gouv.fr
         department_input = data.get("department", None)
         if not department_input:
-            # Then try to export it from postal code
-            postal_code = data.get("postal_code", None)
-            if not postal_code:
-                # then try to get it from the address which have not been picked up in the list
-                # (it can be weirdly formatted)
-                postal_code = self.extract_postal_code(data.get("address", ""))
-
-            if postal_code:
-                department_input = postal_code[:2]
-                if department_input == "97":
-                    # for overseas departments, we need the 3 first digits
-                    department_input = postal_code[:3]
+            # extract department from address
+            department_input = extract_department(data.get("address", ""))
 
         department = (
             Department.objects.filter(department=department_input)
@@ -178,26 +136,16 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
                 department  # adding an error remove the department from cleaned_data, but we need it in the view
             )
 
-        if not department:
+        if not department and not self.has_error("address"):
             self.add_error(
                 None,
                 ValidationError(
-                    "Nous ne parvenons pas à situer votre projet. Merci de vérifier votre saisie.",
+                    "Nous ne parvenons pas à situer votre projet. Merci d'indiquer a minima un code postal.",
                     code="unknown_department",
                 ),
             )
 
         return data
-
-    @staticmethod
-    def extract_postal_code(address):
-        # Regular expression pattern to match postal codes in the correct context
-        postal_code_pattern = re.compile(r"\b\d{5}(?!\d)\b")
-        matches = postal_code_pattern.findall(address)
-        if matches:
-            # Returning the last found postal code (in case of multiple matches)
-            return matches[-1]
-        return None
 
 
 class WizardContactForm(EvaluationFormMixin, forms.ModelForm):

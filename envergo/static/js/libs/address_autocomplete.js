@@ -113,6 +113,8 @@
         }
       },
       source: function(query, populateResults) {
+        const event = new CustomEvent('EnvErgo:address_autocomplete_input', { detail: query });
+        window.dispatchEvent(event);
         return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {
