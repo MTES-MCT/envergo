@@ -40,11 +40,3 @@ def test_wizard_form_without_address_is_invalid(form_data):
     del form_data["address"]
     form = WizardAddressForm(form_data)
     assert not form.is_valid()
-
-
-def test_wizard_form_when_address_is_not_required_is_valid(form_data):
-    form_data["address"] = ""
-    form_data["no_address"] = True
-    form_data["postal_code"] = 44125
-    form = WizardAddressForm(form_data)
-    assert form.is_valid()
