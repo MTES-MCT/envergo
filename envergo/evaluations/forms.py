@@ -69,8 +69,8 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         help_text=_("Type in a few characters to see suggestions"),
         error_messages={
             "required": """
-                Ce champ est obligatoire. Si le projet n'a pas d'adresse,
-                cochez la case ci-dessous.
+                Ce champ est obligatoire. Si le projet n'a pas d'adresse précise,
+                veuillez indiquer uniquement le code postal.
             """
         },
     )

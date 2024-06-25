@@ -33,6 +33,9 @@
       {% include '_form_header.html' with form=form %}
 
       {% include '_field_snippet.html' with field=form.address %}
+      <div class="fr-info-text fr-mb-3w">
+        Si le projet n'a pas d'adresse, indiquez le code postal de la commune où il se situe majoritairement.
+      </div>
       {% include '_field_snippet.html' with field=form.application_number %}
       {% include '_field_snippet.html' with field=form.project_description bottom_help_text=True %}
       {{ form.department.as_hidden }}
