@@ -14,6 +14,7 @@ echo "Starting the backup of s3 bucket"
 
 if ! ls rclone-*-linux-amd64 | grep rclone >/dev/null; then
   echo "Installing rclone"
+  apt-get update && apt-get install -y curl unzip
   curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
   unzip rclone-current-linux-amd64.zip
 fi
