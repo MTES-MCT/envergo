@@ -12,6 +12,7 @@ from django.views.generic import FormView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
 from envergo.moulinette.models import FakeMoulinette, Moulinette
 from envergo.moulinette.utils import compute_surfaces
@@ -310,9 +311,22 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Let's build custom uris for better matomo tracking
+        # Depending on the moulinette result, we want to track different uris
+        # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+
+        # Url without any query parameters
+        stripped_url = self.request.build_absolute_uri(self.request.path)
+        debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
+        missing_data_url = self.request.build_absolute_uri(
+            reverse("moulinette_missing_data")
+        )
+
         context["current_url"] = tracked_url
+        context["envergo_url"] = self.request.build_absolute_uri("/")
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
@@ -334,11 +348,23 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
                 .order_by("type", "distance", "map__name")
             )
+            context["matomo_custom_url"] = debug_url
 
-        if moulinette and moulinette.has_missing_data():
-            context["matomo_custom_url"] = self.request.build_absolute_uri(
-                reverse("moulinette_missing_data")
-            )
+        elif moulinette and moulinette.has_missing_data():
+            context["matomo_custom_url"] = missing_data_url
+
+        elif moulinette:
+            context["matomo_custom_url"] = stripped_url
+
+        if moulinette and moulinette.catalog:
+            lng = moulinette.catalog.get("lng")
+            lat = moulinette.catalog.get("lat")
+            if lng and lat:
+                address = get_address_from_coords(lng, lat)
+                if address:
+                    context["address"] = address
+                else:
+                    context["coords"] = f"{lat}, {lng}"
 
         return context
 

@@ -78,8 +78,6 @@ coverage==7.5.3
     # via
     #   -r local.in
     #   django-coverage-plugin
-crisp-api==1.1.19
-    # via -r base.txt
 cssbeautifier==1.15.1
     # via djlint
 decorator==5.1.1
@@ -161,7 +159,9 @@ executing==2.0.1
 factory-boy==3.3.0
     # via -r local.in
 faker==25.8.0
-    # via factory-boy
+    # via
+    #   -r base.txt
+    #   factory-boy
 filelock==3.14.0
     # via virtualenv
 flake8==7.0.0
@@ -346,7 +346,6 @@ regex==2023.12.25
 requests==2.32.3
     # via
     #   -r base.txt
-    #   crisp-api
     #   django-anymail
 rjsmin==1.2.1
     # via
@@ -379,7 +378,9 @@ text-unidecode==1.3
 tomlkit==0.12.5
     # via pylint
 tqdm==4.66.4
-    # via djlint
+    # via
+    #   -r base.txt
+    #   djlint
 traitlets==5.14.3
     # via
     #   ipython

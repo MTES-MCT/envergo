@@ -672,14 +672,9 @@ class MoulinetteConfig(models.Model):
         "N2000 > Précision proximité immédiate",
         blank=True,
     )
-    n2000_autorisation_urba_result = models.JSONField(
-        "N2000 > Résultat critère autorisation d'urbanisme",
-        blank=True,
-        default=dict,
-    )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
     criteria_values = models.JSONField(
-        "Valeurs des critères", default=dict, null=True, blank=True
+        "Valeurs des critères", default=dict, null=False, blank=True
     )
 
     class Meta:
@@ -802,12 +797,6 @@ class Moulinette:
         self.criteria = self.get_criteria()
         self.regulations = self.get_regulations()
         self.evaluate()
-
-        log_data = {
-            "raw_data": self.raw_data,
-            "result": self.result_data(),
-        }
-        logger.info(log_data)
 
     def evaluate(self):
         for regulation in self.regulations:
