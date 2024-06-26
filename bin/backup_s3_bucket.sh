@@ -25,8 +25,7 @@ scaleway_access_key=$1
 scaleway_secret_key=$2
 
 cd rclone-*-linux-amd64
-# TODO use the real prod bucket
-./rclone sync -vvv --s3-storage-class=GLACIER :s3,provider=Scaleway,region=fr-par,endpoint=s3.fr-par.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-prod  :s3,provider=Scaleway,region=nl-ams,endpoint=s3.nl-ams.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-prod-backup
+./rclone sync -vvv --s3-storage-class=GLACIER :s3,provider=Scaleway,region=fr-par,endpoint=s3.fr-par.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-stage/envergo-upload-prod :s3,provider=Scaleway,region=nl-ams,endpoint=s3.nl-ams.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-prod-backup
 
 
 echo "Leaving the s3 backup script"
