@@ -48,7 +48,7 @@ urlpatterns = [
                     ),
                 ),
                 path(
-                    "étape-1/indisponible/<slug:department>",
+                    "étape-1/indisponible/<slug:department>/",
                     RequestEvalWizardDepartmentUnavailable.as_view(),
                     name="request_eval_wizard_unavailable_department",
                 ),
@@ -58,7 +58,7 @@ urlpatterns = [
                     name="request_eval_wizard_step_2",
                 ),
                 path(
-                    "étape-3/<slug:reference>",
+                    "étape-3/<slug:reference>/",
                     RedirectView.as_view(
                         pattern_name="request_eval_wizard_step_3", permanent=True
                     ),

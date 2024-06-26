@@ -21,18 +21,17 @@ def extract_department(address):
     postal_code = extract_postal_code(address)
     department = None
     if postal_code:
+        department = postal_code[:2]
+        if department == "97":
+            # for overseas departments, we need the 3 first digits
+            department = postal_code[:3]
 
         if postal_code.startswith("20"):
             # Corsica postal codes are special cases
             code_number = int(postal_code)
             if 20000 <= code_number <= 20190:
-                return "2A"  # Corse-du-Sud
+                department = "2A"  # Corse-du-Sud
             elif 20200 <= code_number <= 20620:
-                return "2B"  # Haute-Corse
-
-        department = postal_code[:2]
-        if department == "97":
-            # for overseas departments, we need the 3 first digits
-            department = postal_code[:3]
+                department = "2B"  # Haute-Corse
 
     return department

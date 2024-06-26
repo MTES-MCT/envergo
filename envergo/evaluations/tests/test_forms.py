@@ -11,7 +11,6 @@ pytestmark = pytest.mark.django_db
 def form_data():
     return {
         "address": "123 rue de la Paix 44000 Nantes",
-        "no_address": False,
         "application_number": "PC05412621D1029",
     }
 
