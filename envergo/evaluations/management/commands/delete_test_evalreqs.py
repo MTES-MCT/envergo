@@ -18,7 +18,6 @@ class Command(BaseCommand):
         unsubmitted_evalreqs = Request.objects.filter(
             created_at__gte=one_hr_ago, submitted=False
         )
-        breakpoint()
 
         self.stdout.write(
             f"Deleting {test_evalreqs.count()} test requests / {unsubmitted_evalreqs.count()} unsubmitted requests"
