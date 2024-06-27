@@ -1286,6 +1286,36 @@ main.home {
   }
 }
 
+// Geometricians landing page styles
+main.geometricians {
+  section#hero {
+    background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
+
+    h1, .fr-text {
+      color: var(--grey-1000-50);
+    }
+
+    a {
+      background-color: var(--grey-1000-50);
+    }
+
+    #rounded-hero{
+      display: block;
+      margin-top: -10%;
+      path {
+        fill:var(--grey-1000-50);
+      }
+    }
+
+    #geometrician-illustration{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+  }
+}
+
 .moulinette-columns {
   input[type=text] {
     background-color: var(--background-alt-grey);

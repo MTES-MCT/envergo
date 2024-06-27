@@ -18,6 +18,10 @@ class HomeView(MoulinetteMixin, FormView):
     template_name = "pages/home.html"
 
 
+class GeometriciansView(MoulinetteMixin, FormView):
+    template_name = "pages/geometricians.html"
+
+
 class StatsView(TemplateView):
     template_name = "pages/stats.html"
 
