@@ -1287,12 +1287,17 @@ main.home {
 }
 
 // Geometricians landing page styles
+:root[data-fr-theme=dark] main.geometricians {
+  section#hero {
+      background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
+  }
+}
 main.geometricians {
   section#hero {
     background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
 
     h1, .fr-text {
-      color: var(--grey-1000-50);
+      color: #fff;
     }
 
     a {
@@ -1355,6 +1360,9 @@ main.geometricians {
   section#properties {
     .fr-grid-row--center div {
       text-align: center;
+      img {
+        margin: 0 auto;
+      }
     }
   }
 }

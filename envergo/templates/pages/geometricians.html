@@ -59,10 +59,10 @@
 
   <section id="advantages" class="fr-container">
     <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
-      {% for title, description, light_picture_src in advantages %}
+      {% for title, description, light_picture_src, dark_picture_src in advantages %}
         <div class="fr-col fr-col-12 fr-col-md-4">
-          <img src={% static light_picture_src %}  alt="" class="light-only">
-          {#        <img src="{{ dark_picture_src }}" alt="" class="dark-only"> TODO #}
+          <img src={% static light_picture_src %} alt={{ description }} class="light-only">
+          <img src={% static dark_picture_src %} alt={{ description }} class="dark-only">
           <h2>{{ title }}</h2>
           <p class="fr-text fr-mb-2w">{{ description }}</p>
         </div>
@@ -158,24 +158,17 @@
   </section>
 
   <section id="properties" class="fr-container fr-pt-8w fr-pb-5w">
-    <h2 class="fr-h3 fr-mb-6w">EnvErgo, un service…</h2>
+    <h2 class="fr-h3 fr-mb-2w">EnvErgo, un service…</h2>
     <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
-        <img src="{% static 'images/money.svg' %}"
-             alt="Des piles de pièces de monnaie">
-        <div>Gratuit</div>
-      </div>
-      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
-        <img src="{% static 'images/school.svg' %}" alt="Un édifice public">
-        <div>Public</div>
-      </div>
-      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
-        <img src="{% static 'images/avatar.svg' %}" alt="Un avatar de personne">
-        <div>Anonyme</div>
-      </div>
-      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
-        <img src="{% static 'images/logo_mte.png' %}" alt="Le logo du ministère">
-      </div>
+      {% for title, light_picture_src, dark_picture_src, picture_alt in properties %}
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w fr-mt-4w">
+          <img src="{% static light_picture_src %}" class="light-only" alt={{ picture_alt }}>
+          <img src="{% static dark_picture_src %}"
+               class="dark-only"
+               alt="{{ picture_alt }}">
+          <div>{{ title }}</div>
+        </div>
+      {% endfor %}
     </div>
   </section>
 

@@ -51,19 +51,22 @@ class GeometriciansView(MoulinetteMixin, FormView):
             (
                 "Sécurisez",
                 "Sécurisez vos projets : évitez les retards, les surcoûts, les annulations et les contentieux.",
-                "images/calendar.svg",
+                "images/calendar_light.svg",
+                "images/calendar_dark.svg",
             ),
             (
                 "Maîtrisez",
                 "Maîtrisez les réglementations environnementales applicables à vos projets d'aménagement : seuils "
                 "d'entrée en procédure, délais, contacts des administrations compétentes, procédures.",
-                "images/legal.svg",
+                "images/legal_light.svg",
+                "images/legal_dark.svg",
             ),
             (
                 "Informez",
                 "Renforcez votre capacité de conseil en proposant une information à jour sur les normes "
                 "environnementales.",
-                "images/reputation.svg",
+                "images/reputation_light.svg",
+                "images/reputation_dark.svg",
             ),
         ]
 
@@ -79,6 +82,33 @@ class GeometriciansView(MoulinetteMixin, FormView):
             (
                 "/faq/available-departments/",
                 "Dans quels départements est disponible EnvErgo ?",
+            ),
+        ]
+
+        context["properties"] = [
+            (
+                "Gratuit",
+                "images/money_light.svg",
+                "images/money_dark.svg",
+                "Des piles de pièces de monnaie",
+            ),
+            (
+                "Public",
+                "images/school_light.svg",
+                "images/school_dark.svg",
+                "Un édifice public",
+            ),
+            (
+                "Anonyme",
+                "images/avatar_light.svg",
+                "images/avatar_dark.svg",
+                "Un avatar de personne",
+            ),
+            (
+                "",
+                "images/logo_mte.png",
+                "images/logo_mte_dark.svg",
+                "Le logo du ministère",
             ),
         ]
 
