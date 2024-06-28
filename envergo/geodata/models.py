@@ -150,7 +150,7 @@ class Department(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
-    geometry = gis_models.MultiPolygonField()
+    geometry = gis_models.MultiPolygonField(null=True)
 
     class Meta:
         verbose_name = _("Department")
