@@ -968,7 +968,7 @@ div.hero-alt {
  * Impression
  */
 
-.print-only{
+.print-only {
   display: none;
 }
 
@@ -1071,7 +1071,7 @@ div.hero-alt {
     print-color-adjust: exact;
   }
 
-  .print-only{
+  .print-only {
     display: inherit;
   }
 
@@ -1090,7 +1090,12 @@ div.hero-alt {
         display: none;
       }
 
-      #moulinette-form, #form-groups, #form-group-coords, #form-group-coords > figure , #map-container, #map-container * {
+      #moulinette-form,
+      #form-groups,
+      #form-group-coords,
+      #form-group-coords>figure,
+      #map-container,
+      #map-container * {
         display: inherit;
       }
 
