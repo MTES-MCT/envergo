@@ -20,8 +20,8 @@ html.nojs .js {
 // all pages with target links do.
 @media (min-width: 62em) {
   html {
-    scroll-padding-top: 4rem;
     /* height of sticky header */
+    scroll-padding-top: 3rem;
   }
 }
 
@@ -1174,13 +1174,16 @@ div.hero-alt {
     // We can't use `display: none` here because this messes with the
     // smooth scrolling behavior.
     // Displaying a new element in the middle of a scroll animation interrupts it
+
+    // Since the header also "pops" into existence when the user scrolls, we use
+    // `position: fixed` instead of `position: sticky` to avoir content jumping
+    // effects and smooth-scrolling issues
     position: fixed;
     top: -5000px;
     visibility: hidden;
 
     @media (min-width: 62em) {
       &.displayed {
-        position: sticky;
         top: 0;
         visibility: visible;
       }
