@@ -601,6 +601,12 @@ class Request(models.Model):
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
+    # We have to save the Request before the end of the form wizard, because we need
+    # to attach uploaded files to an existing object.
+    # But we need to wait for the latest step to be completed before
+    # actually sending the confirmation mails and acks
+    submitted = models.BooleanField(_("Submitted"), default=False)
+
     class Meta:
         verbose_name = _("Evaluation request")
         verbose_name_plural = _("Evaluation requests")
