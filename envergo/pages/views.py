@@ -21,6 +21,69 @@ class HomeView(MoulinetteMixin, FormView):
 class GeometriciansView(MoulinetteMixin, FormView):
     template_name = "pages/geometricians.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["testimonials"] = [
+            (
+                "EnvErgo m'a permis de gagner un temps considérable et de m'assurer que mon projet respecte toutes les "
+                "réglementations environnementales. C'est un outil indispensable pour tout géomètre.",
+                "Jean-François Peltier",
+                "Géomètre",
+                "Loire-Atlantique",
+            ),
+            (
+                "J'ai trouvé EnvErgo très facile à utiliser et extrêmement utile pour naviguer dans le labyrinthe des "
+                "réglementations environnementales. Je le recommande vivement à mes collègues.",
+                "Marius Garnier",
+                "Environnementaliste",
+                "Gironde",
+            ),
+            (
+                "Envergo a non seulement amélioré mon efficacité, mais il m'a également permis de gagner la confiance "
+                "de mes clients en garantissant que leurs projets respectent toutes les obligations environnementales.",
+                "Grégoire Gallois",
+                "Géomètre",
+                "Calvados",
+            ),
+        ]
+
+        context["advantages"] = [
+            (
+                "Sécurisez",
+                "Sécurisez vos projets : évitez les retards, les surcoûts, les annulations et les contentieux.",
+                "images/calendar.svg",
+            ),
+            (
+                "Maîtrisez",
+                "Maîtrisez les réglementations environnementales applicables à vos projets d'aménagement : seuils "
+                "d'entrée en procédure, délais, contacts des administrations compétentes, procédures.",
+                "images/legal.svg",
+            ),
+            (
+                "Informez",
+                "Renforcez votre capacité de conseil en proposant une information à jour sur les normes "
+                "environnementales.",
+                "images/reputation.svg",
+            ),
+        ]
+
+        context["questions"] = [
+            (
+                "/faq/loi-sur-leau/#accordion-savoir_si_mon_projet_est_soumis",
+                "Comment déterminer si mon projet est soumis à la Loi sur l’eau ?",
+            ),
+            (
+                "/faq/loi-sur-leau/#accordion-travaux_avant_reponse",
+                "Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?",
+            ),
+            (
+                "/faq/available-departments/",
+                "Dans quels départements est disponible EnvErgo ?",
+            ),
+        ]
+
+        return context
+
 
 class StatsView(TemplateView):
     template_name = "pages/stats.html"

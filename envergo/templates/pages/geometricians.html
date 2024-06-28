@@ -14,7 +14,10 @@
     <div class="fr-container">
       <div class="fr-grid-row fr-pt-4w">
         <div class="fr-col-8 fr-pr-2w">
-          <h1>Géomètres experts, planifiez vos projets d’aménagement en ne manquant aucune obligation environnementale.</h1>
+          <h1>
+            Géomètres experts, planifiez vos projets d’aménagement en ne manquant aucune obligation
+            environnementale.
+          </h1>
 
           <ul class="fr-badge-group fr-my-3w">
             <li>
@@ -54,103 +57,124 @@
 
   </section>
 
-  <section id="decouvrir" class="fr-container">
+  <section id="advantages" class="fr-container">
     <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
-      <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
-        <img src="{% static 'images/simu-light.svg' %}" alt="" class="light-only">
-        <img src="{% static 'images/simu-dark.svg' %}" alt="" class="dark-only">
-        <h2>Vous êtes porteur d'un projet en phase initiale ?</h2>
-        <ul class="fr-tags-group fr-mb-2w">
-          <li>
-            <span class="fr-tag">Lotisseurs</span>
-          </li>
-          <li>
-            <span class="fr-tag">Promoteurs</span>
-          </li>
-          <li>
-            <span class="fr-tag">Géomètres</span>
-          </li>
-          <li>
-            <span class="fr-tag">Architectes</span>
-          </li>
-        </ul>
-        <p class="fr-text--lead fr-mb-2w">
-          Planifiez vos études et procédures en ne manquant aucune obligation
-          légale.
-        </p>
-        <p class="fr-mb-1w">
-          En un clic et <strong>anonymement</strong> obtenez :
-        </p>
-        <ul class="fr-mb-3w">
-          <li>
-            Les <strong>réglementations environnementales</strong> auxquelles votre projet est soumis : loi sur l’eau,
-            Natura 2000, cas par cas…
-          </li>
-          <li>
-            Les <strong>études</strong> à mener
-          </li>
-          <li>
-            Les <strong>procédures administratives</strong> à suivre, en plus du dépôt de permis de construire ou
-            d’aménager
-          </li>
-        </ul>
-
-        <a href="#simulateur"
-           class="fr-btn fr-btn--lg fr-btn--icon-down fr-icon-arrow-down-line"
-           data-event-category="HomePage"
-           data-event-action="SimulationClick"
-           data-event-name="Main">Simuler un projet</a>
-        <br>
-        <span class="fr-hint-text">Durée : 30 secondes</span>
-      </div>
-
-      <div class="fr-col fr-col-12 fr-col-md-8 fr-col-offset-md-2 fr-col-lg-6 fr-ml-lg-0">
-        <img src="{% static 'images/service-light.svg' %}"
-             alt=""
-             class="light-only">
-        <img src="{% static 'images/service-dark.svg' %}" alt="" class="dark-only">
-        <h2>
-          Vous êtes en service <abbr title="Autorisations du Droit des Sols">ADS</abbr> et instruisez un projet de <abbr title="Permis de construire">PC</abbr> ou de <abbr title="Permis d'aménager">PA</abbr> ?
-        </h2>
-        <ul class="fr-tags-group fr-mb-2w">
-          <li>
-            <span class="fr-tag">Instructeurs ADS</span>
-          </li>
-        </ul>
-        <p class="fr-text--lead fr-mb-2w">Déterminez si le projet est soumis à une réglementation environnementale.</p>
-        <ul class="fr-mb-3w">
-          <li>
-            Nos <strong>chargés d’études</strong> examinent le projet
-          </li>
-          <li>
-            Un avis vous est rendu <strong>sous 72h ouvrées</strong>
-          </li>
-          <li>
-            En option : Nous notifions directement le porteur de projet avec un <strong>avis réglementaire</strong> du
-            Ministère de la Transition Écologique
-          </li>
-          <li>
-            Nous <strong>accompagnons</strong> le porteur de projet dans la compréhension de ses obligations.
-          </li>
-        </ul>
-
-        <a href="{% url 'request_evaluation' %}"
-           class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line"
-           data-event-category="HomePage"
-           data-event-action="RequestClick"
-           data-event-name="Main">Demander un avis réglementaire</a>
-        <br>
-        <span class="fr-hint-text">Durée : 1 min 30</span>
-      </div>
+      {% for title, description, light_picture_src in advantages %}
+        <div class="fr-col fr-col-12 fr-col-md-4">
+          <img src={% static light_picture_src %}  alt="" class="light-only">
+          {#        <img src="{{ dark_picture_src }}" alt="" class="dark-only"> TODO #}
+          <h2>{{ title }}</h2>
+          <p class="fr-text fr-mb-2w">{{ description }}</p>
+        </div>
+      {% endfor %}
     </div>
   </section>
 
   <section id="simulateur"
            class="moulinette moulinette-columns fr-pt-8w fr-pb-5w">
     <div class="fr-container">
-      <h2 class="fr-h3">Simulez votre projet en phase amont !</h2>
+      <h2 class="fr-h3 fr-mb-6w">Simulez votre projet !</h2>
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-9">{% include 'moulinette/_form.html' with form=form %}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-6w">Témoignages</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      {% for testimony, author, title, department in testimonials %}
+        <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w">
+          <figure class="fr-quote">
+            <blockquote>
+              <p>« {{ testimony }} »</p>
+            </blockquote>
+            <figcaption>
+              <p class="fr-quote__author">{{ author }}</p>
+              <ul class="fr-quote__source">
+                <li>{{ title }}</li>
+                <li>{{ department }}</li>
+              </ul>
+            </figcaption>
+          </figure>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="webinar" class="fr-pt-8w fr-pb-5w">
+    <div class="fr-container">
+      <h2 class="fr-h3 fr-mb-6w">Participez à notre webinaire mensuel dédié aux géomètres</h2>
+      <div class="fr-grid-row fr-grid-row--middle">
+        <div class="fr-col fr-col-12 fr-col-md-6 fr-pr-2w">
+          <img src="{% static 'images/webinar.png' %}"
+               alt="screenshot of a webinar session">
+        </div>
+        <div class="fr-col fr-col-12 fr-col-md-6 fr-pl-2w">
+
+          <p class="fr-mb-2w">20 minutes pour :</p>
+          <ul class="fr-mb-3w">
+            <li>Découvrir le service avec une démonstration du simulateur</li>
+            <li>Retours d'expériences de géomètres utilisateurs.trices</li>
+            <li>Réponse aux questions des participant.e.s</li>
+          </ul>
+
+          <a href="https://app.livestorm.co/p/3e2db81a-a8eb-4684-83e9-9ba999f8bb37/form"
+             class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line"
+             data-event-category="GeometriciansPage"
+             data-event-action="WebinarClick"
+             data-event-name="Main"
+             title="Inscription webinaire géomètres - ouvre une nouvelle fenêtre"
+             target="_blank"
+             rel="noopener external">Je m'inscris !</a>
+          <br>
+          <span class="fr-hint-text">Durée : 2 min</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq-section" class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-6w">Questions fréquentes</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      {% for href, question in questions %}
+        <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w fr-mb-4w">
+          <a href={{ href }}>
+            <div class="fr-callout">
+              <p class="fr-callout__text fr-mb-2w">{{ question }}</p>
+              <span class="fr-icon-arrow-right-line" aria-hidden="true"></span>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+    <a id="faq-link"
+       href="/faq/"
+       class="fr-btn fr-btn--lg"
+       data-event-category="GeometriciansPage"
+       data-event-action="FAQClick"
+       data-event-name="Main"
+       title="Redirection vers la FAQ">Consulter notre FAQ</a>
+  </section>
+
+  <section id="properties" class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-6w">EnvErgo, un service…</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
+        <img src="{% static 'images/money.svg' %}"
+             alt="Des piles de pièces de monnaie">
+        <div>Gratuit</div>
+      </div>
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
+        <img src="{% static 'images/school.svg' %}" alt="Un édifice public">
+        <div>Public</div>
+      </div>
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
+        <img src="{% static 'images/avatar.svg' %}" alt="Un avatar de personne">
+        <div>Anonyme</div>
+      </div>
+      <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w">
+        <img src="{% static 'images/logo_mte.png' %}" alt="Le logo du ministère">
       </div>
     </div>
   </section>

@@ -1314,6 +1314,49 @@ main.geometricians {
       z-index: 2;
     }
   }
+
+  section#simulateur {
+    background-color: var(--info-950-100);
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  section#advantages h2 {
+    text-align: inherit;
+  }
+
+  section#webinar {
+    background-color: var(--grey-975-100);
+
+    img {
+      max-width: 100%;
+      border-radius: 1em;
+    }
+  }
+
+  section#faq-section {
+    .fr-callout {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    span{
+      color: var(--blue-france-sun-113-625-hover)
+    }
+    #faq-link {
+      display: block;
+      margin:0 auto 0;
+    }
+  }
+
+  section#properties {
+    .fr-grid-row--center div {
+      text-align: center;
+    }
+  }
 }
 
 .moulinette-columns {
