@@ -65,7 +65,7 @@ class EvaluationSearchForm(forms.Form):
 
 class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
-        label=_("What is the project's address?"),
+        label=_("Address of the project"),
         help_text=_("Type in a few characters to see suggestions"),
         error_messages={
             "required": """

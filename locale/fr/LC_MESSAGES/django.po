@@ -261,8 +261,8 @@ msgid "The value you received when you requested a regulatory notice."
 msgstr "La valeur reçue lorsque vous avez demandé un avis réglementaire."
 
 #: envergo/evaluations/forms.py:64
-msgid "What is the project's address?"
-msgstr "Adresse du projet ?"
+msgid "Address of the project"
+msgstr "Adresse du projet"
 
 #: envergo/evaluations/forms.py:65 envergo/moulinette/forms/__init__.py:32
 msgid "Type in a few characters to see suggestions"
