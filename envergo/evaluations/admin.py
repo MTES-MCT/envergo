@@ -451,6 +451,7 @@ class RequestAdmin(admin.ModelAdmin):
         "contact_phone",
         "project_owner_phone",
         "evaluation_link",
+        "submitted",
     ]
     readonly_fields = [
         "reference",
