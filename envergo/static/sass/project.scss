@@ -1166,11 +1166,18 @@ div.hero-alt {
   // Makes a new header show when the page is crolled down
   // and the top header leaves the viewport
   &.header-popup {
-    display: none;
+    // We can't use `display: none` here because this messes with the
+    // smooth scrolling behavior.
+    // Displaying a new element in the middle of a scroll animation interrupts it
+    position: fixed;
+    top: -5000px;
+    visibility: hidden;
 
     @media (min-width: 62em) {
       &.displayed {
-        display: block;
+        position: sticky;
+        top: 0;
+        visibility: visible;
       }
     }
   }
