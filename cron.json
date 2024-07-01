@@ -3,10 +3,6 @@
     {
       "command": "42 2 * * * python manage.py populate_log_communes",
       "size": "M"
-    },
-    {
-      "command": "27 1 * * 1 python manage.py backup_s3_bucket",
-      "size": "S"
     }
   ]
 }
