@@ -194,7 +194,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
     def get_requests(self):
         user_email = self.request.user.email
         return (
-            Request.objects.filter(contact_emails__contains=[user_email])
+            Request.objects.filter(urbanism_department_emails__contains=[user_email])
             .filter(evaluation__isnull=True)
             .order_by("-created_at")
         )
@@ -205,7 +205,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         invalid_evals = url_isnull
 
         evals = (
-            Evaluation.objects.filter(contact_emails__contains=[user_email])
+            Evaluation.objects.filter(urbanism_department_emails__contains=[user_email])
             .exclude(invalid_evals)
             .order_by("-created_at")
         )
@@ -352,7 +352,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         # want to send confirmation emails or any other notifications.
         if (
             request.submitted is False
-            and settings.TEST_EMAIL not in request.contact_emails
+            and settings.TEST_EMAIL not in request.urbanism_department_emails
         ):
             transaction.on_commit(confirm_request)
 

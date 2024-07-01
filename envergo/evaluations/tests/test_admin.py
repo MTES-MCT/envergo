@@ -19,7 +19,7 @@ def form_data():
         "reference": generate_reference(),
         "user_type": "instructor",
         "address": "Sunny side of the street",
-        "contact_emails": ["test@example.org"],
+        "urbanism_department_emails": ["test@example.org"],
         "project_owner_emails": ["sponsor@example.org"],
     }
 

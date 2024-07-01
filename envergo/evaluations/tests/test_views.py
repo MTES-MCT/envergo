@@ -67,7 +67,7 @@ def test_eval_request_wizard_step_2(client):
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "send_eval_to_project_owner": True,
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
@@ -92,7 +92,7 @@ def test_eval_request_wizard_step_2_missing_petitioner_data(client):
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "send_eval_to_project_owner": True,
     }
     res = client.post(url, data=data)
@@ -154,7 +154,7 @@ def test_eval_wizard_step_1_and_2(mock_post, settings, client, mailoutbox):
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -189,7 +189,7 @@ def test_eval_wizard_all_steps(
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -233,7 +233,7 @@ def test_eval_is_only_submitted_once(
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -277,7 +277,7 @@ def test_eval_wizard_all_steps_with_test_email(
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": [settings.TEST_EMAIL],
+        "urbanism_department_emails": [settings.TEST_EMAIL],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -319,7 +319,7 @@ def test_confirmation_email_override(
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "contact_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["contact@example.org"],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -357,10 +357,10 @@ def test_dashboard_displays_empty_messages(user, client):
 
 def test_dashboard_lists_requests_and_evals(user, client):
     RequestFactory.create_batch(
-        7, contact_emails=[user.email, "someoneelse@example.com"]
+        7, urbanism_department_emails=[user.email, "someoneelse@example.com"]
     )
     EvaluationFactory.create_batch(
-        11, contact_emails=[user.email, "someoneelse@example.com"]
+        11, urbanism_department_emails=[user.email, "someoneelse@example.com"]
     )
 
     dashboard_url = reverse("dashboard")
