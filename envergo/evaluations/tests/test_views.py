@@ -182,7 +182,9 @@ def test_eval_request_wizard_step_2_petitioner(client):
 
 
 @patch("envergo.utils.mattermost.requests.post")
-def test_eval_wizard_step_1_and_2(mock_post, settings, client, mailoutbox):
+def test_eval_wizard_step_1_and_2(
+    mock_post, settings, client, mailoutbox, moulinette_config
+):
     """The evalreq is saved but not submitted."""
 
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
@@ -191,7 +193,7 @@ def test_eval_wizard_step_1_and_2(mock_post, settings, client, mailoutbox):
     assert qs.count() == 0
 
     url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
+    data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
 
@@ -361,7 +363,12 @@ def test_eval_wizard_all_steps_with_test_email(
 
 @patch("envergo.utils.mattermost.requests.post")
 def test_confirmation_email_override(
-    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+    mock_post,
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
 ):
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
 
@@ -371,7 +378,7 @@ def test_confirmation_email_override(
     )
 
     url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
+    data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
 
