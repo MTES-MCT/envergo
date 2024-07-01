@@ -177,13 +177,13 @@ class Evaluation(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_emails = ArrayField(
+    urbanism_department_emails = ArrayField(
         models.EmailField(),
         blank=True,
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
-    contact_phone = PhoneNumberField(
+    urbanism_department_phone = PhoneNumberField(
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
@@ -444,10 +444,10 @@ class EvaluationEmail:
                 if result in ("interdit", "soumis", "action_requise"):
                     recipients = evaluation.project_owner_emails
                 else:
-                    recipients = evaluation.contact_emails
+                    recipients = evaluation.urbanism_department_emails
 
             else:
-                recipients = evaluation.contact_emails
+                recipients = evaluation.urbanism_department_emails
         else:
             recipients = evaluation.project_owner_emails
 
@@ -468,7 +468,7 @@ class EvaluationEmail:
                 result in ("interdit", "soumis", "action_requise"),
             )
         ):
-            cc_recipients = evaluation.contact_emails
+            cc_recipients = evaluation.urbanism_department_emails
 
         return sorted(list(set(cc_recipients)))
 
@@ -574,13 +574,13 @@ class Request(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_emails = ArrayField(
+    urbanism_department_emails = ArrayField(
         models.EmailField(),
         blank=True,
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
-    contact_phone = PhoneNumberField(
+    urbanism_department_phone = PhoneNumberField(
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
@@ -644,8 +644,8 @@ class Request(models.Model):
 
         evaluation = Evaluation.objects.create(
             reference=self.reference,
-            contact_emails=self.contact_emails,
-            contact_phone=self.contact_phone,
+            urbanism_department_emails=self.urbanism_department_emails,
+            urbanism_department_phone=self.urbanism_department_phone,
             request=self,
             application_number=self.application_number,
             address=self.address,

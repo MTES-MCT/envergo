@@ -73,8 +73,8 @@ class Command(BaseCommand):
         self.anonymize_model(
             Evaluation.objects.all(),
             [
-                ("contact_phone", lambda x: fake.phone_number()),
-                ("contact_emails", lambda x: [fake.email()]),
+                ("urbanism_department_phone", lambda x: fake.phone_number()),
+                ("urbanism_department_emails", lambda x: [fake.email()]),
                 ("project_owner_emails", lambda x: [fake.email()]),
                 ("project_owner_phone", lambda x: fake.phone_number()),
                 ("project_owner_company", lambda x: fake.company()),
@@ -83,8 +83,8 @@ class Command(BaseCommand):
         self.anonymize_model(
             Request.objects.all(),
             [
-                ("contact_phone", lambda x: fake.phone_number()),
-                ("contact_emails", lambda x: [fake.email()]),
+                ("urbanism_department_phone", lambda x: fake.phone_number()),
+                ("urbanism_department_emails", lambda x: [fake.email()]),
                 ("project_owner_emails", lambda x: [fake.email()]),
                 ("project_owner_phone", lambda x: fake.phone_number()),
             ],

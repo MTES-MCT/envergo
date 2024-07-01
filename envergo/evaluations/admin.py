@@ -43,7 +43,7 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         label="Envoyer directement au porteur de projet",
         required=False,
     )
-    contact_emails = SimpleArrayField(
+    urbanism_department_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
@@ -103,7 +103,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "created_at",
         "has_moulinette_url",
         "application_number",
-        "contact_emails",
+        "urbanism_department_emails",
         "request_link",
         "nb_versions",
     ]
@@ -113,7 +113,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     search_fields = [
         "reference",
         "application_number",
-        "contact_emails",
+        "urbanism_department_emails",
     ]
     readonly_fields = ["reference", "request", "sent_history", "versions"]
     actions = ["create_version"]
@@ -143,8 +143,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user_type",
-                    "contact_emails",
-                    "contact_phone",
+                    "urbanism_department_emails",
+                    "urbanism_department_phone",
                     "project_owner_emails",
                     "project_owner_phone",
                     "project_owner_company",
@@ -447,8 +447,8 @@ class RequestAdmin(admin.ModelAdmin):
         "created_at",
         "application_number",
         "user_type",
-        "contact_emails",
-        "contact_phone",
+        "urbanism_department_emails",
+        "urbanism_department_phone",
         "project_owner_phone",
         "evaluation_link",
         "submitted",
@@ -462,7 +462,7 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = [
         "reference",
         "application_number",
-        "contact_emails",
+        "urbanism_department_emails",
     ]
     ordering = ["-created_at"]
     fieldsets = (
@@ -482,8 +482,8 @@ class RequestAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user_type",
-                    "contact_emails",
-                    "contact_phone",
+                    "urbanism_department_emails",
+                    "urbanism_department_phone",
                     "project_owner_emails",
                     "project_owner_phone",
                     "send_eval_to_project_owner",
