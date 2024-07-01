@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is ran by scalingo scheduler every monday
+# This script is ran by scalingo at the end of the build process
 
 # Interrupt script on error
 set -e
@@ -20,12 +20,9 @@ if ! ls rclone-*-linux-amd64 | grep rclone >/dev/null; then
 fi
 
 echo "Performing backup"
-# Get the arguments
-scaleway_access_key=$1
-scaleway_secret_key=$2
-
 cd rclone-*-linux-amd64
-./rclone sync -vvv --s3-storage-class=GLACIER :s3,provider=Scaleway,region=fr-par,endpoint=s3.fr-par.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-stage/envergo-upload-prod :s3,provider=Scaleway,region=nl-ams,endpoint=s3.nl-ams.scw.cloud,access_key_id=$scaleway_access_key,secret_access_key=$scaleway_secret_key:envergo-prod-backup
+# TODO use the real prod bucket
+./rclone sync -vvv --s3-storage-class=GLACIER :s3,provider=Scaleway,region=fr-par,endpoint=s3.fr-par.scw.cloud,access_key_id=$SCALEWAY_ACCESS_KEY,secret_access_key=$SCALEWAY_SECRET_KEY:envergo-prod  :s3,provider=Scaleway,region=nl-ams,endpoint=s3.nl-ams.scw.cloud,access_key_id=$SCALEWAY_ACCESS_KEY,secret_access_key=$SCALEWAY_SECRET_KEY:envergo-prod-backup
 
 
 echo "Leaving the s3 backup script"
