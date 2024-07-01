@@ -284,13 +284,13 @@ Les documents sont stockés sur un répertoire distant compatible avec le protoc
 ### Backup des buckets S3
 
 Chaque semaine, on souhaite faire un backup du contenu des buckets s3 de production.
-Pour executer ce back up on utilise [le Scalingo Scheduler](https://doc.scalingo.com/platform/app/task-scheduling/scalingo-scheduler)
+Pour executer ce back up on utilise [github action](.github/workflows/s3_backup.yml)
 
-Pour s'exécuter, la tâche a besoin des identifiants s3 à configurer dans [Scalingo](https://dashboard.scalingo.com/apps/osc-fr1/envergo/environment).
+Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans [Settings](https://github.com/MTES-MCT/envergo/settings) > Secrets and variables > [Actions](https://github.com/MTES-MCT/envergo/settings/secrets/actions).
 
-Ajouter les vaiables d'environnement suivantes :
-* SCALEWAY_ACCESS_KEY
-* SCALEWAY_SECRET_KEY
+Ajouter les `Repository secrets` :
+* S3_ACCESS_KEY
+* S3_SECRET_KEY
 
 ## Glossaire
 

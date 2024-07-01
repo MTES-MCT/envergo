@@ -12,4 +12,4 @@ def execute_s3_backup():
     logger.info(
         "Executing the backup of all the files in the s3 bucket to a cold storage."
     )
-    subprocess.run(["bash", "bin/backup_s3_bucket.sh"], check=True)
+    subprocess.run(["./bin/backup_s3_bucket.sh"], check=True)
