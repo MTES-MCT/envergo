@@ -23,6 +23,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +307,7 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
+            "evaluation_url": f"{get_base_url()}{self.get_absolute_url()}",
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
@@ -598,6 +600,12 @@ class Request(models.Model):
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    # We have to save the Request before the end of the form wizard, because we need
+    # to attach uploaded files to an existing object.
+    # But we need to wait for the latest step to be completed before
+    # actually sending the confirmation mails and acks
+    submitted = models.BooleanField(_("Submitted"), default=False)
 
     class Meta:
         verbose_name = _("Evaluation request")

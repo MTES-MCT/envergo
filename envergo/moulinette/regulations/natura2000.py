@@ -120,11 +120,6 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         return criterion_map
 
 
-# Only for legacy purpose and not breaking existing data
-class ZoneHumide44(ZoneHumide):
-    choice_label = "Natura 2000 > 44 - Zone humide (obsolète)"
-
-
 class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone inondable"
     slug = "zone_inondable"
@@ -173,10 +168,6 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
             criterion_map = None
 
         return criterion_map
-
-
-class ZoneInondable44(ZoneInondable):
-    choice_label = "Natura 2000 > 44 - Zone inondable (obsolète)"
 
 
 class IOTA(CriterionEvaluator):

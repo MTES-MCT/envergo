@@ -10,7 +10,7 @@ dbclient-fetcher psql 14
 
 # Let's seed the database
 PG_OPTIONS="--clean --if-exists --no-owner --no-privileges --no-comments"
-PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table=spatial_ref_sys --exclude-table-data geodata_zone --exclude-table-data geodata_catchmentareatile; "
+PG_EXCLUDE="-N information_schema -N ^pg_* --exclude-table=spatial_ref_sys --exclude-table-data geodata_zone --exclude-table-data evaluations_recipientstatus --exclude-table-data geodata_catchmentareatile; "
 
 # Note: dbclient-fetcher installs binary in $HOME/bin
 $HOME/bin/pg_dump $PG_OPTIONS $PG_EXCLUDE --dbname $PARENT_DATABASE_URL --format c --file /tmp/dump.pgsql
@@ -26,5 +26,6 @@ rm /tmp/dump.pgsql
 bash $HOME/bin/post_deploy.sh
 bash $HOME/bin/copy_polygons.sh
 bash $HOME/bin/copy_catchmentarea.sh
+python manage.py anonymize_database -y
 
 echo ">>> Leaving the first_deploy hook"

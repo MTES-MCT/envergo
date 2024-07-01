@@ -33,8 +33,7 @@
 
     {% block css %}
       {% compress css %}
-        <link href="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.css' %}"
-              rel="stylesheet">
+        <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
         <link href="{% static '@gouvfr/dsfr/dist/utility/icons/icons.main.css' %}"
               rel="stylesheet">
         <link href="{% static 'css/project.min.css' %}" rel="stylesheet">
@@ -47,14 +46,17 @@
 
       <script defer
               type="module"
-              src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.module.min.js' %}"></script>
+              src="{% static '@gouvfr/dsfr/dist/dsfr.module.min.js' %}"></script>
       <script defer
               type="text/javascript"
               nomodule
-              src="{% static '@gouvfr/dsfr/dist/dsfr/dsfr.nomodule.min.js' %}"></script>
+              src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}"></script>
       <script>
         var EVENTS_URL = "{% url 'events' %}";
         var CSRF_TOKEN = '{{ csrf_token }}';
+        {% if matomo_custom_url %}
+          var MATOMO_CUSTOM_URL = "{{ matomo_custom_url }}";
+        {% endif %}
       </script>
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
@@ -196,7 +198,7 @@
         {% endblock %}
 
         {% block after-content %}
-          <section class="fr-py-8w alt">
+          <section class="fr-py-8w alt hide-print">
             <div class="fr-container">
               <div class="fr-grid-row fr-grid-row--center">
                 <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
@@ -209,6 +211,17 @@
               </div>
             </div>
           </section>
+          <div class="fr-my-5w print-only">
+            <h2>Pour en savoir plus…</h2>
+            <p class="fr-text">Pour une question, remarque, suggestion…</p>
+            {% include '_contact_means.html' %}
+
+            <p class="fr-text">
+              Ou consultez <a title="Lien vers la foire aux questions"
+    href="{% url 'faq' %}"
+    rel="noopener">notre page d'information</a>
+            </p>
+          </div>
         {% endblock %}
 
       {% endblock %}

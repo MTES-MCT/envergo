@@ -43,6 +43,7 @@ from envergo.evaluations.tasks import (
     post_evalreq_to_automation,
 )
 from envergo.moulinette.views import MoulinetteMixin
+from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +133,10 @@ class EvaluationDetail(
         context = super().get_context_data(**kwargs)
         context["is_map_static"] = True
         context["source"] = "evaluation"
+        current_url = self.request.build_absolute_uri()
+        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        context["current_url"] = tracked_url
+        context["light_url"] = current_url
 
         latest_version = self.object.versions.first()
         if latest_version:
@@ -313,33 +318,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         """This is called when all the combined step forms are valid."""
 
         request = form.save()
-
-        # Send notifications, once data is commited
-        # TODO move the confirmation and logs after the last step
-        def confirm_request():
-            confirm_request_to_requester.delay(request.id, self.request.get_host())
-            confirm_request_to_admin.delay(request.id, self.request.get_host())
-            post_evalreq_to_automation.delay(request.id, self.request.get_host())
-
-        # Special case, hackish
-        # The product is often used for demo purpose. In that case, we don't
-        # want to send confirmation emails or any other notifications.
-        if settings.TEST_EMAIL not in request.contact_emails:
-            transaction.on_commit(confirm_request)
-
-        log_event(
-            "evaluation",
-            "request",
-            self.request,
-            request_reference=request.reference,
-            request_url=reverse("admin:evaluations_request_change", args=[request.id]),
-            mtm_campaign=self.request.session.get("mtm_campaign", ""),
-            mtm_source=self.request.session.get("mtm_source", ""),
-            mtm_medium=self.request.session.get("mtm_medium", ""),
-            mtm_kwd=self.request.session.get("mtm_kwd", ""),
-        )
         self.reset_data()
-
         success_url = reverse("request_eval_wizard_step_3", args=[request.reference])
         return HttpResponseRedirect(success_url)
 
@@ -355,6 +334,43 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     slug_url_kwarg = "reference"
     success_url = reverse_lazy("request_success")
     context_object_name = "evalreq"
+
+    def form_valid(self, form):
+
+        request = form.instance
+
+        # Send notifications, once data is commited
+        def confirm_request():
+            request.submitted = True
+            request.save()
+            confirm_request_to_requester.delay(request.id, self.request.get_host())
+            confirm_request_to_admin.delay(request.id, self.request.get_host())
+            post_evalreq_to_automation.delay(request.id, self.request.get_host())
+
+        # Special case, hackish
+        # The product is often used for demo purpose. In that case, we don't
+        # want to send confirmation emails or any other notifications.
+        if (
+            request.submitted is False
+            and settings.TEST_EMAIL not in request.contact_emails
+        ):
+            transaction.on_commit(confirm_request)
+
+            log_event(
+                "evaluation",
+                "request",
+                self.request,
+                request_reference=request.reference,
+                request_url=reverse(
+                    "admin:evaluations_request_change", args=[request.id]
+                ),
+                mtm_campaign=self.request.session.get("mtm_campaign", ""),
+                mtm_source=self.request.session.get("mtm_source", ""),
+                mtm_medium=self.request.session.get("mtm_medium", ""),
+                mtm_kwd=self.request.session.get("mtm_kwd", ""),
+            )
+
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         files_qs = RequestFile.objects.filter(request=self.object)

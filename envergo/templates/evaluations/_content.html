@@ -1,4 +1,4 @@
-{% load evaluations static l10n moulinette %}
+{% load evaluations static moulinette %}
 
 <h1>Avis réglementaire</h1>
 <p class="fr-text--lead">
@@ -18,6 +18,13 @@
   </li>
 </ul>
 
+<p class="fr-text print-only">
+  Cet avis réglementaire est <a title="Partager l'avis réglementaire"
+    href="{{ evaluation_url }}"
+    target="_blank"
+    rel="noopener external">consultable en ligne</a>
+</p>
+
 <h2 class="fr-h3">Caractéristiques du projet</h2>
 
 <div class="ratio-16x9 fr-mt-1w fr-mb-2w">
@@ -28,52 +35,11 @@
   </div>
 </div>
 
-<ul class="fr-mb-3w">
-  <li>
-    <strong>Adresse :</strong> {{ evaluation.address }}
-  </li>
-  {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
-
-  <li>
-    <strong>Surface nouvellement impactée par le projet :</strong> {{ evaluation.moulinette_params.created_surface|localize }} m²
-    <br />
-    <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-  </li>
-
-  {% if evaluation.moulinette_params.existing_surface %}
-    <li>
-      <strong>Surface déjà impactée avant le projet :</strong> {{ evaluation.moulinette_params.existing_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
-    </li>
-  {% endif %}
-
-  {% if evaluation.moulinette_params.final_surface %}
-    <li>
-      <strong>Surface impactée totale, y compris l'existant :</strong> {{ evaluation.moulinette_params.final_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-    </li>
-  {% endif %}
-
-  {% for key, field in moulinette.additional_fields.items %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-
-  {% for form in moulinette.optional_forms %}
-    {% if form.is_valid and form.is_activated %}
-      {% for field in form %}
-        {% if field.name != "activate" %}
-          <li>{% field_summary field %}</li>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endfor %}
-</ul>
+{% include 'evaluations/_specifications.html' with params=evaluation.moulinette_params address=evaluation.address %}
 
 <div class="fr-alert fr-alert--info fr-mt-3w fr-mb-5w">
   <p>
-    Cet avis est adressé à titre informatif au porteur de projet. Il ne vaut pas position de l’administration. <a href="#liability-info">En savoir plus.</a>
+    Cet avis est adressé à titre informatif au porteur de projet. Il ne vaut pas position de l’administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
 </div>
 
@@ -116,13 +82,13 @@
 
 {% for regulation in moulinette.regulations %}
   {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+
+  {% if evaluation.is_eligible_to_self_declaration %}
+    {% include 'evaluations/_self_declaration_cta.html' %}
+  {% endif %}
 {% endfor %}
 
 {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
-
-{% if evaluation.is_eligible_to_self_declaration %}
-  {% include 'evaluations/_self_declaration_cta.html' %}
-{% endif %}
 
 <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
   <p>
@@ -134,4 +100,10 @@
   <p>
     Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
   </p>
+</div>
+
+<div class="fr-my-5w print-only">
+  <h2>Nous contacter</h2>
+  <p class="fr-text">Pour une question, remarque, suggestion…</p>
+  {% include '_contact_means.html' %}
 </div>

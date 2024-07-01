@@ -57,6 +57,12 @@ class CriterionAdminForm(forms.ModelForm):
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["activation_map"].queryset = self.fields[
+            "activation_map"
+        ].queryset.defer("geometry")
+
     def get_initial_for_field(self, field, field_name):
         """Prevent Evaluator choice to be instanciated.
 
@@ -124,6 +130,10 @@ class CriterionAdmin(admin.ModelAdmin):
             "all": ["css/project_admin.css"],
         }
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.defer("activation_map__geometry")
+
     @admin.display(description=_("Evaluator"))
     def evaluator_column(self, obj):
         label = obj.evaluator.choice_label if obj.evaluator else "ND"
@@ -171,6 +181,12 @@ class CriterionAdmin(admin.ModelAdmin):
 
 
 class PerimeterAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["activation_map"].queryset = self.fields[
+            "activation_map"
+        ].queryset.defer("geometry")
+
     def get_initial_for_field(self, field, field_name):
         """Prevent Criterion choice to be instanciated.
 
@@ -202,6 +218,10 @@ class PerimeterAdmin(admin.ModelAdmin):
     autocomplete_fields = ["activation_map"]
     form = PerimeterAdminForm
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.defer("activation_map__geometry")
+
     @admin.display(
         ordering="activation_distance",
         description=mark_safe('<abbr title="Distance d\'activation">Dist. act.</abbr>'),
@@ -225,6 +245,18 @@ class MoulinetteConfigForm(forms.ModelForm):
         if "n2000_lotissement_proximity" in self.fields:
             self.fields["n2000_lotissement_proximite"].strip = False
 
+        # Let's not fetch the department geometries when displaying the
+        # department select widget
+        self.fields["department"].queryset = self.fields["department"].queryset.defer(
+            "geometry"
+        )
+
+    def clean_criteria_values(self):
+        """Ensure an empty value can be converted to an empty json dict."""
+        value = self.cleaned_data["criteria_values"]
+        value = value or dict()
+        return value
+
 
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
@@ -235,7 +267,7 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.order_by("department__department")
+        return qs.order_by("department__department").defer("department__geometry")
 
 
 @admin.register(MoulinetteTemplate)
