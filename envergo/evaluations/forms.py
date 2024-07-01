@@ -115,10 +115,16 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         data = super().clean()
 
         # first try to get department from api-adresse.data.gouv.fr
+        address = data.get("address", "")
         department_input = data.get("department", None)
         if not department_input:
             # extract department from address
-            department_input = extract_department(data.get("address", ""))
+            department_input = extract_department(address)
+
+        if department_input and department_input not in address:
+            # when a town is selected on its own, without a complete address, there is no zip code.
+            # We therefore add the department number
+            data["address"] = f"{address} ({department_input})"
 
         department = (
             Department.objects.filter(department=department_input)
