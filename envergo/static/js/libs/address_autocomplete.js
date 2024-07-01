@@ -106,12 +106,15 @@
             communeName: val.properties.city,
             citycode: val.properties.citycode,
             coordinates: val.geometry.coordinates,
+            department: val.properties.context?.split(",")[0],
           };
           const event = new CustomEvent('EnvErgo:citycode_selected', { detail: eventData });
           window.dispatchEvent(event);
         }
       },
       source: function(query, populateResults) {
+        const event = new CustomEvent('EnvErgo:address_autocomplete_input', { detail: query });
+        window.dispatchEvent(event);
         return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {

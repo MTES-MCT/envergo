@@ -844,6 +844,10 @@ p:last-child {
   &.fr-alert--sm p:last-child {
     margin-bottom: inherit;
   }
+
+  &#unavailable-department-alert{
+    box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
+  }
 }
 
 .fr-stepper {

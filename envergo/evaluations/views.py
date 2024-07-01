@@ -42,6 +42,7 @@ from envergo.evaluations.tasks import (
     confirm_request_to_requester,
     post_evalreq_to_automation,
 )
+from envergo.geodata.models import Department
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.utils.urls import update_qs
 
@@ -282,6 +283,34 @@ class RequestEvalWizardStep1(WizardStepMixin, FormView):
     template_name = "evaluations/eval_request_wizard_address.html"
     form_class = WizardAddressForm
     success_url = reverse_lazy("request_eval_wizard_step_2")
+
+    def form_invalid(self, form):
+        is_department_unavailable = form.has_error(
+            "department", code="unavailable_department"
+        )
+        if is_department_unavailable:
+            return HttpResponseRedirect(
+                reverse(
+                    "request_eval_wizard_unavailable_department",
+                    args=[form.cleaned_data["department"].department],
+                )
+            )
+
+        return super().form_invalid(form)
+
+
+class RequestEvalWizardDepartmentUnavailable(TemplateView):
+    template_name = (
+        "evaluations/eval_request_wizard_address_unavailable_department.html"
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        department = Department.objects.filter(
+            department=kwargs.get("department")
+        ).first()
+        context["department"] = department
+        return context
 
 
 class RequestEvalWizardStep2(WizardStepMixin, FormView):
