@@ -1,0 +1,14 @@
+
+<p>
+  Le projet se trouve dans plusieurs périmètres de Schémas d’Aménagement et de Gestion des Eaux (SAGE) :
+  {% for perimeter in perimeters %}
+    {# turning djlint off to prevent excessive new lines ruining the tests #}
+    {# djlint:off #}
+    {% if perimeter.url %}
+      <a href="{{ perimeter.url }}" target="_blank" rel="noopener">« {{ perimeter.name }} »</a>
+    {% else %}
+      « {{ perimeter.name }} »
+    {% endif %}{% if forloop.last %}.{% else %} ; {% endif %}
+    {# djlint:on #}
+  {% endfor %}
+</p>

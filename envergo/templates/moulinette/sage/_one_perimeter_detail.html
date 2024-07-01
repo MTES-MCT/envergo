@@ -1,0 +1,9 @@
+<p>
+  {% if perimeter.url %}
+    Le projet se trouve dans le périmètre <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
+    du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « {{ perimeter.name }} »
+  </a>.
+{% else %}
+  Le projet se trouve dans le périmètre du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « {{ perimeter.name }} » .
+{% endif %}
+</p>

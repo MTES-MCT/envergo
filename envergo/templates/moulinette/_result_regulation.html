@@ -14,7 +14,7 @@
   </h2>
 
   {% if regulation.display_perimeter %}
-    {% include 'moulinette/_perimeter_snippet.html' with regulation=regulation perimeter=regulation.perimeter %}
+    {% perimeter_detail regulation %}
   {% endif %}
 
   {% if regulation.display_map %}
