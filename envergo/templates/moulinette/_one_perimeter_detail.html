@@ -1,0 +1,8 @@
+
+<p>
+  {% if perimeter.url %}
+    Le projet se trouve dans le périmètre <a href="{{ perimeter.url }}" target="_blank" rel="noopener">« {{ perimeter.name }} »</a>.
+  {% else %}
+    Le projet se trouve dans le périmètre « {{ perimeter.name }} ».
+  {% endif %}
+</p>

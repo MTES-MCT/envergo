@@ -1,4 +1,7 @@
+from urllib.parse import urlencode
+
 import pytest
+from django.urls import reverse
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Criterion, Moulinette
@@ -35,9 +38,8 @@ def sage_criteria(france_map):  # noqa
 def moulinette_data(footprint):
     return {
         # Bizou coordinates
-        "lat": 48.4961953,
-        "lng": 0.7504093,
-        "existing_surface": 0,
+        "lat": 48.496195,
+        "lng": 0.750409,
         "created_surface": footprint,
         "final_surface": footprint,
     }
@@ -109,3 +111,47 @@ def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
 
     assert moulinette.sage.perimeter is None
     assert moulinette.sage.result == "non_concerne"
+
+
+@pytest.mark.parametrize("footprint", [1000])
+def test_perimeter_map_display(moulinette_data, client):
+    """The perimeter map should be displayed in the result page."""
+
+    MoulinetteConfigFactory(is_activated=True)
+
+    url = reverse("moulinette_result")
+    params = urlencode(moulinette_data)
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+    assert res.status_code == 200
+
+    assert (
+        "Le projet se trouve dans le périmètre du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « Sage Vie Jaunay »"  # noqa
+        in res.content.decode()
+    )
+
+
+@pytest.mark.parametrize("footprint", [1000])
+def test_several_perimeter_maps_display(
+    moulinette_data, sage_criteria, france_map, client  # noqa
+):
+    """When several perimeters are found, they are all displayed."""
+
+    MoulinetteConfigFactory(is_activated=True)
+    PerimeterFactory(
+        name="Sage Test",
+        activation_map=france_map,
+        regulation=sage_criteria[0].regulation,
+    )
+
+    url = reverse("moulinette_result")
+    params = urlencode(moulinette_data)
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+    assert res.status_code == 200
+
+    assert (
+        "Le projet se trouve dans plusieurs périmètres de Schémas d’Aménagement et de Gestion des Eaux (SAGE) :"
+        in res.content.decode()
+    )
+    assert "« Sage Test »" in res.content.decode()
