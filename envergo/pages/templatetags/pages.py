@@ -96,34 +96,45 @@ def faq_menu(context):
 @register.simple_tag(takes_context=True)
 def evaluation_menu(context):
     """Generate html for the "Mes avis réglementaires" collapsible menu."""
-
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
-
     links = (
         ("evaluation_search", "Retrouver un avis"),
         ("dashboard", "Tableau de bord"),
     )
+
+    # Other urls that can be reached from the menu
+    additional_routes = ["evaluation_detail"]
+
+    return collapsible_menu(
+        context, links, "Mes avis réglementaires", "menu-evaluations", additional_routes
+    )
+
+
+@register.simple_tag(takes_context=True)
+def project_owner_menu(context):
+    """Generate html for the "Equipes projet" collapsible menu."""
+    links = (("geometricians", "Géomètres"),)
+    return collapsible_menu(context, links, "Équipes projet", "menu-project-owner")
+
+
+def collapsible_menu(context, links, label, menu_id, additional_routes=[]):
+    try:
+        current_route = context.request.resolver_match.url_name
+    except AttributeError:
+        current_route = ""
     links_html = [
         nav_link(url, label, aria_current=(url == current_route))
         for url, label in links
     ]
-
     # urls for the menu items
     routes = list(dict(links).keys())
-
-    # Other urls that can be reached from the menu
-    additional_routes = ["evaluation_detail"]
     all_routes = routes + additional_routes
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
     menu_html = f"""
-        <button class="fr-nav__btn" aria-expanded="false" aria-controls="menu-evaluations" {aria_current}>
-            Mes avis réglementaires
+        <button class="fr-nav__btn" aria-expanded="false" aria-controls="{menu_id}" {aria_current}>
+            {label}
         </button>
-        <div class="fr-collapse fr-menu" id="menu-evaluations">
+        <div class="fr-collapse fr-menu" id="{menu_id}">
           <ul class="fr-menu__list">
             <li>
             {'</li><li>'.join(links_html)}
