@@ -10,7 +10,6 @@ from django.db import models
 from django.db.models import Case, F, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.http import QueryDict
-from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -179,18 +178,19 @@ class Regulation(models.Model):
         return activated
 
     def show_criteria(self):
-        """Should the criteria be displayed?"""
+        """Should the criteria be displayed?
 
-        if any(
+        We musn't display criteria if the regulation or associated perimetes are
+        not activated yet.
+        """
+
+        activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
+        return all(
             (
-                not self.is_activated(),
-                self.has_perimeters and not self.perimeter,
-                self.has_perimeters and not self.perimeter.is_activated,
+                self.is_activated(),
+                any(activated_perimeters),
             )
-        ):
-            return False
-
-        return True
+        )
 
     @property
     def result(self):
@@ -220,10 +220,11 @@ class Regulation(models.Model):
             return RESULTS.non_active
 
         if self.has_perimeters:
-            perimeter = self.perimeter
-            if perimeter and not perimeter.is_activated:
+            all_perimeters = self.perimeters.all()
+            activated_perimeters = [p for p in all_perimeters if p.is_activated]
+            if all_perimeters and not any(activated_perimeters):
                 return RESULTS.non_disponible
-            if not perimeter:
+            if not all_perimeters:
                 return RESULTS.non_concerne
 
         # From this point, we made sure every data (regulation, perimeter) is existing
@@ -334,24 +335,9 @@ class Regulation(models.Model):
 
         return False
 
-    @cached_property
-    def perimeter(self):
-        """Return the administrative perimeter the project is in.
-
-        The perimeter is an administrative zone. In a perfect world, for a single
-        regulation, perimeters are non-overlapping, meaning there is a single
-        perimeter for a single location.
-
-        French administration being what it is, this is not always the case.
-
-        Hence, if we are matching several perimeters, we have no way to tell which
-        one is the correct one. So we just return the first one.
-        """
-        return self.perimeters.first()
-
     def display_perimeter(self):
         """Should / can a perimeter be displayed?"""
-        return self.is_activated() and self.perimeter
+        return self.is_activated() and bool(self.perimeters.all())
 
     @property
     def map(self):
