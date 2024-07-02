@@ -150,7 +150,7 @@ class Department(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
-    geometry = gis_models.MultiPolygonField()
+    geometry = gis_models.MultiPolygonField(null=True)
 
     class Meta:
         verbose_name = _("Department")
@@ -159,6 +159,10 @@ class Department(models.Model):
 
     def __str__(self):
         return self.get_department_display()
+
+    def is_activated(self):
+        config = getattr(self, "moulinette_config", None)
+        return config and config.is_activated
 
 
 class CatchmentAreaTile(models.Model):

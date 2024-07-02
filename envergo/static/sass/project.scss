@@ -20,8 +20,8 @@ html.nojs .js {
 // all pages with target links do.
 @media (min-width: 62em) {
   html {
-    scroll-padding-top: 4rem;
     /* height of sticky header */
+    scroll-padding-top: 3rem;
   }
 }
 
@@ -713,7 +713,7 @@ div.leaflet-container {
   }
 
   div.leaflet-control-layers a {
-    background-size: unset;
+    background-size: 26px 26px;
     transition: none;
   }
 
@@ -844,6 +844,10 @@ p:last-child {
   &.fr-alert--sm p:last-child {
     margin-bottom: inherit;
   }
+
+  &#unavailable-department-alert{
+    box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
+  }
 }
 
 .fr-stepper {
@@ -968,7 +972,7 @@ div.hero-alt {
  * Impression
  */
 
-.print-only{
+.print-only {
   display: none;
 }
 
@@ -1071,7 +1075,7 @@ div.hero-alt {
     print-color-adjust: exact;
   }
 
-  .print-only{
+  .print-only {
     display: inherit;
   }
 
@@ -1090,7 +1094,12 @@ div.hero-alt {
         display: none;
       }
 
-      #moulinette-form, #form-groups, #form-group-coords, #form-group-coords > figure , #map-container, #map-container * {
+      #moulinette-form,
+      #form-groups,
+      #form-group-coords,
+      #form-group-coords>figure,
+      #map-container,
+      #map-container * {
         display: inherit;
       }
 
@@ -1166,11 +1175,21 @@ div.hero-alt {
   // Makes a new header show when the page is crolled down
   // and the top header leaves the viewport
   &.header-popup {
-    display: none;
+    // We can't use `display: none` here because this messes with the
+    // smooth scrolling behavior.
+    // Displaying a new element in the middle of a scroll animation interrupts it
+
+    // Since the header also "pops" into existence when the user scrolls, we use
+    // `position: fixed` instead of `position: sticky` to avoir content jumping
+    // effects and smooth-scrolling issues
+    position: fixed;
+    top: -5000px;
+    visibility: hidden;
 
     @media (min-width: 62em) {
       &.displayed {
-        display: block;
+        top: 0;
+        visibility: visible;
       }
     }
   }

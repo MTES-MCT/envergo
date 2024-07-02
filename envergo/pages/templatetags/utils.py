@@ -81,3 +81,9 @@ def envergo_submit_row(context):
         }
     )
     return context
+
+
+@register.filter
+def to_list(item):
+    """turn a single item into a list"""
+    return [item]

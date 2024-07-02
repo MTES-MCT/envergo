@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load utils %}
+
 {% load evaluations leaflet_tags static %}
 
 {% block top-bar %}{% endblock %}
@@ -20,35 +22,39 @@
     </p>
   </div>
 
-  <form action=""
-        autocomplete="off"
-        method="post"
-        id="request-evaluation-form"
-        novalidate>
-    {% csrf_token %}
+  {% block form %}
+    <form action=""
+          autocomplete="off"
+          method="post"
+          id="request-evaluation-form"
+          novalidate>
+      {% csrf_token %}
 
-    {% include '_form_header.html' with form=form %}
+      {% include '_form_header.html' with form=form %}
 
-    {% include '_field_snippet.html' with field=form.address %}
-    {% include '_checkbox_snippet.html' with field=form.no_address %}
-    {% include '_field_snippet.html' with field=form.application_number %}
-    {% include '_field_snippet.html' with field=form.project_description bottom_help_text=True %}
+      {% include '_field_snippet.html' with field=form.address %}
+      <div class="fr-info-text fr-mb-3w">
+        Si le projet n'a pas d'adresse, indiquez le code postal de la commune où il se situe majoritairement.
+      </div>
+      {% include '_field_snippet.html' with field=form.application_number %}
+      {% include '_field_snippet.html' with field=form.project_description bottom_help_text=True %}
+      {{ form.department.as_hidden }}
 
-    <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">
-      <p>
-        L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.
-      </p>
-    </div>
+      <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">
+        <p>
+          L'ajout de documents (Cerfa complété, plan de masse, pièces complémentaires…) se fera à l'étape 3 de ce formulaire.
+        </p>
+      </div>
 
-    <div class="right-button">
-      <button type="submit"
-              class="fr-mt-3w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
-        Poursuivre votre demande d'avis réglementaire
-      </button>
-    </div>
+      <div class="right-button">
+        <button type="submit"
+                class="fr-mt-3w fr-btn fr-fi-arrow-right-line fr-btn--icon-left">
+          Poursuivre votre demande d'avis réglementaire
+        </button>
+      </div>
 
-  </form>
-
+    </form>
+  {% endblock %}
 {% endblock %}
 
 {% block extra_css %}
@@ -63,4 +69,6 @@
   <script defer
           src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
   <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+  <script>DEPARTMENT_FIELD_NAME = 'department';</script>
+  <script defer src="{% static 'js/libs/eval_request_department.js' %}"></script>
 {% endblock %}

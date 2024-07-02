@@ -29,5 +29,8 @@ class Command(BaseCommand):
             "department": "INSEE_DEP",
             "geometry": "POLYGON",
         }
+        # The LayerMapping class will add no geometries to the existing MultiPolygonField
+        # so we have to reset it first.
+        Department.objects.update(geometry=None)
         lm = LayerMapping(Department, shapefile, mapping, unique="department")
         lm.save(strict=True, verbose=True)

@@ -13,7 +13,7 @@ echo ">>> Copying polygons from parent database"
 dbclient-fetcher psql 13
 
 # Clear existing polygons in staging database
-# Watch out! Don't empyt $PARENT_DATABASE_URL, it's the production database
+# Watch out! Don't empty $PARENT_DATABASE_URL, it's the production database
 $HOME/bin/psql -d $DATABASE_URL -c "DELETE FROM geodata_zone;"
 
 nb_zones=$($HOME/bin/psql -d $PARENT_DATABASE_URL -t -c "SELECT COUNT(*) FROM geodata_zone z LEFT JOIN geodata_map m ON z.map_id = m.id WHERE m.copy_to_staging IS true;")
