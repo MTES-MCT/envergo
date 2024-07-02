@@ -275,7 +275,7 @@ class Regulation(models.Model):
                 for c in self.criteria.all()
                 if c.required_action and c.result == "action_requise"
             ]
-        return actions
+        return list(set(actions))
 
     def required_actions_soumis(self):
         return self.required_actions(STAKES.soumis)
