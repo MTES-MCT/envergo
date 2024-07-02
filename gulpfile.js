@@ -91,7 +91,7 @@ function scripts() {
 
 // Image compression
 function imgCompression() {
-    return src(`${paths.images}/*`)
+    return src(`${paths.images}/*`, { removeBOM: false })
         .pipe(imagemin()) // Compresses PNG, JPEG, GIF and SVG images
         .pipe(dest(paths.images))
 }
