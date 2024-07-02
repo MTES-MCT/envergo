@@ -361,13 +361,16 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-        perimeter = self.perimeter
-        if perimeter:
-            polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
+        perimeters = self.perimeters.all()
+        if perimeters:
+            polygons = [
+                MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
+                for perimeter in perimeters
+            ]
             map = Map(
                 type="regulation",
                 center=self.moulinette.catalog["coords"],
-                entries=[polygon],
+                entries=polygons,
                 truncate=False,
                 zoom=None,
                 ratio="2x1",
