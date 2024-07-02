@@ -1300,8 +1300,12 @@ main.geometricians {
       color: #fff;
     }
 
-    a {
+    .fr-btn--secondary {
       background-color: var(--grey-1000-50);
+    }
+
+    .fr-btn--secondary:hover {
+      background-color: var(--background-default-grey-hover);
     }
 
     #rounded-hero{
@@ -1347,6 +1351,10 @@ main.geometricians {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      background-color: var(--background-contrast-grey);
+    }
+    .fr-callout:hover {
+      background-color: var(--background-contrast-grey-hover);
     }
     span{
       color: var(--blue-france-sun-113-625-hover)

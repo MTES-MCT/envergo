@@ -72,15 +72,15 @@ class GeometriciansView(MoulinetteMixin, FormView):
 
         context["questions"] = [
             (
-                "/faq/loi-sur-leau/#accordion-savoir_si_mon_projet_est_soumis",
+                f"{reverse('faq_loi_sur_leau')}#accordion-savoir_si_mon_projet_est_soumis",
                 "Comment déterminer si mon projet est soumis à la Loi sur l’eau ?",
             ),
             (
-                "/faq/loi-sur-leau/#accordion-travaux_avant_reponse",
+                f"{reverse('faq_loi_sur_leau')}#accordion-travaux_avant_reponse",
                 "Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?",
             ),
             (
-                "/faq/available-departments/",
+                reverse("faq_availability_info"),
                 "Dans quels départements est disponible EnvErgo ?",
             ),
         ]
