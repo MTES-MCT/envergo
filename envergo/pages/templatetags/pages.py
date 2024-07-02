@@ -144,7 +144,7 @@ def collapsible_menu(
     )
 
     aria_current = 'aria-current="page"' if current_route in all_routes else ""
-    unique_id = f"{menu_id}-{random.randint(0,100)}"
+    unique_id = f"{menu_id}-{random.randint(0, 100)}"
     menu_html = f"""
         <button class="{btn_class}" aria-expanded="false" aria-controls="{unique_id}" {aria_current}>
             {label}
