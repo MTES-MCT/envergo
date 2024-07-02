@@ -38,6 +38,12 @@ urlpatterns = [
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_missing_data",
                 ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    _("debug/"),
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_result_debug",
+                ),
                 path(
                     "<slug:regulation>/",
                     MoulinetteRegulationResult.as_view(),

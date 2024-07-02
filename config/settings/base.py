@@ -24,7 +24,7 @@ DEBUG = env.bool("DJANGO_DEBUG", default=False)
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Paris"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "fr-fr"
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -342,8 +342,6 @@ MATOMO_EVALREQ_DIMENSION_ID = 1
 MATOMO_SIMULATION_DIMENSION_ID = 2
 
 CRISP_CHATBOX_ENABLED = env("DJANGO_CRISP_CHATBOX_ENABLED", default=False)
-CRISP_TOKEN_ID = env("DJANGO_CRISP_TOKEN_ID", default=None)
-CRISP_TOKEN_KEY = env("DJANGO_CRISP_TOKEN_KEY", default=None)
 CRISP_WEBSITE_ID = env("DJANGO_CRISP_WEBSITE_ID", default=None)
 
 MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", default=None)

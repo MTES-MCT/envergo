@@ -251,6 +251,12 @@ class MoulinetteConfigForm(forms.ModelForm):
             "geometry"
         )
 
+    def clean_criteria_values(self):
+        """Ensure an empty value can be converted to an empty json dict."""
+        value = self.cleaned_data["criteria_values"]
+        value = value or dict()
+        return value
+
 
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):

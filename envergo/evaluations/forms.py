@@ -1,13 +1,16 @@
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import USER_TYPES, Request
+from envergo.evaluations.utils import extract_department
 from envergo.evaluations.validators import application_number_validator
+from envergo.geodata.models import Department
 
 
 class EvaluationFormMixin(forms.Form):
@@ -62,17 +65,17 @@ class EvaluationSearchForm(forms.Form):
 
 class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     address = forms.CharField(
-        label=_("What is the project's address?"),
+        label=_("Address of the project"),
         help_text=_("Type in a few characters to see suggestions"),
         error_messages={
             "required": """
-                Ce champ est obligatoire. Si le projet n'a pas d'adresse,
-                cochez la case ci-dessous.
+                Ce champ est obligatoire. Si le projet n'a pas d'adresse précise,
+                veuillez indiquer uniquement le code postal.
             """
         },
     )
-    no_address = forms.BooleanField(
-        label=_("This project is not linked to an address"),
+    department = forms.CharField(
+        label="Department number",
         required=False,
     )
     application_number = forms.CharField(
@@ -98,7 +101,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ["address", "no_address", "application_number", "project_description"]
+        fields = ["address", "application_number", "project_description"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -110,20 +113,43 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        no_address = data.get("no_address", False)
-        if no_address:
-            self.fields["address"].required = False
-            if "address" in self._errors:
-                del self._errors["address"]
 
-            address = data.get("address", None)
-            if address:
-                self.add_error(
-                    "no_address",
-                    _(
-                        "You checked this box but still provided an address. Please check your submission."
-                    ),
-                )
+        # first try to get department from api-adresse.data.gouv.fr
+        address = data.get("address", "")
+        department_input = data.get("department", None)
+        if not department_input:
+            # extract department from address
+            department_input = extract_department(address)
+
+        if department_input and department_input not in address:
+            # when a town is selected on its own, without a complete address, there is no zip code.
+            # We therefore add the department number
+            data["address"] = f"{address} ({department_input})"
+
+        department = (
+            Department.objects.filter(department=department_input)
+            .select_related("moulinette_config")
+            .first()
+        )
+        if department and not department.is_activated():
+            self.add_error(
+                "department",
+                ValidationError(
+                    "Département non disponible", code="unavailable_department"
+                ),
+            )
+            data["department"] = (
+                department  # adding an error remove the department from cleaned_data, but we need it in the view
+            )
+
+        if not department and not self.has_error("address"):
+            self.add_error(
+                None,
+                ValidationError(
+                    "Nous ne parvenons pas à situer votre projet. Merci d'indiquer a minima un code postal.",
+                    code="unknown_department",
+                ),
+            )
 
         return data
 
@@ -192,11 +218,29 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         )
 
 
+# See https://docs.djangoproject.com/en/4.2/topics/http/file-uploads/#uploading-multiple-files
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
 class WizardFilesForm(forms.ModelForm):
-    additional_files = forms.FileField(
+    additional_files = MultipleFileField(
         label=_("Additional files you might deem useful for the evaluation"),
         required=False,
-        widget=forms.ClearableFileInput(attrs={"multiple": True}),
         help_text=f"""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
             Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>

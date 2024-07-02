@@ -220,7 +220,7 @@
     // so the widget map and the result maps are in sync.
     // The "pageshow" event fires after the "load" event, so the map is
     // already initialized.
-    if (event.persisted) {
+    if (event.persisted && moulinetteMap) {
       moulinetteMap.reset();
     }
   });

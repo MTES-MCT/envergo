@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
@@ -12,8 +13,32 @@ from envergo.evaluations.tests.factories import (
     RequestFactory,
     VersionFactory,
 )
+from envergo.geodata.conftest import loire_atlantique_department  # noqa
+from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture()
+def moulinette_config(loire_atlantique_department):  # noqa
+    MoulinetteConfigFactory(
+        department=loire_atlantique_department,
+        is_activated=True,
+        ddtm_water_police_email="ddtm_email_test@example.org",
+        ddtm_n2000_email="ddtm_n2000@example.org",
+        dreal_eval_env_email="dreal_evalenv@example.org",
+    )
+
+
+@pytest.fixture()
+def unactivated_moulinette_config(loire_atlantique_department):  # noqa
+    MoulinetteConfigFactory(
+        department=loire_atlantique_department,
+        is_activated=False,
+        ddtm_water_police_email="ddtm_email_test@example.org",
+        ddtm_n2000_email="ddtm_n2000@example.org",
+        dreal_eval_env_email="dreal_evalenv@example.org",
+    )
 
 
 def test_searching_inexisting_eval(client):
@@ -45,9 +70,10 @@ def test_search_existing_eval(client, evaluation):
     assert redirect_url == f"/avis/{evaluation.reference}/"
 
 
-def test_eval_request_wizard_step_1(client):
+def test_eval_request_wizard_step_1(client, moulinette_config):
+
     url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
+    data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
 
@@ -56,7 +82,26 @@ def test_eval_request_wizard_step_1(client):
     assert DATA_KEY in session
 
     data = session[DATA_KEY]
-    assert data["address"][0] == "42 rue du Test, Testville"
+    assert data["address"][0] == "42 rue du Test, 44000 Testville"
+
+
+def test_eval_request_wizard_step_1_unavailable_department(
+    client, unactivated_moulinette_config
+):
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, 44000 Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+    assert "/indisponible/44" in res.url
+
+
+def test_eval_request_wizard_step_1_missing_department(client):
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 200
+    res.context_data["form"].has_error(NON_FIELD_ERRORS, "unknown_department")
 
 
 def test_eval_request_wizard_step_2(client):
@@ -137,16 +182,18 @@ def test_eval_request_wizard_step_2_petitioner(client):
 
 
 @patch("envergo.utils.mattermost.requests.post")
-def test_eval_wizard_all_steps(
-    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+def test_eval_wizard_step_1_and_2(
+    mock_post, settings, client, mailoutbox, moulinette_config
 ):
+    """The evalreq is saved but not submitted."""
+
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
 
     qs = Request.objects.all()
     assert qs.count() == 0
 
     url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
+    data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
 
@@ -158,20 +205,170 @@ def test_eval_wizard_all_steps(
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    # The evalreq is created but not submitted
+    assert qs.count() == 1
+    evalreq = qs[0]
+    assert evalreq.submitted is False
+
+    # Admin and user are not notified yet
+    mock_post.assert_not_called()
+    assert len(mailoutbox) == 0
+
+
+@patch("envergo.utils.mattermost.requests.post")
+def test_eval_wizard_all_steps(
+    mock_post,
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
+):
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, 44000 Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_emails": ["contact@example.org"],
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    assert qs.count() == 1
+    evalreq = qs[0]
+    assert evalreq.submitted is False
+
+    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
-
     assert res.status_code == 302
+
     assert len(callbacks) == 1
-    assert qs.count() == 1
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
     assert "Vous recevrez une réponse dans les trois jours ouvrés" in mailoutbox[0].body
+    evalreq.refresh_from_db()
+    assert evalreq.submitted is True
+
+
+@patch("envergo.utils.mattermost.requests.post")
+def test_eval_is_only_submitted_once(
+    mock_post,
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
+):
+    """We only send the notifications once."""
+
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, 44000 Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_emails": ["contact@example.org"],
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    evalreq = qs[0]
+    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
+    assert len(callbacks) == 1
+
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
+    assert len(callbacks) == 0
+
+    mock_post.assert_called_once()
+    assert len(mailoutbox) == 1
+    evalreq.refresh_from_db()
+    assert evalreq.submitted is True
+
+
+@patch("envergo.utils.mattermost.requests.post")
+def test_eval_wizard_all_steps_with_test_email(
+    mock_post,
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
+):
+    """Test evalreq are not submitted."""
+
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.TEST_EMAIL = "test@test.org"
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {"address": "42 rue du Test, 44000 Testville"}
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "project_description": "Bla bla bla",
+        "user_type": "instructor",
+        "contact_emails": [settings.TEST_EMAIL],
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    assert qs.count() == 1
+    evalreq = qs[0]
+    assert evalreq.submitted is False
+
+    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    assert res.status_code == 302
+    assert len(callbacks) == 0
+    mock_post.assert_not_called()
+    assert len(mailoutbox) == 0
 
 
 @patch("envergo.utils.mattermost.requests.post")
 def test_confirmation_email_override(
-    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
+    mock_post,
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
 ):
     settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
 
@@ -181,7 +378,7 @@ def test_confirmation_email_override(
     )
 
     url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
+    data = {"address": "42 rue du Test, 44000 Testville"}
     res = client.post(url, data=data)
     assert res.status_code == 302
 
@@ -193,6 +390,13 @@ def test_confirmation_email_override(
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    qs = Request.objects.all()
+    evalreq = qs[0]
+
+    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
     with django_capture_on_commit_callbacks(execute=True):
         res = client.post(url, data=data)
 
@@ -206,39 +410,6 @@ def test_confirmation_email_override(
         "Vous recevrez une réponse quand les poules auront des dentiers"
         in mailoutbox[0].body
     )
-
-
-@patch("envergo.utils.mattermost.requests.post")
-def test_eval_wizard_all_steps_with_test_email(
-    mock_post, settings, client, mailoutbox, django_capture_on_commit_callbacks
-):
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
-    settings.TEST_EMAIL = "test@test.org"
-
-    qs = Request.objects.all()
-    assert qs.count() == 0
-
-    url = reverse("request_eval_wizard_step_1")
-    data = {"address": "42 rue du Test, Testville"}
-    res = client.post(url, data=data)
-    assert res.status_code == 302
-
-    url = reverse("request_eval_wizard_step_2")
-    data = {
-        "project_description": "Bla bla bla",
-        "user_type": "instructor",
-        "contact_emails": [settings.TEST_EMAIL],
-        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
-        "project_owner_phone": "0612345678",
-    }
-    with django_capture_on_commit_callbacks(execute=True) as callbacks:
-        res = client.post(url, data=data)
-
-    assert res.status_code == 302
-    assert len(callbacks) == 0
-    assert qs.count() == 1
-    mock_post.assert_not_called()
-    assert len(mailoutbox) == 0
 
 
 def test_dashboard_displays_empty_messages(user, client):

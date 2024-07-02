@@ -20,8 +20,8 @@ html.nojs .js {
 // all pages with target links do.
 @media (min-width: 62em) {
   html {
-    scroll-padding-top: 4rem;
     /* height of sticky header */
+    scroll-padding-top: 3rem;
   }
 }
 
@@ -703,9 +703,17 @@ div.leaflet-container {
     }
   }
 
+  // Fix issue with dsfr adding styles to every single links and thus breaking
+  // a lot of stuff.
+  // See https://github.com/GouvernementFR/dsfr/issues/264
   div.leaflet-control-zoom a {
     background-image: unset;
     background-size: unset;
+    transition: none;
+  }
+
+  div.leaflet-control-layers a {
+    background-size: 26px 26px;
     transition: none;
   }
 
@@ -836,6 +844,10 @@ p:last-child {
   &.fr-alert--sm p:last-child {
     margin-bottom: inherit;
   }
+
+  &#unavailable-department-alert{
+    box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
+  }
 }
 
 .fr-stepper {
@@ -959,6 +971,11 @@ div.hero-alt {
 /**
  * Impression
  */
+
+.print-only {
+  display: none;
+}
+
 @media print {
 
   // Reduce font size to a more compact print
@@ -1027,11 +1044,70 @@ div.hero-alt {
     display: none;
   }
 
+  // Underline links in pdf
+  a {
+    text-decoration: underline;
+  }
+
+  // for all links but anchors : display in blue with the url in parenthesis
+  a:not([href^="#"]) {
+    color: linktext;
+  }
+
+  a:not([href^="#"])::after {
+    content: " (" attr(href) ") ";
+    // these styles are necessary to override some dsfr styles
+    mask-size: auto;
+    mask-image: none;
+    background-color: inherit;
+    --icon-size: inherit;
+    display: inherit;
+  }
+
   // Make sure leaflet controls are not printed
   .leaflet-control {
     display: none;
   }
 
+  // Enforce background color for tags
+  .fr-tag {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-only {
+    display: inherit;
+  }
+
+  // display the loaded map outside the form for print
+  #moulinette-container {
+    .fr-grid-row {
+      display: block;
+    }
+
+    #form-col {
+      display: block;
+      flex: unset;
+      max-width: 100%;
+
+      * {
+        display: none;
+      }
+
+      #moulinette-form,
+      #form-groups,
+      #form-group-coords,
+      #form-group-coords>figure,
+      #map-container,
+      #map-container * {
+        display: inherit;
+      }
+
+      #map-container .leaflet-control-container {
+        display: none;
+      }
+    }
+  }
 }
 
 .fr-header {
@@ -1099,11 +1175,21 @@ div.hero-alt {
   // Makes a new header show when the page is crolled down
   // and the top header leaves the viewport
   &.header-popup {
-    display: none;
+    // We can't use `display: none` here because this messes with the
+    // smooth scrolling behavior.
+    // Displaying a new element in the middle of a scroll animation interrupts it
+
+    // Since the header also "pops" into existence when the user scrolls, we use
+    // `position: fixed` instead of `position: sticky` to avoir content jumping
+    // effects and smooth-scrolling issues
+    position: fixed;
+    top: -5000px;
+    visibility: hidden;
 
     @media (min-width: 62em) {
       &.displayed {
-        display: block;
+        top: 0;
+        visibility: visible;
       }
     }
   }
@@ -1302,28 +1388,16 @@ main.contrast-bg {
 }
 
 #self-declaration-cta {
-  margin: 1.5rem auto;
-  padding: 1.5rem 0;
-  max-width: 30em;
-  text-align: center;
-  font-style: italic;
-  border-top: 1px solid #E4E4E4;
-  border-bottom: 1px solid #E4E4E4;
+  margin: 3rem auto;
 
-  h2 {
-    margin-bottom: 1rem;
+  div.fr-notice__body {
+    padding-right: 0;
 
-    .icon {
-      font-style: normal;
+    p {
+      font-weight: normal;
+      font-size: 90%;
     }
   }
-
-  .button-with-help {
-    text-align: left;
-    display: inline-block;
-    font-style: normal;
-  }
-
 }
 
 main.demonstrateur_2150 {
