@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from urllib.parse import urlencode
 
 import pytest
@@ -108,3 +108,11 @@ def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_e
     request.refresh_from_db()
     assert request.project_owner_phone == "+33612345678"
     assert request.project_owner_emails == ["test@test.com"]
+
+
+def test_evaluation_edition_triggers_an_automation():
+    with patch("envergo.evaluations.tasks.post_evaluation_to_automation") as mock_post:
+        evaluation = EvaluationFactory()
+        evaluation.save()
+
+    mock_post.assert_called_once_with(evaluation.uid)
