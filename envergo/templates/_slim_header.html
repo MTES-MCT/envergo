@@ -26,9 +26,7 @@
       <div id="slim-menu" class="fr-header__tools">
         <div class="fr-header__tools-links">
           <ul class="fr-btns-group">
-            <li>
-              <a class="fr-btn" href="{% url 'moulinette_home' %}">Porteurs de projet</a>
-            </li>
+            <li>{% project_owner_menu is_slim=True %}</li>
             <li>
               <a class="fr-btn" href="{% url 'request_evaluation' %}">Services urbanisme</a>
             </li>
