@@ -16,7 +16,7 @@ class Command(BaseCommand):
         )
         one_hr_ago = localtime() - timedelta(hours=1)
         unsubmitted_evalreqs = Request.objects.filter(
-            created_at__gte=one_hr_ago, submitted=False
+            created_at__lte=one_hr_ago, submitted=False
         )
 
         self.stdout.write(
