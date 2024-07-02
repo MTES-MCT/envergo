@@ -2,12 +2,16 @@ import logging
 
 from anymail.signals import tracking
 from django.db.models import F
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.evaluations.models import RecipientStatus, RegulatoryNoticeLog
-from envergo.evaluations.tasks import warn_admin_of_email_error
+from envergo.evaluations.models import Evaluation, RecipientStatus, RegulatoryNoticeLog
+from envergo.evaluations.tasks import (
+    post_evaluation_to_automation,
+    warn_admin_of_email_error,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,3 +121,8 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
                 session_key=message_id,
                 metadata=metadata,
             )
+
+
+@receiver(post_save, sender=Evaluation)
+def handle_evaluation_edition(sender, instance, **kwargs):
+    post_evaluation_to_automation.delay(instance.uid)
