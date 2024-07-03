@@ -1,0 +1,18 @@
+
+<p>
+  Le projet se trouve dans plusieurs périmètres :
+  {% for perimeter in perimeters %}
+    «
+    {% if perimeter.url %}
+      <a href="{{ perimeter.url }}" target="_blank" rel="noopener">{{ perimeter.name }}</a>
+    {% else %}
+      {{ perimeter.name }}
+    {% endif %}
+     »
+    {% if forloop.last %}
+      .
+    {% else %}
+       ;
+    {% endif %}
+  {% endfor %}
+</p>
