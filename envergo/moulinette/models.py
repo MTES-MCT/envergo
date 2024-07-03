@@ -185,11 +185,9 @@ class Regulation(models.Model):
         """
 
         activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
-        return all(
-            (
-                self.is_activated(),
-                any(activated_perimeters),
-            )
+        return self.is_activated() and (
+            (not self.has_perimeters)
+            or (self.has_perimeters and any(activated_perimeters))
         )
 
     @property
