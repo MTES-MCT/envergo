@@ -78,7 +78,7 @@ def test_default_result_when_a_perimeter_is_found(moulinette_data):
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
 
-    assert moulinette.sage.perimeter is not None
+    assert moulinette.sage.perimeters.count() > 0
     assert moulinette.sage.result == "non_soumis"
 
 
@@ -90,12 +90,11 @@ def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
 
-    perimeter = moulinette.sage.perimeter
+    perimeter = moulinette.sage.perimeters.all()[0]
     perimeter.is_activated = False
     perimeter.save()
     moulinette.evaluate()
 
-    assert moulinette.sage.perimeter is not None
     assert moulinette.sage.result == "non_disponible"
 
 
@@ -109,7 +108,7 @@ def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
 
-    assert moulinette.sage.perimeter is None
+    assert moulinette.sage.perimeters.count() == 0
     assert moulinette.sage.result == "non_concerne"
 
 
