@@ -1,4 +1,4 @@
-// Description: This script is used to adjust the scroll position when the page is loaded with a hash in the URL.
+// Description: This script is used to see the title of an accordion when the page is loaded with a hash in the URL.
 
 window.addEventListener('load', function() {
   const id = window.location.hash.slice(1);
