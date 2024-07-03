@@ -110,7 +110,7 @@ EVAL_RESULTS = Choices(
 
 class EvaluationQuerySet(QuerySet):
     def update(self, **kwargs):
-        super().update(**kwargs)
+        res = super().update(**kwargs)
         for instance in self:
             # Signal that the save is complete
             post_save.send(
@@ -121,6 +121,7 @@ class EvaluationQuerySet(QuerySet):
                 raw=False,
                 using=self.db,
             )
+        return res
 
 
 class Evaluation(models.Model):
