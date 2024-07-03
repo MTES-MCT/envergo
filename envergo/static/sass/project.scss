@@ -1312,6 +1312,10 @@ main.home {
   }
 }
 main.geometricians {
+  img {
+    max-width: 100%;
+  }
+
   section#hero {
     background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
 
