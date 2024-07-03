@@ -99,8 +99,8 @@ def faq_menu(context):
 def evaluation_menu(context):
     """Generate html for the "Mes avis réglementaires" collapsible menu."""
     links = (
-        ("evaluation_search", "Retrouver un avis"),
-        ("dashboard", "Tableau de bord"),
+        ("evaluation_search", "Retrouver un avis", []),
+        ("dashboard", "Tableau de bord", []),
     )
 
     # Other urls that can be reached from the menu
@@ -114,7 +114,10 @@ def evaluation_menu(context):
 @register.simple_tag(takes_context=True)
 def project_owner_menu(context, is_slim=False):
     """Generate html for the "Equipes projet" collapsible menu."""
-    links = (("geometricians", "Géomètres"),)
+    links = (
+        ("geometricians", "Géomètres", ["GeometrePage", "SimulationClick", "Nav"]),
+    )
+
     return collapsible_menu(
         context, links, "Équipes projet", "menu-project-owner", is_slim=is_slim
     )
@@ -131,11 +134,11 @@ def collapsible_menu(
     except AttributeError:
         current_route = ""
     links_html = [
-        nav_link(url, label, aria_current=(url == current_route))
-        for url, label in links
+        nav_link(url, label, *event_data, aria_current=(url == current_route))
+        for url, label, event_data in links
     ]
     # urls for the menu items
-    routes = list(dict(links).keys())
+    routes = [link[0] for link in links]
     all_routes = routes + additional_routes
     btn_class = (
         "fr-nav__btn"
