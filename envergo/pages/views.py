@@ -27,21 +27,18 @@ class GeometriciansView(MoulinetteMixin, FormView):
             (
                 "EnvErgo m'a permis de gagner un temps considérable et de m'assurer que mon projet respecte toutes les "
                 "réglementations environnementales. C'est un outil indispensable pour tout géomètre.",
-                "Jean-François Peltier",
                 "Géomètre",
                 "Loire-Atlantique",
             ),
             (
                 "J'ai trouvé EnvErgo très facile à utiliser et extrêmement utile pour naviguer dans le labyrinthe des "
                 "réglementations environnementales. Je le recommande vivement à mes collègues.",
-                "Marius Garnier",
-                "Environnementaliste",
+                "Géomètre",
                 "Gironde",
             ),
             (
                 "Envergo a non seulement amélioré mon efficacité, mais il m'a également permis de gagner la confiance "
                 "de mes clients en garantissant que leurs projets respectent toutes les obligations environnementales.",
-                "Grégoire Gallois",
                 "Géomètre",
                 "Calvados",
             ),
@@ -72,11 +69,11 @@ class GeometriciansView(MoulinetteMixin, FormView):
 
         context["questions"] = [
             (
-                f"{reverse('faq_loi_sur_leau')}#accordion-savoir_si_mon_projet_est_soumis",
+                f"{reverse('faq_loi_sur_leau')}#title-savoir_si_mon_projet_est_soumis",
                 "Comment déterminer si mon projet est soumis à la Loi sur l’eau ?",
             ),
             (
-                f"{reverse('faq_loi_sur_leau')}#accordion-travaux_avant_reponse",
+                f"{reverse('faq_loi_sur_leau')}#title-travaux_avant_reponse",
                 "Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?",
             ),
             (

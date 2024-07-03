@@ -1358,9 +1358,14 @@ main.geometricians {
   section#webinar {
     background-color: var(--grey-975-100);
 
+    #webinar-img-container {
+      text-align: center;
+    }
+
     img {
       max-width: 100%;
-      border-radius: 1em;
+      max-height: 20em;
+      border-radius: 0.3em;
     }
   }
 

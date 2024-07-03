@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block main-classes %}geometricians{% endblock %}
+{% block top-bar %}{% endblock %}
 
 {% block container %}
 
@@ -83,14 +84,13 @@
   <section class="fr-container fr-pt-8w fr-pb-5w">
     <h2 class="fr-h3 fr-mb-6w">Témoignages</h2>
     <div class="fr-grid-row fr-grid-row--center">
-      {% for testimony, author, title, department in testimonials %}
+      {% for testimony, title, department in testimonials %}
         <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w fr-mb-4w">
           <figure class="fr-quote">
             <blockquote>
               <p>« {{ testimony }} »</p>
             </blockquote>
             <figcaption>
-              <p class="fr-quote__author">{{ author }}</p>
               <ul class="fr-quote__source">
                 <li>{{ title }}</li>
                 <li>{{ department }}</li>
@@ -106,7 +106,8 @@
     <div class="fr-container">
       <h2 class="fr-h3 fr-mb-2w">Participez à notre webinaire mensuel dédié aux géomètres</h2>
       <div class="fr-grid-row fr-grid-row--middle">
-        <div class="fr-col fr-col-12 fr-col-md-6 fr-pr-2w">
+        <div id="webinar-img-container"
+             class="fr-col fr-col-12 fr-col-md-6 fr-pr-2w">
           <img src="{% static 'images/webinar.png' %}"
                alt="screenshot of a webinar session">
         </div>
@@ -128,7 +129,7 @@
              target="_blank"
              rel="noopener external">Je m'inscris !</a>
           <br>
-          <span class="fr-hint-text">Durée : 2 min</span>
+          <span class="fr-hint-text">2 minutes</span>
         </div>
       </div>
     </div>
@@ -149,7 +150,7 @@
       {% endfor %}
     </div>
     <a id="faq-link"
-       href="/faq/"
+       href="{% url 'faq' %}"
        class="fr-btn fr-btn--lg"
        data-event-category="GeometriciansPage"
        data-event-action="FAQClick"

@@ -54,7 +54,8 @@
     </section>
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn"
+        <button id="title-savoir_si_mon_projet_est_soumis"
+                class="fr-accordion__btn"
                 aria-expanded="false"
                 aria-controls="accordion-savoir_si_mon_projet_est_soumis">
           <span>Comment déterminer si mon projet est soumis à la Loi sur l'eau ?</span>
@@ -245,7 +246,8 @@
     </section>
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn"
+        <button id="title-travaux_avant_reponse"
+                class="fr-accordion__btn"
                 aria-expanded="false"
                 aria-controls="accordion-travaux_avant_reponse">
           <span>Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?</span>
@@ -333,6 +335,7 @@
 {% endblock %}
 {% block extra_js %}
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/anchor_redirection_adjustment.js' %}"></script>
   <script>
     window.addEventListener('load', function() {
       const elt = document.getElementById('faq-accordion');
