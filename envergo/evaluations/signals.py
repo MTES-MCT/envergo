@@ -125,4 +125,5 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
 
 @receiver(post_save, sender=Evaluation)
 def handle_evaluation_edition(sender, instance, **kwargs):
-    post_evaluation_to_automation.delay(instance.uid)
+    if not kwargs.get("created", False):
+        post_evaluation_to_automation.delay(instance.uid)

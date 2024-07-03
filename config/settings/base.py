@@ -344,8 +344,6 @@ MATOMO_SIMULATION_DIMENSION_ID = 2
 CRISP_CHATBOX_ENABLED = env("DJANGO_CRISP_CHATBOX_ENABLED", default=False)
 CRISP_WEBSITE_ID = env("DJANGO_CRISP_WEBSITE_ID", default=None)
 
-MAKE_COM_WEBHOOK = env("DJANGO_MAKE_COM_WEBHOOK", default=None)
-
 SELF_DECLARATION_FORM_ID = "mDzXgX"
 
 TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
@@ -357,6 +355,12 @@ GEOMETRICIAN_WEBINAR_FORM_URL = env(
     default="https://app.livestorm.co/p/3e2db81a-a8eb-4684-83e9-9ba999f8bb37/form",
 )
 
+# Make.com integration settings
+MAKE_COM_WEBHOOK = env(
+    "DJANGO_MAKE_COM_WEBHOOK", default=None
+)  # webhook for new evaluation requests
+
 MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
-    "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK", default=None
+    "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK",
+    default=None,  # webhook for edited evaluations
 )
