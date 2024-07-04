@@ -25,42 +25,41 @@ class GeometriciansView(MoulinetteMixin, FormView):
         context = super().get_context_data(**kwargs)
         context["testimonials"] = [
             (
-                "EnvErgo m'a permis de gagner un temps considérable et de m'assurer que mon projet respecte toutes les "
-                "réglementations environnementales. C'est un outil indispensable pour tout géomètre.",
-                "Géomètre",
-                "Loire-Atlantique",
+                "« Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
+                "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises. »",
+                "Un géomètre-expert en Loire-Atlantique",
             ),
             (
-                "J'ai trouvé EnvErgo très facile à utiliser et extrêmement utile pour naviguer dans le labyrinthe des "
-                "réglementations environnementales. Je le recommande vivement à mes collègues.",
-                "Géomètre",
-                "Gironde",
+                "« Rien de pire que de devoir redéposer un dossier d'urbanisme. EnvErgo a évité à mon client de "
+                "découvrir une fois le permis d'aménager délivré qu'il y avait un dossier Loi sur l'eau à constituer "
+                "pour ce lotissement. »",
+                "Un géomètre-expert en Vendée",
             ),
             (
-                "Envergo a non seulement amélioré mon efficacité, mais il m'a également permis de gagner la confiance "
-                "de mes clients en garantissant que leurs projets respectent toutes les obligations environnementales.",
-                "Géomètre",
-                "Calvados",
+                "« La simplicité d'utilisation du simulateur EnvErgo le rend très adapté en phases de faisabilité et "
+                "de planification réglementaire. En outre l'équipe est réactive en cas de questions. »",
+                "Un géomètre-expert dans l'Aisne",
             ),
         ]
 
         context["advantages"] = [
             (
                 "Sécurisez",
-                "Sécurisez vos projets : évitez les retards, les surcoûts, les annulations et les contentieux.",
+                "Sécurisez les projets de vos clients : évitez les retards, les surcoûts, les annulations et les "
+                "contentieux.",
                 "images/calendar_light.svg",
                 "images/calendar_dark.svg",
             ),
             (
                 "Maîtrisez",
-                "Maîtrisez les réglementations environnementales applicables à vos projets d'aménagement : seuils "
+                "Maîtrisez les réglementations environnementales applicables aux projets d'aménagement : seuils "
                 "d'entrée en procédure, délais, contacts des administrations compétentes, procédures.",
                 "images/legal_light.svg",
                 "images/legal_dark.svg",
             ),
             (
                 "Informez",
-                "Renforcez votre capacité de conseil en proposant une information à jour sur les normes "
+                "Renforcez votre capacité de conseil en proposant une information à jour sur les réglementations "
                 "environnementales.",
                 "images/reputation_light.svg",
                 "images/reputation_dark.svg",

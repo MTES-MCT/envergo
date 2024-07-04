@@ -115,7 +115,11 @@ def evaluation_menu(context):
 def project_owner_menu(context, is_slim=False):
     """Generate html for the "Equipes projet" collapsible menu."""
     links = (
-        ("geometricians", "Géomètres", ["GeometrePage", "SimulationClick", "Nav"]),
+        (
+            "geometricians",
+            "Géomètres-experts",
+            ["GeometrePage", "SimulationClick", "Nav"],
+        ),
     )
 
     return collapsible_menu(

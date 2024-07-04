@@ -3,7 +3,7 @@
 {% load static l10n %}
 
 {% block title %}
-  EnvErgo : géomètres experts, planifiez vos projets d’aménagement en ne manquant aucune obligation environnementale.
+  EnvErgo : géomètres-experts, planifiez les projets d’aménagement en ne manquant aucune obligation environnementale.
 {% endblock %}
 
 {% block main-classes %}geometricians{% endblock %}
@@ -15,17 +15,14 @@
     <div class="fr-container">
       <div class="fr-grid-row fr-pt-4w">
         <div class="fr-col-12 fr-col-lg-8 fr-pr-2w">
-          <h1>
-            Géomètres experts, planifiez vos projets d’aménagement en ne manquant aucune obligation
-            environnementale.
-          </h1>
+          <h1>Géomètres-experts, planifiez les projets d’aménagement en ne manquant aucune obligation environnementale.</h1>
 
           <ul class="fr-badge-group fr-my-3w">
             <li>
               <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
             </li>
             <li>
-              <p class="fr-badge fr-badge--blue-ecume">🌱 SAGE</p>
+              <p class="fr-badge fr-badge--blue-ecume">🌱 Règlement de SAGE</p>
             </li>
             <li>
               <p class="fr-badge fr-badge--blue-ecume">🐸 Natura 2000</p>
@@ -35,14 +32,14 @@
             </li>
           </ul>
           <p class="fr-text fr-text--lead">
-            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction. Avec notre
+            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction. Grâce au
             simulateur, découvrez les réglementations environnementales spécifiques à tout projet d'aménagement.
           </p>
           <a href="#simulateur"
              class="fr-btn fr-btn--secondary fr-btn--lg fr-mb-1w"
              data-event-category="GeometrePage"
              data-event-action="SimulationClick"
-             data-event-name="Main">Simulez votre projet</a>
+             data-event-name="Main">Simulez un projet</a>
           <br />
           <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
         </div>
@@ -84,7 +81,7 @@
   <section class="fr-container fr-pt-8w fr-pb-5w">
     <h2 class="fr-h3 fr-mb-6w">Témoignages</h2>
     <div class="fr-grid-row fr-grid-row--center">
-      {% for testimony, title, department in testimonials %}
+      {% for testimony, author in testimonials %}
         <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w fr-mb-4w">
           <figure class="fr-quote">
             <blockquote>
@@ -92,8 +89,7 @@
             </blockquote>
             <figcaption>
               <ul class="fr-quote__source">
-                <li>{{ title }}</li>
-                <li>{{ department }}</li>
+                <li>{{ author }}</li>
               </ul>
             </figcaption>
           </figure>
@@ -116,7 +112,7 @@
           <p class="fr-mb-2w">20 minutes pour :</p>
           <ul class="fr-mb-3w">
             <li>Découvrir le service avec une démonstration du simulateur</li>
-            <li>Retours d'expériences de géomètres utilisateurs.trices</li>
+            <li>Retours d'expériences de géomètres utilisateurs</li>
             <li>Réponse aux questions des participant.e.s</li>
           </ul>
 
