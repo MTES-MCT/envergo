@@ -180,7 +180,7 @@ class Regulation(models.Model):
     def show_criteria(self):
         """Should the criteria be displayed?
 
-        We musn't display criteria if the regulation or associated perimetes are
+        We musn't display criteria if the regulation or associated perimeters are
         not activated yet.
         """
 
