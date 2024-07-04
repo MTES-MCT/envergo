@@ -3,6 +3,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from envergo.geodata.conftest import france_map  # noqa
+from envergo.geodata.conftest import mock_geo_api_data  # noqa
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -221,7 +222,9 @@ def test_evalenv_terrain_assiette_systematique(moulinette_data):
     assert moulinette.eval_env.terrain_assiette.result == "systematique"
 
 
-def test_evalenv_non_soumis_no_optional_criteria(admin_client):
+def test_evalenv_non_soumis_no_optional_criteria(
+    admin_client, mock_geo_api_data  # noqa
+):
     MoulinetteConfigFactory()
 
     url = reverse("moulinette_result")
@@ -244,7 +247,7 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     )
 
 
-def test_evalenv_non_soumis_optional_criteria(admin_client):
+def test_evalenv_non_soumis_optional_criteria(admin_client, mock_geo_api_data):  # noqa
     MoulinetteConfigFactory()
 
     url = reverse("moulinette_result")
