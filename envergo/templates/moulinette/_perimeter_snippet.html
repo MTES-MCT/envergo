@@ -1,7 +1,5 @@
 {% load moulinette %}
 
-{{ perimeters|length }}
-
 {% if perimeters|length == 1 %}
   <p>
     {% perimeter_long_name regulation perimeters.0 as perimeter_name %}
