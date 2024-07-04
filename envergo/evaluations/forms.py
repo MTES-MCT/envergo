@@ -38,7 +38,7 @@ class EvaluationFormMixin(forms.Form):
         user_type = data.get("user_type", None)
 
         if user_type == USER_TYPES.petitioner:
-            self.fields["contact_emails"].required = False
+            self.fields["urbanism_department_emails"].required = False
 
         if user_type == USER_TYPES.instructor:
             send_eval_to_project_owner = data.get("send_eval_to_project_owner", False)
@@ -162,12 +162,12 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         initial=USER_TYPES.instructor,
         widget=forms.RadioSelect,
     )
-    contact_emails = SimpleArrayField(
+    urbanism_department_emails = SimpleArrayField(
         forms.EmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
-    contact_phone = PhoneNumberField(
+    urbanism_department_phone = PhoneNumberField(
         label=_("Urbanism department phone number"),
         region="FR",
         required=False,
@@ -187,12 +187,12 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         required=False,
         help_text="""
         <span class="if-checked">
-            Si vous décochez cette case, le porteur de projet
-            ne recevra pas l'avis réglementaire.</span>
+            S’il est concerné par une réglementation environnementale, EnvErgo enverra l'avis réglementaire au porteur
+            de projet et l’accompagnera dans la compréhension de ses obligations. Vous serez en copie de l’avis.
+        </span>
         <span class="if-unchecked">
-            Si vous cochez cette case, et si le porteur de projet est concerné par une
-            réglementation environnementale, EnvErgo lui enverra l'avis réglementaire.
-            Vous serez en copie.
+            Le porteur de projet ne recevra pas l'avis réglementaire. Il pourrait alors manquer à ses obligations au
+            titre de la réglementation environnementale.
         </span>
         """,
     )
@@ -201,8 +201,8 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         model = Request
         fields = [
             "user_type",
-            "contact_emails",
-            "contact_phone",
+            "urbanism_department_emails",
+            "urbanism_department_phone",
             "project_owner_emails",
             "project_owner_phone",
             "send_eval_to_project_owner",
@@ -210,7 +210,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["contact_emails"].widget.attrs["placeholder"] = _(
+        self.fields["urbanism_department_emails"].widget.attrs["placeholder"] = _(
             "Provide one or several addresses separated by commas « , »"
         )
         self.fields["project_owner_emails"].widget.attrs["placeholder"] = _(
@@ -261,8 +261,8 @@ class RequestForm(WizardAddressForm, WizardContactForm):
             "application_number",
             "project_description",
             "user_type",
-            "contact_emails",
-            "contact_phone",
+            "urbanism_department_emails",
+            "urbanism_department_phone",
             "project_owner_emails",
             "project_owner_phone",
             "send_eval_to_project_owner",

@@ -43,7 +43,7 @@ def confirm_request_to_requester(request_id, host):
     logger.info(f"Sending confirmation email to requester {request_id}")
     request = Request.objects.filter(id=request_id).first()
     delay_mention = get_setting("evalreq_confirmation_email_delay_mention")
-    user_emails = request.contact_emails
+    user_emails = request.urbanism_department_emails
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
     file_upload_url = reverse("request_eval_wizard_step_3", args=[request.reference])
