@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% load static l10n %}
+
+{% block title %}
+  EnvErgo : géomètres-experts, planifiez les projets d’aménagement en ne manquant aucune obligation environnementale.
+{% endblock %}
+
+{% block main-classes %}geometricians{% endblock %}
+{% block top-bar %}{% endblock %}
+
+{% block container %}
+
+  <section id="hero">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-pt-4w">
+        <div class="fr-col-12 fr-col-lg-8 fr-pr-2w">
+          <h1>Géomètres-experts, planifiez les projets d’aménagement en ne manquant aucune obligation environnementale.</h1>
+
+          <ul class="fr-badge-group fr-my-3w">
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">💧 Loi sur l'eau</p>
+            </li>
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">🌱 Règlement de SAGE</p>
+            </li>
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">🐸 Natura 2000</p>
+            </li>
+            <li>
+              <p class="fr-badge fr-badge--blue-ecume">📖 Évaluation environnementale</p>
+            </li>
+          </ul>
+          <p class="fr-text fr-text--lead">
+            EnvErgo est un service public gratuit destiné aux acteurs de l'aménagement et de la construction. Grâce au
+            simulateur, découvrez les réglementations environnementales spécifiques à tout projet d'aménagement.
+          </p>
+          <a href="#simulateur"
+             class="fr-btn fr-btn--secondary fr-btn--lg fr-mb-1w"
+             data-event-category="GeometrePage"
+             data-event-action="SimulationClick"
+             data-event-name="Main">Simulez un projet</a>
+          <br />
+          <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
+        </div>
+        <div id="geometrician-illustration" class="fr-col-12 fr-col-lg-4">
+          <img src="{% static 'images/geometrician.svg' %}"
+               alt="Illustration d'un géomètre">
+        </div>
+      </div>
+    </div>
+    <svg id="rounded-hero" viewBox="0 0 800 140">
+      <path fill="#fff" fill-opacity="1" d="M 0 100 Q 350 200 800 0 L 800 200 L 0 200 L 0 100 "></path>
+    </svg>
+
+  </section>
+
+  <section id="advantages" class="fr-container">
+    <div class="fr-grid-row fr-grid-row--gutters fr-py-5w">
+      {% for title, description, light_picture_src, dark_picture_src in advantages %}
+        <div class="fr-col fr-col-12 fr-col-md-4">
+          <img src="{% static light_picture_src %}" alt="" class="light-only">
+          <img src="{% static dark_picture_src %}" alt="" class="dark-only">
+          <h2>{{ title }}</h2>
+          <p class="fr-text fr-mb-2w">{{ description }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="simulateur"
+           class="moulinette moulinette-columns fr-pt-8w fr-pb-5w">
+    <div class="fr-container">
+      <h2 class="fr-h3 fr-mb-6w">Simulez votre projet !</h2>
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-lg-9">{% include 'moulinette/_form.html' with form=form %}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-6w">Témoignages</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      {% for testimony, author in testimonials %}
+        <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w fr-mb-4w">
+          <figure class="fr-quote">
+            <blockquote>
+              <p>« {{ testimony }} »</p>
+            </blockquote>
+            <figcaption>
+              <ul class="fr-quote__source">
+                <li>{{ author }}</li>
+              </ul>
+            </figcaption>
+          </figure>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="webinar" class="fr-pt-8w fr-pb-5w">
+    <div class="fr-container">
+      <h2 class="fr-h3 fr-mb-2w">Participez à notre webinaire mensuel dédié aux géomètres</h2>
+      <div class="fr-grid-row fr-grid-row--middle">
+        <div id="webinar-img-container"
+             class="fr-col fr-col-12 fr-col-md-6 fr-pr-2w">
+          <img src="{% static 'images/webinar.jpg' %}"
+               alt="capture d'écran d'une session de webinaire en cours">
+        </div>
+        <div class="fr-col fr-col-12 fr-col-md-6 fr-pl-2w fr-mt-4w">
+
+          <p class="fr-mb-2w">20 minutes pour :</p>
+          <ul class="fr-mb-3w">
+            <li>Découvrir le service avec une démonstration du simulateur</li>
+            <li>Retours d'expériences de géomètres utilisateurs</li>
+            <li>Réponse aux questions des participant·e·s</li>
+          </ul>
+
+          <a href="{{ webinar_url }}"
+             class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line"
+             data-event-category="GeometrePage"
+             data-event-action="WebinarClick"
+             data-event-name="Main"
+             title="Inscription webinaire géomètres - ouvre une nouvelle fenêtre"
+             target="_blank"
+             rel="noopener external">Je m'inscris !</a>
+          <br>
+          <span class="fr-hint-text">2 minutes</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq-section" class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-6w">Questions fréquentes</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      {% for href, question in questions %}
+        <div class="fr-col fr-col-12 fr-col-md-4 fr-pr-4w fr-mb-4w">
+          <a href={{ href }}>
+            <div class="fr-callout">
+              <p class="fr-callout__text fr-mb-2w">{{ question }}</p>
+              <span class="fr-icon-arrow-right-line" aria-hidden="true"></span>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+    <a id="faq-link"
+       href="{% url 'faq' %}"
+       class="fr-btn fr-btn--lg"
+       data-event-category="GeometrePage"
+       data-event-action="FAQClick"
+       data-event-name="Main"
+       title="Redirection vers la FAQ">Consulter notre FAQ</a>
+  </section>
+
+  <section id="properties" class="fr-container fr-pt-8w fr-pb-5w">
+    <h2 class="fr-h3 fr-mb-2w">EnvErgo, un service…</h2>
+    <div class="fr-grid-row fr-grid-row--center">
+      {% for title, light_picture_src, dark_picture_src, picture_alt in properties %}
+        <div class="fr-col fr-col-12 fr-col-sm-6 fr-col-lg-3 fr-col-xl-2 fr-pr-4w fr-mt-4w">
+          <img src="{% static light_picture_src %}"
+               class="light-only"
+               alt="{{ picture_alt }}">
+          <img src="{% static dark_picture_src %}"
+               class="dark-only"
+               alt="{{ picture_alt }}">
+          <div>{{ title }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block extra_css %}
+  {% include 'moulinette/_form_styles.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
+    var FEEDBACK_BUTTONS = '.feedback-buttons button';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var VISITOR_ID = '{{ visitor_id }}';
+    var CSRF_TOKEN = '{{ csrf_token }}';
+    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = 'id_lat';
+    var LNG_FIELD_ID = 'id_lng';
+    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
+    var SIMULATION_FORM_ID = "moulinette-form";
+    var MAP_TYPE = "Form";  // This is only for analytics purpose
+  </script>
+  {% include 'moulinette/_form_scripts.html' %}
+  <script defer src="{% static 'js/libs/home_analytics.js' %}"></script>
+{% endblock %}
