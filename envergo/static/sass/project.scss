@@ -1417,9 +1417,14 @@ section.moulinette {
     --background-contrast-grey: var(--grey-975-100);
   }
 
-  .fr-input-group-map figure {
+  .fr-input-group-map {
     margin-top: 1rem;
     margin-bottom: 1.5rem;
+
+    figure {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
   }
 
   // Single column moulinette form layout
