@@ -9,6 +9,7 @@ from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
+from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
@@ -23,21 +24,22 @@ class GeometriciansView(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["webinar_url"] = GEOMETRICIAN_WEBINAR_FORM_URL
         context["testimonials"] = [
             (
-                "« Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
-                "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises. »",
+                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
+                "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises.",
                 "Un géomètre-expert en Loire-Atlantique",
             ),
             (
-                "« Rien de pire que de devoir redéposer un dossier d'urbanisme. EnvErgo a évité à mon client de "
+                "Rien de pire que de devoir redéposer un dossier d'urbanisme. EnvErgo a évité à mon client de "
                 "découvrir une fois le permis d'aménager délivré qu'il y avait un dossier Loi sur l'eau à constituer "
-                "pour ce lotissement. »",
+                "pour ce lotissement.",
                 "Un géomètre-expert en Vendée",
             ),
             (
-                "« La simplicité d'utilisation du simulateur EnvErgo le rend très adapté en phases de faisabilité et "
-                "de planification réglementaire. En outre l'équipe est réactive en cas de questions. »",
+                "La simplicité d'utilisation du simulateur EnvErgo le rend très adapté en phases de faisabilité et "
+                "de planification réglementaire. En outre l'équipe est réactive en cas de questions.",
                 "Un géomètre-expert dans l'Aisne",
             ),
         ]
