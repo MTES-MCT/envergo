@@ -10,13 +10,6 @@
 
   {% include '_form_header.html' with form=form %}
 
-  {% if additional_forms and moulinette.has_missing_data %}
-    <div class="fr-alert fr-alert--warning fr-mb-3w">
-      <p class="fr-alert__title">Question(s) complémentaire(s)</p>
-      <p>À compléter en bas du formulaire 👇</p>
-    </div>
-  {% endif %}
-
   <div id="form-groups">
     <div id="form-group-coords" class="moulinette-col first-section">
 
@@ -65,9 +58,13 @@
         <hr />
         <div id="additional-forms"
              class="{{ additional_forms_bound|yesno:"bound,unbound" }}">
-          <p>
+          <h4>
             <strong>Question(s) complémentaire(s)</strong>
+          </h4>
+          <p>
+            Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
           </p>
+
           {% for field_name, field in additional_fields.items %}
             {% if field|is_checkbox %}
               {% include '_checkbox_snippet.html' with field=field %}
@@ -79,9 +76,6 @@
               {% include '_field_snippet.html' with field=field %}
             {% endif %}
           {% endfor %}
-          {% if additional_forms and moulinette.has_missing_data and not optional_forms %}
-            <button type="submit" class="fr-btn">Compléter la simulation</button>
-          {% endif %}
         </div>
       {% endif %}
 
@@ -117,11 +111,12 @@
       {% endif %}
 
       <div class="hide-print">
-        {% if additional_forms and moulinette.has_missing_data and not optional_forms %}
-        {% elif moulinette %}
-          <button type="submit" class="fr-btn">Renouveler la simulation</button>
-        {% else %}
+        {% if not moulinette %}
           <button type="submit" class="fr-btn">Démarrer la simulation</button>
+        {% elif additional_forms and moulinette.has_missing_data %}
+          <button type="submit" class="fr-btn">Démarrer la simulation</button>
+        {% else %}
+          <button type="submit" class="fr-btn">Renouveler la simulation</button>
         {% endif %}
       </div>
     </div>
