@@ -227,7 +227,10 @@ class MoulinetteMixin:
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
-        url_with_params = f"{url}?{url_params}"
+        # Scroll to the additional forms if there are missing data
+        url_fragment = "#additional-forms" if moulinette.has_missing_data() else ""
+
+        url_with_params = f"{url}?{url_params}{url_fragment}"
         return url_with_params
 
     def should_activate_optional_criteria(self):
