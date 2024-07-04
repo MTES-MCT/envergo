@@ -1412,6 +1412,11 @@ main.geometricians {
 
 section.moulinette {
 
+  .fr-input,
+  .autocomplete__input {
+    --background-contrast-grey: var(--grey-975-100);
+  }
+
   .fr-input-group-map figure {
     margin-top: 1rem;
     margin-bottom: 1.5rem;
