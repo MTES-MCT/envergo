@@ -409,7 +409,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 class MoulinetteDebug(FormView):
     """Visualize the moulinette result for a specific criteria result combination.
 
-    See `envergo.m"oulinette.models.FakeMoulinette` for more details.
+    See `envergo.moulinette.models.FakeMoulinette` for more details.
     """
 
     form_class = MoulinetteDebugForm
