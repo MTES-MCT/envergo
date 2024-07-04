@@ -18,36 +18,37 @@
   {% endif %}
 
   <div id="form-groups">
-    <div id="form-group-coords"
-         class="fr-input-group moulinette-col first-section">
+    <div id="form-group-coords" class="moulinette-col first-section">
 
       {{ form.lng.as_hidden }}
       {{ form.lat.as_hidden }}
 
       {% include '_field_snippet.html' with field=form.address %}
 
-      <label class="step">
-        Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-        l'emplacement du projet.
-      </label>
-      <figure class="fr-content-media">
-        <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
-          <div class="ratio-content">
-            <div class="leaflet-container">
-              <div id="map"></div>
+      <div class="fr-input-group fr-input-group-map">
+        <label class="step">
+          Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+          l'emplacement du projet.
+        </label>
+        <figure class="fr-content-media">
+          <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
+            <div class="ratio-content">
+              <div class="leaflet-container">
+                <div id="map"></div>
+              </div>
             </div>
           </div>
-        </div>
-      </figure>
+        </figure>
 
-      {% if form.lat.errors or form.lng.errors %}
-        <p class="fr-error-text">
-          ↑
-          Les coordonnées saisies sont incorrectes
-          ↑
-        </p>
+        {% if form.lat.errors or form.lng.errors %}
+          <p class="fr-error-text">
+            ↑
+            Les coordonnées saisies sont incorrectes
+            ↑
+          </p>
 
-      {% endif %}
+        {% endif %}
+      </div>
     </div>
 
     <div class="moulinette-col last-section">
