@@ -46,9 +46,7 @@ def moulinette_data(footprint):
 
 
 # ETQ Admin, je peux voir l'option d'activer un critère optionnel
-def test_admin_see_optional_criterion_additional_question(
-    admin_client,
-):
+def test_admin_see_optional_criterion_additional_question(admin_client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
     full_url = f"{url}?{params}"

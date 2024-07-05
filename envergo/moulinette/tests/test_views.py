@@ -20,6 +20,7 @@ ADMIN_MSG = "Le simulateur n'est pas activé dans ce département"
 def test_moulinette_home(client):
     url = reverse("moulinette_home")
     res = client.get(url)
+
     assert res.status_code == 200
     assert HOME_TITLE in res.content.decode()
     assert RESULT_TITLE not in res.content.decode()
