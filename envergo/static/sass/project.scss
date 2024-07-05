@@ -845,7 +845,7 @@ p:last-child {
     margin-bottom: inherit;
   }
 
-  &#unavailable-department-alert{
+  &#unavailable-department-alert {
     box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
   }
 }
@@ -1308,9 +1308,10 @@ main.home {
 // Geometricians landing page styles
 :root[data-fr-theme=dark] main.geometricians {
   section#hero {
-      background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
+    background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
   }
 }
+
 main.geometricians {
   img {
     max-width: 100%;
@@ -1319,7 +1320,8 @@ main.geometricians {
   section#hero {
     background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
 
-    h1, .fr-text {
+    h1,
+    .fr-text {
       color: #fff;
     }
 
@@ -1331,15 +1333,16 @@ main.geometricians {
       background-color: var(--background-default-grey-hover);
     }
 
-    #rounded-hero{
+    #rounded-hero {
       display: block;
       margin-top: -10%;
+
       path {
-        fill:var(--grey-1000-50);
+        fill: var(--grey-1000-50);
       }
     }
 
-    #geometrician-illustration{
+    #geometrician-illustration {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -1381,21 +1384,25 @@ main.geometricians {
       justify-content: space-between;
       background-color: var(--background-contrast-grey);
     }
+
     .fr-callout:hover {
       background-color: var(--background-contrast-grey-hover);
     }
-    span{
+
+    span {
       color: var(--blue-france-sun-113-625-hover)
     }
+
     #faq-link {
       display: block;
-      margin:0 auto 0;
+      margin: 0 auto 0;
     }
   }
 
   section#properties {
     .fr-grid-row--center div {
       text-align: center;
+
       img {
         margin: 0 auto;
       }
