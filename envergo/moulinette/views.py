@@ -372,6 +372,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                     ] = address  # add address as a submitted data to display it in the rendered form
                 else:
                     context["coords"] = f"{lat}, {lng}"
+                    context["form"].data["address"] = f"{lat}, {lng}"
 
         return context
 
