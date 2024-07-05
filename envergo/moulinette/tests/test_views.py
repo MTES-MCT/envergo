@@ -35,7 +35,7 @@ def test_moulinette_home_with_params_redirects_to_results_page(client):
     assert res.url.startswith("/simulateur/resultat/")
 
 
-def test_moulinette_result_without_config(client, mock_geo_api_data):  # noqa
+def test_moulinette_result_without_config(client):
     """When dept. contact info is not set, eval is unavailable."""
 
     url = reverse("moulinette_result")
@@ -47,9 +47,7 @@ def test_moulinette_result_without_config(client, mock_geo_api_data):  # noqa
     assertTemplateUsed(res, "moulinette/result_non_disponible.html")
 
 
-def test_moulinette_result_without_config_admin_access(
-    client, admin_user, mock_geo_api_data  # noqa
-):
+def test_moulinette_result_without_config_admin_access(client, admin_user):
     """When dept. contact info is not set, eval is unavailable, even for admins."""
     client.force_login(admin_user)
 
@@ -62,7 +60,7 @@ def test_moulinette_result_without_config_admin_access(
     assertTemplateUsed(res, "moulinette/result_non_disponible.html")
 
 
-def test_moulinette_result_with_deactivated_config(client, mock_geo_api_data):  # noqa
+def test_moulinette_result_with_deactivated_config(client):
     MoulinetteConfigFactory(is_activated=False)
 
     url = reverse("moulinette_result")
@@ -74,9 +72,7 @@ def test_moulinette_result_with_deactivated_config(client, mock_geo_api_data):  
     assertTemplateUsed(res, "moulinette/result_available_soon.html")
 
 
-def test_moulinette_result_with_deactivated_config_admin_access(
-    client, admin_user, mock_geo_api_data  # noqa
-):
+def test_moulinette_result_with_deactivated_config_admin_access(client, admin_user):
     MoulinetteConfigFactory(is_activated=False)
     client.force_login(admin_user)
 
@@ -90,7 +86,7 @@ def test_moulinette_result_with_deactivated_config_admin_access(
     assert ADMIN_MSG in res.content.decode()
 
 
-def test_moulinette_result_with_activated_config(client, mock_geo_api_data):  # noqa
+def test_moulinette_result_with_activated_config(client):
     MoulinetteConfigFactory(is_activated=True)
 
     url = reverse("moulinette_result")

@@ -76,7 +76,7 @@ def loire_atlantique_department():
     return loire_atlantique
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def mock_geo_api_data():
     with patch(
         "envergo.geodata.utils.get_data_from_coords", new=Mock()
@@ -102,12 +102,3 @@ def mock_geo_api_data():
             "_type": "address",
         }
         yield mock_geo_data
-
-
-@pytest.fixture()
-def mock_geo_api_commune():
-    with patch(
-        "envergo.geodata.utils.get_commune_from_coords", new=Mock()
-    ) as mock_commune:
-        mock_commune.return_value = {"code": "44102", "nom": "Montbert"}
-        yield mock_commune

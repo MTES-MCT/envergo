@@ -2,8 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.geodata.conftest import france_map  # noqa
-from envergo.geodata.conftest import mock_geo_api_data  # noqa
+from envergo.geodata.conftest import france_map, mock_geo_api_data  # noqa
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     MoulinetteConfigFactory,
@@ -48,7 +47,7 @@ def moulinette_data(footprint):
 
 # ETQ Admin, je peux voir l'option d'activer un critère optionnel
 def test_admin_see_optional_criterion_additional_question(
-    admin_client, mock_geo_api_data  # noqa
+    admin_client,
 ):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -69,9 +68,7 @@ def test_admin_see_optional_criterion_additional_question(
 
 
 # ETQ User, je ne peux pas voir l'option d'activer un critère optionnel
-def test_users_cannot_see_optional_criterion_additional_question(
-    client, mock_geo_api_data  # noqa
-):
+def test_users_cannot_see_optional_criterion_additional_question(client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
     full_url = f"{url}?{params}"
@@ -88,7 +85,7 @@ def test_users_cannot_see_optional_criterion_additional_question(
 
 
 # ETQ Admin, je peux consulter une simulation avec un critère optionnel
-def test_admin_see_optional_criterion_result(admin_client, mock_geo_api_data):  # noqa
+def test_admin_see_optional_criterion_result(admin_client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=gte_50&evalenv_rubrique_41-type_stationnement=public"  # noqa
     full_url = f"{url}?{params}"
@@ -105,7 +102,7 @@ def test_admin_see_optional_criterion_result(admin_client, mock_geo_api_data):  
 
 
 # ETQ User, je ne peux pas consulter une simulation avec un critère optionnel
-def test_users_cannot_see_optional_criterion_results(client, mock_geo_api_data):  # noqa
+def test_users_cannot_see_optional_criterion_results(client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=gte_50"  # noqa
     full_url = f"{url}?{params}"
@@ -115,7 +112,7 @@ def test_users_cannot_see_optional_criterion_results(client, mock_geo_api_data):
     assert "evalenv_rubrique_41_soumis" not in res["Location"]
 
 
-def test_optional_criterion_activation(admin_client, mock_geo_api_data):  # noqa
+def test_optional_criterion_activation(admin_client):
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on"
     full_url = f"{url}?{params}"
