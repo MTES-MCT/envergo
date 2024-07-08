@@ -17,9 +17,12 @@
 
     {% for perimeter in regulation.perimeters.all %}
 
-      <p>La structure en charge de l’animation du SAGE « {{ perimeter.name }} » :</p>
+      {# We are sure at least one sage will have a URL, so this section will not be empty #}
+      {% if perimeter.url %}
+        <p>La structure en charge de l’animation du SAGE « {{ perimeter.name }} » :</p>
 
-      {{ perimeter.contact }}
+        {{ perimeter.contact }}
+      {% endif %}
     {% endfor %}
   {% endif %}
 
