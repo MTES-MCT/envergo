@@ -1561,14 +1561,23 @@ main.demonstrateur_2150 {
     flex: 1;
     display: flex;
 
-    div{
+    >.fr-grid-row, #project-summary, #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
     }
 
-    #project-summary{
-      background-color: #00a95f;
+    #project-summary {
+      background-color: var(--info-975-75);
+
+      h2{
+        text-align: center;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
     }
+
     #project-summary::before {
       content: "";
       position: absolute;
@@ -1576,12 +1585,12 @@ main.demonstrateur_2150 {
       left: -10px;
       width: 40%;
       height: 100%;
-      background-color: #00a95f;
-      z-index:-1;
-
+      background-color: var(--info-975-75);
+      z-index: -1;
+      min-height: 40em; // greater or equal than the min-height of flex-body
     }
 
-    #project-result{
+    #project-result {
       background-color: #f2f2f2;
     }
   }

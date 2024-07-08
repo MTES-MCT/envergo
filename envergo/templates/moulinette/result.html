@@ -1,24 +1,80 @@
 {% extends 'moulinette/base.html' %}
 
+{% load static l10n %}
+
 {% block html-classes %}full-height{% endblock %}
 {% block body-classes %}full-height flex-body{% endblock %}
 {% block main-classes %}full-height flex-body{% endblock %}
 
 {% block container %}
-  <div id="main-container"
-       style="background:#00ffff"
-       class="full-height fr-container">
+  <div id="main-container" class="full-height fr-container">
     <div class="fr-grid-row">
-      <div id="project-summary" class="fr-col-4">
-        <h1>Sidebar</h1>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi explicabo autem cupiditate, facere quas recusandae itaque voluptates sint accusantium amet illo veniam totam placeat odio magni, quaerat eligendi. Distinctio et cupiditate nemo fugit, praesentium, ea obcaecati dolores non amet autem sequi laboriosam labore vero fugiat dolorem qui voluptatibus omnis eos architecto, recusandae corporis rerum quod. Ea minus et odio voluptate quaerat facere incidunt, impedit repellat eos nihil quis modi vel molestiae, eum vitae nam nemo quasi sit aperiam unde ex fugiat. Magnam dolores, enim consectetur veniam illum error eaque ea necessitatibus nam ipsam maxime dolore temporibus animi odio eum molestiae iure. Ut quos cupiditate ad perferendis dolorum nemo deserunt exercitationem magni ipsa iste ea fugit expedita sapiente numquam reprehenderit dolore, quo minus excepturi asperiores sit voluptatibus accusamus necessitatibus, ipsam. Delectus iste cupiditate asperiores vero repellendus atque aliquid temporibus perspiciatis reiciendis quibusdam similique, nesciunt accusantium tempora voluptatem optio qui odit ullam amet eveniet illum incidunt quis quia repudiandae animi. Recusandae, consequuntur laboriosam praesentium fugit possimus nemo ut porro reiciendis quo aperiam et aliquam fuga consectetur fugiat veritatis necessitatibus officiis, officia repellendus, rem. Voluptatem itaque, dolores autem at, culpa cum quam ratione laborum quo totam, nemo sed dolor, hic nisi nobis illo.
+      <div id="project-summary" class="fr-col-4 fr-py-4w fr-px-2w">
+        <h2 class="fr-mb-5w">Le projet</h2>
+        <p class="fr-text print-only">
+          Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
+    href="{{ envergo_url }}"
+    target="_blank"
+    rel="noopener external">EnvErgo</a>
         </p>
+        <p class="fr-text print-only">
+          Cette simulation est <a title="Partager l'avis réglementaire"
+    href="{{ current_url }}"
+    target="_blank"
+    rel="noopener external">consultable en ligne</a>
+        </p>
+
+        {{ form.lng.as_hidden }}
+        {{ form.lat.as_hidden }}
+        <figure class="fr-content-media">
+          <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
+            <div class="ratio-content">
+              <div class="leaflet-container">
+                <div id="map"></div>
+              </div>
+            </div>
+          </div>
+        </figure>
+        {#        <div class="ratio-16x9 fr-mt-1w fr-mb-2w">#}
+        {#          <div class="ratio-content">#}
+        {#            <div class="leaflet-container">#}
+        {#              <div id="map"></div>#}
+        {#            </div>#}
+        {#          </div>#}
+        {#        </div>#}
+        {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
       </div>
       <div id="project-result" class="fr-col-8">
         <h1>Content</h1>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Excepturi ipsa vero, nesciunt sunt dolorum distinctio corporis quis totam, dicta, rem maiores possimus impedit deleniti odio a. Quidem similique temporibus, odit vero illo cupiditate excepturi earum tenetur porro ea. Enim ea pariatur animi eius quo earum corporis adipisci, nesciunt at eum neque alias quibusdam dolor vel expedita. Expedita dolorem cumque minima, quas, maiores officiis beatae pariatur quis suscipit! Consequatur iusto porro odio laborum minima, reiciendis quam quos dolores ipsam dignissimos laboriosam ex quasi possimus impedit provident eveniet cumque blanditiis doloremque a voluptatum assumenda optio! Dolorem, quas consectetur quidem! Itaque magni officia magnam impedit qui nam unde sint veniam, quis animi earum officiis perferendis repellendus porro reiciendis quaerat cumque numquam tempora corporis rerum tenetur autem necessitatibus ab minus consectetur. Magni eligendi ducimus, porro cumque a odit omnis neque rerum unde. Dolores sequi aliquid voluptatibus odit odio facilis quis et temporibus nobis ipsa sit laudantium libero, corporis consequatur. Nisi saepe provident id veniam tempore aliquam libero hic error sint, tenetur alias earum, quam est nobis eaque, eius odio eum. Nam dolor deleniti eos tempore sunt sapiente accusantium non hic, quod eligendi sequi dolore quos molestiae voluptas labore eius temporibus enim similique odio, quis quisquam! Impedit, iure aspernatur id praesentium minima, culpa alias veniam. Sapiente maiores architecto placeat, et harum eligendi doloribus vel reiciendis eveniet est beatae sit necessitatibus hic eius, corporis deleniti praesentium velit similique, quaerat unde odit. Repellat magni, nihil, quibusdam doloremque maiores tenetur obcaecati tempora, veniam officia, doloribus ratione reprehenderit. Porro eum iste minima corrupti fuga expedita quo dolore explicabo ea eius vero, magnam illum dolorem ullam hic enim sapiente, odio eaque! Similique tempore laboriosam explicabo fuga eum ipsum, doloribus animi, repudiandae laudantium. Dignissimos, accusamus quasi sit atque nam quidem autem at maxime, soluta, eveniet excepturi quisquam ratione perspiciatis ipsum consectetur facilis odio ad possimus officiis odit molestiae. Exercitationem facere magnam mollitia assumenda odio est doloribus accusamus animi dignissimos veritatis ut excepturi, quia maiores, ipsum sint ex sed a minus quidem temporibus. Ipsum, quod quidem nam quisquam, quaerat accusantium in iusto inventore, fugiat sint mollitia magnam totam distinctio, vel deleniti sit voluptas quibusdam sequi! Officiis quo, facere atque similique a blanditiis, nostrum recusandae aut. Nemo voluptas, nesciunt totam fugit omnis. Laborum qui laudantium quos, inventore minima ipsum ut velit quam nobis eligendi, expedita quo necessitatibus, ea nemo odit sapiente commodi atque! Expedita facere quae modi iste sed, placeat sint eligendi, sapiente.
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Excepturi ipsa vero, nesciunt sunt dolorum
+          distinctio corporis quis totam, dicta, rem maiores possimus impedit deleniti odio a. Quidem similique
+          temporibus, odit vero illo cupiditate excepturi earum tenetur porro ea. Enim ea pariatur animi eius quo earum
+          corporis adipisci, nesciunt at eum neque alias quibusdam dolor vel expedita. Expedita dolorem cumque minima,
+          quas, maiores officiis beatae pariatur quis suscipit! Consequatur iusto porro odio laborum minima, reiciendis
+          quam quos dolores ipsam dignissimos laboriosam ex quasi possimus impedit provident eveniet cumque blanditiis
+          doloremque a voluptatum assumenda optio! Dolorem, quas consectetur quidem! Itaque magni officia magnam impedit
+          qui nam unde sint veniam, quis animi earum officiis perferendis repellendus porro reiciendis quaerat cumque
+          numquam tempora corporis rerum tenetur autem necessitatibus ab minus consectetur. Magni eligendi ducimus,
+          porro cumque a odit omnis neque rerum unde. Dolores sequi aliquid voluptatibus odit odio facilis quis et
+          temporibus nobis ipsa sit laudantium libero, corporis consequatur. Nisi saepe provident id veniam tempore
+          aliquam libero hic error sint, tenetur alias earum, quam est nobis eaque, eius odio eum. Nam dolor deleniti
+          eos tempore sunt sapiente accusantium non hic, quod eligendi sequi dolore quos molestiae voluptas labore eius
+          temporibus enim similique odio, quis quisquam! Impedit, iure aspernatur id praesentium minima, culpa alias
+          veniam. Sapiente maiores architecto placeat, et harum eligendi doloribus vel reiciendis eveniet est beatae sit
+          necessitatibus hic eius, corporis deleniti praesentium velit similique, quaerat unde odit. Repellat magni,
+          nihil, quibusdam doloremque maiores tenetur obcaecati tempora, veniam officia, doloribus ratione
+          reprehenderit. Porro eum iste minima corrupti fuga expedita quo dolore explicabo ea eius vero, magnam illum
+          dolorem ullam hic enim sapiente, odio eaque! Similique tempore laboriosam explicabo fuga eum ipsum, doloribus
+          animi, repudiandae laudantium. Dignissimos, accusamus quasi sit atque nam quidem autem at maxime, soluta,
+          eveniet excepturi quisquam ratione perspiciatis ipsum consectetur facilis odio ad possimus officiis odit
+          molestiae. Exercitationem facere magnam mollitia assumenda odio est doloribus accusamus animi dignissimos
+          veritatis ut excepturi, quia maiores, ipsum sint ex sed a minus quidem temporibus. Ipsum, quod quidem nam
+          quisquam, quaerat accusantium in iusto inventore, fugiat sint mollitia magnam totam distinctio, vel deleniti
+          sit voluptas quibusdam sequi! Officiis quo, facere atque similique a blanditiis, nostrum recusandae aut. Nemo
+          voluptas, nesciunt totam fugit omnis. Laborum qui laudantium quos, inventore minima ipsum ut velit quam nobis
+          eligendi, expedita quo necessitatibus, ea nemo odit sapiente commodi atque! Expedita facere quae modi iste
+          sed, placeat sint eligendi, sapiente.
         </p>
       </div>
     </div>
@@ -32,9 +88,31 @@
     Kikoo
     <br />
     <br />
-    kikoo
     <br />
     <br />
 
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  {#  {{ block.super }}#}
+  <script>
+    var DEPARTMENT = "{{ moulinette.department.department }}";
+    window.MAPS = window.MAPS || {};
+    window.MAPS['map'] = {
+       center: {coordinates:[{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
+    entries: [],
+    caption: null,
+    truncate: true,
+    zoom: 17,
+    ratio: "4x3",
+    fixed: false
+    };
+  </script>
+
+  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
+  {#  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>#}
 {% endblock %}
