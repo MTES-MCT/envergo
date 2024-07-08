@@ -42,6 +42,13 @@ def evalenv_criteria(france_map):  # noqa
             activation_map=france_map,
             is_optional=True,
         ),
+        CriterionFactory(
+            title="Equipement sportif",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.evalenv.EquipementSportif",
+            activation_map=france_map,
+            is_optional=True,
+        ),
     ]
     return criteria
 
@@ -266,5 +273,63 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
     )
     assert (
         "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        in res.content.decode()
+    )
+
+
+def test_evalenv_rubrique44(admin_client):
+    MoulinetteConfigFactory()
+
+    # Type d'equipement concerné et capacité d'accueil >= 1000 => Cas par cas
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&evalenv_rubrique_44-activate=on&evalenv_rubrique_44-type=sport"
+        "&evalenv_rubrique_44-capacite_accueil=gte_1000"
+    )
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet mène à l’existence d’un équipement sportif, de loisirs, ou lié à une activité culturelle, d’une "
+        "capacité d’accueil de plus de 1000 personnes" in res.content.decode()
+    )
+
+    # Type d'equipement concerné et capacité d'accueil < 1000 => non soumis
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&evalenv_rubrique_44-activate=on&evalenv_rubrique_44-type=sport"
+        "&evalenv_rubrique_44-capacite_accueil=lt_1000"
+    )
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet porte sur un équipement sportif, de loisirs, ou lié à une activité culturelle, mais dont la capacité"
+        " d’accueil est inférieure à 1000 personnes" in res.content.decode()
+    )
+
+    # Type d'equipement non concerné => non soumis
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&evalenv_rubrique_44-activate=on&evalenv_rubrique_44-type=autre"
+        "&evalenv_rubrique_44-capacite_accueil=lt_1000"
+    )
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet ne concerne pas un équipement sportif, de loisirs, ou d’activités culturelles."
         in res.content.decode()
     )
