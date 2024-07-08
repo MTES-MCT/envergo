@@ -1546,3 +1546,48 @@ main.demonstrateur_2150 {
 .fr-hint-text a.fr-link:has(+span.fr-tooltip) {
   font-size: inherit;
 }
+
+.full-height{
+  height: 100%;
+}
+
+// moulinette result page styles
+.flex-body{
+  display: flex;
+  flex-direction: column;
+  min-height: 20em;
+
+  #main-container {
+    flex: 1;
+    display: flex;
+
+    div{
+      overflow-y: scroll;
+      flex-wrap: nowrap;
+    }
+
+    #project-summary{
+      background-color: #00a95f;
+    }
+    #project-summary::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -10px;
+      width: 40%;
+      height: 100%;
+      background-color: #00a95f;
+      z-index:-1;
+
+    }
+
+    #project-result{
+      background-color: #f2f2f2;
+    }
+  }
+
+  footer{
+    padding-top: 0;
+    box-shadow: initial;
+  }
+}
