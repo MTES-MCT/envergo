@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         test_evalreqs = Request.objects.filter(
-            contact_emails__contains=[settings.TEST_EMAIL]
+            urbanism_department_emails__contains=[settings.TEST_EMAIL]
         )
         one_hr_ago = localtime() - timedelta(hours=1)
         unsubmitted_evalreqs = Request.objects.filter(

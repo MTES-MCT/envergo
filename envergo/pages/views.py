@@ -9,6 +9,7 @@ from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
+from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
@@ -16,6 +17,100 @@ from envergo.pages.models import NewsItem
 
 class HomeView(MoulinetteMixin, FormView):
     template_name = "pages/home.html"
+
+
+class GeometriciansView(MoulinetteMixin, FormView):
+    template_name = "pages/geometricians.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["webinar_url"] = GEOMETRICIAN_WEBINAR_FORM_URL
+        context["testimonials"] = [
+            (
+                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
+                "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises.",
+                "Un géomètre-expert en Loire-Atlantique",
+            ),
+            (
+                "Rien de pire que de devoir redéposer un dossier d'urbanisme. EnvErgo a évité à mon client de "
+                "découvrir une fois le permis d'aménager délivré qu'il y avait un dossier Loi sur l'eau à constituer "
+                "pour ce lotissement.",
+                "Un géomètre-expert en Vendée",
+            ),
+            (
+                "La simplicité d'utilisation du simulateur EnvErgo le rend très adapté en phases de faisabilité et "
+                "de planification réglementaire. En outre l'équipe est réactive en cas de questions.",
+                "Un géomètre-expert dans l'Aisne",
+            ),
+        ]
+
+        context["advantages"] = [
+            (
+                "Sécurisez",
+                "Sécurisez les projets de vos clients : évitez les retards, les surcoûts, les annulations et les "
+                "contentieux.",
+                "images/calendar_light.svg",
+                "images/calendar_dark.svg",
+            ),
+            (
+                "Maîtrisez",
+                "Maîtrisez les réglementations environnementales applicables aux projets d'aménagement : seuils "
+                "d'entrée en procédure, délais, contacts des administrations compétentes, procédures.",
+                "images/legal_light.svg",
+                "images/legal_dark.svg",
+            ),
+            (
+                "Informez",
+                "Renforcez votre capacité de conseil en proposant une information à jour sur les réglementations "
+                "environnementales.",
+                "images/reputation_light.svg",
+                "images/reputation_dark.svg",
+            ),
+        ]
+
+        context["questions"] = [
+            (
+                f"{reverse('faq_loi_sur_leau')}#title-savoir_si_mon_projet_est_soumis",
+                "Comment déterminer si mon projet est soumis à la Loi sur l’eau ?",
+            ),
+            (
+                f"{reverse('faq_loi_sur_leau')}#title-travaux_avant_reponse",
+                "Puis-je commencer les travaux avant d'avoir reçu une réponse de la préfecture ?",
+            ),
+            (
+                reverse("faq_availability_info"),
+                "Dans quels départements est disponible EnvErgo ?",
+            ),
+        ]
+
+        context["properties"] = [
+            (
+                "Gratuit",
+                "images/money_light.svg",
+                "images/money_dark.svg",
+                "Des piles de pièces de monnaie",
+            ),
+            (
+                "Public",
+                "images/school_light.svg",
+                "images/school_dark.svg",
+                "Un édifice public",
+            ),
+            (
+                "Anonyme",
+                "images/avatar_light.svg",
+                "images/avatar_dark.svg",
+                "Un avatar de personne",
+            ),
+            (
+                "",
+                "images/logo_mte.png",
+                "images/logo_mte_dark.svg",
+                "Le logo du ministère",
+            ),
+        ]
+
+        return context
 
 
 class StatsView(TemplateView):

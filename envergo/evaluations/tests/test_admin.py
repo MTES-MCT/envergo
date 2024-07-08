@@ -19,7 +19,7 @@ def form_data():
         "reference": generate_reference(),
         "user_type": "instructor",
         "address": "Sunny side of the street",
-        "contact_emails": ["test@example.org"],
+        "urbanism_department_emails": ["test@example.org"],
         "project_owner_emails": ["sponsor@example.org"],
     }
 
@@ -40,7 +40,7 @@ def test_create_eval_from_request(client, admin_user, eval_request):
     assert eval.request == eval_request
     assert eval.reference == eval_request.reference
     assert eval.address == eval_request.address
-    assert eval.contact_emails == eval_request.contact_emails
+    assert eval.urbanism_department_emails == eval_request.urbanism_department_emails
 
 
 def test_create_eval_requires_a_single_request(client, admin_user):

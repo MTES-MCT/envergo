@@ -27,17 +27,29 @@
         <div class="fr-header__tools-links">
           <ul class="fr-btns-group">
             <li>
-              <a class="fr-btn" href="{% url 'moulinette_home' %}">Porteurs de projet</a>
+              <a class="fr-btn"
+                 href="{% url 'moulinette_home' %}"
+                 data-event-category="HomePage"
+                 data-event-action="SimulationClick"
+                 data-event-name="Nav">Simulateur</a>
             </li>
+            <li>{% project_owner_menu is_slim=True %}</li>
             <li>
-              <a class="fr-btn" href="{% url 'request_evaluation' %}">Services urbanisme</a>
+              <a class="fr-btn"
+                 href="{% url 'request_evaluation' %}"
+                 data-event-category="HomePage"
+                 data-event-action="RequestClick"
+                 data-event-name="Nav">Services urbanisme</a>
             </li>
             <li>
               <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
             </li>
             <li>
               <a href="{% url 'request_evaluation' %}"
-                 class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl">Demander un avis réglementaire</a>
+                 class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl"
+                 data-event-category="HomePage"
+                 data-event-action="RequestClick"
+                 data-event-name="CTA">Demander un avis réglementaire</a>
             </li>
           </ul>
         </div>

@@ -315,7 +315,7 @@ msgstr "Téléphone du porteur de projet"
 #: envergo/evaluations/models.py:651
 msgid "Send evaluation to project sponsor"
 msgstr ""
-"Je souhaite qu'EnvErgo envoie aussi l'avis réglementaire au porteur de projet"
+"Je souhaite qu'EnvErgo envoie aussi l'avis réglementaire au porteur de projet (recommandé)"
 
 #: envergo/evaluations/forms.py:187 envergo/evaluations/forms.py:190
 msgid "Provide one or several addresses separated by commas « , »"

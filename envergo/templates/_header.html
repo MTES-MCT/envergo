@@ -49,7 +49,8 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
-        <li class="fr-nav__item">{% menu_item 'moulinette_home' "Porteurs de projet" 'HomePage' 'SimulationClick' 'Nav' %}</li>
+        <li class="fr-nav__item">{% menu_item 'moulinette_home' "Simulateur" 'HomePage' 'SimulationClick' 'Nav' %}</li>
+        <li class="fr-nav__item">{% project_owner_menu %}</li>
         <li class="fr-nav__item">{% evalreq_menu 'HomePage' 'RequestClick' 'Nav' %}</li>
         <li class="fr-nav__item">{% faq_menu %}</li>
         <li class="fr-nav__item ">{% evaluation_menu %}</li>

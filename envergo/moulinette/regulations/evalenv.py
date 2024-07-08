@@ -456,15 +456,6 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    nature = forms.ChoiceField(
-        label="Nature du projet",
-        required=True,
-        widget=forms.RadioSelect,
-        choices=(
-            ("creation", "Création d'un équipement"),
-            ("modification", "Modification d'un équipement"),
-        ),
-    )
     type = forms.ChoiceField(
         label="Type d'équipement",
         required=True,
@@ -476,6 +467,15 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
             ("autre", "Autre (hors nomenclature)"),
         ),
     )
+    capacite_accueil = forms.ChoiceField(
+        label="Capacité d'accueil",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=(
+            ("lt_1000", "0 à 999 personnes"),
+            ("gte_1000", "1000 personnes ou plus"),
+        ),
+    )
 
 
 class EquipementSportif(CriterionEvaluator):
@@ -483,25 +483,25 @@ class EquipementSportif(CriterionEvaluator):
     slug = "sport_loisir_culture"
     form_class = EquipementSportifForm
     CODE_MATRIX = {
-        ("creation", "sport"): "cas_par_cas",
-        ("creation", "loisir"): "cas_par_cas",
-        ("creation", "culture"): "cas_par_cas",
-        ("creation", "autre"): "non_soumis",
-        ("modification", "sport"): "non_soumis_modification",
-        ("modification", "loisir"): "non_soumis_modification",
-        ("modification", "culture"): "non_soumis_modification",
-        ("modification", "autre"): "non_soumis_modification",
+        ("lt_1000", "autre"): "non_soumis",
+        ("gte_1000", "autre"): "non_soumis",
+        ("lt_1000", "sport"): "non_soumis_lt1000",
+        ("lt_1000", "loisir"): "non_soumis_lt1000",
+        ("lt_1000", "culture"): "non_soumis_lt1000",
+        ("gte_1000", "sport"): "cas_par_cas",
+        ("gte_1000", "loisir"): "cas_par_cas",
+        ("gte_1000", "culture"): "cas_par_cas",
     }
     RESULT_MATRIX = {
-        "non_soumis_modification": "non_soumis",
+        "non_soumis_lt1000": "non_soumis",
     }
 
     def get_result_data(self):
         form = self.get_form()
         form.is_valid()
-        nature = form.cleaned_data.get("nature")
+        capacite_accueil = form.cleaned_data.get("capacite_accueil")
         type = form.cleaned_data.get("type")
-        return nature, type
+        return capacite_accueil, type
 
 
 class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
