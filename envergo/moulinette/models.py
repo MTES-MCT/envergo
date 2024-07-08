@@ -71,7 +71,6 @@ class Regulation(models.Model):
         help_text=_("The perimeter's map will be displayed, if it exists"),
         default=False,
     )
-    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
     class Meta:
         verbose_name = _("Regulation")
@@ -345,11 +344,27 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
+
+        # We use visually distinctive color palette to display perimeters.
+        # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
+        palette = [
+            "#4e79a7",
+            "#e15759",
+            "#76b7b2",
+            "#59a14f",
+            "#edc949",
+            "#af7aa1",
+            "#ff9da7",
+            "#9c755f",
+            "#bab0ab",
+        ]
         perimeters = self.perimeters.all()
         if perimeters:
             polygons = [
-                MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
-                for perimeter in perimeters
+                MapPolygon(
+                    [perimeter], palette[counter % len(palette)], perimeter.map_legend
+                )
+                for counter, perimeter in enumerate(perimeters)
             ]
             map = Map(
                 type="regulation",
