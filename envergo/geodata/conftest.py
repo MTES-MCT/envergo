@@ -1,3 +1,5 @@
+from unittest.mock import Mock, patch
+
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
@@ -72,3 +74,31 @@ def loire_atlantique_department():
         department=44, geometry=MultiPolygon([polygon])
     )
     return loire_atlantique
+
+
+@pytest.fixture(autouse=True)
+def mock_geo_api_data():
+    with patch(
+        "envergo.geodata.utils.get_data_from_coords", new=Mock()
+    ) as mock_geo_data:
+        mock_geo_data.return_value = {
+            "type": "housenumber",
+            "name": "10 La Pommeraie",
+            "label": "10 La Pommeraie 44140 Montbert",
+            "street": "La Pommeraie",
+            "postcode": "44140",
+            "citycode": "44102",
+            "city": "Montbert",
+            "oldcitycode": None,
+            "oldcity": None,
+            "context": "44, Loire-Atlantique, Pays de la Loire",
+            "importance": 0.47452,
+            "housenumber": "10",
+            "id": "44102_haa6rn_00010",
+            "x": 359347.63,
+            "y": 6670527.5,
+            "distance": 78,
+            "score": 0.9922,
+            "_type": "address",
+        }
+        yield mock_geo_data
