@@ -1410,7 +1410,7 @@ main.geometricians {
   }
 }
 
-section.moulinette {
+.moulinette {
 
   .fr-input,
   .autocomplete__input {
@@ -1428,39 +1428,14 @@ section.moulinette {
   }
 
   // Single column moulinette form layout
-  &:not(.moulinette-columns) {
-    .fr-input-group-map {
+  .fr-input-group-map {
 
-      @media (min-width: 62em) {
+    @media (min-width: 62em) {
 
-        #map-container {
-          margin-left: -5rem;
-          margin-right: -5rem;
-          width: calc(100% + 10rem);
-        }
-      }
-    }
-  }
-
-  // Two columns moulinette layout
-  &.moulinette-columns {
-    input[type=text] {
-      background-color: var(--background-alt-grey);
-    }
-
-    #form-groups {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-evenly;
-      margin: -1em;
-
-      div.moulinette-col {
-        flex: 1;
-        width: 100%;
-        min-width: 320px;
-        max-width: 410px;
-        padding: 1em;
-
+      #map-container {
+        margin-left: -5rem;
+        margin-right: -5rem;
+        width: calc(100% + 10rem);
       }
     }
   }
