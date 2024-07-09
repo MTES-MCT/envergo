@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.geodata.conftest import france_map  # noqa
+from envergo.geodata.conftest import france_map, mock_geo_api_data  # noqa
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import (
     CriterionFactory,

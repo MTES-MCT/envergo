@@ -313,6 +313,22 @@ $ docker-compose run --rm django python manage.py migrate
 ```
 
 
+## Stockage de fichiers
+
+Les documents sont stockés sur un répertoire distant compatible avec le protocole S3 sur [Scaleway](https://console.scaleway.com/object-storage/buckets) ce processus est géré via la librairie python boto en combinaison avec le package default_storage de Django
+
+
+### Backup des buckets S3
+
+Chaque semaine, on souhaite faire un backup du contenu des buckets s3 de production.
+Pour executer ce back up on utilise [github action](.github/workflows/s3_backup.yml)
+
+Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans [Settings](https://github.com/MTES-MCT/envergo/settings) > Secrets and variables > [Actions](https://github.com/MTES-MCT/envergo/settings/secrets/actions).
+
+Ajouter les `Repository secrets` :
+* S3_ACCESS_KEY
+* S3_SECRET_KEY
+
 ## Glossaire
 
 Voici un petit index des acronymes et termes métiers fréquemment rencontrés.

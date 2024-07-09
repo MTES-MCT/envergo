@@ -192,6 +192,9 @@ def to_geojson(obj, geometry_field="geometry"):
 def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
     url = f"https://data.geopf.fr/geocodage/reverse?lon={lng}&lat={lat}&index={index}&limit=1"  # noqa
 
+    if is_test():
+        raise NotImplementedError("You should mock this function in tests")
+
     data = None
     try:
         logger.info("Requesting ign geocodage api", extra={"lng": lng, "lat": lat})
@@ -224,6 +227,10 @@ def get_address_from_coords(lng, lat, timeout=0.5):
 
 def get_commune_from_coords(lng, lat, timeout=0.5):
     url = f"https://geo.api.gouv.fr/communes?lon={lng}&lat={lat}&fields=code,nom"
+
+    if is_test():
+        raise NotImplementedError("You should mock this function in tests")
+
     data = None
     try:
         res = requests.get(url, timeout=timeout)
@@ -395,3 +402,7 @@ def get_catchment_area_pixel_values(lng, lat):
         cursor.execute(query, [lng, lat])
         pixels = cursor.fetchall()
     return pixels
+
+
+def is_test():
+    return "pytest" in sys.modules
