@@ -30,19 +30,21 @@
           <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
             <div class="ratio-content">
               <div class="leaflet-container">
-                <div id="map"></div>
+                <div id="map">
+                  <a id="map-button"
+                     href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
+                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </figure>
-        {#        <div class="ratio-16x9 fr-mt-1w fr-mb-2w">#}
-        {#          <div class="ratio-content">#}
-        {#            <div class="leaflet-container">#}
-        {#              <div id="map"></div>#}
-        {#            </div>#}
-        {#          </div>#}
-        {#        </div>#}
         {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
+        <div class="button-container">
+          <a href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
+             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet</a>
+        </div>
       </div>
       <div id="project-result" class="fr-col-8">
         <h1>Content</h1>
@@ -100,13 +102,13 @@
     var DEPARTMENT = "{{ moulinette.department.department }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
-       center: {coordinates:[{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
-    entries: [],
-    caption: null,
-    truncate: true,
-    zoom: 17,
-    ratio: "4x3",
-    fixed: false
+      center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
+      entries: [],
+      caption: null,
+      truncate: true,
+      zoom: 17,
+      ratio: "4x3",
+      fixed: false
     };
   </script>
 

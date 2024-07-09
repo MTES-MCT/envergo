@@ -1569,13 +1569,32 @@ main.demonstrateur_2150 {
     #project-summary {
       background-color: var(--info-975-75);
 
-      h2{
+      h2, .button-container{
         text-align: center;
       }
       ul {
         list-style-type: none;
         padding: 0;
       }
+
+      #map:hover > #map-button {
+          transition: opacity 1s ease-in-out 0s;
+          opacity: 1;
+      }
+
+      #map-button{
+        z-index: 1000;
+        position: absolute;
+        right: 1em;
+        bottom: 2em;
+        background-color: var(--grey-1000-50);
+        color: var(--text-action-high-blue-france);
+        opacity: 0;
+      }
+      #map-button:hover {
+        background-color: var(--background-default-grey-hover);
+      }
+
     }
 
     #project-summary::before {
