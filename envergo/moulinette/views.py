@@ -364,7 +364,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 if address:
                     context["address"] = address
                 else:
-                    context["coords"] = f"{lat}, {lng}"
+                    context["address_coords"] = f"{lat}, {lng}"
 
         return context
 
