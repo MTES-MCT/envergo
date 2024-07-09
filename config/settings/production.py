@@ -135,11 +135,8 @@ IS_REVIEW_APP = env.bool("IS_REVIEW_APP", default=False)
 
 # Different settings between scalingo prod and review apps
 if IS_REVIEW_APP:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = env("DJANGO_REVIEW_APP_EMAIL_HOST")
-    EMAIL_HOST_USER = env("DJANGO_REVIEW_APP_EMAIL_HOST_USER")
-    EMAIL_HOST_PASSWORD = env("DJANGO_REVIEW_APP_EMAIL_HOST_PASSWORD")
-    EMAIL_PORT = env("DJANGO_REVIEW_APP_EMAIL_PORT")
+    # Send emails to stdout for logging purpose
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
 
