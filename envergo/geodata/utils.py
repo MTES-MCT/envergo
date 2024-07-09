@@ -224,14 +224,13 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     # try to find the address first, fallback on the parcel if not found to get at least the city and department
     data = get_data_from_coords(lng, lat, timeout, index="address,parcel", limit=5)
     address = None
-    for item in data:
-        if item["properties"]["_type"] == "address":
-            address = item["properties"]["label"]
-            break
-        if not address and item["properties"]["_type"] == "parcel":
-            address = (
-                f"{item['properties']['city']} ({item['properties']['departmentcode']})"
-            )
+    if data:
+        for item in data:
+            if item["properties"]["_type"] == "address":
+                address = item["properties"]["label"]
+                break
+            if not address and item["properties"]["_type"] == "parcel":
+                address = f"{item['properties']['city']} ({item['properties']['departmentcode']})"
 
     return address
 
