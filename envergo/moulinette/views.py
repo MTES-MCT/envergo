@@ -126,7 +126,6 @@ class MoulinetteMixin:
 
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
-        context["source"] = "moulinette"
         context["visitor_id"] = self.request.COOKIES.get(
             settings.VISITOR_COOKIE_NAME, ""
         )
