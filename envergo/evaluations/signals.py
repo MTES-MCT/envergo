@@ -1,6 +1,7 @@
 import logging
 
 from anymail.signals import tracking
+from django.db import transaction
 from django.db.models import F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -126,4 +127,4 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
 @receiver(post_save, sender=Evaluation)
 def handle_evaluation_edition(sender, instance, **kwargs):
     if not kwargs.get("created", False):
-        post_evaluation_to_automation.delay(instance.uid)
+        transaction.on_commit(lambda: post_evaluation_to_automation.delay(instance.uid))

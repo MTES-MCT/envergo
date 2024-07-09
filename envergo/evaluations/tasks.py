@@ -136,7 +136,7 @@ def post_evaluation_to_automation(evaluation_uid):
     """Send the edited evaluation data to a webhook."""
     webhook_url = settings.MAKE_COM_EVALUATION_EDITION_WEBHOOK
     evaluation = Evaluation.objects.get(uid=evaluation_uid)
-    logger.info(f"Sending Evaluation to make.com {Evaluation.reference}")
+    logger.info(f"Sending Evaluation to make.com {evaluation.reference}")
     post_a_model_to_automation(evaluation, webhook_url)
 
 
