@@ -221,7 +221,7 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     Returns None in case anything goes wrong with the request.
     """
 
-    # try to find the address first, fallback on the parcel if not found
+    # try to find the address first, fallback on the parcel if not found to get at least the city and department
     data = get_data_from_coords(lng, lat, timeout, index="address,parcel", limit=5)
     address = None
     for item in data:
