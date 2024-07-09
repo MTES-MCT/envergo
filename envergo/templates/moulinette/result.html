@@ -1,13 +1,13 @@
 {% extends 'moulinette/base.html' %}
 
-{% load static l10n %}
+{% load evaluations static l10n %}
 
 {% block html-classes %}full-height{% endblock %}
 {% block body-classes %}full-height flex-body{% endblock %}
 {% block main-classes %}full-height flex-body{% endblock %}
 
 {% block container %}
-  <div id="main-container" class="full-height fr-container">
+  <div id="moulinette-result-container" class="full-height fr-container">
     <div class="fr-grid-row">
       <div id="project-summary" class="fr-col-4 fr-py-4w fr-px-2w">
         <h2 class="fr-mb-5w">Le projet</h2>
@@ -33,7 +33,8 @@
                 <div id="map">
                   <a id="map-button"
                      href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
-                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet
+                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le
+                    projet
                   </a>
                 </div>
               </div>
@@ -47,54 +48,82 @@
         </div>
       </div>
       <div id="project-result" class="fr-col-8">
-        <h1>Content</h1>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Excepturi ipsa vero, nesciunt sunt dolorum
-          distinctio corporis quis totam, dicta, rem maiores possimus impedit deleniti odio a. Quidem similique
-          temporibus, odit vero illo cupiditate excepturi earum tenetur porro ea. Enim ea pariatur animi eius quo earum
-          corporis adipisci, nesciunt at eum neque alias quibusdam dolor vel expedita. Expedita dolorem cumque minima,
-          quas, maiores officiis beatae pariatur quis suscipit! Consequatur iusto porro odio laborum minima, reiciendis
-          quam quos dolores ipsam dignissimos laboriosam ex quasi possimus impedit provident eveniet cumque blanditiis
-          doloremque a voluptatum assumenda optio! Dolorem, quas consectetur quidem! Itaque magni officia magnam impedit
-          qui nam unde sint veniam, quis animi earum officiis perferendis repellendus porro reiciendis quaerat cumque
-          numquam tempora corporis rerum tenetur autem necessitatibus ab minus consectetur. Magni eligendi ducimus,
-          porro cumque a odit omnis neque rerum unde. Dolores sequi aliquid voluptatibus odit odio facilis quis et
-          temporibus nobis ipsa sit laudantium libero, corporis consequatur. Nisi saepe provident id veniam tempore
-          aliquam libero hic error sint, tenetur alias earum, quam est nobis eaque, eius odio eum. Nam dolor deleniti
-          eos tempore sunt sapiente accusantium non hic, quod eligendi sequi dolore quos molestiae voluptas labore eius
-          temporibus enim similique odio, quis quisquam! Impedit, iure aspernatur id praesentium minima, culpa alias
-          veniam. Sapiente maiores architecto placeat, et harum eligendi doloribus vel reiciendis eveniet est beatae sit
-          necessitatibus hic eius, corporis deleniti praesentium velit similique, quaerat unde odit. Repellat magni,
-          nihil, quibusdam doloremque maiores tenetur obcaecati tempora, veniam officia, doloribus ratione
-          reprehenderit. Porro eum iste minima corrupti fuga expedita quo dolore explicabo ea eius vero, magnam illum
-          dolorem ullam hic enim sapiente, odio eaque! Similique tempore laboriosam explicabo fuga eum ipsum, doloribus
-          animi, repudiandae laudantium. Dignissimos, accusamus quasi sit atque nam quidem autem at maxime, soluta,
-          eveniet excepturi quisquam ratione perspiciatis ipsum consectetur facilis odio ad possimus officiis odit
-          molestiae. Exercitationem facere magnam mollitia assumenda odio est doloribus accusamus animi dignissimos
-          veritatis ut excepturi, quia maiores, ipsum sint ex sed a minus quidem temporibus. Ipsum, quod quidem nam
-          quisquam, quaerat accusantium in iusto inventore, fugiat sint mollitia magnam totam distinctio, vel deleniti
-          sit voluptas quibusdam sequi! Officiis quo, facere atque similique a blanditiis, nostrum recusandae aut. Nemo
-          voluptas, nesciunt totam fugit omnis. Laborum qui laudantium quos, inventore minima ipsum ut velit quam nobis
-          eligendi, expedita quo necessitatibus, ea nemo odit sapiente commodi atque! Expedita facere quae modi iste
-          sed, placeat sint eligendi, sapiente.
-        </p>
+        <section class="fr-py-4w fr-pl-6w fr-pr-2w">
+          {% if config and not config.is_activated %}
+            <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
+              Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
+              cette page grâce à votre statut d'admin.
+            </div>
+          {% endif %}
+          <h1 class="fr-mb-5w">Simulation réglementaire</h1>
+
+          <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
+            <li>
+              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+                      data-fr-opened="false"
+                      aria-controls="share-modal"
+                      data-btn="bottom">Partager cette page par email</button>
+            </li>
+            <li>
+              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn"
+                      onclick="window.print();">Imprimer cette simulation</button>
+            </li>
+          </ul>
+
+          <h2 class="fr-h3">Réglementations environnementales</h2>
+
+          {% include 'moulinette/_evaluation_summary.html' %}
+
+          <p class="fr-hint-text fr-mb-3w">
+            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
+          </p>
+
+          {% for regulation in moulinette.regulations %}
+            {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
+
+          {% endfor %}
+
+          {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
+
+          <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
+            <p>
+              EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de
+              l'aménagement en phase amont de leurs projets.
+            </p>
+            <p>
+              Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne
+              couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
+            </p>
+            <p>
+              Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en
+              charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
+            </p>
+          </div>
+
+          <section class="regulation regulation-disabled fr-mb-5w"
+                   id="regulation_defrichement">
+            <h2>
+              <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
+            </h2>
+            <p>
+              Cette réglementation sera prochainement prise en compte dans EnvErgo.
+              Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
+              priorité</a>.
+            </p>
+          </section>
+        </section>
+
+        {% include "_learn_more.html" %}
+        <section class="fr-footer  fr-pb-2w" role="contentinfo">
+          {% include '_footer.html' %}
+        </section>
       </div>
     </div>
   </div>
 {% endblock %}
 
 {% block after-content %}{% endblock %}
-{% block footer %}
-  <div style="background:#0000ff">
-    <br />
-    Kikoo
-    <br />
-    <br />
-    <br />
-    <br />
-
-  </div>
-{% endblock %}
+{% block footer %}<div id="action-banner" class="fr-py-4w"></div>{% endblock %}
 
 {% block extra_js %}
   {#  {{ block.super }}#}
