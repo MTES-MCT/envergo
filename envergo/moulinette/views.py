@@ -191,12 +191,28 @@ class MoulinetteMixin:
     def get_all_optional_forms(self):
         from envergo.moulinette.models import Criterion
 
-        forms = []
+        form_classes = []
         criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
         for criterion in criteria:
             form_class = criterion.evaluator.form_class
-            if form_class and form_class not in forms:
-                forms.append(form_class)
+            if form_class and form_class not in form_classes:
+                form_classes.append(form_class)
+
+        forms = []
+        for Form in form_classes:
+            form_kwargs = self.get_form_kwargs()
+
+            # Every optional form has a "activate" field
+            # If unchecked, the form validation must be ignored alltogether
+            activate_field = f"{Form.prefix}-activate"
+            if activate_field not in form_kwargs["data"]:
+                form_kwargs.pop("data")
+
+            form = Form(**form_kwargs)
+            if form.fields:
+                form.is_valid()
+                forms.append(form)
+
         return forms
 
     def form_valid(self, form):
