@@ -130,6 +130,9 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
+        if "moulinette" not in context and self.should_activate_optional_criteria():
+            context["optional_forms"] = self.get_all_optional_forms()
+
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -183,6 +186,17 @@ class MoulinetteMixin:
                 form.is_valid()
                 forms.append(form)
 
+        return forms
+
+    def get_all_optional_forms(self):
+        from envergo.moulinette.models import Criterion
+
+        forms = []
+        criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
+        for criterion in criteria:
+            form_class = criterion.evaluator.form_class
+            if form_class and form_class not in forms:
+                forms.append(form_class)
         return forms
 
     def form_valid(self, form):
