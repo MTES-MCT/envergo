@@ -195,7 +195,7 @@ class MoulinetteMixin:
             # Every optional form has a "activate" field
             # If unchecked, the form validation must be ignored alltogether
             activate_field = f"{Form.prefix}-activate"
-            if activate_field not in form_kwargs["data"]:
+            if "data" in form_kwargs and activate_field not in form_kwargs["data"]:
                 form_kwargs.pop("data")
 
             form = Form(**form_kwargs)
