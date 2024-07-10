@@ -65,6 +65,18 @@ def test_admin_see_optional_criterion_additional_question(admin_client):
     assert "error-text-evalenv_rubrique_41-soumis" not in res.content.decode()
 
 
+# ETQ admin, je peux voir les questions optionnelles dès l'accueil du simulateur
+def test_optional_questions_appear_on_moulinette_home(admin_client):
+    url = reverse("moulinette_home")
+    res = admin_client.get(url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/home.html")
+
+    # The question exists in the sidebar
+    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
+
+
 # ETQ User, je ne peux pas voir l'option d'activer un critère optionnel
 def test_users_cannot_see_optional_criterion_additional_question(client):
     url = reverse("moulinette_result")
