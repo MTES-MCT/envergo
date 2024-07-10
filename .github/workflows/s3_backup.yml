@@ -13,7 +13,12 @@ env:
 jobs:
   backup-production:
     name: Backup S3 in Production environment
-    runs-on: rclone/rclone:latest
+    runs-on: ubuntu-latest
     steps:
+      - name: Install rclone
+        run: |
+          apt-get update && apt-get install -y curl unzip
+          curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
+          unzip rclone-current-linux-amd64.zip
       - name: Backup S3 Bucket
-        run: rclone sync -v  --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }} ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}
+        run: ./rclone-*-linux-amd64/rclone sync -v  --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }} ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}

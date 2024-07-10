@@ -241,7 +241,7 @@ Le workflow de collaboration git en vigueur est le suivant :
  - sauf en cas de branche triviale et au jugé, les branches doivent passer par une revue de code avant d'être fusionnées
  - la branche `staging` contient du code fonctionnel, mais en cours de validation ; cette branche est déployée automatiquement sur l'environnement de staging permanent
  - Les Pull Requests doivent systématiquement être fusionnées dans `main`, et uniquement après validation complete
- - si la création d'une review app dédiée est jugée trop fastidieuse, une branche de dev peut être fusionnée dans `staging` pour en vaciliter la validation.
+ - si la création d'une review app dédiée est jugée trop fastidieuse, une branche de dev peut être fusionnée dans `staging` pour en faciliter la validation.
  - il est interdit de pusher du code sur `prod` qui ne soit pas déjà dans `main`
  - pour effectuer une mise en prod, on fusionne `main` dans `prod` (fast forward)
  - de façon exceptionnelle, pour déployer un correctif urgemment en prod sans

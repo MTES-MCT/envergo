@@ -6,17 +6,13 @@
 
 {% block main-classes %}contrast-bg{% endblock %}
 
-{% block container %}
-  <div id="main-container" class="fr-container fr-pt-6w fr-pb-5w">
+{% block content %}
+  <div class="fr-container">
     <div class="fr-grid-row fr-grid-row--center">
-      <article class="fr-col fr-col-lg-9">
-
-        <h1 class="centered">Simulez votre projet en phase amont</h1>
-
-        <section id="moulinette" class="moulinette moulinette-columns fr-pt-5w">
-          <div class="fr-container">{% include 'moulinette/_form.html' with form=form %}</div>
-        </section>
-      </article>
+      <div class="fr-col fr-col-lg-8 fr-col-xl-6">
+        <h1 class="fr-h2 centered">Simulez votre projet en phase amont !</h1>
+        <div id="moulinette" class="moulinette fr-pt-5w">{% include 'moulinette/_form.html' with form=form %}</div>
+      </div>
     </div>
   </div>
 {% endblock %}

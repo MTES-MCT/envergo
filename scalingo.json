@@ -53,6 +53,9 @@
     "DJANGO_MAKE_COM_WEBHOOK": {
       "value": ""
     },
+    "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK": {
+      "value": ""
+    },
     "DJANGO_ADMIN_OTP_REQUIRED": {
       "value": "False"
     }

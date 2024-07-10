@@ -24,12 +24,11 @@ urlpatterns = [
         RedirectView.as_view(pattern_name="home", query_string=True),
         name="moulinette_home_redirect",
     ),
-    path(_("form/"), MoulinetteHome.as_view(), name="moulinette_home"),
     path(
-        _("result/"),
+        _("form/"),
         include(
             [
-                path("", MoulinetteResult.as_view(), name="moulinette_result"),
+                path("", MoulinetteHome.as_view(), name="moulinette_home"),
                 # We need this url to exist, but it's a "fake" url, it's only
                 # used to be logged in matomo, so we can correctry track the funnel
                 # moulinette home > missing data > final result
@@ -38,6 +37,14 @@ urlpatterns = [
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_missing_data",
                 ),
+            ]
+        ),
+    ),
+    path(
+        _("result/"),
+        include(
+            [
+                path("", MoulinetteResult.as_view(), name="moulinette_result"),
                 # This is another "fake" url, only for matomo tracking
                 path(
                     _("debug/"),

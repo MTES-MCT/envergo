@@ -11,6 +11,8 @@ from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.db.models import QuerySet
+from django.db.models.signals import post_save
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -106,6 +108,22 @@ EVAL_RESULTS = Choices(
 )
 
 
+class EvaluationQuerySet(QuerySet):
+    def update(self, **kwargs):
+        res = super().update(**kwargs)
+        for instance in self:
+            # Signal that the save is complete
+            post_save.send(
+                sender=Evaluation,
+                instance=instance,
+                created=False,
+                update_fields=None,
+                raw=False,
+                using=self.db,
+            )
+        return res
+
+
 class Evaluation(models.Model):
     """A single evaluation for a building permit application.
 
@@ -113,6 +131,8 @@ class Evaluation(models.Model):
     often shortened in "avis".
 
     """
+
+    objects = EvaluationQuerySet.as_manager()
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.CharField(
