@@ -213,15 +213,19 @@ class MoulinetteMixin:
             )
 
         additional_forms = self.get_additional_forms(moulinette)
-        for form in additional_forms:
-            for field in form:
-                get.setlist(field.html_name, form.data.getlist(field.html_name))
+        for additional_form in additional_forms:
+            for field in additional_form:
+                get.setlist(
+                    field.html_name, additional_form.data.getlist(field.html_name)
+                )
 
         if self.should_activate_optional_criteria():
             optional_forms = self.get_optional_forms(moulinette)
-            for form in optional_forms:
-                for field in form:
-                    get.setlist(field.html_name, form.data.getlist(field.html_name))
+            for optional_form in optional_forms:
+                for field in optional_form:
+                    get.setlist(
+                        field.html_name, optional_form.data.getlist(field.html_name)
+                    )
 
         url_params = get.urlencode()
         url = reverse("moulinette_result")
@@ -365,8 +369,12 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 address = get_address_from_coords(lng, lat)
                 if address:
                     context["address"] = address
+                    context["form"].data[
+                        "address"
+                    ] = address  # add address as a submitted data to display it in the rendered form
                 else:
                     context["address_coords"] = f"{lat}, {lng}"
+                    context["form"].data["address"] = f"{lat}, {lng}"
 
         return context
 
