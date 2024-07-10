@@ -1,9 +1,9 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, call, patch
 from urllib.parse import urlencode
 
 import pytest
 
-from envergo.evaluations.models import Request
+from envergo.evaluations.models import Evaluation, Request
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
@@ -108,3 +108,25 @@ def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_e
     request.refresh_from_db()
     assert request.project_owner_phone == "+33612345678"
     assert request.project_owner_emails == ["test@test.com"]
+
+
+def test_evaluation_edition_triggers_an_automation():
+    with patch("django.db.transaction.on_commit", new=lambda fn: fn()):
+        with patch(
+            "envergo.evaluations.tasks.post_evaluation_to_automation.delay"
+        ) as mock_post:
+            evaluation = EvaluationFactory()  # no call from creation
+            evaluation.application_number = "PC05112321D0001"
+            evaluation.save()  # call from edition
+            evaluation2 = EvaluationFactory()  # no call from creation
+            Evaluation.objects.update(
+                application_number="PC05112321D0001"
+            )  # call from edition for all the evaluations
+
+    mock_post.assert_has_calls(
+        [
+            call(evaluation.uid),
+            call(evaluation.uid),
+            call(evaluation2.uid),
+        ]
+    )
