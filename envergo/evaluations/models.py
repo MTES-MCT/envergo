@@ -11,6 +11,8 @@ from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.db.models import QuerySet
+from django.db.models.signals import post_save
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -106,6 +108,22 @@ EVAL_RESULTS = Choices(
 )
 
 
+class EvaluationQuerySet(QuerySet):
+    def update(self, **kwargs):
+        res = super().update(**kwargs)
+        for instance in self:
+            # Signal that the save is complete
+            post_save.send(
+                sender=Evaluation,
+                instance=instance,
+                created=False,
+                update_fields=None,
+                raw=False,
+                using=self.db,
+            )
+        return res
+
+
 class Evaluation(models.Model):
     """A single evaluation for a building permit application.
 
@@ -113,6 +131,8 @@ class Evaluation(models.Model):
     often shortened in "avis".
 
     """
+
+    objects = EvaluationQuerySet.as_manager()
 
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.CharField(
@@ -177,13 +197,13 @@ class Evaluation(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_emails = ArrayField(
+    urbanism_department_emails = ArrayField(
         models.EmailField(),
         blank=True,
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
-    contact_phone = PhoneNumberField(
+    urbanism_department_phone = PhoneNumberField(
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
@@ -444,10 +464,10 @@ class EvaluationEmail:
                 if result in ("interdit", "soumis", "action_requise"):
                     recipients = evaluation.project_owner_emails
                 else:
-                    recipients = evaluation.contact_emails
+                    recipients = evaluation.urbanism_department_emails
 
             else:
-                recipients = evaluation.contact_emails
+                recipients = evaluation.urbanism_department_emails
         else:
             recipients = evaluation.project_owner_emails
 
@@ -468,7 +488,7 @@ class EvaluationEmail:
                 result in ("interdit", "soumis", "action_requise"),
             )
         ):
-            cc_recipients = evaluation.contact_emails
+            cc_recipients = evaluation.urbanism_department_emails
 
         return sorted(list(set(cc_recipients)))
 
@@ -574,13 +594,13 @@ class Request(models.Model):
         max_length=32,
         verbose_name=_("Who are you?"),
     )
-    contact_emails = ArrayField(
+    urbanism_department_emails = ArrayField(
         models.EmailField(),
         blank=True,
         default=list,
         verbose_name=_("Urbanism department email address(es)"),
     )
-    contact_phone = PhoneNumberField(
+    urbanism_department_phone = PhoneNumberField(
         _("Urbanism department phone number"), max_length=20, blank=True
     )
 
@@ -644,8 +664,8 @@ class Request(models.Model):
 
         evaluation = Evaluation.objects.create(
             reference=self.reference,
-            contact_emails=self.contact_emails,
-            contact_phone=self.contact_phone,
+            urbanism_department_emails=self.urbanism_department_emails,
+            urbanism_department_phone=self.urbanism_department_phone,
             request=self,
             application_number=self.application_number,
             address=self.address,

@@ -189,8 +189,11 @@ def to_geojson(obj, geometry_field="geometry"):
     return json.loads(geojson)
 
 
-def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
-    url = f"https://data.geopf.fr/geocodage/reverse?lon={lng}&lat={lat}&index={index}&limit=1"  # noqa
+def get_data_from_coords(lng, lat, timeout=0.5, index="address", limit=1):
+    url = f"https://data.geopf.fr/geocodage/reverse?lon={lng}&lat={lat}&index={index}&limit={limit}"  # noqa
+
+    if is_test():
+        raise NotImplementedError("You should mock this function in tests")
 
     data = None
     try:
@@ -198,7 +201,7 @@ def get_data_from_coords(lng, lat, timeout=0.5, index="address"):
         res = requests.get(url, timeout=timeout)
         if res.status_code == 200:
             json = res.json()
-            data = json["features"][0]["properties"]
+            data = json["features"]
     except (
         requests.exceptions.RequestException,
         KeyError,
@@ -218,12 +221,26 @@ def get_address_from_coords(lng, lat, timeout=0.5):
     Returns None in case anything goes wrong with the request.
     """
 
-    data = get_data_from_coords(lng, lat, timeout)
-    return data["label"] if data else None
+    # try to find the address first, fallback on the parcel if not found to get at least the city and department
+    data = get_data_from_coords(lng, lat, timeout, index="address,parcel", limit=5)
+    address = None
+    if data:
+        for item in data:
+            if item["properties"]["_type"] == "address":
+                address = item["properties"]["label"]
+                break
+            if not address and item["properties"]["_type"] == "parcel":
+                address = f"{item['properties']['city']} ({item['properties']['departmentcode']})"
+
+    return address
 
 
 def get_commune_from_coords(lng, lat, timeout=0.5):
     url = f"https://geo.api.gouv.fr/communes?lon={lng}&lat={lat}&fields=code,nom"
+
+    if is_test():
+        raise NotImplementedError("You should mock this function in tests")
+
     data = None
     try:
         res = requests.get(url, timeout=timeout)
@@ -395,3 +412,7 @@ def get_catchment_area_pixel_values(lng, lat):
         cursor.execute(query, [lng, lat])
         pixels = cursor.fetchall()
     return pixels
+
+
+def is_test():
+    return "pytest" in sys.modules

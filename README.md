@@ -214,7 +214,44 @@ docker-compose run --rm django pytest
 ```
 
 
-## Déploiement
+## Recette et déploiement
+
+### Environnement de recette
+
+Deux possibilités existent pour la mise en disponibilité d'un environnement de recette :
+
+ - 1/ création d'une « review app » manuellement via scalingo ;
+ - 2/ utilisation de l'environnement de recette permanent `envergo.incubateur.net`.
+
+Les « review app » peuvent être créées manuellement à l'envie depuis l'interface
+de Scalingo.  Une review app est automatiquement supprimée lorsque la Pull Request
+correspondante est fusionnée.
+
+L'environnement de staging est permanent, avec un déploiement automatique de la
+branche `staging`.
+
+
+### Workflow de collaboration
+
+Le workflow de collaboration git en vigueur est le suivant :
+
+ - la branche `main` ne contient que du code absolument prêt à passer en prod (revue de code ok, review PO ok)
+ - sauf commit absolument trivial, tous les devs sont effectués sur des branches dédiées
+ avant de pouvoir être fusionnées
+ - sauf en cas de branche triviale et au jugé, les branches doivent passer par une revue de code avant d'être fusionnées
+ - la branche `staging` contient du code fonctionnel, mais en cours de validation ; cette branche est déployée automatiquement sur l'environnement de staging permanent
+ - Les Pull Requests doivent systématiquement être fusionnées dans `main`, et uniquement après validation complete
+ - si la création d'une review app dédiée est jugée trop fastidieuse, une branche de dev peut être fusionnée dans `staging` pour en faciliter la validation.
+ - il est interdit de pusher du code sur `prod` qui ne soit pas déjà dans `main`
+ - pour effectuer une mise en prod, on fusionne `main` dans `prod` (fast forward)
+ - de façon exceptionnelle, pour déployer un correctif urgemment en prod sans
+ devoir déployer toute la branche `main`, on peut :
+   - publier et valider le correctif sur `main` ;
+   - effectuer un `cherry-pick` du commit pour les intégrer de manière unitaire
+   à la branche `prod`.
+
+
+### Déploiement en production
 
 Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement, il suffit de pousser de nouveaux commits sur la branche `prod`.
 
@@ -275,6 +312,22 @@ $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER
 $ docker-compose run --rm django python manage.py migrate
 ```
 
+
+## Stockage de fichiers
+
+Les documents sont stockés sur un répertoire distant compatible avec le protocole S3 sur [Scaleway](https://console.scaleway.com/object-storage/buckets) ce processus est géré via la librairie python boto en combinaison avec le package default_storage de Django
+
+
+### Backup des buckets S3
+
+Chaque semaine, on souhaite faire un backup du contenu des buckets s3 de production.
+Pour executer ce back up on utilise [github action](.github/workflows/s3_backup.yml)
+
+Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans [Settings](https://github.com/MTES-MCT/envergo/settings) > Secrets and variables > [Actions](https://github.com/MTES-MCT/envergo/settings/secrets/actions).
+
+Ajouter les `Repository secrets` :
+* S3_ACCESS_KEY
+* S3_SECRET_KEY
 
 ## Glossaire
 

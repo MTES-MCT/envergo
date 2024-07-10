@@ -245,7 +245,7 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
-    background-color: #fef7da;
+    background-color: var(--background-alt-green-tilleul-verveine);
     padding: 1rem;
 
     .fr-input-group--error {
@@ -845,7 +845,7 @@ p:last-child {
     margin-bottom: inherit;
   }
 
-  &#unavailable-department-alert{
+  &#unavailable-department-alert {
     box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
   }
 }
@@ -1305,24 +1305,138 @@ main.home {
   }
 }
 
-.moulinette-columns {
-  input[type=text] {
-    background-color: var(--background-alt-grey);
+// Geometricians landing page styles
+:root[data-fr-theme=dark] main.geometricians {
+  section#hero {
+    background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
+  }
+}
+
+main.geometricians {
+  img {
+    max-width: 100%;
   }
 
-  #form-groups {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    margin: -1em;
+  section#hero {
+    background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
 
-    div.moulinette-col {
-      flex: 1;
-      width: 100%;
-      min-width: 320px;
-      max-width: 410px;
-      padding: 1em;
+    h1,
+    .fr-text {
+      color: #fff;
+    }
 
+    .fr-btn--secondary {
+      background-color: var(--grey-1000-50);
+    }
+
+    .fr-btn--secondary:hover {
+      background-color: var(--background-default-grey-hover);
+    }
+
+    #rounded-hero {
+      display: block;
+      margin-top: -10%;
+
+      path {
+        fill: var(--grey-1000-50);
+      }
+    }
+
+    #geometrician-illustration {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+  }
+
+  section#simulateur {
+    background-color: var(--info-950-100);
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  section#advantages h2 {
+    text-align: inherit;
+  }
+
+  section#webinar {
+    background-color: var(--grey-975-100);
+
+    #webinar-img-container {
+      text-align: center;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 20em;
+      border-radius: 0.3em;
+    }
+  }
+
+  section#faq-section {
+    .fr-callout {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: var(--background-contrast-grey);
+    }
+
+    .fr-callout:hover {
+      background-color: var(--background-contrast-grey-hover);
+    }
+
+    span {
+      color: var(--blue-france-sun-113-625-hover)
+    }
+
+    #faq-link {
+      display: block;
+      margin: 0 auto 0;
+    }
+  }
+
+  section#properties {
+    .fr-grid-row--center div {
+      text-align: center;
+
+      img {
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+.moulinette {
+
+  .fr-input,
+  .autocomplete__input {
+    --background-contrast-grey: var(--grey-975-100);
+  }
+
+  .fr-input-group-map {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+
+    figure {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  // Single column moulinette form layout
+  .fr-input-group-map {
+
+    @media (min-width: 62em) {
+
+      #map-container {
+        margin-left: -5rem;
+        margin-right: -5rem;
+        width: calc(100% + 10rem);
+      }
     }
   }
 

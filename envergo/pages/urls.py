@@ -5,6 +5,7 @@ from django.views.generic import RedirectView, TemplateView
 from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import (
     AvailabilityInfo,
+    GeometriciansView,
     HomeView,
     LegalMentionsView,
     NewsFeed,
@@ -87,4 +88,5 @@ urlpatterns = [
         name="parcels_export",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
+    path(_("géomètres/"), GeometriciansView.as_view(), name="geometricians"),
 ]

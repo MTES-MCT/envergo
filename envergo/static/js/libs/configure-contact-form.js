@@ -5,7 +5,7 @@ window.addEventListener('load', function () {
 
   var FIELDS_SETUP = {
     instructor: {
-      contact_emails: {
+      urbanism_department_emails: {
         label: 'Adresse(s) e-mail',
       },
       project_owner_emails: {
