@@ -14,7 +14,7 @@ from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import FakeMoulinette, Moulinette
+from envergo.moulinette.models import Criterion, FakeMoulinette, Moulinette
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -86,7 +86,6 @@ class MoulinetteMixin:
             if moulinette.is_evaluation_available() or self.request.user.is_staff:
                 context["additional_forms"] = self.get_additional_forms(moulinette)
                 context["additional_fields"] = self.get_additional_fields(moulinette)
-                context["optional_forms"] = self.get_optional_forms(moulinette)
 
                 # We need to display a different form style when the "additional forms"
                 # first appears, but the way this feature is designed, said forms
@@ -130,8 +129,13 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
-        if "moulinette" not in context and self.should_activate_optional_criteria():
-            context["optional_forms"] = self.get_all_optional_forms()
+        if self.should_activate_optional_criteria():
+            if "moulinette" in context:
+                context["optional_forms"] = self.get_optional_forms(
+                    context["moulinette"]
+                )
+            else:
+                context["optional_forms"] = self.get_optional_forms()
 
         return context
 
@@ -169,8 +173,21 @@ class MoulinetteMixin:
 
         return fields
 
-    def get_optional_forms(self, moulinette):
-        form_classes = moulinette.optional_form_classes()
+    def get_optional_forms(self, moulinette=None):
+        """Get the form list for optional criteria.
+
+        If a moulinette object is available, it means the user submitted the form,
+        so we can fetch the optional criteria from the moulinette object.
+
+        But we also want to display optional forms on the initial moulinette form,
+        so we have no choice but to manually fetch all optional criteria and extracting
+        their forms.
+        """
+        if moulinette:
+            form_classes = moulinette.optional_form_classes()
+        else:
+            form_classes = self.get_all_optional_form_classes()
+
         forms = []
         for Form in form_classes:
             form_kwargs = self.get_form_kwargs()
@@ -188,9 +205,7 @@ class MoulinetteMixin:
 
         return forms
 
-    def get_all_optional_forms(self):
-        from envergo.moulinette.models import Criterion
-
+    def get_all_optional_form_classes(self):
         form_classes = []
         criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
         for criterion in criteria:
@@ -198,22 +213,7 @@ class MoulinetteMixin:
             if form_class and form_class not in form_classes:
                 form_classes.append(form_class)
 
-        forms = []
-        for Form in form_classes:
-            form_kwargs = self.get_form_kwargs()
-
-            # Every optional form has a "activate" field
-            # If unchecked, the form validation must be ignored alltogether
-            activate_field = f"{Form.prefix}-activate"
-            if activate_field not in form_kwargs["data"]:
-                form_kwargs.pop("data")
-
-            form = Form(**form_kwargs)
-            if form.fields:
-                form.is_valid()
-                forms.append(form)
-
-        return forms
+        return form_classes
 
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
