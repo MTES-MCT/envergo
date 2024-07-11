@@ -1,8 +1,19 @@
+{# djlint:off #}
 
 <p>
-  {% if perimeter.url %}
-    Le projet se trouve dans le périmètre <a href="{{ perimeter.url }}" target="_blank" rel="noopener">« {{ perimeter.name }} »</a>.
+  {% if perimeter.distance <= 10 %}
+    Le projet se trouve dans le périmètre
   {% else %}
-    Le projet se trouve dans le périmètre « {{ perimeter.name }} ».
+    Le projet se trouve à proximité du périmètre
+  {% endif %}
+
+  {% if perimeter.url %}
+    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
+      {{ perimeter.name }}
+    </a>{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}.
+  {% else %}
+    {{ perimeter.name }}{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}.
   {% endif %}
 </p>
