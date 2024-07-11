@@ -1,9 +1,19 @@
+{# djlint:off #}
+
 <p>
+  {% if perimeter.distance <= 10 %}
+    Le projet se trouve dans le périmètre
+  {% else %}
+    Le projet se trouve à proximité du périmètre
+  {% endif %}
+
   {% if perimeter.url %}
-    Le projet se trouve dans le périmètre <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
+    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
     du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « {{ perimeter.name }} »
-  </a>.
+  </a>{% if perimeter.distance > 10 %}
+    (distance : {{ perimeter.distance }}m){% endif %}.
 {% else %}
-  Le projet se trouve dans le périmètre du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « {{ perimeter.name }} » .
+  du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « {{ perimeter.name }} »{% if perimeter.distance > 10 %}
+    (distance : {{ perimeter.distance }}m){% endif %}.
 {% endif %}
 </p>

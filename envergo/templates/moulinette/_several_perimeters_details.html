@@ -1,6 +1,7 @@
+{# djlint:off #}
 
 <p>
-  Le projet se trouve dans plusieurs périmètres :
+  Le projet se trouve dans ou à proximité de plusieurs périmètres :
   {% for perimeter in perimeters %}
     «
     {% if perimeter.url %}
@@ -8,7 +9,8 @@
     {% else %}
       {{ perimeter.name }}
     {% endif %}
-     »
+     »{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}
     {% if forloop.last %}
       .
     {% else %}
