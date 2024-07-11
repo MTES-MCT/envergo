@@ -7,7 +7,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, Prefetch, Q, When
+from django.db.models import Case, F, IntegerField, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
@@ -907,7 +907,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
@@ -940,7 +940,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("id")
             .distinct("id")
             .select_related("activation_map")
@@ -965,7 +965,7 @@ class Moulinette:
 
         zones = (
             Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
-            .annotate(distance=Distance("geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
             .defer("map__geometry")
