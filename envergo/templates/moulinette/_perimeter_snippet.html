@@ -3,10 +3,20 @@
 {% perimeter_long_name regulation perimeter as perimeter_name %}
 
 <p>
-  Le projet se trouve dans le périmètre
-  {% if perimeter.url %}
-    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">{{ perimeter_name }}</a>.
+  {% if perimeter.distance <= 10 %}
+    Le projet se trouve dans le périmètre
   {% else %}
-    {{ perimeter_name }}.
+    Le projet se trouve à proximité du périmètre
+  {% endif %}
+
+  {# djlint:off #}
+  {% if perimeter.url %}
+    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
+      {{ perimeter_name }}
+    </a>{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}.
+  {% else %}
+    {{ perimeter_name }}{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}.
   {% endif %}
 </p>
