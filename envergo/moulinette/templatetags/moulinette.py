@@ -21,31 +21,15 @@ def to_geojson(obj, geometry_field="geometry"):
     return mark_safe(json.dumps(json_obj))
 
 
-@register.simple_tag(takes_context=True)
-def show_regulation_body(context, regulation):
-    template_name = f"moulinette/{regulation.slug}/result_{regulation.result}.html"
-    try:
-        content = render_to_string(template_name, context=context.flatten())
-    except TemplateDoesNotExist:
-        content = ""
+def render_from_moulinette_templates(context, template_name):
+    """Render a given moulinette template.
 
-    return content
-
-
-@register.simple_tag(takes_context=True)
-def show_criterion_body(context, regulation, criterion):
-    """Render a single criterion content.
-
-    We use templates to render the content of a single criterion for a given result code.
-
-    Templates are by default stored on the file system, but can be overriden with
-    MoulinetteConfig templates.
+    By default, templates are stored on the file system, but we added the possibility
+    to store html templates in the database, to override some templates on a
+    department basis.
     """
-    template_name = f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
     full_template_name = f"moulinette/{template_name}"
-    context_data = context.flatten()
-    context_data.update({"regulation": regulation, "criterion": criterion})
-
+    context_data = context.flatten()  # context must be a dict, not RequestContext
     moulinette_templates = context["moulinette"].templates
     if template_name in moulinette_templates:
         template_content = moulinette_templates[template_name].content
@@ -55,6 +39,26 @@ def show_criterion_body(context, regulation, criterion):
             content = render_to_string((full_template_name,), context_data)
         except TemplateDoesNotExist:
             content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_regulation_body(context, regulation):
+    """Render the main regulation content block."""
+
+    template_name = f"{regulation.slug}/result_{regulation.result}.html"
+    content = render_from_moulinette_templates(context, template_name)
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_criterion_body(context, regulation, criterion):
+    """Render a single criterion content."""
+
+    template_name = f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
+    content = render_from_moulinette_templates(context, template_name)
 
     return content
 
