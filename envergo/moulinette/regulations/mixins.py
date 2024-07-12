@@ -1,18 +1,15 @@
-from django.contrib.gis.measure import Distance as D
-
-
 class ZoneHumideMixin:
     def get_catalog_data(self):
         data = {}
         if "wetlands_25" not in self.catalog:
             data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=25)
+                zone for zone in self.catalog["wetlands"] if zone.distance <= 25
             ]
             data["wetlands_within_25m"] = bool(data["wetlands_25"])
 
         if "wetlands_100" not in self.catalog:
             data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= D(m=100)
+                zone for zone in self.catalog["wetlands"] if zone.distance <= 100
             ]
             data["wetlands_within_100m"] = bool(data["wetlands_100"])
 
@@ -20,7 +17,7 @@ class ZoneHumideMixin:
             data["potential_wetlands_10"] = [
                 zone
                 for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= D(m=10)
+                if zone.distance <= 10
             ]
             data["potential_wetlands_within_10m"] = bool(data["potential_wetlands_10"])
 
@@ -28,7 +25,7 @@ class ZoneHumideMixin:
             data["forbidden_wetlands_25"] = [
                 zone
                 for zone in self.catalog["forbidden_wetlands"]
-                if zone.distance <= D(m=25)
+                if zone.distance <= 25
             ]
             data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
 
@@ -36,7 +33,7 @@ class ZoneHumideMixin:
             data["forbidden_wetlands_100"] = [
                 zone
                 for zone in self.catalog["forbidden_wetlands"]
-                if zone.distance <= D(m=100)
+                if zone.distance <= 100
             ]
             data["forbidden_wetlands_within_100m"] = bool(
                 data["forbidden_wetlands_100"]
@@ -59,7 +56,7 @@ class ZoneInondableMixin:
 
         if "flood_zones_12" not in self.catalog:
             data["flood_zones_12"] = [
-                zone for zone in self.catalog["flood_zones"] if zone.distance <= D(m=12)
+                zone for zone in self.catalog["flood_zones"] if zone.distance <= 12
             ]
             data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
 
@@ -67,7 +64,7 @@ class ZoneInondableMixin:
             data["potential_flood_zones_0"] = [
                 zone
                 for zone in self.catalog["potential_flood_zones"]
-                if zone.distance <= D(m=0)
+                if zone.distance <= 0
             ]
             data["potential_flood_zones_within_0m"] = bool(
                 data["potential_flood_zones_0"]

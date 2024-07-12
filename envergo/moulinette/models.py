@@ -7,7 +7,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, Prefetch, Q, When
+from django.db.models import Case, F, IntegerField, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
@@ -71,7 +71,6 @@ class Regulation(models.Model):
         help_text=_("The perimeter's map will be displayed, if it exists"),
         default=False,
     )
-    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
     class Meta:
         verbose_name = _("Regulation")
@@ -183,7 +182,6 @@ class Regulation(models.Model):
         We musn't display criteria if the regulation or associated perimetes are
         not activated yet.
         """
-
         activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
         return self.is_activated() and (
             (not self.has_perimeters)
@@ -345,11 +343,27 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
+
+        # We use visually distinctive color palette to display perimeters.
+        # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
+        palette = [
+            "#4e79a7",
+            "#e15759",
+            "#76b7b2",
+            "#59a14f",
+            "#edc949",
+            "#af7aa1",
+            "#ff9da7",
+            "#9c755f",
+            "#bab0ab",
+        ]
         perimeters = self.perimeters.all()
         if perimeters:
             polygons = [
-                MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
-                for perimeter in perimeters
+                MapPolygon(
+                    [perimeter], palette[counter % len(palette)], perimeter.map_legend
+                )
+                for counter, perimeter in enumerate(perimeters)
             ]
             map = Map(
                 type="regulation",
@@ -892,7 +906,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
@@ -925,7 +939,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("id")
             .distinct("id")
             .select_related("activation_map")
@@ -950,7 +964,7 @@ class Moulinette:
 
         zones = (
             Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
-            .annotate(distance=Distance("geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
             .defer("map__geometry")
