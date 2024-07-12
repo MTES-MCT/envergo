@@ -4,7 +4,8 @@
   Le projet se trouve dans ou à proximité de plusieurs périmètres de Schémas d’Aménagement et de Gestion des Eaux (SAGE) :
   {% for perimeter in perimeters %}
     {% if perimeter.url %}
-      <a href="{{ perimeter.url }}" target="_blank" rel="noopener">« {{ perimeter.name }} »</a>
+      <a href="{{ perimeter.url }}" target="_blank" rel="noopener">« {{ perimeter.name }} »</a>{% if perimeter.distance > 10 %}
+      (distance : {{ perimeter.distance }}m){% endif %}
     {% else %}
       « {{ perimeter.name }} »{% if perimeter.distance > 10 %}
       (distance : {{ perimeter.distance }}m){% endif %}
