@@ -71,6 +71,7 @@ class Regulation(models.Model):
         help_text=_("The perimeter's map will be displayed, if it exists"),
         default=False,
     )
+    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
     class Meta:
         verbose_name = _("Regulation")
