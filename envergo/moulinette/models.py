@@ -71,6 +71,7 @@ class Regulation(models.Model):
         help_text=_("The perimeter's map will be displayed, if it exists"),
         default=False,
     )
+    polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
     class Meta:
         verbose_name = _("Regulation")
@@ -347,6 +348,7 @@ class Regulation(models.Model):
         # We use visually distinctive color palette to display perimeters.
         # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
         palette = [
+            self.polygon_color,
             "#4e79a7",
             "#e15759",
             "#76b7b2",
