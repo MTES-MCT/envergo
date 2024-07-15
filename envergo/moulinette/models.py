@@ -349,6 +349,7 @@ class Regulation(models.Model):
         # We use visually distinctive color palette to display perimeters.
         # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
         palette = [
+            self.polygon_color,
             "#4e79a7",
             "#e15759",
             "#76b7b2",
