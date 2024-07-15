@@ -15,12 +15,7 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.regulations import CriterionEvaluator
-
-
-class MoulinetteTemplateInline(admin.StackedInline):
-    model = MoulinetteTemplate
-    extra = 0
-    fields = ["key", "content"]
+from envergo.moulinette.utils import list_criteria_templates
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -98,6 +93,12 @@ class CriterionAdminForm(forms.ModelForm):
                 "Both required action and stake are required if one is set."
             )
         return data
+
+
+class MoulinetteTemplateInline(admin.StackedInline):
+    model = MoulinetteTemplate
+    extra = 0
+    fields = ["key", "content"]
 
 
 @admin.register(Criterion)
@@ -258,11 +259,31 @@ class MoulinetteConfigForm(forms.ModelForm):
         return value
 
 
+class MoulinetteConfigTemplateForm(forms.ModelForm):
+    """Form to edit a MoulinetteTemplate in a MoulinetteConfig.
+
+    We remove every key that is not a real template (autorisation_urba_*, etc.)
+    """
+
+    class Meta:
+        model = MoulinetteTemplate
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        templates = list(list_criteria_templates())
+        self.fields["key"].choices = zip(templates, templates)
+
+
+class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
+    form = MoulinetteConfigTemplateForm
+
+
 @admin.register(MoulinetteConfig)
 class MoulinetteConfigAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated", "zh_doubt"]
     form = MoulinetteConfigForm
-    inlines = [MoulinetteTemplateInline]
+    inlines = [MoulinetteConfigTemplateInline]
     list_filter = ["is_activated", "zh_doubt"]
 
     def get_queryset(self, request):
