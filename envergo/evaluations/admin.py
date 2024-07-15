@@ -93,11 +93,6 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
 
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
-    class Media:
-        css = {
-            "all": ["css/project_admin.css"],
-        }
-
     list_display = [
         "reference",
         "created_at",
