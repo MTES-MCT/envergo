@@ -13,10 +13,17 @@
   </div>
 
   <p>
-    Si vous souhaitez apporter des modifications ou des compléments à votre
-    demande, <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter</a>.
+    Vous pouvez <a href="{% url "request_eval_wizard_step_3" evalreq.reference %}">compléter ou modifier vos documents via ce formulaire</a>.
   </p>
 
-  <a class="fr-btn" href="{% url 'request_evaluation' %}">Soumettre une nouvelle demande d'avis réglementaire</a>
+  <p>
+    Pour toute question
+    <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter</a>.
+  </p>
+
+  <div class="alt cta fr-p-3w fr-mt-5w centered">
+    <p>D'autres projets dont la surface est de plus de 1000 m² ?</p>
+    <a class="fr-btn" href="{% url 'request_eval_wizard_reset' %}">Soumettre une nouvelle demande d'avis réglementaire</a>
+  </div>
 
 {% endblock %}
