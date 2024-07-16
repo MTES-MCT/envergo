@@ -361,8 +361,11 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     form_class = WizardFilesForm
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    success_url = reverse_lazy("request_success")
     context_object_name = "evalreq"
+
+    def get_success_url(self):
+        url = reverse("request_success", args=[self.object.reference])
+        return url
 
     def form_valid(self, form):
 
@@ -497,8 +500,12 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             )
 
 
-class RequestSuccess(TemplateView):
+class RequestSuccess(DetailView):
     template_name = "evaluations/request_success.html"
+    model = Request
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    context_object_name = "evalreq"
 
 
 class SelfDeclaration(EvaluationDetailMixin, DetailView):
