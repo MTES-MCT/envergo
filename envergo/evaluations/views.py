@@ -420,6 +420,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
         context["uploaded_files"] = files
+        context["request_submitted"] = self.object.submitted
         return context
 
 
