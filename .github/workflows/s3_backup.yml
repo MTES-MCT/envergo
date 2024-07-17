@@ -1,0 +1,24 @@
+name: Backup S3 Production Bucket
+
+on:
+  workflow_dispatch:
+  schedule:
+    # At 01:27 UTC every Monday
+    - cron: '27 1 * * 1'
+
+env:
+  S3_BUCKET_SOURCE_CONNECTION_STRING: :s3,provider=Scaleway,region=fr-par,endpoint=s3.fr-par.scw.cloud,access_key_id=${{ secrets.S3_ACCESS_KEY }},secret_access_key=${{ secrets.S3_SECRET_KEY }}:envergo-stage/envergo-upload-prod
+  S3_BUCKET_DESTINATION_CONNECTION_STRING: :s3,provider=Scaleway,region=nl-ams,endpoint=s3.nl-ams.scw.cloud,access_key_id=${{ secrets.S3_ACCESS_KEY }},secret_access_key=${{ secrets.S3_SECRET_KEY }}:envergo-prod-backup
+
+jobs:
+  backup-production:
+    name: Backup S3 in Production environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install rclone
+        run: |
+          apt-get update && apt-get install -y curl unzip
+          curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
+          unzip rclone-current-linux-amd64.zip
+      - name: Backup S3 Bucket
+        run: ./rclone-*-linux-amd64/rclone sync -v  --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }} ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}

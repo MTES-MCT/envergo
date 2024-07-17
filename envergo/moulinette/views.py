@@ -126,7 +126,6 @@ class MoulinetteMixin:
 
         context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
-        context["source"] = "moulinette"
         context["visitor_id"] = self.request.COOKIES.get(
             settings.VISITOR_COOKIE_NAME, ""
         )
@@ -231,7 +230,10 @@ class MoulinetteMixin:
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
-        url_with_params = f"{url}?{url_params}"
+        # Scroll to the additional forms if there are missing data
+        url_fragment = "#additional-forms" if moulinette.has_missing_data() else ""
+
+        url_with_params = f"{url}?{url_params}{url_fragment}"
         return url_with_params
 
     def should_activate_optional_criteria(self):
@@ -276,7 +278,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
-            template_name = "moulinette/missing_data.html"
+            template_name = "moulinette/home.html"
         else:
             template_name = "moulinette/result.html"
 
@@ -371,7 +373,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                         "address"
                     ] = address  # add address as a submitted data to display it in the rendered form
                 else:
-                    context["coords"] = f"{lat}, {lng}"
+                    context["address_coords"] = f"{lat}, {lng}"
                     context["form"].data["address"] = f"{lat}, {lng}"
 
         return context
