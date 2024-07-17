@@ -1569,6 +1569,7 @@ main.demonstrateur_2150 {
   #moulinette-result-container {
     flex: 1;
     display: flex;
+    overflow: hidden;
 
     >.fr-grid-row{
       flex-wrap: nowrap;
@@ -1577,6 +1578,10 @@ main.demonstrateur_2150 {
     #project-summary, #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
+    }
+
+    .fr-sr-only{
+      position:fixed; // to avoid the element to break the whole scroll flow in Chrome
     }
 
     #project-summary {
@@ -1612,7 +1617,7 @@ main.demonstrateur_2150 {
 
     #project-summary::before {
       content: "";
-      position: absolute;
+      position: fixed;
       top: 0;
       left: -10px;
       width: 30%;
@@ -1641,6 +1646,7 @@ main.demonstrateur_2150 {
   footer{
     padding-top: 0;
     box-shadow: initial;
+    z-index: 1000; // to be above the leaflet map
   }
 }
 
