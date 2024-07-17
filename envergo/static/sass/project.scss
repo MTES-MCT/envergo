@@ -1570,7 +1570,11 @@ main.demonstrateur_2150 {
     flex: 1;
     display: flex;
 
-    >.fr-grid-row, #project-summary, #project-result {
+    >.fr-grid-row{
+      flex-wrap: nowrap;
+    }
+
+    #project-summary, #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
     }
