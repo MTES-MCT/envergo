@@ -995,6 +995,18 @@ class Moulinette:
 
         return any(form_errors)
 
+    def has_missing_optional_data(self):
+        """Does any optional forms has some validation errors?"""
+
+        form_errors = []
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                form = criterion.get_form()
+                if form and criterion.is_optional:
+                    form_errors.append(not form.is_valid())
+
+        return any(form_errors)
+
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
 
