@@ -992,13 +992,16 @@ class Moulinette:
                 form = criterion.get_form()
                 # We check for each form for errors
                 if form:
+                    form.is_valid()
 
                     # For optional forms, we only check for errors if the form
                     # was activated (the "activate" checkbox was selected)
-                    if criterion.is_optional and self.activate_optional_criteria:
-                        activate_field = f"{form.prefix}-activate"
-                        if activate_field in form.data:
-                            form_errors.append(not form.is_valid())
+                    if (
+                        criterion.is_optional
+                        and self.activate_optional_criteria
+                        and form.is_activated()
+                    ):
+                        form_errors.append(not form.is_valid())
                     elif not criterion.is_optional:
                         form_errors.append(not form.is_valid())
 
