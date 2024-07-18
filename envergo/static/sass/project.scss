@@ -984,6 +984,10 @@ div.hero-alt {
 .moulinette-result-body {
   min-height: 20em;
 
+  main{
+    min-height: 20em;
+  }
+
   #moulinette-result-container {
     flex: 1;
     overflow: hidden;
