@@ -33,7 +33,10 @@
                 <div id="map">
                   <a id="map-button"
                      href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
-                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le
+                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+                     data-event-category="Content"
+                     data-event-action="Edit"
+                     data-event-name="Map">Modifier le
                     projet
                   </a>
                 </div>
@@ -44,7 +47,10 @@
         {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
         <div class="button-container  hide-print">
           <a href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
-             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet</a>
+             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+             data-event-category="Content"
+             data-event-action="Edit"
+             data-event-name="Project">Modifier le projet</a>
         </div>
       </div>
       <div id="project-result" class="fr-col-8">

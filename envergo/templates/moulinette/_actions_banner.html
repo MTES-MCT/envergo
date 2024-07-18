@@ -5,7 +5,10 @@
     <div class="fr-grid-row  fr-grid-row--gutters fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-4">
         <a href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
-           class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet</a>
+           class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+           data-event-category="Content"
+           data-event-action="Edit"
+           data-event-name="Main">Modifier le projet</a>
       </div>
       {% if is_admin %}
         <div id="copy-btn-container" class="fr-col-12 fr-col-md-4">
