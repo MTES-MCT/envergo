@@ -983,26 +983,16 @@ class Moulinette:
         config = getattr(self.department, "moulinette_config", None)
         return config and config.is_activated
 
-    def has_missing_additional_data(self):
+    def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
 
         form_errors = []
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
-                if form and not criterion.is_optional:
-                    form_errors.append(not form.is_valid())
-
-        return any(form_errors)
-
-    def has_missing_optional_data(self):
-        """Does any optional forms has some validation errors?"""
-
-        form_errors = []
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                form = criterion.get_form()
-                if form and criterion.is_optional:
+                if form and (
+                    self.activate_optional_criteria or not criterion.is_optional
+                ):
                     form_errors.append(not form.is_valid())
 
         return any(form_errors)

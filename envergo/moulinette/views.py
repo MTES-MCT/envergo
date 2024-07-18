@@ -307,12 +307,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = "moulinette/result_available_soon.html"
-        elif moulinette.has_missing_additional_data():
-            template_name = "moulinette/home.html"
-        elif (
-            self.should_activate_optional_criteria()
-            and moulinette.has_missing_optional_data()
-        ):
+        elif moulinette.has_missing_data():
             template_name = "moulinette/home.html"
         else:
             template_name = "moulinette/result.html"
@@ -330,10 +325,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
-            if not (
-                moulinette.has_missing_additional_data()
-                or is_request_from_a_bot(request)
-            ):
+            if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
                 self.log_moulinette_event(moulinette)
 
             return res
@@ -394,7 +386,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
             context["matomo_custom_url"] = debug_url
 
-        elif moulinette and moulinette.has_missing_additional_data():
+        elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
 
         elif moulinette:

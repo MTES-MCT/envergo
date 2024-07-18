@@ -113,7 +113,7 @@
       <div class="hide-print">
         {% if not moulinette %}
           <button type="submit" class="fr-btn">Démarrer la simulation</button>
-        {% elif additional_forms and moulinette.has_missing_additional_data %}
+        {% elif additional_forms and moulinette.has_missing_data %}
           <button type="submit" class="fr-btn">Démarrer la simulation</button>
         {% else %}
           <button type="submit" class="fr-btn">Renouveler la simulation</button>
