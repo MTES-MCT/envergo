@@ -2,6 +2,7 @@ from datetime import timedelta
 from itertools import groupby
 
 from django.core.management.base import BaseCommand
+from django.db.models import F
 from django.urls import reverse
 from django.utils.timezone import localtime
 
@@ -17,12 +18,17 @@ class Command(BaseCommand):
         # We want to notify admins every time a Request has a new file.
         # But we don't want to spam a message for each and every file.
         # Hence, we wait for an hour, then we send a single message for each Request that has new files.
+        # We also don't want to send a notification if the evalreq was just created.
+        # So we only select files that were uploaded more than 1hr after the evalreq was created.
         one_hr_ago = localtime() - timedelta(hours=1)
         two_ours_ago = localtime() - timedelta(hours=2)
+        one_hour_delta = timedelta(hours=1)
 
         files = (
             RequestFile.objects.filter(uploaded_at__gte=two_ours_ago)
             .filter(uploaded_at__lt=one_hr_ago)
+            .annotate(upload_delta=F("uploaded_at") - F("request__created_at"))
+            .filter(upload_delta__gte=one_hour_delta)
             .order_by("request")
             .select_related("request")
         )
