@@ -15,13 +15,15 @@
 
   <p class="fr-text--lead centered">{{ evalreq.address }}</p>
 
-  <div class="fr-stepper">
-    <h2 class="fr-stepper__title">
-      <span class="fr-stepper__state">Étape 3 sur 3</span>
-      Documents complémentaires
-    </h2>
-    <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
-  </div>
+  {% if not request_submitted %}
+    <div class="fr-stepper">
+      <h2 class="fr-stepper__title">
+        <span class="fr-stepper__state">Étape 3 sur 3</span>
+        Documents complémentaires
+      </h2>
+      <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
+    </div>
+  {% endif %}
 
   <form action=""
         autocomplete="off"
