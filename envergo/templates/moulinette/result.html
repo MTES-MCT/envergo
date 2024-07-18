@@ -3,11 +3,11 @@
 {% load evaluations static l10n %}
 
 {% block html-classes %}full-height{% endblock %}
-{% block body-classes %}full-height flex-body{% endblock %}
-{% block main-classes %}full-height flex-body{% endblock %}
+{% block body-classes %}full-height flex-box flex-column moulinette-result-body{% endblock %}
+{% block main-classes %}full-height flex-box flex-column{% endblock %}
 
 {% block container %}
-  <div id="moulinette-result-container" class="fr-container">
+  <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
       <div id="project-summary" class="fr-col-4 fr-py-4w fr-px-2w">
         <h2 class="fr-mb-5w">Le projet</h2>
@@ -42,7 +42,7 @@
           </div>
         </figure>
         {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
-        <div class="button-container">
+        <div class="button-container  hide-print">
           <a href="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
              class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line">Modifier le projet</a>
         </div>
@@ -114,7 +114,7 @@
         </section>
 
         {% include "_learn_more.html" %}
-        <section class="fr-footer  fr-pb-2w" role="contentinfo">
+        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
           {% include '_footer.html' %}
         </section>
       </div>
