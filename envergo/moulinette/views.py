@@ -261,7 +261,15 @@ class MoulinetteMixin:
         url = reverse("moulinette_result")
 
         # Scroll to the additional forms if there are missing data
-        url_fragment = "#additional-forms" if moulinette.has_missing_data() else ""
+        if moulinette.has_missing_additional_data():
+            url_fragment = "#additional-forms"
+        elif (
+            self.should_activate_optional_criteria()
+            and moulinette.has_missing_optional_data()
+        ):
+            url_fragment = "#optional-forms"
+        else:
+            url_fragment = ""
 
         url_with_params = f"{url}?{url_params}{url_fragment}"
         return url_with_params
