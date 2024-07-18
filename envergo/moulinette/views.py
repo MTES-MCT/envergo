@@ -330,7 +330,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
-            if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
+            if not (
+                moulinette.has_missing_additional_data()
+                or is_request_from_a_bot(request)
+            ):
                 self.log_moulinette_event(moulinette)
 
             return res
@@ -391,7 +394,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
             context["matomo_custom_url"] = debug_url
 
-        elif moulinette and moulinette.has_missing_data():
+        elif moulinette and moulinette.has_missing_additional_data():
             context["matomo_custom_url"] = missing_data_url
 
         elif moulinette:
