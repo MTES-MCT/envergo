@@ -323,6 +323,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        debug_result_url = update_qs(current_url, {"debug": "true"})
 
         # Url without any query parameters
         stripped_url = self.request.build_absolute_uri(self.request.path)
@@ -375,6 +376,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 else:
                     context["address_coords"] = f"{lat}, {lng}"
                     context["form"].data["address"] = f"{lat}, {lng}"
+
+        context["is_admin"] = self.request.user.is_staff
+        context["debug_url"] = debug_result_url
 
         return context
 

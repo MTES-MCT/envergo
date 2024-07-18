@@ -137,7 +137,7 @@ article {
     }
   }
 
-  article>img {
+  article > img {
     max-height: 11.25rem;
     margin: 0 auto 1.5rem auto;
     display: block;
@@ -224,7 +224,7 @@ nav#evaluation-summary {
 
   #form-group-created_surface,
   #form-group-final_surface {
-    &>label {
+    & > label {
       font-weight: 600;
 
       .fr-hint-text {
@@ -286,11 +286,11 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
-      &>fieldset {
+      & > fieldset {
         display: none;
       }
 
-      &.active>fieldset {
+      &.active > fieldset {
         display: inherit !important;
       }
     }
@@ -346,7 +346,7 @@ section.regulation {
         padding-bottom: 0;
       }
 
-      li+li::before {
+      li + li::before {
         content: ", ";
       }
     }
@@ -368,7 +368,7 @@ section.regulation {
     }
   }
 
-  .more.fr-collapse>*:first-child {
+  .more.fr-collapse > *:first-child {
     margin-top: 1.5rem;
   }
 
@@ -452,7 +452,7 @@ form {
 
   .formset {
 
-    &+.formset {
+    & + .formset {
       margin-top: 2rem;
     }
 
@@ -504,7 +504,7 @@ form {
       }
     }
 
-    input[type=file]:focus+div.input-file-widget {
+    input[type=file]:focus + div.input-file-widget {
       outline-color: var(--focus);
       outline-offset: 2px;
       outline-width: 2px;
@@ -512,7 +512,7 @@ form {
     }
 
     // When a file has been selected
-    input[type=file]:valid+div.input-file-widget {
+    input[type=file]:valid + div.input-file-widget {
       #default-box-msg {
         display: none;
       }
@@ -565,15 +565,15 @@ form#request-evaluation-form {
 
   }
 
-  #id_send_eval_to_project_owner+.fr-label .fr-hint-text {
+  #id_send_eval_to_project_owner + .fr-label .fr-hint-text {
     color: var(--info-425-625);
   }
 
-  #id_send_eval_to_project_owner:checked+.fr-label .if-unchecked {
+  #id_send_eval_to_project_owner:checked + .fr-label .if-unchecked {
     display: none;
   }
 
-  #id_send_eval_to_project_owner:not(:checked)+.fr-label .if-checked {
+  #id_send_eval_to_project_owner:not(:checked) + .fr-label .if-checked {
     display: none;
   }
 }
@@ -581,7 +581,7 @@ form#request-evaluation-form {
 /**
  * Autocomplete fields
  */
-.fr-label+div>.autocomplete__wrapper {
+.fr-label + div > .autocomplete__wrapper {
   margin-top: .5rem;
 }
 
@@ -766,7 +766,7 @@ ul.roomy {
   }
 }
 
-main>.fr-notice {
+main > .fr-notice {
   .fr-notice__body {
     &:before {
       display: none;
@@ -991,8 +991,8 @@ div.hero-alt {
   }
 
   // Hide common template elements
-  body>header,
-  body>footer,
+  body > header,
+  body > footer,
   #top-bar,
   .hide-print {
     display: none;
@@ -1097,7 +1097,7 @@ div.hero-alt {
       #moulinette-form,
       #form-groups,
       #form-group-coords,
-      #form-group-coords>figure,
+      #form-group-coords > figure,
       #map-container,
       #map-container * {
         display: inherit;
@@ -1556,12 +1556,12 @@ main.demonstrateur_2150 {
   font-size: inherit;
 }
 
-.full-height{
+.full-height {
   height: 100%;
 }
 
 // moulinette result page styles
-.flex-body{
+.flex-body {
   display: flex;
   flex-direction: column;
   min-height: 20em;
@@ -1571,7 +1571,7 @@ main.demonstrateur_2150 {
     display: flex;
     overflow: hidden;
 
-    >.fr-grid-row{
+    > .fr-grid-row {
       flex-wrap: nowrap;
     }
 
@@ -1580,27 +1580,28 @@ main.demonstrateur_2150 {
       flex-wrap: nowrap;
     }
 
-    .fr-sr-only{
-      position:fixed; // to avoid the element to break the whole scroll flow in Chrome
+    .fr-sr-only {
+      position: fixed; // to avoid the element to break the whole scroll flow in Chrome
     }
 
     #project-summary {
       background-color: var(--info-975-75);
 
-      h2, .button-container{
+      h2, .button-container {
         text-align: center;
       }
+
       ul {
         list-style-type: none;
         padding: 0;
       }
 
       #map:hover > #map-button {
-          transition: opacity 1s ease-in-out 0s;
-          opacity: 1;
+        transition: opacity 1s ease-in-out 0s;
+        opacity: 1;
       }
 
-      #map-button{
+      #map-button {
         z-index: 1000;
         position: absolute;
         right: 1em;
@@ -1609,6 +1610,7 @@ main.demonstrateur_2150 {
         color: var(--text-action-high-blue-france);
         opacity: 0;
       }
+
       #map-button:hover {
         background-color: var(--background-default-grey-hover);
       }
@@ -1628,7 +1630,7 @@ main.demonstrateur_2150 {
     }
 
     #project-result {
-      h1{
+      h1 {
         text-align: center;
       }
 
@@ -1637,19 +1639,44 @@ main.demonstrateur_2150 {
         box-shadow: initial;
       }
 
-      .fr-btns-group{
-        margin:0;
+      .fr-btns-group {
+        margin: 0;
       }
     }
   }
 
-  footer{
+  footer {
     padding-top: 0;
     box-shadow: initial;
     z-index: 1000; // to be above the leaflet map
   }
 }
 
-#action-banner{
+#action-banner {
   background-color: var(--blue-france-sun-113-625);
+  text-align: center;
+
+  #feedback-form > p {
+    color: #fff;
+  }
+
+  #copy-btn-container {
+    #copy-btn {
+      position: relative;
+    }
+    #btn-clicked-message {
+      position: absolute;
+      top: 9px;
+      right: -70%;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.5s ease-out;
+      opacity: 0;
+
+      img {
+        height: 1em;
+      }
+    }
+  }
 }

@@ -123,12 +123,15 @@
 {% endblock %}
 
 {% block after-content %}{% endblock %}
-{% block footer %}<div id="action-banner" class="fr-py-4w"></div>{% endblock %}
+{% block footer %}
+  {% include 'moulinette/_actions_banner.html' %}
+{% endblock %}
 
 {% block extra_js %}
   {#  {{ block.super }}#}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
+    var SHARING_URL = "{{ current_url }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
@@ -145,5 +148,7 @@
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
+  <script defer
+          src="{% static 'js/libs/moulinette_result_actions_banner.js' %}"></script>
   {#  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>#}
 {% endblock %}
