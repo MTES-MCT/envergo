@@ -1622,7 +1622,7 @@ main.demonstrateur_2150 {
       position: fixed;
       top: 0;
       left: -10px;
-      width: 30%;
+      width: 40%;
       height: 100%;
       background-color: var(--info-975-75);
       z-index: -1;
@@ -1656,14 +1656,22 @@ main.demonstrateur_2150 {
   background-color: var(--blue-france-sun-113-625);
   text-align: center;
 
-  #feedback-form > p {
-    color: #fff;
+  #feedback-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > p {
+      color: #fff;
+      margin: 0 1em 0 0;
+    }
   }
 
   #copy-btn-container {
     #copy-btn {
       position: relative;
     }
+
     #btn-clicked-message {
       position: absolute;
       top: 9px;
