@@ -325,7 +325,12 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
-    success_url = reverse_lazy("request_success")
+
+    # This method is called by the `super()` class, at a moment when we don't
+    # know the url yet. So we just return a dummy url.
+    def get_success_url(self):
+        success_url = reverse("request_eval_wizard_step_3", args=["XXXXXX"])
+        return success_url
 
     def form_valid(self, form):
         """Process the whole form and save object to the db.
