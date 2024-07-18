@@ -229,11 +229,40 @@ def test_evalenv_terrain_assiette_systematique(moulinette_data):
 
 
 def test_evalenv_non_soumis_no_optional_criteria(admin_client):
+    """When no optional form is activated, we can show the result."""
+
     MoulinetteConfigFactory()
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
 
+    full_url = f"{url}?{params}"
+    res = admin_client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/result.html")
+
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
+        "de surface plancher, d'emprise au sol et de terrain d'assiette."
+        in res.content.decode()
+    )
+    assert (
+        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        not in res.content.decode()
+    )
+
+
+def test_evalenv_non_soumis_missing_optional_criteria(admin_client):
+    """When optional data is missing, we don't show the result page."""
+
+    MoulinetteConfigFactory()
+
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&evalenv_rubrique_41-activate=on&evalenv_rubrique_41-nb_emplacements=0_49"
+    )
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
