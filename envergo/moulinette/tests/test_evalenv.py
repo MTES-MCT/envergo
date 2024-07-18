@@ -77,7 +77,7 @@ def test_evalenv_small_footprint(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert not moulinette.has_missing_additional_data()
+    assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [10500])
@@ -87,12 +87,12 @@ def test_evalenv_medium(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.has_missing_additional_data()
+    assert moulinette.has_missing_data()
 
     moulinette_data["emprise"] = 42
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert not moulinette.has_missing_additional_data()
+    assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [40500])
@@ -102,12 +102,12 @@ def test_evalenv_wide_footprint(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.has_missing_additional_data()
+    assert moulinette.has_missing_data()
 
     moulinette_data["zone_u"] = "oui"
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert not moulinette.has_missing_additional_data()
+    assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [9500])
@@ -166,7 +166,7 @@ def test_evalenv_surface_plancher_non_soumis(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert not moulinette.has_missing_additional_data()
+    assert not moulinette.has_missing_data()
     assert moulinette.eval_env.surface_plancher.result == "non_soumis"
 
 
@@ -176,7 +176,7 @@ def test_evalenv_surface_plancher_non_soumis_2(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.has_missing_additional_data()
+    assert moulinette.has_missing_data()
 
     moulinette_data["surface_plancher_sup_thld"] = "non"
     moulinette.evaluate()
@@ -197,7 +197,7 @@ def test_evalenv_terrain_assiette_non_soumis(moulinette_data):
 
     moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert not moulinette.has_missing_additional_data()
+    assert not moulinette.has_missing_data()
     assert moulinette.eval_env.terrain_assiette.result == "non_soumis"
 
 
@@ -238,17 +238,7 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     res = admin_client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
-
-    assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
-        "de surface plancher, d'emprise au sol et de terrain d'assiette."
-        in res.content.decode()
-    )
-    assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
-        not in res.content.decode()
-    )
+    assertTemplateUsed(res, "moulinette/home.html")
 
 
 def test_evalenv_non_soumis_optional_criteria(admin_client):
