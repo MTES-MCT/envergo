@@ -983,7 +983,7 @@ class Moulinette:
         config = getattr(self.department, "moulinette_config", None)
         return config and config.is_activated
 
-    def has_missing_data(self):
+    def has_missing_additional_data(self):
         """Make sure all the data required to compute the result is provided."""
 
         form_errors = []
