@@ -9,7 +9,7 @@
 {% block container %}
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
-      <div id="project-summary" class="fr-col-4 fr-py-4w fr-px-2w">
+      <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <h2 class="fr-mb-5w">Le projet</h2>
         <p class="fr-text print-only">
           Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
@@ -53,7 +53,7 @@
              data-event-name="Project">Modifier le projet</a>
         </div>
       </div>
-      <div id="project-result" class="fr-col-8">
+      <div id="project-result" class="fr-col-12 fr-col-lg-8">
         <section class="fr-py-4w fr-pl-6w fr-pr-2w">
           {% if config and not config.is_activated %}
             <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
