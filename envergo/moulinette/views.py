@@ -130,12 +130,7 @@ class MoulinetteMixin:
         )
 
         if self.should_activate_optional_criteria():
-            if "moulinette" in context:
-                context["optional_forms"] = self.get_optional_forms(
-                    context["moulinette"]
-                )
-            else:
-                context["optional_forms"] = self.get_optional_forms()
+            context["optional_forms"] = self.get_optional_forms(context.get("moulinette", None))
 
         return context
 
