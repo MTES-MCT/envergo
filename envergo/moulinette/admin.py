@@ -15,7 +15,7 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.regulations import CriterionEvaluator
-from envergo.moulinette.utils import list_criteria_templates
+from envergo.moulinette.utils import list_moulinette_templates
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -266,7 +266,7 @@ class MoulinetteConfigTemplateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        templates = list(list_criteria_templates())
+        templates = list(list_moulinette_templates())
         self.fields["key"].choices = zip(templates, templates)
 
 
