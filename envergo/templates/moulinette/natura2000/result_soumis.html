@@ -12,7 +12,8 @@
 
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée et incluse dans le dossier Loi sur l’eau.</p>
+  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée, puis incluse à la fois 
+  dans la demande d'autorisation d'urbanisme (PA, PC ou DP) et dans le dossier Loi sur l’eau.</p>
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
@@ -23,8 +24,8 @@
   </p>
 
   <ul>
-    <li>EIN à déposer en ligne avec le dossier Loi sur l'eau.</li>
-    <li>Délai d'instruction : 2 mois.</li>
+    <li>EIN à joindre à la fois au dossier Loi sur l'eau et à la demande d'autorisation d'urbanisme (PA, PC ou DP)</li>
+    <li>Délais d'instruction inchangés</li>
   </ul>
 
   <p>
@@ -103,23 +104,9 @@
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
     <p>
-      <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
+      <em>Si le projet est soumis à la Loi sur l'eau</em>, 
+      l'EIN doit aussi être déposée avec le dossier Loi sur l'eau.
     </p>
-
-    <p>L'EIN est à déposer avec le dossier Loi sur l'eau.</p>
-
-    <p>
-      <a href="https://entreprendre.service-public.fr/vosdroits/R62929"
-         target="_blank"
-         rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement,
-      via une procédure en ligne.</a>
-    </p>
-
-    <p>
-      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :
-    </p>
-
-    <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
 
     {% if regulation.autorisation_urba_needed %}
 
@@ -156,29 +143,21 @@
   {% endif %}
 
   <h4>Comment l'instruction se déroule-t-elle ?</h4>
-
+  
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
     <p>
-      L'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau.
-      Son instruction se fait donc dans le cadre du dossier Loi sur l'eau, avec la même procédure et le même délai.
-    </p>
-
-    <p>
-      Le délai d'instruction d'un dossier de déclaration Loi sur l'eau est de 2 mois, extensible en cas de demande de compléments.
-    </p>
-
-    <p>
-      Consultez <a href="{% url 'faq_loi_sur_leau' %}#accordion-instruction">notre article décrivant l'instruction Loi sur l'eau</a>.
+      L'évaluation des incidences Natura 2000 est une pièce obligatoire du dossier Loi sur l'eau et de la demande d'autorisation d'urbanisme (PA, PC ou DP).
+      Les délais d'instruction de ces dossiers sont inchangés.
     </p>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
     {% if regulation.autorisation_urba_needed %}
 
-      <p>L'évaluation des incidences (EIN) est une pièce obligatoire du dossier soumis à l'administration.</p>
+      <p>L'évaluation des incidences (EIN) est une pièce obligatoire des dossiers soumis à l'administration.</p>
 
-      <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
+      <p>Les procédures d'instruction n'en sont pas modifiées, et gardent le même délai.</p>
 
       <p>
         Ainsi, <em>si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
