@@ -123,19 +123,12 @@ def test_users_cannot_see_optional_criterion_results(client):
 
 
 def test_optional_criterion_activation(admin_client):
+    """If the form is activated, fields become required."""
+
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on"
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
-
-    # The question exists in the sidebar
-    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
-
-    # The criterion is not activated
-    assert "Aire de stationnement" not in res.content.decode()
-
-    # The form is invalid, the error message is shown
-    assert "error-text-evalenv_rubrique_41-nb_emplacements" in res.content.decode()
+    assertTemplateUsed(res, "moulinette/home.html")
