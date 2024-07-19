@@ -126,11 +126,6 @@ class CriterionAdmin(admin.ModelAdmin):
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 
-    class Media:
-        css = {
-            "all": ["css/project_admin.css"],
-        }
-
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.defer("activation_map__geometry")
