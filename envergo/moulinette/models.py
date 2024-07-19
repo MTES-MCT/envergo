@@ -992,7 +992,7 @@ class Moulinette:
                 form = criterion.get_form()
                 # We check for each form for errors
                 if form:
-                    form.is_valid()
+                    form.full_clean()
 
                     # For optional forms, we only check for errors if the form
                     # was activated (the "activate" checkbox was selected)
