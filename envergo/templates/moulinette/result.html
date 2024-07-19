@@ -9,6 +9,13 @@
 {% block container %}
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
+      <div id="mobile-footer"
+           class="hide-above-lg fr-col-12 hide-print fr-mt-4w">
+        {% include "_learn_more.html" %}
+        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
+          {% include '_footer.html' %}
+        </section>
+      </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <h2 class="fr-mb-5w">Le projet</h2>
         <p class="fr-text print-only">
@@ -118,11 +125,12 @@
             </p>
           </section>
         </section>
-
-        {% include "_learn_more.html" %}
-        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-          {% include '_footer.html' %}
-        </section>
+        <div class="hide-under-lg">
+          {% include "_learn_more.html" %}
+          <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
+            {% include '_footer.html' %}
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -142,7 +150,6 @@
 {% endblock %}
 
 {% block extra_js %}
-  {#  {{ block.super }}#}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
     var SHARING_URL = "{{ current_url }}";
@@ -164,5 +171,5 @@
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
   <script defer
           src="{% static 'js/libs/moulinette_result_actions_banner.js' %}"></script>
-  {#  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>#}
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 {% endblock %}

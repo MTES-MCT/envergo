@@ -980,11 +980,24 @@ div.hero-alt {
   flex-direction: column;
 }
 
+.hide-above-lg {
+  display: none;
+}
+
+@media only screen and (max-width: 991px) {
+  .hide-under-lg {
+    display: none;
+  }
+  .hide-above-lg {
+    display: inherit;
+  }
+}
+
 // moulinette result page styles
 .moulinette-result-body {
   min-height: 20em;
 
-  main{
+  main {
     min-height: 20em;
   }
 
@@ -1073,6 +1086,7 @@ div.hero-alt {
   }
 
   @media only screen and (max-width: 991px) {
+
     #moulinette-result-container {
       padding-left: 0;
       padding-right: 0;
@@ -1080,10 +1094,19 @@ div.hero-alt {
       > .fr-grid-row {
         flex-wrap: wrap;
         overflow: auto;
+        flex-flow: column-reverse;
       }
 
       #project-summary::before {
         content: none;
+      }
+
+      #project-summary, #project-result {
+        overflow: initial;
+      }
+
+      #mobile-footer {
+        display: block;
       }
     }
   }
