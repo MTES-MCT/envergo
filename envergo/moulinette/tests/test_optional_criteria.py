@@ -46,18 +46,19 @@ def moulinette_data(footprint):
 
 
 # ETQ Admin, je peux voir l'option d'activer un critère optionnel
-def test_admin_see_optional_criterion_additional_question(admin_client):
+def test_edition_redirection_from_result_admin_see_optional_criterion_additional_question(
+    admin_client,
+):
     url = reverse("moulinette_result")
-    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&edit=true"
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "moulinette/home.html")
 
-    # TODO on doit pouvoir faire cela depuis le formulaire
     # The question exists in the sidebar
-    # assert "Rubrique 41 : aires de stationnement" in res.content.decode()
+    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
 
     # The criterion is not activated
     assert "Aire de stationnement" not in res.content.decode()
@@ -126,6 +127,4 @@ def test_optional_criterion_activation(admin_client):
     # The criterion is not activated
     assert "Aire de stationnement" not in res.content.decode()
 
-    # TODO It should redirect to the form
-    # The form is invalid, the error message is shown
-    # assert "error-text-evalenv_rubrique_41-nb_emplacements" in res.content.decode()
+    # The form is invalid, the error message will be displayed in the form if the user get back to it.
