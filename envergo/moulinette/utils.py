@@ -43,21 +43,26 @@ def compute_surfaces(data: QueryDict):
     }
 
 
-def list_criteria_templates():
-    """List all known criteria templates
+def list_moulinette_templates():
+    """List all known templates for moulinette result rendering.
 
-    With the following form:
+    (regulation and criteria results).
 
-    {regulation/{criterion}.html
+    Returns a list of strings like:
+
+    {regulation/{template_name}.html
     """
     from envergo.moulinette.models import REGULATIONS
 
     templates_path = f"{settings.APPS_DIR}/templates/moulinette"
+    templates = []
     for regulation, _label in REGULATIONS:
         regulation_path = f"{templates_path}/{regulation}"
         path = Path(regulation_path)
         files = [f for f in path.iterdir() if f.is_file()]
         for file in files:
-            if not file.name.startswith("result_") and not file.name.startswith("_"):
+            if not file.name.startswith("_"):
                 template = f"{regulation}/{file.name}"
-                yield template
+                templates.append(template)
+
+    return sorted(templates)
