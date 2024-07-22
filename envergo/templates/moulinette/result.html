@@ -2,6 +2,13 @@
 
 {% load evaluations static l10n %}
 
+{% block header %}
+  <header role="banner" class="fr-header header-sticky header-slim">
+    {% include '_slim_header.html' %}
+
+  </header>
+{% endblock %}
+
 {% block html-classes %}full-height{% endblock %}
 {% block body-classes %}full-height flex-box flex-column moulinette-result-body{% endblock %}
 {% block main-classes %}full-height flex-box flex-column{% endblock %}
@@ -159,9 +166,16 @@
       entries: [],
       caption: null,
       truncate: true,
-      zoom: 17,
+      zoom: 15,
       ratio: "4x3",
-      fixed: false
+      fixed: {
+        zoomControl: true,
+        dragging: false,
+        doubleClickZoom: 'center',
+        scrollWheelZoom: false,
+        touchZoom: 'center',
+        keyboard: true,
+      }
     };
   </script>
 
