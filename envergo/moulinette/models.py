@@ -47,6 +47,7 @@ REGULATIONS = Choices(
     ("natura2000", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
+    ("bcae8", "Bonnes conditions agricoles et environnementales - Fiche VIII"),
 )
 
 
