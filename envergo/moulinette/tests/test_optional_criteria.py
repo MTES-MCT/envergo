@@ -65,6 +65,18 @@ def test_admin_see_optional_criterion_additional_question(admin_client):
     assert "error-text-evalenv_rubrique_41-soumis" not in res.content.decode()
 
 
+# ETQ admin, je peux voir les questions optionnelles dès l'accueil du simulateur
+def test_optional_questions_appear_on_moulinette_home(admin_client):
+    url = reverse("moulinette_home")
+    res = admin_client.get(url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "moulinette/home.html")
+
+    # The question exists in the sidebar
+    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
+
+
 # ETQ User, je ne peux pas voir l'option d'activer un critère optionnel
 def test_users_cannot_see_optional_criterion_additional_question(client):
     url = reverse("moulinette_result")
@@ -111,19 +123,12 @@ def test_users_cannot_see_optional_criterion_results(client):
 
 
 def test_optional_criterion_activation(admin_client):
+    """If the form is activated, fields become required."""
+
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&evalenv_rubrique_41-activate=on"
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
-
-    # The question exists in the sidebar
-    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
-
-    # The criterion is not activated
-    assert "Aire de stationnement" not in res.content.decode()
-
-    # The form is invalid, the error message is shown
-    assert "error-text-evalenv_rubrique_41-nb_emplacements" in res.content.decode()
+    assertTemplateUsed(res, "moulinette/home.html")

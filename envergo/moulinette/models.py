@@ -20,7 +20,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
-from envergo.moulinette.utils import list_criteria_templates
+from envergo.moulinette.utils import list_moulinette_templates
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -697,7 +697,7 @@ TEMPLATE_KEYS = [
 
 
 def get_all_template_keys():
-    tpls = TEMPLATE_KEYS + list(list_criteria_templates())
+    tpls = TEMPLATE_KEYS + list(list_moulinette_templates())
     return zip(tpls, tpls)
 
 
@@ -990,8 +990,20 @@ class Moulinette:
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
-                if form and not criterion.is_optional:
-                    form_errors.append(not form.is_valid())
+                # We check for each form for errors
+                if form:
+                    form.full_clean()
+
+                    # For optional forms, we only check for errors if the form
+                    # was activated (the "activate" checkbox was selected)
+                    if (
+                        criterion.is_optional
+                        and self.activate_optional_criteria
+                        and form.is_activated()
+                    ):
+                        form_errors.append(not form.is_valid())
+                    elif not criterion.is_optional:
+                        form_errors.append(not form.is_valid())
 
         return any(form_errors)
 
