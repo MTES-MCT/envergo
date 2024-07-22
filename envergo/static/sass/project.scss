@@ -1003,10 +1003,14 @@ div.hero-alt {
 
   #moulinette-result-container {
     flex: 1;
-    overflow: hidden;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0;
+    max-width: none;
 
     > .fr-grid-row {
       flex-wrap: nowrap;
+      flex: 1;
     }
 
     #project-summary, #project-result {
@@ -1020,6 +1024,12 @@ div.hero-alt {
 
     #project-summary {
       background-color: var(--info-975-75);
+
+      > section {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 0 2em;
+      }
 
       h2, .button-container {
         text-align: center;
@@ -1051,19 +1061,12 @@ div.hero-alt {
 
     }
 
-    #project-summary::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: -10px;
-      width: 33%;
-      height: 100%;
-      background-color: var(--info-975-75);
-      z-index: -1;
-      min-height: 40em; // greater or equal than the min-height of flex-body
-    }
-
     #project-result {
+      > section {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
       h1 {
         text-align: center;
       }
@@ -1092,17 +1095,15 @@ div.hero-alt {
       padding-right: 0;
 
       > .fr-grid-row {
-        flex-wrap: wrap;
-        overflow: auto;
-        flex-flow: column-reverse;
-      }
-
-      #project-summary::before {
-        content: none;
+        flex-direction: column-reverse;
+        flex-wrap: nowrap;
+        overflow-y: auto;
       }
 
       #project-summary, #project-result {
         overflow: initial;
+        display: flex;
+        flex-wrap: wrap;
       }
 
       #mobile-footer {
@@ -1275,10 +1276,6 @@ div.hero-alt {
 
     #moulinette-result-container {
       overflow: inherit;
-
-      #project-summary::before {
-        content: none;
-      }
     }
 
     #map-container .leaflet-control-container {

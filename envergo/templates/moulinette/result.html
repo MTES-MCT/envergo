@@ -24,48 +24,50 @@
         </section>
       </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
-        <h2 class="fr-mb-5w">Le projet</h2>
-        <p class="fr-text print-only">
-          Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
+        <section>
+          <h2 class="fr-mb-5w">Le projet</h2>
+          <p class="fr-text print-only">
+            Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
     href="{{ envergo_url }}"
     target="_blank"
     rel="noopener external">EnvErgo</a>
-        </p>
-        <p class="fr-text print-only">
-          Cette simulation est <a title="Partager l'avis réglementaire"
+          </p>
+          <p class="fr-text print-only">
+            Cette simulation est <a title="Partager l'avis réglementaire"
     href="{{ current_url }}"
     target="_blank"
     rel="noopener external">consultable en ligne</a>
-        </p>
+          </p>
 
-        {{ form.lng.as_hidden }}
-        {{ form.lat.as_hidden }}
-        <figure class="fr-content-media">
-          <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
-            <div class="ratio-content">
-              <div class="leaflet-container">
-                <div id="map">
-                  <a id="map-button"
-                     href="{{ edit_url }}"
-                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-                     data-event-category="Content"
-                     data-event-action="Edit"
-                     data-event-name="Map">Modifier le
-                    projet
-                  </a>
+          {{ form.lng.as_hidden }}
+          {{ form.lat.as_hidden }}
+          <figure class="fr-content-media">
+            <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
+              <div class="ratio-content">
+                <div class="leaflet-container">
+                  <div id="map">
+                    <a id="map-button"
+                       href="{{ edit_url }}"
+                       class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+                       data-event-category="Content"
+                       data-event-action="Edit"
+                       data-event-name="Map">Modifier le
+                      projet
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
+          </figure>
+          {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
+          <div class="button-container  hide-print">
+            <a href="{{ edit_url }}"
+               class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+               data-event-category="Content"
+               data-event-action="Edit"
+               data-event-name="Project">Modifier le projet</a>
           </div>
-        </figure>
-        {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
-        <div class="button-container  hide-print">
-          <a href="{{ edit_url }}"
-             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-             data-event-category="Content"
-             data-event-action="Edit"
-             data-event-name="Project">Modifier le projet</a>
-        </div>
+        </section>
       </div>
       <div id="project-result" class="fr-col-12 fr-col-lg-8">
         <section class="fr-py-4w fr-pl-6w fr-pr-2w">
