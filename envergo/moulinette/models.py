@@ -180,9 +180,10 @@ class Regulation(models.Model):
     def show_criteria(self):
         """Should the criteria be displayed?
 
-        We musn't display criteria if the regulation or associated perimetes are
+        We musn't display criteria if the regulation or associated perimeters are
         not activated yet.
         """
+
         activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
         return self.is_activated() and (
             (not self.has_perimeters)
@@ -403,6 +404,14 @@ class Criterion(models.Model):
         verbose_name=_("Regulation"),
         on_delete=models.PROTECT,
         related_name="criteria",
+    )
+    perimeter = models.ForeignKey(
+        "moulinette.Perimeter",
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+        null=True,
+        blank=True,
     )
     activation_map = models.ForeignKey(
         "geodata.Map",
