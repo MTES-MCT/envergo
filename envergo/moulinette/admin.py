@@ -114,7 +114,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "weight",
     ]
     readonly_fields = ["unique_slug"]
-    autocomplete_fields = ["activation_map"]
+    autocomplete_fields = ["activation_map", "perimeter"]
     form = CriterionAdminForm
     search_fields = [
         "backend_title",
