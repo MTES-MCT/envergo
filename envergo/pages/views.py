@@ -3,6 +3,7 @@ from datetime import date, timedelta
 import requests
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
 from django.urls import reverse
 from django.utils.formats import date_format
@@ -16,7 +17,12 @@ from envergo.pages.models import NewsItem
 
 
 class HomeView(MoulinetteMixin, FormView):
-    template_name = "pages/home.html"
+    def get_template_names(self):
+        current_site = get_current_site(self.request)
+        home = "pages/home.html"
+        if current_site.name == "Haie":
+            home = "pages/home_haie.html"
+        return [home]
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
