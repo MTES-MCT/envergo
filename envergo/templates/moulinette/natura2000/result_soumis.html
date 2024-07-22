@@ -12,8 +12,10 @@
 
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée, puis incluse à la fois 
-  dans la demande d'autorisation d'urbanisme (PA, PC ou DP) et dans le dossier Loi sur l’eau.</p>
+  <p>
+    Une évaluation des incidences Natura 2000 (EIN) doit être réalisée, puis incluse à la fois
+    dans la demande d'autorisation d'urbanisme (PA, PC ou DP) et dans le dossier Loi sur l’eau.
+  </p>
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
@@ -104,7 +106,7 @@
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
     <p>
-      <em>Si le projet est soumis à la Loi sur l'eau</em>, 
+      <em>Si le projet est soumis à la Loi sur l'eau</em>,
       l'EIN doit aussi être déposée avec le dossier Loi sur l'eau.
     </p>
 
@@ -143,7 +145,7 @@
   {% endif %}
 
   <h4>Comment l'instruction se déroule-t-elle ?</h4>
-  
+
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
     <p>
