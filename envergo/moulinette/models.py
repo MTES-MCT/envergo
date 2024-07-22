@@ -405,6 +405,14 @@ class Criterion(models.Model):
         on_delete=models.PROTECT,
         related_name="criteria",
     )
+    perimeter = models.ForeignKey(
+        "moulinette.Perimeter",
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+        null=True,
+        blank=True,
+    )
     activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Activation map"),

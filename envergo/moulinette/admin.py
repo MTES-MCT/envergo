@@ -107,6 +107,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "backend_title",
         "is_optional",
         "regulation",
+        "perimeter",
         "activation_map_column",
         "activation_distance_column",
         "evaluator_column",
