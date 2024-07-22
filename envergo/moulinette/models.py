@@ -990,8 +990,20 @@ class Moulinette:
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
-                if form and not criterion.is_optional:
-                    form_errors.append(not form.is_valid())
+                # We check for each form for errors
+                if form:
+                    form.full_clean()
+
+                    # For optional forms, we only check for errors if the form
+                    # was activated (the "activate" checkbox was selected)
+                    if (
+                        criterion.is_optional
+                        and self.activate_optional_criteria
+                        and form.is_activated()
+                    ):
+                        form_errors.append(not form.is_valid())
+                    elif not criterion.is_optional:
+                        form_errors.append(not form.is_valid())
 
         return any(form_errors)
 
