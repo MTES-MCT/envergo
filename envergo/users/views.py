@@ -1,5 +1,6 @@
 from braces.views import AnonymousRequiredMixin, MessageMixin
 from django.contrib.auth import login
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
@@ -9,9 +10,10 @@ from django.views.generic import CreateView, TemplateView
 from envergo.users.forms import RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import send_account_activation_email
+from envergo.utils.views import MultiSiteMixin
 
 
-class Register(AnonymousRequiredMixin, CreateView):
+class Register(MultiSiteMixin, AnonymousRequiredMixin, CreateView):
     """Allow users to create new accounts."""
 
     template_name = "registration/register.html"
@@ -49,13 +51,13 @@ class Register(AnonymousRequiredMixin, CreateView):
             return super().form_invalid(form)
 
 
-class RegisterSuccess(AnonymousRequiredMixin, TemplateView):
+class RegisterSuccess(MultiSiteMixin, AnonymousRequiredMixin, TemplateView):
     """Display success message after register action."""
 
     template_name = "registration/register_success.html"
 
 
-class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
+class TokenLogin(MultiSiteMixin, AnonymousRequiredMixin, MessageMixin, TemplateView):
     """Check token and authenticates user."""
 
     template_name = "registration/login_error.html"
@@ -89,3 +91,38 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 return HttpResponseRedirect(redirect_url)
 
         return super().get(request, *args, **kwargs)
+
+
+# Add MultiSiteMixin to Django Authentication views
+
+
+class LoginView(MultiSiteMixin, auth_views.LoginView):
+    pass
+
+
+class LogoutView(MultiSiteMixin, auth_views.LogoutView):
+    pass
+
+
+class PasswordChangeView(MultiSiteMixin, auth_views.PasswordChangeView):
+    pass
+
+
+class PasswordChangeDoneView(MultiSiteMixin, auth_views.PasswordChangeDoneView):
+    pass
+
+
+class PasswordResetView(MultiSiteMixin, auth_views.PasswordResetView):
+    pass
+
+
+class PasswordResetDoneView(MultiSiteMixin, auth_views.PasswordResetDoneView):
+    pass
+
+
+class PasswordResetConfirmView(MultiSiteMixin, auth_views.PasswordResetConfirmView):
+    pass
+
+
+class PasswordResetCompleteView(MultiSiteMixin, auth_views.PasswordResetCompleteView):
+    pass
