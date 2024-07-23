@@ -11,7 +11,7 @@ class SetUrlConfBasedOnSite:
         if site.name == "Haie":
             settings.ROOT_URLCONF = "config.urls_haie"
         else:
-            settings.ROOT_URLCONF = "config.urls_envergo"
+            settings.ROOT_URLCONF = "config.urls_amenagement"
 
         response = self.get_response(request)
 
