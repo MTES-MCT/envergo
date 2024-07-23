@@ -67,4 +67,6 @@
 </div>
 </div>
 
-{% include '_color_scheme.html' %}
+{% if not do_not_load_modal %}
+  {% include '_color_scheme.html' %}
+{% endif %}

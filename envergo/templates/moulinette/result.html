@@ -20,12 +20,12 @@
            class="hide-above-lg fr-col-12 hide-print fr-mt-4w">
         {% include "_learn_more.html" %}
         <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-          {% include '_footer.html' %}
+          {% include '_footer.html' with do_not_load_modal="true" %}
         </section>
       </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <section>
-          <h2 class="fr-mb-5w">Le projet</h2>
+          <h2 class="fr-mb-5w">Caractéristiques du projet</h2>
           <p class="fr-text print-only">
             Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
     href="{{ envergo_url }}"
@@ -70,7 +70,7 @@
         </section>
       </div>
       <div id="project-result" class="fr-col-12 fr-col-lg-8">
-        <section class="fr-py-4w fr-pl-6w fr-pr-2w">
+        <section class="fr-py-4w fr-px-1w">
           {% if config and not config.is_activated %}
             <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
               Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez

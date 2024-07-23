@@ -1016,6 +1016,7 @@ div.hero-alt {
     #project-summary, #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
+      scroll-behavior: smooth;
     }
 
     .fr-sr-only {
@@ -1026,12 +1027,12 @@ div.hero-alt {
       background-color: var(--info-975-75);
 
       > section {
-        max-width: 500px;
+        max-width: 36em;
         margin: 0 auto;
-        padding: 0 2em;
+        padding: 0 1em;
       }
 
-      h2, .button-container {
+      .button-container {
         text-align: center;
       }
 
@@ -1063,12 +1064,8 @@ div.hero-alt {
 
     #project-result {
       > section {
-        max-width: 700px;
+        max-width: 46em;
         margin: 0 auto;
-      }
-
-      h1 {
-        text-align: center;
       }
 
       footer {
