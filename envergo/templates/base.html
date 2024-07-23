@@ -8,13 +8,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="keywords" content="">
     <title>
-      {% block title %}
-      {% endblock title %}
-    — EnvErgo</title>
+      {% block app_title %}
+        {% block title %}
+        {% endblock title %}
+        — EnvErgo
+      {% endblock app_title %}
+    </title>
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <meta name="description"
-          content="Améliorer la prise en compte de l'environnement dans les projets d'urbanisme">
+          content="{% block description %} Améliorer la prise en compte de l'environnement dans les projets d'urbanisme{% endblock description %}">
     <meta name="author" content="MTES">
 
     <link rel="apple-touch-icon"
@@ -157,14 +160,17 @@
 
     {% block header %}
       <header role="banner" class="fr-header header-legacy">
-        {% include '_header.html' %}
+        {% block include_header %}
+          {% include '_header.html' %}
+        {% endblock %}
 
       </header>
 
       <header role="banner"
               class="fr-header header-slim header-sticky header-popup">
-        {% include '_slim_header.html' %}
-
+        {% block include_slim_header %}
+          {% include '_slim_header.html' %}
+        {% endblock %}
       </header>
     {% endblock %}
 

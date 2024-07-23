@@ -6,6 +6,8 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.sites.managers import CurrentSiteManager
+from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models import Case, F, Prefetch, Q, When
 from django.db.models.functions import Cast
@@ -59,6 +61,9 @@ def all_regulations():
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
+    objects = models.Manager()
+    on_site = CurrentSiteManager()
+
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
@@ -73,6 +78,10 @@ class Regulation(models.Model):
         default=False,
     )
     polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
+
+    site = models.ForeignKey(
+        Site, on_delete=models.CASCADE, default=1
+    )  # EnvErgo (site_id=1) as default
 
     class Meta:
         verbose_name = _("Regulation")
@@ -951,7 +960,7 @@ class Moulinette:
         """Find the activated regulations and their criteria."""
 
         regulations = (
-            Regulation.objects.all()
+            Regulation.on_site.all()
             .order_by("weight")
             .prefetch_related(Prefetch("criteria", queryset=self.criteria))
             .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
