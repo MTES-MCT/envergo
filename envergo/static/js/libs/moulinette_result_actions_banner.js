@@ -1,5 +1,8 @@
+// a script to add actions on the moulinette result banner
 (function (exports) {
   'use strict';
+
+  // Put the current Url in the clipboard on click
   // The `navigator.clipboard` API is only available on `https` urls
   if (navigator.clipboard != undefined) {
     document.getElementById("copy-btn").addEventListener("click", function () {

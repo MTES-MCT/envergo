@@ -16,8 +16,7 @@
 {% block container %}
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
-      <div id="mobile-footer"
-           class="hide-above-lg fr-col-12 hide-print fr-mt-4w">
+      <div id="mobile-footer" class="fr-hidden-lg fr-col-12 hide-print fr-mt-4w">
         {% include "_learn_more.html" %}
         <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
           {% include '_footer.html' with do_not_load_modal="true" %}
@@ -70,7 +69,7 @@
         </section>
       </div>
       <div id="project-result" class="fr-col-12 fr-col-lg-8">
-        <section class="fr-py-4w fr-px-1w">
+        <section class="fr-py-4w fr-px-4w">
           {% if config and not config.is_activated %}
             <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
               Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
@@ -134,7 +133,7 @@
             </p>
           </section>
         </section>
-        <div class="hide-under-lg">
+        <div class="fr-hidden fr-unhidden-lg">
           {% include "_learn_more.html" %}
           <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
             {% include '_footer.html' %}

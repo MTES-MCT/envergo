@@ -980,19 +980,6 @@ div.hero-alt {
   flex-direction: column;
 }
 
-.hide-above-lg {
-  display: none;
-}
-
-@media only screen and (max-width: 991px) {
-  .hide-under-lg {
-    display: none;
-  }
-  .hide-above-lg {
-    display: inherit;
-  }
-}
-
 // moulinette result page styles
 .moulinette-result-body {
   min-height: 20em;
@@ -1064,7 +1051,7 @@ div.hero-alt {
 
     #project-result {
       > section {
-        max-width: 46em;
+        max-width: 42em;
         margin: 0 auto;
       }
 
