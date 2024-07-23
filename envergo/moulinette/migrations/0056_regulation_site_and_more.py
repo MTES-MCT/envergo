@@ -20,44 +20,4 @@ class Migration(migrations.Migration):
                 default=1, on_delete=django.db.models.deletion.CASCADE, to="sites.site"
             ),
         ),
-        migrations.AlterField(
-            model_name="moulinetteconfig",
-            name="regulations_available",
-            field=django.contrib.postgres.fields.ArrayField(
-                base_field=models.CharField(
-                    choices=[
-                        ("loi_sur_leau", "Loi sur l'eau"),
-                        ("natura2000", "Natura 2000"),
-                        ("eval_env", "Évaluation environnementale"),
-                        ("sage", "Règlement de SAGE"),
-                        (
-                            "bcae8",
-                            "Bonnes conditions agricoles et environnementales - Fiche VIII",
-                        ),
-                    ],
-                    max_length=64,
-                ),
-                blank=True,
-                default=list,
-                size=None,
-            ),
-        ),
-        migrations.AlterField(
-            model_name="regulation",
-            name="regulation",
-            field=models.CharField(
-                choices=[
-                    ("loi_sur_leau", "Loi sur l'eau"),
-                    ("natura2000", "Natura 2000"),
-                    ("eval_env", "Évaluation environnementale"),
-                    ("sage", "Règlement de SAGE"),
-                    (
-                        "bcae8",
-                        "Bonnes conditions agricoles et environnementales - Fiche VIII",
-                    ),
-                ],
-                max_length=64,
-                verbose_name="Regulation",
-            ),
-        ),
     ]
