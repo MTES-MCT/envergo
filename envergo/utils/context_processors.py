@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 
 def settings_context(_request):
@@ -9,7 +9,11 @@ def settings_context(_request):
 
     # We disable the chatbox on the catchment area page
     # Because it breaks the map, for reasons I just don't understand
-    catchment_area_page_url = reverse("2150_debug")
+    try:
+        catchment_area_page_url = reverse("2150_debug")
+    except NoReverseMatch:
+        catchment_area_page_url = None
+
     if _request.path == catchment_area_page_url:
         chatbox_enabled = False
     else:
