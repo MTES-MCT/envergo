@@ -19,13 +19,14 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture(autouse=True)
 def sage_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="sage", has_perimeters=True)
-    PerimeterFactory(
+    perimeter = PerimeterFactory(
         name="Sage Vie Jaunay", activation_map=france_map, regulation=regulation
     )
     criteria = [
         CriterionFactory(
             title="Zone humide",
             regulation=regulation,
+            perimeter=perimeter,
             evaluator="envergo.moulinette.regulations.sage.ImpactZoneHumide",
             evaluator_settings={"threshold": 150},
             activation_map=france_map,
@@ -124,8 +125,9 @@ def test_perimeter_map_display(moulinette_data, client):
     res = client.get(full_url)
     assert res.status_code == 200
 
+    assert "Le projet se trouve dans le périmètre" in res.content.decode()
     assert (
-        "Le projet se trouve dans le périmètre du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « Sage Vie Jaunay »"  # noqa
+        "du Schéma d'Aménagement et de Gestion des Eaux (SAGE) « Sage Vie Jaunay »"
         in res.content.decode()
     )
 
@@ -150,7 +152,7 @@ def test_several_perimeter_maps_display(
     assert res.status_code == 200
 
     assert (
-        "Le projet se trouve dans plusieurs périmètres de Schémas d’Aménagement et de Gestion des Eaux (SAGE) :"
+        "Le projet se trouve dans ou à proximité de plusieurs périmètres de Schémas d’Aménagement et de Gestion des Eaux (SAGE) :"  # noqa
         in res.content.decode()
     )
     assert "« Sage Test »" in res.content.decode()
