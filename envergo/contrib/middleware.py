@@ -7,7 +7,7 @@ class SetUrlConfBasedOnSite:
         self.get_response = get_response
 
     def __call__(self, request):
-        site = Site.objects.get_current()
+        site = Site.objects.get_current(request)
         if site.name == "Haie":
             settings.ROOT_URLCONF = "config.urls_haie"
         else:
