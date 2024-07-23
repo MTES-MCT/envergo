@@ -1,6 +1,6 @@
 from django.urls import path
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 
 from envergo.pages.views import (
     HomeHaieView,
@@ -9,7 +9,6 @@ from envergo.pages.views import (
     PrivacyView,
     TermsOfServiceView,
 )
-from envergo.utils.views import MultiSiteTemplateView
 
 urlpatterns = [
     path("", HomeHaieView.as_view(), name="home"),
@@ -23,12 +22,12 @@ urlpatterns = [
     ),
     path(
         _("accessibility/"),
-        MultiSiteTemplateView.as_view(template_name="pages/accessibility.html"),
+        TemplateView.as_view(template_name="pages/accessibility.html"),
         name="accessibility",
     ),
     path(
         _("contact-us/"),
-        MultiSiteTemplateView.as_view(template_name="pages/contact_us.html"),
+        TemplateView.as_view(template_name="pages/contact_us.html"),
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
