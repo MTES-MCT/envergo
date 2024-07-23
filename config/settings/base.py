@@ -27,6 +27,11 @@ DEBUG = env.bool("DJANGO_DEBUG", default=False)
 TIME_ZONE = "Europe/Paris"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "fr-fr"
+# https://docs.djangoproject.com/en/dev/ref/settings/#site-id
+SITE_ID = env(
+    "DJANGO_ENVERGO_SITE_ID",
+    default=1,
+)
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
@@ -136,6 +141,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
     "envergo.analytics.middleware.StoreMtmValues",
 ]

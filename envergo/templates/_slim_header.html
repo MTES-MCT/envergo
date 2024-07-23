@@ -18,7 +18,9 @@
         </div>
         <div class="fr-header__service">
           <a href="/">
-            <p class="fr-header__service-title">EnvErgo</p>
+            {% block slim_header_title %}
+              <p class="fr-header__service-title">EnvErgo</p>
+            {% endblock slim_header_title %}
           </a>
         </div>
       </div>
@@ -26,31 +28,34 @@
       <div id="slim-menu" class="fr-header__tools">
         <div class="fr-header__tools-links">
           <ul class="fr-btns-group">
-            <li>
-              <a class="fr-btn"
-                 href="{% url 'moulinette_home' %}"
-                 data-event-category="HomePage"
-                 data-event-action="SimulationClick"
-                 data-event-name="Nav">Simulateur</a>
-            </li>
-            <li>{% project_owner_menu is_slim=True %}</li>
-            <li>
-              <a class="fr-btn"
-                 href="{% url 'request_evaluation' %}"
-                 data-event-category="HomePage"
-                 data-event-action="RequestClick"
-                 data-event-name="Nav">Services urbanisme</a>
-            </li>
-            <li>
-              <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
-            </li>
-            <li>
-              <a href="{% url 'request_evaluation' %}"
-                 class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl"
-                 data-event-category="HomePage"
-                 data-event-action="RequestClick"
-                 data-event-name="CTA">Demander un avis réglementaire</a>
-            </li>
+
+            {% block slim_menu_items %}
+              <li>
+                <a class="fr-btn"
+                   href="{% url 'moulinette_home' %}"
+                   data-event-category="HomePage"
+                   data-event-action="SimulationClick"
+                   data-event-name="Nav">Simulateur</a>
+              </li>
+              <li>{% project_owner_menu is_slim=True %}</li>
+              <li>
+                <a class="fr-btn"
+                   href="{% url 'request_evaluation' %}"
+                   data-event-category="HomePage"
+                   data-event-action="RequestClick"
+                   data-event-name="Nav">Services urbanisme</a>
+              </li>
+              <li>
+                <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
+              </li>
+              <li>
+                <a href="{% url 'request_evaluation' %}"
+                   class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl"
+                   data-event-category="HomePage"
+                   data-event-action="RequestClick"
+                   data-event-name="CTA">Demander un avis réglementaire</a>
+              </li>
+            {% endblock slim_menu_items %}
           </ul>
         </div>
       </div>
