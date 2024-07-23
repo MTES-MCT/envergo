@@ -194,6 +194,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "envergo.utils.context_processors.settings_context",
+                "envergo.utils.context_processors.multi_sites_context",
                 "envergo.analytics.context_processors.analytics",
             ],
         },
