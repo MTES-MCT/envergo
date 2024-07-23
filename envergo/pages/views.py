@@ -14,9 +14,10 @@ from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.utils.views import MultiSiteMixin
 
 
-class HomeView(MoulinetteMixin, FormView):
+class HomeView(MultiSiteMixin, MoulinetteMixin, FormView):
     def get_template_names(self):
         current_site = get_current_site(self.request)
         home = "pages/home.html"
@@ -119,19 +120,15 @@ class GeometriciansView(MoulinetteMixin, FormView):
         return context
 
 
-class StatsView(TemplateView):
-    template_name = "pages/stats.html"
-
-
-class LegalMentionsView(TemplateView):
+class LegalMentionsView(MultiSiteMixin, TemplateView):
     template_name = "pages/legal_mentions.html"
 
 
-class TermsOfServiceView(TemplateView):
+class TermsOfServiceView(MultiSiteMixin, TemplateView):
     template_name = "pages/terms_of_service.html"
 
 
-class PrivacyView(TemplateView):
+class PrivacyView(MultiSiteMixin, TemplateView):
     template_name = "pages/privacy.html"
 
     def get_context_data(self, **kwargs):
@@ -141,7 +138,7 @@ class PrivacyView(TemplateView):
         return context
 
 
-class Outlinks(TemplateView):
+class Outlinks(MultiSiteMixin, TemplateView):
     template_name = "pages/outlinks.html"
 
     def post(self, *args, **kwargs):
