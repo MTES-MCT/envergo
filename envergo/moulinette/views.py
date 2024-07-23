@@ -3,6 +3,7 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Value as V
 from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
@@ -78,7 +79,10 @@ class MoulinetteMixin:
         form = context["form"]
         if form.is_valid():
             moulinette = Moulinette(
-                form.cleaned_data, form.data, self.should_activate_optional_criteria()
+                form.cleaned_data,
+                form.data,
+                self.should_activate_optional_criteria(),
+                context.get("current_site_id", None),
             )
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
@@ -235,8 +239,12 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
+            current_site = get_current_site(self.request)
             moulinette = Moulinette(
-                form_data, form.data, self.should_activate_optional_criteria()
+                form_data,
+                form.data,
+                self.should_activate_optional_criteria(),
+                current_site.id,
             )
 
         additional_forms = self.get_additional_forms(moulinette)

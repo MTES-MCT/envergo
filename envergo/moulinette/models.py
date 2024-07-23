@@ -6,10 +6,9 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
-from django.contrib.sites.managers import CurrentSiteManager
 from django.contrib.sites.models import Site
 from django.db import models
-from django.db.models import Case, F, Prefetch, Q, When
+from django.db.models import Case, F, Prefetch, Q, QuerySet, When
 from django.db.models.functions import Cast
 from django.http import QueryDict
 from django.utils.functional import cached_property
@@ -58,11 +57,18 @@ def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
 
 
+class RegulationQuerySet(QuerySet):
+    def on_site(self, site_id):
+        """
+        Filter regulation based on their site
+        """
+        return self.filter(site_id=site_id)
+
+
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
-    objects = models.Manager()
-    on_site = CurrentSiteManager()
+    objects = RegulationQuerySet.as_manager()
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
@@ -81,7 +87,7 @@ class Regulation(models.Model):
 
     site = models.ForeignKey(
         Site, on_delete=models.CASCADE, default=1
-    )  # EnvErgo (site_id=1) as default
+    )  # EnvErgo amenagement (site_id=1) as default
 
     class Meta:
         verbose_name = _("Regulation")
@@ -787,7 +793,7 @@ class Moulinette:
     or other regulations.
     """
 
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
+    def __init__(self, data, raw_data, activate_optional_criteria=True, site_id=None):
         if isinstance(raw_data, QueryDict):
             self.raw_data = raw_data.dict()
         else:
@@ -795,6 +801,7 @@ class Moulinette:
         self.catalog = MoulinetteCatalog(**data)
         self.catalog.update(self.get_catalog_data())
 
+        self.site_id = site_id
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
         self.department = self.get_department()
@@ -960,7 +967,8 @@ class Moulinette:
         """Find the activated regulations and their criteria."""
 
         regulations = (
-            Regulation.on_site.all()
+            Regulation.objects.on_site(self.site_id)
+            .all()
             .order_by("weight")
             .prefetch_related(Prefetch("criteria", queryset=self.criteria))
             .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
@@ -1220,7 +1228,7 @@ class FakeMoulinette(Moulinette):
             "existing_surface": 50,
         }
         dummy_data.update(fake_data)
-        super().__init__(dummy_data, dummy_data)
+        super().__init__(dummy_data, dummy_data, site_id=1)  # TODO @Thibault is it ok ?
 
         # Override the `result_code` for each criterion
         # Since `result_code` is a property, we cannot directly monkeypatch the

@@ -37,6 +37,6 @@ def multi_sites_context(_request):
     if current_site.name == "Haie":
         base_template = "haie/base.html"
     return {
-        "current_site": current_site,
+        "current_site_id": current_site.id,
         "base_template": base_template,
     }

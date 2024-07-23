@@ -7,6 +7,7 @@ from urllib.parse import urlencode, urlparse
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.sites.models import Site
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
@@ -226,6 +227,10 @@ class Evaluation(models.Model):
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
+    site = models.ForeignKey(
+        Site, on_delete=models.CASCADE, default=1
+    )  # EnvErgo amenagement (site_id=1) as default
+
     class Meta:
         verbose_name = "Avis"
         verbose_name_plural = "Avis"
@@ -277,7 +282,7 @@ class Evaluation(models.Model):
             params = form.cleaned_data
             activate_optional_criteria = True
             self._moulinette = Moulinette(
-                params, raw_params, activate_optional_criteria
+                params, raw_params, activate_optional_criteria, self.site_id
             )
 
         return self._moulinette
