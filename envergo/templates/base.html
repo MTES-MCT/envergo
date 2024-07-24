@@ -1,7 +1,9 @@
 {% load static i18n compress confs %}
 
 <!DOCTYPE html>
-<html lang="fr" data-fr-scheme="system" class="nojs">
+<html lang="fr"
+      data-fr-scheme="system"
+      class="nojs {% block html-classes %}{% endblock %}">
 
   <head>
     <meta charset="utf-8">
@@ -151,7 +153,7 @@
     </script>
   </head>
 
-  <body>
+  <body class="{% block body-classes %}{% endblock %}">
 
     {% include '_skiplinks.html' %}
 

@@ -137,7 +137,7 @@ article {
     }
   }
 
-  article>img {
+  article > img {
     max-height: 11.25rem;
     margin: 0 auto 1.5rem auto;
     display: block;
@@ -224,7 +224,7 @@ nav#evaluation-summary {
 
   #form-group-created_surface,
   #form-group-final_surface {
-    &>label {
+    & > label {
       font-weight: 600;
 
       .fr-hint-text {
@@ -286,11 +286,11 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
-      &>fieldset {
+      & > fieldset {
         display: none;
       }
 
-      &.active>fieldset {
+      &.active > fieldset {
         display: inherit !important;
       }
     }
@@ -346,7 +346,7 @@ section.regulation {
         padding-bottom: 0;
       }
 
-      li+li::before {
+      li + li::before {
         content: ", ";
       }
     }
@@ -368,7 +368,7 @@ section.regulation {
     }
   }
 
-  .more.fr-collapse>*:first-child {
+  .more.fr-collapse > *:first-child {
     margin-top: 1.5rem;
   }
 
@@ -452,7 +452,7 @@ form {
 
   .formset {
 
-    &+.formset {
+    & + .formset {
       margin-top: 2rem;
     }
 
@@ -504,7 +504,7 @@ form {
       }
     }
 
-    input[type=file]:focus+div.input-file-widget {
+    input[type=file]:focus + div.input-file-widget {
       outline-color: var(--focus);
       outline-offset: 2px;
       outline-width: 2px;
@@ -512,7 +512,7 @@ form {
     }
 
     // When a file has been selected
-    input[type=file]:valid+div.input-file-widget {
+    input[type=file]:valid + div.input-file-widget {
       #default-box-msg {
         display: none;
       }
@@ -565,15 +565,15 @@ form#request-evaluation-form {
 
   }
 
-  #id_send_eval_to_project_owner+.fr-label .fr-hint-text {
+  #id_send_eval_to_project_owner + .fr-label .fr-hint-text {
     color: var(--info-425-625);
   }
 
-  #id_send_eval_to_project_owner:checked+.fr-label .if-unchecked {
+  #id_send_eval_to_project_owner:checked + .fr-label .if-unchecked {
     display: none;
   }
 
-  #id_send_eval_to_project_owner:not(:checked)+.fr-label .if-checked {
+  #id_send_eval_to_project_owner:not(:checked) + .fr-label .if-checked {
     display: none;
   }
 }
@@ -581,7 +581,7 @@ form#request-evaluation-form {
 /**
  * Autocomplete fields
  */
-.fr-label+div>.autocomplete__wrapper {
+.fr-label + div > .autocomplete__wrapper {
   margin-top: .5rem;
 }
 
@@ -766,7 +766,7 @@ ul.roomy {
   }
 }
 
-main>.fr-notice {
+main > .fr-notice {
   .fr-notice__body {
     &:before {
       display: none;
@@ -968,6 +968,175 @@ div.hero-alt {
 }
 
 
+.full-height {
+  height: 100%;
+}
+
+.flex-box {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+// moulinette result page styles
+.moulinette-result-body {
+  min-height: 20em;
+
+  main {
+    min-height: 20em;
+  }
+
+  #moulinette-result-container {
+    flex: 1;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+
+    > .fr-grid-row {
+      flex-wrap: nowrap;
+      flex: 1;
+    }
+
+    #project-summary, #project-result {
+      overflow-y: scroll;
+      flex-wrap: nowrap;
+      scroll-behavior: smooth;
+    }
+
+    .fr-sr-only {
+      position: fixed; // to avoid the element to break the whole scroll flow in Chrome
+    }
+
+    #project-summary {
+      background-color: var(--info-975-75);
+
+      > section {
+        max-width: 36em;
+        margin: 0 auto;
+        padding: 0 1em;
+      }
+
+      .button-container {
+        text-align: center;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      #map:hover > #map-button {
+        opacity: 1;
+      }
+
+      #map-button {
+        transition: opacity 0.4s ease-in-out 0s;
+        z-index: 1000;
+        position: absolute;
+        right: 1.5em;
+        bottom: 2em;
+        background-color: var(--grey-1000-50);
+        color: var(--text-action-high-blue-france);
+        opacity: 0;
+      }
+
+      #map-button:hover {
+        background-color: var(--background-default-grey-hover);
+      }
+
+    }
+
+    #project-result {
+      > section {
+        max-width: 42em;
+        margin: 0 auto;
+      }
+
+      footer {
+        padding-top: 0;
+        box-shadow: initial;
+      }
+
+      .fr-btns-group {
+        margin: 0;
+      }
+    }
+  }
+
+  footer {
+    padding-top: 0;
+    box-shadow: initial;
+    z-index: 1000; // to be above the leaflet map
+  }
+
+  @media only screen and (max-width: 991px) {
+
+    #moulinette-result-container {
+      padding-left: 0;
+      padding-right: 0;
+
+      > .fr-grid-row {
+        flex-direction: column-reverse;
+        flex-wrap: nowrap;
+        overflow-y: auto;
+      }
+
+      #project-summary, #project-result {
+        overflow: initial;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      #mobile-footer {
+        display: block;
+      }
+    }
+  }
+  @media only screen and (max-width: 767px) {
+    #feedback-form, #copy-btn-container, #debug-btn {
+      display: none;
+    }
+  }
+}
+
+#action-banner {
+  background-color: var(--blue-france-sun-113-625);
+  text-align: center;
+
+  #feedback-form {
+    align-items: center;
+    justify-content: center;
+
+    > p {
+      color: #fff;
+      margin: 0 1em 0 0;
+    }
+  }
+
+  #copy-btn-container {
+    #copy-btn {
+      position: relative;
+    }
+
+    #btn-clicked-message {
+      position: absolute;
+      top: 9px;
+      right: -70%;
+      color: #fff;
+      align-items: center;
+      transition: opacity 0.5s ease-out;
+      opacity: 0;
+
+      img {
+        height: 1em;
+      }
+    }
+  }
+}
+
 /**
  * Impression
  */
@@ -991,8 +1160,8 @@ div.hero-alt {
   }
 
   // Hide common template elements
-  body>header,
-  body>footer,
+  body > header,
+  body > footer,
   #top-bar,
   .hide-print {
     display: none;
@@ -1079,33 +1248,22 @@ div.hero-alt {
     display: inherit;
   }
 
-  // display the loaded map outside the form for print
-  #moulinette-container {
-    .fr-grid-row {
+  .moulinette-result-body {
+    .flex-box, .fr-grid-row {
       display: block;
     }
 
-    #form-col {
-      display: block;
-      flex: unset;
-      max-width: 100%;
+    .fr-grid-row > div {
+      width: unset;
+      max-width: unset;
+    }
 
-      * {
-        display: none;
-      }
+    #moulinette-result-container {
+      overflow: inherit;
+    }
 
-      #moulinette-form,
-      #form-groups,
-      #form-group-coords,
-      #form-group-coords>figure,
-      #map-container,
-      #map-container * {
-        display: inherit;
-      }
-
-      #map-container .leaflet-control-container {
-        display: none;
-      }
+    #map-container .leaflet-control-container {
+      display: none;
     }
   }
 }

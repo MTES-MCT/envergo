@@ -40,11 +40,19 @@
 
   {% for form in moulinette.optional_forms %}
     {% if form.is_valid and form.is_activated %}
-      {% for field in form %}
-        {% if field.name != "activate" %}
-          <li>{% field_summary field %}</li>
+      <li>
+        {% if form.activate %}
+          <strong>{{ form.activate.label }}</strong>
+          {% if form.activate.help_text %}<span class="fr-hint-text">{{ form.activate.help_text|safe }}</span>{% endif %}
         {% endif %}
-      {% endfor %}
+        <ul class="fr-pl-2w">
+          {% for field in form %}
+            {% if field.name != "activate" %}
+              <li>{% field_summary field %}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </li>
     {% endif %}
   {% endfor %}
 </ul>

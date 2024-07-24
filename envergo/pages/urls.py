@@ -88,5 +88,6 @@ urlpatterns = [
         name="parcels_export",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
-    path(_("géomètres/"), GeometriciansView.as_view(), name="geometricians"),
+    path(_("géomètres/"), RedirectView.as_view(url="/geometres/")),
+    path(_("geometres/"), GeometriciansView.as_view(), name="geometricians"),
 ]

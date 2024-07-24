@@ -107,7 +107,7 @@ def evaluation_menu(context):
     additional_routes = ["evaluation_detail"]
 
     return collapsible_menu(
-        context, links, "Mes avis réglementaires", "menu-evaluations", additional_routes
+        context, links, "Mes avis", "menu-evaluations", additional_routes
     )
 
 

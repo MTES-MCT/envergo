@@ -51,16 +51,22 @@
 
     // Damn this constant lat and lng order mixing
     const centerCoords = [center.coordinates[1], center.coordinates[0]];
-    const map = L.map(mapId, {
+    let settings = {
       maxZoom: 21,
-      zoomControl: !mapData["fixed"],
-      dragging: !mapData["fixed"],
-      doubleClickZoom: !mapData["fixed"],
-      scrollWheelZoom: !mapData["fixed"],
-      touchZoom: !mapData["fixed"],
-      keyboard: !mapData["fixed"],
       layers: [planLayer],
-    }).setView(centerCoords, mapData['zoom']);
+    };
+    if (typeof mapData["fixed"] === 'object') {
+      settings = {...settings, ...mapData["fixed"]}
+    }
+    else{
+      settings["zoomControl"] = !mapData["fixed"];
+      settings["dragging"] = !mapData["fixed"];
+      settings["doubleClickZoom"] = !mapData["fixed"];
+      settings["scrollWheelZoom"] = !mapData["fixed"];
+      settings["touchZoom"] = !mapData["fixed"];
+      settings["keyboard"] = !mapData["fixed"];
+    }
+    const map = L.map(mapId, settings).setView(centerCoords, mapData['zoom']);
 
     // Display layer switching control
     const baseMaps = {
