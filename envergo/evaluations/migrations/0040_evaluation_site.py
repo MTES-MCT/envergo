@@ -22,4 +22,11 @@ class Migration(migrations.Migration):
                 default=1, on_delete=django.db.models.deletion.CASCADE, to="sites.site"
             ),
         ),
+        migrations.AddField(
+            model_name="request",
+            name="site",
+            field=models.ForeignKey(
+                default=1, on_delete=django.db.models.deletion.CASCADE, to="sites.site"
+            ),
+        ),
     ]

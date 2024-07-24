@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 from django.contrib.sites.models import Site
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
@@ -94,3 +95,8 @@ def mock_get_current_site():
 def update_default_site(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
         Site.objects.create(domain="testserver", name="testserver")
+
+
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
