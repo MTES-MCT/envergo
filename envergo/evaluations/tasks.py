@@ -177,4 +177,3 @@ def post_a_model_to_automation(model, webhook_url, **extra_data):
             logger.error(f"Error while posting data to make.com: {res.text}")
     else:
         logger.warning("No make.com webhook configured. Doing nothing.")
-        return
