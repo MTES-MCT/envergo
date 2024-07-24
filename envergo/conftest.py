@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.sites.models import Site
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
@@ -20,7 +21,6 @@ def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def update_default_site(django_db_setup, django_db_blocker):
-    with django_db_blocker.unblock():
-        Site.objects.create(domain="testserver", name="testserver")
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
