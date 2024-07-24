@@ -24,6 +24,7 @@ class EvaluationFactory(DjangoModelFactory):
     user_type = "instructor"
     urbanism_department_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
+    site = factory.SubFactory(SiteFactory)
 
     @factory.post_generation
     def versions(self, create, extracted, **kwargs):

@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 import pytest
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import Evaluation, Request
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
@@ -92,6 +93,7 @@ def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_e
         project_owner_phone="+33612345678",
         project_owner_emails=["test@test.com"],
         send_eval_to_project_owner=False,
+        site=SiteFactory(),
     )
     request.save()
     request.refresh_from_db()
@@ -103,6 +105,7 @@ def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_e
         project_owner_phone="+33612345678",
         project_owner_emails=["test@test.com"],
         send_eval_to_project_owner=True,
+        site=SiteFactory(),
     )
     request.save()
     request.refresh_from_db()
