@@ -99,18 +99,24 @@ def debug(stuff):
 
 
 @register.simple_tag()
-def perimeter_long_name(regulation, perimeter):
-    """Display a long name for a given perimeter.
+def perimeter_detail(regulation):
+    """Display the perimeter short description with links."""
 
-    It will displayed in this kind of sentence:
-    "Le projet se trouve dans le périmètre {{ long name }}."
-    """
-    templates = [
-        f"moulinette/{regulation.slug}/_perimeter_long_name.html",
-        "moulinette/_perimeter_long_name.html",
-    ]
-    long_name = render_to_string(templates, {"perimeter": perimeter})
-    return long_name
+    perimeters = regulation.perimeters.all()
+    if len(perimeters) == 1:
+        templates = [
+            f"moulinette/{regulation.slug}/_one_perimeter_detail.html",
+            "moulinette/_one_perimeter_detail.html",
+        ]
+        detail = render_to_string(templates, {"perimeter": perimeters[0]})
+    else:
+        templates = [
+            f"moulinette/{regulation.slug}/_several_perimeters_details.html",
+            "moulinette/_several_perimeters_details.html",
+        ]
+        detail = render_to_string(templates, {"perimeters": perimeters})
+
+    return mark_safe(detail)
 
 
 @register.simple_tag()

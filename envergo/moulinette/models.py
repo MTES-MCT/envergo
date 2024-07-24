@@ -7,10 +7,9 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, Prefetch, Q, When
+from django.db.models import Case, F, IntegerField, Prefetch, Q, When
 from django.db.models.functions import Cast
 from django.http import QueryDict
-from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -179,18 +178,17 @@ class Regulation(models.Model):
         return activated
 
     def show_criteria(self):
-        """Should the criteria be displayed?"""
+        """Should the criteria be displayed?
 
-        if any(
-            (
-                not self.is_activated(),
-                self.has_perimeters and not self.perimeter,
-                self.has_perimeters and not self.perimeter.is_activated,
-            )
-        ):
-            return False
+        We musn't display criteria if the regulation or associated perimeters are
+        not activated yet.
+        """
 
-        return True
+        activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
+        return self.is_activated() and (
+            (not self.has_perimeters)
+            or (self.has_perimeters and any(activated_perimeters))
+        )
 
     @property
     def result(self):
@@ -220,10 +218,11 @@ class Regulation(models.Model):
             return RESULTS.non_active
 
         if self.has_perimeters:
-            perimeter = self.perimeter
-            if perimeter and not perimeter.is_activated:
+            all_perimeters = self.perimeters.all()
+            activated_perimeters = [p for p in all_perimeters if p.is_activated]
+            if all_perimeters and not any(activated_perimeters):
                 return RESULTS.non_disponible
-            if not perimeter:
+            if not all_perimeters:
                 return RESULTS.non_concerne
 
         # From this point, we made sure every data (regulation, perimeter) is existing
@@ -274,7 +273,7 @@ class Regulation(models.Model):
                 for c in self.criteria.all()
                 if c.required_action and c.result == "action_requise"
             ]
-        return actions
+        return list(set(actions))
 
     def required_actions_soumis(self):
         return self.required_actions(STAKES.soumis)
@@ -334,24 +333,9 @@ class Regulation(models.Model):
 
         return False
 
-    @cached_property
-    def perimeter(self):
-        """Return the administrative perimeter the project is in.
-
-        The perimeter is an administrative zone. In a perfect world, for a single
-        regulation, perimeters are non-overlapping, meaning there is a single
-        perimeter for a single location.
-
-        French administration being what it is, this is not always the case.
-
-        Hence, if we are matching several perimeters, we have no way to tell which
-        one is the correct one. So we just return the first one.
-        """
-        return self.perimeters.first()
-
     def display_perimeter(self):
         """Should / can a perimeter be displayed?"""
-        return self.is_activated() and self.perimeter
+        return self.is_activated() and bool(self.perimeters.all())
 
     @property
     def map(self):
@@ -361,13 +345,33 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-        perimeter = self.perimeter
-        if perimeter:
-            polygon = MapPolygon([perimeter], self.polygon_color, perimeter.map_legend)
+
+        # We use visually distinctive color palette to display perimeters.
+        # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
+        palette = [
+            self.polygon_color,
+            "#4e79a7",
+            "#e15759",
+            "#76b7b2",
+            "#59a14f",
+            "#edc949",
+            "#af7aa1",
+            "#ff9da7",
+            "#9c755f",
+            "#bab0ab",
+        ]
+        perimeters = self.perimeters.all()
+        if perimeters:
+            polygons = [
+                MapPolygon(
+                    [perimeter], palette[counter % len(palette)], perimeter.map_legend
+                )
+                for counter, perimeter in enumerate(perimeters)
+            ]
             map = Map(
                 type="regulation",
                 center=self.moulinette.catalog["coords"],
-                entries=[polygon],
+                entries=polygons,
                 truncate=False,
                 zoom=None,
                 ratio="2x1",
@@ -400,6 +404,14 @@ class Criterion(models.Model):
         verbose_name=_("Regulation"),
         on_delete=models.PROTECT,
         related_name="criteria",
+    )
+    perimeter = models.ForeignKey(
+        "moulinette.Perimeter",
+        verbose_name=_("Perimeter"),
+        on_delete=models.PROTECT,
+        related_name="criteria",
+        null=True,
+        blank=True,
     )
     activation_map = models.ForeignKey(
         "geodata.Map",
@@ -905,7 +917,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("weight")
             .distinct("weight", "id")
             .select_related("activation_map")
@@ -938,7 +950,7 @@ class Moulinette:
                     default=F("activation_map__zones__geometry"),
                 )
             )
-            .annotate(distance=Distance("activation_map__zones__geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .order_by("id")
             .distinct("id")
             .select_related("activation_map")
@@ -963,7 +975,7 @@ class Moulinette:
 
         zones = (
             Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
-            .annotate(distance=Distance("geometry", coords))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .annotate(geom=Cast("geometry", MultiPolygonField()))
             .select_related("map")
             .defer("map__geometry")
