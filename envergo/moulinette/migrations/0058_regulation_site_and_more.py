@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("sites", "0002_add_haie"),
-        ("moulinette", "0055_alter_moulinettetemplate_key"),
+        ("moulinette", "0057_set_criteria_perimeters"),
     ]
 
     operations = [
