@@ -8,3 +8,8 @@ class SiteFactory(DjangoModelFactory):
 
     domain = "testserver"
     name = "testserver"
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        instance, created = model_class.objects.get_or_create(*args, **kwargs)
+        return instance
