@@ -97,12 +97,18 @@ def post_evalreq_to_automation(request_id, host):
     logger.info(f"Sending data to make.com {request_id} {host}")
     request = Request.objects.get(id=request_id)
 
+    # We need to provide the previous requests count for every instructor email
     extra_data = {}
     if request.is_from_instructor():
         instructor_emails = request.urbanism_department_emails
+
+        # Let's fetch all requests by one of the current instructors
         requests = Request.objects.filter(user_type=USER_TYPES.instructor).filter(
             urbanism_department_emails__overlap=instructor_emails
         )
+        # and create an {email: count} dict
+        # the `defaultdict` makes sure the default key value is initialized
+        # Since we will count the current request as well, we initialize the count to -1
         request_history = defaultdict(lambda: -1)
         for req in requests:
             for email in req.urbanism_department_emails:
