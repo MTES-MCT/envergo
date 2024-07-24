@@ -114,7 +114,7 @@ def post_evalreq_to_automation(request_id, host):
             for email in req.urbanism_department_emails:
                 if email in instructor_emails:
                     request_history[email] += 1
-        extra_data["request_history"] = request_history
+        extra_data["request_history"] = dict(request_history)
 
     post_a_model_to_automation(request, webhook_url, **extra_data)
 
