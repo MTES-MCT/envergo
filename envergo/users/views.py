@@ -26,7 +26,7 @@ class Register(AnonymousRequiredMixin, CreateView):
         self.object.save()
 
         user_email = form.cleaned_data["email"]
-        send_account_activation_email.delay(user_email)
+        send_account_activation_email.delay(user_email, self.request.site.id)
         return response
 
     def form_invalid(self, form):
@@ -43,7 +43,7 @@ class Register(AnonymousRequiredMixin, CreateView):
             and form["email"].errors.as_data()[0].code == "unique"
         ):
             user_email = form.data["email"]
-            send_account_activation_email.delay(user_email)
+            send_account_activation_email.delay(user_email, self.request.site.id)
             return HttpResponseRedirect(self.success_url)
         else:
             return super().form_invalid(form)

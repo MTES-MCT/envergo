@@ -11,7 +11,7 @@ LOGIN_SUBJECT = "[EnvErgo] Activation de votre compte"
 
 
 @app.task
-def send_account_activation_email(user_email):
+def send_account_activation_email(user_email, site_id):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -29,7 +29,7 @@ def send_account_activation_email(user_email):
         return
 
     login_url = make_token_login_url(user)
-    base_url = get_base_url()
+    base_url = get_base_url(site_id)
     full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
 
     txt_template = "emails/activate_account.txt"
