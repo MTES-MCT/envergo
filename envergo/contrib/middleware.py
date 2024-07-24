@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.sites.models import Site
 
 
@@ -7,11 +6,13 @@ class SetUrlConfBasedOnSite:
         self.get_response = get_response
 
     def __call__(self, request):
-        site = Site.objects.get_current(request)
-        if site.name == "Haie":
-            settings.ROOT_URLCONF = "config.urls_haie"
-        else:
-            settings.ROOT_URLCONF = "config.urls_amenagement"
+        request.urlconf = "config.urls_amenagement"
+        try:
+            site = Site.objects.get_current(request)
+            if site.name == "Haie":
+                request.urlconf = "config.urls_haie"
+        except Site.DoesNotExist:
+            pass  # No site found, use default ROOT_URLCONF (e.g. for tests)
 
         response = self.get_response(request)
 
