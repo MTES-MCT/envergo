@@ -162,16 +162,19 @@ def post_evaluation_to_automation(evaluation_uid):
 
 
 def post_a_model_to_automation(model, webhook_url, **extra_data):
-    if not webhook_url:
-        logger.warning("No make.com webhook configured. Doing nothing.")
-        return
-
     serialized = BetterJsonSerializer().serialize([model])
     json_data = json.loads(serialized)[0]
     payload = json_data["fields"]
     payload["pk"] = json_data["pk"]
     payload.update(extra_data)
 
-    res = post(webhook_url, json=payload)
-    if res.status_code != 200:
-        logger.error(f"Error while posting data to make.com: {res.text}")
+    logger.info("Posting info to make.com webhook")
+    logger.info(payload)
+
+    if webhook_url:
+        res = post(webhook_url, json=payload)
+        if res.status_code != 200:
+            logger.error(f"Error while posting data to make.com: {res.text}")
+    else:
+        logger.warning("No make.com webhook configured. Doing nothing.")
+        return
