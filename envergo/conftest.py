@@ -88,3 +88,12 @@ def mock_get_current_site():
         "django.contrib.sites.shortcuts.get_current_site", return_value=mock_site
     ):
         yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def update_default_site(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        default_site = Site.objects.get(id=1)
+        default_site.domain = "testserver"
+        default_site.name = "testserver"
+        default_site.save()
