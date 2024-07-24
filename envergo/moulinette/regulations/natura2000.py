@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.gis.measure import Distance as D
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -232,7 +231,7 @@ class Lotissement(CriterionEvaluator):
 
     def get_result_data(self):
         is_lotissement = self.catalog["is_lotissement"]
-        if self.distance <= D(m=0.0):
+        if self.distance <= 0:
             distance = "dedans"
         else:
             distance = "proximite_immediate"

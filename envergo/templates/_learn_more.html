@@ -1,0 +1,20 @@
+<section class="fr-py-8w fr-px-6w alt hide-print">
+  <div>
+    <h2>Pour en savoir plus…</h2>
+    <p>
+      Consultez notre <a href="{% url 'faq' %}">page d'information</a>
+      ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
+    </p>
+  </div>
+</section>
+<div class="fr-py-5w fr-px-6w print-only">
+  <h2>Pour en savoir plus…</h2>
+  <p class="fr-text">Pour une question, remarque, suggestion…</p>
+  {% include '_contact_means.html' %}
+
+  <p class="fr-text">
+    Ou consultez <a title="Lien vers la foire aux questions"
+    href="{% url 'faq' %}"
+    rel="noopener">notre page d'information</a>
+  </p>
+</div>

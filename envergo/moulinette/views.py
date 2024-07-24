@@ -302,6 +302,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
+        is_edit = bool(self.request.GET.get("edit", False))
         is_admin = self.request.user.is_staff
 
         if moulinette is None:
@@ -314,6 +315,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
             template_name = "moulinette/home.html"
+        elif is_edit:
+            template_name = "moulinette/home.html"
         else:
             template_name = "moulinette/result.html"
 
@@ -325,8 +328,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         moulinette = self.moulinette
         if moulinette:
 
-            if "debug" not in self.request.GET and not self.validate_results_url(
-                request, context
+            if (
+                "debug" not in self.request.GET
+                and "edit" not in self.request.GET
+                and not self.validate_results_url(request, context)
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
@@ -358,6 +363,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
         tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        debug_result_url = update_qs(current_url, {"debug": "true"})
+        edit_url = update_qs(current_url, {"edit": "true"})
 
         # Url without any query parameters
         stripped_url = self.request.build_absolute_uri(self.request.path)
@@ -410,6 +417,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 else:
                     context["address_coords"] = f"{lat}, {lng}"
                     context["form"].data["address"] = f"{lat}, {lng}"
+
+        context["is_admin"] = self.request.user.is_staff
+        context["debug_url"] = debug_result_url
+        context["edit_url"] = edit_url
 
         return context
 

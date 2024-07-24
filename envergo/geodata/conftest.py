@@ -1,5 +1,3 @@
-from unittest.mock import Mock, patch
-
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
@@ -74,56 +72,3 @@ def loire_atlantique_department():
         department=44, geometry=MultiPolygon([polygon])
     )
     return loire_atlantique
-
-
-@pytest.fixture(autouse=True)
-def mock_geo_api_data():
-    with patch(
-        "envergo.geodata.utils.get_data_from_coords", new=Mock()
-    ) as mock_geo_data:
-        mock_geo_data.return_value = [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-1.3866392402397603, 47.14711855636099],
-                },
-                "properties": {
-                    "id": "44070000AR0238",
-                    "departmentcode": "44",
-                    "municipalitycode": "070",
-                    "oldmunicipalitycode": "000",
-                    "districtcode": "000",
-                    "section": "AR",
-                    "sheet": "01",
-                    "number": "0238",
-                    "city": "La Haie-Fouassière",
-                    "distance": 11,
-                    "score": 0.9989,
-                    "_type": "parcel",
-                },
-            },
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [-1.386865, 47.146822]},
-                "properties": {
-                    "type": "street",
-                    "name": "Rue du Breil",
-                    "postcode": "44690",
-                    "citycode": "44070",
-                    "city": "La Haie-Fouassière",
-                    "oldcitycode": None,
-                    "oldcity": None,
-                    "context": "44, Loire-Atlantique, Pays de la Loire",
-                    "importance": 0.49222,
-                    "id": "44070_0553",
-                    "x": 367734.49,
-                    "y": 6681070.77,
-                    "label": "Rue du Breil 44690 La Haie-Fouassière",
-                    "distance": 27,
-                    "score": 0.9973,
-                    "_type": "address",
-                },
-            },
-        ]
-        yield mock_geo_data

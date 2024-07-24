@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.geodata.conftest import france_map, mock_geo_api_data  # noqa
+from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     MoulinetteConfigFactory,
@@ -46,14 +46,16 @@ def moulinette_data(footprint):
 
 
 # ETQ Admin, je peux voir l'option d'activer un critère optionnel
-def test_admin_see_optional_criterion_additional_question(admin_client):
+def test_edition_redirection_from_result_admin_see_optional_criterion_additional_question(
+    admin_client,
+):
     url = reverse("moulinette_result")
-    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&edit=true"
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "moulinette/home.html")
 
     # The question exists in the sidebar
     assert "Rubrique 41 : aires de stationnement" in res.content.decode()
