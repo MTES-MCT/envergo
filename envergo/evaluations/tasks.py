@@ -1,17 +1,18 @@
 import json
 import logging
+from collections import defaultdict
 
-import requests
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.serializers.json import Serializer as JSONSerializer
 from django.template.loader import render_to_string
 from django.urls import reverse
+from requests import post
 
 from config.celery_app import app
 from envergo.confs.utils import get_setting
-from envergo.evaluations.models import Evaluation, RecipientStatus, Request
+from envergo.evaluations.models import USER_TYPES, Evaluation, RecipientStatus, Request
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url
 
@@ -95,7 +96,21 @@ def post_evalreq_to_automation(request_id, host):
     webhook_url = settings.MAKE_COM_WEBHOOK
     logger.info(f"Sending data to make.com {request_id} {host}")
     request = Request.objects.get(id=request_id)
-    post_a_model_to_automation(request, webhook_url)
+
+    extra_data = {}
+    if request.is_from_instructor():
+        instructor_emails = request.urbanism_department_emails
+        requests = Request.objects.filter(user_type=USER_TYPES.instructor).filter(
+            urbanism_department_emails__overlap=instructor_emails
+        )
+        request_history = defaultdict(lambda: -1)
+        for req in requests:
+            for email in req.urbanism_department_emails:
+                if email in instructor_emails:
+                    request_history[email] += 1
+        extra_data["request_history"] = request_history
+
+    post_a_model_to_automation(request, webhook_url, **extra_data)
 
 
 @app.task
@@ -140,7 +155,7 @@ def post_evaluation_to_automation(evaluation_uid):
     post_a_model_to_automation(evaluation, webhook_url)
 
 
-def post_a_model_to_automation(model, webhook_url):
+def post_a_model_to_automation(model, webhook_url, **extra_data):
     if not webhook_url:
         logger.warning("No make.com webhook configured. Doing nothing.")
         return
@@ -149,7 +164,8 @@ def post_a_model_to_automation(model, webhook_url):
     json_data = json.loads(serialized)[0]
     payload = json_data["fields"]
     payload["pk"] = json_data["pk"]
+    payload.update(extra_data)
 
-    res = requests.post(webhook_url, json=payload)
+    res = post(webhook_url, json=payload)
     if res.status_code != 200:
         logger.error(f"Error while posting data to make.com: {res.text}")
