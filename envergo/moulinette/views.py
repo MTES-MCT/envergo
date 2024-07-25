@@ -17,7 +17,6 @@ from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
 from envergo.moulinette.models import (
     Criterion,
     FakeMoulinette,
-    Moulinette,
     get_moulinette_class_from_request,
 )
 from envergo.moulinette.utils import compute_surfaces
@@ -243,7 +242,8 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
-            moulinette = Moulinette(
+            MoulinetteClass = get_moulinette_class_from_request(self.request)
+            moulinette = MoulinetteClass(
                 form_data,
                 form.data,
                 self.should_activate_optional_criteria(),
