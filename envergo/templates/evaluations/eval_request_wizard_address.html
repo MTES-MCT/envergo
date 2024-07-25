@@ -2,7 +2,7 @@
 
 {% load utils %}
 
-{% load evaluations leaflet_tags static %}
+{% load evaluations static %}
 
 {% block top-bar %}{% endblock %}
 
@@ -58,13 +58,11 @@
 {% endblock %}
 
 {% block extra_css %}
-  {% leaflet_css %}
   <link rel="stylesheet"
         href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
-  {% leaflet_js %}
   <script>ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer
           src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
