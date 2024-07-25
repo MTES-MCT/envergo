@@ -1713,3 +1713,37 @@ main.demonstrateur_2150 {
 .fr-hint-text a.fr-link:has(+span.fr-tooltip) {
   font-size: inherit;
 }
+
+// Fix issues with the leaflet icon detection
+// This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
+.leaflet-default-icon-icon {
+  background-image: url(/static/images/marker-icon.png), url(/static/images/marker-icon-2x.png);
+  /* normal[, Retina] */
+  cursor: url(/static/images/marker-icon.png), url(/static/images/marker-icon-2x.png), auto;
+  /* normal[, Retina], auto for compliance with cursor syntax */
+  width: 25px;
+  height: 41px;
+  margin: -41px -12px;
+  /* margin top and left to reversely position iconAnchor */
+}
+
+.leaflet-default-icon-shadow {
+  background-image: url(/static/images/marker-shadow.png);
+  /* normal[, Retina] */
+  cursor: url(/static/images/marker-shadow.png), auto;
+  /* normal[, Retina], auto */
+  width: 41px;
+  height: 41px;
+  margin: -41px -12px;
+  /* margin top and left to reversely position shadowAnchor */
+}
+
+.leaflet-default-icon-popup {
+  margin: -34px 1px;
+  /* margin top and left to position popupAnchor */
+}
+
+.leaflet-default-icon-tooltip {
+  margin: -28px 16px;
+  /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
