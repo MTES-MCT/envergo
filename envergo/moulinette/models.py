@@ -85,9 +85,7 @@ class Regulation(models.Model):
     )
     polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
 
-    site = models.ForeignKey(
-        Site, on_delete=models.CASCADE, default=1
-    )  # EnvErgo amenagement (site_id=1) as default
+    site = models.ForeignKey(Site, on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = _("Regulation")
