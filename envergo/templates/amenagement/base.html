@@ -1,0 +1,54 @@
+{% extends "multisite_base.html" %}
+
+{% block app_title %}
+  {% block title %}
+  {% endblock title %}
+  — EnvErgo
+{% endblock %}
+{% block description %}Améliorer la prise en compte de l'environnement dans les projets d'urbanisme{% endblock %}
+
+{% block extra_head %}
+  <link rel="alternate"
+        type="application/rss+xml"
+        title="Les actualités EnvErgo"
+        href="https://envergo.beta.gouv.fr{% url 'news_feed' %}" />
+{% endblock %}
+
+{% block include_slim_header %}
+  {% include 'amenagement/_slim_header.html' %}
+{% endblock %}
+
+{% block include_header %}
+  {% include 'amenagement/_header.html' %}
+{% endblock %}
+
+{% block after-content %}
+  <section class="fr-py-8w alt hide-print">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+          <h2>Pour en savoir plus…</h2>
+          <p>
+            Consultez notre <a href="{% url 'faq' %}">page d'information</a>
+            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="fr-my-5w print-only">
+    <h2>Pour en savoir plus…</h2>
+    <p class="fr-text">Pour une question, remarque, suggestion…</p>
+    {% include '_contact_means.html' %}
+
+    <p class="fr-text">
+      Ou consultez <a title="Lien vers la foire aux questions"
+    href="{% url 'faq' %}"
+    rel="noopener">notre page d'information</a>
+    </p>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  {% include 'amenagement/_footer.html' %}
+{% endblock %}
