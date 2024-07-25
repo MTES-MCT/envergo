@@ -14,7 +14,12 @@ from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import Criterion, FakeMoulinette, Moulinette
+from envergo.moulinette.models import (
+    Criterion,
+    FakeMoulinette,
+    Moulinette,
+    get_moulinette_class_from_request,
+)
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -77,7 +82,8 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(
+            MoulinetteClass = get_moulinette_class_from_request(self.request)
+            moulinette = MoulinetteClass(
                 form.cleaned_data,
                 form.data,
                 self.should_activate_optional_criteria(),

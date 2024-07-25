@@ -1204,6 +1204,18 @@ class HaieMoulinette(Moulinette):
     REGULATIONS = ["bcae8"]
 
 
+def get_moulinette_class_from_request(request):
+    """Return the correct Moulinette class depending on the current site."""
+
+    if request.site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN:
+        cls = AmenagementMoulinette
+    elif request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+        cls = HaieMoulinette
+    else:
+        raise RuntimeError("Unknown site!")
+    return cls
+
+
 class FakeMoulinette(Moulinette):
     """This is a custom Moulinette subclass used for debugging purpose.
 
