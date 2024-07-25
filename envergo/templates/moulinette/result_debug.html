@@ -174,12 +174,6 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    window.addEventListener('load', function() {
-      L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
-    });
-  </script>
-
   {% regroup grouped_perimeters by activation_map as map_list %}
   {% for map in map_list %}
     <script>
