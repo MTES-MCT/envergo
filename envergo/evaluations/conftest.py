@@ -1,7 +1,5 @@
 import pytest
-from django.contrib.sites.models import Site
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import Evaluation, Request
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
 
@@ -23,8 +21,3 @@ def legacy_eval() -> Evaluation:
 @pytest.fixture
 def eval_request() -> Request:
     return RequestFactory()
-
-
-@pytest.fixture(autouse=True)
-def site() -> Site:
-    return SiteFactory()

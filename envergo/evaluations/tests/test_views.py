@@ -2,11 +2,13 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from django.contrib.sites.models import Site
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
 from envergo.confs.models import Setting
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import (
     EvaluationFactory,
@@ -17,6 +19,11 @@ from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
 
 
 @pytest.fixture()

@@ -1,6 +1,8 @@
 import pytest
+from django.contrib.sites.models import Site
 from django.urls import reverse
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import (
     Evaluation,
     RegulatoryNoticeLog,
@@ -22,6 +24,11 @@ def form_data():
         "urbanism_department_emails": ["test@example.org"],
         "project_owner_emails": ["sponsor@example.org"],
     }
+
+
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
 
 
 def test_create_eval_from_request(client, admin_user, eval_request):

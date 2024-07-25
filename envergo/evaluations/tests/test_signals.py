@@ -1,11 +1,18 @@
 import pytest
 from anymail.signals import AnymailTrackingEvent, tracking
+from django.contrib.sites.models import Site
 from django.utils import timezone
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import RecipientStatus
 from envergo.evaluations.tests.factories import RegulatoryNoticeLogFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
 
 
 @pytest.fixture

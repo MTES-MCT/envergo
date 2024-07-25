@@ -364,3 +364,9 @@ MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
     "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK",
     default=None,  # webhook for edited evaluations
 )
+
+
+ENVERGO_AMENAGEMENT_DOMAIN = env(
+    "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
+)
+ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")

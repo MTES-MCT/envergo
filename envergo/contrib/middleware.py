@@ -5,6 +5,13 @@ from envergo.geodata.utils import is_test
 
 
 class SetUrlConfBasedOnSite:
+    """Depending on the served site, the urlconf will vary.
+    We are not overriding settings.ROOT_URLCONF because settings should not be changed at runtime,
+    it implies erratic behavior.
+    By default, we use the EnvErgo Amenagement urlconf.
+    If the site is the Haie site, we use the Envergo Haie urlconf.
+    """
+
     def __init__(self, get_response):
         self.get_response = get_response
 
