@@ -1,7 +1,15 @@
 import pytest
+from django.contrib.sites.models import Site
 from django.urls import reverse
 
+from envergo.contrib.sites.tests.factories import SiteFactory
+
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def site() -> Site:
+    return SiteFactory()
 
 
 def test_set_visitor_id_cookie_middleware(client):
