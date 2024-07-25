@@ -12,15 +12,19 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  {% with perimeter=regulation.perimeter %}
-    {% if perimeter %}
-      <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
+  {% if regulation.perimeters.all %}
+    <h4>Vers qui se tourner pour échanger de cette interdiction ?</h4>
 
-      <p>La structure en charge de l’animation du SAGE « {{ perimeter.name }} » :</p>
+    {% for perimeter in regulation.perimeters.all %}
 
-      {{ perimeter.contact }}
-    {% endif %}
-  {% endwith %}
+      {# We are sure at least one sage will have a URL, so this section will not be empty #}
+      {% if perimeter.url %}
+        <p>La structure en charge de l’animation du SAGE « {{ perimeter.name }} » :</p>
+
+        {{ perimeter.contact }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
   <h4 class="fr-h4">Sanctions en cas d'omission</h4>
 

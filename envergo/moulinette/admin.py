@@ -34,7 +34,13 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
 
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
-    list_display = ["get_regulation_display", "regulation_slug", "has_perimeters"]
+    list_display = [
+        "get_regulation_display",
+        "regulation_slug",
+        "has_perimeters",
+        "weight",
+    ]
+    list_editable = ["weight"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -107,13 +113,14 @@ class CriterionAdmin(admin.ModelAdmin):
         "backend_title",
         "is_optional",
         "regulation",
+        "perimeter",
         "activation_map_column",
         "activation_distance_column",
         "evaluator_column",
         "weight",
     ]
     readonly_fields = ["unique_slug"]
-    autocomplete_fields = ["activation_map"]
+    autocomplete_fields = ["activation_map", "perimeter"]
     form = CriterionAdminForm
     search_fields = [
         "backend_title",

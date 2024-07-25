@@ -1,6 +1,5 @@
-{% with perimeter=regulation.perimeter %}
-  {% if perimeter %}
-
+{% if regulation.perimeters.all.count > 0 %}
+  {% for perimeter in regulation.perimeters.all %}
     {% if perimeter.rules_url %}
       <p>Le règlement du SAGE « {{ perimeter.name }} » sera prochainement pris en compte par EnvErgo.</p>
 
@@ -19,7 +18,9 @@
       {{ perimeter.contact }}
     {% endif %}
 
-  {% else %}
-    {% include 'moulinette/sage/result_non_active.html' %}
-  {% endif %}
-{% endwith %}
+    {% if not forloop.last %}<hr>{% endif %}
+
+  {% endfor %}
+{% else %}
+  {% include 'moulinette/sage/result_non_active.html' %}
+{% endif %}
