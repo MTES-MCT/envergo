@@ -1,7 +1,6 @@
 [
 {
   "model": "moulinette.regulation",
-  "pk": 5,
   "fields": {
     "regulation": "bcae8",
     "weight": 1,
@@ -11,7 +10,6 @@
 },
 {
   "model": "moulinette.criterion",
-  "pk": 18,
   "fields": {
     "backend_title": "BCAE8 > Maintien des haies",
     "title": "Maintien des haies du paysage",
