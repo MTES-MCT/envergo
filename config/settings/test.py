@@ -44,3 +44,5 @@ CELERY_TASK_ALWAYS_EAGER = True
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "test"
+ENVERGO_AMENAGEMENT_DOMAIN = "testserver"
+ENVERGO_HAIE_DOMAIN = "haie.local"

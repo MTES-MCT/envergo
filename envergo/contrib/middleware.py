@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.sites.models import Site
 
 from envergo.geodata.utils import is_test
@@ -12,7 +13,7 @@ class SetUrlConfBasedOnSite:
         try:
             site = Site.objects.get_current(request)
             request.site = site
-            if site.name == "Haie":
+            if site.domain == settings.ENVERGO_HAIE_DOMAIN:
                 request.urlconf = "config.urls_haie"
         except Site.DoesNotExist as e:
             if is_test():

@@ -79,3 +79,5 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "local"
+ENVERGO_AMENAGEMENT_DOMAIN = "envergo.local"
+ENVERGO_HAIE_DOMAIN = "haie.local"

@@ -1,7 +1,6 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.evaluations.models import (
     Evaluation,
     EvaluationVersion,
@@ -23,7 +22,6 @@ class EvaluationFactory(DjangoModelFactory):
     user_type = "instructor"
     urbanism_department_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
-    site = factory.SubFactory(SiteFactory)
 
     @factory.post_generation
     def versions(self, create, extracted, **kwargs):
@@ -64,7 +62,6 @@ class RequestFactory(DjangoModelFactory):
     user_type = "instructor"
     urbanism_department_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
-    site = factory.SubFactory(SiteFactory)
 
 
 class RegulatoryNoticeLogFactory(DjangoModelFactory):
