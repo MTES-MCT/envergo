@@ -1,6 +1,7 @@
 import logging
 from collections import OrderedDict
 
+from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -1240,7 +1241,10 @@ class FakeMoulinette(Moulinette):
             "existing_surface": 50,
         }
         dummy_data.update(fake_data)
-        super().__init__(dummy_data, dummy_data, site_id=1)  # TODO @Thibault is it ok ?
+        site = Site.objects.get(
+            domain=settings.ENVERGO_AMENAGEMENT_DOMAIN
+        )  # use amenagement site for now
+        super().__init__(dummy_data, dummy_data, site_id=site.id)
 
         # Override the `result_code` for each criterion
         # Since `result_code` is a property, we cannot directly monkeypatch the

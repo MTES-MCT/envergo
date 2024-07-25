@@ -44,6 +44,7 @@ DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 # URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
+# SetUrlConfBasedOnSite middleware will override the urlConf based on the site for a request context
 ROOT_URLCONF = "config.urls_amenagement"
 # https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = "config.wsgi.application"

@@ -10,8 +10,21 @@ SECRET_KEY = env(
     "DJANGO_SECRET_KEY",
     default="xa7B39ApH5wH2VZS28Hk1CfLs7Hta6iPAkModtOEft8iGv3jppqDeGSCvpW1AX4p",
 )
+
+
+ENVERGO_AMENAGEMENT_DOMAIN = "envergo.local"
+ENVERGO_HAIE_DOMAIN = "haie.local"
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "envergo.local", "haie.local"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "0.0.0.0",
+    "127.0.0.1",
+    "envergo.local",
+    "haie.local",
+    ENVERGO_AMENAGEMENT_DOMAIN,
+    ENVERGO_HAIE_DOMAIN,
+]
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -79,5 +92,3 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "local"
-ENVERGO_AMENAGEMENT_DOMAIN = "envergo.local"
-ENVERGO_HAIE_DOMAIN = "haie.local"
