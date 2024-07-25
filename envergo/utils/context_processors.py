@@ -32,7 +32,7 @@ def settings_context(_request):
 def multi_sites_context(_request):
     """Give some useful context to handle multi sites"""
     current_site = _request.site  # this has been populated by a middleware
-    base_template = "base.html"
+    base_template = "amenagement/base.html"
     if current_site.domain == settings.ENVERGO_HAIE_DOMAIN:
         base_template = "haie/base.html"
     return {
