@@ -790,6 +790,8 @@ class Moulinette:
     or other regulations.
     """
 
+    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage", "bcae8"]
+
     def __init__(self, data, raw_data, activate_optional_criteria=True):
         if isinstance(raw_data, QueryDict):
             self.raw_data = raw_data.dict()
@@ -963,7 +965,7 @@ class Moulinette:
         """Find the activated regulations and their criteria."""
 
         regulations = (
-            Regulation.objects.all()
+            Regulation.objects.filter(regulation__in=self.REGULATIONS)
             .order_by("weight")
             .prefetch_related(Prefetch("criteria", queryset=self.criteria))
             .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
@@ -1192,6 +1194,14 @@ class Moulinette:
         for regulation in self.regulations:
             for required_action in regulation.required_actions_interdit():
                 yield required_action
+
+
+class AmenagementMoulinette(Moulinette):
+    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
+
+
+class HaieMoulinette(Moulinette):
+    REGULATIONS = ["bcae8"]
 
 
 class FakeMoulinette(Moulinette):
