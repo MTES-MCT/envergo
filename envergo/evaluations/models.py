@@ -227,10 +227,6 @@ class Evaluation(models.Model):
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
-    site = models.ForeignKey(
-        Site, on_delete=models.CASCADE, default=1
-    )  # EnvErgo amenagement (site_id=1) as default
-
     class Meta:
         verbose_name = "Avis"
         verbose_name_plural = "Avis"
@@ -282,10 +278,16 @@ class Evaluation(models.Model):
             params = form.cleaned_data
             activate_optional_criteria = True
             self._moulinette = Moulinette(
-                params, raw_params, activate_optional_criteria, self.site_id
+                params, raw_params, activate_optional_criteria, self.get_site().id
             )
 
         return self._moulinette
+
+    def get_site(self):
+        # Evaluations exist only for EnvErgo Amenagement.
+        if not hasattr(self, "_site"):
+            self._site = Site.objects.get(domain=settings.ENVERGO_AMENAGEMENT_DOMAIN)
+        return self._site
 
     def can_send_regulatory_reminder(self):
         """Return True if a regulatory reminder can be sent for this evaluation."""
@@ -332,7 +334,7 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
-            "evaluation_url": f"{get_base_url(self.site_id)}{self.get_absolute_url()}",
+            "evaluation_url": f"{get_base_url(self.get_site().id)}{self.get_absolute_url()}",
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
@@ -632,10 +634,6 @@ class Request(models.Model):
     # actually sending the confirmation mails and acks
     submitted = models.BooleanField(_("Submitted"), default=False)
 
-    site = models.ForeignKey(
-        Site, on_delete=models.CASCADE, default=1
-    )  # EnvErgo amenagement (site_id=1) as default
-
     class Meta:
         verbose_name = _("Evaluation request")
         verbose_name_plural = _("Evaluation requests")
@@ -684,7 +682,6 @@ class Request(models.Model):
             project_owner_phone=self.project_owner_phone,
             other_contacts=self.other_contacts,
             send_eval_to_project_owner=self.send_eval_to_project_owner,
-            site_id=self.site_id,
         )
         return evaluation
 

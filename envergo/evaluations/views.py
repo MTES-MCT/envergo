@@ -339,7 +339,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
         (WizardContactForm) is valid.
         """
         super().form_valid(form)
-        form.instance.site_id = self.request.site.id
+
         form_kwargs = self.get_form_kwargs()
         form_kwargs["data"] = self.get_form_data()
         request_form = RequestForm(**form_kwargs)
