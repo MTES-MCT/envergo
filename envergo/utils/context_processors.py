@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.sites.shortcuts import get_current_site
 from django.urls import NoReverseMatch, reverse
 
 
@@ -32,11 +31,10 @@ def settings_context(_request):
 
 def multi_sites_context(_request):
     """Give some useful context to handle multi sites"""
-    current_site = get_current_site(_request)
+    current_site = _request.site  # this has been populated by a middleware
     base_template = "base.html"
     if current_site.domain == settings.ENVERGO_HAIE_DOMAIN:
         base_template = "haie/base.html"
     return {
-        "current_site_id": current_site.id,
         "base_template": base_template,
     }

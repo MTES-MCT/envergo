@@ -4,10 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.views import ShortUrlAdminRedirectView
 from envergo.geodata.views import CatchmentAreaDebug
 
-from .urls import auth_patterns as common_auth_patterns
 from .urls import urlpatterns as common_urlpatterns
-
-auth_patterns = common_auth_patterns
 
 urlpatterns = [
     path("", include("envergo.pages.urls")),
