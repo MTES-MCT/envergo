@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
@@ -29,7 +30,8 @@ def send_account_activation_email(user_email, site_id):
         return
 
     login_url = make_token_login_url(user)
-    base_url = get_base_url(site_id)
+    site = Site.objects.get(id=site_id)
+    base_url = get_base_url(site.domain)
     full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
 
     txt_template = "emails/activate_account.txt"
