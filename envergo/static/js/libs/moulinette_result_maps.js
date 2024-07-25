@@ -56,9 +56,9 @@
       layers: [planLayer],
     };
     if (typeof mapData["fixed"] === 'object') {
-      settings = {...settings, ...mapData["fixed"]}
+      settings = { ...settings, ...mapData["fixed"] }
     }
-    else{
+    else {
       settings["zoomControl"] = !mapData["fixed"];
       settings["dragging"] = !mapData["fixed"];
       settings["doubleClickZoom"] = !mapData["fixed"];
@@ -110,10 +110,6 @@
       return div;
     };
     legend.addTo(map);
-
-    // Bypass an issue with leaflet detecting a bad icon url, caused by
-    // assets versioning
-    L.Icon.Default.prototype.options.imagePath = '/static/leaflet/images/';
 
     // Upon page printing, the map container width is reduced, so we need to
     // make sure the map displays correctly with the new size.
