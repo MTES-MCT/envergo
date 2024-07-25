@@ -1216,6 +1216,18 @@ def get_moulinette_class_from_request(request):
     return cls
 
 
+def get_moulinette_class_from_url(url):
+    """Return the correct Moulinette class depending on the current site."""
+
+    if "envergo" in url:
+        cls = AmenagementMoulinette
+    elif "haie" in url:
+        cls = HaieMoulinette
+    else:
+        raise RuntimeError("Cannot find the moulinette to use")
+    return cls
+
+
 class FakeMoulinette(Moulinette):
     """This is a custom Moulinette subclass used for debugging purpose.
 
