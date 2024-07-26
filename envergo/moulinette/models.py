@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -1247,25 +1248,61 @@ class MoulinetteHaie(Moulinette):
         self.evaluate()
 
         # TODO is this needed ?
-        # self.config
-        # self.templates
+        self.config = self.catalog["config"] = MoulinetteConfig(
+            regulations_available=self.REGULATIONS
+        )
+        self.templates = {}
         # self.perimeters
 
     def get_criteria(self):
-        raise NotImplementedError("Todo")
+        criteria = (
+            Criterion.objects.annotate(
+                distance=Cast(0, IntegerField())
+            )  # TODO: it is a leak from amenagement
+            .order_by("weight")
+            .distinct("weight", "id")
+            .prefetch_related("templates")
+        )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
+        return criteria
 
     def has_config(self):
         return True
 
     def get_catalog_data(self):
-        return {}
+        return self.catalog
 
     def is_evaluation_available(self):
         return True
 
     def summary(self):
+        """Build a data summary, for analytics purpose."""
         # TODO
-        return "summary"
+        summary = {
+            "haie": "this is a haie simulation",
+        }
+        summary.update(self.cleaned_additional_data())
+
+        if self.is_evaluation_available():
+            summary["result"] = self.result_data()
+
+        return summary
+
+
+def get_moulinette_class_from_site(site):
+    """Return the correct Moulinette class depending on the current site."""
+
+    if site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN:
+        cls = MoulinetteAmenagement
+    elif site.domain == settings.ENVERGO_HAIE_DOMAIN:
+        cls = MoulinetteHaie
+    else:
+        raise RuntimeError("Unknown site!")
+    return cls
 
 
 class FakeMoulinette(Moulinette):

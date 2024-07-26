@@ -3,6 +3,7 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db.models import Value as V
 from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
@@ -14,7 +15,11 @@ from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import Criterion, FakeMoulinette, MoulinetteAmenagement
+from envergo.moulinette.models import (
+    Criterion,
+    FakeMoulinette,
+    get_moulinette_class_from_site,
+)
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -77,7 +82,10 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            moulinette = MoulinetteAmenagement(  # TODO
+            MoulinetteClass = get_moulinette_class_from_site(
+                Site(domain=settings.ENVERGO_HAIE_DOMAIN)
+            )  # TODO
+            moulinette = MoulinetteClass(
                 form.cleaned_data, form.data, self.should_activate_optional_criteria()
             )
             context["moulinette"] = moulinette
@@ -235,7 +243,10 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
-            moulinette = MoulinetteAmenagement(  # TODO
+            MoulinetteClass = get_moulinette_class_from_site(
+                Site(domain=settings.ENVERGO_HAIE_DOMAIN)
+            )  # TODO
+            moulinette = MoulinetteClass(
                 form_data, form.data, self.should_activate_optional_criteria()
             )
 
