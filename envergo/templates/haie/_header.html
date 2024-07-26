@@ -1,9 +1,38 @@
-{% extends "_header.html" %}
+{% load pages static %}
 
-{% block header_title %}
-  <span class="fr-header__service-title">Haie</span>
-  <span class="fr-header__service-tagline fr-hidden fr-unhidden-sm">: le guichet unique de la haie</span>
-{% endblock %}
+<div class="fr-header__body">
+  <div class="fr-container">
+    <div class="fr-header__body-row">
+      <div class="fr-header__brand fr-enlarge-link">
+        <div class="fr-header__brand-top">
+          <div class="fr-header__logo">
+            <p class="fr-logo">
+              République
+              <br>
+              Française
+            </p>
+          </div>
+          <div class="fr-header__navbar">
+            <button class="fr-btn--menu fr-btn"
+                    data-fr-opened="false"
+                    aria-controls="modal-menu"
+                    aria-haspopup="menu"
+                    title="Menu">Menu</button>
+          </div>
+        </div>
+        <div class="fr-header__service">
+          <a href="/">
+            <span class="fr-header__service-title">Haie</span>
+            <span class="fr-header__service-tagline fr-hidden fr-unhidden-sm">: le guichet unique de la haie</span>
+          </a>
+        </div>
+      </div>
 
-{% block menu_items %}
-{% endblock menu_items %}
+      {% if user.is_authenticated %}
+        {% include '_user_menu.html' %}
+      {% else %}
+        {% include '_anonymous_menu.html' %}
+      {% endif %}
+    </div>
+  </div>
+</div>
