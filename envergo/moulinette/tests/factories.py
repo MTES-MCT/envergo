@@ -1,7 +1,6 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
 from envergo.moulinette.models import Criterion, MoulinetteConfig, Perimeter, Regulation
 
@@ -21,7 +20,6 @@ class RegulationFactory(DjangoModelFactory):
 
     regulation = "loi_sur_leau"
     has_perimeters = False
-    site = factory.SubFactory(SiteFactory)
 
 
 class CriterionFactory(DjangoModelFactory):

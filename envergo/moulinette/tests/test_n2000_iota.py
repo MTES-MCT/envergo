@@ -1,6 +1,5 @@
 import pytest
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import (
@@ -10,6 +9,11 @@ from envergo.moulinette.tests.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +56,7 @@ def moulinette_data(footprint):
 def test_zh_medium_footprint_inside_wetlands(moulinette_data):
     """Project with 700 <= footprint <= 1000m² within a wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
 

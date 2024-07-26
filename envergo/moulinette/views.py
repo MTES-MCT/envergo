@@ -81,7 +81,6 @@ class MoulinetteMixin:
                 form.cleaned_data,
                 form.data,
                 self.should_activate_optional_criteria(),
-                self.request.site.id,
             )
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
@@ -242,7 +241,6 @@ class MoulinetteMixin:
                 form_data,
                 form.data,
                 self.should_activate_optional_criteria(),
-                self.request.site.id,
             )
 
         additional_forms = self.get_additional_forms(moulinette)

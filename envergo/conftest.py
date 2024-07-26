@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from django.contrib.sites.models import Site
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
@@ -19,6 +21,11 @@ def user() -> User:
 @pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
+
+
+@pytest.fixture
+def site() -> Site:
+    return SiteFactory()
 
 
 # Some views trigger a call to a remote API, and we want to make sure it is mocked

@@ -7,7 +7,6 @@ from urllib.parse import urlencode, urlparse
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
-from django.contrib.sites.models import Site
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
@@ -278,16 +277,10 @@ class Evaluation(models.Model):
             params = form.cleaned_data
             activate_optional_criteria = True
             self._moulinette = Moulinette(
-                params, raw_params, activate_optional_criteria, self.get_site().id
+                params, raw_params, activate_optional_criteria
             )
 
         return self._moulinette
-
-    def get_site(self):
-        # Evaluations exist only for EnvErgo Amenagement.
-        if not hasattr(self, "_site"):
-            self._site = Site.objects.get(domain=settings.ENVERGO_AMENAGEMENT_DOMAIN)
-        return self._site
 
     def can_send_regulatory_reminder(self):
         """Return True if a regulatory reminder can be sent for this evaluation."""
@@ -334,7 +327,8 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
-            "evaluation_url": f"{get_base_url(self.get_site().domain)}{self.get_absolute_url()}",
+            # Evaluations exist only for EnvErgo Amenagement:
+            "evaluation_url": f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}",
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)

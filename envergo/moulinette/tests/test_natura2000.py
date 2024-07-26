@@ -1,11 +1,15 @@
 import pytest
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Moulinette
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +54,7 @@ def moulinette_data(footprint):
 def test_zh_small_footprint_outside_wetlands(moulinette_data):
     """Project with footprint < 100m² are not subject to the 3310."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_concerne"
@@ -60,7 +64,7 @@ def test_zh_small_footprint_outside_wetlands(moulinette_data):
 def test_zh_small_footprint_inside_wetlands(moulinette_data):
     """Project with footprint < 100m² are not subject to the 3310."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_soumis"
@@ -70,7 +74,7 @@ def test_zh_small_footprint_inside_wetlands(moulinette_data):
 def test_zh_large_footprint_within_wetlands(moulinette_data):
     """Project with footprint >= 100m² within a wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "soumis"
@@ -80,7 +84,7 @@ def test_zh_large_footprint_within_wetlands(moulinette_data):
 def test_zh_large_footprint_close_to_wetlands(moulinette_data):
     """Project with footprint >= 100m² close to a wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
     moulinette.evaluate()
@@ -91,7 +95,7 @@ def test_zh_large_footprint_close_to_wetlands(moulinette_data):
 def test_zh_large_footprint_inside_potential_wetland(moulinette_data):
     """Project with footprint >= 100m² inside a potential wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_10m"] = True
@@ -103,7 +107,7 @@ def test_zh_large_footprint_inside_potential_wetland(moulinette_data):
 def test_zh_large_footprint_outside_wetlands(moulinette_data):
     """Project with footprint > 100m² outside a wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_concerne"
 
@@ -113,7 +117,7 @@ def test_zi_small_footprint(moulinette_data):
     """Project with footprint < 200m² are not subject to the 3320."""
 
     # Make sure the project in in a flood zone
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "non_soumis"
@@ -123,7 +127,7 @@ def test_zi_small_footprint(moulinette_data):
 def test_zi_medium_footprint_within_flood_zones(moulinette_data):
     """Project with footprint >= 200m² within a flood zone."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "soumis"
@@ -134,6 +138,6 @@ def test_zi_medium_footprint_outside_flood_zones(moulinette_data):
     """Project footprint >= 200m² outside a flood zone."""
 
     # Make sure the project in in a flood zone
-    moulinette = Moulinette(moulinette_data, moulinette_data, site_id=SiteFactory().id)
+    moulinette = Moulinette(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "non_concerne"

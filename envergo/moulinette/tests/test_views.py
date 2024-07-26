@@ -1,12 +1,15 @@
 import pytest
-from django.contrib.sites.models import Site
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
 
 
 HOME_TITLE = "Simulez votre projet en phase amont"
@@ -16,11 +19,6 @@ FORM_ERROR = (
 )
 UNAVAIL = "Le simulateur EnvErgo n'est pas encore déployé dans votre département."
 ADMIN_MSG = "Le simulateur n'est pas activé dans ce département"
-
-
-@pytest.fixture(autouse=True)
-def site() -> Site:
-    return SiteFactory()
 
 
 def test_moulinette_home(client):
