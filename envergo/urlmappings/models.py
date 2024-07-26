@@ -15,7 +15,7 @@ def generate_key():
     return key
 
 
-class Mapping(models.Model):
+class UrlMapping(models.Model):
     """A mapping between a short key and a URL."""
 
     key = models.CharField(max_length=20, unique=True, default=generate_key)
