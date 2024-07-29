@@ -1,4 +1,4 @@
-(function (exports, _paq) {
+(function (exports, _paq, UrlMapping) {
   'use strict';
 
   const ShareModal = function (dialogElt) {
@@ -16,6 +16,13 @@
 
   ShareModal.prototype.onModalDisclose = function () {
     _paq.push(['trackEvent', 'ShareDialog', 'Disclose']);
+
+    const mapping = new UrlMapping();
+    mapping.create(this.urlInput.value).then((json) => {
+      this.urlInput.value = json.short_url;
+    }).catch((error) => {
+      console.log("Cannot create url mapping", error);
+    });
   };
 
   ShareModal.prototype.onModalConceal = function () {
@@ -34,7 +41,7 @@
     _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
   };
 
-})(this, window._paq);
+})(this, window._paq, UrlMapping);
 
 window.addEventListener('load', function () {
   const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
