@@ -9,6 +9,7 @@ from django.views import defaults as default_views
 
 from envergo.evaluations.views import ShortUrlAdminRedirectView
 from envergo.geodata.views import CatchmentAreaDebug
+from envergo.urlmappings.views import UrlMappingRedirect
 
 # We redefine django auth patterns for better customization
 auth_patterns = [
@@ -70,6 +71,11 @@ urlpatterns = [
     path(_("analytics/"), include("envergo.analytics.urls")),
     path(_("feedback/"), include("envergo.analytics.urls")),
     path("urlmappings/", include("envergo.urlmappings.urls")),
+    path(
+        "simulation/<slug:key>/",
+        UrlMappingRedirect.as_view(),
+        name="urlmapping_redirect",
+    ),
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
