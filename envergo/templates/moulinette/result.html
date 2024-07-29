@@ -35,6 +35,7 @@
             Cette simulation est <a title="Partager l'avis réglementaire"
     href="{{ current_url }}"
     target="_blank"
+    class="share-link"
     rel="noopener external">consultable en ligne</a>
           </p>
 
@@ -86,8 +87,9 @@
                       data-btn="bottom">Partager cette page par email</button>
             </li>
             <li>
-              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn"
-                      onclick="window.print();">Imprimer cette simulation</button>
+              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn print-btn">
+                Imprimer cette simulation
+              </button>
             </li>
           </ul>
 
@@ -150,7 +152,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' %}
+  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True %}
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal_useful.html' %}
     {% include 'analytics/_feedback_modal_useless.html' %}
@@ -189,4 +191,5 @@
           src="{% static 'js/libs/moulinette_result_actions_banner.js' %}"></script>
   <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_print_buttons.js' %}"></script>
 {% endblock %}

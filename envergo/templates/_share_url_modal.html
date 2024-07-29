@@ -1,6 +1,7 @@
 <dialog aria-labelledby="share-modal-title"
         role="dialog"
         id="share-modal"
+        data-shorten-url="{{ shorten_url|yesno:"true,false,false" }}"
         class="fr-modal">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
