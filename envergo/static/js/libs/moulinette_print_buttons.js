@@ -21,10 +21,10 @@
       .then((json) => {
         this.shareLinks.forEach(link => { link.href = json.short_url; });
       })
-      .then(() => { window.print() })
       .catch((error) => {
         console.log("Cannot create url mapping", error);
-      });
+      })
+      .finally(() => { window.print() });
   };
 
 })(this, window.UrlMapping);
