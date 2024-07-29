@@ -17,3 +17,8 @@ class UrlMappingCreateView(CreateView):
         return JsonResponse(
             {"short_url": short_url, "key": mapping.key, "url": mapping.url}, status=201
         )
+
+    def form_invalid(self, form):
+        return JsonResponse(
+            {"message": "Cannot create mapping", "errors": form.errors}, status=400
+        )
