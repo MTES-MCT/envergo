@@ -5,6 +5,7 @@
     this.dialogElt = dialogElt;
     this.urlInput = dialogElt.querySelector("input[type=url]");
     this.shareBtn = dialogElt.querySelector("button[type=submit]");
+    this.firstDisclosed = true;
   };
   exports.ShareModal = ShareModal;
 
@@ -17,12 +18,16 @@
   ShareModal.prototype.onModalDisclose = function () {
     _paq.push(['trackEvent', 'ShareDialog', 'Disclose']);
 
-    const mapping = new UrlMapping();
-    mapping.create(this.urlInput.value).then((json) => {
-      this.urlInput.value = json.short_url;
-    }).catch((error) => {
-      console.log("Cannot create url mapping", error);
-    });
+    if (this.firstDisclosed) {
+      const mapping = new UrlMapping();
+      mapping.create(this.urlInput.value).then((json) => {
+        this.urlInput.value = json.short_url;
+      }).catch((error) => {
+        console.log("Cannot create url mapping", error);
+      });
+    }
+
+    this.firstDisclosed = false;
   };
 
   ShareModal.prototype.onModalConceal = function () {
