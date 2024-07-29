@@ -69,7 +69,7 @@ urlpatterns = [
     path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
     path(_("analytics/"), include("envergo.analytics.urls")),
     path(_("feedback/"), include("envergo.analytics.urls")),
-    path("urlmappings", include("envergo.urlmappings.urls")),
+    path("urlmappings/", include("envergo.urlmappings.urls")),
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
