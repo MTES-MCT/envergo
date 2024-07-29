@@ -2,6 +2,8 @@ import secrets
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 def generate_key():
@@ -20,6 +22,7 @@ class UrlMapping(models.Model):
 
     key = models.CharField(max_length=20, unique=True, default=generate_key)
     url = models.URLField()
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     def __str__(self):
         return f"{self.key}"
