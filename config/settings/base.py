@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",
     "envergo.admin.config.EnvergoAdminConfig",
+    "envergo.urlmappings",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -321,6 +322,8 @@ LEAFLET_CONFIG = {
 }
 
 ENVERGO_REFERENCE_LENGTH = 6
+
+URLMAPPING_KEY_LENGTH = 6
 
 VISITOR_COOKIE_NAME = "visitorid"
 

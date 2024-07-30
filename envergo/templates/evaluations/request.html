@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load evaluations leaflet_tags static %}
+{% load evaluations static %}
 
 {% block title %}Demandez une avis réglementaire{% endblock %}
 
@@ -102,13 +102,11 @@
 {% endblock %}
 
 {% block extra_css %}
-  {% leaflet_css %}
   <link rel="stylesheet"
         href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
-  {% leaflet_js %}
   <script defer
           src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
   <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
