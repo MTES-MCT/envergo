@@ -327,7 +327,8 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
-            "evaluation_url": f"{get_base_url()}{self.get_absolute_url()}",
+            # Evaluations exist only for EnvErgo Amenagement:
+            "evaluation_url": f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}",
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)

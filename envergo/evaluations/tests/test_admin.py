@@ -24,6 +24,11 @@ def form_data():
     }
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 def test_create_eval_from_request(client, admin_user, eval_request):
     qs = Evaluation.objects.all()
     assert qs.count() == 0

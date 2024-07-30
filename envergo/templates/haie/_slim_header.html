@@ -1,0 +1,38 @@
+{% load pages static %}
+
+<div class="fr-header__body">
+  <div class="fr-container">
+    <div class="fr-header__body-row">
+      <div class="fr-header__brand fr-enlarge-link">
+        <div class="fr-header__brand-top">
+          <div class="fr-header__logo">
+            <img src="{% static 'images/marianne.svg' %}" alt="République française">
+          </div>
+          <div class="fr-header__navbar">
+            <button class="fr-btn--menu fr-btn"
+                    data-fr-opened="false"
+                    aria-controls="modal-menu-slim"
+                    aria-haspopup="menu"
+                    title="Menu">Menu</button>
+          </div>
+        </div>
+        <div class="fr-header__service">
+          <a href="/">
+            <p class="fr-header__service-title">Haie</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fr-header__menu fr-modal" id="modal-menu-slim">
+  <div class="fr-container">
+    <button class="fr-btn--close fr-btn"
+            aria-controls="modal-menu-slim"
+            title="Fermer"
+            aria-haspopup="slim-menu"
+            title="Menu">Fermer</button>
+    <div class="fr-header__menu-links"></div>
+  </div>
+</div>

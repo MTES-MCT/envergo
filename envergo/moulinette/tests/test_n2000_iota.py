@@ -12,6 +12,11 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
+@pytest.fixture(autouse=True)
 def loisurleau_criteria(france_map):  # noqa
     MoulinetteConfigFactory(
         is_activated=True,

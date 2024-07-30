@@ -17,6 +17,11 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
+@pytest.fixture(autouse=True)
 def sage_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="sage", has_perimeters=True)
     perimeter = PerimeterFactory(

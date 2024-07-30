@@ -19,6 +19,11 @@ from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 @pytest.fixture()
 def moulinette_config(loire_atlantique_department):  # noqa
     MoulinetteConfigFactory(

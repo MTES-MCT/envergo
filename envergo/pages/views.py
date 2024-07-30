@@ -19,6 +19,10 @@ class HomeView(MoulinetteMixin, FormView):
     template_name = "pages/home.html"
 
 
+class HomeHaieView(MoulinetteMixin, FormView):
+    template_name = "haie/pages/home.html"
+
+
 class GeometriciansView(MoulinetteMixin, FormView):
     template_name = "pages/geometricians.html"
 
@@ -111,10 +115,6 @@ class GeometriciansView(MoulinetteMixin, FormView):
         ]
 
         return context
-
-
-class StatsView(TemplateView):
-    template_name = "pages/stats.html"
 
 
 class LegalMentionsView(TemplateView):

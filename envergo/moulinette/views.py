@@ -78,7 +78,9 @@ class MoulinetteMixin:
         form = context["form"]
         if form.is_valid():
             moulinette = Moulinette(
-                form.cleaned_data, form.data, self.should_activate_optional_criteria()
+                form.cleaned_data,
+                form.data,
+                self.should_activate_optional_criteria(),
             )
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
@@ -236,7 +238,9 @@ class MoulinetteMixin:
             moulinette = self.moulinette
         else:
             moulinette = Moulinette(
-                form_data, form.data, self.should_activate_optional_criteria()
+                form_data,
+                form.data,
+                self.should_activate_optional_criteria(),
             )
 
         additional_forms = self.get_additional_forms(moulinette)
@@ -309,8 +313,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/home.html"
         elif is_edit:
             template_name = "moulinette/home.html"
+        elif self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+            template_name = "haie/moulinette/result.html"
         else:
-            template_name = "moulinette/result.html"
+            template_name = "amenagement/moulinette/result.html"
 
         return [template_name]
 
@@ -462,14 +468,3 @@ class MoulinetteDebug(FormView):
             template_name = "moulinette/debug.html"
 
         return [template_name]
-
-
-class MoulinetteRegulationResult(MoulinetteResult, FormView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        moulinette = context["moulinette"]
-
-        regulation_slug = self.kwargs.get("regulation")
-        context["regulations"] = [getattr(moulinette, regulation_slug)]
-
-        return context

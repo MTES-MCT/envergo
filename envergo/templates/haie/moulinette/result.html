@@ -1,0 +1,16 @@
+{% extends 'moulinette/result.html' %}
+
+{% block header %}
+  <header role="banner" class="fr-header header-sticky header-slim">
+    {% include 'haie/_slim_header.html' %}
+
+  </header>
+{% endblock %}
+
+{% block include_mobile_footer %}
+  {% include 'haie/_footer.html' with do_not_load_modal="true" %}
+{% endblock %}
+
+{% block include_desktop_footer %}
+  {% include 'haie/_footer.html' %}
+{% endblock %}

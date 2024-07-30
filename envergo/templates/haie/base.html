@@ -1,0 +1,21 @@
+{% extends "multisite_base.html" %}
+
+{% block app_title %}
+  {% block title %}
+  {% endblock title %}
+  — Haie
+{% endblock %}
+
+{% block description %}Guichet unique de la haie{% endblock %}
+
+{% block include_slim_header %}
+  {% include 'haie/_slim_header.html' %}
+{% endblock %}
+
+{% block include_header %}
+  {% include 'haie/_header.html' %}
+{% endblock %}
+
+{% block footer %}
+  {% include 'haie/_footer.html' %}
+{% endblock %}
