@@ -7,6 +7,10 @@
     {
       "command": "21 */2 * * * python manage.py delete_test_evalreqs",
       "size": "M"
+    },
+    {
+      "command": "10 * * * * python manage.py new_files_alert",
+      "size": "M"
     }
   ]
 }

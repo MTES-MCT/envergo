@@ -712,6 +712,7 @@ class RequestFile(models.Model):
         storage=get_upload_storage,
     )
     name = models.CharField(_("Name"), blank=True, max_length=1024)
+    uploaded_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = _("Request file")
