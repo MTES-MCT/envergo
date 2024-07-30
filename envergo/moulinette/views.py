@@ -468,14 +468,3 @@ class MoulinetteDebug(FormView):
             template_name = "moulinette/debug.html"
 
         return [template_name]
-
-
-class MoulinetteRegulationResult(MoulinetteResult, FormView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        moulinette = context["moulinette"]
-
-        regulation_slug = self.kwargs.get("regulation")
-        context["regulations"] = [getattr(moulinette, regulation_slug)]
-
-        return context
