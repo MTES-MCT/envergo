@@ -805,17 +805,104 @@ class Moulinette(ABC):
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
+        self.department = self.get_department()
+        if hasattr(self.department, "moulinette_config"):
+            self.config = self.catalog["config"] = self.department.moulinette_config
+            self.templates = {t.key: t for t in self.config.templates.all()}
+
+        self.perimeters = self.get_perimeters()
+        self.criteria = self.get_criteria()
+        self.regulations = self.get_regulations()
+        self.evaluate()
 
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
 
+    def get_department(self):
+        lng_lat = self.catalog["lng_lat"]
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
+        return department
+
     def get_template(self, template_key):
         return self.templates.get(template_key, None)
 
-    @abstractmethod
+    def get_catalog_data(self):
+        """Fetch / compute data required for further computations."""
+
+        catalog = {}
+
+        lng = self.catalog["lng"]
+        lat = self.catalog["lat"]
+        catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
+        return catalog
+
     def get_criteria(self):
-        raise NotImplementedError
+        coords = self.catalog["coords"]
+
+        criteria = (
+            Criterion.objects.filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .order_by("weight")
+            .distinct("weight", "id")
+            .select_related("activation_map")
+            .prefetch_related("templates")
+            .defer("activation_map__geometry")
+        )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
+        return criteria
+
+    def get_perimeters(self):
+        coords = self.catalog["coords"]
+
+        perimeters = (
+            Perimeter.objects.filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .order_by("id")
+            .distinct("id")
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+        )
+
+        return perimeters
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -824,20 +911,34 @@ class Moulinette(ABC):
             Regulation.objects.filter(regulation__in=self.REGULATIONS)
             .order_by("weight")
             .prefetch_related(Prefetch("criteria", queryset=self.criteria))
+            .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
         )
         return regulations
 
-    @abstractmethod
-    def get_catalog_data(self):
-        raise NotImplementedError
+    def get_zones(self, coords, radius=200):
+        """Return the Zone objects containing the queried coordinates."""
 
-    @abstractmethod
+        zones = (
+            Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .annotate(geom=Cast("geometry", MultiPolygonField()))
+            .select_related("map")
+            .defer("map__geometry")
+            .order_by("distance", "map__name")
+        )
+        return zones
+
     def has_config(self):
-        raise NotImplementedError
+        config = getattr(self.department, "moulinette_config", None)
+        return bool(config)
 
-    @abstractmethod
     def is_evaluation_available(self):
-        raise NotImplementedError
+        """Moulinette evaluations are only available on some departments.
+
+        When a department is available, we fill it's contact data.
+        """
+        config = getattr(self.department, "moulinette_config", None)
+        return config and config.is_activated
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
@@ -973,10 +1074,27 @@ class Moulinette(ABC):
                 forms.append(form)
         return forms
 
-    @abstractmethod
     def summary(self):
         """Build a data summary, for analytics purpose."""
-        raise NotImplementedError
+
+        department = self.department
+        department_code = department.department if department else ""
+
+        summary = {
+            "lat": f'{self.catalog["lat"]:.5f}',
+            "lng": f'{self.catalog["lng"]:.5f}',
+            "existing_surface": self.catalog["existing_surface"],
+            "created_surface": self.catalog["created_surface"],
+            "final_surface": self.catalog["final_surface"],
+            "department": department_code,
+            "is_eval_available": self.is_evaluation_available(),
+        }
+        summary.update(self.cleaned_additional_data())
+
+        if self.is_evaluation_available():
+            summary["result"] = self.result_data()
+
+        return summary
 
     @property
     def result(self):
@@ -1024,113 +1142,9 @@ class Moulinette(ABC):
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
 
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
-        super().__init__(data, raw_data, activate_optional_criteria)
-        self.department = self.get_department()
-        if hasattr(self.department, "moulinette_config"):
-            self.config = self.catalog["config"] = self.department.moulinette_config
-            self.templates = {t.key: t for t in self.config.templates.all()}
-
-        self.perimeters = self.get_perimeters()
-
-        self.criteria = self.get_criteria()
-        self.regulations = self.get_regulations()
-        self.evaluate()
-
-    def get_department(self):
-        lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
-            .first()
-        )
-        return department
-
-    def get_regulations(self):
-        """Find the activated regulations and their criteria."""
-
-        regulations = (
-            super()
-            .get_regulations()
-            .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
-        )
-        return regulations
-
-    def get_perimeters(self):
-        coords = self.catalog["coords"]
-
-        perimeters = (
-            Perimeter.objects.filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
-            .annotate(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
-                )
-            )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("id")
-            .distinct("id")
-            .select_related("activation_map")
-            .defer("activation_map__geometry")
-        )
-
-        return perimeters
-
-    def get_criteria(self):
-        coords = self.catalog["coords"]
-
-        criteria = (
-            Criterion.objects.filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
-            .annotate(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
-                )
-            )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("weight")
-            .distinct("weight", "id")
-            .select_related("activation_map")
-            .prefetch_related("templates")
-            .defer("activation_map__geometry")
-        )
-
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
-        return criteria
-
-    def has_config(self):
-        config = getattr(self.department, "moulinette_config", None)
-        return bool(config)
-
     def get_catalog_data(self):
-        """Fetch / compute data required for further computations."""
+        catalog = super().get_catalog_data()
 
-        catalog = {}
-
-        lng = self.catalog["lng"]
-        lat = self.catalog["lat"]
-        catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
@@ -1193,104 +1207,9 @@ class MoulinetteAmenagement(Moulinette):
 
         return catalog
 
-    def get_zones(self, coords, radius=200):
-        """Return the Zone objects containing the queried coordinates."""
-
-        zones = (
-            Zone.objects.filter(geometry__dwithin=(coords, D(m=radius)))
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .annotate(geom=Cast("geometry", MultiPolygonField()))
-            .select_related("map")
-            .defer("map__geometry")
-            .order_by("distance", "map__name")
-        )
-        return zones
-
-    def is_evaluation_available(self):
-        """Moulinette evaluations are only available on some departments.
-
-        When a department is available, we fill it's contact data.
-        """
-        config = getattr(self.department, "moulinette_config", None)
-        return config and config.is_activated
-
-    def summary(self):
-        """Build a data summary, for analytics purpose."""
-
-        department = self.department
-        department_code = department.department if department else ""
-
-        summary = {
-            "lat": f'{self.catalog["lat"]:.5f}',
-            "lng": f'{self.catalog["lng"]:.5f}',
-            "existing_surface": self.catalog["existing_surface"],
-            "created_surface": self.catalog["created_surface"],
-            "final_surface": self.catalog["final_surface"],
-            "department": department_code,
-            "is_eval_available": self.is_evaluation_available(),
-        }
-        summary.update(self.cleaned_additional_data())
-
-        if self.is_evaluation_available():
-            summary["result"] = self.result_data()
-
-        return summary
-
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
-
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
-        super().__init__(data, raw_data, activate_optional_criteria)
-
-        self.criteria = self.get_criteria()
-        self.regulations = self.get_regulations()
-        self.evaluate()
-
-        # TODO is this needed ?
-        self.config = self.catalog["config"] = MoulinetteConfig(
-            regulations_available=self.REGULATIONS
-        )
-        self.templates = {}
-        # self.perimeters
-
-    def get_criteria(self):
-        criteria = (
-            Criterion.objects.annotate(
-                distance=Cast(0, IntegerField())
-            )  # TODO: it is a leak from amenagement
-            .order_by("weight")
-            .distinct("weight", "id")
-            .prefetch_related("templates")
-        )
-
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
-        return criteria
-
-    def has_config(self):
-        return True
-
-    def get_catalog_data(self):
-        return self.catalog
-
-    def is_evaluation_available(self):
-        return True
-
-    def summary(self):
-        """Build a data summary, for analytics purpose."""
-        # TODO
-        summary = {
-            "haie": "this is a haie simulation",
-        }
-        summary.update(self.cleaned_additional_data())
-
-        if self.is_evaluation_available():
-            summary["result"] = self.result_data()
-
-        return summary
 
 
 def get_moulinette_class_from_site(site):
@@ -1302,6 +1221,18 @@ def get_moulinette_class_from_site(site):
         cls = MoulinetteHaie
     else:
         raise RuntimeError("Unknown site!")
+    return cls
+
+
+def get_moulinette_class_from_url(url):
+    """Return the correct Moulinette class depending on the current site."""
+
+    if "envergo" in url:
+        cls = MoulinetteAmenagement
+    elif "haie" in url:
+        cls = MoulinetteHaie
+    else:
+        raise RuntimeError("Cannot find the moulinette to use")
     return cls
 
 
