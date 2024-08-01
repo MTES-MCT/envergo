@@ -20,6 +20,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
+from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
 
@@ -841,6 +842,14 @@ class Moulinette(ABC):
             raise AttributeError("No result template found.")
         return self.result_template
 
+    @classmethod
+    def get_main_form_class(cls):
+        """Return the form class for the main questions."""
+
+        if not hasattr(cls, "main_form_class"):
+            raise AttributeError("No main form class found.")
+        return cls.main_form_class
+
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
@@ -1151,6 +1160,7 @@ class Moulinette(ABC):
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
+    main_form_class = MoulinetteFormAmenagement
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
@@ -1221,6 +1231,7 @@ class MoulinetteAmenagement(Moulinette):
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
     result_template = "haie/moulinette/result.html"
+    main_form_class = MoulinetteFormHaie
 
 
 def get_moulinette_class_from_site(site):

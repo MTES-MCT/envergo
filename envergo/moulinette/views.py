@@ -13,7 +13,6 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
-from envergo.moulinette.forms import MoulinetteForm
 from envergo.moulinette.models import Criterion, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
@@ -28,7 +27,10 @@ BODY_TPL = {
 class MoulinetteMixin:
     """Display the moulinette form and results."""
 
-    form_class = MoulinetteForm
+    def get_form_class(self):
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        FormClass = MoulinetteClass.get_main_form_class()
+        return FormClass
 
     def get_initial(self):
         return self.request.GET

@@ -2,7 +2,11 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 
-class MoulinetteForm(forms.Form):
+class BaseMoulinetteForm(forms.Form):
+    pass
+
+
+class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = forms.IntegerField(
         label=_("Surface created by the project"),
         required=True,
@@ -58,3 +62,7 @@ class MoulinetteForm(forms.Form):
                     _("The total surface must be greater than the created surface"),
                 )
         return data
+
+
+class MoulinetteFormHaie(BaseMoulinetteForm):
+    pass
