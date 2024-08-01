@@ -3,7 +3,6 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.db.models import Value as V
 from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
@@ -82,9 +81,7 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            MoulinetteClass = get_moulinette_class_from_site(
-                Site(domain=settings.ENVERGO_HAIE_DOMAIN)
-            )  # TODO
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
             moulinette = MoulinetteClass(
                 form.cleaned_data, form.data, self.should_activate_optional_criteria()
             )
@@ -243,9 +240,7 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
-            MoulinetteClass = get_moulinette_class_from_site(
-                Site(domain=settings.ENVERGO_HAIE_DOMAIN)
-            )  # TODO
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
             moulinette = MoulinetteClass(
                 form_data, form.data, self.should_activate_optional_criteria()
             )
