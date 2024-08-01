@@ -830,7 +830,16 @@ class Moulinette(ABC):
         return department
 
     def get_template(self, template_key):
+        """Return the MoulinetteTemplate with the given key."""
+
         return self.templates.get(template_key, None)
+
+    def get_result_template(self):
+        """Return the template to display the result page."""
+
+        if not hasattr(self, "result_template"):
+            raise AttributeError("No result template found.")
+        return self.result_template
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
@@ -1141,6 +1150,7 @@ class Moulinette(ABC):
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
+    result_template = "amenagement/moulinette/result.html"
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
@@ -1210,6 +1220,7 @@ class MoulinetteAmenagement(Moulinette):
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
+    result_template = "haie/moulinette/result.html"
 
 
 def get_moulinette_class_from_site(site):

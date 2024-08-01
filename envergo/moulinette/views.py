@@ -315,10 +315,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/home.html"
         elif is_edit:
             template_name = "moulinette/home.html"
-        elif self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
-            template_name = "haie/moulinette/result.html"
         else:
-            template_name = "amenagement/moulinette/result.html"
+            template_name = moulinette.get_result_template()
 
         return [template_name]
 
