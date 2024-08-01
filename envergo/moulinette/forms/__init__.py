@@ -1,9 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Department
-from envergo.moulinette.regulations import CriterionEvaluator
-
 
 class MoulinetteForm(forms.Form):
     created_surface = forms.IntegerField(
@@ -61,33 +58,3 @@ class MoulinetteForm(forms.Form):
                     _("The total surface must be greater than the created surface"),
                 )
         return data
-
-
-EMPTY_CHOICE = ("", "---------")
-
-
-class MoulinetteDebugForm(forms.Form):
-    """For debugging purpose.
-
-    This form dynamically creates a field for every `CriterionEvaluator` subclass.
-    """
-
-    department = forms.ModelChoiceField(
-        label=_("Department"),
-        required=True,
-        queryset=Department.objects.all(),
-        to_field_name="department",
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        criteria = [criterion for criterion in CriterionEvaluator.__subclasses__()]
-        for criterion in criteria:
-            field_name = f"{criterion.slug}"
-            choices = [EMPTY_CHOICE] + list(zip(criterion.CODES, criterion.CODES))
-            self.fields[field_name] = forms.ChoiceField(
-                label=criterion.choice_label,
-                choices=choices,
-                required=False,
-            )

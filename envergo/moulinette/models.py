@@ -20,7 +20,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
 
 # WGS84, geodetic coordinates, units in degrees
@@ -1246,56 +1246,3 @@ def get_moulinette_class_from_url(url):
     else:
         raise RuntimeError("Cannot find the moulinette to use")
     return cls
-
-
-class FakeMoulinette(Moulinette):
-    """This is a custom Moulinette subclass used for debugging purpose.
-
-    A single moulinette simulation tests many criteria, each criterion can
-    have a different result code, resulting in specific regulation results.
-
-    Every single criterion unique result is displayed with a dedicated template.
-    Moreover, some data may change depending on the department the simulation
-    is ran.
-
-    For this reason, it can be very cumbersome for the EnvErgo team members
-    to review and test each and every possibility.
-
-    That's why a custom page was created, allowing to manually select the exact
-    Moulinette result combination we want to display.
-
-    This `FakeMoulinette` is a utility class that must be initialized with a
-    dict of data where each key is a single criterion slug and the associated
-    value is the `result_code` we want the criterion to return.
-    """
-
-    def __init__(self, fake_data):
-        dummy_data = {
-            "lat": 1.7,
-            "lng": 47,
-            "created_surface": 50,
-            "existing_surface": 50,
-        }
-        dummy_data.update(fake_data)
-        super().__init__(dummy_data, dummy_data)
-
-        # Override the `result_code` for each criterion
-        # Since `result_code` is a property, we cannot directly monkeypatch the
-        # property.
-        # Hence, we have to override the value at the class level
-        for regulation in self.regulations:
-            for criterion in regulation.criterions:
-                setattr(
-                    criterion.__class__, "result_code", self.catalog[criterion.slug]
-                )
-
-    def get_criterions(self):
-        criteria = [
-            criterion
-            for criterion in CriterionEvaluator.__subclasses__()
-            if self.catalog[criterion.slug]
-        ]
-        return criteria
-
-    def get_department(self):
-        return self.catalog["department"]

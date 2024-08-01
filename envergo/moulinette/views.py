@@ -13,12 +13,8 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
-from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import (
-    Criterion,
-    FakeMoulinette,
-    get_moulinette_class_from_site,
-)
+from envergo.moulinette.forms import MoulinetteForm
+from envergo.moulinette.models import Criterion, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -421,50 +417,3 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["edit_url"] = edit_url
 
         return context
-
-
-class MoulinetteDebug(FormView):
-    """Visualize the moulinette result for a specific criteria result combination.
-
-    See `envergo.moulinette.models.FakeMoulinette` for more details.
-    """
-
-    form_class = MoulinetteDebugForm
-
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
-        }
-
-        # This form is submitted with GET, not POST
-        GET = self.request.GET
-        if GET:
-            kwargs.update({"data": GET})
-
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form = context["form"]
-        if form.is_valid():
-            context["moulinette"] = self.moulinette = FakeMoulinette(form.cleaned_data)
-            context.update(self.moulinette.catalog)
-
-        return context
-
-    def get_template_names(self):
-        """Check wich template to use depending on the moulinette result."""
-
-        moulinette = getattr(self, "moulinette", None)
-        is_admin = self.request.user.is_staff
-
-        if moulinette and (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/debug_result.html"
-        elif moulinette:
-            template_name = "moulinette/debug_result_non_disponible.html"
-        else:
-            template_name = "moulinette/debug.html"
-
-        return [template_name]

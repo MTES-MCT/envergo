@@ -2,7 +2,7 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteDebug, MoulinetteHome, MoulinetteResult
+from envergo.moulinette.views import MoulinetteHome, MoulinetteResult
 
 urlpatterns = [
     # Redirections history
@@ -49,5 +49,4 @@ urlpatterns = [
             ]
         ),
     ),
-    path("debug/", MoulinetteDebug.as_view(), name="moulinette_debug"),
 ]
