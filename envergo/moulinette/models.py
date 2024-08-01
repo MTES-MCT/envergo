@@ -1,5 +1,5 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections import OrderedDict
 
 from django.conf import settings
@@ -1215,12 +1215,13 @@ class MoulinetteHaie(Moulinette):
 def get_moulinette_class_from_site(site):
     """Return the correct Moulinette class depending on the current site."""
 
-    if site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN:
-        cls = MoulinetteAmenagement
-    elif site.domain == settings.ENVERGO_HAIE_DOMAIN:
-        cls = MoulinetteHaie
-    else:
-        raise RuntimeError("Unknown site!")
+    domain_class = {
+        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
+        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
+    }
+    cls = domain_class.get(site.domain, None)
+    if cls is None:
+        raise RuntimeError(f"Unknown site for domain {site.domain}")
     return cls
 
 
