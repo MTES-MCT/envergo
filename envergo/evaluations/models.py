@@ -538,12 +538,14 @@ class EvaluationEmail:
                 "action_requise",
             )
         ):
-            if self.moulinette.sage.perimeter.contact_email:
-                bcc_recipients.append(self.moulinette.sage.perimeter.contact_email)
-            else:
-                logger.warning(
-                    f"Manque l'email du périmètre de SAGE : {self.moulinette.sage.perimeter.name}"
-                )
+            perimeters = self.moulinette.sage.perimeters.all()
+            for perimeter in perimeters:
+                if perimeter.contact_email:
+                    bcc_recipients.append(perimeter.contact_email)
+                else:
+                    logger.warning(
+                        f"Manque l'email du périmètre de SAGE : {perimeter.name}"
+                    )
 
         return sorted(list(set(bcc_recipients)))
 
