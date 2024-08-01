@@ -5,48 +5,6 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 
 class MaintienHaiesForm(forms.Form):
-    profil = forms.ChoiceField(
-        label="J’effectue cette demande en tant que :",
-        widget=forms.RadioSelect,
-        choices=(
-            ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
-            (
-                "autre",
-                "Collectivité, aménageur, gestionnaire de réseau, particulier, etc.",
-            ),
-        ),
-        required=True,
-    )
-    motif = forms.ChoiceField(
-        label="J’effectue cette demande en tant que :",
-        widget=forms.RadioSelect,
-        choices=(
-            (
-                "transfert_parcelles",
-                "Agrandissement, échange de parcelles, nouvelle installation…",
-            ),
-            (
-                "chemin_acces",
-                "Chemin nécessaire pour l’accès et l’exploitation de la parcelle",
-            ),
-            ("meilleur_emplacement", "Plantation justifiée par un organisme agréé"),
-            ("amenagement", "Réaliser une opération d’aménagement foncier"),
-            ("autre", "Autre"),
-        ),
-        required=True,
-    )
-
-    reimplantation = forms.ChoiceField(
-        label="Est-il prévu de planter une nouvelle haie ?",
-        widget=forms.RadioSelect,
-        choices=(
-            ("remplacement", "Oui, en remplaçant la haie détruite au même endroit"),
-            ("compensation", "Oui, en plantant une haie à un autre endroit"),
-            ("non", "Non, aucune réimplantation"),
-        ),
-        required=True,
-    )
-
     lineaire_detruit = forms.IntegerField(
         label="Linéaire de haie détruit (en m) :",
         required=False,
@@ -88,6 +46,9 @@ class MaintienHaiesForm(forms.Form):
         ),
         required=False,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class MaintienHaies(CriterionEvaluator):
