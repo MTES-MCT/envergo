@@ -808,10 +808,8 @@ class Moulinette(ABC):
         self.activate_optional_criteria = activate_optional_criteria
 
         self.department = self.get_department()
-        self.config = self.catalog["config"] = getattr(
-            self.department, "moulinette_config", None
-        )
-        if self.config:
+        self.config = self.catalog["config"] = self.get_config()
+        if self.config and self.config.id:
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
@@ -843,6 +841,9 @@ class Moulinette(ABC):
 
     def has_config(self):
         return bool(self.config)
+
+    def get_config(self):
+        return getattr(self.department, "moulinette_config", None)
 
     def get_template(self, template_key):
         """Return the MoulinetteTemplate with the given key."""
@@ -1271,6 +1272,9 @@ class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
     result_template = "haie/moulinette/result.html"
     main_form_class = MoulinetteFormHaie
+
+    def get_config(self):
+        return MoulinetteConfig(is_activated=True, regulations_available=["bcae8"])
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
