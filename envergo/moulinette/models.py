@@ -807,9 +807,42 @@ class Moulinette(ABC):
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
 
+        self.department = self.get_department()
+        self.config = self.catalog["config"] = getattr(
+            self.department, "moulinette_config", None
+        )
+        if self.config:
+            self.templates = {t.key: t for t in self.config.templates.all()}
+        else:
+            self.templates = {}
+
+        self.evaluate()
+
+    @property
+    def regulations(self):
+        if not hasattr(self, "_regulations"):
+            self._regulations = self.get_regulations()
+        return self._regulations
+
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
+
+    def get_department(self):
+        if "lng_lat" not in self.catalog:
+            return None
+
+        lng_lat = self.catalog["lng_lat"]
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
+        return department
+
+    def has_config(self):
+        return bool(self.config)
 
     def get_template(self, template_key):
         """Return the MoulinetteTemplate with the given key."""
@@ -831,31 +864,43 @@ class Moulinette(ABC):
             raise AttributeError("No main form class found.")
         return cls.main_form_class
 
-    @abstractmethod
     def get_criteria(self):
-        raise NotImplementedError
+        """Fetch relevant criteria for evaluation.
+
+        We don't actually use the criteria directly, the returned queryset will only
+        be used in a prefetch_related call when we fetch the regulations.
+        """
+        criteria = (
+            Criterion.objects.order_by("weight")
+            .distinct("weight", "id")
+            .prefetch_related("templates")
+        )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
+        return criteria
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
 
+        criteria = self.get_criteria()
         regulations = (
             Regulation.objects.filter(regulation__in=self.REGULATIONS)
             .order_by("weight")
-            .prefetch_related(Prefetch("criteria", queryset=self.criteria))
+            .prefetch_related(Prefetch("criteria", queryset=criteria))
         )
         return regulations
 
-    @abstractmethod
     def get_catalog_data(self):
-        raise NotImplementedError
+        return {}
 
-    @abstractmethod
-    def has_config(self):
-        raise NotImplementedError
-
-    @abstractmethod
     def is_evaluation_available(self):
-        raise NotImplementedError
+        if self.config is None:
+            return True
+        else:
+            return self.config.is_activated
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
@@ -894,12 +939,15 @@ class Moulinette(ABC):
         return data
 
     def __getattr__(self, attr):
-        """Returs the corresponding regulation.
+        """Returns the corresponding regulation.
 
         Allows to do something like this:
         moulinette.loi_sur_leau to fetch the correct regulation.
         """
-        return self.get_regulation(attr)
+        if attr in self.REGULATIONS:
+            return self.get_regulation(attr)
+        else:
+            return super().__getattr__(attr)
 
     def get_regulation(self, regulation_slug):
         """Return the regulation with the given slug."""
@@ -1044,36 +1092,15 @@ class MoulinetteAmenagement(Moulinette):
     result_template = "amenagement/moulinette/result.html"
     main_form_class = MoulinetteFormAmenagement
 
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
-        super().__init__(data, raw_data, activate_optional_criteria)
-        self.department = self.get_department()
-        if hasattr(self.department, "moulinette_config"):
-            self.config = self.catalog["config"] = self.department.moulinette_config
-            self.templates = {t.key: t for t in self.config.templates.all()}
-
-        self.perimeters = self.get_perimeters()
-
-        self.criteria = self.get_criteria()
-        self.regulations = self.get_regulations()
-        self.evaluate()
-
-    def get_department(self):
-        lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
-            .first()
-        )
-        return department
-
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+
+        perimeters = self.get_perimeters()
 
         regulations = (
             super()
             .get_regulations()
-            .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
         )
         return regulations
 
@@ -1109,7 +1136,9 @@ class MoulinetteAmenagement(Moulinette):
         coords = self.catalog["coords"]
 
         criteria = (
-            Criterion.objects.filter(
+            super()
+            .get_criteria()
+            .filter(
                 activation_map__zones__geometry__dwithin=(
                     coords,
                     F("activation_distance"),
@@ -1125,27 +1154,16 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("weight")
-            .distinct("weight", "id")
             .select_related("activation_map")
-            .prefetch_related("templates")
             .defer("activation_map__geometry")
         )
 
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
         return criteria
-
-    def has_config(self):
-        config = getattr(self.department, "moulinette_config", None)
-        return bool(config)
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        catalog = {}
+        catalog = super().get_catalog_data()
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
@@ -1226,14 +1244,6 @@ class MoulinetteAmenagement(Moulinette):
         )
         return zones
 
-    def is_evaluation_available(self):
-        """Moulinette evaluations are only available on some departments.
-
-        When a department is available, we fill it's contact data.
-        """
-        config = getattr(self.department, "moulinette_config", None)
-        return config and config.is_activated
-
     def summary(self):
         """Build a data summary, for analytics purpose."""
 
@@ -1261,45 +1271,6 @@ class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
     result_template = "haie/moulinette/result.html"
     main_form_class = MoulinetteFormHaie
-
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
-        super().__init__(data, raw_data, activate_optional_criteria)
-
-        self.criteria = self.get_criteria()
-        self.regulations = self.get_regulations()
-        self.evaluate()
-
-        # TODO is this needed ?
-        self.config = self.catalog["config"] = MoulinetteConfig(
-            regulations_available=self.REGULATIONS
-        )
-        self.templates = {}
-        # self.perimeters
-
-    def get_criteria(self):
-        criteria = (
-            Criterion.objects.annotate(
-                distance=Cast(0, IntegerField())
-            )  # TODO: it is a leak from amenagement
-            .order_by("weight")
-            .distinct("weight", "id")
-            .prefetch_related("templates")
-        )
-
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
-        return criteria
-
-    def has_config(self):
-        return True
-
-    def get_catalog_data(self):
-        return self.catalog
-
-    def is_evaluation_available(self):
-        return True
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
