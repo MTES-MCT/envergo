@@ -152,7 +152,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True %}
+  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
   {% if display_feedback_form %}
     {% include 'analytics/_feedback_modal_useful.html' %}
     {% include 'analytics/_feedback_modal_useless.html' %}
