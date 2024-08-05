@@ -12,10 +12,7 @@
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
       <div id="mobile-footer" class="fr-hidden-lg fr-col-12 hide-print fr-mt-4w">
-        {% include "_learn_more.html" %}
-        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-          {% block include_mobile_footer %}{% endblock %}
-        </section>
+        {% block mobile-footer %}{% endblock %}
       </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <section>
@@ -99,7 +96,7 @@
 
           {% endfor %}
 
-          {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
+          {% block additional_regulations %}{% endblock %}
 
           <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
             <p>
@@ -116,20 +113,11 @@
             </p>
           </div>
 
-          <section class="regulation regulation-disabled fr-mb-5w"
-                   id="regulation_defrichement">
-            <h2>
-              <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
-            </h2>
-            <p>
-              Cette réglementation sera prochainement prise en compte dans EnvErgo.
-              Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
-              priorité</a>.
-            </p>
-          </section>
+          {% block coming_soon_regulations %}
+          {% endblock coming_soon_regulations %}
         </section>
         <div class="fr-hidden fr-unhidden-lg">
-          {% include "_learn_more.html" %}
+          {% block include_learn_more %}{% endblock %}
           <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
             {% block include_desktop_footer %}{% endblock %}
           </section>

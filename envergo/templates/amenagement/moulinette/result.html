@@ -1,5 +1,7 @@
 {% extends 'moulinette/result.html' %}
 
+{% load evaluations %}
+
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
     {% include 'amenagement/_slim_header.html' %}
@@ -7,10 +9,35 @@
   </header>
 {% endblock %}
 
-{% block include_mobile_footer %}
-  {% include 'amenagement/_footer.html' with do_not_load_modal="true" %}
+{% block additional_regulations %}
+  {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
+{% endblock %}
+
+{% block coming_soon_regulations %}
+  <section class="regulation regulation-disabled fr-mb-5w"
+           id="regulation_defrichement">
+    <h2>
+      <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
+    </h2>
+    <p>
+      Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
+      priorité</a>.
+    </p>
+  </section>
+{% endblock coming_soon_regulations %}
+
+{% block mobile-footer %}
+  {% include "amenagement/_learn_more.html" %}
+  <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
+    {% include 'amenagement/_footer.html' with do_not_load_modal="true" %}
+  </section>
 {% endblock %}
 
 {% block include_desktop_footer %}
   {% include 'amenagement/_footer.html' %}
+{% endblock %}
+
+{% block include_learn_more %}
+  {% include 'amenagement/_learn_more.html' %}
 {% endblock %}

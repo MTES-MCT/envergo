@@ -7,10 +7,17 @@
   </header>
 {% endblock %}
 
-{% block include_mobile_footer %}
-  {% include 'haie/_footer.html' with do_not_load_modal="true" %}
+{% block mobile-footer %}
+  {% include "haie/_learn_more.html" %}
+  <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
+    {% include 'haie/_footer.html' with do_not_load_modal="true" %}
+  </section>
 {% endblock %}
 
 {% block include_desktop_footer %}
   {% include 'haie/_footer.html' %}
+{% endblock %}
+
+{% block include_learn_more %}
+  {% include 'haie/_learn_more.html' %}
 {% endblock %}
