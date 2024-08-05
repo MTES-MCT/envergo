@@ -875,6 +875,7 @@ class Moulinette(ABC):
             Criterion.objects.order_by("weight")
             .distinct("weight", "id")
             .prefetch_related("templates")
+            .annotate(distance=Cast(0, IntegerField()))
         )
 
         # We might have to filter out optional criteria
