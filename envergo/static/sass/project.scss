@@ -355,6 +355,11 @@ section.regulation {
   .fr-accordion {
     .fr-accordion__btn {
       color: inherit;
+
+      span.title .perimeter {
+        font-weight: 300;
+        color: var(--grey-925-100);
+      }
     }
 
     .fr-accordion__btn[aria-expanded="true"] {
