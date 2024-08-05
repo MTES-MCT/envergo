@@ -89,10 +89,13 @@ class MaintienHaies(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        is_petit = (
-            self.catalog["lineaire_detruit"] < 5
-            or self.catalog["lineaire_detruit"] <= 0.02 * self.catalog["lineaire_total"]
-        )
+        is_petit = False
+        if self.catalog["lineaire_detruit"] and self.catalog["lineaire_total"]:
+            is_petit = (
+                self.catalog["lineaire_detruit"] < 5
+                or self.catalog["lineaire_detruit"]
+                <= 0.02 * self.catalog["lineaire_total"]
+            )
 
         return (
             self.catalog["profil"],
