@@ -33,7 +33,7 @@
           </p>
           <p class="fr-text print-only">
             Cette simulation est <a title="Partager l'avis réglementaire"
-    href="{{ current_url }}"
+    href="{{ share_print_url }}"
     target="_blank"
     class="share-link"
     rel="noopener external">consultable en ligne</a>
@@ -162,7 +162,7 @@
 {% block extra_js %}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
-    var SHARING_URL = "{{ current_url }}";
+    var SHARING_URL = "{{ share_btn_url }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},

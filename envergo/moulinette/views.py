@@ -354,7 +354,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
-        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         edit_url = update_qs(current_url, {"edit": "true"})
 
@@ -365,7 +366,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             reverse("moulinette_missing_data")
         )
 
-        context["current_url"] = tracked_url
+        context["current_url"] = current_url
+        context["share_btn_url"] = share_btn_url
+        context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
 
         moulinette = context.get("moulinette", None)
