@@ -106,3 +106,30 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         ),
         required=True,
     )
+
+    def clean(self):
+        data = super().clean()
+
+        reimplantation = data.get("reimplantation")
+        motif = data.get("motif")
+
+        if reimplantation == "remplacement" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+        elif reimplantation == "remplacement" and motif == "chemin_acces":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le percement d'un chemin"
+                " d'accès. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+        elif reimplantation == "non" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "L’absence de réimplantation de la haie est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+
+        return data
