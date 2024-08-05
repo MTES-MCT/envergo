@@ -6,6 +6,7 @@ from envergo.evaluations.models import (
     EvaluationVersion,
     RegulatoryNoticeLog,
     Request,
+    RequestFile,
 )
 
 
@@ -62,6 +63,15 @@ class RequestFactory(DjangoModelFactory):
     user_type = "instructor"
     urbanism_department_emails = ["instructor@example.org"]
     project_owner_emails = ["sponsor1@example.org", "sponsor2@example.org"]
+
+
+class RequestFileFactory(DjangoModelFactory):
+    class Meta:
+        model = RequestFile
+
+    request = factory.SubFactory(RequestFactory)
+    name = factory.Sequence(lambda n: f"file_{n}.pdf")
+    file = factory.django.FileField(filename="file.pdf", data=b"Hello")
 
 
 class RegulatoryNoticeLogFactory(DjangoModelFactory):

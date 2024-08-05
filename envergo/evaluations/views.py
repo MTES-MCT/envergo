@@ -325,7 +325,12 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
     template_name = "evaluations/eval_request_wizard_contact.html"
     form_class = WizardContactForm
-    success_url = reverse_lazy("request_success")
+
+    # This method is called by the `super()` class, at a moment when we don't
+    # know the url yet. So we just return a dummy url.
+    def get_success_url(self):
+        success_url = reverse("request_eval_wizard_step_3", args=["XXXXXX"])
+        return success_url
 
     def form_valid(self, form):
         """Process the whole form and save object to the db.
@@ -361,8 +366,11 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
     form_class = WizardFilesForm
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    success_url = reverse_lazy("request_success")
     context_object_name = "evalreq"
+
+    def get_success_url(self):
+        url = reverse("request_success", args=[self.object.reference])
+        return url
 
     def form_valid(self, form):
 
@@ -417,6 +425,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
         context["uploaded_files"] = files
+        context["request_submitted"] = self.object.submitted
         return context
 
 
@@ -497,8 +506,12 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             )
 
 
-class RequestSuccess(TemplateView):
+class RequestSuccess(DetailView):
     template_name = "evaluations/request_success.html"
+    model = Request
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    context_object_name = "evalreq"
 
 
 class SelfDeclaration(EvaluationDetailMixin, DetailView):

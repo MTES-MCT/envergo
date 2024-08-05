@@ -533,6 +533,11 @@ class RequestAdmin(admin.ModelAdmin):
             except Evaluation.DoesNotExist:
                 context["show_make_eval_button"] = True
 
+            upload_files_url = reverse(
+                "request_eval_wizard_step_3", args=[obj.reference]
+            )
+            context["upload_files_url"] = request.build_absolute_uri(upload_files_url)
+
         return super().render_change_form(request, context, add, change, form_url, obj)
 
     def response_change(self, request, obj):

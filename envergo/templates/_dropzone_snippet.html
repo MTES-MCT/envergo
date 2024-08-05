@@ -5,6 +5,12 @@
 
   {% include '_label.html' %}
 
+  {% if not request_submitted %}
+    <p class="fr-alert fr-alert--info fr-mb-3w">
+      Ces documents pourront être complétés ou modifiés après l’envoi de votre demande
+    </p>
+  {% endif %}
+
   <div id="dropzone-previews" class="dropzone-previews">
     <div class="dz-default dz-message">
       <button class="dz-button" type="button">

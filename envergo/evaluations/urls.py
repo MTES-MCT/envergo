@@ -73,7 +73,11 @@ urlpatterns = [
                     RequestEvalWizardStep3Upload.as_view(),
                     name="request_eval_wizard_step_3_upload",
                 ),
-                path(_("success/"), RequestSuccess.as_view(), name="request_success"),
+                path(
+                    "succès/<slug:reference>/",
+                    RequestSuccess.as_view(),
+                    name="request_success",
+                ),
             ]
         ),
     ),

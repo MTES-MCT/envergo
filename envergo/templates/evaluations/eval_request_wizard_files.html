@@ -7,15 +7,23 @@
 {% block title %}Demander un avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>Demander un avis réglementaire sur un projet</h1>
+  <h1 class="centered">
+    Demande d'avis réglementaire
+    <br />
+    <small>Référence {{ evalreq.reference }}</small>
+  </h1>
 
-  <div class="fr-stepper">
-    <h2 class="fr-stepper__title">
-      <span class="fr-stepper__state">Étape 3 sur 3</span>
-      Documents complémentaires
-    </h2>
-    <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
-  </div>
+  <p class="fr-text--lead centered">{{ evalreq.address }}</p>
+
+  {% if not request_submitted %}
+    <div class="fr-stepper">
+      <h2 class="fr-stepper__title">
+        <span class="fr-stepper__state">Étape 3 sur 3</span>
+        Documents complémentaires
+      </h2>
+      <div class="fr-stepper__steps" data-fr-current-step="3" data-fr-steps="3"></div>
+    </div>
+  {% endif %}
 
   <form action=""
         autocomplete="off"
@@ -33,12 +41,14 @@
       <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
     </div>
 
-    <div class="right-button">
-      <button type="submit"
-              class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
-        Envoyer votre demande d'avis réglementaire
-      </button>
-    </div>
+    {% if not request_submitted %}
+      <div class="right-button">
+        <button type="submit"
+                class="fr-mt-2w fr-btn fr-btn--icon-left fr-fi-checkbox-circle-line">
+          Envoyer votre demande d'avis réglementaire
+        </button>
+      </div>
+    {% endif %}
 
   </form>
 
