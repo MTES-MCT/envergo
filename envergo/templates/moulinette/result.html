@@ -76,21 +76,7 @@
           {% endfor %}
 
           {% block additional_regulations %}{% endblock %}
-
-          <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
-            <p>
-              EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de
-              l'aménagement en phase amont de leurs projets.
-            </p>
-            <p>
-              Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne
-              couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
-            </p>
-            <p>
-              Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en
-              charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
-            </p>
-          </div>
+          {% block liability_info %}{% endblock %}
 
           {% block coming_soon_regulations %}
           {% endblock coming_soon_regulations %}
