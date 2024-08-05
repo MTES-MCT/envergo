@@ -1,10 +1,20 @@
 {% extends 'moulinette/result.html' %}
 
+{% load moulinette %}
+
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
     {% include 'haie/_slim_header.html' %}
 
   </header>
+{% endblock %}
+
+{% block project_summary %}
+  {% for field in moulinette.main_form %}
+    <li>{% field_summary field %}</li>
+  {% endfor %}
+
+  {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
 {% endblock %}
 
 {% block mobile-footer %}

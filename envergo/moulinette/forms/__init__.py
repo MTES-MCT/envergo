@@ -78,7 +78,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         required=True,
     )
     motif = forms.ChoiceField(
-        label="J’effectue cette demande en tant que :",
+        label="Quelle est la raison de l’arrachage de la haie ?",
         widget=forms.RadioSelect,
         choices=(
             (

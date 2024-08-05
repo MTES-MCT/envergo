@@ -994,6 +994,12 @@ class Moulinette(ABC):
 
         return forms
 
+    def main_form(self):
+        """Get the instanciated main form questions."""
+
+        form_class = self.get_main_form_class()
+        return form_class(self.raw_data)
+
     def additional_forms(self):
         """Get a list of instanciated additional questions forms."""
 

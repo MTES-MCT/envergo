@@ -155,7 +155,7 @@ def field_summary(field):
     else:
         value = field.value()
 
-    html = f"<strong>{field.label}</strong>: {value}"
+    html = f"<strong>{field.label}</strong> {value}"
     if field.help_text:
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
 
