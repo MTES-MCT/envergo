@@ -1059,7 +1059,8 @@ class Moulinette(ABC):
                 RESULTS.soumis,
             ),
             ((RESULTS.action_requise,), RESULTS.action_requise),
-            ((RESULTS.non_soumis), RESULTS.non_soumis),
+            ((RESULTS.non_soumis,), RESULTS.non_soumis),
+            ((RESULTS.non_disponible,), RESULTS.non_disponible),
         ]
 
         result = None
