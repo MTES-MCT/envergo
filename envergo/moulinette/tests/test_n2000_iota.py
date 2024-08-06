@@ -1,7 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.moulinette.models import Moulinette
+from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     MoulinetteConfigFactory,
@@ -56,7 +56,7 @@ def moulinette_data(footprint):
 def test_zh_medium_footprint_inside_wetlands(moulinette_data):
     """Project with 700 <= footprint <= 1000m² within a wetland."""
 
-    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
 

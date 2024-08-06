@@ -823,6 +823,10 @@ class Moulinette(ABC):
             self._regulations = self.get_regulations()
         return self._regulations
 
+    @regulations.setter
+    def regulations(self, value):
+        self._regulations = value
+
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
@@ -893,10 +897,7 @@ class Moulinette(ABC):
         return {}
 
     def is_evaluation_available(self):
-        if self.config is None:
-            return True
-        else:
-            return self.config.is_activated
+        return self.config and self.config.is_activated
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
