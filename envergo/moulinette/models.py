@@ -1094,6 +1094,11 @@ class Moulinette(ABC):
             for required_action in regulation.required_actions_interdit():
                 yield required_action
 
+    @classmethod
+    def get_form_template_name(cls):
+        """Return the template name for the moulinette."""
+        raise RuntimeError("Unknown moulinette template")
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1274,6 +1279,11 @@ class MoulinetteAmenagement(Moulinette):
 
         return summary
 
+    @classmethod
+    def get_form_template_name(cls):
+        """Return the template name for the moulinette."""
+        return "amenagement/moulinette/form.html"
+
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
@@ -1295,6 +1305,11 @@ class MoulinetteHaie(Moulinette):
             summary["result"] = self.result_data()
 
         return summary
+
+    @classmethod
+    def get_form_template_name(cls):
+        """Return the template name for the moulinette."""
+        return "haie/moulinette/form.html"
 
 
 def get_moulinette_class_from_site(site):

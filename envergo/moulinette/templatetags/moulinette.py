@@ -2,13 +2,13 @@ import json
 import logging
 
 from django import template
-from django.conf import settings
 from django.template import Context, Template
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
+from envergo.moulinette.models import get_moulinette_class_from_site
 
 register = template.Library()
 
@@ -28,15 +28,8 @@ def show_moulinette_form(context):
 
     We do so by selecting the correct template depending on the current domain.
     """
-
-    domain = context["request"].site.domain
-    domain_template = {
-        settings.ENVERGO_AMENAGEMENT_DOMAIN: "amenagement/moulinette/form.html",
-        settings.ENVERGO_HAIE_DOMAIN: "haie/moulinette/form.html",
-    }
-    template_name = domain_template.get(domain, None)
-    if template_name is None:
-        raise RuntimeError(f"Unknown moulinette template for {domain}")
+    MoulinetteClass = get_moulinette_class_from_site(context["request"].site)
+    template_name = MoulinetteClass.get_form_template_name()
 
     template = get_template(template_name)
     content = template.render(context.flatten())

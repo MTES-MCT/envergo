@@ -53,11 +53,11 @@ class MaintienHaiesForm(forms.Form):
         if profil == "agri_pac":
             self.fields["lineaire_detruit"].required = True
             self.fields["lineaire_total"].required = True
-        motif = self.data.get("motif")
-        if motif == "amenagement":
-            self.fields["amenagement_dup"].required = True
-        if motif == "autre":
-            self.fields["motif_qc"].required = True
+            motif = self.data.get("motif")
+            if motif == "amenagement":
+                self.fields["amenagement_dup"].required = True
+            if motif == "autre":
+                self.fields["motif_qc"].required = True
 
 
 class MaintienHaies(CriterionEvaluator):
