@@ -574,7 +574,7 @@ form#request-evaluation-form {
 
 .autocomplete__wrapper .autocomplete__input {
   border: 0;
-  border-radius: space(1v) space(1v) 0 0;  /* stylelint-disable-line */
+  border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
   color: var(--text-label-grey);
 
   --blend: var(--background-contrast-grey-blend);
@@ -1553,7 +1553,6 @@ main.geometricians {
 
 .moulinette {
   .fr-input,
-
   .autocomplete__input {
     --background-contrast-grey: var(--grey-975-100);
   }
