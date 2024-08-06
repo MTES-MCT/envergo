@@ -15,9 +15,9 @@ class Command(BaseCommand):
         if "url" not in options:
             raise CommandError("The environment url is required.")
 
-        Site.objects.first().update(
-            domain=options["url"]
-        )  # the first one should be EnvErgo Amenagement
+        site = Site.objects.first()  # the first one should be EnvErgo Amenagement
+        site.domain = options["url"]
+        site.save()
 
         self.stdout.write(
             self.style.SUCCESS("Successfully updated the environment url.")
