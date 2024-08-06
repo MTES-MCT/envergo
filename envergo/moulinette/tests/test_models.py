@@ -1,9 +1,17 @@
 import pytest
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import ZoneFactory
-from envergo.moulinette.models import Moulinette
+from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.models import (
+    Moulinette,
+    MoulinetteAmenagement,
+    MoulinetteHaie,
+    get_moulinette_class_from_site,
+    get_moulinette_class_from_url,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     MoulinetteConfigFactory,
@@ -96,3 +104,31 @@ def test_result_with_contact_data(moulinette_data):
     MoulinetteConfigFactory(is_activated=True)
     moulinette = Moulinette(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
+
+
+@pytest.mark.parametrize("footprint", [50])
+def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
+    site = SiteFactory()
+    MoulinetteClass = get_moulinette_class_from_site(site)
+    moulinette = MoulinetteClass(moulinette_data, moulinette_data)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.get_main_form_class() == MoulinetteFormAmenagement
+    assert moulinette.get_form_template_name() == "amenagement/moulinette/form.html"
+    assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
+
+    MoulinetteClass = get_moulinette_class_from_url("envergo.beta.gouv.fr")
+    assert MoulinetteClass is MoulinetteAmenagement
+
+
+def test_moulinette_haie_has_specific_behavior():
+    site = SiteFactory()
+    site.domain = "haie.beta.gouv.fr"
+    MoulinetteClass = get_moulinette_class_from_site(site)
+    moulinette = MoulinetteClass({}, {})
+    assert moulinette.is_evaluation_available()
+    assert moulinette.get_main_form_class() == MoulinetteFormHaie
+    assert moulinette.get_form_template_name() == "haie/moulinette/form.html"
+    assert moulinette.get_result_template() == "haie/moulinette/result.html"
+
+    MoulinetteClass = get_moulinette_class_from_url("haie.beta.gouv.fr")
+    assert MoulinetteClass is MoulinetteHaie
