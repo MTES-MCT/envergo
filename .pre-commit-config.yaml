@@ -33,6 +33,13 @@ repos:
       - id: djlint-reformat-django
       - id: djlint-django
 
+  - repo: https://github.com/awebdeveloper/pre-commit-stylelint
+    rev: 0.0.2
+    hooks:
+      - id: stylelint
+        args: [--fix]
+        additional_dependencies: [ 'stylelint@16.8.1', 'stylelint-config-standard-scss@13.1.0' ]
+
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
     autoupdate_schedule: weekly
