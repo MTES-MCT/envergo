@@ -807,7 +807,8 @@ class Moulinette(ABC):
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
 
-        self.department = self.get_department()
+        self.load_specific_data()
+
         self.config = self.catalog["config"] = self.get_config()
         if self.config and self.config.id:
             self.templates = {t.key: t for t in self.config.templates.all()}
@@ -826,18 +827,10 @@ class Moulinette(ABC):
         for regulation in self.regulations:
             regulation.evaluate(self)
 
-    def get_department(self):
-        if "lng_lat" not in self.catalog:
-            return None
-
-        lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
-            .first()
-        )
-        return department
+    @abstractmethod
+    def load_specific_data(self):
+        """Load data specific for a given moulinette instance."""
+        pass
 
     def has_config(self):
         return bool(self.config)
@@ -1101,6 +1094,7 @@ class Moulinette(ABC):
 
 
 class MoulinetteAmenagement(Moulinette):
+
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
     main_form_class = MoulinetteFormAmenagement
@@ -1284,6 +1278,22 @@ class MoulinetteAmenagement(Moulinette):
         """Return the template name for the moulinette."""
         return "amenagement/moulinette/form.html"
 
+    def load_specific_data(self):
+        self.department = self.get_department()
+
+    def get_department(self):
+        if "lng_lat" not in self.catalog:
+            return None
+
+        lng_lat = self.catalog["lng_lat"]
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
+        return department
+
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
@@ -1310,6 +1320,10 @@ class MoulinetteHaie(Moulinette):
     def get_form_template_name(cls):
         """Return the template name for the moulinette."""
         return "haie/moulinette/form.html"
+
+    def load_specific_data(self):
+        """There is no specific needs for the Haie moulinette."""
+        pass
 
 
 def get_moulinette_class_from_site(site):
