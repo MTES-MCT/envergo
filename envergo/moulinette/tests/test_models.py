@@ -108,6 +108,7 @@ def test_result_with_contact_data(moulinette_data):
 @pytest.mark.parametrize("footprint", [50])
 def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     site = SiteFactory()
+    MoulinetteConfigFactory(is_activated=True)
     MoulinetteClass = get_moulinette_class_from_site(site)
     moulinette = MoulinetteClass(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
