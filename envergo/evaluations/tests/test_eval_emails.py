@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 from urllib.parse import urlencode
 
 import pytest
@@ -33,7 +33,7 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
         dreal_eval_env_email="dreal_evalenv@example.org",
     )
     regulation = RegulationFactory()
-    PerimeterFactory(
+    perimeter = PerimeterFactory(
         regulation=regulation,
         activation_map=france_map,
     )
@@ -44,7 +44,10 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
     ]
     for path in classes:
         CriterionFactory(
-            regulation=regulation, activation_map=france_map, evaluator=path
+            regulation=regulation,
+            activation_map=france_map,
+            evaluator=path,
+            perimeter=perimeter,
         )
 
 
@@ -102,7 +105,9 @@ def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
             regulation,
             wraps=regulation,
             result=sage,
-            perimeter=Mock(contact_email="sage@example.com"),
+            perimeters=Mock(
+                all=MagicMock(return_value=[Mock(contact_email="sage@example.com")])
+            ),
             slug="sage",
             do_not_call_in_templates=True,
         ),
