@@ -113,7 +113,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     moulinette = MoulinetteClass(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
     assert moulinette.get_main_form_class() == MoulinetteFormAmenagement
-    assert moulinette.get_form_template_name() == "amenagement/moulinette/form.html"
+    assert moulinette.get_form_template() == "amenagement/moulinette/form.html"
     assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
 
     MoulinetteClass = get_moulinette_class_from_url("envergo.beta.gouv.fr")
@@ -127,7 +127,7 @@ def test_moulinette_haie_has_specific_behavior():
     moulinette = MoulinetteClass({}, {})
     assert moulinette.is_evaluation_available()
     assert moulinette.get_main_form_class() == MoulinetteFormHaie
-    assert moulinette.get_form_template_name() == "haie/moulinette/form.html"
+    assert moulinette.get_form_template() == "haie/moulinette/form.html"
     assert moulinette.get_result_template() == "haie/moulinette/result.html"
 
     MoulinetteClass = get_moulinette_class_from_url("haie.beta.gouv.fr")

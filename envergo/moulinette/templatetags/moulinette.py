@@ -29,7 +29,7 @@ def show_moulinette_form(context):
     We do so by selecting the correct template depending on the current domain.
     """
     MoulinetteClass = get_moulinette_class_from_site(context["request"].site)
-    template_name = MoulinetteClass.get_form_template_name()
+    template_name = MoulinetteClass.get_form_template()
 
     template = get_template(template_name)
     content = template.render(context.flatten())

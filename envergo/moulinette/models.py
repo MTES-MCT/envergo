@@ -835,8 +835,9 @@ class Moulinette(ABC):
     def has_config(self):
         return bool(self.config)
 
+    @abstractmethod
     def get_config(self):
-        return getattr(self.department, "moulinette_config", None)
+        pass
 
     def get_template(self, template_key):
         """Return the MoulinetteTemplate with the given key."""
@@ -1089,15 +1090,18 @@ class Moulinette(ABC):
                 yield required_action
 
     @classmethod
-    def get_form_template_name(cls):
+    def get_form_template(cls):
         """Return the template name for the moulinette."""
-        raise RuntimeError("Unknown moulinette template")
+
+        if not hasattr(cls, "form_template"):
+            raise AttributeError("No form template name found.")
+        return cls.form_template
 
 
 class MoulinetteAmenagement(Moulinette):
-
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
+    form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
 
     def get_regulations(self):
@@ -1274,18 +1278,10 @@ class MoulinetteAmenagement(Moulinette):
 
         return summary
 
-    @classmethod
-    def get_form_template_name(cls):
-        """Return the template name for the moulinette."""
-        return "amenagement/moulinette/form.html"
-
     def load_specific_data(self):
         self.department = self.get_department()
 
     def get_department(self):
-        if "lng_lat" not in self.catalog:
-            return None
-
         lng_lat = self.catalog["lng_lat"]
         department = (
             Department.objects.filter(geometry__contains=lng_lat)
@@ -1295,10 +1291,14 @@ class MoulinetteAmenagement(Moulinette):
         )
         return department
 
+    def get_config(self):
+        return getattr(self.department, "moulinette_config", None)
+
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["bcae8"]
     result_template = "haie/moulinette/result.html"
+    form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
 
     def get_config(self):
@@ -1316,11 +1316,6 @@ class MoulinetteHaie(Moulinette):
             summary["result"] = self.result_data()
 
         return summary
-
-    @classmethod
-    def get_form_template_name(cls):
-        """Return the template name for the moulinette."""
-        return "haie/moulinette/form.html"
 
     def load_specific_data(self):
         """There is no specific needs for the Haie moulinette."""

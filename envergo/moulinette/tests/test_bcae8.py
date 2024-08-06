@@ -61,65 +61,46 @@ def test_bcae8_for_agri_pac():
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "non_soumis_petit"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "non_soumis_petit", data
 
     data["lineaire_detruit"] = 6
     data["lineaire_total"] = 100
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_remplacement"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_remplacement", data
 
     data["lineaire_detruit"] = 6
     data["lineaire_total"] = 300
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "non_soumis_petit"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "non_soumis_petit", data
 
     data["reimplantation"] = "compensation"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "non_soumis_petit"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "non_soumis_petit", data
 
     data["lineaire_total"] = 100
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_chemin_acces"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_chemin_acces", data
 
     data["lineaire_detruit"] = 11
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "interdit_chemin_acces"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_chemin_acces", data
 
     data["motif"] = "meilleur_emplacement"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
     assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_meilleur_emplacement"
+        moulinette.bcae8.maintien_haies.result_code == "soumis_meilleur_emplacement"
     ), data
 
     data["motif"] = "transfert_parcelles"
@@ -127,8 +108,7 @@ def test_bcae8_for_agri_pac():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
     assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_transfert_parcelles"
+        moulinette.bcae8.maintien_haies.result_code == "soumis_transfert_parcelles"
     ), data
 
     data["motif"] = "amenagement"
@@ -140,19 +120,13 @@ def test_bcae8_for_agri_pac():
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_amenagement"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_amenagement", data
 
     data["amenagement_dup"] = "non"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "interdit_amenagement"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_amenagement", data
 
     data["motif"] = "autre"
     moulinette = MoulinetteHaie(data, data, False)
@@ -163,75 +137,54 @@ def test_bcae8_for_agri_pac():
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code == "interdit_autre"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_autre", data
 
     data["motif_qc"] = "gestion_sanitaire"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code == "soumis_autre"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_autre", data
 
     data["reimplantation"] = "non"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code == "soumis_autre"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_autre", data
 
     data["motif_qc"] = "aucun"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code == "interdit_autre"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_autre", data
 
     data["motif"] = "chemin_acces"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "interdit_chemin_acces"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_chemin_acces", data
 
     data["lineaire_detruit"] = 10
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_chemin_acces"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_chemin_acces", data
 
     data["motif"] = "amenagement"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "interdit_amenagement"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "interdit_amenagement", data
 
     data["amenagement_dup"] = "oui"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "soumis_amenagement"
-    ), data
+    assert moulinette.bcae8.maintien_haies.result_code == "soumis_amenagement", data
 
     data["motif"] = "transfert_parcelles"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
     assert (
-        moulinette.regulations.first().criteria.first().result_code
-        == "interdit_transfert_parcelles"
+        moulinette.bcae8.maintien_haies.result_code == "interdit_transfert_parcelles"
     ), data
