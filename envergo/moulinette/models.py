@@ -882,6 +882,15 @@ class Moulinette(ABC):
 
         return criteria
 
+    @classmethod
+    def get_optionnal_criteria(self):
+        """Fetch optionnal criteria used by this moulinette regulations."""
+        criteria = Criterion.objects.filter(
+            is_optional=True, regulation__regulation__in=self.REGULATIONS
+        ).order_by("weight")
+
+        return criteria
+
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
 

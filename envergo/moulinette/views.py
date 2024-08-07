@@ -13,7 +13,7 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
-from envergo.moulinette.models import Criterion, get_moulinette_class_from_site
+from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -207,8 +207,8 @@ class MoulinetteMixin:
 
     def get_all_optional_form_classes(self):
         form_classes = []
-        criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
-        for criterion in criteria:
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        for criterion in MoulinetteClass.get_optionnal_criteria():
             form_class = criterion.evaluator.form_class
             if form_class and form_class not in form_classes:
                 form_classes.append(form_class)
