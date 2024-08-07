@@ -293,3 +293,7 @@ data.*
 
 ### Jetbrain's IDE
 .idea/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

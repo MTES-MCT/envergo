@@ -98,3 +98,44 @@ jobs:
 
       - name: Run Django Tests
         run:  pytest
+
+
+  e2e:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    # Configure the database service
+    services:
+      database:
+        image: postgis/postgis:14-master
+        env:
+          POSTGRES_USER: envergo
+          POSTGRES_PASSWORD: envergo
+          POSTGRES_DB: envergo
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
