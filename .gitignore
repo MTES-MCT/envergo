@@ -276,8 +276,8 @@ envergo/media/
 
 
 .ipython/
-.env
-.envs/*
+#.env
+#.envs/*
 !.envs/.local/
 
 .vscode
