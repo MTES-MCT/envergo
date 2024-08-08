@@ -45,7 +45,7 @@ repos:
     hooks:
       - id: prettier
         name: 'prettier [(s)css only]'
-        args: [--write, '**/*.{css,scss}']
+        files: '\.(css|scss)$' # Only run on CSS and SCSS files
 
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
