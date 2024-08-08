@@ -44,7 +44,7 @@ html.nojs .js {
  * Update some margins for paragraphs and lists
  */
 article {
-  --li-bottom: .5rem;
+  --li-bottom: 0.5rem;
   --text-spacing: 0 0 1rem;
 
   ul {
@@ -52,7 +52,7 @@ article {
   }
 
   li p {
-    margin-bottom: .5rem;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -106,7 +106,7 @@ article {
 
   svg {
     background-color: white;
-    padding: .75rem;
+    padding: 0.75rem;
   }
 
   circle {
@@ -177,7 +177,7 @@ nav#evaluation-summary {
     justify-content: space-between;
     align-items: baseline;
     background-image: none;
-    padding: .25rem 0;
+    padding: 0.25rem 0;
     color: var(--text-action-high-grey);
 
     &:hover {
@@ -211,7 +211,7 @@ nav#evaluation-summary {
       content: counter(steps) " "; /* stylelint-disable-line */
       font-size: 2rem;
       font-weight: bold;
-      margin-right: .25rem;
+      margin-right: 0.25rem;
     }
   }
 
@@ -304,7 +304,7 @@ section.regulation {
     }
 
     span.content {
-      margin-right: .5em;
+      margin-right: 0.5em;
       white-space: nowrap;
 
       .undertitle {
@@ -314,7 +314,7 @@ section.regulation {
     }
 
     span.fr-tag {
-      margin-top: .75em;
+      margin-top: 0.75em;
       white-space: nowrap;
     }
   }
@@ -454,7 +454,7 @@ form {
       background-color: var(--bf100-g750);
       color: var(--g700);
       box-shadow: 0 1px 0 0 var(--g300);
-      padding: .5rem 1rem;
+      padding: 0.5rem 1rem;
     }
 
     .formset-field {
@@ -549,7 +549,6 @@ form#request-evaluation-form {
     #send-eval-hint {
       display: none;
     }
-
   }
 
   #id_send_eval_to_project_owner + .fr-label .fr-hint-text {
@@ -569,7 +568,7 @@ form#request-evaluation-form {
  * Autocomplete fields
  */
 .fr-label + div > .autocomplete__wrapper {
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 }
 
 .autocomplete__wrapper .autocomplete__input {
@@ -610,11 +609,9 @@ form#request-evaluation-form {
  * Misc stuff
  */
 
-
 /**
  * Stupid little helpers
  */
-
 
 // Smart little trick to fix the aspect ratio of an element
 // See https://css-tricks.com/aspect-ratio-boxes/
@@ -663,9 +660,8 @@ form#request-evaluation-form {
   }
 }
 
-
 figcaption.fr-content-media__caption .fr-link[target="_blank"]::after {
-  margin-left: .25rem;
+  margin-left: 0.25rem;
 }
 
 div.leaflet-container {
@@ -769,7 +765,7 @@ main > .fr-notice {
  */
 .fr-accordion {
   &.fr-accordion--no-icon {
-    padding-bottom: .25rem;
+    padding-bottom: 0.25rem;
 
     .fr-accordion__btn::after {
       display: none;
@@ -821,16 +817,19 @@ p:last-child {
   margin-bottom: 0;
 }
 
-
 .fr-alert--warning {
-  box-shadow: inset 0 0 0 1px #fcc63a, inset 2.5rem 0 0 0 #FFCA00;
+  box-shadow:
+    inset 0 0 0 1px #fcc63a,
+    inset 2.5rem 0 0 0 #ffca00;
 
   &.fr-alert--sm p:last-child {
     margin-bottom: inherit;
   }
 
   &#unavailable-department-alert {
-    box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
+    box-shadow:
+      inset 0 0 0 1px #b34000,
+      inset 2.5rem 0 0 0 #b34000;
   }
 }
 
@@ -950,7 +949,6 @@ div.hero-alt {
   padding: 1.5rem;
 }
 
-
 .full-height {
   height: 100%;
 }
@@ -983,7 +981,8 @@ div.hero-alt {
       flex: 1;
     }
 
-    #project-summary, #project-result {
+    #project-summary,
+    #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
@@ -1029,7 +1028,6 @@ div.hero-alt {
       #map-button:hover {
         background-color: var(--background-default-grey-hover);
       }
-
     }
 
     #project-result {
@@ -1065,7 +1063,8 @@ div.hero-alt {
         overflow-y: auto;
       }
 
-      #project-summary, #project-result {
+      #project-summary,
+      #project-result {
         overflow: initial;
         display: flex;
         flex-wrap: wrap;
@@ -1078,7 +1077,9 @@ div.hero-alt {
   }
 
   @media only screen and (width <= 767px) {
-    #feedback-form, #copy-btn-container, #debug-btn {
+    #feedback-form,
+    #copy-btn-container,
+    #debug-btn {
       display: none;
     }
   }
@@ -1147,7 +1148,6 @@ div.hero-alt {
   .hide-print {
     display: none;
   }
-
 
   // Make sure accordion content is visible
   .fr-accordion__title .fr-accordion__btn {
@@ -1234,7 +1234,8 @@ div.hero-alt {
   }
 
   .moulinette-result-body {
-    .flex-box, .fr-grid-row {
+    .flex-box,
+    .fr-grid-row {
       display: block;
     }
 
@@ -1255,8 +1256,8 @@ div.hero-alt {
 
 .fr-header {
   .fr-header__logo {
-    padding-top: .25rem;
-    padding-bottom: .25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 
   .fr-nav__link,
@@ -1267,7 +1268,7 @@ div.hero-alt {
 
   &.header-slim {
     .fr-header__body-row {
-      padding: .75rem 0;
+      padding: 0.75rem 0;
       line-height: 1rem;
 
       img {
@@ -1295,7 +1296,7 @@ div.hero-alt {
     }
 
     .fr-header__service {
-      padding: .75rem 1rem;
+      padding: 0.75rem 1rem;
     }
   }
 
@@ -1431,7 +1432,7 @@ main.home {
   }
 
   section#simulateur {
-    background-color: #E8EDFF;
+    background-color: #e8edff;
     background-color: var(--info-950-100);
 
     h2 {
@@ -1449,7 +1450,7 @@ main.home {
 // Geometricians landing page styles
 :root[data-fr-theme="dark"] main.geometricians {
   section#hero {
-    background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
+    background: linear-gradient(248deg, #1b1b35 100%, #4a4a7d 100%);
   }
 }
 
@@ -1459,7 +1460,7 @@ main.geometricians {
   }
 
   section#hero {
-    background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
+    background: linear-gradient(248deg, #000091 0%, #6a6af4 100%);
 
     h1,
     .fr-text {
@@ -1531,7 +1532,7 @@ main.geometricians {
     }
 
     span {
-      color: var(--blue-france-sun-113-625-hover)
+      color: var(--blue-france-sun-113-625-hover);
     }
 
     #faq-link {
@@ -1589,7 +1590,6 @@ main.geometricians {
     }
   }
 }
-
 
 li.btn-link {
   margin-left: auto;
@@ -1656,7 +1656,10 @@ main.demonstrateur_2150 {
 
   .info {
     padding: 6px 8px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
+    font:
+      14px/16px Arial,
+      Helvetica,
+      sans-serif;
     background: white;
     background: rgb(255 255 255 / 80%);
     box-shadow: 0 0 15px rgb(0 0 0 / 20%);
@@ -1687,17 +1690,19 @@ main.demonstrateur_2150 {
 }
 
 // Some dsfr related fixes
-.fr-hint-text a.fr-link:has(+span.fr-tooltip) {
+.fr-hint-text a.fr-link:has(+ span.fr-tooltip) {
   font-size: inherit;
 }
 
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image: url("/static/images/marker-icon.png"), url("/static/images/marker-icon-2x.png");
+  background-image: url("/static/images/marker-icon.png"),
+    url("/static/images/marker-icon-2x.png");
 
   /* normal[, Retina] */
-  cursor: url("/static/images/marker-icon.png"), url("/static/images/marker-icon-2x.png"), auto;
+  cursor: url("/static/images/marker-icon.png"),
+    url("/static/images/marker-icon-2x.png"), auto;
 
   /* normal[, Retina], auto for compliance with cursor syntax */
   width: 25px;

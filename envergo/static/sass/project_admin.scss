@@ -13,7 +13,7 @@ fieldset.recipients {
 }
 
 .rr-content {
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 
   .mail-content {
     width: 800px;
@@ -34,6 +34,7 @@ ul.messagelist li ul {
   }
 }
 
-.vTextField { /* stylelint-disable-line */
+/* stylelint-disable-next-line */
+.vTextField {
   width: 40em !important;
 }
