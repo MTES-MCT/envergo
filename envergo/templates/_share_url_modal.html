@@ -1,6 +1,7 @@
 <dialog aria-labelledby="share-modal-title"
         role="dialog"
         id="share-modal"
+        data-shorten-url="{{ shorten_url|yesno:"true,false,false" }}"
         class="fr-modal">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
@@ -19,7 +20,8 @@
               <input class="fr-input"
                      type="url"
                      name="share-modal-email"
-                     value="{{ current_url }}" />
+                     autocomplete="off"
+                     value="{{ share_url }}" />
             </div>
 
             <button type="submit" class="fr-btn fr-mb-3w">Copier le lien dans le presse-papier</button>
