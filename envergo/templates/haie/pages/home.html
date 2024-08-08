@@ -67,7 +67,7 @@
     </div>
   </section>
 
-  <section id="quand-demander" class="fr-container">
+  <section id="quand-demander" class="fr-mb-5w">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-8 fr-col-xl-6 alt fr-p-3w">
@@ -99,16 +99,15 @@
     </div>
   </section>
 
-  <div class="fr-container fr-mt-4w">
-    <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col fr-col-lg-8 fr-col-xl-6">
-        <h1 class="fr-h2 centered">Simulez votre projet en phase amont !</h1>
-        <div id="moulinette" class="moulinette fr-pt-5w">{% show_moulinette_form %}</div>
+  <section id="simulez" class="fr-mb-5w">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-lg-8 fr-col-xl-6 fr-p-5w wrapper">
+          <h2 class="centered">Simulez votre projet</h2>
+          <p class="fr-text--light fr-mb-0">Tous les champs sont obligatoires</p>
+          <div id="moulinette" class="moulinette fr-pt-5w">{% show_moulinette_form %}</div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 {% endblock %}
-
-{% block extra_css %}{% endblock %}
-
-{% block extra_js %}{% endblock %}
