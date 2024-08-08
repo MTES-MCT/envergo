@@ -24,7 +24,10 @@
     "gulp-sass": "^5.1.0",
     "gulp-uglify-es": "^3.0.0",
     "pixrem": "^5.0.0",
-    "sass": "^1.77.6"
+    "prettier": "3.3.3",
+    "sass": "^1.77.6",
+    "stylelint": "^16.8.1",
+    "stylelint-config-standard-scss": "^13.1.0"
   },
   "browserslist": [
     "last 2 versions"

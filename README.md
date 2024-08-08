@@ -129,6 +129,7 @@ Installer les extensions :
   - [Flake8 pour le linting](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8)
   - [Black pour le formattage](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter)
   - [Isort pour l'organisation des imports](https://marketplace.visualstudio.com/items?itemName=ms-python.isort)
+  - [Prettier pour le formattage du code css / sass](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 
 Voici un fichier `settings.json` à enregistres dans `.vscode/settings.json` pour configurer
@@ -157,7 +158,7 @@ correctement VSCode :
     "editor.wordWrap": "wordWrapColumn"
   },
   "[css][scss][less]": {
-    "editor.defaultFormatter": "vscode.css-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "isort.args": [
     "--profile",

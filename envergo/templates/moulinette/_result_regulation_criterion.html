@@ -17,6 +17,10 @@
       {% endif %}
 
       <span class="title">
+        {% if criterion.perimeter and regulation.has_several_perimeters %}
+          <span class="perimeter">{{ criterion.perimeter }}</span>
+          <br />
+        {% endif %}
         <strong>{{ criterion.title }}</strong>
         {% if criterion.subtitle %}
           <br>

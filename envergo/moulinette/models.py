@@ -385,6 +385,9 @@ class Regulation(models.Model):
         """Should / can a perimeter map be displayed?"""
         return all((self.is_activated(), self.show_map, self.map))
 
+    def has_several_perimeters(self):
+        return len(self.perimeters.all()) > 1
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
