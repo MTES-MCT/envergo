@@ -7,6 +7,98 @@
 {% block main-classes %}home{% endblock %}
 
 {% block container %}
+
+  <section id="hero" class="fr-mb-5w">
+    <div class="fr-container">
+
+      {% comment %}
+    The main hero section illustration moves up and down the document depending on the screen width.
+
+    Since a full css solution was getting really hackish and complicated, it's just much easier and cleaner to use three different img elements, and hide or display them using media queries.
+      {% endcomment %}
+
+      <div class="home-illustration fr-hidden fr-unhidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <h1>Simplifier la prise en compte de la réglementation environnementale dans les projets d’arrachage de haies.</h1>
+
+      <div class="home-illustration fr-hidden fr-unhidden-md fr-hidden-lg fr-hidden fr-unhidden-md fr-hidden-lg">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+
+      <ul class="fr-badge-group fr-my-3w">
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">🐦 Dérogation espèces protégées</p>
+        </li>
+        <li>
+          <p class="fr-badge fr-badge--blue-ecume">🚜 Conditionalité PAC</p>
+        </li>
+      </ul>
+      <p class="fr-text--lead">
+        Le Guichet Unique de la Haie fournit un accès centralisé et des informations sur la réglementation des haies.
+      </p>
+      <a href="#decouvrir"
+         class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w"
+         data-event-category="HomePage"
+         data-event-action="DiscoverClick"
+         data-event-name="Main">Simuler un projet</a>
+      <br />
+      <span>Accessible sans créer de compte</span>
+
+      <div class="home-illustration fr-hidden-md fr-mt-3w fr-hidden-md fr-mt-3w">
+        <img src="{% static 'images/image_produit.png' %}"
+             alt=""
+             class="light-only">
+        <img src="{% static 'images/image_produit_dark.png' %}"
+             alt=""
+             class="dark-only">
+      </div>
+    </div>
+  </section>
+
+  <section id="quand-demander" class="fr-container">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-lg-8 fr-col-xl-6 alt fr-p-3w">
+
+          <h2 class="fr-h6">Quand demander un avis réglementaire ?</h2>
+          <hr>
+
+          <p>
+            ✔ Tout projet qui aménage <strong>plus de 1 000 m²</strong>
+          </p>
+          <p>✔ Un lotissement, un bâtiment agricole, l'extension d'un bâtiment de bureaux…</p>
+          <p>
+            ✔ Tout projet qui vous <strong>pose question</strong>
+          </p>
+
+          <p class="fr-mb-0">
+            ❌ <strong>À l'exception</strong> des projets qui concernent uniquement :
+          </p>
+
+          <ul class="fr-pl-5w">
+            <li>une mare ou un plan d'eau</li>
+            <li>une déchetterie</li>
+            <li>une station d'épuration</li>
+            <li>une route, une piste cyclable</li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="fr-container fr-mt-4w">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col fr-col-lg-8 fr-col-xl-6">
