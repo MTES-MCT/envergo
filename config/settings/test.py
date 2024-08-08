@@ -44,3 +44,4 @@ CELERY_TASK_ALWAYS_EAGER = True
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "test"
+ALLOWED_HOSTS = ["localhost"]
