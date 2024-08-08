@@ -23,7 +23,7 @@ def nav_link(route, label, *event_data, aria_current=False, data_testid=None):
 
     test_attribute = ""
     if data_testid:
-        test_attribute = f"data-testid=\"{data_testid}\""
+        test_attribute = f'data-testid="{data_testid}"'
 
     return mark_safe(
         f"""<a class="fr-nav__link" href="{url}" {aria_current} {data_attrs} {test_attribute}">
@@ -45,7 +45,9 @@ def menu_item(context, route, label, *event_data, subroutes=[], data_testid=None
         current_route = ""
 
     aria_current = route == current_route or current_route in subroutes
-    return nav_link(route, label, *event_data, aria_current=aria_current, data_testid=data_testid)
+    return nav_link(
+        route, label, *event_data, aria_current=aria_current, data_testid=data_testid
+    )
 
 
 @register.simple_tag(takes_context=True)
