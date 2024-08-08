@@ -119,6 +119,12 @@
       }
     });
 
+    // Subsequently, when the print page is closed, we must reset the maps to
+    // it's original size
+    window.addEventListener("afterprint", function () {
+      map.invalidateSize();
+    });
+
     // Track some events to Matomo
     map.on('baselayerchange', function (e) {
       let mapType = mapData["type"];  // criterion or regulation
