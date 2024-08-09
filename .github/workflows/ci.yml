@@ -133,7 +133,7 @@ jobs:
     - name: Launch services
       run: docker compose -f docker-compose.yml up -d
       env:
-        DJANGO_SETTINGS_MODULE: envergo.settings.test
+        DJANGO_SETTINGS_MODULE: config.settings.test
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
