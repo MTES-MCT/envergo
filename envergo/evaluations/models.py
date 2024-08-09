@@ -512,7 +512,11 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la police de l'eau")
 
-            if moulinette.natura2000 and moulinette.natura2000.result == "soumis":
+            if (
+                moulinette.natura2000
+                and moulinette.natura2000.result == "soumis"
+                and not moulinette.natura2000.iota_only()
+            ):
                 if config.ddtm_n2000_email:
                     bcc_recipients.append(config.ddtm_n2000_email)
                 else:
