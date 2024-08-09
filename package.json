@@ -12,6 +12,8 @@
     "leaflet": "^1.9.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.46.0",
+    "@types/node": "^22.1.0",
     "autoprefixer": "^10.4.19",
     "cssnano": "^7.0.3",
     "gulp": "^5.0.0",
