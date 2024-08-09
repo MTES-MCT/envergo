@@ -18,7 +18,7 @@ html.nojs .js {
 // Make sure the :target element is not hidden behind the sticky header
 // Note: not all pages have a sticky header, but fortunately, right now,
 // all pages with target links do.
-@media (min-width: 62em) {
+@media (width >= 62em) {
   html {
     /* height of sticky header */
     scroll-padding-top: 3rem;
@@ -44,7 +44,7 @@ html.nojs .js {
  * Update some margins for paragraphs and lists
  */
 article {
-  --li-bottom: .5rem;
+  --li-bottom: 0.5rem;
   --text-spacing: 0 0 1rem;
 
   ul {
@@ -52,7 +52,7 @@ article {
   }
 
   li p {
-    margin-bottom: .5rem;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -106,7 +106,7 @@ article {
 
   svg {
     background-color: white;
-    padding: .75rem;
+    padding: 0.75rem;
   }
 
   circle {
@@ -115,7 +115,6 @@ article {
 }
 
 #moulinette-container {
-
   #form-col {
     order: 2;
   }
@@ -124,7 +123,7 @@ article {
     order: 1;
   }
 
-  @media (min-width: 48em) {
+  @media (width >= 48em) {
     #form-col {
       order: 1;
     }
@@ -139,7 +138,7 @@ article {
 
   article > img {
     max-height: 11.25rem;
-    margin: 0 auto 1.5rem auto;
+    margin: 0 auto 1.5rem;
     display: block;
   }
 
@@ -154,7 +153,7 @@ article {
     }
   }
 
-  button[type=submit] {
+  button[type="submit"] {
     margin-right: 1rem;
   }
 
@@ -178,7 +177,7 @@ nav#evaluation-summary {
     justify-content: space-between;
     align-items: baseline;
     background-image: none;
-    padding: .25rem 0;
+    padding: 0.25rem 0;
     color: var(--text-action-high-grey);
 
     &:hover {
@@ -203,18 +202,16 @@ nav#evaluation-summary {
 }
 
 #moulinette-form {
-
   counter-reset: steps;
 
   label.step,
-  label[for=id_address] {
-
+  label[for="id_address"] {
     &::before {
       counter-increment: steps;
-      content: counter(steps) " ";
+      content: counter(steps) " "; /* stylelint-disable-line */
       font-size: 2rem;
       font-weight: bold;
-      margin-right: .25rem;
+      margin-right: 0.25rem;
     }
   }
 
@@ -249,7 +246,6 @@ nav#evaluation-summary {
     padding: 1rem;
 
     .fr-input-group--error {
-
       &::before {
         background-image: none;
       }
@@ -262,6 +258,7 @@ nav#evaluation-summary {
 
       .fr-label {
         color: var(--text-default-grey);
+
         --border-plain-error: var(--background-action-high-blue-france);
       }
 
@@ -281,7 +278,6 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
 
     .optional-form {
-
       .fr-input-group[id$="activate"] span.label-content {
         font-weight: bold;
       }
@@ -298,18 +294,17 @@ nav#evaluation-summary {
 }
 
 section.regulation {
-
   h2 {
     display: flex;
     align-items: center;
     line-height: 2rem;
 
-    &:before {
-      content: "• ";
+    &::before {
+      content: "• "; /* stylelint-disable-line */
     }
 
     span.content {
-      margin-right: .5em;
+      margin-right: 0.5em;
       white-space: nowrap;
 
       .undertitle {
@@ -319,7 +314,7 @@ section.regulation {
     }
 
     span.fr-tag {
-      margin-top: .75em;
+      margin-top: 0.75em;
       white-space: nowrap;
     }
   }
@@ -364,6 +359,7 @@ section.regulation {
 
     .fr-accordion__btn[aria-expanded="true"] {
       background-color: var(--hover-tint);
+
       --hover: inherit;
       --active: inherit;
 
@@ -378,7 +374,6 @@ section.regulation {
   }
 
   &.regulation-disabled {
-
     h2,
     p {
       color: var(--text-disabled-grey);
@@ -396,7 +391,7 @@ section.regulation {
     line-height: 1.75rem;
   }
 
-  @media (min-width: 48em) {
+  @media (width >= 48em) {
     h3 {
       font-size: 1.5rem;
       line-height: 2rem;
@@ -413,7 +408,6 @@ section.regulation {
   }
 
   div.criteria {
-
     h3 {
       padding-left: 1.5rem;
     }
@@ -456,7 +450,6 @@ form {
   }
 
   .formset {
-
     & + .formset {
       margin-top: 2rem;
     }
@@ -466,7 +459,7 @@ form {
       background-color: var(--bf100-g750);
       color: var(--g700);
       box-shadow: 0 1px 0 0 var(--g300);
-      padding: .5rem 1rem;
+      padding: 0.5rem 1rem;
     }
 
     .formset-field {
@@ -479,14 +472,11 @@ form {
   div.input-file-box {
     position: relative;
 
-    input[type=file] {
+    input[type="file"] {
       position: absolute;
       width: 100%;
       height: 100%;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
+      inset: 0;
       opacity: 0;
     }
 
@@ -509,15 +499,13 @@ form {
       }
     }
 
-    input[type=file]:focus + div.input-file-widget {
-      outline-color: var(--focus);
+    input[type="file"]:focus + div.input-file-widget {
+      outline: var(--focus) solid 2px;
       outline-offset: 2px;
-      outline-width: 2px;
-      outline-style: solid;
     }
 
     // When a file has been selected
-    input[type=file]:valid + div.input-file-widget {
+    input[type="file"]:valid + div.input-file-widget {
       #default-box-msg {
         display: none;
       }
@@ -550,7 +538,6 @@ form#request-evaluation-form {
 
   &[data-user-type="instructor"] {
     &[data-send-eval="false"] {
-
       .only-if-send-eval-checked {
         display: none;
       }
@@ -567,7 +554,6 @@ form#request-evaluation-form {
     #send-eval-hint {
       display: none;
     }
-
   }
 
   #id_send_eval_to_project_owner + .fr-label .fr-hint-text {
@@ -587,22 +573,22 @@ form#request-evaluation-form {
  * Autocomplete fields
  */
 .fr-label + div > .autocomplete__wrapper {
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 }
 
 .autocomplete__wrapper .autocomplete__input {
   border: 0;
-  border-radius: space(1v) space(1v) 0 0;
+  border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
   color: var(--text-label-grey);
+
   --blend: var(--background-contrast-grey-blend);
+
   background-color: var(--background-contrast-grey);
   box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
   line-height: 1.5rem;
   padding: 0.5rem 1rem;
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
@@ -628,11 +614,9 @@ form#request-evaluation-form {
  * Misc stuff
  */
 
-
 /**
  * Stupid little helpers
  */
-
 
 // Smart little trick to fix the aspect ratio of an element
 // See https://css-tricks.com/aspect-ratio-boxes/
@@ -643,17 +627,14 @@ form#request-evaluation-form {
   width: 100%;
   position: relative;
 
-  &:before {
+  &::before {
     content: "";
     display: block;
   }
 
   .ratio-content {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: block;
@@ -661,32 +642,31 @@ form#request-evaluation-form {
 }
 
 .ratio-1x1 {
-  &:before {
+  &::before {
     padding-bottom: 100%;
   }
 }
 
 .ratio-4x3 {
-  &:before {
+  &::before {
     padding-bottom: 75%;
   }
 }
 
 .ratio-16x9 {
-  &:before {
+  &::before {
     padding-bottom: 56.25%;
   }
 }
 
 .ratio-2x1 {
-  &:before {
+  &::before {
     padding-bottom: 50%;
   }
 }
 
-
-figcaption.fr-content-media__caption .fr-link[target=_blank]::after {
-  margin-left: .25rem;
+figcaption.fr-content-media__caption .fr-link[target="_blank"]::after {
+  margin-left: 0.25rem;
 }
 
 div.leaflet-container {
@@ -725,8 +705,8 @@ div.leaflet-container {
   .info {
     padding: 6px 8px;
     background: white;
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    background: rgb(255 255 255 / 80%);
+    box-shadow: 0 0 15px rgb(0 0 0 / 20%);
     border-radius: 5px;
   }
 
@@ -773,7 +753,7 @@ ul.roomy {
 
 main > .fr-notice {
   .fr-notice__body {
-    &:before {
+    &::before {
       display: none;
     }
 
@@ -790,7 +770,7 @@ main > .fr-notice {
  */
 .fr-accordion {
   &.fr-accordion--no-icon {
-    padding-bottom: .25rem;
+    padding-bottom: 0.25rem;
 
     .fr-accordion__btn::after {
       display: none;
@@ -842,16 +822,19 @@ p:last-child {
   margin-bottom: 0;
 }
 
-
 .fr-alert--warning {
-  box-shadow: inset 0 0 0 1px #fcc63a, inset 2.5rem 0 0 0 #FFCA00;
+  box-shadow:
+    inset 0 0 0 1px #fcc63a,
+    inset 2.5rem 0 0 0 #ffca00;
 
   &.fr-alert--sm p:last-child {
     margin-bottom: inherit;
   }
 
   &#unavailable-department-alert {
-    box-shadow: inset 0 0 0 1px #b34000, inset 2.5rem 0 0 0 #b34000;
+    box-shadow:
+      inset 0 0 0 1px #b34000,
+      inset 2.5rem 0 0 0 #b34000;
   }
 }
 
@@ -899,7 +882,6 @@ form.dropzone {
   }
 
   &.dz-max-files-reached {
-
     #max-files-exceeded-alert {
       display: inherit;
     }
@@ -972,7 +954,6 @@ div.hero-alt {
   padding: 1.5rem;
 }
 
-
 .full-height {
   height: 100%;
 }
@@ -1005,7 +986,8 @@ div.hero-alt {
       flex: 1;
     }
 
-    #project-summary, #project-result {
+    #project-summary,
+    #project-result {
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
@@ -1051,7 +1033,6 @@ div.hero-alt {
       #map-button:hover {
         background-color: var(--background-default-grey-hover);
       }
-
     }
 
     #project-result {
@@ -1077,19 +1058,18 @@ div.hero-alt {
     z-index: 1000; // to be above the leaflet map
   }
 
-  @media only screen and (max-width: 991px) {
-
+  @media only screen and (width <= 991px) {
     #moulinette-result-container {
       padding-left: 0;
       padding-right: 0;
 
       > .fr-grid-row {
-        flex-direction: column-reverse;
-        flex-wrap: nowrap;
+        flex-flow: column-reverse nowrap;
         overflow-y: auto;
       }
 
-      #project-summary, #project-result {
+      #project-summary,
+      #project-result {
         overflow: initial;
         display: flex;
         flex-wrap: wrap;
@@ -1100,8 +1080,11 @@ div.hero-alt {
       }
     }
   }
-  @media only screen and (max-width: 767px) {
-    #feedback-form, #copy-btn-container, #debug-btn {
+
+  @media only screen and (width <= 767px) {
+    #feedback-form,
+    #copy-btn-container,
+    #debug-btn {
       display: none;
     }
   }
@@ -1151,7 +1134,6 @@ div.hero-alt {
 }
 
 @media print {
-
   // Reduce font size to a more compact print
   :root {
     font-size: 85%;
@@ -1172,7 +1154,6 @@ div.hero-alt {
     display: none;
   }
 
-
   // Make sure accordion content is visible
   .fr-accordion__title .fr-accordion__btn {
     font-weight: bold;
@@ -1182,6 +1163,7 @@ div.hero-alt {
     --collapse-max-height: 0;
     --collapse: auto;
     --collapser: "";
+
     overflow: auto;
     max-height: auto;
     max-height: inherit;
@@ -1230,11 +1212,14 @@ div.hero-alt {
 
   a:not([href^="#"])::after {
     content: " (" attr(href) ") ";
+
     // these styles are necessary to override some dsfr styles
     mask-size: auto;
     mask-image: none;
     background-color: inherit;
+
     --icon-size: inherit;
+
     display: inherit;
   }
 
@@ -1254,7 +1239,8 @@ div.hero-alt {
   }
 
   .moulinette-result-body {
-    .flex-box, .fr-grid-row {
+    .flex-box,
+    .fr-grid-row {
       display: block;
     }
 
@@ -1275,8 +1261,8 @@ div.hero-alt {
 
 .fr-header {
   .fr-header__logo {
-    padding-top: .25rem;
-    padding-bottom: .25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 
   .fr-nav__link,
@@ -1286,9 +1272,8 @@ div.hero-alt {
   }
 
   &.header-slim {
-
     .fr-header__body-row {
-      padding: .75rem 0;
+      padding: 0.75rem 0;
       line-height: 1rem;
 
       img {
@@ -1302,6 +1287,7 @@ div.hero-alt {
     .fr-btn.main-cta {
       background-color: var(--background-action-high-blue-france);
       color: var(--text-inverted-blue-france);
+
       --hover: var(--background-action-high-blue-france-hover);
       --active: var(--background-action-high-blue-france-active);
 
@@ -1315,14 +1301,14 @@ div.hero-alt {
     }
 
     .fr-header__service {
-      padding: .75rem 1rem;
+      padding: 0.75rem 1rem;
     }
   }
 
   // Makes the header stick at the top of the page
   &.header-sticky {
     position: sticky;
-    top: 0px;
+    top: 0;
     z-index: 2000;
 
     .fr-btn {
@@ -1349,7 +1335,7 @@ div.hero-alt {
     top: -5000px;
     visibility: hidden;
 
-    @media (min-width: 62em) {
+    @media (width >= 62em) {
       &.displayed {
         top: 0;
         visibility: visible;
@@ -1359,7 +1345,6 @@ div.hero-alt {
 }
 
 .fr-callout.evaluation-comment {
-
   .fr-callout__title {
     font-size: 1.375rem;
   }
@@ -1389,12 +1374,12 @@ main.home {
         clear: both;
       }
 
-      @media (min-width: 48em) {
+      @media (width >= 48em) {
         padding-top: 3rem;
         padding-bottom: 3rem;
       }
 
-      @media (min-width: 48em) {
+      @media (width >= 48em) {
         padding-top: 4rem;
         padding-bottom: 4rem;
       }
@@ -1409,20 +1394,20 @@ main.home {
         max-width: 100%;
       }
 
-      @media (min-width: 48em) {
+      @media (width >= 48em) {
         float: right;
         max-width: 320px;
         margin-left: 2rem;
         margin-top: -2.5rem;
       }
 
-      @media (min-width: 62em) {
+      @media (width >= 62em) {
         max-width: 420px;
         margin-left: 2.5rem;
         margin-top: 0;
       }
 
-      @media (min-width: 78em) {
+      @media (width >= 78em) {
         max-width: 480px;
         margin-left: 3rem;
       }
@@ -1440,8 +1425,7 @@ main.home {
       margin-right: 0.5rem;
     }
 
-    @media (min-width: 78em) {
-
+    @media (width >= 78em) {
       div.fr-col:first-child {
         padding-right: 4.5rem !important;
       }
@@ -1453,7 +1437,7 @@ main.home {
   }
 
   section#simulateur {
-    background-color: #E8EDFF;
+    background-color: #e8edff;
     background-color: var(--info-950-100);
 
     h2 {
@@ -1469,9 +1453,9 @@ main.home {
 }
 
 // Geometricians landing page styles
-:root[data-fr-theme=dark] main.geometricians {
+:root[data-fr-theme="dark"] main.geometricians {
   section#hero {
-    background: linear-gradient(248deg, #1B1B35 100%, #4A4A7D 100%);
+    background: linear-gradient(248deg, #1b1b35 100%, #4a4a7d 100%);
   }
 }
 
@@ -1481,7 +1465,7 @@ main.geometricians {
   }
 
   section#hero {
-    background: linear-gradient(248deg, #000091 0%, #6A6AF4 100%);
+    background: linear-gradient(248deg, #000091 0%, #6a6af4 100%);
 
     h1,
     .fr-text {
@@ -1553,12 +1537,12 @@ main.geometricians {
     }
 
     span {
-      color: var(--blue-france-sun-113-625-hover)
+      color: var(--blue-france-sun-113-625-hover);
     }
 
     #faq-link {
       display: block;
-      margin: 0 auto 0;
+      margin: 0 auto;
     }
   }
 
@@ -1574,12 +1558,12 @@ main.geometricians {
 }
 
 .moulinette {
-
   .fr-input,
   .autocomplete__input {
     --background-contrast-grey: var(--grey-975-100);
   }
 
+  // Single column moulinette form layout
   .fr-input-group-map {
     margin-top: 1rem;
     margin-bottom: 1.5rem;
@@ -1588,13 +1572,8 @@ main.geometricians {
       margin-top: 0;
       margin-bottom: 0;
     }
-  }
 
-  // Single column moulinette form layout
-  .fr-input-group-map {
-
-    @media (min-width: 62em) {
-
+    @media (width >= 62em) {
       #map-container {
         margin-left: -5rem;
         margin-right: -5rem;
@@ -1604,20 +1583,18 @@ main.geometricians {
   }
 
   div.last-section {
-
     button {
       display: block;
-      margin: 3rem auto 0 auto;
+      margin: 3rem auto 0;
     }
 
     .submit-feedback-hint-text {
       display: block;
-      margin: 1rem auto 0 auto;
+      margin: 1rem auto 0;
       text-align: center;
     }
   }
 }
-
 
 li.btn-link {
   margin-left: auto;
@@ -1626,7 +1603,7 @@ li.btn-link {
 }
 
 // Missing classes from the dsfr
-@media (min-width: 62em) {
+@media (width >= 62em) {
   .fr-ml-lg-0 {
     margin-left: 0 !important;
   }
@@ -1636,7 +1613,7 @@ li.btn-link {
   display: none;
 }
 
-:root[data-fr-theme=dark] {
+:root[data-fr-theme="dark"] {
   .dark-only {
     display: inherit;
   }
@@ -1684,10 +1661,13 @@ main.demonstrateur_2150 {
 
   .info {
     padding: 6px 8px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
+    font:
+      14px/16px Arial,
+      Helvetica,
+      sans-serif;
     background: white;
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    background: rgb(255 255 255 / 80%);
+    box-shadow: 0 0 15px rgb(0 0 0 / 20%);
     border-radius: 5px;
   }
 
@@ -1715,40 +1695,50 @@ main.demonstrateur_2150 {
 }
 
 // Some dsfr related fixes
-.fr-hint-text a.fr-link:has(+span.fr-tooltip) {
+.fr-hint-text a.fr-link:has(+ span.fr-tooltip) {
   font-size: inherit;
 }
 
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image: url(/static/images/marker-icon.png), url(/static/images/marker-icon-2x.png);
+  background-image: url("/static/images/marker-icon.png"),
+    url("/static/images/marker-icon-2x.png");
+
   /* normal[, Retina] */
-  cursor: url(/static/images/marker-icon.png), url(/static/images/marker-icon-2x.png), auto;
+  cursor: url("/static/images/marker-icon.png"),
+    url("/static/images/marker-icon-2x.png"), auto;
+
   /* normal[, Retina], auto for compliance with cursor syntax */
   width: 25px;
   height: 41px;
   margin: -41px -12px;
+
   /* margin top and left to reversely position iconAnchor */
 }
 
 .leaflet-default-icon-shadow {
-  background-image: url(/static/images/marker-shadow.png);
+  background-image: url("/static/images/marker-shadow.png");
+
   /* normal[, Retina] */
-  cursor: url(/static/images/marker-shadow.png), auto;
+  cursor: url("/static/images/marker-shadow.png"), auto;
+
   /* normal[, Retina], auto */
   width: 41px;
   height: 41px;
   margin: -41px -12px;
+
   /* margin top and left to reversely position shadowAnchor */
 }
 
 .leaflet-default-icon-popup {
   margin: -34px 1px;
+
   /* margin top and left to position popupAnchor */
 }
 
 .leaflet-default-icon-tooltip {
   margin: -28px 16px;
+
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
 }
