@@ -1,11 +1,12 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Department
-from envergo.moulinette.regulations import CriterionEvaluator
+
+class BaseMoulinetteForm(forms.Form):
+    pass
 
 
-class MoulinetteForm(forms.Form):
+class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = forms.IntegerField(
         label=_("Surface created by the project"),
         required=True,
@@ -63,31 +64,72 @@ class MoulinetteForm(forms.Form):
         return data
 
 
-EMPTY_CHOICE = ("", "---------")
-
-
-class MoulinetteDebugForm(forms.Form):
-    """For debugging purpose.
-
-    This form dynamically creates a field for every `CriterionEvaluator` subclass.
-    """
-
-    department = forms.ModelChoiceField(
-        label=_("Department"),
+class MoulinetteFormHaie(BaseMoulinetteForm):
+    profil = forms.ChoiceField(
+        label="J’effectue cette demande en tant que :",
+        widget=forms.RadioSelect,
+        choices=(
+            ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
+            (
+                "autre",
+                "Collectivité, aménageur, gestionnaire de réseau, particulier, etc.",
+            ),
+        ),
         required=True,
-        queryset=Department.objects.all(),
-        to_field_name="department",
+    )
+    motif = forms.ChoiceField(
+        label="Quelle est la raison de l’arrachage de la haie ?",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "transfert_parcelles",
+                "Agrandissement, échange de parcelles, nouvelle installation…",
+            ),
+            (
+                "chemin_acces",
+                "Chemin nécessaire pour l’accès et l’exploitation de la parcelle",
+            ),
+            ("meilleur_emplacement", "Plantation justifiée par un organisme agréé"),
+            ("amenagement", "Réaliser une opération d’aménagement foncier"),
+            ("autre", "Autre"),
+        ),
+        required=True,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    reimplantation = forms.ChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=(
+            ("remplacement", "Oui, en remplaçant la haie détruite au même endroit"),
+            ("compensation", "Oui, en plantant une haie à un autre endroit"),
+            ("non", "Non, aucune réimplantation"),
+        ),
+        required=True,
+    )
 
-        criteria = [criterion for criterion in CriterionEvaluator.__subclasses__()]
-        for criterion in criteria:
-            field_name = f"{criterion.slug}"
-            choices = [EMPTY_CHOICE] + list(zip(criterion.CODES, criterion.CODES))
-            self.fields[field_name] = forms.ChoiceField(
-                label=criterion.choice_label,
-                choices=choices,
-                required=False,
+    def clean(self):
+        data = super().clean()
+
+        reimplantation = data.get("reimplantation")
+        motif = data.get("motif")
+
+        if reimplantation == "remplacement" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
             )
+        elif reimplantation == "remplacement" and motif == "chemin_acces":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le percement d'un chemin"
+                " d'accès. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+        elif reimplantation == "non" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "L’absence de réimplantation de la haie est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+
+        return data

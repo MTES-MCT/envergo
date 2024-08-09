@@ -12,27 +12,14 @@
               Française
             </p>
           </div>
-          <div class="fr-header__navbar">
-            <button class="fr-btn--menu fr-btn"
-                    data-fr-opened="false"
-                    aria-controls="modal-menu"
-                    aria-haspopup="menu"
-                    title="Menu">Menu</button>
-          </div>
         </div>
         <div class="fr-header__service">
           <a href="/">
-            <span class="fr-header__service-title">Haie</span>
-            <span class="fr-header__service-tagline fr-hidden fr-unhidden-sm">: le guichet unique de la haie</span>
+            <span class="fr-header__service-title">Guichet Unique de la Haie</span>
+            <span class="fr-header__service-tagline fr-hidden fr-unhidden-sm">(en construction)</span>
           </a>
         </div>
       </div>
-
-      {% if user.is_authenticated %}
-        {% include '_user_menu.html' %}
-      {% else %}
-        {% include '_anonymous_menu.html' %}
-      {% endif %}
     </div>
   </div>
 </div>

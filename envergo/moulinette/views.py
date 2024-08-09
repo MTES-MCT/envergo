@@ -13,8 +13,7 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
-from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import Criterion, FakeMoulinette, Moulinette
+from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -28,7 +27,10 @@ BODY_TPL = {
 class MoulinetteMixin:
     """Display the moulinette form and results."""
 
-    form_class = MoulinetteForm
+    def get_form_class(self):
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        FormClass = MoulinetteClass.get_main_form_class()
+        return FormClass
 
     def get_initial(self):
         return self.request.GET
@@ -77,10 +79,9 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(
-                form.cleaned_data,
-                form.data,
-                self.should_activate_optional_criteria(),
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            moulinette = MoulinetteClass(
+                form.cleaned_data, form.data, self.should_activate_optional_criteria()
             )
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
@@ -206,8 +207,8 @@ class MoulinetteMixin:
 
     def get_all_optional_form_classes(self):
         form_classes = []
-        criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
-        for criterion in criteria:
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        for criterion in MoulinetteClass.get_optionnal_criteria():
             form_class = criterion.evaluator.form_class
             if form_class and form_class not in form_classes:
                 form_classes.append(form_class)
@@ -237,10 +238,9 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
-            moulinette = Moulinette(
-                form_data,
-                form.data,
-                self.should_activate_optional_criteria(),
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            moulinette = MoulinetteClass(
+                form_data, form.data, self.should_activate_optional_criteria()
             )
 
         additional_forms = self.get_additional_forms(moulinette)
@@ -313,10 +313,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/home.html"
         elif is_edit:
             template_name = "moulinette/home.html"
-        elif self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
-            template_name = "haie/moulinette/result.html"
         else:
-            template_name = "amenagement/moulinette/result.html"
+            template_name = moulinette.get_result_template()
 
         return [template_name]
 
@@ -421,50 +419,3 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["edit_url"] = edit_url
 
         return context
-
-
-class MoulinetteDebug(FormView):
-    """Visualize the moulinette result for a specific criteria result combination.
-
-    See `envergo.moulinette.models.FakeMoulinette` for more details.
-    """
-
-    form_class = MoulinetteDebugForm
-
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
-        }
-
-        # This form is submitted with GET, not POST
-        GET = self.request.GET
-        if GET:
-            kwargs.update({"data": GET})
-
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form = context["form"]
-        if form.is_valid():
-            context["moulinette"] = self.moulinette = FakeMoulinette(form.cleaned_data)
-            context.update(self.moulinette.catalog)
-
-        return context
-
-    def get_template_names(self):
-        """Check wich template to use depending on the moulinette result."""
-
-        moulinette = getattr(self, "moulinette", None)
-        is_admin = self.request.user.is_staff
-
-        if moulinette and (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/debug_result.html"
-        elif moulinette:
-            template_name = "moulinette/debug_result_non_disponible.html"
-        else:
-            template_name = "moulinette/debug.html"
-
-        return [template_name]

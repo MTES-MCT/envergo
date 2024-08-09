@@ -265,19 +265,23 @@ class Evaluation(models.Model):
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
-        from envergo.moulinette.forms import MoulinetteForm
-        from envergo.moulinette.models import Moulinette
+        from envergo.moulinette.forms import MoulinetteFormAmenagement
+        from envergo.moulinette.models import MoulinetteAmenagement
         from envergo.moulinette.utils import compute_surfaces
 
         if not hasattr(self, "_moulinette"):
             raw_params = self.moulinette_params
             raw_params.update(compute_surfaces(raw_params))
-            form = MoulinetteForm(raw_params)
+            form = MoulinetteFormAmenagement(
+                raw_params
+            )  # there is only Amenagement evaluations
             form.is_valid()
             params = form.cleaned_data
             activate_optional_criteria = True
-            self._moulinette = Moulinette(
-                params, raw_params, activate_optional_criteria
+            self._moulinette = (
+                MoulinetteAmenagement(  # there is only Amenagement evaluations
+                    params, raw_params, activate_optional_criteria
+                )
             )
 
         return self._moulinette

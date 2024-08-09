@@ -1,0 +1,71 @@
+{% load utils %}
+
+{% if additional_forms %}
+  <hr />
+  <div id="additional-forms"
+       class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
+    <h4>
+      <strong>Questions complémentaires</strong>
+    </h4>
+    <p>
+      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+    </p>
+
+    {% for field_name, field in additional_fields.items %}
+      {% if field|is_checkbox %}
+        {% include '_checkbox_snippet.html' with field=field %}
+      {% elif field|is_radio %}
+        {% include '_radio_snippet.html' with field=field %}
+      {% elif field|is_input_file %}
+        {% include '_input_file_snippet.html' with field=field %}
+      {% else %}
+        {% include '_field_snippet.html' with field=field %}
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if optional_forms %}
+  <div id="optional-forms" class="form-section">
+    <p>
+      <strong>Questions optionnelles</strong>
+      <small>(admin uniquement)</small>
+    </p>
+    {% for form in optional_forms %}
+
+      <div class="optional-form">
+        {% include '_checkbox_snippet.html' with field=form.activate %}
+
+        <fieldset>
+          {% for field in form %}
+            {% if field.name != "activate" %}
+              {% if field|is_checkbox %}
+                {% include '_checkbox_snippet.html' with field=field %}
+              {% elif field|is_radio %}
+                {% include '_radio_snippet.html' with field=field %}
+              {% elif field|is_input_file %}
+                {% include '_input_file_snippet.html' with field=field %}
+              {% else %}
+                {% include '_field_snippet.html' with field=field %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </fieldset>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="hide-print">
+  {% if not moulinette %}
+    <button type="submit" class="fr-btn">Démarrer la simulation</button>
+  {% elif additional_forms and moulinette.has_missing_data %}
+    <button type="submit" class="fr-btn">Démarrer la simulation</button>
+  {% else %}
+    <button type="submit" class="fr-btn">Renouveler la simulation</button>
+  {% endif %}
+</div>
+
+<p id="liability-warning" class="fr-message fr-mt-2w">
+  EnvErgo est un service d'information. Il ne se substitue pas aux positions de l'administration.
+</p>

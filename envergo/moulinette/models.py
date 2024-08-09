@@ -1,6 +1,8 @@
 import logging
+from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -18,7 +20,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
 
 # WGS84, geodetic coordinates, units in degrees
@@ -47,6 +50,8 @@ REGULATIONS = Choices(
     ("natura2000", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
+    ("bcae8", "Bonnes conditions agricoles et environnementales - Fiche VIII"),
+    ("dep", "Dérogation espèces protégées"),
 )
 
 
@@ -782,13 +787,15 @@ class MoulinetteCatalog(dict):
         return value
 
 
-class Moulinette:
+class Moulinette(ABC):
     """Automatic environment law evaluation processing tool.
 
     Given a bunch of relevant user provided data, we try to perform an
     automatic computation and tell if the project is subject to the Water Law
     or other regulations.
     """
+
+    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage", "bcae8"]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
         if isinstance(raw_data, QueryDict):
@@ -800,37 +807,386 @@ class Moulinette:
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
-        self.department = self.get_department()
-        if hasattr(self.department, "moulinette_config"):
-            self.config = self.catalog["config"] = self.department.moulinette_config
-            self.templates = {t.key: t for t in self.config.templates.all()}
 
-        self.perimeters = self.get_perimeters()
-        self.criteria = self.get_criteria()
-        self.regulations = self.get_regulations()
+        self.load_specific_data()
+
+        self.config = self.catalog["config"] = self.get_config()
+        if self.config and self.config.id:
+            self.templates = {t.key: t for t in self.config.templates.all()}
+        else:
+            self.templates = {}
+
         self.evaluate()
+
+    @property
+    def regulations(self):
+        if not hasattr(self, "_regulations"):
+            self._regulations = self.get_regulations()
+        return self._regulations
+
+    @regulations.setter
+    def regulations(self, value):
+        self._regulations = value
 
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
 
-    def get_department(self):
-        lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
-            .first()
-        )
-        return department
+    @abstractmethod
+    def load_specific_data(self):
+        """Load data specific for a given moulinette instance."""
+        pass
+
+    def has_config(self):
+        return bool(self.config)
+
+    @abstractmethod
+    def get_config(self):
+        pass
 
     def get_template(self, template_key):
+        """Return the MoulinetteTemplate with the given key."""
+
         return self.templates.get(template_key, None)
+
+    def get_result_template(self):
+        """Return the template to display the result page."""
+
+        if not hasattr(self, "result_template"):
+            raise AttributeError("No result template found.")
+        return self.result_template
+
+    @classmethod
+    def get_main_form_class(cls):
+        """Return the form class for the main questions."""
+
+        if not hasattr(cls, "main_form_class"):
+            raise AttributeError("No main form class found.")
+        return cls.main_form_class
+
+    def get_criteria(self):
+        """Fetch relevant criteria for evaluation.
+
+        We don't actually use the criteria directly, the returned queryset will only
+        be used in a prefetch_related call when we fetch the regulations.
+        """
+        criteria = (
+            Criterion.objects.order_by("weight")
+            .distinct("weight", "id")
+            .prefetch_related("templates")
+            .annotate(distance=Cast(0, IntegerField()))
+        )
+
+        # We might have to filter out optional criteria
+        if not self.activate_optional_criteria:
+            criteria = criteria.exclude(is_optional=True)
+
+        return criteria
+
+    @classmethod
+    def get_optionnal_criteria(self):
+        """Fetch optionnal criteria used by this moulinette regulations."""
+        criteria = Criterion.objects.filter(
+            is_optional=True, regulation__regulation__in=self.REGULATIONS
+        ).order_by("weight")
+
+        return criteria
+
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
+        criteria = self.get_criteria()
+        regulations = (
+            Regulation.objects.filter(regulation__in=self.REGULATIONS)
+            .order_by("weight")
+            .prefetch_related(Prefetch("criteria", queryset=criteria))
+        )
+        return regulations
+
+    def get_catalog_data(self):
+        return {}
+
+    def is_evaluation_available(self):
+        return self.config and self.config.is_activated
+
+    def has_missing_data(self):
+        """Make sure all the data required to compute the result is provided."""
+
+        form_errors = []
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                form = criterion.get_form()
+                # We check for each form for errors
+                if form:
+                    form.full_clean()
+
+                    # For optional forms, we only check for errors if the form
+                    # was activated (the "activate" checkbox was selected)
+                    if (
+                        criterion.is_optional
+                        and self.activate_optional_criteria
+                        and form.is_activated()
+                    ):
+                        form_errors.append(not form.is_valid())
+                    elif not criterion.is_optional:
+                        form_errors.append(not form.is_valid())
+
+        return any(form_errors)
+
+    def cleaned_additional_data(self):
+        """Return combined additional data from custom criterion forms."""
+
+        data = {}
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                form = criterion.get_form()
+                if form and form.is_valid():
+                    data.update(form.cleaned_data)
+
+        return data
+
+    def __getattr__(self, attr):
+        """Returns the corresponding regulation.
+
+        Allows to do something like this:
+        moulinette.loi_sur_leau to fetch the correct regulation.
+        """
+        if attr in self.REGULATIONS:
+            return self.get_regulation(attr)
+        else:
+            return super().__getattr__(attr)
+
+    def get_regulation(self, regulation_slug):
+        """Return the regulation with the given slug."""
+
+        def select_regulation(regulation):
+            return regulation.slug == regulation_slug
+
+        regul = next(filter(select_regulation, self.regulations), None)
+        if regul is None:
+            logger.warning(f"Regulation {regulation_slug} not found.")
+        return regul
+
+    def result_data(self):
+        """Export all results data as a dict."""
+
+        result = {}
+        for regulation in self.regulations:
+            result[regulation.slug] = {
+                "result": regulation.result,
+                "criterions": {},
+            }
+            for criterion in regulation.criteria.all():
+                result[regulation.slug]["criterions"][criterion.slug] = criterion.result
+
+        return result
+
+    def additional_form_classes(self):
+        """Return the list of forms for additional questions.
+
+        Some criteria need more data to return an answer. Here, we gather all
+        the forms to gather this data.
+        """
+
+        forms = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in forms:
+                        forms.append(form_class)
+
+        return forms
+
+    def main_form(self):
+        """Get the instanciated main form questions."""
+
+        form_class = self.get_main_form_class()
+        return form_class(self.raw_data)
+
+    def additional_forms(self):
+        """Get a list of instanciated additional questions forms."""
+
+        form_classes = self.additional_form_classes()
+        forms = []
+        for form_class in form_classes:
+            form = form_class(self.raw_data)
+
+            # Some forms end up with no fields, depending on the project data
+            # so we just skip them
+            if form.fields:
+                forms.append(form)
+        return forms
+
+    def additional_fields(self):
+        """Get a {field_name: field} dict of all additional questions fields."""
+
+        forms = self.additional_forms()
+        fields = OrderedDict()
+        for form in forms:
+            for field in form:
+                if field.name not in fields:
+                    fields[field.name] = field
+        return fields
+
+    def optional_form_classes(self):
+        """Return the list of forms for optional questions."""
+        forms = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in forms:
+                        forms.append(form_class)
+
+        return forms
+
+    def optional_forms(self):
+        form_classes = self.optional_form_classes()
+        forms = []
+        for form_class in form_classes:
+            form = form_class(self.raw_data)
+            if form.fields:
+                forms.append(form)
+        return forms
+
+    @abstractmethod
+    def summary(self):
+        """Build a data summary, for analytics purpose."""
+        raise NotImplementedError
+
+    @property
+    def result(self):
+        """Compute global result from individual regulation results."""
+
+        results = [regulation.result for regulation in self.regulations]
+
+        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
+        rules = [
+            ((RESULTS.interdit,), RESULTS.interdit),
+            (
+                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
+                RESULTS.soumis,
+            ),
+            ((RESULTS.action_requise,), RESULTS.action_requise),
+            ((RESULTS.non_soumis,), RESULTS.non_soumis),
+            ((RESULTS.non_disponible,), RESULTS.non_disponible),
+        ]
+
+        result = None
+        for rule_statuses, rule_result in rules:
+            if any(rule_status in results for rule_status in rule_statuses):
+                result = rule_result
+                break
+
+        result = result or RESULTS.non_soumis
+
+        return result
+
+    def all_required_actions(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions():
+                yield required_action
+
+    def all_required_actions_soumis(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_soumis():
+                yield required_action
+
+    def all_required_actions_interdit(self):
+        for regulation in self.regulations:
+            for required_action in regulation.required_actions_interdit():
+                yield required_action
+
+    @classmethod
+    def get_form_template(cls):
+        """Return the template name for the moulinette."""
+
+        if not hasattr(cls, "form_template"):
+            raise AttributeError("No form template name found.")
+        return cls.form_template
+
+
+class MoulinetteAmenagement(Moulinette):
+    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
+    result_template = "amenagement/moulinette/result.html"
+    form_template = "amenagement/moulinette/form.html"
+    main_form_class = MoulinetteFormAmenagement
+
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
+        perimeters = self.get_perimeters()
+
+        regulations = (
+            super()
+            .get_regulations()
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
+        return regulations
+
+    def get_perimeters(self):
+        coords = self.catalog["coords"]
+
+        perimeters = (
+            Perimeter.objects.filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .order_by("id")
+            .distinct("id")
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+        )
+
+        return perimeters
+
+    def get_criteria(self):
+        coords = self.catalog["coords"]
+
+        criteria = (
+            super()
+            .get_criteria()
+            .filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+        )
+
+        return criteria
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        catalog = {}
+        catalog = super().get_catalog_data()
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
@@ -898,78 +1254,6 @@ class Moulinette:
 
         return catalog
 
-    def get_criteria(self):
-        coords = self.catalog["coords"]
-
-        criteria = (
-            Criterion.objects.filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
-            .annotate(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
-                )
-            )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("weight")
-            .distinct("weight", "id")
-            .select_related("activation_map")
-            .prefetch_related("templates")
-            .defer("activation_map__geometry")
-        )
-
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
-        return criteria
-
-    def get_perimeters(self):
-        coords = self.catalog["coords"]
-
-        perimeters = (
-            Perimeter.objects.filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
-            .annotate(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
-                )
-            )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("id")
-            .distinct("id")
-            .select_related("activation_map")
-            .defer("activation_map__geometry")
-        )
-
-        return perimeters
-
-    def get_regulations(self):
-        """Find the activated regulations and their criteria."""
-
-        regulations = (
-            Regulation.objects.all()
-            .order_by("weight")
-            .prefetch_related(Prefetch("criteria", queryset=self.criteria))
-            .prefetch_related(Prefetch("perimeters", queryset=self.perimeters))
-        )
-        return regulations
-
     def get_zones(self, coords, radius=200):
         """Return the Zone objects containing the queried coordinates."""
 
@@ -982,152 +1266,6 @@ class Moulinette:
             .order_by("distance", "map__name")
         )
         return zones
-
-    def has_config(self):
-        config = getattr(self.department, "moulinette_config", None)
-        return bool(config)
-
-    def is_evaluation_available(self):
-        """Moulinette evaluations are only available on some departments.
-
-        When a department is available, we fill it's contact data.
-        """
-        config = getattr(self.department, "moulinette_config", None)
-        return config and config.is_activated
-
-    def has_missing_data(self):
-        """Make sure all the data required to compute the result is provided."""
-
-        form_errors = []
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                form = criterion.get_form()
-                # We check for each form for errors
-                if form:
-                    form.full_clean()
-
-                    # For optional forms, we only check for errors if the form
-                    # was activated (the "activate" checkbox was selected)
-                    if (
-                        criterion.is_optional
-                        and self.activate_optional_criteria
-                        and form.is_activated()
-                    ):
-                        form_errors.append(not form.is_valid())
-                    elif not criterion.is_optional:
-                        form_errors.append(not form.is_valid())
-
-        return any(form_errors)
-
-    def cleaned_additional_data(self):
-        """Return combined additional data from custom criterion forms."""
-
-        data = {}
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                form = criterion.get_form()
-                if form and form.is_valid():
-                    data.update(form.cleaned_data)
-
-        return data
-
-    def __getattr__(self, attr):
-        """Returs the corresponding regulation.
-
-        Allows to do something like this:
-        moulinette.loi_sur_leau to fetch the correct regulation.
-        """
-        return self.get_regulation(attr)
-
-    def get_regulation(self, regulation_slug):
-        """Return the regulation with the given slug."""
-
-        def select_regulation(regulation):
-            return regulation.slug == regulation_slug
-
-        regul = next(filter(select_regulation, self.regulations), None)
-        if regul is None:
-            logger.warning(f"Regulation {regulation_slug} not found.")
-        return regul
-
-    def result_data(self):
-        """Export all results data as a dict."""
-
-        result = {}
-        for regulation in self.regulations:
-            result[regulation.slug] = {
-                "result": regulation.result,
-                "criterions": {},
-            }
-            for criterion in regulation.criteria.all():
-                result[regulation.slug]["criterions"][criterion.slug] = criterion.result
-
-        return result
-
-    def additional_form_classes(self):
-        """Return the list of forms for additional questions.
-
-        Some criteria need more data to return an answer. Here, we gather all
-        the forms to gather this data.
-        """
-
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if not criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
-
-    def additional_forms(self):
-        """Get a list of instanciated additional questions forms."""
-
-        form_classes = self.additional_form_classes()
-        forms = []
-        for form_class in form_classes:
-            form = form_class(self.raw_data)
-
-            # Some forms end up with no fields, depending on the project data
-            # so we just skip them
-            if form.fields:
-                forms.append(form)
-        return forms
-
-    def additional_fields(self):
-        """Get a {field_name: field} dict of all additional questions fields."""
-
-        forms = self.additional_forms()
-        fields = OrderedDict()
-        for form in forms:
-            for field in form:
-                if field.name not in fields:
-                    fields[field.name] = field
-        return fields
-
-    def optional_form_classes(self):
-        """Return the list of forms for optional questions."""
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
-
-    def optional_forms(self):
-        form_classes = self.optional_form_classes()
-        forms = []
-        for form_class in form_classes:
-            form = form_class(self.raw_data)
-            if form.fields:
-                forms.append(form)
-        return forms
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
@@ -1151,97 +1289,72 @@ class Moulinette:
 
         return summary
 
-    @property
-    def result(self):
-        """Compute global result from individual regulation results."""
-
-        results = [regulation.result for regulation in self.regulations]
-
-        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
-        rules = [
-            ((RESULTS.interdit,), RESULTS.interdit),
-            (
-                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
-                RESULTS.soumis,
-            ),
-            ((RESULTS.action_requise,), RESULTS.action_requise),
-            ((RESULTS.non_soumis), RESULTS.non_soumis),
-        ]
-
-        result = None
-        for rule_statuses, rule_result in rules:
-            if any(rule_status in results for rule_status in rule_statuses):
-                result = rule_result
-                break
-
-        result = result or RESULTS.non_soumis
-
-        return result
-
-    def all_required_actions(self):
-        for regulation in self.regulations:
-            for required_action in regulation.required_actions():
-                yield required_action
-
-    def all_required_actions_soumis(self):
-        for regulation in self.regulations:
-            for required_action in regulation.required_actions_soumis():
-                yield required_action
-
-    def all_required_actions_interdit(self):
-        for regulation in self.regulations:
-            for required_action in regulation.required_actions_interdit():
-                yield required_action
-
-
-class FakeMoulinette(Moulinette):
-    """This is a custom Moulinette subclass used for debugging purpose.
-
-    A single moulinette simulation tests many criteria, each criterion can
-    have a different result code, resulting in specific regulation results.
-
-    Every single criterion unique result is displayed with a dedicated template.
-    Moreover, some data may change depending on the department the simulation
-    is ran.
-
-    For this reason, it can be very cumbersome for the EnvErgo team members
-    to review and test each and every possibility.
-
-    That's why a custom page was created, allowing to manually select the exact
-    Moulinette result combination we want to display.
-
-    This `FakeMoulinette` is a utility class that must be initialized with a
-    dict of data where each key is a single criterion slug and the associated
-    value is the `result_code` we want the criterion to return.
-    """
-
-    def __init__(self, fake_data):
-        dummy_data = {
-            "lat": 1.7,
-            "lng": 47,
-            "created_surface": 50,
-            "existing_surface": 50,
-        }
-        dummy_data.update(fake_data)
-        super().__init__(dummy_data, dummy_data)
-
-        # Override the `result_code` for each criterion
-        # Since `result_code` is a property, we cannot directly monkeypatch the
-        # property.
-        # Hence, we have to override the value at the class level
-        for regulation in self.regulations:
-            for criterion in regulation.criterions:
-                setattr(
-                    criterion.__class__, "result_code", self.catalog[criterion.slug]
-                )
-
-    def get_criterions(self):
-        criteria = [
-            criterion
-            for criterion in CriterionEvaluator.__subclasses__()
-            if self.catalog[criterion.slug]
-        ]
-        return criteria
+    def load_specific_data(self):
+        self.department = self.get_department()
 
     def get_department(self):
-        return self.catalog["department"]
+        lng_lat = self.catalog["lng_lat"]
+        department = (
+            Department.objects.filter(geometry__contains=lng_lat)
+            .select_related("moulinette_config")
+            .prefetch_related("moulinette_config__templates")
+            .first()
+        )
+        return department
+
+    def get_config(self):
+        return getattr(self.department, "moulinette_config", None)
+
+
+class MoulinetteHaie(Moulinette):
+    REGULATIONS = ["bcae8", "dep"]
+    result_template = "haie/moulinette/result.html"
+    form_template = "haie/moulinette/form.html"
+    main_form_class = MoulinetteFormHaie
+
+    def get_config(self):
+        return MoulinetteConfig(
+            is_activated=True, regulations_available=self.REGULATIONS
+        )
+
+    def summary(self):
+        """Build a data summary, for analytics purpose."""
+        # TODO
+        summary = {
+            "haie": "this is a haie simulation",
+        }
+        summary.update(self.cleaned_additional_data())
+
+        if self.is_evaluation_available():
+            summary["result"] = self.result_data()
+
+        return summary
+
+    def load_specific_data(self):
+        """There is no specific needs for the Haie moulinette."""
+        pass
+
+
+def get_moulinette_class_from_site(site):
+    """Return the correct Moulinette class depending on the current site."""
+
+    domain_class = {
+        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
+        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
+    }
+    cls = domain_class.get(site.domain, None)
+    if cls is None:
+        raise RuntimeError(f"Unknown site for domain {site.domain}")
+    return cls
+
+
+def get_moulinette_class_from_url(url):
+    """Return the correct Moulinette class depending on the current site."""
+
+    if "envergo" in url:
+        cls = MoulinetteAmenagement
+    elif "haie" in url:
+        cls = MoulinetteHaie
+    else:
+        raise RuntimeError("Cannot find the moulinette to use")
+    return cls

@@ -29,6 +29,14 @@ def autouse_site(site):
     pass
 
 
+@pytest.fixture()
+def admin_client(admin_client):
+    admin_client.force_template_rendering = (
+        True  # enforce template rendering, and context processors triggering
+    )
+    return admin_client
+
+
 def test_create_eval_from_request(client, admin_user, eval_request):
     qs = Evaluation.objects.all()
     assert qs.count() == 0

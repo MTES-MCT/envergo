@@ -1,5 +1,7 @@
 {% extends 'moulinette/result.html' %}
 
+{% load moulinette %}
+
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
     {% include 'haie/_slim_header.html' %}
@@ -7,10 +9,25 @@
   </header>
 {% endblock %}
 
-{% block include_mobile_footer %}
-  {% include 'haie/_footer.html' with do_not_load_modal="true" %}
+{% block project_summary %}
+  {% for field in moulinette.main_form %}
+    <li>{% field_summary field %}</li>
+  {% endfor %}
+
+  {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+{% endblock %}
+
+{% block mobile-footer %}
+  {% include "haie/_learn_more.html" %}
+  <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
+    {% include 'haie/_footer.html' with do_not_load_modal="true" %}
+  </section>
 {% endblock %}
 
 {% block include_desktop_footer %}
   {% include 'haie/_footer.html' %}
+{% endblock %}
+
+{% block include_learn_more %}
+  {% include 'haie/_learn_more.html' %}
 {% endblock %}

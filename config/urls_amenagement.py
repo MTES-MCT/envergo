@@ -7,7 +7,7 @@ from envergo.geodata.views import CatchmentAreaDebug
 from .urls import urlpatterns as common_urlpatterns
 
 urlpatterns = [
-    path("", include("envergo.pages.urls")),
+    path("", include("envergo.pages.urls_amenagement")),
     path(
         "a/<slug:reference>/",
         ShortUrlAdminRedirectView.as_view(),
