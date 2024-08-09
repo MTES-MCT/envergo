@@ -51,6 +51,7 @@ REGULATIONS = Choices(
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("bcae8", "Bonnes conditions agricoles et environnementales - Fiche VIII"),
+    ("dep", "Dérogation espèces protégées"),
 )
 
 
@@ -1306,13 +1307,15 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["bcae8"]
+    REGULATIONS = ["bcae8", "dep"]
     result_template = "haie/moulinette/result.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
 
     def get_config(self):
-        return MoulinetteConfig(is_activated=True, regulations_available=["bcae8"])
+        return MoulinetteConfig(
+            is_activated=True, regulations_available=self.REGULATIONS
+        )
 
     def summary(self):
         """Build a data summary, for analytics purpose."""

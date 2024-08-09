@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def loisurleau_criteria(france_map):  # noqa
+def bcae8_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="bcae8")
     criteria = [
         CriterionFactory(
