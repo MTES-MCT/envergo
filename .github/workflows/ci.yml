@@ -3,9 +3,10 @@ name: CI
 # Enable Buildkit and let compose use it to speed up image building
 env:
   DATABASE_URL: 'postgis://envergo:envergo@localhost:5432/envergo'
-  USE_DOCKER: False
+  USE_DOCKER: "yes"
   LANG: 'fr_FR.UTF-8'
   LC_ALL: 'fr_FR.UTF-8'
+  DJANGO_SETTINGS_MODULE: envergo.settings.test
 
 on:
   pull_request:
@@ -112,7 +113,6 @@ jobs:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
           POSTGRES_DB: envergo
-          DJANGO_SETTINGS_MODULE: envergo.settings.test
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
