@@ -7,6 +7,11 @@ from envergo.moulinette.tests.factories import MoulinetteConfigFactory
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 HOME_TITLE = "Simulez votre projet en phase amont"
 RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (

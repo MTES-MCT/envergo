@@ -219,6 +219,10 @@ nav#evaluation-summary {
     color: var(--text-default-info);
   }
 
+  .form-section {
+    margin-bottom: 1.5rem;
+  }
+
   #form-group-created_surface,
   #form-group-final_surface {
     & > label {
@@ -235,10 +239,6 @@ nav#evaluation-summary {
   #form-group-address .optional-tag,
   #form-group-final_surface .optional-tag {
     display: none;
-  }
-
-  #additional-forms {
-    margin-bottom: 1.5rem;
   }
 
   #additional-forms.unbound {
@@ -275,7 +275,6 @@ nav#evaluation-summary {
   #optional-forms {
     background-color: var(--background-contrast-grey);
     padding: 1rem;
-    margin-bottom: 1.5rem;
 
     .optional-form {
       .fr-input-group[id$="activate"] span.label-content {

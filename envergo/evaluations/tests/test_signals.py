@@ -8,6 +8,11 @@ from envergo.evaluations.tests.factories import RegulatoryNoticeLogFactory
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 @pytest.fixture
 def event():
     data = {

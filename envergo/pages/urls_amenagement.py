@@ -6,7 +6,7 @@ from envergo.geodata.views import ParcelsExport
 from envergo.pages.views import (
     AvailabilityInfo,
     GeometriciansView,
-    HomeView,
+    HomeAmenagementView,
     LegalMentionsView,
     NewsFeed,
     NewsView,
@@ -16,7 +16,7 @@ from envergo.pages.views import (
 )
 
 urlpatterns = [
-    path("", HomeView.as_view(), name="home"),
+    path("", HomeAmenagementView.as_view(), name="home"),
     path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(_("privacy/"), PrivacyView.as_view(), name="privacy"),

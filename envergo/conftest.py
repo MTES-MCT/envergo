@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from django.contrib.sites.models import Site
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
@@ -19,6 +21,11 @@ def user() -> User:
 @pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
+
+
+@pytest.fixture
+def site() -> Site:
+    return SiteFactory()
 
 
 # Some views trigger a call to a remote API, and we want to make sure it is mocked
@@ -73,3 +80,23 @@ def mock_geo_api_data():
             },
         ]
         yield mock_geo_data
+
+
+@pytest.fixture(autouse=True)
+def mock_get_current_site():
+    # Create a mock site
+    mock_site = Site()
+    mock_site.domain = "www.example.com"
+    mock_site.name = "example"
+
+    # Use patch to replace get_current_site with your mock
+    with patch(
+        "django.contrib.sites.shortcuts.get_current_site", return_value=mock_site
+    ):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def update_default_site(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        SiteFactory(domain="testserver", name="testserver")

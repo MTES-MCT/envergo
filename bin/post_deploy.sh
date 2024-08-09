@@ -8,7 +8,10 @@ echo ">>> Starting the post_deploy hook"
 
 python manage.py migrate
 
-python manage.py deploy_environment $APP.$REGION_NAME.scalingo.io
+if [ "$IS_REVIEW_APP" == "True" ]
+then
+  python manage.py deploy_environment $APP.$REGION_NAME.scalingo.io
+fi
 
 
 echo ">>> Leaving the post_deploy hook"
