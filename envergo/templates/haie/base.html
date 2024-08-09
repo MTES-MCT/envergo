@@ -1,5 +1,7 @@
 {% extends "multisite_base.html" %}
 
+{% load static compress %}
+
 {% block app_title %}
   {% block title %}
   {% endblock title %}
@@ -7,6 +9,12 @@
 {% endblock %}
 
 {% block description %}Guichet unique de la haie{% endblock %}
+
+{% block extra_css %}
+  {% compress css %}
+    <link href="{% static 'css/project_haie.min.css' %}" rel="stylesheet">
+  {% endcompress %}
+{% endblock extra_css %}
 
 {% block include_slim_header %}
   {% include 'haie/_slim_header.html' %}

@@ -15,8 +15,8 @@ from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 
 
-class HomeView(MoulinetteMixin, FormView):
-    template_name = "pages/home.html"
+class HomeAmenagementView(MoulinetteMixin, FormView):
+    template_name = "amenagement/pages/home.html"
 
 
 class HomeHaieView(MoulinetteMixin, FormView):

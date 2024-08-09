@@ -1,0 +1,10 @@
+section#simulez .wrapper {
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+}
+section#simulez h2 {
+  color: var(--text-action-high-blue-france);
+}
+section#simulez fieldset .fr-fieldset__legend.fr-text--regular {
+  font-weight: bold !important;
+}
