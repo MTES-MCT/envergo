@@ -112,6 +112,7 @@ jobs:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
           POSTGRES_DB: envergo
+          DJANGO_SETTINGS_MODULE: envergo.settings.test
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
