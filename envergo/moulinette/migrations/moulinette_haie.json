@@ -26,5 +26,33 @@
     "project_impact": "",
     "discussion_contact": ""
   }
+},
+  {
+  "model": "moulinette.regulation",
+  "fields": {
+    "id": 6,
+    "regulation": "dep",
+    "weight": 2,
+    "show_map": false,
+    "polygon_color": "blue"
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "DEP > Dérogation espèces protégées",
+    "title": "Dérogation espèces protégées",
+    "subtitle": "",
+    "header": "",
+    "regulation": 6,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.dep.DerogationEspecesProtegees",
+    "weight": 1,
+    "required_action": "",
+    "required_action_stake": "",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
 }
 ]

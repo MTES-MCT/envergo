@@ -9,7 +9,7 @@ env:
 
 on:
   pull_request:
-    branches: [ "main", "envergo_haie" ] # TODO: Remove envergo_haie
+    branches: [ "main", "envergo_haie", "feature/bootstrap-haie-bcae8" ] # TODO: keep only main
 
   push:
     branches: [ "main" ]
