@@ -3,10 +3,9 @@ name: CI
 # Enable Buildkit and let compose use it to speed up image building
 env:
   DATABASE_URL: 'postgis://envergo:envergo@localhost:5432/envergo'
-  USE_DOCKER: "yes"
+  USE_DOCKER: False
   LANG: 'fr_FR.UTF-8'
   LC_ALL: 'fr_FR.UTF-8'
-  DJANGO_SETTINGS_MODULE: envergo.settings.test
 
 on:
   pull_request:
@@ -133,6 +132,8 @@ jobs:
       run: npx playwright install --with-deps
     - name: Launch services
       run: docker compose -f docker-compose.yml up -d
+      env:
+        DJANGO_SETTINGS_MODULE: envergo.settings.test
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
