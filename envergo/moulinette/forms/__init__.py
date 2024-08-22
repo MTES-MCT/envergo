@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 
@@ -72,7 +73,12 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
             (
                 "autre",
-                "Collectivité, aménageur, gestionnaire de réseau, particulier, etc.",
+                mark_safe(
+                    "Autre "
+                    '<em class="choice-help-text">'
+                    "Collectivité, aménageur, gestionnaire de réseau, particulier, etc."
+                    "</em>"
+                ),
             ),
         ),
         required=True,
@@ -83,13 +89,25 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         choices=(
             (
                 "transfert_parcelles",
-                "Agrandissement, échange de parcelles, nouvelle installation…",
+                mark_safe(
+                    "Transfert de parcelles entre exploitations"
+                    '<em class="choice-help-text">Agrandissement, échange de parcelles, nouvelle installation…</em>'
+                ),
             ),
             (
                 "chemin_acces",
-                "Chemin nécessaire pour l’accès et l’exploitation de la parcelle",
+                mark_safe(
+                    "Créer un chemin d’accès"
+                    '<em class="choice-help-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</em>'
+                ),
             ),
-            ("meilleur_emplacement", "Plantation justifiée par un organisme agréé"),
+            (
+                "meilleur_emplacement",
+                mark_safe(
+                    "Replanter la haie à un meilleur emplacement environnemental"
+                    '<em class="choice-help-text">Plantation justifiée par un organisme agréé</em>'
+                ),
+            ),
             ("amenagement", "Réaliser une opération d’aménagement foncier"),
             ("autre", "Autre"),
         ),
@@ -100,8 +118,18 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         label="Est-il prévu de planter une nouvelle haie ?",
         widget=forms.RadioSelect,
         choices=(
-            ("remplacement", "Oui, en remplaçant la haie détruite au même endroit"),
-            ("compensation", "Oui, en plantant une haie à un autre endroit"),
+            (
+                "remplacement",
+                mark_safe(
+                    "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
+                ),
+            ),
+            (
+                "compensation",
+                mark_safe(
+                    "<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"
+                ),
+            ),
             ("non", "Non, aucune réimplantation"),
         ),
         required=True,

@@ -6,14 +6,14 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 class MaintienHaiesForm(forms.Form):
     lineaire_detruit = forms.IntegerField(
-        label="Linéaire de haie détruit (en m) :",
+        label="Linéaire de haie détruit :",
         required=False,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
     )
 
     lineaire_total = forms.IntegerField(
-        label="Linéaire total de haie sur l’exploitation (en m) :",
+        label="Linéaire total de haie sur l’exploitation :",
         required=False,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
