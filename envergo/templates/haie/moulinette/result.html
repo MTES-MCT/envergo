@@ -10,11 +10,12 @@
 {% endblock %}
 
 {% block project_summary %}
-  {% for field in moulinette.main_form %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-
-  {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+  <ul class="fr-mb-3w">
+    {% for field in moulinette.main_form %}
+      <li>{% field_summary field %}</li>
+    {% endfor %}
+    {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+  </ul>
 {% endblock %}
 
 {% block mobile-footer %}
