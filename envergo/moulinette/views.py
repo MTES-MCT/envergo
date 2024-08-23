@@ -3,8 +3,6 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
-from django.db.models import Value as V
-from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
@@ -304,7 +302,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         if moulinette is None:
             template_name = "moulinette/home.html"
         elif is_debug:
-            template_name = "moulinette/result_debug.html"
+            template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
@@ -375,24 +373,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         if moulinette and is_debug:
-            # In the debug page, we want to factorize the maps we display, so we order them
-            # by map first
-            context["grouped_perimeters"] = moulinette.perimeters.order_by(
-                "activation_map__name",
-                "id",
-                "distance",
-            ).distinct("activation_map__name", "id")
-            context["grouped_criteria"] = moulinette.criteria.order_by(
-                "activation_map__name",
-                "id",
-                "distance",
-            ).distinct("activation_map__name", "id")
-            context["grouped_zones"] = (
-                moulinette.catalog["all_zones"]
-                .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
-                .order_by("type", "distance", "map__name")
-            )
-            context["matomo_custom_url"] = debug_url
+            context = {
+                **context,
+                **moulinette.get_debug_context(),
+                "matomo_custom_url": debug_url,
+            }
 
         elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
