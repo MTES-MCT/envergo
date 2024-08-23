@@ -68,7 +68,9 @@
 {% endblock coming_soon_regulations %}
 
 {% block mobile-footer %}
-  {% include "amenagement/_learn_more.html" %}
+  <section class="fr-py-8w fr-px-6w alt">
+    {% include "amenagement/_learn_more.html" %}
+  </section>
   <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
     {% include 'amenagement/_footer.html' with do_not_load_modal="true" %}
   </section>

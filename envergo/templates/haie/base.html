@@ -24,6 +24,16 @@
   {% include 'haie/_header.html' %}
 {% endblock %}
 
+{% block after-content %}
+  <section class="fr-py-8w alt hide-print">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include 'haie/_learn_more.html' %}</div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
 {% block footer %}
   {% include 'haie/_footer.html' %}
 {% endblock %}

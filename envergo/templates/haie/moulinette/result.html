@@ -18,7 +18,9 @@
 {% endblock %}
 
 {% block mobile-footer %}
-  {% include "haie/_learn_more.html" %}
+  <section class="fr-py-8w fr-px-6w alt">
+    {% include "haie/_learn_more.html" %}
+  </section>
   <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
     {% include 'haie/_footer.html' with do_not_load_modal="true" %}
   </section>
