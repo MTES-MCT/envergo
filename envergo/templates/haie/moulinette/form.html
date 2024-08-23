@@ -1,5 +1,10 @@
 {% load utils %}
 
+{% if display_title %}
+  <h2 class="centered">Simulez votre projet</h2>
+  <p class="fr-text--light fr-mb-0">Tous les champs sont obligatoires</p>
+{% endif %}
+
 <form class="fr-mb-3w"
       method="post"
       novalidate
