@@ -37,6 +37,7 @@
               rel="stylesheet">
         <link href="{% static 'css/project.min.css' %}" rel="stylesheet">
       {% endcompress %}
+      {% block site_css %}{% endblock %}
       {% block extra_css %}{% endblock %}
     {% endblock css %}
 
