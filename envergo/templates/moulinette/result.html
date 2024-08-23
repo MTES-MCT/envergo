@@ -67,7 +67,8 @@
           {% include 'moulinette/_evaluation_summary.html' %}
 
           <p class="fr-hint-text fr-mb-3w">
-            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
+            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+            {% block liability_link %}{% endblock %}
           </p>
 
           {% for regulation in moulinette.regulations %}
