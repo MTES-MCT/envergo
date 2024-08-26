@@ -7,14 +7,14 @@ from envergo.moulinette.regulations import CriterionEvaluator
 class Bcae8Form(forms.Form):
     lineaire_detruit = forms.IntegerField(
         label="Linéaire de haie détruit :",
-        required=False,
+        required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
     )
 
     lineaire_total = forms.IntegerField(
         label="Linéaire total de haie sur l’exploitation :",
-        required=False,
+        required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
     )
@@ -23,7 +23,7 @@ class Bcae8Form(forms.Form):
         label="L’aménagement a-t-il été déclaré d’utilité publique et fait l’objet d’une consultation du public ?",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
-        required=False,
+        required=True,
     )
 
     motif_qc = forms.ChoiceField(
@@ -44,20 +44,20 @@ class Bcae8Form(forms.Form):
             ),
             ("aucun", "Aucun de ces cas"),
         ),
-        required=False,
+        required=True,
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         profil = self.data.get("profil")
-        if profil == "agri_pac":
-            self.fields["lineaire_detruit"].required = True
-            self.fields["lineaire_total"].required = True
+        if profil == "autre":
+            self.fields = {}
+        elif profil == "agri_pac":
             motif = self.data.get("motif")
-            if motif == "amenagement":
-                self.fields["amenagement_dup"].required = True
-            if motif == "autre":
-                self.fields["motif_qc"].required = True
+            if not motif == "amenagement":
+                self.fields.pop("amenagement_dup")
+            if not motif == "autre":
+                self.fields.pop("motif_qc")
 
 
 class Bcae8(CriterionEvaluator):
@@ -99,7 +99,7 @@ class Bcae8(CriterionEvaluator):
 
     def get_result_data(self):
         is_petit = False
-        if self.catalog["lineaire_detruit"] and self.catalog["lineaire_total"]:
+        if "lineaire_detruit" in self.catalog and "lineaire_total" in self.catalog:
             is_petit = (
                 self.catalog["lineaire_detruit"] <= 5
                 or self.catalog["lineaire_detruit"]
@@ -111,9 +111,9 @@ class Bcae8(CriterionEvaluator):
             self.catalog["motif"],
             self.catalog["reimplantation"],
             is_petit,
-            self.catalog["lineaire_detruit"],
-            self.catalog["amenagement_dup"],
-            self.catalog["motif_qc"],
+            self.catalog.get("lineaire_detruit"),
+            self.catalog.get("amenagement_dup"),
+            self.catalog.get("motif_qc"),
         )
 
     def get_result_code(self, result_data):
