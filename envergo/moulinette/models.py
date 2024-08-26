@@ -52,8 +52,8 @@ REGULATIONS = Choices(
     ("natura2000", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
-    ("bcae8", "Bonnes conditions agricoles et environnementales - Fiche VIII"),
-    ("dep", "Dérogation espèces protégées"),
+    ("conditionnalite_pac", "Conditionnalité PAC"),
+    ("dep", "Dérogation « espèces protégées »"),
 )
 
 
@@ -797,7 +797,14 @@ class Moulinette(ABC):
     or other regulations.
     """
 
-    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage", "bcae8"]
+    REGULATIONS = [
+        "loi_sur_leau",
+        "natura2000",
+        "eval_env",
+        "sage",
+        "conditionnalite_pac",
+        "dep",
+    ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
         if isinstance(raw_data, QueryDict):
@@ -1347,7 +1354,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["bcae8", "dep"]
+    REGULATIONS = ["conditionnalite_pac", "dep"]
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
     form_template = "haie/moulinette/form.html"

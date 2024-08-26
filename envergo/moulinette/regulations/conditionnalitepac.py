@@ -4,7 +4,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
-class MaintienHaiesForm(forms.Form):
+class Bcae8Form(forms.Form):
     lineaire_detruit = forms.IntegerField(
         label="Linéaire de haie détruit :",
         required=False,
@@ -60,10 +60,10 @@ class MaintienHaiesForm(forms.Form):
                 self.fields["motif_qc"].required = True
 
 
-class MaintienHaies(CriterionEvaluator):
-    choice_label = "BCAE8 > Maintien des haies"
-    slug = "maintien_haies"
-    form_class = MaintienHaiesForm
+class Bcae8(CriterionEvaluator):
+    choice_label = "Conditionnalité PAC > BCAE8"
+    slug = "bcae8"
+    form_class = Bcae8Form
 
     CODES = [
         "non_soumis",
