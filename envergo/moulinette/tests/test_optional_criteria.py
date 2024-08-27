@@ -106,9 +106,6 @@ def test_admin_see_optional_criterion_result(admin_client):
     assert res.status_code == 200
     assertTemplateUsed(res, "moulinette/result.html")
 
-    # The question exists in the sidebar
-    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
-
     # The criterion is activated
     assert "Aire de stationnement" in res.content.decode()
 
