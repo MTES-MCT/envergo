@@ -308,6 +308,22 @@ class PisteCyclable(CriterionEvaluator):
         return result
 
 
+PUISSANCE_CHOICES = (
+    ("lt_300kWc", "< 300 kWc", "Inférieure à 300 kWc"),
+    ("300_1000kWc", "300 à 1000 kWc", "Entre 300 kWc et 1 000 kWc"),
+    ("gte_1000kWc", "≥ 1000 kWc", "Supérieure à 1 000 kWc"),
+)
+
+LOCALISATION_CHOICES = (
+    ("sol", "Au sol, y compris agrivoltaïsme"),
+    ("aire_arti", "Sur aire de stationnement artificialisée"),
+    ("aire_non_arti", "Sur aire de stationnement non artificialisée"),
+    ("batiment_clos", "Sur bâtiment 4 murs clos ou serre ou hangar"),
+    ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
+    ("aucun", "Aucun panneau"),
+)
+
+
 class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_30"
 
@@ -316,29 +332,25 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    puissance = forms.ChoiceField(
+    puissance = DisplayChoiceField(
         label="Puissance",
         help_text="Cumul autorisé depuis le 16 mai 2017",
-        choices=(
-            ("lt_300kWc", "< 300 kWc"),
-            ("300_1000kWc", "300 à 1000 kWc"),
-            ("gte_1000kWc", "≥ 1000 kWc"),
-        ),
+        choices=extract_choices(PUISSANCE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
+        display_help_text="",
+        display_label="Puissance photovoltaïque :",
+        get_display_value=extract_display_function(PUISSANCE_CHOICES),
     )
-    localisation = forms.ChoiceField(
+    localisation = DisplayChoiceField(
         label="Localisation des panneaux",
-        choices=(
-            ("sol", "Au sol, y compris agrivoltaïsme"),
-            ("aire_arti", "Sur aire de stationnement artificialisée"),
-            ("aire_non_arti", "Sur aire de stationnement non artificialisée"),
-            ("batiment_clos", "Sur bâtiment 4 murs clos ou serre ou hangar"),
-            ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
-            ("aucun", "Aucun panneau"),
-        ),
+        choices=LOCALISATION_CHOICES,
         widget=forms.RadioSelect,
         required=True,
+        display_label="Localisation des panneaux photovoltaïques :",
+        get_display_value=lambda value: (
+            "Au sol" if value == "sol" else dict(LOCALISATION_CHOICES).get(value, value)
+        ),
     )
 
 
