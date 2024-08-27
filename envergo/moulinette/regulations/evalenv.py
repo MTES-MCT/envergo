@@ -395,6 +395,18 @@ class Photovoltaique(CriterionEvaluator):
         return puissance, localisation
 
 
+TYPE_STATIONNEMENT_CHOICES = (
+    ("public", "Ouvert au public", "Ouverte au public"),
+    ("private", "Privé", "Privée"),
+    ("mixed", "Mixte", "Mixte public-privé (au moins une place est ouverte au public)"),
+)
+
+NB_EMPLACEMENTS_CHOICES = (
+    ("0_49", "De 0 à 49", "0 à 49"),
+    ("gte_50", "50 et plus", "50 ou plus"),
+)
+
+
 class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_41"
 
@@ -403,7 +415,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    type_stationnement = forms.ChoiceField(
+    type_stationnement = DisplayChoiceField(
         label="Type de stationnement",
         help_text="""
             Privé : attaché à des logements ou réservé à des employés.
@@ -411,13 +423,12 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("public", "Ouvert au public"),
-            ("private", "Privé"),
-            ("mixed", "Mixte"),
-        ),
+        choices=extract_choices(TYPE_STATIONNEMENT_CHOICES),
+        display_help_text="",
+        display_label="Aire de stationnement :",
+        get_display_value=extract_display_function(TYPE_STATIONNEMENT_CHOICES),
     )
-    nb_emplacements = forms.ChoiceField(
+    nb_emplacements = DisplayChoiceField(
         label="Nombre total d'emplacements",
         help_text="""
             Somme des places privées et publiques.
@@ -425,10 +436,10 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("0_49", "De 0 à 49"),
-            ("gte_50", "50 et plus"),
-        ),
+        choices=extract_choices(NB_EMPLACEMENTS_CHOICES),
+        display_help_text="Somme des places privées et publiques",
+        display_label="Nombre total d'emplacements de stationnement :",
+        get_display_value=extract_display_function(NB_EMPLACEMENTS_CHOICES),
     )
 
 
