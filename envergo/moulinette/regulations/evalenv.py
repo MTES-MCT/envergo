@@ -583,7 +583,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    defrichement_deboisement = forms.ChoiceField(
+    defrichement_deboisement = DisplayChoiceField(
         label="Défrichement ou déboisement",
         help_text="""
             Uniquement en cas de changement de destination du terrain.
@@ -595,8 +595,15 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
             ("lt_05ha", "< 0,5 ha"),
             ("gte_05ha", "≥ 0,5 ha"),
         ),
+        display_help_text="""
+            Uniquement en cas de changement de destination du terrain.
+            Superficie totale, même fragmentée.
+        """,
+        get_display_value=lambda value: (
+            "Inférieur à 0,5 ha" if value == "lt_05ha" else "Supérieur à 0,5 ha"
+        ),
     )
-    premier_boisement = forms.ChoiceField(
+    premier_boisement = DisplayChoiceField(
         label="Premier boisement",
         help_text="""
             Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.
@@ -607,6 +614,13 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
         choices=(
             ("lt_05ha", "< 0,5 ha"),
             ("gte_05ha", "≥ 0,5 ha"),
+        ),
+        display_label="Superficie totale du premier boisement (même fragmentée) :",
+        display_help_text="Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.",
+        get_display_value=lambda value: (
+            " Inférieure au seuil de 0,5 ha"
+            if value == "lt_05ha"
+            else "Supérieure ou égale au seuil de 0,5 ha"
         ),
     )
 
