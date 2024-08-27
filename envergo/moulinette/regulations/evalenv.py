@@ -464,6 +464,13 @@ class AireDeStationnement(CriterionEvaluator):
         return nb_emplacements, type_stationnement
 
 
+NB_EMPLACEMENTS_CAMPING_CHOICES = (
+    ("0_6", "De 0 à 6", "De 0 à 6 emplacements"),
+    ("7_199", "De 7 à 199", "De 7 à 199 emplacements"),
+    ("gte_200", "200 et plus", "200 emplacements ou plus"),
+)
+
+
 class CampingForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_42"
 
@@ -472,7 +479,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    nb_emplacements = forms.ChoiceField(
+    nb_emplacements = DisplayChoiceField(
         label="Nombre d'emplacements",
         help_text="""
             De tentes, caravanes, résidences mobiles ou habitations légères de loisirs.
@@ -480,11 +487,10 @@ class CampingForm(OptionalFormMixin, forms.Form):
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("0_6", "De 0 à 6"),
-            ("7_199", "De 7 à 199"),
-            ("gte_200", "200 et plus"),
-        ),
+        choices=extract_choices(NB_EMPLACEMENTS_CAMPING_CHOICES),
+        display_help_text="Tentes, caravanes, résidences mobiles ou habitations légères de loisirs",
+        display_label="Terrain de camping :",
+        get_display_value=extract_display_function(NB_EMPLACEMENTS_CAMPING_CHOICES),
     )
 
 
