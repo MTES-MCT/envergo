@@ -511,6 +511,14 @@ class Camping(CriterionEvaluator):
         return nb_emplacements
 
 
+TYPE_EQUIPEMENT_CHOICES = (
+    ("sport", "Équipement sportif"),
+    ("loisir", "Parc de loisirs"),
+    ("culture", "Équipement culturel"),
+    ("autre", "Autre (hors nomenclature)"),
+)
+
+
 class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
 
@@ -519,15 +527,15 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    type = forms.ChoiceField(
+    type = DisplayChoiceField(
         label="Type d'équipement",
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("sport", "Équipement sportif"),
-            ("loisir", "Parc de loisirs"),
-            ("culture", "Équipement culturel"),
-            ("autre", "Autre (hors nomenclature)"),
+        choices=TYPE_EQUIPEMENT_CHOICES,
+        get_display_value=lambda value: (
+            "Ni sportif, ni de loisirs, ni culturel"
+            if value == "autre"
+            else dict(TYPE_EQUIPEMENT_CHOICES).get(value, value)
         ),
     )
     capacite_accueil = forms.ChoiceField(
