@@ -3,7 +3,12 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.forms.fields import DisplayChoiceField, DisplayIntegerField
+from envergo.moulinette.forms.fields import (
+    DisplayChoiceField,
+    DisplayIntegerField,
+    extract_choices,
+    extract_display_function,
+)
 from envergo.moulinette.regulations import CriterionEvaluator
 
 # Only ask the "emprise" question if final surface is greater or equal than
@@ -21,6 +26,7 @@ class EmpriseForm(forms.Form):
         required=True,
         display_unit="m²",
         display_label="Emprise totale au sol, y compris l'existant :",
+        display_help_text="Projection verticale du volume de la construction",
     )
     zone_u = DisplayChoiceField(
         label=mark_safe(
@@ -90,6 +96,7 @@ class SurfacePlancherForm(forms.Form):
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
+        display_help_text="",
     )
 
     def __init__(self, *args, **kwargs):
@@ -190,6 +197,23 @@ class OptionalFormMixin:
         return self.is_bound and self.cleaned_data.get("activate", False)
 
 
+ROUTE_PUBLIQUE_CHOICES = (
+    ("aucune", "Aucune", "Aucun"),
+    ("lt_10km", "< 10 km (dès le premier mètre)", "Inférieur à 10 km"),
+    ("gte_10km", "≥ 10 km", "Supérieur à 10 km"),
+)
+
+VOIE_PRIVEE_CHOICES = (
+    ("lt_3km", "Aucune ou < 3 km", "Aucune ou de longueur inférieure à 3 km"),
+    ("gte_3km", "≥ 3 km", "Longueur supérieure à 3 km"),
+)
+
+PISTE_CYCLABLE_CHOICES = (
+    ("lt_10km", "Aucune ou < 10 km", "Aucune ou de longueur inférieure à 10 km"),
+    ("gte_10km", "≥ 10 km", "Longueur supérieure à 10 km"),
+)
+
+
 class RoutesForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_06"
 
@@ -198,43 +222,40 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.CheckboxInput,
     )
-    route_publique = forms.ChoiceField(
+    route_publique = DisplayChoiceField(
         label="Route publique",
         help_text="""
             Construite, élargie, ou rétrocédée au domaine public.
             Cumul autorisé depuis le 16 mai 2017
         """,
-        choices=(
-            ("aucune", "Aucune"),
-            ("lt_10km", "< 10 km (dès le premier mètre)"),
-            ("gte_10km", "≥ 10 km"),
-        ),
+        choices=extract_choices(ROUTE_PUBLIQUE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
+        display_label="Tronçon de route publique :",
+        display_help_text="Construit, élargi ou rétrocédé au domaine public",
+        get_display_value=extract_display_function(ROUTE_PUBLIQUE_CHOICES),
     )
-    voie_privee = forms.ChoiceField(
+    voie_privee = DisplayChoiceField(
         label="Voie privée",
         help_text="""
             Cumul autorisé depuis le 16 mai 2017
         """,
-        choices=(
-            ("lt_3km", "Aucune ou < 3 km"),
-            ("gte_3km", "≥ 3 km"),
-        ),
+        choices=extract_choices(VOIE_PRIVEE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
+        display_help_text="",
+        get_display_value=extract_display_function(VOIE_PRIVEE_CHOICES),
     )
-    piste_cyclable = forms.ChoiceField(
+    piste_cyclable = DisplayChoiceField(
         label="Piste cyclable ou voie verte",
         help_text="""
         Cumul autorisé depuis le 16 mai 2017
         """,
-        choices=(
-            ("lt_10km", "Aucune ou < 10 km"),
-            ("gte_10km", "≥ 10 km"),
-        ),
+        choices=extract_choices(PISTE_CYCLABLE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
+        display_help_text="",
+        get_display_value=extract_display_function(PISTE_CYCLABLE_CHOICES),
     )
 
 
