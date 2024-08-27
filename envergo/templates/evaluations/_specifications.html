@@ -12,26 +12,14 @@
   {% endif %}
   {% if evaluation.application_number %}<li>Demande de permis n° {{ evaluation.application_number }}</li>{% endif %}
 
-  <li>
-    <strong>Surface nouvellement impactée par le projet :</strong> {{ params.created_surface|localize }} m²
-    <br />
-    <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-  </li>
+  <li>{% field_summary form.created_surface %}</li>
 
   {% if params.existing_surface %}
-    <li>
-      <strong>Surface déjà impactée avant le projet :</strong> {{ params.existing_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins</span>
-    </li>
+    <li>{% field_summary form.existing_surface %}</li>
   {% endif %}
 
   {% if params.final_surface %}
-    <li>
-      <strong>Surface impactée totale, y compris l'existant :</strong> {{ params.final_surface|localize }} m²
-      <br />
-      <span class="fr-hint-text">Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs</span>
-    </li>
+    <li>{% field_summary form.final_surface %}</li>
   {% endif %}
 
   {% for key, field in moulinette.additional_fields.items %}

@@ -2,30 +2,40 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import Department
+from envergo.moulinette.forms.fields import DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
 class MoulinetteForm(forms.Form):
-    created_surface = forms.IntegerField(
+    created_surface = DisplayIntegerField(
         label=_("Surface created by the project"),
         required=True,
         min_value=0,
         help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
+        display_unit="m²",
+        display_label="Surface nouvellement impactée par le projet :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
     )
-    existing_surface = forms.IntegerField(
+    existing_surface = DisplayIntegerField(
         label=_("Existing surface before the project"),
         required=False,
         min_value=0,
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
+        display_unit="m²",
+        display_label="Surface déjà impactée avant le projet :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins",
     )
-    final_surface = forms.IntegerField(
+    final_surface = DisplayIntegerField(
         label=_("Total surface at the end of the project"),
         required=False,
         min_value=0,
         help_text="Surface au sol impactée totale, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
+        display_unit="m²",
+        display_label="Surface impactée totale, y compris l'existant :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
     )
     address = forms.CharField(
         label=_("Search for the address to center the map"),
