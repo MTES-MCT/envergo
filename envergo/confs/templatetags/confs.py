@@ -16,9 +16,13 @@ def top_bar(context):
     if "hide_top_bar" in cookies:
         return {"is_active": False}
 
-    # Display the most recent of the top bar messages that is active
+    # Display the most recent of the top bar messages that is active for the current site
     data = {"is_active": False}
-    top_bar = TopBar.objects.filter(is_active=True).order_by("-updated_at").first()
+    top_bar = (
+        TopBar.objects.filter(is_active=True, site=context["request"].site)
+        .order_by("-updated_at")
+        .first()
+    )
     if top_bar:
         data.update(
             {

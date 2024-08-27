@@ -56,7 +56,7 @@
   </div>
 {% endif %}
 
-<div class="hide-print">
+<div class="hide-print submit-section">
   {% if not moulinette %}
     <button type="submit" class="fr-btn">Démarrer la simulation</button>
   {% elif additional_forms and moulinette.has_missing_data %}
@@ -65,7 +65,3 @@
     <button type="submit" class="fr-btn">Renouveler la simulation</button>
   {% endif %}
 </div>
-
-<p id="liability-warning" class="fr-message fr-mt-2w">
-  EnvErgo est un service d'information. Il ne se substitue pas aux positions de l'administration.
-</p>

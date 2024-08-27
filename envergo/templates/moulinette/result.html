@@ -48,26 +48,15 @@
             </div>
           {% endif %}
           <h1 class="fr-mb-5w">Simulation réglementaire</h1>
-
-          <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
-            <li>
-              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-                      data-fr-opened="false"
-                      aria-controls="share-modal"
-                      data-btn="bottom">Partager cette page par email</button>
-            </li>
-            <li>
-              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn"
-                      onclick="window.print();">Imprimer cette simulation</button>
-            </li>
-          </ul>
+          {% block after-title-content %}{% endblock %}
 
           <h2 class="fr-h3">Réglementations environnementales</h2>
 
           {% include 'moulinette/_evaluation_summary.html' %}
 
           <p class="fr-hint-text fr-mb-3w">
-            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
+            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+            {% block liability_link %}{% endblock %}
           </p>
 
           {% for regulation in moulinette.regulations %}
@@ -82,7 +71,9 @@
           {% endblock coming_soon_regulations %}
         </section>
         <div class="fr-hidden fr-unhidden-lg">
-          {% block include_learn_more %}{% endblock %}
+          <section class="fr-py-8w fr-px-6w alt">
+            {% block include_learn_more %}{% endblock %}
+          </section>
           <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
             {% block include_desktop_footer %}{% endblock %}
           </section>
@@ -93,9 +84,7 @@
 {% endblock %}
 
 {% block after-content %}{% endblock %}
-{% block footer %}
-  {% include 'moulinette/_actions_banner.html' %}
-{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block extra_body %}
   {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' %}

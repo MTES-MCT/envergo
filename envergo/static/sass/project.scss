@@ -1605,7 +1605,7 @@ main.geometricians {
     }
   }
 
-  div.last-section {
+  div.submit-section {
 
     button {
       display: block;
@@ -1753,4 +1753,9 @@ main.demonstrateur_2150 {
 .leaflet-default-icon-tooltip {
   margin: -28px 16px;
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
+
+.choice-help-text{
+  font-size: 0.75rem !important;
+  color: var(--text-mention-grey);
 }

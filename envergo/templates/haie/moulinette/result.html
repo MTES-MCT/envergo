@@ -10,15 +10,18 @@
 {% endblock %}
 
 {% block project_summary %}
-  {% for field in moulinette.main_form %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-
-  {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+  <ul class="fr-mb-3w">
+    {% for field in moulinette.main_form %}
+      <li>{% field_summary field %}</li>
+    {% endfor %}
+    {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+  </ul>
 {% endblock %}
 
 {% block mobile-footer %}
-  {% include "haie/_learn_more.html" %}
+  <section class="fr-py-8w fr-px-6w alt">
+    {% include "haie/_learn_more.html" %}
+  </section>
   <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
     {% include 'haie/_footer.html' with do_not_load_modal="true" %}
   </section>

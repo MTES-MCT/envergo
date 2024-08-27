@@ -33,9 +33,25 @@
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
 {% endblock %}
 
+{% block after-title-content %}
+  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
+    <li>
+      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
+              data-fr-opened="false"
+              aria-controls="share-modal"
+              data-btn="bottom">Partager cette page par email</button>
+    </li>
+    <li>
+      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn"
+              onclick="window.print();">Imprimer cette simulation</button>
+    </li>
+  </ul>
+{% endblock %}
+
 {% block additional_regulations %}
   {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
 {% endblock %}
+{% block liability_link %}<a href="#liability-info" class="hide-print">En savoir plus.</a>{% endblock %}
 {% block liability_info %}
   <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
     <p>
@@ -68,7 +84,9 @@
 {% endblock coming_soon_regulations %}
 
 {% block mobile-footer %}
-  {% include "amenagement/_learn_more.html" %}
+  <section class="fr-py-8w fr-px-6w alt">
+    {% include "amenagement/_learn_more.html" %}
+  </section>
   <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
     {% include 'amenagement/_footer.html' with do_not_load_modal="true" %}
   </section>
@@ -80,6 +98,10 @@
 
 {% block include_learn_more %}
   {% include 'amenagement/_learn_more.html' %}
+{% endblock %}
+
+{% block footer %}
+  {% include 'moulinette/_actions_banner.html' %}
 {% endblock %}
 
 {% block extra_js %}

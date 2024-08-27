@@ -9,8 +9,10 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, F, IntegerField, Prefetch, Q, When
-from django.db.models.functions import Cast
+from django.db.models import Case, F, IntegerField, Prefetch, Q
+from django.db.models import Value as V
+from django.db.models import When
+from django.db.models.functions import Cast, Concat
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -50,8 +52,8 @@ REGULATIONS = Choices(
     ("natura2000", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
-    ("bcae8", "Bonnes conditions agricoles et environnementales - Fiche VIII"),
-    ("dep", "Dérogation espèces protégées"),
+    ("conditionnalite_pac", "Conditionnalité PAC"),
+    ("dep", "Dérogation « espèces protégées »"),
 )
 
 
@@ -795,7 +797,14 @@ class Moulinette(ABC):
     or other regulations.
     """
 
-    REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage", "bcae8"]
+    REGULATIONS = [
+        "loi_sur_leau",
+        "natura2000",
+        "eval_env",
+        "sage",
+        "conditionnalite_pac",
+        "dep",
+    ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
         if isinstance(raw_data, QueryDict):
@@ -855,6 +864,13 @@ class Moulinette(ABC):
         if not hasattr(self, "result_template"):
             raise AttributeError("No result template found.")
         return self.result_template
+
+    def get_debug_result_template(self):
+        """Return the template to display the result page."""
+
+        if not hasattr(self, "debug_result_template"):
+            raise AttributeError("No result template found.")
+        return self.debug_result_template
 
     @classmethod
     def get_main_form_class(cls):
@@ -1108,10 +1124,16 @@ class Moulinette(ABC):
             raise AttributeError("No form template name found.")
         return cls.form_template
 
+    @abstractmethod
+    def get_debug_context(self):
+        """Add some data to display on the debug page"""
+        raise NotImplementedError
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
+    debug_result_template = "moulinette/result_debug.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
 
@@ -1305,10 +1327,36 @@ class MoulinetteAmenagement(Moulinette):
     def get_config(self):
         return getattr(self.department, "moulinette_config", None)
 
+    def get_debug_context(self):
+        # In the debug page, we want to factorize the maps we display, so we order them
+        # by map first
+        return {
+            "grouped_perimeters": self.get_perimeters()
+            .order_by(
+                "activation_map__name",
+                "id",
+                "distance",
+            )
+            .distinct("activation_map__name", "id"),
+            "grouped_criteria": self.get_criteria()
+            .order_by(
+                "activation_map__name",
+                "id",
+                "distance",
+            )
+            .distinct("activation_map__name", "id"),
+            "grouped_zones": (
+                self.catalog["all_zones"]
+                .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
+                .order_by("type", "distance", "map__name")
+            ),
+        }
+
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["bcae8", "dep"]
+    REGULATIONS = ["conditionnalite_pac", "dep"]
     result_template = "haie/moulinette/result.html"
+    debug_result_template = "haie/moulinette/result.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
 
@@ -1333,6 +1381,9 @@ class MoulinetteHaie(Moulinette):
     def load_specific_data(self):
         """There is no specific needs for the Haie moulinette."""
         pass
+
+    def get_debug_context(self):
+        return {}
 
 
 def get_moulinette_class_from_site(site):
