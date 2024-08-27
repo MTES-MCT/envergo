@@ -1,10 +1,6 @@
-section#simulez .wrapper {
-  border: 1px solid #ddd;
-  border-radius: 1rem;
-}
-section#simulez h2 {
+section#simulateur h2, div#moulinette h2 {
   color: var(--text-action-high-blue-france);
 }
-section#simulez fieldset .fr-fieldset__legend.fr-text--regular {
+section#simulateur fieldset .fr-fieldset__legend.fr-text--regular, div#moulinette fieldset .fr-fieldset__legend.fr-text--regular {
   font-weight: bold !important;
 }

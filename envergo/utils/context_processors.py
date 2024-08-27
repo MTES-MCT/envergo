@@ -14,7 +14,11 @@ def settings_context(_request):
     except NoReverseMatch:
         catchment_area_page_url = None
 
-    if _request.path == catchment_area_page_url:
+    # We disable the chatbox on the Haie website
+    if (
+        _request.path == catchment_area_page_url
+        or _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+    ):
         chatbox_enabled = False
     else:
         chatbox_enabled = settings.CRISP_CHATBOX_ENABLED

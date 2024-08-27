@@ -23,6 +23,5 @@
 {% block article %}
   <h1>Contactez-nous</h1>
   <p class="fr-text--lead">Pour une question, remarque, suggestion…</p>
-  {% include '_contact_means.html' %}
-
+  {% block contact-means %}{% endblock %}
 {% endblock %}

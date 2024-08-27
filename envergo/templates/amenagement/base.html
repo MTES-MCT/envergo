@@ -26,27 +26,10 @@
   <section class="fr-py-8w alt hide-print">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
-          <h2>Pour en savoir plus…</h2>
-          <p>
-            Consultez notre <a href="{% url 'faq' %}">page d'information</a>
-            ou <a href="{% url 'contact_us' %}">contactez l'équipe EnvErgo</a>.
-          </p>
-        </div>
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include 'amenagement/_learn_more.html' %}</div>
       </div>
     </div>
   </section>
-  <div class="fr-my-5w print-only">
-    <h2>Pour en savoir plus…</h2>
-    <p class="fr-text">Pour une question, remarque, suggestion…</p>
-    {% include '_contact_means.html' %}
-
-    <p class="fr-text">
-      Ou consultez <a title="Lien vers la foire aux questions"
-    href="{% url 'faq' %}"
-    rel="noopener">notre page d'information</a>
-    </p>
-  </div>
 {% endblock %}
 
 {% block footer %}

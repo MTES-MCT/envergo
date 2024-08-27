@@ -42,13 +42,13 @@
           <p class="fr-badge fr-badge--blue-ecume">🐦 Dérogation espèces protégées</p>
         </li>
         <li>
-          <p class="fr-badge fr-badge--blue-ecume">🚜 Conditionalité PAC</p>
+          <p class="fr-badge fr-badge--blue-ecume">🚜 Conditionnalité PAC</p>
         </li>
       </ul>
       <p class="fr-text--lead">
-        Le Guichet Unique de la Haie fournit un accès centralisé et des informations sur la réglementation des haies.
+        Le guichet unique de la haie fournit un accès centralisé et des informations sur la réglementation environnementale sur les haies.
       </p>
-      <a href="#simulez"
+      <a href="#simulateur"
          class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w"
          data-event-category="HomePage"
          data-event-action="DiscoverClick"
@@ -72,39 +72,40 @@
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-8 fr-col-xl-6 alt fr-p-3w">
 
-          <h2 class="fr-h6">Quand demander un avis réglementaire ?</h2>
+          <h2 class="fr-h6">Quels types de projets ce simulateur couvre-t-il actuellement ?</h2>
           <hr>
-
           <p>
-            ✔ Tout projet qui aménage <strong>plus de 1 000 m²</strong>
+            <strong>Végétation concernée</strong>
+            <br />
+            ✔ Une haie
+            <br />
+            ❌ Un bosquet
+            <br />
+            ❌ Un alignement d’arbres
+            <br />
           </p>
-          <p>✔ Un lotissement, un bâtiment agricole, l'extension d'un bâtiment de bureaux…</p>
           <p>
-            ✔ Tout projet qui vous <strong>pose question</strong>
+            <strong>Nature du projet</strong>
+            <br />
+            ✔ Un arrachage
+            <br />
+            ❌ Un entretien
+            <br />
           </p>
-
-          <p class="fr-mb-0">
-            ❌ <strong>À l'exception</strong> des projets qui concernent uniquement :
+          <p>
+            <strong>Localisation</strong>
+            <br />
+            Simulateur uniquement en expérimentation dans quelques departements
           </p>
-
-          <ul class="fr-pl-5w">
-            <li>une mare ou un plan d'eau</li>
-            <li>une déchetterie</li>
-            <li>une station d'épuration</li>
-            <li>une route, une piste cyclable</li>
-          </ul>
-
         </div>
       </div>
     </div>
   </section>
 
-  <section id="simulez" class="fr-mb-5w">
+  <section id="simulateur">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-8 fr-col-xl-6 fr-p-5w wrapper">
-          <h2 class="centered">Simulez votre projet</h2>
-          <p class="fr-text--light fr-mb-0">Tous les champs sont obligatoires</p>
           <div id="moulinette" class="moulinette fr-pt-5w">{% show_moulinette_form %}</div>
         </div>
       </div>

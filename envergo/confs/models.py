@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +14,7 @@ class TopBar(models.Model):
     message_html = models.TextField(_("Message (html)"), blank=True)
     is_active = models.BooleanField(_("Is active"), default=False)
     updated_at = models.DateTimeField(_("Updated at"), default=timezone.now)
+    site = models.ForeignKey(Site, on_delete=models.CASCADE)
 
     def __str__(self):
         return "TopBar"

@@ -27,7 +27,7 @@ urlpatterns = [
     ),
     path(
         _("contact-us/"),
-        TemplateView.as_view(template_name="pages/contact_us.html"),
+        TemplateView.as_view(template_name="haie/pages/contact_us.html"),
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
