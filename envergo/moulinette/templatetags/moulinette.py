@@ -1,5 +1,6 @@
 import json
 import logging
+import string
 
 from django import template
 from django.template import Context, Template
@@ -119,6 +120,11 @@ def perimeter_detail(regulation):
     return mark_safe(detail)
 
 
+def ends_with_punctuation(sentence):
+    trimmed_sentence = sentence.strip() if sentence else sentence
+    return trimmed_sentence[-1] in string.punctuation if trimmed_sentence else False
+
+
 @register.simple_tag()
 def field_summary(field):
     """User friendly display of the field value.
@@ -128,12 +134,25 @@ def field_summary(field):
 
     This tag is used to format a single field from the additional or optional forms.
     """
-    if hasattr(field.field, "choices"):
+    if hasattr(field.field, "get_display_value"):
+        value = field.field.get_display_value(field.value())
+    elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
     else:
         value = field.value()
 
-    html = f"<strong>{field.label}</strong>: {value}"
+    label = field.label
+    if hasattr(field.field, "display_label"):
+        label = field.field.display_label
+    elif not ends_with_punctuation(field.label):
+        label = f"{field.label} :"
+
+    value = (
+        f"{value} {field.field.display_unit}"
+        if hasattr(field.field, "display_unit") and field.field.display_unit
+        else value
+    )
+    html = f"<strong>{label}</strong> {value}"
     if field.help_text:
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
 

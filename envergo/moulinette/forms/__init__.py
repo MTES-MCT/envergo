@@ -24,7 +24,7 @@ class MoulinetteForm(forms.Form):
         label=_("Total surface at the end of the project"),
         required=False,
         min_value=0,
-        help_text="Surface au sol impactée totale, y compris l'existant",
+        help_text="Surface au sol impactée totale, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
     )
     address = forms.CharField(

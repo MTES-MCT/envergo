@@ -3,6 +3,7 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
+from envergo.moulinette.forms.fields import DisplayChoiceField, DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
 
 # Only ask the "emprise" question if final surface is greater or equal than
@@ -13,19 +14,25 @@ ZONE_U_THRESHOLD = 40000
 
 
 class EmpriseForm(forms.Form):
-    emprise = forms.IntegerField(
+    emprise = DisplayIntegerField(
         label="Emprise au sol totale",
         help_text="Projection verticale du volume de la construction, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
+        display_unit="m²",
+        display_label="Emprise totale au sol, y compris l'existant :",
     )
-    zone_u = forms.ChoiceField(
+    zone_u = DisplayChoiceField(
         label=mark_safe(
             "Le projet se situe-t-il en zone U dans le <abbr title='Plan local d’urbanisme'>PLU</abbr> ?"
         ),
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
+        display_label="Zonage du projet :",
+        get_display_value=lambda value: (
+            "Zone urbaine du PLU" if value == "oui" else "Hors zone Urbaine du PLU"
+        ),
     )
 
     def __init__(self, *args, **kwargs):
@@ -73,12 +80,16 @@ SURFACE_PLANCHER_THRESHOLD = 3000
 
 
 class SurfacePlancherForm(forms.Form):
-    surface_plancher_sup_thld = forms.ChoiceField(
-        label="La surface de plancher totale sera-t-elle supérieure à 10 000 m² ?",
-        help_text="En comptant l'existant",
+    surface_plancher_sup_thld = DisplayChoiceField(
+        label="Surface de plancher totale",
+        help_text="En comptant l'existant. Cumul autorisé depuis le 16 mai 2017",
         widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
+        choices=(
+            ("oui", "Supérieure ou égale à 10 000 m2"),
+            ("non", "Inférieure à 10 000 m2"),
+        ),
         required=True,
+        display_label="Surface de plancher totale, y compris l'existant :",
     )
 
     def __init__(self, *args, **kwargs):
@@ -112,11 +123,13 @@ TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD = 100000
 
 
 class TerrainAssietteForm(forms.Form):
-    terrain_assiette = forms.IntegerField(
+    terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
         help_text="Ensemble des parcelles cadastrales concernées par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         required=True,
+        display_unit="m²",
+        display_label="Surface du terrain d'assiette du projet :",
     )
 
     def __init__(self, *args, **kwargs):

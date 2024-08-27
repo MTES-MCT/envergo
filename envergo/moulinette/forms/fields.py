@@ -25,3 +25,25 @@ class NoInstanciateChoiceField(forms.TypedChoiceField):
         else:
             prepared_val = value
         return prepared_val
+
+
+class DisplayFieldMixin:
+    def __init__(self, *args, **kwargs):
+        self._display_label = kwargs.pop("display_label", kwargs.get("label", None))
+        self.display_unit = kwargs.pop("display_unit", None)
+        get_display_value = kwargs.pop("get_display_value", None)
+        if get_display_value:
+            self.get_display_value = get_display_value
+        super().__init__(*args, **kwargs)
+
+    @property
+    def display_label(self):
+        return self._display_label
+
+
+class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
+    pass
+
+
+class DisplayIntegerField(DisplayFieldMixin, forms.IntegerField):
+    pass
