@@ -162,7 +162,7 @@
 {% block extra_js %}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
-    var SHARING_URL = "{{ share_btn_url }}";
+    var SHARING_URL = "{{ share_btn_url|safe }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
