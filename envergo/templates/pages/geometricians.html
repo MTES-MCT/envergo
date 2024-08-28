@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load static l10n %}
+{% load static l10n moulinette %}
 
 {% block title %}
   EnvErgo : géomètres-experts, planifiez les projets d’aménagement en ne manquant aucune obligation environnementale.
@@ -72,8 +72,7 @@
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-8 fr-col-xl-6">
-          <h1 class="fr-h2 centered">Simulez votre projet en phase amont !</h1>
-          <div id="moulinette" class="moulinette fr-pt-5w">{% include 'moulinette/_form.html' with form=form %}</div>
+          <div id="moulinette" class="moulinette fr-pt-5w">{% show_moulinette_form %}</div>
         </div>
       </div>
     </div>
