@@ -328,7 +328,7 @@ class Regulation(models.Model):
                 autor_urba_form.is_valid()
                 and autor_urba_form.cleaned_data["autorisation_urba"] == "none"
             ):
-                return True
+                return False
         except AttributeError:
             pass
 
