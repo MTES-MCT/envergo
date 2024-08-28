@@ -131,7 +131,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' %}
+  {% include '_share_url_modal.html' with shorten_url=False share_url=current_url %}
 {% endblock %}
 
 {% block extra_css %}

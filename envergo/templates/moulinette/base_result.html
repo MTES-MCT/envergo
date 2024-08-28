@@ -1,6 +1,6 @@
 {% extends 'moulinette/base.html' %}
 
-{% load evaluations static l10n %}
+{% load evaluations static l10n moulinette %}
 
 {% block container %}
 
@@ -29,7 +29,7 @@
 
           <h2>Saisissez les caractéristiques du projet</h2>
 
-          {% include 'moulinette/_form.html' with form=form %}
+          {% show_moulinette_form False %}
 
           {% block extra-form-col %}{% endblock %}
         {% endblock %}

@@ -131,14 +131,15 @@ INSTALLED_APPS += ["anymail"]  # noqa F405
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps/sendinblue/
 
+ENV_NAME = env("ENV_NAME")
 IS_REVIEW_APP = env.bool("IS_REVIEW_APP", default=False)
 
 # Different settings between scalingo prod and review apps
-if IS_REVIEW_APP:
+if ENV_NAME == "production":
+    EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+else:
     # Send emails to stdout for logging purpose
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
 
 ANYMAIL = {
     "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
@@ -229,8 +230,6 @@ CELERY_CACHE_BACKEND = "django-cache"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-
-ENV_NAME = env("ENV_NAME")
 
 SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
 

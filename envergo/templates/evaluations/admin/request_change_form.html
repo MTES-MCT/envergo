@@ -27,6 +27,34 @@
       <input type="submit"
              value="Créer un avis réglementaire"
              name="_make-evaluation">
+      <input type="button"
+             id="copy-upload-url-btn"
+             class="button"
+             style="padding: 10px 15px"
+             value="Copier le lien de l'étape 3 de la demande">
     </div>
   {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script>window.addEventListener("load", function () {
+    let button = document.getElementById("copy-upload-url-btn");
+    button.addEventListener("click", function () {
+      let btnText = button.value;
+
+      // The `navigator.clipboard` API is only available on `https` urls
+      if (navigator.clipboard != undefined) {
+        navigator.clipboard.writeText('{{ upload_files_url }}');
+        button.value = "Lien copié !";
+      } else {
+        button.value = "Impossible de copier le lien";
+      }
+
+      setTimeout(function () {
+        button.value = btnText;
+      }, 2000);
+    });
+  });
+  </script>
 {% endblock %}

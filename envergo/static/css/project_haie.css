@@ -1,0 +1,9 @@
+section#simulateur h2,
+div#moulinette h2 {
+  color: var(--text-action-high-blue-france);
+}
+
+section#simulateur fieldset .fr-fieldset__legend.fr-text--regular,
+div#moulinette fieldset .fr-fieldset__legend.fr-text--regular {
+  font-weight: bold !important;
+}

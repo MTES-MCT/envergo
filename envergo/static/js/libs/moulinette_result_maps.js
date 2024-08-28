@@ -119,6 +119,19 @@
       }
     });
 
+    // Subsequently, when the print page is closed, we must reset the maps to
+    // it's original size
+    window.addEventListener("afterprint", function () {
+      map.invalidateSize();
+
+      // Note: in firefox, the "afterprint" event is fired as soon as the
+      // print preview window opens (go figure). So we have to use this hack
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1663290#c12
+      window.addEventListener("focus", function () {
+        map.invalidateSize();
+      });
+    });
+
     // Track some events to Matomo
     map.on('baselayerchange', function (e) {
       let mapType = mapData["type"];  // criterion or regulation

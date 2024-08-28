@@ -27,8 +27,6 @@ DEBUG = env.bool("DJANGO_DEBUG", default=False)
 TIME_ZONE = "Europe/Paris"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "fr-fr"
-# https://docs.djangoproject.com/en/dev/ref/settings/#site-id
-SITE_ID = 1
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
@@ -46,7 +44,8 @@ DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 # URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
-ROOT_URLCONF = "config.urls"
+# SetUrlConfBasedOnSite middleware will override the urlConf based on the site for a request context
+ROOT_URLCONF = "config.urls_amenagement"
 # https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -82,6 +81,7 @@ LOCAL_APPS = [
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",
     "envergo.admin.config.EnvergoAdminConfig",
+    "envergo.urlmappings",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -138,6 +138,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
     "envergo.analytics.middleware.StoreMtmValues",
 ]
@@ -190,6 +191,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "envergo.utils.context_processors.settings_context",
+                "envergo.utils.context_processors.multi_sites_context",
                 "envergo.analytics.context_processors.analytics",
             ],
         },
@@ -322,6 +324,8 @@ LEAFLET_CONFIG = {
 
 ENVERGO_REFERENCE_LENGTH = 6
 
+URLMAPPING_KEY_LENGTH = 6
+
 VISITOR_COOKIE_NAME = "visitorid"
 
 # The max number of files that can be uploaded with a single evaluation request
@@ -364,3 +368,9 @@ MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
     "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK",
     default=None,  # webhook for edited evaluations
 )
+
+
+ENVERGO_AMENAGEMENT_DOMAIN = env(
+    "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
+)
+ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")

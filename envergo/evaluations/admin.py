@@ -28,7 +28,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
-from envergo.moulinette.forms import MoulinetteForm
+from envergo.moulinette.models import get_moulinette_class_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,8 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         if moulinette_url:
             parsed_url = urlparse(moulinette_url)
             query = QueryDict(parsed_url.query)
+            MoulinetteClass = get_moulinette_class_from_url(moulinette_url)
+            MoulinetteForm = MoulinetteClass.get_main_form_class()
             moulinette_form = MoulinetteForm(data=query)
             if not moulinette_form.is_valid():
                 self.add_error("moulinette_url", _("The moulinette url is invalid."))
@@ -532,6 +534,11 @@ class RequestAdmin(admin.ModelAdmin):
                 obj.evaluation
             except Evaluation.DoesNotExist:
                 context["show_make_eval_button"] = True
+
+            upload_files_url = reverse(
+                "request_eval_wizard_step_3", args=[obj.reference]
+            )
+            context["upload_files_url"] = request.build_absolute_uri(upload_files_url)
 
         return super().render_change_form(request, context, add, change, form_url, obj)
 

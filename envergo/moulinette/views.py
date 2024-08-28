@@ -3,8 +3,6 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
-from django.db.models import Value as V
-from django.db.models.functions import Concat
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
@@ -13,8 +11,7 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
-from envergo.moulinette.forms import MoulinetteDebugForm, MoulinetteForm
-from envergo.moulinette.models import Criterion, FakeMoulinette, Moulinette
+from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import update_qs
 
@@ -28,7 +25,10 @@ BODY_TPL = {
 class MoulinetteMixin:
     """Display the moulinette form and results."""
 
-    form_class = MoulinetteForm
+    def get_form_class(self):
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        FormClass = MoulinetteClass.get_main_form_class()
+        return FormClass
 
     def get_initial(self):
         return self.request.GET
@@ -77,7 +77,8 @@ class MoulinetteMixin:
 
         form = context["form"]
         if form.is_valid():
-            moulinette = Moulinette(
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            moulinette = MoulinetteClass(
                 form.cleaned_data, form.data, self.should_activate_optional_criteria()
             )
             context["moulinette"] = moulinette
@@ -204,8 +205,8 @@ class MoulinetteMixin:
 
     def get_all_optional_form_classes(self):
         form_classes = []
-        criteria = Criterion.objects.filter(is_optional=True).order_by("weight")
-        for criterion in criteria:
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        for criterion in MoulinetteClass.get_optionnal_criteria():
             form_class = criterion.evaluator.form_class
             if form_class and form_class not in form_classes:
                 form_classes.append(form_class)
@@ -235,7 +236,8 @@ class MoulinetteMixin:
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
         else:
-            moulinette = Moulinette(
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            moulinette = MoulinetteClass(
                 form_data, form.data, self.should_activate_optional_criteria()
             )
 
@@ -300,7 +302,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         if moulinette is None:
             template_name = "moulinette/home.html"
         elif is_debug:
-            template_name = "moulinette/result_debug.html"
+            template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
@@ -310,7 +312,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         elif is_edit:
             template_name = "moulinette/home.html"
         else:
-            template_name = "moulinette/result.html"
+            template_name = moulinette.get_result_template()
 
         return [template_name]
 
@@ -354,7 +356,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
-        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
+        share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         edit_url = update_qs(current_url, {"edit": "true"})
 
@@ -365,30 +368,19 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             reverse("moulinette_missing_data")
         )
 
-        context["current_url"] = tracked_url
+        context["current_url"] = current_url
+        context["share_btn_url"] = share_btn_url
+        context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         if moulinette and is_debug:
-            # In the debug page, we want to factorize the maps we display, so we order them
-            # by map first
-            context["grouped_perimeters"] = moulinette.perimeters.order_by(
-                "activation_map__name",
-                "id",
-                "distance",
-            ).distinct("activation_map__name", "id")
-            context["grouped_criteria"] = moulinette.criteria.order_by(
-                "activation_map__name",
-                "id",
-                "distance",
-            ).distinct("activation_map__name", "id")
-            context["grouped_zones"] = (
-                moulinette.catalog["all_zones"]
-                .annotate(type=Concat("map__map_type", V("-"), "map__data_type"))
-                .order_by("type", "distance", "map__name")
-            )
-            context["matomo_custom_url"] = debug_url
+            context = {
+                **context,
+                **moulinette.get_debug_context(),
+                "matomo_custom_url": debug_url,
+            }
 
         elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
@@ -413,63 +405,5 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["is_admin"] = self.request.user.is_staff
         context["debug_url"] = debug_result_url
         context["edit_url"] = edit_url
-
-        return context
-
-
-class MoulinetteDebug(FormView):
-    """Visualize the moulinette result for a specific criteria result combination.
-
-    See `envergo.moulinette.models.FakeMoulinette` for more details.
-    """
-
-    form_class = MoulinetteDebugForm
-
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
-        }
-
-        # This form is submitted with GET, not POST
-        GET = self.request.GET
-        if GET:
-            kwargs.update({"data": GET})
-
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form = context["form"]
-        if form.is_valid():
-            context["moulinette"] = self.moulinette = FakeMoulinette(form.cleaned_data)
-            context.update(self.moulinette.catalog)
-
-        return context
-
-    def get_template_names(self):
-        """Check wich template to use depending on the moulinette result."""
-
-        moulinette = getattr(self, "moulinette", None)
-        is_admin = self.request.user.is_staff
-
-        if moulinette and (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/debug_result.html"
-        elif moulinette:
-            template_name = "moulinette/debug_result_non_disponible.html"
-        else:
-            template_name = "moulinette/debug.html"
-
-        return [template_name]
-
-
-class MoulinetteRegulationResult(MoulinetteResult, FormView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        moulinette = context["moulinette"]
-
-        regulation_slug = self.kwargs.get("regulation")
-        context["regulations"] = [getattr(moulinette, regulation_slug)]
 
         return context
