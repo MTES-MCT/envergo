@@ -357,6 +357,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
+        result_url = update_qs(current_url, {"debug": None})
         edit_url = update_qs(current_url, {"edit": "true"})
 
         # Url without any query parameters
@@ -393,11 +394,15 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             )
             context["matomo_custom_url"] = debug_url
 
+            context["result_url"] = result_url
+
         elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
 
         elif moulinette:
             context["matomo_custom_url"] = stripped_url
+            if moulinette.has_config() and moulinette.is_evaluation_available():
+                context["debug_url"] = debug_result_url
 
         if moulinette and moulinette.catalog:
             lng = moulinette.catalog.get("lng")
@@ -414,7 +419,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                     context["form"].data["address"] = f"{lat}, {lng}"
 
         context["is_admin"] = self.request.user.is_staff
-        context["debug_url"] = debug_result_url
         context["edit_url"] = edit_url
 
         return context
