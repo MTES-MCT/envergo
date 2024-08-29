@@ -13,7 +13,7 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             """
             Nouveaux impacts
             <button type="button"
-                    id="sidebar-button"
+                    class="help-sidebar-button"
                     aria-controls="sidebar-created-surface">
                 help
             </button>
@@ -32,7 +32,16 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         widget=forms.HiddenInput,
     )
     final_surface = forms.IntegerField(
-        label=_("Total surface at the end of the project"),
+        label=mark_safe(
+            """
+            État final
+            <button type="button"
+                    class="help-sidebar-button"
+                    aria-controls="sidebar-final-surface">
+                help
+            </button>
+            """
+        ),
         required=False,
         min_value=0,
         help_text="Surface au sol impactée totale, y compris l'existant",

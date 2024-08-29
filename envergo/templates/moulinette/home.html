@@ -18,7 +18,12 @@
 
 {% block help-sidebar %}
   <div id="sidebar-created-surface" class="help-sidebar">
+
     <div class="sidebar-content">
+      <button class="fr-btn--close fr-btn"
+              title="Fermer la barre d'aide"
+              aria-controls="sidebar-created-surface">Fermer</button>
+
       <h2>Nouveaux impacts</h2>
 
       <p>
@@ -34,8 +39,39 @@
       <p>Mais les zones impactées sont plus larges que celle-ci.</p>
 
       <p>
-        <img src="{% static 'images/sidebar-help-created_surface.png' %}"
+        <img src="{% static 'images/help-sidebar-created_surface.png' %}"
              alt="Un diagramme d'example représentant les surfaces de nouvelles construction et les surfaces d'artificialisation.">
+      </p>
+    </div>
+  </div>
+
+  <div id="sidebar-final-surface" class="help-sidebar">
+
+    <div class="sidebar-content">
+      <button class="fr-btn--close fr-btn"
+              title="Fermer la barre d'aide"
+              aria-controls="sidebar-final-surface">Fermer</button>
+      <h2>Nouveaux impacts</h2>
+
+      <p>EnvErgo pose la question de la surface au sol nouvellement impactée. Celle-ci inclut :</p>
+
+      <ul>
+        <li>l’emprise au sol du nouveau bâti ;</li>
+        <li>les zones nouvellement artificialisées (voirie par exemple) ;</li>
+        <li>et toute l’aire qui sera impactée indirectement par le projet.</li>
+      </ul>
+
+      <p>
+        Si les constructions sont assez rapprochées, cela inclut les zones situées entre les bâtiments, incluant l'existant, et y compris les zones non artificialisées.
+      </p>
+
+      <p>
+        Pourquoi ? Car les écoulements d’eaux pluviales ou de crue, et les zones humides éventuelles, seront impactées indirectement par la présence des constructions et imperméabilisations.
+      </p>
+
+      <p>
+        <img src="{% static 'images/help-sidebar-final_surface.png' %}"
+             alt="Un diagramme d'example représentant les surfaces déjà impactées et nouvellement impactées.">
       </p>
     </div>
   </div>
@@ -44,15 +80,33 @@
 {% block bottom_js %}
   <script>
   window.addEventListener("load", function() {
-    let btn = document.getElementById("sidebar-button");
+    let helpBtns = document.querySelectorAll(".help-sidebar-button");
+    let closeBtns = document.querySelectorAll(".fr-btn--close");
     let moulinetteGrid = document.getElementById("moulinette-grid");
     let sidebars = document.querySelectorAll(".help-sidebar");
 
-    btn.addEventListener("click", function() {
-      let sidebarId = btn.attributes["aria-controls"].value;
-      let sidebar = document.getElementById(sidebarId);
-      sidebar.classList.toggle("sidebar-open");
-      moulinetteGrid.classList.toggle("sidebar-open");
+    helpBtns.forEach(function(btn) {
+      btn.addEventListener("click", function() {
+
+        sidebars.forEach(function(sidebar) {
+          sidebar.classList.remove("sidebar-open");
+        });
+
+        let sidebarId = btn.attributes["aria-controls"].value;
+        let sidebar = document.getElementById(sidebarId);
+        sidebar.classList.add("sidebar-open");
+        moulinetteGrid.classList.add("sidebar-open");
+      });
+
+      closeBtns.forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          let sidebarId = btn.attributes["aria-controls"].value;
+          let sidebar = document.getElementById(sidebarId);
+          sidebar.classList.remove("sidebar-open");
+          moulinetteGrid.classList.remove("sidebar-open");
+        });
+
+      });
     });
   });
   </script>
