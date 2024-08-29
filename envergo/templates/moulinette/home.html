@@ -7,24 +7,38 @@
 {% block main-classes %}contrast-bg{% endblock %}
 
 {% block content %}
-  <div class="fr-container">
-    <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col fr-col-lg-8 fr-col-xl-6">
-        <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
-      </div>
-    </div>
-  </div>
-{% endblock %}
+  <div id="moulinette-grid"
+       class="fr-grid-row fr-grid-row--center fr-grid-row--gutters">
 
-{% block help-sidebar %}
-  <div id="help-sidebar" class="fr-collapse">
-    <div class="sidebar-content">
-      <h2>bla bla bla</h2>
-      <p>bla bla bla</p>
-      <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-      </p>
+    <div id="moulinette-col" class="fr-col">
+      <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
+    </div>
+
+    <div id="help-col" class="fr-col">
+      <div class="sidebar-content">
+        <h2>bla bla bla</h2>
+        <p>bla bla bla</p>
+        <p>
+          bla bla bla
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        </p>
+        <p>
+          bla bla bla
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        </p>
+        <p>
+          bla bla bla
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        </p>
+        <p>
+          bla bla bla
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        </p>
+        <p>
+          bla bla bla
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        </p>
+      </div>
     </div>
   </div>
 {% endblock %}

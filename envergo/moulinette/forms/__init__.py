@@ -13,7 +13,7 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             """
             Nouveaux impacts
             <button type="button"
-                    aria-controls="help-sidebar"
+                    aria-controls="help-col"
                     aria-expanded="true">
                 help
             </button>
