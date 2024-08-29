@@ -1744,8 +1744,6 @@ main.demonstrateur_2150 {
 
   #help-sidebar {
     z-index: 9999;
-    background-color: white;
-    padding: 1.5rem;
     position: absolute;
     top: 0;
     right: 0;
@@ -1759,6 +1757,31 @@ main.demonstrateur_2150 {
 
     @media (width >= 36em) {
       max-width: 28em;
+    }
+  }
+}
+
+#moulinette-grid {
+  align-items: stretch;
+
+  #moulinette-col {
+    flex-grow: 2;
+    max-width: 650px;
+  }
+
+  #help-col {
+    &:not(.fr-collapse--expanded) {
+    }
+
+    z-index: 1000;
+    background-color: white;
+    padding: 1.5rem;
+    flex-grow: 1;
+    max-width: 440px;
+
+    .sidebar-content {
+      position: sticky;
+      top: 4.5rem;
     }
   }
 }
