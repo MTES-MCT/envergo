@@ -17,10 +17,7 @@
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
       <div id="mobile-footer" class="fr-hidden-lg fr-col-12 hide-print fr-mt-4w">
-        {% include "_learn_more.html" %}
-        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-          {% include '_footer.html' with do_not_load_modal="true" %}
-        </section>
+        {% block mobile-footer %}{% endblock %}
       </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <section>
@@ -38,28 +35,7 @@
     class="share-link"
     rel="noopener external">consultable en ligne</a>
           </p>
-
-          {{ form.lng.as_hidden }}
-          {{ form.lat.as_hidden }}
-          <figure class="fr-content-media">
-            <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
-              <div class="ratio-content">
-                <div class="leaflet-container">
-                  <div id="map">
-                    <a id="map-button"
-                       href="{{ edit_url }}"
-                       class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-                       data-event-category="Content"
-                       data-event-action="Edit"
-                       data-event-name="Map">Modifier le
-                      projet
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </figure>
-          {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
+          {% block project_summary %}{% endblock %}
           <div class="button-container  hide-print">
             <a href="{{ edit_url }}"
                class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
@@ -74,9 +50,11 @@
           {% block result %}{% endblock %}
         </section>
         <div class="fr-hidden fr-unhidden-lg">
-          {% include "_learn_more.html" %}
+          <section class="fr-py-8w fr-px-6w alt">
+            {% block include_learn_more %}{% endblock %}
+          </section>
           <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-            {% include '_footer.html' %}
+            {% block include_desktop_footer %}{% endblock %}
           </section>
         </div>
       </div>
@@ -100,7 +78,7 @@
 {% block extra_js %}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
-    var SHARING_URL = "{{ share_btn_url }}";
+    var SHARING_URL = "{{ current_url }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
