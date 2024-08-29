@@ -1737,3 +1737,28 @@ main.demonstrateur_2150 {
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
 }
+
+#content {
+  padding-bottom: 3rem;
+  position: relative;
+
+  #help-sidebar {
+    z-index: 9999;
+    background-color: white;
+    padding: 1.5rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+
+    .sidebar-content {
+      position: sticky;
+      top: 0;
+    }
+
+    @media (width >= 36em) {
+      max-width: 28em;
+    }
+  }
+}
