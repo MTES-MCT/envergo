@@ -288,7 +288,7 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.defer("geometry", "map__geometry")
+        return qs.select_related("map").defer("geometry", "map__geometry")
 
 
 @admin.register(Department)
