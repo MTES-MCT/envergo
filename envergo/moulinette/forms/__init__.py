@@ -21,7 +21,7 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             Nouveaux impacts
             <button type="button"
                     id="sidebar-button"
-                    aria-controls="help-sidebar">
+                    aria-controls="sidebar-created-surface">
                 help
             </button>
             """
