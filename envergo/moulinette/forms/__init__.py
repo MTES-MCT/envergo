@@ -2,7 +2,12 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.moulinette.forms.fields import DisplayIntegerField
+from envergo.moulinette.forms.fields import (
+    DisplayChoiceField,
+    DisplayIntegerField,
+    extract_choices,
+    extract_display_function,
+)
 
 
 class BaseMoulinetteForm(forms.Form):
@@ -76,8 +81,59 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         return data
 
 
+REIMPLANATION_CHOICES = (
+    (
+        "remplacement",
+        mark_safe(
+            "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
+        ),
+        "Oui, en remplaçant la haie détruite au même endroit",
+    ),
+    (
+        "compensation",
+        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
+        "Oui, en plantant une haie à un autre endroit",
+    ),
+    ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
+)
+
+
+MOTIF_CHOICES = (
+    (
+        "transfert_parcelles",
+        mark_safe(
+            "Transfert de parcelles entre exploitations<br />"
+            '<span class="fr-hint-text">Agrandissement, échange de parcelles, nouvelle installation…</span>'
+        ),
+        "Transfert de parcelles entre exploitations",
+    ),
+    (
+        "chemin_acces",
+        mark_safe(
+            "Créer un chemin d’accès<br />"
+            '<span class="fr-hint-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</span>'
+        ),
+        "Créer un chemin d’accès",
+    ),
+    (
+        "meilleur_emplacement",
+        mark_safe(
+            "Replanter la haie à un meilleur emplacement environnemental<br />"
+            '<span class="fr-hint-text">Plantation justifiée par un organisme agréé</span>'
+        ),
+        "Replanter la haie à un meilleur emplacement environnemental",
+    ),
+    (
+        "amenagement",
+        "Réaliser une opération d’aménagement foncier",
+        "Réaliser une opération d’aménagement foncier",
+    ),
+    ("autre", "Autre", "Autre"),
+)
+
+
 class MoulinetteFormHaie(BaseMoulinetteForm):
-    profil = forms.ChoiceField(
+    profil = DisplayChoiceField(
         label="J’effectue cette demande en tant que :",
         widget=forms.RadioSelect,
         choices=(
@@ -85,65 +141,34 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             (
                 "autre",
                 mark_safe(
-                    "Autre "
-                    '<em class="choice-help-text">'
+                    "Autre<br />"
+                    '<span class="fr-hint-text">'
                     "Collectivité, aménageur, gestionnaire de réseau, particulier, etc."
-                    "</em>"
+                    "</span>"
                 ),
             ),
         ),
         required=True,
+        get_display_value=lambda value: (
+            "Exploitant-e agricole bénéficiaire de la PAC"
+            if value == "agri_pac"
+            else "Autre"
+        ),
     )
-    motif = forms.ChoiceField(
+    motif = DisplayChoiceField(
         label="Quelle est la raison de l’arrachage de la haie ?",
         widget=forms.RadioSelect,
-        choices=(
-            (
-                "transfert_parcelles",
-                mark_safe(
-                    "Transfert de parcelles entre exploitations"
-                    '<em class="choice-help-text">Agrandissement, échange de parcelles, nouvelle installation…</em>'
-                ),
-            ),
-            (
-                "chemin_acces",
-                mark_safe(
-                    "Créer un chemin d’accès"
-                    '<em class="choice-help-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</em>'
-                ),
-            ),
-            (
-                "meilleur_emplacement",
-                mark_safe(
-                    "Replanter la haie à un meilleur emplacement environnemental"
-                    '<em class="choice-help-text">Plantation justifiée par un organisme agréé</em>'
-                ),
-            ),
-            ("amenagement", "Réaliser une opération d’aménagement foncier"),
-            ("autre", "Autre"),
-        ),
+        choices=extract_choices(MOTIF_CHOICES),
         required=True,
+        get_display_value=extract_display_function(MOTIF_CHOICES),
     )
 
-    reimplantation = forms.ChoiceField(
+    reimplantation = DisplayChoiceField(
         label="Est-il prévu de planter une nouvelle haie ?",
         widget=forms.RadioSelect,
-        choices=(
-            (
-                "remplacement",
-                mark_safe(
-                    "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
-                ),
-            ),
-            (
-                "compensation",
-                mark_safe(
-                    "<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"
-                ),
-            ),
-            ("non", "Non, aucune réimplantation"),
-        ),
+        choices=extract_choices(REIMPLANATION_CHOICES),
         required=True,
+        get_display_value=extract_display_function(REIMPLANATION_CHOICES),
     )
 
     def clean(self):
