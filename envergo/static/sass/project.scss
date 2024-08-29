@@ -1777,7 +1777,7 @@ main.demonstrateur_2150 {
       width: 50%;
     }
 
-    @media (min-width: 48em) {
+    @media (width >= 48em) {
       width: 40%;
     }
   }
@@ -1789,6 +1789,7 @@ main.demonstrateur_2150 {
   #moulinette-col {
     display: flex;
     justify-content: center;
+
     #moulinette {
       max-width: 650px;
     }
@@ -1800,7 +1801,7 @@ main.demonstrateur_2150 {
 
   &.sidebar-open {
     #moulinette-col {
-      @media (min-width: 48em) {
+      @media (width >= 48em) {
         max-width: 60%;
         padding-right: 1.5rem;
       }
