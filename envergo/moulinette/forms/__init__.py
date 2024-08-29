@@ -20,9 +20,9 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             """
             Nouveaux impacts
             <button type="button"
-                    class="help-sidebar-button"
+                    class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
                     aria-controls="sidebar-created-surface">
-                help
+                Voir l'aide pour le champ « Nouveaux impacts ».
             </button>
             """
         ),
@@ -49,9 +49,9 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             """
             État final
             <button type="button"
-                    class="help-sidebar-button"
+                    class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
                     aria-controls="sidebar-final-surface">
-                help
+                Voir l'aide pour le champ « État final ».
             </button>
             """
         ),
