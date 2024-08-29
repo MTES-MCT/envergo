@@ -7,38 +7,56 @@
 {% block main-classes %}contrast-bg{% endblock %}
 
 {% block content %}
-  <div id="moulinette-grid"
-       class="fr-grid-row fr-grid-row--center fr-grid-row--gutters">
+  <div id="moulinette-grid" class="sidebar-open">
 
     <div id="moulinette-col" class="fr-col">
       <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
     </div>
 
-    <div id="help-col" class="fr-col">
-      <div class="sidebar-content">
-        <h2>bla bla bla</h2>
-        <p>bla bla bla</p>
-        <p>
-          bla bla bla
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-        </p>
-        <p>
-          bla bla bla
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-        </p>
-        <p>
-          bla bla bla
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-        </p>
-        <p>
-          bla bla bla
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-        </p>
-        <p>
-          bla bla bla
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-        </p>
-      </div>
+  </div>
+{% endblock %}
+
+{% block help-sidebar %}
+  <div id="help-sidebar" class="sidebar-open">
+    <div class="sidebar-content">
+      <h2>bla bla bla</h2>
+      <p>bla bla bla</p>
+      <p>
+        bla bla bla
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+      </p>
+      <p>
+        bla bla bla
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+      </p>
+      <p>
+        bla bla bla
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+      </p>
+      <p>
+        bla bla bla
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+      </p>
+      <p>
+        bla bla bla
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+      </p>
     </div>
   </div>
+{% endblock %}
+
+{% block bottom_js %}
+  <script>
+  window.addEventListener("load", function() {
+    let btn = document.getElementById("sidebar-button");
+    let sidebarId = btn.attributes["aria-controls"].value;
+    let sidebar = document.getElementById(sidebarId);
+    let moulinetteGrid = document.getElementById("moulinette-grid");
+
+    btn.addEventListener("click", function() {
+      sidebar.classList.toggle("sidebar-open");
+      moulinetteGrid.classList.toggle("sidebar-open");
+    });
+  });
+  </script>
 {% endblock %}
