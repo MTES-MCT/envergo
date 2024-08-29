@@ -27,8 +27,8 @@ class TopBarAdminForm(forms.ModelForm):
 
 @admin.register(TopBar)
 class TopBarAdmin(admin.ModelAdmin):
-    list_display = ["message_summary", "is_active", "updated_at"]
-    fields = ("message_md", "is_active")
+    list_display = ["message_summary", "is_active", "updated_at", "site"]
+    fields = ("message_md", "is_active", "site")
     form = TopBarAdminForm
 
     def message_summary(self, obj):

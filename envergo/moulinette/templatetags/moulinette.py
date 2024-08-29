@@ -5,10 +5,11 @@ import string
 from django import template
 from django.template import Context, Template
 from django.template.exceptions import TemplateDoesNotExist
-from django.template.loader import render_to_string
+from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
+from envergo.moulinette.models import get_moulinette_class_from_site
 
 register = template.Library()
 
@@ -20,6 +21,21 @@ logger = logging.getLogger(__name__)
 def to_geojson(obj, geometry_field="geometry"):
     json_obj = convert_to_geojson(obj)
     return mark_safe(json.dumps(json_obj))
+
+
+@register.simple_tag(takes_context=True)
+def show_moulinette_form(context, display_title=True):
+    """Display the moulinette form.
+
+    We do so by selecting the correct template depending on the current domain.
+    """
+    MoulinetteClass = get_moulinette_class_from_site(context["request"].site)
+    template_name = MoulinetteClass.get_form_template()
+
+    template = get_template(template_name)
+    context["display_title"] = display_title
+    content = template.render(context.flatten())
+    return content
 
 
 def render_from_moulinette_templates(context, template_name):

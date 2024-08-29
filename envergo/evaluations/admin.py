@@ -28,7 +28,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
-from envergo.moulinette.forms import MoulinetteForm
+from envergo.moulinette.models import get_moulinette_class_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,8 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         if moulinette_url:
             parsed_url = urlparse(moulinette_url)
             query = QueryDict(parsed_url.query)
+            MoulinetteClass = get_moulinette_class_from_url(moulinette_url)
+            MoulinetteForm = MoulinetteClass.get_main_form_class()
             moulinette_form = MoulinetteForm(data=query)
             if not moulinette_form.is_valid():
                 self.add_error("moulinette_url", _("The moulinette url is invalid."))

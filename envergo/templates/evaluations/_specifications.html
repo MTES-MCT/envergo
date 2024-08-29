@@ -24,17 +24,5 @@
     <li>{% field_summary form.final_surface %}</li>
   {% endif %}
 
-  {% for key, field in moulinette.additional_fields.items %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-
-  {% for form in moulinette.optional_forms %}
-    {% if form.is_valid and form.is_activated %}
-      {% for field in form %}
-        {% if field.name != "activate" %}
-          <li>{% field_summary field %}</li>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endfor %}
+  {% include 'moulinette/_additional_specifications.html' %}
 </ul>
