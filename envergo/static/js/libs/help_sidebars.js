@@ -7,16 +7,23 @@ window.addEventListener("load", function () {
   let moulinetteGrid = document.getElementById("moulinette-grid");
   let sidebars = document.querySelectorAll(".help-sidebar");
 
+  // When a help button is clicked…
   helpBtns.forEach(function (btn) {
     btn.addEventListener("click", function () {
 
+      // Close all currently open sidebars
       sidebars.forEach(function (sidebar) {
-        sidebar.classList.remove("sidebar-open");
+        sidebar.close();
       });
 
+      // Display the sidebar that corresponds to the current field
       let sidebarId = btn.attributes["aria-controls"].value;
       let sidebar = document.getElementById(sidebarId);
       sidebar.classList.add("sidebar-open");
+      sidebar.show();
+
+      // Also add a class to the main moulinette content so we can adapt
+      // it's display
       moulinetteGrid.classList.add("sidebar-open");
     });
 
@@ -24,7 +31,7 @@ window.addEventListener("load", function () {
       btn.addEventListener("click", function () {
         let sidebarId = btn.attributes["aria-controls"].value;
         let sidebar = document.getElementById(sidebarId);
-        sidebar.classList.remove("sidebar-open");
+        sidebar.close();
         moulinetteGrid.classList.remove("sidebar-open");
       });
 
