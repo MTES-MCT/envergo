@@ -4,6 +4,11 @@ from django.urls import reverse
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 def test_set_visitor_id_cookie_middleware(client):
     """A single page view sets the unique visitor cookie."""
 
