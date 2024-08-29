@@ -9,7 +9,16 @@ class BaseMoulinetteForm(forms.Form):
 
 class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = forms.IntegerField(
-        label=_("Surface created by the project"),
+        label=mark_safe(
+            """
+            Nouveaux impacts
+            <button type="button"
+                    aria-controls="help-sidebar"
+                    aria-expanded="true">
+                help
+            </button>
+            """
+        ),
         required=True,
         min_value=0,
         help_text="Surface au sol nouvellement impactée par le projet",
