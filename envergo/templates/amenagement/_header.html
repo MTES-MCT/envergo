@@ -48,27 +48,29 @@
 
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
-        <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
-        <li class="fr-nav__item">{% menu_item 'moulinette_home' "Simulateur" 'HomePage' 'SimulationClick' 'Nav' %}</li>
-        <li class="fr-nav__item">{% project_owner_menu %}</li>
-        <li class="fr-nav__item">{% evalreq_menu 'HomePage' 'RequestClick' 'Nav' %}</li>
-        <li class="fr-nav__item">{% faq_menu %}</li>
-        <li class="fr-nav__item ">{% evaluation_menu %}</li>
-        <li class="fr-nav__item fr-hidden-lg">
-          <a href="{% url 'request_evaluation' %}"
-             class="fr-nav__link"
-             data-event-category="HomePage"
-             data-event-action="RequestClick"
-             data-event-name="CTA">Demander un avis réglementaire</a>
-        </li>
+        {% block menu_items %}
+          <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
+          <li class="fr-nav__item">{% menu_item 'moulinette_home' "Simulateur" 'HomePage' 'SimulationClick' 'Nav' %}</li>
+          <li class="fr-nav__item">{% project_owner_menu %}</li>
+          <li class="fr-nav__item">{% evalreq_menu 'HomePage' 'RequestClick' 'Nav' %}</li>
+          <li class="fr-nav__item">{% faq_menu %}</li>
+          <li class="fr-nav__item ">{% evaluation_menu %}</li>
+          <li class="fr-nav__item fr-hidden-lg">
+            <a href="{% url 'request_evaluation' %}"
+               class="fr-nav__link"
+               data-event-category="HomePage"
+               data-event-action="RequestClick"
+               data-event-name="CTA">Demander un avis réglementaire</a>
+          </li>
 
-        <li class="fr-nav__item btn-link fr-hidden fr-unhidden-xl">
-          <a href="{% url 'request_evaluation' %}"
-             class="fr-btn fr-btn--sm"
-             data-event-category="HomePage"
-             data-event-action="RequestClick"
-             data-event-name="CTA">Demander un avis réglementaire</a>
-        </li>
+          <li class="fr-nav__item btn-link fr-hidden fr-unhidden-xl">
+            <a href="{% url 'request_evaluation' %}"
+               class="fr-btn fr-btn--sm"
+               data-event-category="HomePage"
+               data-event-action="RequestClick"
+               data-event-name="CTA">Demander un avis réglementaire</a>
+          </li>
+        {% endblock menu_items %}
       </ul>
     </nav>
   </div>

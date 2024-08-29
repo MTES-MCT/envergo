@@ -219,6 +219,10 @@ nav#evaluation-summary {
     color: var(--text-default-info);
   }
 
+  .form-section {
+    margin-bottom: 1.5rem;
+  }
+
   #form-group-created_surface,
   #form-group-final_surface {
     & > label {
@@ -235,10 +239,6 @@ nav#evaluation-summary {
   #form-group-address .optional-tag,
   #form-group-final_surface .optional-tag {
     display: none;
-  }
-
-  #additional-forms {
-    margin-bottom: 1.5rem;
   }
 
   #additional-forms.unbound {
@@ -275,7 +275,6 @@ nav#evaluation-summary {
   #optional-forms {
     background-color: var(--background-contrast-grey);
     padding: 1rem;
-    margin-bottom: 1.5rem;
 
     .optional-form {
       .fr-input-group[id$="activate"] span.label-content {
@@ -500,7 +499,7 @@ form {
     }
 
     input[type="file"]:focus + div.input-file-widget {
-      outline: var(--focus) solid 2px;
+      outline-color: var(--focus);
       outline-offset: 2px;
     }
 
@@ -1582,7 +1581,7 @@ main.geometricians {
     }
   }
 
-  div.last-section {
+  div.submit-section {
     button {
       display: block;
       margin: 3rem auto 0;
@@ -1741,4 +1740,9 @@ main.demonstrateur_2150 {
   margin: -28px 16px;
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
+
+.choice-help-text {
+  font-size: 0.75rem !important;
+  color: var(--text-mention-grey);
 }

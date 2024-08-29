@@ -1,0 +1,61 @@
+{% load utils %}
+
+{% if display_title %}<h1 class="fr-h2 centered">Simulez votre projet en phase amont !</h1>{% endif %}
+
+<form class="fr-mb-3w"
+      method="post"
+      novalidate
+      autocomplete="off"
+      action="{% url "moulinette_result" %}"
+      id="moulinette-form">
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+
+  <div id="form-section-coords" class="form-section">
+
+    {{ form.lng.as_hidden }}
+    {{ form.lat.as_hidden }}
+
+    {% include '_field_snippet.html' with field=form.address %}
+
+    <div class="fr-input-group fr-input-group-map">
+      <label class="step">
+        Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+        l'emplacement du projet.
+      </label>
+      <figure class="fr-content-media">
+        <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
+          <div class="ratio-content">
+            <div class="leaflet-container">
+              <div id="map"></div>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      {% if form.lat.errors or form.lng.errors %}
+        <p class="fr-error-text">
+          ↑
+          Les coordonnées saisies sont incorrectes
+          ↑
+        </p>
+
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="form-section-surface" class="form-section">
+    <div class="fr-mb-3w">
+      <label class="step">Complétez les informations décrivant le projet</label>
+    </div>
+    <p class="hint-header">
+      <span class="fr-icon-info-fill" aria-hidden="true"></span>
+      Surfaces à prendre en compte : bâti, voirie, espaces verts, remblais et bassins — impacts définitifs et temporaires (travaux).
+    </p>
+    {% include '_field_snippet.html' with field=form.created_surface %}
+    {% include '_field_snippet.html' with field=form.final_surface %}
+  </div>
+
+  {% include 'amenagement/moulinette/_form_footer.html' %}
+</form>
