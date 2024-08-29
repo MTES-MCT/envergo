@@ -1753,10 +1753,8 @@ main.demonstrateur_2150 {
     padding: 1.5rem;
     height: 100%;
     overflow: visible;
-
-    &:not(.sidebar-open) {
-      display: none;
-    }
+    border: none;
+    margin-right: 0;
 
     .sidebar-content {
       position: sticky;

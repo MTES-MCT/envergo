@@ -17,11 +17,12 @@
 {% endblock %}
 
 {% block help-sidebar %}
-  <div id="sidebar-created-surface" class="help-sidebar">
+  <dialog id="sidebar-created-surface" class="help-sidebar">
 
     <div class="sidebar-content">
       <button class="fr-btn--close fr-btn"
               title="Fermer la barre d'aide"
+              autofocus
               aria-controls="sidebar-created-surface">Fermer</button>
 
       <h2>Nouveaux impacts</h2>
@@ -43,13 +44,14 @@
              alt="Un diagramme d'example représentant les surfaces de nouvelles construction et les surfaces d'artificialisation.">
       </p>
     </div>
-  </div>
+  </dialog>
 
-  <div id="sidebar-final-surface" class="help-sidebar">
+  <dialog id="sidebar-final-surface" class="help-sidebar">
 
     <div class="sidebar-content">
       <button class="fr-btn--close fr-btn"
               title="Fermer la barre d'aide"
+              autofocus
               aria-controls="sidebar-final-surface">Fermer</button>
       <h2>Nouveaux impacts</h2>
 
@@ -74,5 +76,5 @@
              alt="Un diagramme d'example représentant les surfaces déjà impactées et nouvellement impactées.">
       </p>
     </div>
-  </div>
+  </dialog>
 {% endblock %}
