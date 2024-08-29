@@ -1,11 +1,13 @@
 from django import forms
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Department
-from envergo.moulinette.regulations import CriterionEvaluator
+
+class BaseMoulinetteForm(forms.Form):
+    pass
 
 
-class MoulinetteForm(forms.Form):
+class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = forms.IntegerField(
         label=_("Surface created by the project"),
         required=True,
@@ -63,31 +65,99 @@ class MoulinetteForm(forms.Form):
         return data
 
 
-EMPTY_CHOICE = ("", "---------")
-
-
-class MoulinetteDebugForm(forms.Form):
-    """For debugging purpose.
-
-    This form dynamically creates a field for every `CriterionEvaluator` subclass.
-    """
-
-    department = forms.ModelChoiceField(
-        label=_("Department"),
+class MoulinetteFormHaie(BaseMoulinetteForm):
+    profil = forms.ChoiceField(
+        label="J’effectue cette demande en tant que :",
+        widget=forms.RadioSelect,
+        choices=(
+            ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
+            (
+                "autre",
+                mark_safe(
+                    "Autre "
+                    '<em class="choice-help-text">'
+                    "Collectivité, aménageur, gestionnaire de réseau, particulier, etc."
+                    "</em>"
+                ),
+            ),
+        ),
         required=True,
-        queryset=Department.objects.all(),
-        to_field_name="department",
+    )
+    motif = forms.ChoiceField(
+        label="Quelle est la raison de l’arrachage de la haie ?",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "transfert_parcelles",
+                mark_safe(
+                    "Transfert de parcelles entre exploitations"
+                    '<em class="choice-help-text">Agrandissement, échange de parcelles, nouvelle installation…</em>'
+                ),
+            ),
+            (
+                "chemin_acces",
+                mark_safe(
+                    "Créer un chemin d’accès"
+                    '<em class="choice-help-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</em>'
+                ),
+            ),
+            (
+                "meilleur_emplacement",
+                mark_safe(
+                    "Replanter la haie à un meilleur emplacement environnemental"
+                    '<em class="choice-help-text">Plantation justifiée par un organisme agréé</em>'
+                ),
+            ),
+            ("amenagement", "Réaliser une opération d’aménagement foncier"),
+            ("autre", "Autre"),
+        ),
+        required=True,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    reimplantation = forms.ChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "remplacement",
+                mark_safe(
+                    "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
+                ),
+            ),
+            (
+                "compensation",
+                mark_safe(
+                    "<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"
+                ),
+            ),
+            ("non", "Non, aucune réimplantation"),
+        ),
+        required=True,
+    )
 
-        criteria = [criterion for criterion in CriterionEvaluator.__subclasses__()]
-        for criterion in criteria:
-            field_name = f"{criterion.slug}"
-            choices = [EMPTY_CHOICE] + list(zip(criterion.CODES, criterion.CODES))
-            self.fields[field_name] = forms.ChoiceField(
-                label=criterion.choice_label,
-                choices=choices,
-                required=False,
+    def clean(self):
+        data = super().clean()
+
+        reimplantation = data.get("reimplantation")
+        motif = data.get("motif")
+
+        if reimplantation == "remplacement" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
             )
+        elif reimplantation == "remplacement" and motif == "chemin_acces":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le percement d'un chemin"
+                " d'accès. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+        elif reimplantation == "non" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "L’absence de réimplantation de la haie est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+
+        return data

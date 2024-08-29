@@ -128,7 +128,9 @@ def warn_admin_of_email_error(recipient_status_id):
     log = status.regulatory_notice_log
     evaluation = log.evaluation
     evalreq = evaluation.request
-    base_url = get_base_url()
+    base_url = get_base_url(
+        settings.ENVERGO_AMENAGEMENT_DOMAIN
+    )  # Evaluations exist only for EnvErgo Amenagement.
     eval_url = reverse(
         "admin:evaluations_evaluation_change",
         args=[evaluation.reference],

@@ -2,12 +2,7 @@
 
 {% load evaluations static l10n %}
 
-{% block header %}
-  <header role="banner" class="fr-header header-sticky header-slim">
-    {% include '_slim_header.html' %}
-
-  </header>
-{% endblock %}
+{% block header %}{% endblock %}
 
 {% block html-classes %}full-height{% endblock %}
 {% block body-classes %}full-height flex-box flex-column moulinette-result-body{% endblock %}
@@ -17,10 +12,7 @@
   <div id="moulinette-result-container" class="flex-box fr-container">
     <div class="fr-grid-row">
       <div id="mobile-footer" class="fr-hidden-lg fr-col-12 hide-print fr-mt-4w">
-        {% include "_learn_more.html" %}
-        <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-          {% include '_footer.html' with do_not_load_modal="true" %}
-        </section>
+        {% block mobile-footer %}{% endblock %}
       </div>
       <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
         <section>
@@ -38,28 +30,7 @@
     class="share-link"
     rel="noopener external">consultable en ligne</a>
           </p>
-
-          {{ form.lng.as_hidden }}
-          {{ form.lat.as_hidden }}
-          <figure class="fr-content-media">
-            <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
-              <div class="ratio-content">
-                <div class="leaflet-container">
-                  <div id="map">
-                    <a id="map-button"
-                       href="{{ edit_url }}"
-                       class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-                       data-event-category="Content"
-                       data-event-action="Edit"
-                       data-event-name="Map">Modifier le
-                      projet
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </figure>
-          {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
+          {% block project_summary %}{% endblock %}
           <div class="button-container  hide-print">
             <a href="{{ edit_url }}"
                class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
@@ -78,27 +49,15 @@
             </div>
           {% endif %}
           <h1 class="fr-mb-5w">Simulation réglementaire</h1>
-
-          <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
-            <li>
-              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-                      data-fr-opened="false"
-                      aria-controls="share-modal"
-                      data-btn="bottom">Partager cette page par email</button>
-            </li>
-            <li>
-              <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill share-btn print-btn">
-                Imprimer cette simulation
-              </button>
-            </li>
-          </ul>
+          {% block after-title-content %}{% endblock %}
 
           <h2 class="fr-h3">Réglementations environnementales</h2>
 
           {% include 'moulinette/_evaluation_summary.html' %}
 
           <p class="fr-hint-text fr-mb-3w">
-            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration. <a href="#liability-info" class="hide-print">En savoir plus.</a>
+            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+            {% block liability_link %}{% endblock %}
           </p>
 
           {% for regulation in moulinette.regulations %}
@@ -106,39 +65,18 @@
 
           {% endfor %}
 
-          {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
+          {% block additional_regulations %}{% endblock %}
+          {% block liability_info %}{% endblock %}
 
-          <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
-            <p>
-              EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de
-              l'aménagement en phase amont de leurs projets.
-            </p>
-            <p>
-              Les simulations sont établies à titre informatif, et ne valent pas position de l'administration. Elles ne
-              couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets.
-            </p>
-            <p>
-              Les porteurs doivent échanger directement avec les autorités administratives compétentes (collectivité en
-              charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.
-            </p>
-          </div>
-
-          <section class="regulation regulation-disabled fr-mb-5w"
-                   id="regulation_defrichement">
-            <h2>
-              <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
-            </h2>
-            <p>
-              Cette réglementation sera prochainement prise en compte dans EnvErgo.
-              Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
-              priorité</a>.
-            </p>
-          </section>
+          {% block coming_soon_regulations %}
+          {% endblock coming_soon_regulations %}
         </section>
         <div class="fr-hidden fr-unhidden-lg">
-          {% include "_learn_more.html" %}
+          <section class="fr-py-8w fr-px-6w alt">
+            {% block include_learn_more %}{% endblock %}
+          </section>
           <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-            {% include '_footer.html' %}
+            {% block include_desktop_footer %}{% endblock %}
           </section>
         </div>
       </div>
@@ -147,9 +85,7 @@
 {% endblock %}
 
 {% block after-content %}{% endblock %}
-{% block footer %}
-  {% include 'moulinette/_actions_banner.html' %}
-{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block extra_body %}
   {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
@@ -162,7 +98,7 @@
 {% block extra_js %}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
-    var SHARING_URL = "{{ share_btn_url }}";
+    var SHARING_URL = "{{ current_url }}";
     window.MAPS = window.MAPS || {};
     window.MAPS['map'] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
@@ -188,10 +124,6 @@
     {% endif %}
   </script>
 
-  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
-  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
-  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
   <script defer
           src="{% static 'js/libs/moulinette_result_actions_banner.js' %}"></script>

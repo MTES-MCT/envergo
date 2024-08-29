@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 
 def settings_context(_request):
@@ -9,8 +9,16 @@ def settings_context(_request):
 
     # We disable the chatbox on the catchment area page
     # Because it breaks the map, for reasons I just don't understand
-    catchment_area_page_url = reverse("2150_debug")
-    if _request.path == catchment_area_page_url:
+    try:
+        catchment_area_page_url = reverse("2150_debug")
+    except NoReverseMatch:
+        catchment_area_page_url = None
+
+    # We disable the chatbox on the Haie website
+    if (
+        _request.path == catchment_area_page_url
+        or _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+    ):
         chatbox_enabled = False
     else:
         chatbox_enabled = settings.CRISP_CHATBOX_ENABLED
@@ -22,4 +30,15 @@ def settings_context(_request):
         "ENV_NAME": settings.ENV_NAME,
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
         "CRISP_WEBSITE_ID": settings.CRISP_WEBSITE_ID,
+    }
+
+
+def multi_sites_context(_request):
+    """Give some useful context to handle multi sites"""
+    current_site = _request.site  # this has been populated by a middleware
+    base_template = "amenagement/base.html"
+    if current_site.domain == settings.ENVERGO_HAIE_DOMAIN:
+        base_template = "haie/base.html"
+    return {
+        "base_template": base_template,
     }

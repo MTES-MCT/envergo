@@ -8,6 +8,11 @@ from envergo.users.models import User
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
 def test_password_reset_with_existing_email_does_send_an_email(
     client, user, mailoutbox
 ):
