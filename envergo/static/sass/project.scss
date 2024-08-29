@@ -1742,7 +1742,7 @@ main.demonstrateur_2150 {
   padding-bottom: 3rem;
   position: relative;
 
-  #help-sidebar {
+  .help-sidebar {
     z-index: 9999;
     position: absolute;
     top: 0;
@@ -1762,6 +1762,10 @@ main.demonstrateur_2150 {
       position: sticky;
       top: 4.5rem;
       max-width: 440px;
+
+      img {
+        max-width: 100%;
+      }
     }
 
     @media (width >= 36em) {

@@ -7,7 +7,7 @@
 {% block main-classes %}contrast-bg{% endblock %}
 
 {% block content %}
-  <div id="moulinette-grid" class="sidebar-open">
+  <div id="moulinette-grid">
 
     <div id="moulinette-col" class="fr-col">
       <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
@@ -17,29 +17,25 @@
 {% endblock %}
 
 {% block help-sidebar %}
-  <div id="help-sidebar" class="sidebar-open">
+  <div id="sidebar-created-surface" class="help-sidebar">
     <div class="sidebar-content">
-      <h2>bla bla bla</h2>
-      <p>bla bla bla</p>
+      <h2>Nouveaux impacts</h2>
+
       <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        Les surfaces considérées par les seuils de la Loi sur l’eau et Natura 2000 diffèrent de celles saisies dans les autorisations d’urbanisme ou de l’Évaluation Environnementale.
       </p>
+
       <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        Voici un exemple pour illustrer ces subtilités : un projet de construction de deux bâtiments avec une zone d’enrobé, sur un terrain comportant déjà un corps de ferme.
       </p>
+
+      <p>L’emprise au sol est la projection verticale au sol du volume de la construction.</p>
+
+      <p>Mais les zones impactées sont plus larges que celle-ci.</p>
+
       <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-      </p>
-      <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
-      </p>
-      <p>
-        bla bla bla
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, quae totam tempora, nostrum odit dolores debitis sunt tempore blanditiis quod excepturi quos, quia magnam laboriosam? Sint exercitationem quia officia dolor!
+        <img src="{% static 'images/sidebar-help-created_surface.png' %}"
+             alt="Un diagramme d'example représentant les surfaces de nouvelles construction et les surfaces d'artificialisation.">
       </p>
     </div>
   </div>
@@ -49,11 +45,12 @@
   <script>
   window.addEventListener("load", function() {
     let btn = document.getElementById("sidebar-button");
-    let sidebarId = btn.attributes["aria-controls"].value;
-    let sidebar = document.getElementById(sidebarId);
     let moulinetteGrid = document.getElementById("moulinette-grid");
+    let sidebars = document.querySelectorAll(".help-sidebar");
 
     btn.addEventListener("click", function() {
+      let sidebarId = btn.attributes["aria-controls"].value;
+      let sidebar = document.getElementById(sidebarId);
       sidebar.classList.toggle("sidebar-open");
       moulinetteGrid.classList.toggle("sidebar-open");
     });
