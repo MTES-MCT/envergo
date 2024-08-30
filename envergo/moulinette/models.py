@@ -315,30 +315,24 @@ class Regulation(models.Model):
         """Is an "autorisation d'urbanisme" needed?
 
         This is a custom check for the N2000 regulation.
-        Such an authorization is required if the projet is a "lotissement" or if the
-        answer to the "autorisation d'urbanisme" question is anything other than "no".
+        Such an authorization is required if the answer to the "autorisation d'urbanisme"
+        question is anything other than "no".
+
+        Also, the value is "True" by default if the "autorisation_urba" question is
+        not present.
         """
-        try:
-            lotissement_form = self.get_criterion("lotissement").get_form()
-            if (
-                lotissement_form.is_valid()
-                and lotissement_form.cleaned_data["is_lotissement"] == "oui"
-            ):
-                return True
-        except AttributeError:
-            pass
 
         try:
             autor_urba_form = self.get_criterion("autorisation_urba").get_form()
             if (
                 autor_urba_form.is_valid()
-                and autor_urba_form.cleaned_data["autorisation_urba"] != "none"
+                and autor_urba_form.cleaned_data["autorisation_urba"] == "none"
             ):
-                return True
+                return False
         except AttributeError:
             pass
 
-        return False
+        return True
 
     def display_perimeter(self):
         """Should / can a perimeter be displayed?"""
