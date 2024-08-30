@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
+from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
@@ -267,11 +268,17 @@ AUTORISATION_URBA_CHOICES = (
 
 
 class AutorisationUrbanismeForm(forms.Form):
-    autorisation_urba = forms.ChoiceField(
+    autorisation_urba = DisplayChoiceField(
         label="Le projet est-il…",
         widget=forms.RadioSelect,
         choices=AUTORISATION_URBA_CHOICES,
         required=True,
+        display_label="Autorisation d'urbanisme :",
+        get_display_value=lambda value: (
+            "Non soumis"
+            if value == "none"
+            else dict(AUTORISATION_URBA_CHOICES).get(value, value)
+        ),
     )
 
 

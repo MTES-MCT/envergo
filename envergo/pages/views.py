@@ -31,7 +31,7 @@ class GeometriciansView(MoulinetteMixin, FormView):
         context["webinar_url"] = GEOMETRICIAN_WEBINAR_FORM_URL
         context["testimonials"] = [
             (
-                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
+                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m² en cas de présence de zone humide. "
                 "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises.",
                 "Un géomètre-expert en Loire-Atlantique",
             ),
