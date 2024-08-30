@@ -679,7 +679,6 @@ div.leaflet-container {
     right: 0;
     margin-top: 10px;
     margin-right: 10px;
-    z-index: 9999;
     width: 80%;
 
     input {
@@ -1740,4 +1739,70 @@ main.demonstrateur_2150 {
   margin: -28px 16px;
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
+
+/**
+  * Handle the form display, along with the help sidebars
+  */
+#content {
+  position: relative;
+
+  .help-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--background-raised-grey);
+    padding: 1.5rem;
+    height: 100%;
+    overflow: visible;
+    border: none;
+    margin-right: 0;
+    filter: drop-shadow(var(--raised-shadow));
+
+    .sidebar-content {
+      position: sticky;
+      top: 4.5rem;
+      max-width: 440px;
+
+      img {
+        max-width: 100%;
+      }
+    }
+
+    @media (width >= 36em) {
+      width: 50%;
+    }
+
+    @media (width >= 48em) {
+      width: 40%;
+    }
+  }
+}
+
+#moulinette-grid {
+  display: flex;
+
+  #moulinette-col {
+    display: flex;
+    justify-content: center;
+
+    #moulinette {
+      max-width: 650px;
+    }
+  }
+
+  &:not(.sidebar-open) {
+    justify-content: center;
+  }
+
+  &.sidebar-open {
+    #moulinette-col {
+      @media (width >= 48em) {
+        max-width: 60%;
+        padding-right: 1.5rem;
+      }
+    }
+  }
 }

@@ -44,7 +44,6 @@ class EvaluationFormMixin(forms.Form):
             send_eval_to_project_owner = data.get("send_eval_to_project_owner", False)
             if not send_eval_to_project_owner:
                 self.fields["project_owner_emails"].required = False
-                self.fields["project_owner_phone"].required = False
 
         return super().full_clean()
 
@@ -179,7 +178,9 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
     project_owner_phone = PhoneNumberField(
-        label=_("Project sponsor phone number"), region="FR"
+        label=_("Project sponsor phone number"),
+        region="FR",
+        required=False,
     )
     send_eval_to_project_owner = forms.BooleanField(
         label=_("Send evaluation to project sponsor"),
