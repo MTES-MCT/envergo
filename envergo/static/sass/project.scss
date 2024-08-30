@@ -679,7 +679,6 @@ div.leaflet-container {
     right: 0;
     margin-top: 10px;
     margin-right: 10px;
-    z-index: 9999;
     width: 80%;
 
     input {
@@ -1753,6 +1752,7 @@ main.demonstrateur_2150 {
     overflow: visible;
     border: none;
     margin-right: 0;
+    filter: drop-shadow(var(--raised-shadow));
 
     .sidebar-content {
       position: sticky;
