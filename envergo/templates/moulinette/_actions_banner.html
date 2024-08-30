@@ -22,11 +22,17 @@
             </span>
           </button>
         </div>
-
-        <div id="debug-btn" class="fr-col-12 fr-col-md-4">
-          <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
-             href="{{ debug_url }}">Voir le débug</a>
-        </div>
+        {% if debug_url %}
+          <div id="debug-btn" class="fr-col-12 fr-col-md-4">
+            <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
+               href="{{ debug_url }}">Voir le debug</a>
+          </div>
+        {% elif result_url %}
+          <div id="debug-btn" class="fr-col-12 fr-col-md-4">
+            <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
+               href="{{ result_url }}">Voir la simulation</a>
+          </div>
+        {% endif %}
       {% else %}
         {% if display_feedback_form %}
           {% include 'analytics/_feedback_form.html' %}
