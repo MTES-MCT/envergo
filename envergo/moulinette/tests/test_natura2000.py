@@ -170,21 +170,21 @@ def test_autorisation_urba_value(moulinette_data):
     It will always be the case unless the user explicitly states otherwise.
     """
     moulinette_data["autorisation_urba"] = "pa"
-    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.natura2000.autorisation_urba.result == "soumis"
     assert moulinette.natura2000.autorisation_urba_needed() is True
 
     moulinette_data["autorisation_urba"] = "other"
-    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.natura2000.autorisation_urba.result == "a_verifier"
     assert moulinette.natura2000.autorisation_urba_needed() is True
 
     moulinette_data["autorisation_urba"] = "none"
-    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.natura2000.autorisation_urba.result == "non_soumis"
     assert moulinette.natura2000.autorisation_urba_needed() is False
 
     del moulinette_data["autorisation_urba"]
-    moulinette = Moulinette(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.natura2000.autorisation_urba.result == "non_disponible"
     assert moulinette.natura2000.autorisation_urba_needed() is True
