@@ -13,7 +13,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_from_qs, update_qs
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -359,7 +359,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
-        result_url = update_qs(current_url, {"debug": None})
+        result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(current_url, {"edit": "true"})
 
         # Url without any query parameters
