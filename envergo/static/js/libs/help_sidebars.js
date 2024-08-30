@@ -25,6 +25,10 @@ window.addEventListener("load", function () {
       // Also add a class to the main moulinette content so we can adapt
       // it's display
       moulinetteGrid.classList.add("sidebar-open");
+
+      // Track matomo event
+      let eventId = sidebarId.replace("sidebar-", "");
+      _paq.push(["trackEvent", "Form", "HelpDisclose", eventId]);
     });
 
     closeBtns.forEach(function (btn) {
@@ -33,8 +37,11 @@ window.addEventListener("load", function () {
         let sidebar = document.getElementById(sidebarId);
         sidebar.close();
         moulinetteGrid.classList.remove("sidebar-open");
-      });
 
+        // Track matomo event
+        let eventId = sidebarId.replace("sidebar-", "");
+        _paq.push(["trackEvent", "Form", "HelpConceal", eventId]);
+      });
     });
   });
 });
