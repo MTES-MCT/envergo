@@ -105,7 +105,6 @@ MOTIF_CHOICES = (
             "Transfert de parcelles entre exploitations<br />"
             '<span class="fr-hint-text">Agrandissement, échange de parcelles, nouvelle installation…</span>'
         ),
-        "Transfert de parcelles entre exploitations",
     ),
     (
         "chemin_acces",
@@ -113,7 +112,6 @@ MOTIF_CHOICES = (
             "Créer un chemin d’accès<br />"
             '<span class="fr-hint-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</span>'
         ),
-        "Créer un chemin d’accès",
     ),
     (
         "meilleur_emplacement",
@@ -121,19 +119,20 @@ MOTIF_CHOICES = (
             "Replanter la haie à un meilleur emplacement environnemental<br />"
             '<span class="fr-hint-text">Plantation justifiée par un organisme agréé</span>'
         ),
-        "Replanter la haie à un meilleur emplacement environnemental",
     ),
     (
         "amenagement",
         "Réaliser une opération d’aménagement foncier",
-        "Réaliser une opération d’aménagement foncier",
     ),
-    ("autre", "Autre", "Autre"),
+    (
+        "autre",
+        "Autre",
+    ),
 )
 
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
-    profil = DisplayChoiceField(
+    profil = forms.ChoiceField(
         label="J’effectue cette demande en tant que :",
         widget=forms.RadioSelect,
         choices=(
@@ -149,18 +148,12 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             ),
         ),
         required=True,
-        get_display_value=lambda value: (
-            "Exploitant-e agricole bénéficiaire de la PAC"
-            if value == "agri_pac"
-            else "Autre"
-        ),
     )
-    motif = DisplayChoiceField(
+    motif = forms.ChoiceField(
         label="Quelle est la raison de l’arrachage de la haie ?",
         widget=forms.RadioSelect,
-        choices=extract_choices(MOTIF_CHOICES),
+        choices=MOTIF_CHOICES,
         required=True,
-        get_display_value=extract_display_function(MOTIF_CHOICES),
     )
 
     reimplantation = DisplayChoiceField(
