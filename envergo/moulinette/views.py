@@ -360,7 +360,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
-        edit_url = update_qs(current_url, {"edit": "true"})
+        edit_url = update_qs(result_url, {"edit": "true"})
 
         # Url without any query parameters
         stripped_url = self.request.build_absolute_uri(self.request.path)
@@ -373,9 +373,14 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
+        context["base_result"] = "moulinette/base_result.html"
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
+
+        if moulinette:
+            context["base_result"] = moulinette.get_result_template()
+
         if moulinette and is_debug:
             context = {
                 **context,
