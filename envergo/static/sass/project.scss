@@ -1743,13 +1743,12 @@ main.demonstrateur_2150 {
   position: relative;
 
   .help-sidebar {
-    z-index: 9999;
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     width: 100%;
-    background-color: white;
+    background-color: var(--background-raised-grey);
     padding: 1.5rem;
     height: 100%;
     overflow: visible;
