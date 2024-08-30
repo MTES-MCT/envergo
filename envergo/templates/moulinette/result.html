@@ -59,11 +59,7 @@
             Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
             {% block liability_link %}{% endblock %}
           </p>
-
-          {% for regulation in moulinette.regulations %}
-            {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
-
-          {% endfor %}
+          {% block regulations_results %}{% endblock %}
 
           {% block additional_regulations %}{% endblock %}
           {% block liability_info %}{% endblock %}

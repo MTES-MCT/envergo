@@ -1,0 +1,19 @@
+{% extends 'moulinette/_result_regulation.html' %}
+
+{% load moulinette %}
+
+{% block regulation_body %}
+  <div class="alt fr-p-3w fr-mb-3w">{% show_regulation_body regulation %}</div>
+
+  {% if regulation.show_criteria and regulation.criteria.all %}
+    <div class="criteria">
+      <h3>Détail des rubriques</h3>
+
+      {% for criterion in regulation.criteria.all %}
+        {% if criterion.should_be_displayed %}
+          {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}
