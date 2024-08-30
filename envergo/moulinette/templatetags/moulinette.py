@@ -157,6 +157,12 @@ def field_summary(field):
     else:
         value = field.value()
 
+    # try to add thousands separator
+    try:
+        value = f"{int(value):,}".replace(",", " ")
+    except ValueError:
+        pass
+
     label = field.label
     if hasattr(field.field, "display_label"):
         label = field.field.display_label

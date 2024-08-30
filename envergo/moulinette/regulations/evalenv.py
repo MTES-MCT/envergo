@@ -91,8 +91,8 @@ class SurfacePlancherForm(forms.Form):
         help_text="En comptant l'existant. Cumul autorisé depuis le 16 mai 2017",
         widget=forms.RadioSelect,
         choices=(
-            ("oui", "Supérieure ou égale à 10 000 m2"),
-            ("non", "Inférieure à 10 000 m2"),
+            ("oui", "Supérieure ou égale à 10 000 m²"),
+            ("non", "Inférieure à 10 000 m²"),
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
@@ -205,7 +205,7 @@ ROUTE_PUBLIQUE_CHOICES = (
 
 VOIE_PRIVEE_CHOICES = (
     ("lt_3km", "Aucune ou < 3 km", "Aucune ou de longueur inférieure à 3 km"),
-    ("gte_3km", "≥ 3 km", "Longueur supérieure à 3 km"),
+    ("gte_3km", "≥ 3 km", "Longueur supérieure à 3 km"),
 )
 
 PISTE_CYCLABLE_CHOICES = (
@@ -418,8 +418,8 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     type_stationnement = DisplayChoiceField(
         label="Type de stationnement",
         help_text="""
-            Privé : attaché à des logements ou réservé à des employés.
-            Mixte : si au moins une place est ouverte au public
+            Privé : attaché à des logements ou réservé à des employés.
+            Mixte : si au moins une place est ouverte au public
         """,
         required=True,
         widget=forms.RadioSelect,
