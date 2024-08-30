@@ -3,6 +3,7 @@ import logging
 import string
 
 from django import template
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.template import Context, Template
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
@@ -159,14 +160,16 @@ def field_summary(field):
 
     # try to add thousands separator
     try:
-        value = f"{int(value):,}".replace(",", " ")
-    except ValueError:
+        value = intcomma(value)
+    except (TypeError, ValueError):
         pass
 
     label = field.label
     if hasattr(field.field, "display_label"):
+        # if there is a display_label, use it instead of the field label
         label = field.field.display_label
     elif not ends_with_punctuation(field.label):
+        # else, add a colon at the end of the label if it doesn't end with punctuation
         label = f"{field.label} :"
 
     value = (

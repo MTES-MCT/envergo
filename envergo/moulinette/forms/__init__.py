@@ -81,7 +81,7 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         return data
 
 
-REIMPLANATION_CHOICES = (
+REIMPLANTATION_CHOICES = (
     (
         "remplacement",
         mark_safe(
@@ -166,9 +166,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     reimplantation = DisplayChoiceField(
         label="Est-il prévu de planter une nouvelle haie ?",
         widget=forms.RadioSelect,
-        choices=extract_choices(REIMPLANATION_CHOICES),
+        choices=extract_choices(REIMPLANTATION_CHOICES),
         required=True,
-        get_display_value=extract_display_function(REIMPLANATION_CHOICES),
+        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
 
     def clean(self):
