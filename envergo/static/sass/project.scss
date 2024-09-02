@@ -1741,10 +1741,8 @@ main.demonstrateur_2150 {
   * Handle the form display, along with the help sidebars
   */
 #content {
-  position: relative;
-
   .help-sidebar {
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
@@ -1752,15 +1750,13 @@ main.demonstrateur_2150 {
     background-color: var(--background-raised-grey);
     padding: 1.5rem;
     height: 100%;
-    overflow: visible;
+    overflow-y: scroll;
     border: none;
     margin-right: 0;
     filter: drop-shadow(var(--raised-shadow));
-    z-index: 1000;
+    z-index: 3000;
 
     .sidebar-content {
-      position: sticky;
-      top: 4.5rem;
       max-width: 440px;
 
       img {
