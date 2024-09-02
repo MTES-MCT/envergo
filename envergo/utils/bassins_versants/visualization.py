@@ -122,7 +122,7 @@ def plot_carto(
         if colorbar:
             cbar = plt.colorbar()
             cbar.ax.set_ylabel(
-                "surface de bassin versant en m2", rotation=270, labelpad=5
+                "surface de bassin versant en m²", rotation=270, labelpad=5
             )
 
     elif colormap == "alti":

@@ -1019,7 +1019,7 @@ div.hero-alt {
       }
 
       #map-button {
-        transition: opacity 0.4s ease-in-out 0s;
+        transition: opacity 0.25s ease-in-out 0s;
         z-index: 1000;
         position: absolute;
         right: 1.5em;
@@ -1740,9 +1740,4 @@ main.demonstrateur_2150 {
   margin: -28px 16px;
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
-}
-
-.choice-help-text {
-  font-size: 0.75rem !important;
-  color: var(--text-mention-grey);
 }

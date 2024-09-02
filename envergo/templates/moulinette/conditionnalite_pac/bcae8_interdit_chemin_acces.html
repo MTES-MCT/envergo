@@ -1,0 +1,8 @@
+<p>Le projet est interdit car la longueur de haie à détruire pour créer un chemin d’accès dépasse 10 mètres.</p>
+
+{% if form.cleaned_data.reimplantation == "compensation" %}
+  <p>
+    Bien que le projet prévoie la réimplantation d’une haie, l’aménagement d’un chemin d’accès ne fait pas partie des
+    motifs autorisés au titre des règles de conditionnalité PAC, si le linéaire détruit excède 10 mètres.
+  </p>
+{% endif %}

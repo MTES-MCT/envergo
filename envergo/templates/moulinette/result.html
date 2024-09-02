@@ -1,107 +1,30 @@
-{% extends 'moulinette/base.html' %}
+{% extends 'moulinette/base_result.html' %}
 
 {% load evaluations static l10n %}
 
-{% block header %}{% endblock %}
-
-{% block html-classes %}full-height{% endblock %}
-{% block body-classes %}full-height flex-box flex-column moulinette-result-body{% endblock %}
-{% block main-classes %}full-height flex-box flex-column{% endblock %}
-
-{% block container %}
-  <div id="moulinette-result-container" class="flex-box fr-container">
-    <div class="fr-grid-row">
-      <div id="mobile-footer" class="fr-hidden-lg fr-col-12 hide-print fr-mt-4w">
-        {% block mobile-footer %}{% endblock %}
-      </div>
-      <div id="project-summary" class="fr-col-12 fr-col-lg-4 fr-py-4w fr-px-2w">
-        <section>
-          <h2 class="fr-mb-5w">Caractéristiques du projet</h2>
-          <p class="fr-text print-only">
-            Simulation réalisée sur <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
-    href="{{ envergo_url }}"
-    target="_blank"
-    rel="noopener external">EnvErgo</a>
-          </p>
-          <p class="fr-text print-only">
-            Cette simulation est <a title="Partager l'avis réglementaire"
-    href="{{ share_print_url }}"
-    target="_blank"
-    class="share-link"
-    rel="noopener external">consultable en ligne</a>
-          </p>
-          {% block project_summary %}{% endblock %}
-          <div class="button-container  hide-print">
-            <a href="{{ edit_url }}"
-               class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-               data-event-category="Content"
-               data-event-action="Edit"
-               data-event-name="Project">Modifier le projet</a>
-          </div>
-        </section>
-      </div>
-      <div id="project-result" class="fr-col-12 fr-col-lg-8">
-        <section class="fr-py-4w fr-px-4w">
-          {% if config and not config.is_activated %}
-            <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
-              Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
-              cette page grâce à votre statut d'admin.
-            </div>
-          {% endif %}
-          <h1 class="fr-mb-5w">Simulation réglementaire</h1>
-          {% block after-title-content %}{% endblock %}
-
-          <h2 class="fr-h3">Réglementations environnementales</h2>
-
-          {% include 'moulinette/_evaluation_summary.html' %}
-
-          <p class="fr-hint-text fr-mb-3w">
-            Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
-            {% block liability_link %}{% endblock %}
-          </p>
-
-          {% for regulation in moulinette.regulations %}
-            {% include 'moulinette/_result_regulation.html' with regulation=regulation %}
-
-          {% endfor %}
-
-          {% block additional_regulations %}{% endblock %}
-          {% block liability_info %}{% endblock %}
-
-          {% block coming_soon_regulations %}
-          {% endblock coming_soon_regulations %}
-        </section>
-        <div class="fr-hidden fr-unhidden-lg">
-          <section class="fr-py-8w fr-px-6w alt">
-            {% block include_learn_more %}{% endblock %}
-          </section>
-          <section class="fr-footer fr-pb-2w hide-print" role="contentinfo">
-            {% block include_desktop_footer %}{% endblock %}
-          </section>
-        </div>
-      </div>
+{% block result %}
+  {% if config and not config.is_activated %}
+    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
+      Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
+      cette page grâce à votre statut d'admin.
     </div>
-  </div>
-{% endblock %}
-
-{% block after-content %}{% endblock %}
-{% block footer %}{% endblock %}
-
-{% block extra_body %}
-  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (localisation et surfaces) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
-  {% if display_feedback_form %}
-    {% include 'analytics/_feedback_modal_useful.html' %}
-    {% include 'analytics/_feedback_modal_useless.html' %}
   {% endif %}
-{% endblock %}
+  <h1 class="fr-mb-5w">Simulation réglementaire</h1>
+  {% block after-title-content %}{% endblock %}
 
-{% block extra_js %}
-  <script>var SHARING_URL = "{{ current_url }}";</script>
+  <h2 class="fr-h3">Réglementations environnementales</h2>
 
-  <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
-  <script defer
-          src="{% static 'js/libs/moulinette_result_actions_banner.js' %}"></script>
-  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
-  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
-  <script defer src="{% static 'js/libs/moulinette_print_buttons.js' %}"></script>
+  {% include 'moulinette/_evaluation_summary.html' %}
+
+  <p class="fr-hint-text fr-mb-3w">
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+    {% block liability_link %}{% endblock %}
+  </p>
+  {% block regulations_results %}{% endblock %}
+
+  {% block additional_regulations %}{% endblock %}
+  {% block liability_info %}{% endblock %}
+
+  {% block coming_soon_regulations %}
+  {% endblock coming_soon_regulations %}
 {% endblock %}
