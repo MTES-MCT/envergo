@@ -956,11 +956,13 @@ div.hero-alt {
 // moulinette result page styles
 .moulinette-result-body {
   #action-banner {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
+    @media (height > 20rem) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
   }
 
   .fr-sr-only {
