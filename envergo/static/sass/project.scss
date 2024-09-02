@@ -1756,6 +1756,7 @@ main.demonstrateur_2150 {
     border: none;
     margin-right: 0;
     filter: drop-shadow(var(--raised-shadow));
+    z-index: 1000;
 
     .sidebar-content {
       position: sticky;
