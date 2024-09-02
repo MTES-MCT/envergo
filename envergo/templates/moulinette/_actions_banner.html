@@ -35,18 +35,7 @@
         {% endif %}
       {% else %}
         {% if display_feedback_form %}
-          <div id="feedback-form" class="flex-box fr-col-12 fr-col-md-8">
-            <p>💡 Cette simulation vous est-elle utile ?</p>
-            <button class="fr-btn fr-btn--icon-left fr-icon-thumb-up-fill"
-                    data-fr-opened="false"
-                    data-feedback="Oui"
-                    aria-controls="feedback-form-useful-dialog">Oui</button>
-
-            <button class="fr-btn fr-btn--icon-left fr-icon-thumb-down-fill"
-                    data-fr-opened="false"
-                    data-feedback="Non"
-                    aria-controls="feedback-form-useless-dialog">Non</button>
-          </div>
+          {% include 'analytics/_feedback_form.html' %}
         {% endif %}
       {% endif %}
     </div>

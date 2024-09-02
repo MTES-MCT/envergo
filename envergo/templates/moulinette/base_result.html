@@ -91,6 +91,12 @@
         keyboard: true,
       }
     };
+    var FEEDBACK_MODAL_DIALOGS = '.feedback-dialog';
+    var FEEDBACK_RESPOND_URL = '{% url "feedback_respond" %}';
+    var VISITOR_ID = '{{ visitor_id }}';
+    {% if moulinette_summary %}
+      var MOULINETTE_DATA = {{ moulinette_summary|safe }};
+    {% endif %}
   </script>
 
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
@@ -103,4 +109,5 @@
   <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_print_buttons.js' %}"></script>
+  <script defer src="{% static 'js/libs/feedback_form.js' %}"></script>
 {% endblock %}
