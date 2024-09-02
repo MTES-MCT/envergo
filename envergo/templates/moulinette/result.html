@@ -96,7 +96,27 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>var SHARING_URL = "{{ current_url }}";</script>
+  <script>
+    var DEPARTMENT = "{{ moulinette.department.department }}";
+    var SHARING_URL = "{{ share_btn_url|safe }}";
+    window.MAPS = window.MAPS || {};
+    window.MAPS['map'] = {
+      center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
+      entries: [],
+      caption: null,
+      truncate: true,
+      zoom: 15,
+      ratio: "4x3",
+      fixed: {
+        zoomControl: true,
+        dragging: false,
+        doubleClickZoom: 'center',
+        scrollWheelZoom: false,
+        touchZoom: 'center',
+        keyboard: true,
+      }
+    };
+  </script>
 
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
   <script defer
