@@ -98,10 +98,9 @@ class EvaluationAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
-        "has_moulinette_url",
         "application_number",
         "urbanism_department_emails",
-        "request_link",
+        "nb_emails_sent",
         "nb_versions",
     ]
     form = EvaluationAdminForm
@@ -198,25 +197,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
         return qs
 
-    @admin.display(description=_("Versions"), ordering="nb_versions")
+    @admin.display(description="Nb. avis publiés", ordering="nb_versions")
     def nb_versions(self, obj):
         return obj.nb_versions
-
-    @admin.display(description=_("Request"), ordering="request")
-    def request_link(self, obj):
-        if not obj.request:
-            return ""
-
-        request = obj.request
-        request_admin_url = reverse(
-            "admin:evaluations_request_change", args=[request.reference]
-        )
-        link = f'<a href="{request_admin_url}">{request}</a>'
-        return mark_safe(link)
-
-    @admin.display(description=_("Url"), boolean=True)
-    def has_moulinette_url(self, obj):
-        return bool(obj.moulinette_url)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -386,6 +369,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             },
         )
         return mark_safe(content)
+
+    @admin.display(description="Nb. emails envoyés")
+    def nb_emails_sent(self, obj):
+        return RegulatoryNoticeLog.objects.filter(evaluation=obj).count()
 
     @admin.display(description=_("Versions"))
     def versions(self, obj):
