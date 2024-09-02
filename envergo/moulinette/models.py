@@ -1130,7 +1130,7 @@ class Moulinette(ABC):
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
-    debug_result_template = "moulinette/result_debug.html"
+    debug_result_template = "amenagement/moulinette/result_debug.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
 
