@@ -6,6 +6,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
+from django.views.generic import TemplateView
 
 from envergo.urlmappings.views import UrlMappingRedirect
 
@@ -91,3 +92,15 @@ if settings.DEBUG:
         import debug_toolbar
 
         urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+
+
+# Exclude staging envs from search engine results
+if settings.ENV_NAME != "production":
+    urlpatterns += [
+        path(
+            "robots.txt",
+            TemplateView.as_view(
+                template_name="robots_staging.txt", content_type="text/plain"
+            ),
+        ),
+    ]
