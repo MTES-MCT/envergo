@@ -18,12 +18,14 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = DisplayIntegerField(
         label=mark_safe(
             """
-            Nouveaux impacts
-            <button type="button"
-                    class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
-                    aria-controls="sidebar-created-surface">
-                Voir l'aide pour le champ « Nouveaux impacts ».
-            </button>
+            <span class="help-sidebar-label">
+                Nouveaux impacts
+                <button type="button"
+                        class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
+                        aria-controls="sidebar-created-surface">
+                    Voir l'aide pour le champ « Nouveaux impacts ».
+                </button>
+            </span>
             """
         ),
         required=True,
@@ -47,12 +49,14 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
     final_surface = DisplayIntegerField(
         label=mark_safe(
             """
-            État final
-            <button type="button"
-                    class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
-                    aria-controls="sidebar-final-surface">
-                Voir l'aide pour le champ « État final ».
-            </button>
+            <span class="help-sidebar-label">
+                État final
+                <button type="button"
+                        class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
+                        aria-controls="sidebar-final-surface">
+                    Voir l'aide pour le champ « État final ».
+                </button>
+            </span>
             """
         ),
         required=False,
