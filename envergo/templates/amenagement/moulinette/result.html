@@ -48,6 +48,12 @@
   </ul>
 {% endblock %}
 
+{% block regulations_results %}
+  {% for regulation in moulinette.regulations %}
+    {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
+  {% endfor %}
+{% endblock %}
+
 {% block additional_regulations %}
   {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
 {% endblock %}

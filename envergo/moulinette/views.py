@@ -13,7 +13,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_from_qs, update_qs
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -303,13 +303,13 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = "moulinette/home.html"
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
+        elif is_edit:
+            template_name = "moulinette/home.html"
         elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
-            template_name = "moulinette/home.html"
-        elif is_edit:
             template_name = "moulinette/home.html"
         else:
             template_name = moulinette.get_result_template()
@@ -359,7 +359,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
         share_print_url = update_qs(current_url, {"mtm_source": "print"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
-        edit_url = update_qs(current_url, {"edit": "true"})
+        result_url = remove_from_qs(current_url, "debug")
+        edit_url = update_qs(result_url, {"edit": "true"})
 
         # Url without any query parameters
         stripped_url = self.request.build_absolute_uri(self.request.path)
@@ -372,9 +373,14 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
+        context["base_result"] = "moulinette/base_result.html"
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
+
+        if moulinette:
+            context["base_result"] = moulinette.get_result_template()
+
         if moulinette and is_debug:
             context = {
                 **context,
@@ -382,11 +388,15 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 "matomo_custom_url": debug_url,
             }
 
+            context["result_url"] = result_url
+
         elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
 
         elif moulinette:
             context["matomo_custom_url"] = stripped_url
+            if moulinette.has_config() and moulinette.is_evaluation_available():
+                context["debug_url"] = debug_result_url
 
         if moulinette and moulinette.catalog:
             lng = moulinette.catalog.get("lng")
@@ -403,7 +413,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                     context["form"].data["address"] = f"{lat}, {lng}"
 
         context["is_admin"] = self.request.user.is_staff
-        context["debug_url"] = debug_result_url
         context["edit_url"] = edit_url
 
         return context

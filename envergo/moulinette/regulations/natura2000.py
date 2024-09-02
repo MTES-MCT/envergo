@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
+from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
@@ -192,53 +193,6 @@ class IOTA(CriterionEvaluator):
         self._result_code, self._result = result, result
 
 
-class LotissementForm(forms.Form):
-    # I sacrificed a frog to the god of bad translations for the right to use
-    # this variable name. Sorry.
-    is_lotissement = forms.ChoiceField(
-        label=_("Le projet concerne-t-il un lotissement ?"),
-        widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
-        required=True,
-    )
-
-
-class Lotissement(CriterionEvaluator):
-    choice_label = "Natura 2000 > Lotissement"
-    slug = "lotissement"
-    form_class = LotissementForm
-
-    CODES = [
-        "soumis_dedans",
-        "soumis_proximite_immediate",
-        "non_soumis",
-        "non_disponible",
-    ]
-
-    CODE_MATRIX = {
-        ("oui", "dedans"): "soumis_dedans",
-        ("oui", "proximite_immediate"): "soumis_proximite_immediate",
-        ("non", "dedans"): "non_soumis",
-        ("non", "proximite_immediate"): "non_soumis",
-    }
-
-    RESULT_MATRIX = {
-        "soumis_dedans": RESULTS.soumis,
-        "soumis_proximite_immediate": RESULTS.soumis,
-        "non_soumis": RESULTS.non_soumis,
-        "non_disponible": RESULTS.non_disponible,
-    }
-
-    def get_result_data(self):
-        is_lotissement = self.catalog["is_lotissement"]
-        if self.distance <= 0:
-            distance = "dedans"
-        else:
-            distance = "proximite_immediate"
-
-        return is_lotissement, distance
-
-
 AUTORISATION_URBA_CHOICES = (
     ("pa", "soumis à permis d'aménager (PA)"),
     ("pc", "soumis à permis de construire (PC)"),
@@ -267,11 +221,17 @@ AUTORISATION_URBA_CHOICES = (
 
 
 class AutorisationUrbanismeForm(forms.Form):
-    autorisation_urba = forms.ChoiceField(
+    autorisation_urba = DisplayChoiceField(
         label="Le projet est-il…",
         widget=forms.RadioSelect,
         choices=AUTORISATION_URBA_CHOICES,
         required=True,
+        display_label="Autorisation d'urbanisme :",
+        get_display_value=lambda value: (
+            "Non soumis"
+            if value == "none"
+            else dict(AUTORISATION_URBA_CHOICES).get(value, value)
+        ),
     )
 
 
@@ -325,6 +285,17 @@ class AutorisationUrbanisme(CriterionEvaluator):
             result_code = super().get_result_code(result_data)
 
         return result_code
+
+
+class LotissementForm(forms.Form):
+    # I sacrificed a frog to the god of bad translations for the right to use
+    # this variable name. Sorry.
+    is_lotissement = forms.ChoiceField(
+        label=_("Le projet concerne-t-il un lotissement ?"),
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
 
 
 class AutorisationUrbanismeExcLotissementForm(
