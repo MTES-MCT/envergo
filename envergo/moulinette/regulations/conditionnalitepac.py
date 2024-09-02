@@ -1,22 +1,25 @@
 from django import forms
 
 from envergo.evaluations.models import RESULTS
+from envergo.moulinette.forms import DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
 class Bcae8Form(forms.Form):
-    lineaire_detruit = forms.IntegerField(
+    lineaire_detruit = DisplayIntegerField(
         label="Linéaire de haie détruit :",
         required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
+        display_unit="m",
     )
 
-    lineaire_total = forms.IntegerField(
+    lineaire_total = DisplayIntegerField(
         label="Linéaire total de haie sur l’exploitation :",
         required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
+        display_unit="m",
     )
 
     amenagement_dup = forms.ChoiceField(

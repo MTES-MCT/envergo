@@ -34,6 +34,22 @@ def n2000_criteria(france_map):  # noqa
             evaluator="envergo.moulinette.regulations.natura2000.IOTA",
             activation_map=france_map,
         ),
+        CriterionFactory(
+            title="Autorisation urbanisme",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.natura2000.AutorisationUrbanisme",
+            activation_map=france_map,
+            evaluator_settings={
+                "result_code_matrix": {
+                    "pa": "soumis",
+                    "pc": "soumis",
+                    "amenagement_dp": "soumis",
+                    "construction_dp": "soumis",
+                    "none": "non_soumis",
+                    "other": "a_verifier",
+                }
+            },
+        ),
     ]
     return criteria
 
@@ -47,6 +63,7 @@ def moulinette_data(footprint):
         "existing_surface": 0,
         "created_surface": footprint,
         "final_surface": footprint,
+        "autorisation_urba": "none",
     }
 
 
@@ -141,3 +158,33 @@ def test_zi_medium_footprint_outside_flood_zones(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "non_concerne"
+
+
+@pytest.mark.parametrize("footprint", [300])
+def test_autorisation_urba_value(moulinette_data):
+    """Check the custom "autorisation_urba" property.
+
+    We need a custom property to check if the project requires an
+    "autorisation d'urbanisme".
+
+    It will always be the case unless the user explicitly states otherwise.
+    """
+    moulinette_data["autorisation_urba"] = "pa"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    assert moulinette.natura2000.autorisation_urba.result == "soumis"
+    assert moulinette.natura2000.autorisation_urba_needed() is True
+
+    moulinette_data["autorisation_urba"] = "other"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    assert moulinette.natura2000.autorisation_urba.result == "a_verifier"
+    assert moulinette.natura2000.autorisation_urba_needed() is True
+
+    moulinette_data["autorisation_urba"] = "none"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    assert moulinette.natura2000.autorisation_urba.result == "non_soumis"
+    assert moulinette.natura2000.autorisation_urba_needed() is False
+
+    del moulinette_data["autorisation_urba"]
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    assert moulinette.natura2000.autorisation_urba.result == "non_disponible"
+    assert moulinette.natura2000.autorisation_urba_needed() is True
