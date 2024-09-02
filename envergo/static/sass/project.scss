@@ -1741,6 +1741,20 @@ main.demonstrateur_2150 {
   * Handle the form display, along with the help sidebars
   */
 #content {
+  .help-sidebar-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .help-sidebar-button {
+    max-width: 2rem;
+    max-height: 2rem;
+
+    &::before {
+      --icon-size: 1.2em;
+    }
+  }
+
   .help-sidebar {
     position: fixed;
     top: 0;
