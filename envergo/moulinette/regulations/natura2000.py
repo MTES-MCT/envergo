@@ -193,6 +193,29 @@ class IOTA(CriterionEvaluator):
         self._result_code, self._result = result, result
 
 
+class EvalEnv(CriterionEvaluator):
+    choice_label = "Natura 2000 > EE"
+    slug = "eval_env"
+
+    def evaluate(self):
+        try:
+            evalenv = self.moulinette.eval_env.result
+            if evalenv == RESULTS.cas_par_cas:
+                result = ("soumis_cas_par_cas", RESULTS.soumis)
+            elif evalenv == RESULTS.systematique:
+                result = ("soumis_systematique", RESULTS.soumis)
+            elif evalenv == RESULTS.non_soumis:
+                result = (RESULTS.non_soumis, RESULTS.non_soumis)
+            else:
+                raise NotImplementedError()
+        except AttributeError:
+            # If there is no Loi sur l'eau regulation
+            # for example, during unit tests
+            result = (RESULTS.non_disponible, RESULTS.non_disponible)
+
+        self._result_code, self._result = result
+
+
 AUTORISATION_URBA_CHOICES = (
     ("pa", "soumis à permis d'aménager (PA)"),
     ("pc", "soumis à permis de construire (PC)"),
