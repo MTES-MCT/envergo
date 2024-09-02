@@ -2,13 +2,16 @@
 
 {% if moulinette.natura2000.ein_out_of_n2000_site %}
   <p>
-    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis 
-    {% if moulinette.loi_sur_leau.result == 'soumis' %}à la Loi sur l'eau{% endif %}
-    {% if moulinette.loi_sur_leau.result == 'soumis' and 
-      ( moulinette.eval_env.result == 'cas_par_cas' or moulinette.eval_env.result == 'systematique' ) %} et {% endif %}
+    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis
+    {% if moulinette.loi_sur_leau.result == 'soumis' %}
+      à la Loi sur l'eau
+      {% if moulinette.eval_env.result == 'cas_par_cas' or moulinette.eval_env.result == 'systematique' %}et{% endif %}
+    {% endif %}
     {% if moulinette.eval_env.result == 'cas_par_cas' %}
       à examen au cas par cas
-    {% elif moulinette.eval_env.result == 'systematique' %}à évaluation environnementale{% endif %}
+    {% elif moulinette.eval_env.result == 'systematique' %}
+      à évaluation environnementale
+    {% endif %}
     .
   </p>
 {% else %}
@@ -19,25 +22,22 @@
 
 <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-{% if regulation.autorisation_urba_needed
-  or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+{% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
 
   <p>L'EIN doit être jointe :</p>
 
   <ul>
 
-  {% if regulation.autorisation_urba_needed %}
-    <li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>
-  {% endif %}
+    {% if regulation.autorisation_urba_needed %}<li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>{% endif %}
 
-  {% if moulinette.loi_sur_leau.result == 'soumis' %}
-    <li>au dossier Loi sur l'eau</li>
-  {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
-    <li>au dossier Loi sur l'eau si le projet y est soumis</li>
-  {% endif %}
+    {% if moulinette.loi_sur_leau.result == 'soumis' %}
+      <li>au dossier Loi sur l'eau</li>
+    {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+      <li>au dossier Loi sur l'eau si le projet y est soumis</li>
+    {% endif %}
 
   </ul>
-      
+
 {% else %}
 
   <ul>
@@ -47,7 +47,6 @@
 
 {% endif %}
 
-
 {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
@@ -55,16 +54,22 @@
   <h4>Comment réaliser une évaluation des incidences Natura 2000 (EIN) ?</h4>
 
   {% if moulinette.eval_env.result == 'cas_par_cas' %}
-    <p>Le projet est soumis à examen au cas par cas. Le formulaire correspondant à cette procédure tient lieu d'EIN s'il permet d'établir
-    l'absence d'incidences sur tout site Natura 2000.</p>
-    <p><strong>En cas d’incidences possibles ou avérées, le porteur de projet doit se rapprocher 
-    d'un bureau d'études disposant d'une expertise environnementale pour mener une évaluation complète.</strong></p>
+    <p>
+      Le projet est soumis à examen au cas par cas. Le formulaire correspondant à cette procédure tient lieu d'EIN s'il permet d'établir
+      l'absence d'incidences sur tout site Natura 2000.
+    </p>
+    <p>
+      <strong>En cas d’incidences possibles ou avérées, le porteur de projet doit se rapprocher
+      d'un bureau d'études disposant d'une expertise environnementale pour mener une évaluation complète.</strong>
+    </p>
 
   {% elif moulinette.eval_env.result == 'systematique' %}
-    <p>Le projet est soumis à évaluation environnementale. L'étude d'impact tient lieu d'EIN si elle permet d'établir
-    l'absence d'incidences sur tout site Natura 2000. Le bureau d'études environnement en charge du dossier inclura dans son analyse
-    les incidences du projet sur les sites Natura 2000.</p>
-  
+    <p>
+      Le projet est soumis à évaluation environnementale. L'étude d'impact tient lieu d'EIN si elle permet d'établir
+      l'absence d'incidences sur tout site Natura 2000. Le bureau d'études environnement en charge du dossier inclura dans son analyse
+      les incidences du projet sur les sites Natura 2000.
+    </p>
+
   {% else %}
     {{ config.n2000_procedure_ein|safe }}
     <p>
@@ -73,7 +78,7 @@
     <p>
       Il est chargé de réaliser les études qui conviennent et de rédiger une évaluation des incidences Natura 2000 complète.
     </p>
-  
+
   {% endif %}
 
   <p>En cas de question, se rapprocher du service de la DDT(M) en charge de Natura 2000 :</p>
@@ -82,24 +87,21 @@
 
   <h4>Comment déposer l’évaluation des incidences Natura 2000 ?</h4>
 
-  {% if regulation.autorisation_urba_needed
-  or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+  {% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
 
     <p>L'EIN est doit être jointe aux différents dossiers d'autorisation concernant le projet :</p>
-  
+
     <ul>
-    {% if regulation.autorisation_urba_needed %}
-      <li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>
-    {% endif %}
-  
-    {% if moulinette.loi_sur_leau.result == 'soumis' %}
-      <li>au dossier Loi sur l'eau</li>
-    {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
-      <li>au dossier Loi sur l'eau si le projet y est soumis</li>
-    {% endif %}
+      {% if regulation.autorisation_urba_needed %}<li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>{% endif %}
+
+      {% if moulinette.loi_sur_leau.result == 'soumis' %}
+        <li>au dossier Loi sur l'eau</li>
+      {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+        <li>au dossier Loi sur l'eau si le projet y est soumis</li>
+      {% endif %}
 
     </ul>
-      
+
   {% else %}
 
     <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
@@ -108,36 +110,32 @@
 
   {% endif %}
 
-
   <h4>Comment l'instruction se déroule-t-elle ?</h4>
 
-  {% if regulation.autorisation_urba_needed
-  or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+  {% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
 
-    <p>L'évaluation des incidences Natura 2000 est une pièce obligatoire de différents dossiers d'autorisation concernant le projet.</p>
+    <p>
+      L'évaluation des incidences Natura 2000 est une pièce obligatoire de différents dossiers d'autorisation concernant le projet.
+    </p>
 
     <p>Son instruction se fait dans le cadre de celle des dossiers, avec les mêmes procédures et les mêmes délais.</p>
-  
+
     <ul>
-    {% if regulation.autorisation_urba_needed %}
-      <li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>
-    {% endif %}
-  
-    {% if moulinette.loi_sur_leau.result == 'soumis' %}
-      <li>au dossier Loi sur l'eau</li>
-    {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
-      <li>au dossier Loi sur l'eau si le projet y est soumis</li>
-    {% endif %}
+      {% if regulation.autorisation_urba_needed %}<li>à la demande d’autorisation d’urbanisme (PA, PC ou DP)</li>{% endif %}
+
+      {% if moulinette.loi_sur_leau.result == 'soumis' %}
+        <li>au dossier Loi sur l'eau</li>
+      {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+        <li>au dossier Loi sur l'eau si le projet y est soumis</li>
+      {% endif %}
 
     </ul>
-      
+
   {% else %}
 
-      <p>L'évaluation des incidences Natura 2000 est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
+    <p>L'évaluation des incidences Natura 2000 est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
 
   {% endif %}
-
-
 
   <h4>Sanctions en cas d'omission</h4>
 

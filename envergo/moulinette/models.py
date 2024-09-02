@@ -300,16 +300,16 @@ class Regulation(models.Model):
         ]
         return contacts
 
-    def iota_only(self):
-        """Is the IOTA criterion the only valid criterion.
+    def ein_out_of_n2000_site(self):
+        """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
 
         There is an edge case for the Natura2000 regulation.
         Projects can be subject to Natura2000 only
-        because they are subject to IOTA, even though they are outsite
+        because they are subject to IOTA or Evaluation Environnemental, even though they are outsite
         Natura 2000 zones.
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
-        return criteria_slugs == ["iota"]
+        return all(item in ["iota", "eval_env"] for item in criteria_slugs)
 
     def autorisation_urba_needed(self):
         """Is an "autorisation d'urbanisme" needed?

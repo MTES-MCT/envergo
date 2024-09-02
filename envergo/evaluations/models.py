@@ -520,7 +520,7 @@ class EvaluationEmail:
             if (
                 moulinette.natura2000
                 and moulinette.natura2000.result == "soumis"
-                and not moulinette.natura2000.iota_only()
+                and not moulinette.natura2000.ein_out_of_n2000_site()
             ):
                 if config.ddtm_n2000_email:
                     bcc_recipients.append(config.ddtm_n2000_email)
