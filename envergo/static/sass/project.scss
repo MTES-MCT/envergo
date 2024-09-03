@@ -1750,8 +1750,22 @@ main.demonstrateur_2150 {
     max-width: 2rem;
     max-height: 2rem;
 
+    --help-sidebar-btn-color: #6a6af4;
+    --hover-tint: transparent;
+    --active-tint: transparent;
+
+    &:hover {
+      --help-sidebar-btn-color: #000091;
+    }
+
+    &:active {
+      --help-sidebar-btn-color: #000091;
+    }
+
     &::before {
       --icon-size: 1.2em;
+
+      color: var(--help-sidebar-btn-color);
     }
   }
 
