@@ -1783,10 +1783,21 @@ main.demonstrateur_2150 {
     margin-right: 0;
     filter: drop-shadow(var(--raised-shadow));
     z-index: 3000;
+
+    // Prevent the main body to scroll when we scroll the sidebar
+    // This way, we have two sections than can scroll independently
     overscroll-behavior: contain;
 
     .sidebar-content {
       max-width: 440px;
+
+      // This is a hack
+      // The `overscroll-behavior` property prevents the main body to scroll,
+      // but it only works when there is a scrollbar on the sidebar.
+      // So we force a height > 100% to make sure the content overflows and a
+      // scrollbar appears.
+      // (I'm feeling like a mad genius right now.)
+      min-height: calc(100% + 1px);
 
       img {
         max-width: 100%;
