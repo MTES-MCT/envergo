@@ -201,7 +201,7 @@ class Evaluation(models.Model):
         models.EmailField(),
         blank=True,
         default=list,
-        verbose_name=_("Urbanism department email address(es)"),
+        verbose_name="Email service ADS",
     )
     urbanism_department_phone = PhoneNumberField(
         _("Urbanism department phone number"), max_length=20, blank=True
