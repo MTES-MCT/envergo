@@ -187,7 +187,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             super()
             .get_queryset(request)
             .select_related("request")
-            .annotate(nb_versions=Count("versions"))
+            .annotate(
+                nb_versions=Count("versions"),
+                nb_emails_sent=Count("regulatory_notice_logs"),
+            )
             .prefetch_related(
                 Prefetch(
                     "versions",
@@ -372,7 +375,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     @admin.display(description="Nb. emails envoyés")
     def nb_emails_sent(self, obj):
-        return RegulatoryNoticeLog.objects.filter(evaluation=obj).count()
+        return obj.nb_emails_sent
 
     @admin.display(description=_("Versions"))
     def versions(self, obj):
