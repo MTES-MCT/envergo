@@ -974,19 +974,11 @@ div.hero-alt {
   }
 
   #moulinette-result-container {
-    flex: 1;
+    display: flex;
     overflow-y: hidden;
-    margin: 0;
-    padding: 0;
-    max-width: none;
-
-    > .fr-grid-row {
-      flex-wrap: nowrap;
-      flex: 1;
-    }
 
     #project-summary,
-    #project-result {
+    #project-result-container {
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
@@ -996,10 +988,17 @@ div.hero-alt {
       position: fixed; // to avoid the element to break the whole scroll flow in Chrome
     }
 
+    #project-result-container {
+      display: flex;
+      flex-direction: column;
+      flex: 2;
+    }
+
     #project-summary {
       background-color: var(--info-975-75);
+      flex: 1;
 
-      > section {
+      > div {
         max-width: 36em;
         margin: 0 auto;
         padding: 0 1em;
@@ -1035,10 +1034,8 @@ div.hero-alt {
     }
 
     #project-result {
-      > section {
-        max-width: 42em;
-        margin: 0 auto;
-      }
+      max-width: 42em;
+      margin: 0 auto;
 
       footer {
         padding-top: 0;
@@ -1059,23 +1056,27 @@ div.hero-alt {
 
   @media only screen and (width <= 991px) {
     #moulinette-result-container {
+      flex-direction: column;
       padding-left: 0;
       padding-right: 0;
+      overflow-y: scroll;
 
-      > .fr-grid-row {
-        flex-flow: column-reverse nowrap;
-        overflow-y: auto;
+      #project-result-container {
+        display: contents;
+        flex: 1;
       }
 
-      #project-summary,
+      #project-summary {
+        order: 2;
+        overflow-y: initial;
+      }
+
       #project-result {
-        overflow: initial;
-        display: flex;
-        flex-wrap: wrap;
+        order: 1;
       }
 
-      #mobile-footer {
-        display: block;
+      footer {
+        order: 3;
       }
     }
   }
