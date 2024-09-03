@@ -2,7 +2,7 @@
 
 {% if moulinette.natura2000.ein_out_of_n2000_site %}
   <p>
-    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis
+    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis
     {% if moulinette.loi_sur_leau.result == 'soumis' %}
       à la Loi sur l'eau
       {% if moulinette.eval_env.result == 'cas_par_cas' or moulinette.eval_env.result == 'systematique' %}et{% endif %}

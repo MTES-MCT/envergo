@@ -309,7 +309,9 @@ class Regulation(models.Model):
         Natura 2000 zones.
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
-        return all(item in ["iota", "eval_env"] for item in criteria_slugs)
+        return criteria_slugs and all(
+            item in ["iota", "eval_env"] for item in criteria_slugs
+        )
 
     def autorisation_urba_needed(self):
         """Is an "autorisation d'urbanisme" needed?
