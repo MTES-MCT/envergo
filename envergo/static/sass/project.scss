@@ -1783,6 +1783,7 @@ main.demonstrateur_2150 {
     margin-right: 0;
     filter: drop-shadow(var(--raised-shadow));
     z-index: 3000;
+    overscroll-behavior: contain;
 
     .sidebar-content {
       max-width: 440px;
