@@ -305,7 +305,7 @@ class Regulation(models.Model):
 
         There is an edge case for the Natura2000 regulation.
         Projects can be subject to Natura2000 only
-        because they are subject to IOTA or Evaluation Environnemental, even though they are outsite
+        because they are subject to IOTA or Evaluation Environnemental, even though they are outside
         Natura 2000 zones.
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
