@@ -12,30 +12,40 @@ div#moulinette {
 html.saisie {
   height: 100%;
 
-  body,
-  main {
-    height: 100%;
+  body > footer {
+    display: none;
   }
 
-  & > footer {
-    display: none;
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    main {
+      flex: 1;
+    }
   }
 }
 
-div#saisie-ui {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: stretch;
+div#app {
   height: 100%;
-  min-width: 62em; // size lg
 
-  #map {
-    flex: 1;
-  }
+  div#saisie-ui {
+    height: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    min-width: 62em; // size lg
 
-  #dashboard {
-    min-width: 20em;
-    max-width: 30em;
-    padding: 1rem 1.5rem;
+    #map {
+      flex: 1;
+      height: 100%;
+    }
+
+    #sidebar {
+      min-width: 20em;
+      max-width: 30em;
+      padding: 1rem 1.5rem;
+    }
   }
 }
