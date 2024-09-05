@@ -14,3 +14,33 @@ main.home {
     background-color: var(--blue-france-850-200);
   }
 }
+
+html.saisie {
+  height: 100%;
+
+  body,
+  main {
+    height: 100%;
+  }
+
+  & > footer {
+    display: none;
+  }
+}
+
+div#saisie-ui {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  height: 100%;
+
+  #map {
+    flex: 1;
+  }
+
+  #dashboard {
+    min-width: 20em;
+    max-width: 30em;
+    padding: 1rem 1.5rem;
+  }
+}
