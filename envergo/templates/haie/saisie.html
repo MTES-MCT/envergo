@@ -2,14 +2,22 @@
 
 {% load static %}
 
+{% block title %}Saisie haie{% endblock %}
+
 {% block html-classes %}saisie{% endblock %}
 
 {% block container %}
+  <div id="app">
+    <div id="saisie-ui">
+      <div id="map"></div>
 
-  <div id="saisie-ui">
-    <div id="map">toto</div>
-
-    <div id="dashboard">tata</div>
+      <div id="sidebar">
+        <h3>Haies à arracher</h3>
+        <ul>
+          <li v-for="(polyline, index) in polylines" :key="index">Haie [[ index + 1 ]]: [[ polyline ]]</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
 {% endblock %}
@@ -24,8 +32,16 @@
 {% block footer %}{% endblock %}
 
 {% block bottom_js %}
+  {{ block.super }}
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
-  <script src="{% static 'haie/js/saisie.js' %}"></script>
+  <script defer src="{% static 'vue/dist/vue.global.js' %}"></script>
+  <script type="module" src="{% static 'saisie/app.js' %}"></script>
+{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
 {% endblock %}
