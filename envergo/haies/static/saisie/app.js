@@ -1,7 +1,11 @@
 const { createApp, ref, onMounted } = Vue
 
 createApp({
+
+  // Prevent conflict with django template delimiters
   delimiters: ["[[", "]]"],
+
+
   setup() {
     const polylines = ref([]);
 
