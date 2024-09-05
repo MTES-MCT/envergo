@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block html-classes %}saisie{% endblock %}
 
 {% block container %}
@@ -20,3 +22,10 @@
 {% endblock %}
 {% block after-content %}{% endblock %}
 {% block footer %}{% endblock %}
+
+{% block bottom_js %}
+  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script src="{% static 'haie/js/saisie.js' %}"></script>
+{% endblock %}

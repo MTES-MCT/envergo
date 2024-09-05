@@ -33,6 +33,7 @@ div#saisie-ui {
   flex-wrap: nowrap;
   align-items: stretch;
   height: 100%;
+  min-width: 62em; // size lg
 
   #map {
     flex: 1;
