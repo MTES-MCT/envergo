@@ -335,6 +335,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                     event="email-send",
                     session_key="admin",
                     metadata=metadata,
+                    site=Site.objects.get(
+                        domain=settings.ENVERGO_AMENAGEMENT_DOMAIN
+                    ),  # Evaluations are only for Aménagement
                 )
 
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
