@@ -188,8 +188,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related("request")
             .annotate(
-                nb_versions=Count("versions"),
-                nb_emails_sent=Count("regulatory_notice_logs"),
+                nb_versions=Count("versions", distinct=True),
+                nb_emails_sent=Count("regulatory_notice_logs", distinct=True),
             )
             .prefetch_related(
                 Prefetch(
