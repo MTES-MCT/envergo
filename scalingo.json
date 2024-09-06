@@ -29,6 +29,9 @@
     "DJANGO_SITE_ID_2": {
       "value": ""
     },
+    "DJANGO_HAIE_SITE_ID": {
+      "value": "141"
+    },
     "ENV_NAME": {
       "value": "staging"
     },

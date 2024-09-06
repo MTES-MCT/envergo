@@ -1,5 +1,7 @@
 {% load pages static %}
 
+{% page_tracking_name as tracking_name %}
+
 <div class="fr-header__body">
   <div class="fr-container">
     <div class="fr-header__body-row">
@@ -29,7 +31,7 @@
             <li>
               <a class="fr-btn"
                  href="{% url 'moulinette_home' %}"
-                 data-event-category="HomePage"
+                 data-event-category="{{ tracking_name }}"
                  data-event-action="SimulationClick"
                  data-event-name="Nav">Simulateur</a>
             </li>
@@ -37,7 +39,7 @@
             <li>
               <a class="fr-btn"
                  href="{% url 'request_evaluation' %}"
-                 data-event-category="HomePage"
+                 data-event-category="{{ tracking_name }}"
                  data-event-action="RequestClick"
                  data-event-name="Nav">Services urbanisme</a>
             </li>
@@ -47,7 +49,7 @@
             <li>
               <a href="{% url 'request_evaluation' %}"
                  class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl"
-                 data-event-category="HomePage"
+                 data-event-category="{{ tracking_name }}"
                  data-event-action="RequestClick"
                  data-event-name="CTA">Demander un avis réglementaire</a>
             </li>
