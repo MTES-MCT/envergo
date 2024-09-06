@@ -17,6 +17,8 @@
         <ul>
           <li v-for="(polyline, index) in polylines" :key="index">
             Haie [[ index + 1 ]]: [[ polyline.length.toFixed(0) ]] mètres
+            <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                    @click="removePolyline(index)">Supprimer</button>
           </li>
         </ul>
       </div>
