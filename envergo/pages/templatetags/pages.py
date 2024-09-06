@@ -177,7 +177,11 @@ def nb_available_depts():
 @register.simple_tag(takes_context=True)
 def page_tracking_name(context):
     """Return the name of the page for tracking purposes."""
-    view_name = context.request.resolver_match.view_name
+    try:
+        view_name = context.request.resolver_match.view_name
+    except AttributeError:
+        view_name = None
+
     if view_name == "home":
         return "HomePage"
     elif view_name == "geometricians":
