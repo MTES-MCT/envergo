@@ -22,7 +22,7 @@ createApp({
       let currentPolyline = map.editTools.startPolyline();
       // let index = polylines.length;
 
-      const polylineData = reactive({ latLngs: currentPolyline.getLatLngs(), length: 0 });
+      const polylineData = reactive({ polylineLayer: currentPolyline, latLngs: currentPolyline.getLatLngs(), length: 0 });
       polylines.push(polylineData);
 
       // Mettre à jour les informations en temps réel pendant le dessin
@@ -38,12 +38,18 @@ createApp({
       });
     };
 
+    const removePolyline = (index) => {
+      // Retirer la polyline de la carte
+      polylines[index].polylineLayer.remove();
+      // Supprimer la polyline du tableau
+      polylines.splice(index, 1);
+    };
+
     // Initialiser la carte Leaflet après le montage du composant
     onMounted(() => {
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
-        draggable: true,
       }).setView([43.6861, 3.5911], 17);
 
       // Ajouter une couche de tuiles
@@ -55,6 +61,7 @@ createApp({
     return {
       polylines,
       startDrawing,
+      removePolyline,
     };
   }
 }).mount('#app');
