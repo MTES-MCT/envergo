@@ -12,6 +12,7 @@
       <div id="map"></div>
 
       <div id="sidebar">
+        <button class="fr-btn fr-btn--primary" @click="startDrawing">Tracer</button>
         <h3>Haies à arracher</h3>
         <ul>
           <li v-for="(polyline, index) in polylines" :key="index">
@@ -37,6 +38,7 @@
   {{ block.super }}
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'leaflet-editable/src/Leaflet.Editable.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'vue/dist/vue.global.js' %}"></script>
   <script type="module" src="{% static 'saisie/app.js' %}"></script>
