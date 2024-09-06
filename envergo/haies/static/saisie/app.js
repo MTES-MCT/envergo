@@ -9,6 +9,7 @@ createApp({
   setup() {
     const polylines = reactive([]);
     let map = null;
+    let nextId = ref(0);
 
     const calculatePolylineLength = (latLngs) => {
       let length = 0;
@@ -18,11 +19,23 @@ createApp({
       return length;
     };
 
+    const generatePolylineId = () => {
+      const getAlphaIdentifier = (index) => {
+        let str = '';
+        while (index >= 0) {
+          str = String.fromCharCode((index % 26) + 65) + str;
+          index = Math.floor(index / 26) - 1;
+        }
+        return str;
+      };
+      return getAlphaIdentifier(nextId.value++);
+    };
+
     const startDrawing = () => {
       let currentPolyline = map.editTools.startPolyline();
-      // let index = polylines.length;
+      const polylineId = generatePolylineId();
 
-      const polylineData = reactive({ polylineLayer: currentPolyline, latLngs: currentPolyline.getLatLngs(), length: 0 });
+      const polylineData = reactive({ id: polylineId, polylineLayer: currentPolyline, latLngs: currentPolyline.getLatLngs(), length: 0 });
       polylines.push(polylineData);
 
       // Mettre à jour les informations en temps réel pendant le dessin
