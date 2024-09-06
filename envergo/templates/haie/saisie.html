@@ -14,7 +14,9 @@
       <div id="sidebar">
         <h3>Haies à arracher</h3>
         <ul>
-          <li v-for="(polyline, index) in polylines" :key="index">Haie [[ index + 1 ]]: [[ polyline ]]</li>
+          <li v-for="(polyline, index) in polylines" :key="index">
+            Haie [[ index + 1 ]]: [[ polyline.length.toFixed(0) ]] mètres
+          </li>
         </ul>
       </div>
     </div>
