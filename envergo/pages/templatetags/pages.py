@@ -172,3 +172,17 @@ def nb_available_depts():
     """Return nb of depts where EnvErgo is available."""
 
     return MoulinetteConfig.objects.filter(is_activated=True).count()
+
+
+@register.simple_tag(takes_context=True)
+def page_tracking_name(context):
+    """Return the name of the page for tracking purposes."""
+    view_name = context.request.resolver_match.view_name
+    if view_name == "home":
+        return "HomePage"
+    elif view_name == "geometricians":
+        return "GeometrePage"
+    elif view_name == "moulinette_result":
+        return "ResultPage"
+    else:
+        return "UntrackedPage"
