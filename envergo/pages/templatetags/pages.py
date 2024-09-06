@@ -189,4 +189,4 @@ def page_tracking_name(context):
     elif view_name == "moulinette_result":
         return "ResultPage"
     else:
-        return "UntrackedPage"
+        return view_name
