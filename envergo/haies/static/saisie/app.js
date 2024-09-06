@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted } = Vue
+const { createApp, ref, onMounted, reactive } = Vue
 
 createApp({
 
@@ -7,7 +7,8 @@ createApp({
 
 
   setup() {
-    const polylines = ref([]);
+    const polylines = reactive([]);
+    let map = null;
 
     const calculatePolylineLength = (latLngs) => {
       let length = 0;
@@ -17,41 +18,43 @@ createApp({
       return length;
     };
 
+    const startDrawing = () => {
+      let currentPolyline = map.editTools.startPolyline();
+      // let index = polylines.length;
+
+      const polylineData = reactive({ latLngs: currentPolyline.getLatLngs(), length: 0 });
+      polylines.push(polylineData);
+
+      // Mettre à jour les informations en temps réel pendant le dessin
+      currentPolyline.on('editable:vertex:new', () => {
+        polylineData.latLngs = [...currentPolyline.getLatLngs()];
+        polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
+      });
+
+      // Mettre à jour les informations en temps réel pendant le déplacement
+      currentPolyline.on('editable:vertex:dragend', () => {
+        polylineData.latLngs = [...currentPolyline.getLatLngs()];
+        polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
+      });
+    };
+
     // Initialiser la carte Leaflet après le montage du composant
     onMounted(() => {
-      const map = L.map('map').setView([43.6861, 3.5911], 17);
-      map.doubleClickZoom.disable();
+      map = L.map('map', {
+        editable: true,
+        doubleClickZoom: false,
+        draggable: true,
+      }).setView([43.6861, 3.5911], 17);
 
       // Ajouter une couche de tuiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
       }).addTo(map);
-
-      let currentPolyline = null;
-
-      // Ajouter la fonctionnalité de dessin de polylines
-      map.on('click', (e) => {
-        if (!currentPolyline) {
-          currentPolyline = L.polyline([], { color: 'red' }).addTo(map);
-          polylines.value.push({ latLngs: currentPolyline.getLatLngs(), length: 0 });
-        }
-        currentPolyline.addLatLng(e.latlng);
-
-        const index = polylines.value.length - 1;
-        polylines.value[index].latLngs = currentPolyline.getLatLngs();
-        polylines.value[index].length = calculatePolylineLength(currentPolyline.getLatLngs());
-      });
-
-      // Terminer la polyline au double-clic
-      map.on('dblclick', (evt) => {
-        if (currentPolyline) {
-          currentPolyline = null;
-        }
-      });
     });
 
     return {
       polylines,
+      startDrawing,
     };
-  },
+  }
 }).mount('#app');
