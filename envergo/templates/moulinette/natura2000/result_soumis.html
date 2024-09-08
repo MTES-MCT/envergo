@@ -10,56 +10,45 @@
 
 <h3>Marche à suivre</h3>
 
+<p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
+
+
+
 {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-  <p>
-    Une évaluation des incidences Natura 2000 (EIN) doit être réalisée, puis incluse à la fois
-    dans la demande d'autorisation d'urbanisme (PA, PC ou DP) et dans le dossier Loi sur l’eau.
-  </p>
+  {% if regulation.autorisation_urba_needed %}
+    <p>
+      L'EIN doit être jointe à la fois à la demande d'autorisation d'urbanisme (PA, PC ou DP) et au dossier Loi sur l’eau.
+    </p>
+  {% else %}
+    <p>
+      L'EIN doit être jointe au dossier Loi sur l’eau.
+    </p>
+  {% endif %}
 
 {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
-  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
-
-  <p>
-    <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
-  </p>
-
-  <ul>
-    <li>EIN à joindre à la fois au dossier Loi sur l'eau et à la demande d'autorisation d'urbanisme (PA, PC ou DP)</li>
-    <li>Délais d'instruction inchangés</li>
-  </ul>
-
-  <p>
-    <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
-  </p>
-
   {% if regulation.autorisation_urba_needed %}
-    <ul>
-      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
-      <li>Le délai d'instruction est inchangé.</li>
-    </ul>
-  {% else %}
-    <ul>
-      <li>EIN à déposer à la DDT(M).</li>
-      <li>Délai d'instruction : 2 mois.</li>
-    </ul>
+    <p>
+      L'EIN doit être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP).
+    </p>
+  {% endif %}
+
+  <p>
+    <em>Si le projet est aussi soumis à la Loi sur l'eau</em>,
+    l'EIN doit être jointe au dossier Loi sur l'eau.
+  </p>
+
+  {% if regulation.autorisation_urba_needed == false %}
+    <p>
+      <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l'EIN doit être déposée à la DDT(M). Le délai d'instruction est de 2 mois.
+    </p>
   {% endif %}
 
 {% else %}
 
-  <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
-
-  {% if regulation.autorisation_urba_needed %}
-    <ul>
-      <li>EIN à déposer en mairie, avec la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
-      <li>Le délai d'instruction est inchangé.</li>
-    </ul>
-  {% else %}
-    <ul>
-      <li>EIN à déposer à la DDT(M).</li>
-      <li>Délai d'instruction : 2 mois.</li>
-    </ul>
+  {% if regulation.autorisation_urba_needed == false %}
+    <p>L'EIN doit être déposée à la DDT(M). Le délai d'instruction est de 2 mois.</p>
   {% endif %}
 
 {% endif %}
@@ -86,39 +75,24 @@
 
   <h4>Comment déposer l’évaluation des incidences Natura 2000 (EIN) ?</h4>
 
+  {% if regulation.autorisation_urba_needed %}
+  
+      <p>L'EIN doit être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
+
+  {% endif %}
+
   {% if moulinette.loi_sur_leau.result == 'soumis' %}
 
-    <p>L'EIN est à déposer avec le dossier Loi sur l'eau.</p>
-
-    <p>
-      <a href="https://entreprendre.service-public.fr/vosdroits/R62929"
-         target="_blank"
-         rel="noopener">Le dépôt du dossier Loi sur l'eau peut se faire numériquement,
-      via une procédure en ligne.</a>
-    </p>
-
-    <p>
-      Si besoin, se rapprocher du service de la DDT(M) (Direction Départementale du Territoire et de la Mer) en charge de l'instruction :
-    </p>
-
-    <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
+    <p>L'EIN doit être jointe au dossier Loi sur l'eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> dans cette page).</p>
 
   {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
 
     <p>
-      <em>Si le projet est soumis à la Loi sur l'eau</em>,
-      l'EIN doit aussi être déposée avec le dossier Loi sur l'eau.
+      <em>Si le projet est soumis à la Loi sur l'eau</em> (<a href="#regulation_loi_sur_leau">voir section « Loi sur l'eau »</a> dans cette page),
+      l'EIN doit être jointe au dossier Loi sur l'eau.
     </p>
 
-    {% if regulation.autorisation_urba_needed %}
-
-      <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
-      </p>
-
-      <p>L'EIN est à déposer en mairie, avec la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
-
-    {% else %}
+    {% if regulation.autorisation_urba_needed == false %}
 
       <p>
         <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l’EIN doit être adressée pour instruction à la DDT(M) :
