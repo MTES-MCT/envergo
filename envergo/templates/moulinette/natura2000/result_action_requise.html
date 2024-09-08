@@ -1,16 +1,5 @@
 {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
-  <p>
-    Si le projet s’avère soumis à la Loi sur l’eau, il est automatiquement soumis à Natura 2000 ;
-    une étude des incidences Natura 2000 (EIN) doit être réalisée, puis jointe à la fois à la demande d'autorisation d'urbanisme (PA, PC ou DP)
-    et au dossier Loi sur l’eau.
-  </p>
-
-  <p>
-    Si le projet n’est pas soumis à la Loi sur l’eau, il peut tout de même être soumis à Natura 2000 ;
-    une action du porteur de projet est requise.
-  </p>
-
   <p>Le projet peut être soumis à Natura 2000 pour plusieurs raisons :</p>
   <ul>
     <li>
@@ -62,35 +51,20 @@
 
 <p>Si le projet s'avère soumis à Natura 2000, une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-{% if moulinette.loi_sur_leau.result == 'action_requise' %}
-
-  <p>
-    <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
-  </p>
-
-  <ul>
-    <li>EIN à joindre à la fois au dossier Loi sur l'eau et à la demande d'autorisation d'urbanisme (PA, PC ou DP).</li>
-  </ul>
-
-  <p>
-    <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
-  </p>
-
+{% if regulation.autorisation_urba_needed %}
+  <p>L'EIN doit alors être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
 {% endif %}
 
-{% if regulation.autorisation_urba_needed %}
+{% if moulinette.loi_sur_leau.result == 'action_requise' %}
+  <p>
+    <em>Si le projet est aussi soumis à la Loi sur l'eau</em>, l'EIN doit être jointe au dossier Loi sur l'eau.
+  </p>
+{% endif %}
 
-  <ul>
-    <li>EIN à joindre à la demande d’autorisation d’urbanisme (PA, PC ou DP).</li>
-    <li>Le délai d'instruction est inchangé.</li>
-  </ul>
+{% if regulation.autorisation_urba_needed == false 
+  and moulinette.loi_sur_leau.result != 'action_requise' %}
 
-{% else %}
-
-  <ul>
-    <li>EIN à déposer à la DDT(M).</li>
-    <li>Délai d'instruction : 2 mois.</li>
-  </ul>
+  <p>L'EIN doit alors être déposée à la DDT(M). Le délai d'instruction est de 2 mois.</p>
 
 {% endif %}
 
@@ -98,13 +72,7 @@
 
 <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
 
-  <p>
-    Au vu des caractéristiques du projet, le porteur
-    doit mener des études sur les points cités ci-dessus, afin de déterminer
-    si le projet est soumis à Natura 2000.
-  </p>
-
-  <p>Ainsi il convient de :</p>
+  <p>Il convient de :</p>
 
   <p>
     <strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale
@@ -120,110 +88,38 @@
   <p>En cas de question, se rapprocher du service de la DDT(M) en charge de Natura 2000 :</p>
   <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_info|safe }}</div>
 
+  <strong>2/ Déposer l'évaluation des incidences Natura 2000 (EIN)</strong>
+
+  {% if regulation.autorisation_urba_needed %}
+    <p>L'EIN est à joindre à la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
+  {% endif %}
+
   {% if moulinette.loi_sur_leau.result == 'action_requise' %}
 
     <p>
-      <strong>2/ Déposer l'évaluation des incidences Natura 2000 (EIN)</strong>
+      <em>Si le projet est aussi soumis à la Loi sur l'eau</em>, l'EIN doit être jointe au dossier Loi sur l'eau.
     </p>
+  {% endif %}
 
-    <p>
-      <em>Si le projet est aussi soumis à la Loi sur l'eau :</em>
-    </p>
+  {% if regulation.autorisation_urba_needed == false 
+    and moulinette.loi_sur_leau.result != 'action_requise' %}
 
-    <p>
-      L'EIN doit être jointe à la fois au dossier Loi sur l'eau et à la demande d'autorisation d'urbanisme (PA, PC ou DP).
-    </p>
+    <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
 
-    {% if regulation.autorisation_urba_needed %}
-
-      <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, et ne fait l'objet d'aucun autre dépôt de dossier à la DDT(M) :
-      </p>
-
-      <p>L'EIN est à déposer en mairie, avec la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
-
-    {% else %}
-
-      <p>
-        <em>Si le projet n'est pas soumis à la Loi sur l'eau :</em>
-      </p>
-
-      <p>L’EIN doit être adressée pour instruction à la DDT(M) :</p>
-
-      <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
-
-    {% endif %}
-
-  {% else %}
-
-    {% if regulation.autorisation_urba_needed %}
-
-      <p>
-        <strong>2/ Déposer l'évaluation des incidences Natura 2000 en mairie</strong>
-      </p>
-
-      <p>Elle doit être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP).</p>
-
-    {% else %}
-
-      <p>
-        <strong>2/ Déposer l'évaluation des incidences Natura 2000 à la DDT(M)</strong>
-      </p>
-
-      <p>Elle doit être adressée à :</p>
-
-      <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
-
-    {% endif %}
+    <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
 
   {% endif %}
 
   <h4>Comment l'instruction de l'évaluation des incidences Natura 2000 se déroule-t-elle ?</h4>
 
-  <p>L'évaluation des incidences Natura 2000 (EIN) est une pièce obligatoire des dossiers soumis à l'administration :</p>
+  {% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'action_requise' %}
 
-  {% if moulinette.loi_sur_leau.result == 'action_requise' %}
-
-    {% if regulation.autorisation_urba_needed %}
-
-      <ul>
-        <li>l'EIN doit être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP) ;</li>
-        <li>si un dossier Loi sur l'eau est constitué, l'EIN doit y être jointe également.</li>
-      </ul>
-
-      <p>Les procédures d'instruction n'en sont pas modifiées, et gardent le même délai.</p>
-
-    {% else %}
-
-      <p>
-        <em>Si l'EIN est jointe à un dossier de déclaration Loi sur l'eau</em>,
-        elle est examinée en même temps que celui-ci. La procédure d'instruction n'en est pas modifiée, et garde le même délai :
-        2 mois, extensible en cas de demande de compléments.
-      </p>
-
-      <p>
-        <em>S’il n’y a pas de dossier Loi sur l’eau</em>,
-        l'EIN est instruite par la DDT(M). Le délai d'instruction est de 2 mois.
-      </p>
-
-    {% endif %}
+  <p>L'évaluation des incidences Natura 2000 (EIN) est une pièce obligatoire des dossiers soumis à l'administration.
+    Les procédures d'instruction n'en sont pas modifiées, et gardent le même délai.</p>
 
   {% else %}
-
-    {% if regulation.autorisation_urba_needed %}
-
-      <ul>
-        <li>l'EIN doit être jointe à la demande d'autorisation d'urbanisme (PA, PC ou DP) ;</li>
-        <li>si un dossier Loi sur l'eau est constitué, l'EIN doit y être jointe également.</li>
-      </ul>
-
-      <p>La procédure d'instruction n'en est pas modifiée, et garde le même délai.</p>
-
-    {% else %}
-
-      <p>L'EIN est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
-
-    {% endif %}
+  
+    <p>L'EIN est instruite par la DDT(M). Le délai d'instruction est de 2 mois.</p>
 
   {% endif %}
 
