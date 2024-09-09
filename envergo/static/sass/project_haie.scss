@@ -51,7 +51,7 @@ div#app {
     #sidebar {
       min-width: 30em;
       max-width: 40em;
-      padding: 1rem 1.5rem;
+      padding: 1rem;
 
       div.title {
         display: flex;
@@ -73,6 +73,8 @@ div#app {
           justify-content: space-between;
           align-items: center;
           padding: 0.2rem 1rem;
+          margin-left: -1rem;
+          margin-right: -1rem;
 
           button {
             visibility: hidden;
