@@ -25,3 +25,41 @@ class NoInstanciateChoiceField(forms.TypedChoiceField):
         else:
             prepared_val = value
         return prepared_val
+
+
+class DisplayFieldMixin:
+    def __init__(self, *args, **kwargs):
+        display_label = kwargs.pop("display_label", None)
+        display_unit = kwargs.pop("display_unit", None)
+        display_help_text = kwargs.pop("display_help_text", None)
+        get_display_value = kwargs.pop("get_display_value", None)
+        if display_label is not None:
+            self.display_label = display_label
+        if display_unit is not None:
+            self.display_unit = display_unit
+        if display_help_text is not None:
+            self.display_help_text = display_help_text
+        if get_display_value is not None:
+            self.get_display_value = get_display_value
+        super().__init__(*args, **kwargs)
+
+
+class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
+    pass
+
+
+class DisplayIntegerField(DisplayFieldMixin, forms.IntegerField):
+    pass
+
+
+def extract_choices(choices):
+    """Extract form choices from a list of 3 items tuples : code, form label, display label."""
+    return [(code, form_label) for code, form_label, _ in choices]
+
+
+def extract_display_function(choices):
+    """Extract a lambda method to display the label based on code
+    from a list of 3 items tuples : code, form label, display label."""
+    return lambda value: next(
+        (choice[2] for choice in choices if choice[0] == value), None
+    )

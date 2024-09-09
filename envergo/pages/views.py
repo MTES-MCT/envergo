@@ -15,8 +15,12 @@ from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 
 
-class HomeView(MoulinetteMixin, FormView):
-    template_name = "pages/home.html"
+class HomeAmenagementView(MoulinetteMixin, FormView):
+    template_name = "amenagement/pages/home.html"
+
+
+class HomeHaieView(MoulinetteMixin, FormView):
+    template_name = "haie/pages/home.html"
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
@@ -27,7 +31,7 @@ class GeometriciansView(MoulinetteMixin, FormView):
         context["webinar_url"] = GEOMETRICIAN_WEBINAR_FORM_URL
         context["testimonials"] = [
             (
-                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m2 en cas de présence de zone humide. "
+                "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m² en cas de présence de zone humide. "
                 "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises.",
                 "Un géomètre-expert en Loire-Atlantique",
             ),
@@ -111,10 +115,6 @@ class GeometriciansView(MoulinetteMixin, FormView):
         ]
 
         return context
-
-
-class StatsView(TemplateView):
-    template_name = "pages/stats.html"
 
 
 class LegalMentionsView(TemplateView):

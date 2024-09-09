@@ -8,10 +8,10 @@ pytestmark = pytest.mark.django_db
 
 @patch("envergo.utils.mattermost.notify")
 @patch("envergo.geodata.utils.get_data_from_coords")
-def test_feedback_sent(mock_notify, _mock_api, client):
+def test_feedback_sent(mock_notify, _mock_api, client, site):
 
     feedback_url = reverse("feedback_submit")
-    referer_url = "https://envergo/simulateur/resultat/?created_surface=42&existing_surface=42&lng=-1.77498&lat=47.21452&is_lotissement=oui"  # noqa
+    referer_url = "https://envergo/simulateur/resultat/?created_surface=42&existing_surface=42&lng=-1.77498&lat=47.21452"  # noqa
     data = {
         "useful-feedback": "Oui",
         "useful-message": "Ceci n'est pas un message",

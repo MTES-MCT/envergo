@@ -637,3 +637,16 @@ def test_petitioner_icpe(rf, moulinette_url):
         "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
         not in body
     )
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_n2000_iota_only_no_bcc(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "soumis", "soumis", "non_soumis", "non_soumis"
+    )
+    moulinette.regulations[1].configure_mock(iota_only=lambda: True)
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert "ddtm_n2000@example.org" not in email.bcc

@@ -6,9 +6,8 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
+from django.views.generic import TemplateView
 
-from envergo.evaluations.views import ShortUrlAdminRedirectView
-from envergo.geodata.views import CatchmentAreaDebug
 from envergo.urlmappings.views import UrlMappingRedirect
 
 # We redefine django auth patterns for better customization
@@ -53,21 +52,9 @@ auth_patterns = [
 
 
 urlpatterns = [
-    path("", include("envergo.pages.urls")),
     path("anymail/", include("anymail.urls")),
-    path(
-        "a/<slug:reference>/",
-        ShortUrlAdminRedirectView.as_view(),
-        name="eval_admin_short_url",
-    ),
     path(_("accounts/"), include(auth_patterns)),
     path(_("users/"), include("envergo.users.urls")),
-    path("evaluations/", include("envergo.evaluations.redirect_urls")),
-    path("évaluations/", include("envergo.evaluations.redirect_urls")),
-    path("avis/", include("envergo.evaluations.urls")),
-    path(_("moulinette/"), include("envergo.moulinette.urls")),
-    path(_("geo/"), include("envergo.geodata.urls")),
-    path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
     path(_("analytics/"), include("envergo.analytics.urls")),
     path(_("feedback/"), include("envergo.analytics.urls")),
     path("urlmappings/", include("envergo.urlmappings.urls")),
@@ -105,3 +92,15 @@ if settings.DEBUG:
         import debug_toolbar
 
         urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+
+
+# Exclude staging envs from search engine results
+if settings.ENV_NAME != "production":
+    urlpatterns += [
+        path(
+            "robots.txt",
+            TemplateView.as_view(
+                template_name="robots_staging.txt", content_type="text/plain"
+            ),
+        ),
+    ]

@@ -1,0 +1,39 @@
+{% extends "multisite_base.html" %}
+
+{% load static compress %}
+
+{% block app_title %}
+  {% block title %}
+  {% endblock title %}
+  — Guichet unique de la haie
+{% endblock %}
+
+{% block description %}Guichet unique de la haie{% endblock %}
+
+{% block site_css %}
+  {% compress css %}
+    <link href="{% static 'css/project_haie.min.css' %}" rel="stylesheet">
+  {% endcompress %}
+{% endblock site_css %}
+
+{% block include_slim_header %}
+  {% include 'haie/_slim_header.html' %}
+{% endblock %}
+
+{% block include_header %}
+  {% include 'haie/_header.html' %}
+{% endblock %}
+
+{% block after-content %}
+  <section class="fr-py-8w alt hide-print">
+    <div class="fr-container">
+      <div class="fr-grid-row fr-grid-row--center">
+        <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include 'haie/_learn_more.html' %}</div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block footer %}
+  {% include 'haie/_footer.html' %}
+{% endblock %}

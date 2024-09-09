@@ -1,13 +1,16 @@
 import json
 import logging
+import string
 
 from django import template
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.template import Context, Template
 from django.template.exceptions import TemplateDoesNotExist
-from django.template.loader import render_to_string
+from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
+from envergo.moulinette.models import get_moulinette_class_from_site
 
 register = template.Library()
 
@@ -19,6 +22,21 @@ logger = logging.getLogger(__name__)
 def to_geojson(obj, geometry_field="geometry"):
     json_obj = convert_to_geojson(obj)
     return mark_safe(json.dumps(json_obj))
+
+
+@register.simple_tag(takes_context=True)
+def show_moulinette_form(context, display_title=True):
+    """Display the moulinette form.
+
+    We do so by selecting the correct template depending on the current domain.
+    """
+    MoulinetteClass = get_moulinette_class_from_site(context["request"].site)
+    template_name = MoulinetteClass.get_form_template()
+
+    template = get_template(template_name)
+    context["display_title"] = display_title
+    content = template.render(context.flatten())
+    return content
 
 
 def render_from_moulinette_templates(context, template_name):
@@ -119,6 +137,11 @@ def perimeter_detail(regulation):
     return mark_safe(detail)
 
 
+def ends_with_punctuation(sentence):
+    trimmed_sentence = sentence.strip() if sentence else sentence
+    return trimmed_sentence[-1] in string.punctuation if trimmed_sentence else False
+
+
 @register.simple_tag()
 def field_summary(field):
     """User friendly display of the field value.
@@ -128,13 +151,38 @@ def field_summary(field):
 
     This tag is used to format a single field from the additional or optional forms.
     """
-    if hasattr(field.field, "choices"):
+    if hasattr(field.field, "get_display_value"):
+        value = field.field.get_display_value(field.value())
+    elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
     else:
         value = field.value()
 
-    html = f"<strong>{field.label}</strong>: {value}"
-    if field.help_text:
+    # try to add thousands separator
+    try:
+        value = intcomma(value)
+    except (TypeError, ValueError):
+        pass
+
+    label = field.label
+    if hasattr(field.field, "display_label"):
+        # if there is a display_label, use it instead of the field label
+        label = field.field.display_label
+    elif not ends_with_punctuation(field.label):
+        # else, add a colon at the end of the label if it doesn't end with punctuation
+        label = f"{field.label} :"
+
+    value = (
+        f"{value} {field.field.display_unit}"
+        if hasattr(field.field, "display_unit") and field.field.display_unit
+        else value
+    )
+    html = f"<strong>{label}</strong> {value}"
+    if hasattr(field.field, "display_help_text"):
+        html += (
+            f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
+        )
+    elif field.help_text:
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
 
     return mark_safe(html)

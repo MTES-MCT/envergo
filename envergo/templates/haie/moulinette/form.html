@@ -1,0 +1,25 @@
+{% load utils %}
+
+{% if display_title %}
+  <h2 class="centered">Simulez votre projet</h2>
+  <p class="fr-text--light">Tous les champs sont obligatoires.</p>
+{% endif %}
+
+<form class="fr-mb-3w"
+      method="post"
+      novalidate
+      autocomplete="off"
+      action="{% url "moulinette_result" %}"
+      id="moulinette-form">
+  {% csrf_token %}
+
+  {% include '_form_header.html' with form=form %}
+
+  <div class="form-section">
+    {% include '_radio_snippet.html' with field=form.profil %}
+    {% include '_radio_snippet.html' with field=form.motif %}
+    {% include '_radio_snippet.html' with field=form.reimplantation %}
+  </div>
+
+  {% include 'haie/moulinette/_form_footer.html' %}
+</form>

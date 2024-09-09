@@ -1,31 +1,49 @@
 from django import forms
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import Department
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.forms.fields import (
+    DisplayChoiceField,
+    DisplayIntegerField,
+    extract_choices,
+    extract_display_function,
+)
 
 
-class MoulinetteForm(forms.Form):
-    created_surface = forms.IntegerField(
+class BaseMoulinetteForm(forms.Form):
+    pass
+
+
+class MoulinetteFormAmenagement(BaseMoulinetteForm):
+    created_surface = DisplayIntegerField(
         label=_("Surface created by the project"),
         required=True,
         min_value=0,
         help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
+        display_unit="m²",
+        display_label="Surface nouvellement impactée par le projet :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
     )
-    existing_surface = forms.IntegerField(
+    existing_surface = DisplayIntegerField(
         label=_("Existing surface before the project"),
         required=False,
         min_value=0,
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
+        display_unit="m²",
+        display_label="Surface déjà impactée avant le projet :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins",
     )
-    final_surface = forms.IntegerField(
+    final_surface = DisplayIntegerField(
         label=_("Total surface at the end of the project"),
         required=False,
         min_value=0,
-        help_text="Surface au sol impactée totale, y compris l'existant",
+        help_text="Surface au sol impactée totale, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
+        display_unit="m²",
+        display_label="Surface impactée totale, y compris l'existant :",
+        display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
     )
     address = forms.CharField(
         label=_("Search for the address to center the map"),
@@ -63,31 +81,112 @@ class MoulinetteForm(forms.Form):
         return data
 
 
-EMPTY_CHOICE = ("", "---------")
+REIMPLANTATION_CHOICES = (
+    (
+        "remplacement",
+        mark_safe(
+            "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
+        ),
+        "Oui, en remplaçant la haie détruite au même endroit",
+    ),
+    (
+        "compensation",
+        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
+        "Oui, en plantant une haie à un autre endroit",
+    ),
+    ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
+)
 
 
-class MoulinetteDebugForm(forms.Form):
-    """For debugging purpose.
+MOTIF_CHOICES = (
+    (
+        "transfert_parcelles",
+        mark_safe(
+            "Transfert de parcelles entre exploitations<br />"
+            '<span class="fr-hint-text">Agrandissement, échange de parcelles, nouvelle installation…</span>'
+        ),
+    ),
+    (
+        "chemin_acces",
+        mark_safe(
+            "Créer un chemin d’accès<br />"
+            '<span class="fr-hint-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</span>'
+        ),
+    ),
+    (
+        "meilleur_emplacement",
+        mark_safe(
+            "Replanter la haie à un meilleur emplacement environnemental<br />"
+            '<span class="fr-hint-text">Plantation justifiée par un organisme agréé</span>'
+        ),
+    ),
+    (
+        "amenagement",
+        "Réaliser une opération d’aménagement foncier",
+    ),
+    (
+        "autre",
+        "Autre",
+    ),
+)
 
-    This form dynamically creates a field for every `CriterionEvaluator` subclass.
-    """
 
-    department = forms.ModelChoiceField(
-        label=_("Department"),
+class MoulinetteFormHaie(BaseMoulinetteForm):
+    profil = forms.ChoiceField(
+        label="J’effectue cette demande en tant que :",
+        widget=forms.RadioSelect,
+        choices=(
+            ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
+            (
+                "autre",
+                mark_safe(
+                    "Autre<br />"
+                    '<span class="fr-hint-text">'
+                    "Collectivité, aménageur, gestionnaire de réseau, particulier, etc."
+                    "</span>"
+                ),
+            ),
+        ),
         required=True,
-        queryset=Department.objects.all(),
-        to_field_name="department",
+    )
+    motif = forms.ChoiceField(
+        label="Quelle est la raison de l’arrachage de la haie ?",
+        widget=forms.RadioSelect,
+        choices=MOTIF_CHOICES,
+        required=True,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    reimplantation = DisplayChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=extract_choices(REIMPLANTATION_CHOICES),
+        required=True,
+        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
 
-        criteria = [criterion for criterion in CriterionEvaluator.__subclasses__()]
-        for criterion in criteria:
-            field_name = f"{criterion.slug}"
-            choices = [EMPTY_CHOICE] + list(zip(criterion.CODES, criterion.CODES))
-            self.fields[field_name] = forms.ChoiceField(
-                label=criterion.choice_label,
-                choices=choices,
-                required=False,
+    def clean(self):
+        data = super().clean()
+
+        reimplantation = data.get("reimplantation")
+        motif = data.get("motif")
+
+        if reimplantation == "remplacement" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
             )
+        elif reimplantation == "remplacement" and motif == "chemin_acces":
+            self.add_error(
+                "motif",
+                "Le remplacement de la haie au même endroit est incompatible avec le percement d'un chemin"
+                " d'accès. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+        elif reimplantation == "non" and motif == "meilleur_emplacement":
+            self.add_error(
+                "motif",
+                "L’absence de réimplantation de la haie est incompatible avec le meilleur emplacement"
+                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+            )
+
+        return data
