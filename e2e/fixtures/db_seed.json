@@ -165,7 +165,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 5,
     "fields": {
       "backend_title": "N2000 > Zone humide - 44",
       "title": "Impact sur zone humide Natura 2000",
@@ -184,7 +183,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 6,
     "fields": {
       "backend_title": "N2000 > Zone inondable - 44",
       "title": "Impact sur zone inondable Natura 2000",
@@ -203,7 +201,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 7,
     "fields": {
       "backend_title": "N2000 > IOTA",
       "title": "Natura 2000 si dossier Loi sur l'eau",
@@ -222,7 +219,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 9,
     "fields": {
       "backend_title": "Eval Env > Emprise",
       "title": "Emprise au sol créée",
@@ -241,7 +237,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 10,
     "fields": {
       "backend_title": "Eval Env > Surface plancher",
       "title": "Surface de plancher créée",
@@ -260,7 +255,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 11,
     "fields": {
       "backend_title": "Eval Env > Terrain d'assiette",
       "title": "Terrain d'assiette",
@@ -279,7 +273,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 12,
     "fields": {
       "backend_title": "Eval Env > Autres rubriques",
       "title": "Autres rubriques",
