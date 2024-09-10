@@ -190,5 +190,31 @@
     "project_impact": "",
     "discussion_contact": ""
   }
+},
+{
+  "model": "geodata.department",
+  "pk": 63,
+  "fields": {
+    "department": "44",
+    "geometry": "SRID=4326;MULTIPOLYGON (((-2.581787 47.694974, -0.840454 47.706065, -0.796509 46.694667, -2.554321 46.705969, -2.581787 47.694974)))"
+  }
+},
+{
+  "model": "moulinette.moulinetteconfig",
+  "pk": 1,
+  "fields": {
+    "department": 63,
+    "is_activated": true,
+    "lse_contact_ddtm": "<address>\r\n    <strong>DDTM de Loire-Atlantique</strong><br />\r\n    Unité Police de l’eau<br />\r\n    Email : <a href=\"mailto:ddtm-see-guichet-unique@loire-atlantique.gouv.fr\">ddtm-see-guichet-unique@loire-atlantique.gouv.fr</a>\r\n  </address>",
+    "n2000_contact_ddtm_info": "<address>\r\n      <strong>DDTM de Loire-Atlantique</strong><br />\r\n      Unité Biodiversité<br />\r\n      Email : <a href=\"mailto:ddtm-see-biodiv@loire-atlantique.gouv.fr\">ddtm-see-biodiv@loire-atlantique.gouv.fr</a>\r\n    </address>",
+    "n2000_contact_ddtm_instruction": "<address>\r\n          <strong>DDTM de Loire-Atlantique</strong><br />\r\n          Service eau et environnement<br />\r\n          Email : <a href=\"mailto:ddtm-see@loire-atlantique.gouv.fr\">ddtm-see@loire-atlantique.gouv.fr</a>\r\n        </address>",
+    "n2000_procedure_ein": "<p><strong>1/ Remplir le formulaire d’évaluation simplifiée</strong></p>\r\n<p>Ce <a download=\"Formulaire N2000 DDTM44.pdf\" href=\"/static/pdfs/formulaire_eval_n2000_ddtm44.pdf\">formulaire d’évaluation simplifiée</a> est fourni par la DDTM 44. Il permet de mener une première analyse des incidences du projet.</p>\r\n<p>S’il conclut à l’absence d’incidence, il fait office d’évaluation des incidences Natura 2000.</p>\r\n<p>Dans le cas contraire, une évaluation plus poussée doit être conduite.</p>",
+    "n2000_lotissement_proximite": "(moins de 500 m, selon la doctrine de la DDTM 44)",
+    "evalenv_procedure_casparcas": "<p><strong>1/ Faire établir un pré-diagnostic environnemental et remplir le formulaire\r\n    de demande d’examen au cas par cas</strong></p>\r\n\r\n  <p>Ce travail doit être confié à un bureau d’études spécialisé.</p>\r\n\r\n  <p>Un pré-diagnostic environnemental est réalisé, afin d’évaluer :</p>\r\n  <ul>\r\n    <li>la sensibilité environnementale de la zone d'implantation envisagée ;</li>\r\n    <li>les impacts potentiels du projet sur l’environnement et la santé humaine\r\n      (rejets nocifs, biodiversité, risques, nuisances, paysages…).</li>\r\n  </ul>\r\n\r\n  <p>Le formulaire de demande d’examen au cas par cas doit être rempli (<a href=\"/static/pdfs/formulaire_cerfa_14734-04.pdf\" download>Cerfa 14734-04</a>),\r\n    accompagné de <a href=\"/static/pdfs/annexe_1_cerfa_14734_3.pdf\" download>son annexe</a>.</p>\r\n\r\n<p>Une <a href=\"https://www.formulaires.service-public.fr/gf/getNotice.do?cerfaNotice=51656&cerfaFormulaire=14734\" target=\"_blank\" rel=\"noopener\">notice explicative</a> pour le remplissage du formulaire est disponible.</p>\r\n\r\n  <p>Tous les dossiers déposés sont rendus publics et mis à disposition <a href=\"https://www.pays-de-la-loire.developpement-durable.gouv.fr/loire-atlantique-a5865.html\"\r\n    target=\"_blank\" rel=\"noopener\">sur le site de la DREAL Pays-de-la-Loire</a>.\r\n    Il est intéressant de les consulter à titre de comparaison et d’analyse des bonnes pratiques.\r\n  </p>\r\n\r\n  <p><strong>2/ Déposer la demande en ligne ou par courrier</strong></p>\r\n\r\n  <p>Le formulaire et ses annexes doivent être déposés à la DREAL (Direction régionale de l’environnement,\r\n    de l’aménagement et du logement) :</p>\r\n\r\n  <ul>\r\n    <li>soit par messagerie électronique à l’adresse suivante : <a href=\"mailto:evaluation-env-projets@developpement-durable.gouv.fr\">\r\n      evaluation-env-projets@developpement-durable.gouv.fr</a>\r\n      <br>(si les fichiers sont volumineux (> 5 Mo), utiliser la plate-forme <a href=\"https://melanissimo-ng.din.developpement-durable.gouv.fr/\" target=\"_blank\" rel=\"noopener\">\r\n        Melanissimo</a> en indiquant comme destinataire l'adresse email ci-dessus)\r\n    </li>\r\n    <li>soit par courrier :\r\n      <br>DREAL Pays de la Loire\r\n      <br>SCTE/DEE\r\n      <br>5 rue Françoise Giroud - CS 16326\r\n      <br>44263 Nantes Cédex 2\r\n    </li>\r\n  </ul>\r\n\r\n  <p>Les modalités pratiques de ce dépôt sont détaillées\r\n    <a href=\"https://www.pays-de-la-loire.developpement-durable.gouv.fr/modalites-pratiques-du-cas-par-cas-a1738.html\"\r\n      target=\"_blank\" rel=\"noopener\">sur le site de la DREAL.</a></p>",
+    "criteria_values": {
+      "lotissement__header": "« Liste locale 1 » Natura 2000 en Loire-Atlantique (1° de l'art. 2 de l'<a href='/static/pdfs/arrete_16062011.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 16 juin 2011</a>)",
+      "zone_humide__header": "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='https://www.loire-atlantique.gouv.fr/contenu/telechargement/13963/90551/file/Arr.08-04-2014%202eme%20liste%20locale.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"
+    }
+  }
 }
 ]

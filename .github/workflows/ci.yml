@@ -133,7 +133,7 @@ jobs:
     - name: Launch services
       run: docker compose up -d
     - name: Wait for services to be ready
-      run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
+      run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://envergo.local:3000/
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database
