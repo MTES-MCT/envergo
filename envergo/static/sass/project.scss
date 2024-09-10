@@ -1033,9 +1033,7 @@ div.hero-alt {
 
     & > main,
     & > footer {
-      @media only screen and (width > 991px) {
-        padding-left: calc(400% / 12);
-      }
+      padding-left: calc(400% / 12);
     }
 
     #project-summary,
@@ -1053,6 +1051,22 @@ div.hero-alt {
       left: 0;
       bottom: 0;
       padding-top: 5rem;
+    }
+  }
+}
+
+// For print, move the project summary above the project result
+@media only print {
+  .moulinette-result-body main {
+    display: flex;
+    flex-flow: column;
+
+    #project-summary {
+      order: 1;
+    }
+
+    #project-result {
+      order: 2;
     }
   }
 }
