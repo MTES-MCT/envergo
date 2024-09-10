@@ -19,22 +19,24 @@ createApp({
       return length;
     };
 
-    const generatePolylineId = () => {
-      const getAlphaIdentifier = (index) => {
-        let str = '';
-        while (index >= 0) {
-          str = String.fromCharCode((index % 26) + 65) + str;
-          index = Math.floor(index / 26) - 1;
-        }
-        return str;
-      };
-      return getAlphaIdentifier(nextId.value++);
+    const getAlphaIdentifier = (index) => {
+      let str = '';
+      while (index >= 0) {
+        str = String.fromCharCode((index % 26) + 65) + str;
+        index = Math.floor(index / 26) - 1;
+      }
+      return str;
+    };
+
+    const updatePolylineIds = () => {
+      polylines.forEach((polyline, index) => {
+        polyline.id = getAlphaIdentifier(index);
+      });
     };
 
     const startDrawing = () => {
       let currentPolyline = map.editTools.startPolyline();
-      const polylineId = generatePolylineId();
-
+      const polylineId = getAlphaIdentifier(nextId.value++);
       const polylineData = reactive({ id: polylineId, polylineLayer: currentPolyline, latLngs: currentPolyline.getLatLngs(), length: 0 });
       polylines.push(polylineData);
 
@@ -52,10 +54,10 @@ createApp({
     };
 
     const removePolyline = (index) => {
-      // Retirer la polyline de la carte
       polylines[index].polylineLayer.remove();
-      // Supprimer la polyline du tableau
       polylines.splice(index, 1);
+      updatePolylineIds(); // Mettre à jour les identifiants après suppression
+      nextId.value = polylines.length; // Réinitialiser le prochain identifiant
     };
 
     // Initialiser la carte Leaflet après le montage du composant
