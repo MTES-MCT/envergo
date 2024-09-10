@@ -10,7 +10,6 @@ env:
 on:
   pull_request:
     branches: [ "main" ]
-    types: [opened, synchronize, reopened, ready_for_review]
 
   push:
     branches: [ "main" ]
@@ -112,7 +111,7 @@ jobs:
         env:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
-          POSTGRES_DB: envergo-test
+          POSTGRES_DB: envergo
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
@@ -133,14 +132,12 @@ jobs:
       run: npx playwright install --with-deps
     - name: Launch services
       run: docker compose up -d
-      env:
-        POSTGRES_DB: envergo-test
-    - name: Migrate database
-      run: docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
-    - name: Seed database
-      run:  docker compose run  -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
+    - name: Migrate database
+      run: docker compose run --rm django python manage.py migrate
+    - name: Seed database
+      run:  docker compose run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
