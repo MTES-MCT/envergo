@@ -3,7 +3,7 @@
   "model": "sites.site",
   "pk": 1,
   "fields": {
-    "domain": "envergo.local",
+    "domain": "localhost",
     "name": "EnvErgo"
   }
 },
@@ -11,7 +11,7 @@
   "model": "sites.site",
   "pk": 2,
   "fields": {
-    "domain": "haie.local",
+    "domain": "127.0.0.1",
     "name": "Haie"
   }
 },
@@ -205,6 +205,7 @@
   "fields": {
     "department": 63,
     "is_activated": true,
+    "regulations_available": ["loi_sur_leau", "natura2000", "eval_env", "sage"],
     "lse_contact_ddtm": "<address>\r\n    <strong>DDTM de Loire-Atlantique</strong><br />\r\n    Unité Police de l’eau<br />\r\n    Email : <a href=\"mailto:ddtm-see-guichet-unique@loire-atlantique.gouv.fr\">ddtm-see-guichet-unique@loire-atlantique.gouv.fr</a>\r\n  </address>",
     "n2000_contact_ddtm_info": "<address>\r\n      <strong>DDTM de Loire-Atlantique</strong><br />\r\n      Unité Biodiversité<br />\r\n      Email : <a href=\"mailto:ddtm-see-biodiv@loire-atlantique.gouv.fr\">ddtm-see-biodiv@loire-atlantique.gouv.fr</a>\r\n    </address>",
     "n2000_contact_ddtm_instruction": "<address>\r\n          <strong>DDTM de Loire-Atlantique</strong><br />\r\n          Service eau et environnement<br />\r\n          Email : <a href=\"mailto:ddtm-see@loire-atlantique.gouv.fr\">ddtm-see@loire-atlantique.gouv.fr</a>\r\n        </address>",
@@ -216,5 +217,16 @@
       "zone_humide__header": "« Liste locale 2 » Natura 2000 en Loire-Atlantique (13° de l'art. 1 de l'<a href='https://www.loire-atlantique.gouv.fr/contenu/telechargement/13963/90551/file/Arr.08-04-2014%202eme%20liste%20locale.pdf' target='_blank' rel='noopener'>arrêté préfectoral du 8 avril 2014</a>)"
     }
   }
-}
+},
+  {
+    "model": "geodata.zone",
+    "pk": 1527427,
+    "fields": {
+      "map": 36,
+      "geometry": "SRID=4326;MULTIPOLYGON (((-5.84563415928438 51.2898671061012, 9.43812855512209 51.9266905525348, 10.3710749041473 41.2949231143258, -5.31388658151241 40.8332261156614, -5.84563415928438 51.2898671061012)))",
+      "area": 1394050951971,
+      "npoints": 5,
+      "created_at": "2023-04-18T16:08:41.355Z"
+    }
+  }
 ]
