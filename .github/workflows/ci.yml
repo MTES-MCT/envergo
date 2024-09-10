@@ -132,9 +132,9 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Launch services
-      run: docker compose -e POSTGRES_DB=envergo-test up -d
+      run: docker compose up -d
       env:
-        POSTGRES_DB:envergo-test
+        POSTGRES_DB: envergo-test
     - name: Migrate database
       run: docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
     - name: Seed database
