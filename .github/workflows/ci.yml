@@ -6,6 +6,7 @@ env:
   USE_DOCKER: False
   LANG: 'fr_FR.UTF-8'
   LC_ALL: 'fr_FR.UTF-8'
+  DJANGO_SETTINGS_MODULE: 'config.settings.ci'
 
 on:
   pull_request:
