@@ -1,0 +1,194 @@
+[
+{
+  "model": "sites.site",
+  "pk": 1,
+  "fields": {
+    "domain": "envergo.local",
+    "name": "EnvErgo"
+  }
+},
+{
+  "model": "sites.site",
+  "pk": 2,
+  "fields": {
+    "domain": "haie.local",
+    "name": "Haie"
+  }
+},
+{
+  "model": "users.user",
+  "pk": 1,
+  "fields": {
+    "email": "user@test.fr",
+    "name": "Pass Is Sésame",
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$WGIwMmFJRDFTYWZJUEpXZ3VCV1RDdA$+VBUtvWtVp4CWZAWF777RWj79SV5tQMiicS5BrmQN84",
+    "is_staff": true,
+    "is_superuser": true
+  }
+},
+{
+  "model": "geodata.map",
+  "pk": 36,
+  "fields": {
+    "name": "France",
+    "display_name": "France",
+    "source": "",
+    "display_for_user": false,
+    "file": "maps/France_polygone.zip",
+    "map_type": "",
+    "data_type": "certain",
+    "description": "France entière pour critères",
+    "departments": "[]"
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "pk": 1,
+  "fields": {
+    "regulation": "loi_sur_leau",
+    "weight": 1,
+    "show_map": false,
+    "polygon_color": "blue"
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "pk": 2,
+  "fields": {
+    "regulation": "natura2000",
+    "weight": 3,
+    "show_map": true,
+    "polygon_color": "green"
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "pk": 3,
+  "fields": {
+    "regulation": "eval_env",
+    "weight": 4,
+    "show_map": false,
+    "polygon_color": "blue"
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "pk": 4,
+  "fields": {
+    "regulation": "sage",
+    "weight": 2,
+    "show_map": true,
+    "polygon_color": "teal"
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "LSE > Zone humide",
+    "title": "Impact sur une zone humide",
+    "subtitle": "Seuil de déclaration : 1 000 m²",
+    "header": "Rubrique 3.3.1.0. de la <a href=\"https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf\" target=\"_blank\" rel=\"noopener\">nomenclature IOTA</a>",
+    "regulation": 1,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.loisurleau.ZoneHumide",
+    "weight": 1,
+    "required_action": "n'impacte pas plus de 1 000 m² de zone humide",
+    "required_action_stake": "soumis",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "LSE > Zone inondable",
+    "title": "Impact sur une zone inondable",
+    "subtitle": "Seuil de déclaration : 400 m²",
+    "header": "Rubrique 3.2.2.0. de la <a href=\"https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf\" target=\"_blank\" rel=\"noopener\">nomenclature IOTA</a>",
+    "regulation": 1,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.loisurleau.ZoneInondable",
+    "weight": 2,
+    "required_action": "n'impacte pas plus de 400 m² de zone inondable",
+    "required_action_stake": "soumis",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "LSE > 2150",
+    "title": "Impact sur l'écoulement des eaux pluviales",
+    "subtitle": "Seuil de déclaration : 1 ha",
+    "header": "Rubrique 2.1.5.0. de la <a href=\"https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/nouvelle_nomenclature_tableau_detaille_complete_diffusable-2.pdf\" target=\"_blank\" rel=\"noopener\">nomenclature IOTA</a>",
+    "regulation": 1,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.loisurleau.Ruissellement",
+    "weight": 3,
+    "required_action": "a une surface totale, augmentée de l'aire d'écoulement d'eaux de pluie interceptée, inférieure à 1 ha",
+    "required_action_stake": "soumis",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "fields": {
+    "id": 5,
+    "regulation": "conditionnalite_pac",
+    "weight": 1,
+    "show_map": false,
+    "polygon_color": "blue"
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "Conditionnalité PAC > BCAE8",
+    "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
+    "subtitle": "",
+    "header": "",
+    "regulation": 5,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+    "weight": 1,
+    "required_action": "",
+    "required_action_stake": "",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+},
+{
+  "model": "moulinette.regulation",
+  "fields": {
+    "id": 6,
+    "regulation": "dep",
+    "weight": 2,
+    "show_map": false,
+    "polygon_color": "blue"
+  }
+},
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "DEP > DEP",
+    "title": "Dérogation « espèces protégées »",
+    "subtitle": "",
+    "header": "",
+    "regulation": 6,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.dep.DerogationEspecesProtegees",
+    "weight": 1,
+    "required_action": "",
+    "required_action_stake": "",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+}
+]

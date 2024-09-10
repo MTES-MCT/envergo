@@ -111,7 +111,7 @@ jobs:
         env:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
-          POSTGRES_DB: envergo
+          POSTGRES_DB: envergo-test
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
@@ -131,9 +131,13 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Launch services
-      run: docker compose -f docker-compose.yml up -d
+      run: docker compose -e POSTGRES_DB=envergo-test up -d
       env:
-        DJANGO_SETTINGS_MODULE: config.settings.test
+        POSTGRES_DB:envergo-test
+    - name: Migrate database
+      run: docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
+    - name: Seed database
+      run:  docker compose run  -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
