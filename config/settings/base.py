@@ -304,11 +304,11 @@ SENTRY_DSN = env("SENTRY_DSN", default="")
 
 ANALYTICS = {
     "AMENAGEMENT": {
-        "TRACKER_ENABLED": env("DJANGO_TRACKER_ENABLED", default=False),
-        "TRACKER_URL": env("DJANGO_TRACKER_URL", default=""),
-        "SITE_ID": env("DJANGO_SITE_ID", default=""),
-        "TRACKER_URL_2": env("DJANGO_TRACKER_URL_2", default=""),
-        "SITE_ID_2": env("DJANGO_SITE_ID_2", default=""),
+        "TRACKER_ENABLED": env("DJANGO_AMENAGEMENT_TRACKER_ENABLED", default=False),
+        "TRACKER_URL": env("DJANGO_AMENAGEMENT_TRACKER_URL", default=""),
+        "SITE_ID": env("DJANGO_AMENAGEMENT_SITE_ID", default=""),
+        "TRACKER_URL_2": env("DJANGO_AMENAGEMENT_TRACKER_URL_2", default=""),
+        "SITE_ID_2": env("DJANGO_AMENAGEMENT_SITE_ID_2", default=""),
     },
     "HAIE": {
         "TRACKER_ENABLED": env("DJANGO_HAIE_TRACKER_ENABLED", default=False),
