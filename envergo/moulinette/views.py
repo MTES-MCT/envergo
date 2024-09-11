@@ -368,6 +368,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")
         )
+        form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
+        form_url_with_edit = update_qs(form_url, {"edit": "true"})
 
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
@@ -377,19 +379,19 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
+        is_edit = bool(self.request.GET.get("edit", False))
 
         if moulinette:
             context["base_result"] = moulinette.get_result_template()
-
-        if moulinette and is_debug:
+        if moulinette and is_edit:
+            context["matomo_custom_url"] = form_url_with_edit
+        elif moulinette and is_debug:
             context = {
                 **context,
                 **moulinette.get_debug_context(),
                 "matomo_custom_url": debug_url,
+                "result_url": result_url,
             }
-
-            context["result_url"] = result_url
-
         elif moulinette and moulinette.has_missing_data():
             context["matomo_custom_url"] = missing_data_url
 
