@@ -134,6 +134,17 @@ class CriterionAdmin(admin.ModelAdmin):
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if not request.user.has_perm("moulinette.change_criterion"):
+            # Replace 'evaluator' with 'evaluator_column' for users without edit rights
+            for fieldset in fieldsets:
+                fields = list(fieldset[1]["fields"])
+                if "evaluator" in fields:
+                    fields[fields.index("evaluator")] = "evaluator_column"
+                fieldset[1]["fields"] = tuple(fields)
+        return fieldsets
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related("activation_map").defer("activation_map__geometry")
