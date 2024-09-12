@@ -272,7 +272,16 @@ class MoulinetteMixin:
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
-        log_event(self.event_category, self.event_action, self.request, **export)
+        log_event(
+            self.event_category,
+            self.event_action,
+            self.request,
+            mtm_campaign=self.request.session.get("mtm_campaign", ""),
+            mtm_source=self.request.session.get("mtm_source", ""),
+            mtm_medium=self.request.session.get("mtm_medium", ""),
+            mtm_kwd=self.request.session.get("mtm_kwd", ""),
+            **export,
+        )
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
