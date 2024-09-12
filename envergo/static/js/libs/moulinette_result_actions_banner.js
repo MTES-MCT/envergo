@@ -6,7 +6,7 @@
   // The `navigator.clipboard` API is only available on `https` urls
   if (navigator.clipboard != undefined) {
     document.getElementById("copy-btn").addEventListener("click", function () {
-      navigator.clipboard.writeText(SHARING_URL).then(function () {
+      navigator.clipboard.writeText(CURRENT_URL).then(function () {
         var successMessage = document.getElementById('btn-clicked-message');
         successMessage.style.opacity = 1;
         var gif = document.getElementById('btn-clicked-image');

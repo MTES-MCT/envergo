@@ -29,7 +29,7 @@
     <p class="fr-text">
       Vous pouvez partager l'avis
       <a title="Partager l'avis réglementaire"
-         href="{{ light_url }}"
+         href="{{ share_print_url }}"
          target="_blank"
          rel="noopener external">via cette url</a>
     </p>
@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' with title="Partager cet avis réglementaire" shorten_url=False share_url=current_url %}
+  {% include '_share_url_modal.html' with title="Partager cet avis réglementaire" shorten_url=False share_url=share_btn_url %}
 
 {% endblock %}
 
