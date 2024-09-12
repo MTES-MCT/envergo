@@ -356,8 +356,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
-        share_print_url = update_qs(current_url, {"mtm_source": "print"})
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(result_url, {"edit": "true"})

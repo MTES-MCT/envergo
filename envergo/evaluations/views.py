@@ -135,9 +135,12 @@ class EvaluationDetail(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         current_url = self.request.build_absolute_uri()
-        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
-        context["current_url"] = tracked_url
-        context["light_url"] = current_url
+
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-ar"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-ar"})
+
+        context["share_btn_url"] = share_btn_url
+        context["share_print_url"] = share_print_url
 
         latest_version = self.object.versions.first()
         if latest_version:
