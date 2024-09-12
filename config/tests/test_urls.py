@@ -41,6 +41,7 @@ AMENAGEMENT_URLS = [
 ]
 
 
+@pytest.mark.urls("config.urls_haie")
 @pytest.mark.parametrize("url", COMMON_URLS + HAIE_URLS)
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_haie_can_access_haie_pages(client, url):
@@ -49,6 +50,7 @@ def test_haie_can_access_haie_pages(client, url):
     assert response.status_code < 400, f"Failed for URL: {url}"
 
 
+@pytest.mark.urls("config.urls_haie")
 @pytest.mark.parametrize("url", AMENAGEMENT_URLS)
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_haie_cannot_access_amenagement_pages(client, url):
