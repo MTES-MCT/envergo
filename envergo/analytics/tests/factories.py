@@ -1,7 +1,9 @@
+import factory
 from factory import Faker
 from factory.django import DjangoModelFactory
 
 from envergo.analytics.models import Event
+from envergo.contrib.sites.tests.factories import SiteFactory
 
 
 class EventFactory(DjangoModelFactory):
@@ -17,8 +19,10 @@ class EventFactory(DjangoModelFactory):
 class EvalreqEventFactory(EventFactory):
     category = "evaluation"
     event = "request"
+    site = factory.SubFactory(SiteFactory)
 
 
 class SimulationEventFactory(EventFactory):
     category = "simulateur"
     event = "soumission"
+    site = factory.SubFactory(SiteFactory)

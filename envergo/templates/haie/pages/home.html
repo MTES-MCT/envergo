@@ -53,7 +53,7 @@
       <a href="#simulateur"
          class="fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-down-line fr-mb-1w"
          data-event-category="HomePage"
-         data-event-action="DiscoverClick"
+         data-event-action="SimulationClick"
          data-event-name="Main">Simuler un projet</a>
       <br />
       <span>Accessible sans créer de compte</span>
@@ -104,13 +104,17 @@
     </div>
   </section>
 
-  <section id="simulateur">
+  <section id="simulateur" class="fr-pt-8w fr-pb-5w">
     <div class="fr-container">
-      <div class="fr-grid-row fr-grid-row--center">
-        <div class="fr-col fr-col-lg-8 fr-col-xl-6 fr-p-5w wrapper">
+      <div id="moulinette-grid">
+        <div id="moulinette-col">
           <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
         </div>
       </div>
     </div>
   </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
 {% endblock %}

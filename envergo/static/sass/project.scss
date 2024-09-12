@@ -142,17 +142,6 @@ article {
     display: block;
   }
 
-  #feedback-form {
-    position: sticky;
-    top: 3rem;
-
-    #feedback-trigger {
-      .callout-buttons {
-        text-align: right;
-      }
-    }
-  }
-
   button[type="submit"] {
     margin-right: 1rem;
   }
@@ -679,7 +668,6 @@ div.leaflet-container {
     right: 0;
     margin-top: 10px;
     margin-right: 10px;
-    z-index: 9999;
     width: 80%;
 
     input {
@@ -953,139 +941,135 @@ div.hero-alt {
   padding: 1.5rem;
 }
 
-.full-height {
-  height: 100%;
-}
-
-.flex-box {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
 // moulinette result page styles
 .moulinette-result-body {
-  min-height: 20em;
-
-  main {
-    min-height: 20em;
+  #action-banner {
+    @media (height > 20rem) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
   }
 
-  #moulinette-result-container {
-    flex: 1;
-    overflow-y: hidden;
-    margin: 0;
-    padding: 0;
-    max-width: none;
+  .fr-sr-only {
+    position: fixed; // to avoid the element to break the whole scroll flow in Chrome
+  }
 
-    > .fr-grid-row {
-      flex-wrap: nowrap;
-      flex: 1;
+  #project-summary {
+    background-color: var(--info-975-75);
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+
+    & > section {
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 0 1em;
+    }
+
+    .button-container {
+      text-align: center;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #map:hover > #map-button {
+      opacity: 1;
+    }
+
+    #map-button {
+      transition: opacity 0.4s ease-in-out 0s;
+      z-index: 1000;
+      position: absolute;
+      right: 1.5em;
+      bottom: 2em;
+      background-color: var(--grey-1000-50);
+      color: var(--text-action-high-blue-france);
+      opacity: 0;
+    }
+
+    #map-button:hover {
+      background-color: var(--background-default-grey-hover);
+    }
+  }
+
+  #project-result {
+    & > section {
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+
+    .fr-btns-group {
+      margin: 0;
+    }
+  }
+}
+
+@media only screen and (width > 991px) {
+  .moulinette-result-body {
+    height: 100%;
+    padding-bottom: 5rem;
+
+    main {
+      height: 100%;
+      position: relative;
+    }
+
+    & > main,
+    & > footer {
+      padding-left: calc(400% / 12);
     }
 
     #project-summary,
     #project-result {
+      height: 100%;
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
     }
 
-    .fr-sr-only {
-      position: fixed; // to avoid the element to break the whole scroll flow in Chrome
+    #project-summary {
+      width: calc(400% / 12); // because 33.333333…% is not a valid css value
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      padding-top: 5rem;
     }
+  }
+}
+
+// For print, move the project summary above the project result
+@media only print {
+  .moulinette-result-body main {
+    display: flex;
+    flex-flow: column;
 
     #project-summary {
-      background-color: var(--info-975-75);
-
-      > section {
-        max-width: 36em;
-        margin: 0 auto;
-        padding: 0 1em;
-      }
-
-      .button-container {
-        text-align: center;
-      }
-
-      ul {
-        list-style-type: none;
-        padding: 0;
-      }
-
-      #map:hover > #map-button {
-        opacity: 1;
-      }
-
-      #map-button {
-        transition: opacity 0.25s ease-in-out 0s;
-        z-index: 1000;
-        position: absolute;
-        right: 1.5em;
-        bottom: 2em;
-        background-color: var(--grey-1000-50);
-        color: var(--text-action-high-blue-france);
-        opacity: 0;
-      }
-
-      #map-button:hover {
-        background-color: var(--background-default-grey-hover);
-      }
+      order: 1;
     }
 
     #project-result {
-      > section {
-        max-width: 42em;
-        margin: 0 auto;
-      }
-
-      footer {
-        padding-top: 0;
-        box-shadow: initial;
-      }
-
-      .fr-btns-group {
-        margin: 0;
-      }
+      order: 2;
     }
   }
+}
 
-  footer {
-    padding-top: 0;
-    box-shadow: initial;
-    z-index: 1000; // to be above the leaflet map
-  }
+footer {
+  padding-top: 0;
+  box-shadow: initial;
+  z-index: 1000; // to be above the leaflet map
+}
 
-  @media only screen and (width <= 991px) {
-    #moulinette-result-container {
-      padding-left: 0;
-      padding-right: 0;
-
-      > .fr-grid-row {
-        flex-flow: column-reverse nowrap;
-        overflow-y: auto;
-      }
-
-      #project-summary,
-      #project-result {
-        overflow: initial;
-        display: flex;
-        flex-wrap: wrap;
-      }
-
-      #mobile-footer {
-        display: block;
-      }
-    }
-  }
-
-  @media only screen and (width <= 767px) {
-    #feedback-form,
-    #copy-btn-container,
-    #debug-btn {
-      display: none;
-    }
+@media only screen and (width <= 767px) {
+  #feedback-form,
+  #copy-btn-container,
+  #debug-btn {
+    display: none;
   }
 }
 
@@ -1094,6 +1078,7 @@ div.hero-alt {
   text-align: center;
 
   #feedback-form {
+    display: flex;
     align-items: center;
     justify-content: center;
 
@@ -1740,4 +1725,108 @@ main.demonstrateur_2150 {
   margin: -28px 16px;
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
+
+/**
+  * Handle the form display, along with the help sidebars
+  */
+#content {
+  .help-sidebar-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .help-sidebar-button {
+    display: none; // TODO remove to reactivate the feature
+    max-width: 2rem;
+    max-height: 2rem;
+
+    --help-sidebar-btn-color: #6a6af4;
+    --hover-tint: transparent;
+    --active-tint: transparent;
+
+    &:hover {
+      --help-sidebar-btn-color: #000091;
+    }
+
+    &:active {
+      --help-sidebar-btn-color: #000091;
+    }
+
+    &::before {
+      --icon-size: 1.2em;
+
+      color: var(--help-sidebar-btn-color);
+    }
+  }
+
+  .help-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--background-raised-grey);
+    padding: 1.5rem;
+    height: 100%;
+    overflow-y: scroll;
+    border: none;
+    margin-right: 0;
+    filter: drop-shadow(var(--raised-shadow));
+    z-index: 3000;
+
+    // Prevent the main body to scroll when we scroll the sidebar
+    // This way, we have two sections than can scroll independently
+    overscroll-behavior: contain;
+
+    .sidebar-content {
+      max-width: 440px;
+
+      // This is a hack
+      // The `overscroll-behavior` property prevents the main body to scroll,
+      // but it only works when there is a scrollbar on the sidebar.
+      // So we force a height > 100% to make sure the content overflows and a
+      // scrollbar appears.
+      // (I'm feeling like a mad genius right now.)
+      min-height: calc(100% + 1px);
+
+      img {
+        max-width: 100%;
+      }
+    }
+
+    @media (width >= 36em) {
+      width: 50%;
+    }
+
+    @media (width >= 48em) {
+      width: 40%;
+    }
+  }
+}
+
+#moulinette-grid {
+  display: flex;
+
+  #moulinette-col {
+    display: flex;
+    justify-content: center;
+
+    #moulinette {
+      max-width: 650px;
+    }
+  }
+
+  &:not(.sidebar-open) {
+    justify-content: center;
+  }
+
+  &.sidebar-open {
+    #moulinette-col {
+      @media (width >= 48em) {
+        max-width: 60%;
+        padding-right: 1.5rem;
+      }
+    }
+  }
 }

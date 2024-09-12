@@ -168,9 +168,7 @@
       </header>
     {% endblock %}
 
-    <main role="main"
-          id="contenu"
-          class="{% block main-classes %}{% endblock %}">
+    <main role="main" class="{% block main-classes %}{% endblock %}">
       {% block main %}
 
         {% block top-bar %}
@@ -185,17 +183,21 @@
           </div>
         {% endblock %}
 
-        {% block container %}
-          <div id="main-container" class="fr-container fr-pt-5w fr-pb-6w fr-mb-8w">
-            {% block content %}
-              <div class="fr-grid-row fr-grid-row--center">
-                <article class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
-                  {% block article %}{% endblock %}
-                </article>
-              </div>
-            {% endblock %}
-          </div>
-        {% endblock %}
+        <div id="content">
+          {% block container %}
+            <div id="main-container" class="fr-container fr-pt-5w">
+              {% block content %}
+                <div class="fr-grid-row fr-grid-row--center">
+                  <article class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
+                    {% block article %}{% endblock %}
+                  </article>
+                </div>
+              {% endblock %}
+            </div>
+          {% endblock %}
+
+          {% block help-sidebar %}{% endblock %}
+        </div>
 
         {% block after-content %}{% endblock %}
 

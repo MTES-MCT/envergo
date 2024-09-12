@@ -53,7 +53,11 @@ def log_event(category, event, request, **kwargs):
 
     if visitor_id and not request.user.is_staff:
         Event.objects.create(
-            category=category, event=event, session_key=visitor_id, metadata=kwargs
+            category=category,
+            event=event,
+            session_key=visitor_id,
+            metadata=kwargs,
+            site=request.site,
         )
 
 

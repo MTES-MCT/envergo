@@ -16,7 +16,18 @@ class BaseMoulinetteForm(forms.Form):
 
 class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = DisplayIntegerField(
-        label=_("Surface created by the project"),
+        label=mark_safe(
+            """
+            <span class="help-sidebar-label">
+                Nouveaux impacts
+                <button type="button"
+                        class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
+                        aria-controls="sidebar-created-surface">
+                    Voir l'aide pour le champ « Nouveaux impacts ».
+                </button>
+            </span>
+            """
+        ),
         required=True,
         min_value=0,
         help_text="Surface au sol nouvellement impactée par le projet",
@@ -36,7 +47,18 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins",
     )
     final_surface = DisplayIntegerField(
-        label=_("Total surface at the end of the project"),
+        label=mark_safe(
+            """
+            <span class="help-sidebar-label">
+                État final
+                <button type="button"
+                        class="fr-btn fr-btn--tertiary-no-outline fr-icon-question-line help-sidebar-button"
+                        aria-controls="sidebar-final-surface">
+                    Voir l'aide pour le champ « État final ».
+                </button>
+            </span>
+            """
+        ),
         required=False,
         min_value=0,
         help_text="Surface au sol impactée totale, en comptant l'existant",
