@@ -1,6 +1,8 @@
 import logging
 
 from anymail.signals import tracking
+from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db import transaction
 from django.db.models import F
 from django.db.models.signals import post_save
@@ -121,6 +123,9 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
                 event="email-click",
                 session_key=message_id,
                 metadata=metadata,
+                site=Site.objects.get(
+                    domain=settings.ENVERGO_AMENAGEMENT_DOMAIN
+                ),  # Evaluations are only for Aménagement
             )
 
 

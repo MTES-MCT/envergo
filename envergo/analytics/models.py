@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -18,6 +19,11 @@ class Event(models.Model):
     metadata = models.JSONField(_("Metadata"), null=True, blank=True)
 
     date_created = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.PROTECT,
+    )
 
     class Meta:
         verbose_name = _("Event")
