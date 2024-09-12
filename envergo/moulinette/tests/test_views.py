@@ -137,6 +137,22 @@ def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
     assertTemplateUsed(res, "moulinette/result.html")
 
 
+def test_moulinette_result_custom_matomo_tracking_url(client):
+    MoulinetteConfigFactory(is_activated=True)
+
+    url = reverse("moulinette_result")
+    params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&mtm_campaign=test"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?mtm_campaign=test";'
+        in content
+    )
+
+
 def test_moulinette_home_form_error(client):
     url = reverse("moulinette_home")
     params = "bad_param=true"

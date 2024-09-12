@@ -13,7 +13,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import remove_from_qs, update_qs
+from envergo.utils.urls import remove_from_qs, update_qs, url_with_only_mtm_params
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -371,7 +371,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         edit_url = update_qs(result_url, {"edit": "true"})
 
         # Url without any query parameters
-        stripped_url = self.request.build_absolute_uri(self.request.path)
+        stripped_url = url_with_only_mtm_params(current_url)
         debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")

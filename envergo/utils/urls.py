@@ -21,3 +21,14 @@ def remove_from_qs(url, key):
     new_query = urlencode(query, doseq=True)
     new_bits = bits._replace(query=new_query)
     return urlunsplit(new_bits)
+
+
+def url_with_only_mtm_params(url):
+    """Return an url with only mtm parameters."""
+
+    bits = urlsplit(url)
+    query = parse_qs(bits.query)
+    mtm_params = {k: v for k, v in query.items() if k.startswith("mtm_")}
+    new_query = urlencode(mtm_params, doseq=True)
+    new_bits = bits._replace(query=new_query)
+    return urlunsplit(new_bits)
