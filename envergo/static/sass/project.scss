@@ -142,17 +142,6 @@ article {
     display: block;
   }
 
-  #feedback-form {
-    position: sticky;
-    top: 3rem;
-
-    #feedback-trigger {
-      .callout-buttons {
-        text-align: right;
-      }
-    }
-  }
-
   button[type="submit"] {
     margin-right: 1rem;
   }
@@ -1089,6 +1078,7 @@ footer {
   text-align: center;
 
   #feedback-form {
+    display: flex;
     align-items: center;
     justify-content: center;
 

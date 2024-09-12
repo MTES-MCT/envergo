@@ -1,6 +1,6 @@
 // Track a moulinette result page load
 window.addEventListener('load', function () {
-  _paq.push(['trackEvent', 'Evaluation', 'Display', DEPARTMENT]);
+  _paq.push(['trackEvent', 'Evaluation', 'Visit', DEPARTMENT]);
 });
 
 
