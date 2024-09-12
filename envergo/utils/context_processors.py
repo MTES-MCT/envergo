@@ -23,9 +23,15 @@ def settings_context(_request):
     else:
         chatbox_enabled = settings.CRISP_CHATBOX_ENABLED
 
+    analytics = (
+        settings.ANALYTICS["HAIE"]
+        if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+        else settings.ANALYTICS["AMENAGEMENT"]
+    )
+
     return {
         "DEBUG": settings.DEBUG,
-        "ANALYTICS": settings.ANALYTICS,
+        "ANALYTICS": analytics,
         "SENTRY_DSN": settings.SENTRY_DSN,
         "ENV_NAME": settings.ENV_NAME,
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
