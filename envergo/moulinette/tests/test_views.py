@@ -111,6 +111,8 @@ def test_moulinette_result_without_params_redirects_to_home(client):
 
 
 def test_moulinette_result_form_error(client):
+    """Bad params are cleaned from the result url."""
+
     MoulinetteConfigFactory()
 
     url = reverse("moulinette_result")
@@ -121,7 +123,10 @@ def test_moulinette_result_form_error(client):
     res = client.get(full_url)
 
     assert res.status_code == 302
-    assert res.url.endswith("/simulateur/formulaire/")
+    assert (
+        res.url
+        == "/simulateur/resultat/?created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+    )
 
 
 def test_moulinette_result_mtm_keywords_are_not_bad_params(client):

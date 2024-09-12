@@ -23,12 +23,10 @@ def remove_from_qs(url, key):
     return urlunsplit(new_bits)
 
 
-def url_with_only_mtm_params(url):
-    """Return an url with only mtm parameters."""
+def extract_mtm_params(url):
+    """Extract mtm parameters from an url."""
 
     bits = urlsplit(url)
     query = parse_qs(bits.query)
     mtm_params = {k: v for k, v in query.items() if k.startswith("mtm_")}
-    new_query = urlencode(mtm_params, doseq=True)
-    new_bits = bits._replace(query=new_query)
-    return urlunsplit(new_bits)
+    return mtm_params
