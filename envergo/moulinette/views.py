@@ -317,6 +317,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         return [template_name]
 
     def get(self, request, *args, **kwargs):
+        is_edit = bool(self.request.GET.get("edit", False))
         context = self.get_context_data()
         res = self.render_to_response(context)
         moulinette = self.moulinette
@@ -324,12 +325,16 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
             if (
                 "debug" not in self.request.GET
-                and "edit" not in self.request.GET
+                and not is_edit
                 and not self.validate_results_url(request, context)
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
-            if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
+            if not (
+                moulinette.has_missing_data()
+                or is_request_from_a_bot(request)
+                or is_edit
+            ):
                 self.log_moulinette_event(moulinette)
 
             return res
