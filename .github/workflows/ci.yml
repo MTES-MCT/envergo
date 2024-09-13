@@ -135,6 +135,8 @@ jobs:
       uses: docker/setup-buildx-action@v3
     - name: Launch services
       run: docker compose up -d
+      env:
+        DJANGO_SETTINGS_MODULE: 'config.settings.ci'
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database
