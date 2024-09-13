@@ -19,7 +19,11 @@
         </div>
         <template v-if="polylines.length > 0">
           <ul id="hedge-list">
-            <li v-for="(polyline, index) in polylines" :key="index">
+            <li v-for="(polyline, index) in polylines"
+                :key="index"
+                :class="{ hovered: polyline.isHovered }"
+                @mouseover="handleMouseOver(polyline)"
+                @mouseout="handleMouseOut(polyline)">
               <strong>[[ polyline.id ]]</strong>
               <span>[[ polyline.length.toFixed(0) ]] m</span>
               <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
