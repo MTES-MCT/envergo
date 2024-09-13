@@ -1,27 +1,75 @@
 const { createApp, ref, onMounted, reactive } = Vue
 
+const normalStyle = { className: 'hedge' };
+const hoveredStyle = {};
+const fitBoundsOptions = { padding: [25, 25] };
+
+class Polyline {
+  constructor(map, id, onRemove) {
+    this.id = id;
+    this.map = map;
+    this.onRemove = onRemove;
+    this.polylineLayer = map.editTools.startPolyline(null, normalStyle);
+    this.latLngs = this.polylineLayer.getLatLngs();
+    this.length = this.calculateLength();
+    this.isHovered = false;
+
+    this.polylineLayer.on('editable:vertex:new', this.updateLength.bind(this));
+    this.polylineLayer.on('editable:vertex:dragend', this.updateLength.bind(this));
+    this.polylineLayer.on('click', this.centerOnMap.bind(this));
+    this.polylineLayer.on('mouseover', this.handleMouseOver.bind(this));
+    this.polylineLayer.on('mouseout', this.handleMouseOut.bind(this));
+  }
+
+  calculateLength() {
+    let length = 0;
+    for (let i = 0; i < this.latLngs.length - 1; i++) {
+      length += this.latLngs[i].distanceTo(this.latLngs[i + 1]);
+    }
+    return length;
+  }
+
+  updateLength() {
+    this.latLngs = this.polylineLayer.getLatLngs();
+    this.length = this.calculateLength();
+  }
+
+  handleMouseOver() {
+    this.polylineLayer.setStyle(hoveredStyle);
+    this.isHovered = true;
+    if (this.polylineLayer._path) {
+      this.polylineLayer._path.classList.add("hovered");
+    }
+  }
+
+  handleMouseOut() {
+    this.polylineLayer.setStyle(normalStyle);
+    this.isHovered = false;
+    if (this.polylineLayer._path) {
+      this.polylineLayer._path.classList.remove("hovered");
+    }
+  }
+
+  centerOnMap() {
+    const bounds = this.polylineLayer.getBounds();
+    this.map.fitBounds(bounds, { padding: [25, 25] });
+  }
+
+  remove() {
+    this.polylineLayer.remove();
+    this.onRemove(this);
+  }
+}
+
 createApp({
 
   // Prevent conflict with django template delimiters
   delimiters: ["[[", "]]"],
 
-
   setup() {
     const polylines = reactive([]);
     let map = null;
     let nextId = ref(0);
-
-    const normalStyle = { className: 'hedge' };
-    const hoveredStyle = {};
-    const fitBoundsOptions = { padding: [25, 25] };
-
-    const calculatePolylineLength = (latLngs) => {
-      let length = 0;
-      for (let i = 0; i < latLngs.length - 1; i++) {
-        length += latLngs[i].distanceTo(latLngs[i + 1]);
-      }
-      return length;
-    };
 
     const getAlphaIdentifier = (index) => {
       let str = '';
@@ -39,80 +87,16 @@ createApp({
     };
 
     const startDrawing = () => {
-      let currentPolyline = map.editTools.startPolyline(null, normalStyle);
       const polylineId = getAlphaIdentifier(nextId.value++);
-      const polylineData = reactive({
-        id: polylineId,
-        polylineLayer: currentPolyline,
-        latLngs: currentPolyline.getLatLngs(),
-        length: 0,
-        isHovered: false
-      });
-      polylines.push(polylineData);
-
-      // Mettre à jour les informations en temps réel pendant le dessin
-      currentPolyline.on('editable:vertex:new', () => {
-        polylineData.latLngs = [...currentPolyline.getLatLngs()];
-        polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
-      });
-
-      // Mettre à jour les informations en temps réel pendant le déplacement
-      currentPolyline.on('editable:vertex:dragend', () => {
-        polylineData.latLngs = [...currentPolyline.getLatLngs()];
-        polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
-      });
-
-      // Centrer la carte sur la polyline lors du clic
-      currentPolyline.on('click', () => {
-        const bounds = currentPolyline.getBounds();
-        map.fitBounds(bounds, fitBoundsOptions);
-      });
-
-      // Gérer l'état de survol pour la polyline
-      currentPolyline.on('mouseover', () => {
-        currentPolyline.setStyle(hoveredStyle);
-        currentPolyline._path.classList.add("hovered");
-        polylineData.isHovered = true;
-      });
-
-      currentPolyline.on('mouseout', () => {
-        currentPolyline.setStyle(normalStyle);
-        currentPolyline._path.classList.remove("hovered");
-        polylineData.isHovered = false;
-
-      });
+      const polyline = reactive(new Polyline(map, polylineId, removePolyline));
+      polylines.push(polyline);
     };
 
-    const removePolyline = (index, event) => {
-      polylines[index].polylineLayer.remove();
+    const removePolyline = (polyline) => {
+      let index = polylines.indexOf(polyline);
       polylines.splice(index, 1);
-      updatePolylineIds(); // Mettre à jour les identifiants après suppression
-      nextId.value = polylines.length; // Réinitialiser le prochain identifiant
-
-      // Stop the event to bubble, triggering the list "click" event that would
-      // center the map on the deleted polyline
-      event.stopPropagation();
-    };
-
-    const handleMouseOver = (polyline) => {
-      polyline.polylineLayer.setStyle(hoveredStyle);
-      if (Object.hasOwn(polyline.polylineLayer, "_path")) {
-        polyline.polylineLayer._path.classList.add("hovered");
-      }
-
-    };
-
-    const handleMouseOut = (polyline) => {
-      polyline.polylineLayer.setStyle(normalStyle);
-      if (Object.hasOwn(polyline.polylineLayer, "_path")) {
-        polyline.polylineLayer._path.classList.remove("hovered");
-      }
-    };
-
-    // Centrer la carte sur la polyline lorsque l'utilisateur clique sur l'entrée dans la liste
-    const handleClickOnList = (polyline) => {
-      const bounds = polyline.polylineLayer.getBounds();
-      map.fitBounds(bounds, fitBoundsOptions);
+      updatePolylineIds();
+      nextId.value = polylines.length;
     };
 
     const zoomOut = () => {
@@ -139,9 +123,6 @@ createApp({
       polylines,
       startDrawing,
       removePolyline,
-      handleMouseOver,
-      handleMouseOut,
-      handleClickOnList,
       zoomOut,
     };
   }
