@@ -11,8 +11,8 @@ createApp({
     let map = null;
     let nextId = ref(0);
 
-    const normalStyle = { color: 'red', weight: 5, opacity: 0.75 };
-    const hoveredStyle = { color: 'red', weight: 7, opacity: 0.95 };
+    const normalStyle = { className: 'hedge' };
+    const hoveredStyle = {};
     const fitBoundsOptions = { padding: [25, 25] };
 
     const calculatePolylineLength = (latLngs) => {
@@ -71,11 +71,13 @@ createApp({
       // Gérer l'état de survol pour la polyline
       currentPolyline.on('mouseover', () => {
         currentPolyline.setStyle(hoveredStyle);
+        currentPolyline._path.classList.add("hovered");
         polylineData.isHovered = true;
       });
 
       currentPolyline.on('mouseout', () => {
         currentPolyline.setStyle(normalStyle);
+        currentPolyline._path.classList.remove("hovered");
         polylineData.isHovered = false;
 
       });
@@ -94,10 +96,17 @@ createApp({
 
     const handleMouseOver = (polyline) => {
       polyline.polylineLayer.setStyle(hoveredStyle);
+      if (Object.hasOwn(polyline.polylineLayer, "_path")) {
+        polyline.polylineLayer._path.classList.add("hovered");
+      }
+
     };
 
     const handleMouseOut = (polyline) => {
       polyline.polylineLayer.setStyle(normalStyle);
+      if (Object.hasOwn(polyline.polylineLayer, "_path")) {
+        polyline.polylineLayer._path.classList.remove("hovered");
+      }
     };
 
     // Centrer la carte sur la polyline lorsque l'utilisateur clique sur l'entrée dans la liste
