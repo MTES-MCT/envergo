@@ -142,17 +142,6 @@ article {
     display: block;
   }
 
-  #feedback-form {
-    position: sticky;
-    top: 3rem;
-
-    #feedback-trigger {
-      .callout-buttons {
-        text-align: right;
-      }
-    }
-  }
-
   button[type="submit"] {
     margin-right: 1rem;
   }
@@ -679,7 +668,6 @@ div.leaflet-container {
     right: 0;
     margin-top: 10px;
     margin-right: 10px;
-    z-index: 9999;
     width: 80%;
 
     input {
@@ -1033,9 +1021,7 @@ div.hero-alt {
 
     & > main,
     & > footer {
-      @media only screen and (width > 991px) {
-        padding-left: calc(400% / 12);
-      }
+      padding-left: calc(400% / 12);
     }
 
     #project-summary,
@@ -1053,6 +1039,22 @@ div.hero-alt {
       left: 0;
       bottom: 0;
       padding-top: 5rem;
+    }
+  }
+}
+
+// For print, move the project summary above the project result
+@media only print {
+  .moulinette-result-body main {
+    display: flex;
+    flex-flow: column;
+
+    #project-summary {
+      order: 1;
+    }
+
+    #project-result {
+      order: 2;
     }
   }
 }
@@ -1076,6 +1078,7 @@ footer {
   text-align: center;
 
   #feedback-form {
+    display: flex;
     align-items: center;
     justify-content: center;
 
@@ -1722,4 +1725,108 @@ main.demonstrateur_2150 {
   margin: -28px 16px;
 
   /* margin top and left to position tooltipAnchor, even if direction 'bottom' or 'right' */
+}
+
+/**
+  * Handle the form display, along with the help sidebars
+  */
+#content {
+  .help-sidebar-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .help-sidebar-button {
+    display: none; // TODO remove to reactivate the feature
+    max-width: 2rem;
+    max-height: 2rem;
+
+    --help-sidebar-btn-color: #6a6af4;
+    --hover-tint: transparent;
+    --active-tint: transparent;
+
+    &:hover {
+      --help-sidebar-btn-color: #000091;
+    }
+
+    &:active {
+      --help-sidebar-btn-color: #000091;
+    }
+
+    &::before {
+      --icon-size: 1.2em;
+
+      color: var(--help-sidebar-btn-color);
+    }
+  }
+
+  .help-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--background-raised-grey);
+    padding: 1.5rem;
+    height: 100%;
+    overflow-y: scroll;
+    border: none;
+    margin-right: 0;
+    filter: drop-shadow(var(--raised-shadow));
+    z-index: 3000;
+
+    // Prevent the main body to scroll when we scroll the sidebar
+    // This way, we have two sections than can scroll independently
+    overscroll-behavior: contain;
+
+    .sidebar-content {
+      max-width: 440px;
+
+      // This is a hack
+      // The `overscroll-behavior` property prevents the main body to scroll,
+      // but it only works when there is a scrollbar on the sidebar.
+      // So we force a height > 100% to make sure the content overflows and a
+      // scrollbar appears.
+      // (I'm feeling like a mad genius right now.)
+      min-height: calc(100% + 1px);
+
+      img {
+        max-width: 100%;
+      }
+    }
+
+    @media (width >= 36em) {
+      width: 50%;
+    }
+
+    @media (width >= 48em) {
+      width: 40%;
+    }
+  }
+}
+
+#moulinette-grid {
+  display: flex;
+
+  #moulinette-col {
+    display: flex;
+    justify-content: center;
+
+    #moulinette {
+      max-width: 650px;
+    }
+  }
+
+  &:not(.sidebar-open) {
+    justify-content: center;
+  }
+
+  &.sidebar-open {
+    #moulinette-col {
+      @media (width >= 48em) {
+        max-width: 60%;
+        padding-right: 1.5rem;
+      }
+    }
+  }
 }

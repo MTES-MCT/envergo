@@ -6,12 +6,13 @@ from envergo.analytics.utils import log_event
 pytestmark = pytest.mark.django_db
 
 
-def test_log_event(rf, user, admin_user):
+def test_log_event(rf, user, admin_user, site):
     event_qs = Event.objects.all()
     assert event_qs.count() == 0
 
     request = rf.get("/")
     request.user = user
+    request.site = site
     request.COOKIES["visitorid"] = "1234"
     metadata = {"data1": "value1", "data2": "value2"}
 
