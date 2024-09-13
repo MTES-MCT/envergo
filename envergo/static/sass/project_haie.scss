@@ -80,8 +80,9 @@ div#app {
             visibility: hidden;
           }
 
-          &:hover {
-            background-color: var(--blue-france-950-100);
+          &:hover,
+          &.hovered {
+            background-color: #ca00201f;
 
             button {
               visibility: visible;

@@ -11,6 +11,9 @@ createApp({
     let map = null;
     let nextId = ref(0);
 
+    const normalStyle = { color: 'red', weight: 3 };
+    const hoveredStyle = { color: 'red', weight: 5 };
+
     const calculatePolylineLength = (latLngs) => {
       let length = 0;
       for (let i = 0; i < latLngs.length - 1; i++) {
@@ -35,9 +38,15 @@ createApp({
     };
 
     const startDrawing = () => {
-      let currentPolyline = map.editTools.startPolyline();
+      let currentPolyline = map.editTools.startPolyline(null, normalStyle);
       const polylineId = getAlphaIdentifier(nextId.value++);
-      const polylineData = reactive({ id: polylineId, polylineLayer: currentPolyline, latLngs: currentPolyline.getLatLngs(), length: 0 });
+      const polylineData = reactive({
+        id: polylineId,
+        polylineLayer: currentPolyline,
+        latLngs: currentPolyline.getLatLngs(),
+        length: 0,
+        isHovered: false
+      });
       polylines.push(polylineData);
 
       // Mettre à jour les informations en temps réel pendant le dessin
@@ -51,6 +60,18 @@ createApp({
         polylineData.latLngs = [...currentPolyline.getLatLngs()];
         polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
       });
+
+      // Gérer l'état de survol pour la polyline
+      currentPolyline.on('mouseover', () => {
+        currentPolyline.setStyle(hoveredStyle);
+        polylineData.isHovered = true;
+      });
+
+      currentPolyline.on('mouseout', () => {
+        currentPolyline.setStyle(normalStyle);
+        polylineData.isHovered = false;
+
+      });
     };
 
     const removePolyline = (index) => {
@@ -58,6 +79,14 @@ createApp({
       polylines.splice(index, 1);
       updatePolylineIds(); // Mettre à jour les identifiants après suppression
       nextId.value = polylines.length; // Réinitialiser le prochain identifiant
+    };
+
+    const handleMouseOver = (polyline) => {
+      polyline.polylineLayer.setStyle(hoveredStyle);
+    };
+
+    const handleMouseOut = (polyline) => {
+      polyline.polylineLayer.setStyle(normalStyle);
     };
 
     // Initialiser la carte Leaflet après le montage du composant
@@ -77,6 +106,8 @@ createApp({
       polylines,
       startDrawing,
       removePolyline,
+      handleMouseOver,
+      handleMouseOut
     };
   }
 }).mount('#app');
