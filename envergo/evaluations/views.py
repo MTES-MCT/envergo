@@ -396,7 +396,9 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
             and settings.TEST_EMAIL not in request.urbanism_department_emails
         ):
             transaction.on_commit(confirm_request)
-
+            mtm_keys = {
+                k: v for k, v in self.request.session.items() if k.startswith("mtm_")
+            }
             log_event(
                 "evaluation",
                 "request",
@@ -405,10 +407,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
                 request_url=reverse(
                     "admin:evaluations_request_change", args=[request.id]
                 ),
-                mtm_campaign=self.request.session.get("mtm_campaign", ""),
-                mtm_source=self.request.session.get("mtm_source", ""),
-                mtm_medium=self.request.session.get("mtm_medium", ""),
-                mtm_kwd=self.request.session.get("mtm_kwd", ""),
+                **mtm_keys,
             )
 
         return super().form_valid(form)

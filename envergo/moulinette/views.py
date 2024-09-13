@@ -272,7 +272,17 @@ class MoulinetteMixin:
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
-        log_event(self.event_category, self.event_action, self.request, **export)
+
+        mtm_keys = {
+            k: v for k, v in self.request.session.items() if k.startswith("mtm_")
+        }
+        export.update(mtm_keys)
+        log_event(
+            self.event_category,
+            self.event_action,
+            self.request,
+            **export,
+        )
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
