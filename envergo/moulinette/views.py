@@ -13,7 +13,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import remove_from_qs, update_qs
+from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -272,7 +272,17 @@ class MoulinetteMixin:
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
-        log_event(self.event_category, self.event_action, self.request, **export)
+
+        mtm_keys = {
+            k: v for k, v in self.request.session.items() if k.startswith("mtm_")
+        }
+        export.update(mtm_keys)
+        log_event(
+            self.event_category,
+            self.event_action,
+            self.request,
+            **export,
+        )
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
@@ -322,7 +332,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         res = self.render_to_response(context)
         moulinette = self.moulinette
         if moulinette:
-
             if (
                 "debug" not in self.request.GET
                 and not is_edit
@@ -352,6 +361,10 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         current_url = request.get_full_path()
         current_qs = parse_qs(urlparse(current_url).query)
         current_params = set(current_qs.keys())
+
+        # We don't want to take analytics params into account, so they stay in the url
+        current_params = set([p for p in current_params if not p.startswith("mtm_")])
+
         return expected_params == current_params
 
     def get_context_data(self, **kwargs):
@@ -361,20 +374,30 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_source": "shareBtn"})
-        share_print_url = update_qs(current_url, {"mtm_source": "print"})
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(result_url, {"edit": "true"})
 
         # Url without any query parameters
-        stripped_url = self.request.build_absolute_uri(self.request.path)
+        # We want to build "fake" urls for matomo tracking
+        # For example, if the current url is /simulateur/resultat/?debug=true,
+        # We want to track this as a custom url /simulateur/debug/
+        mtm_params = extract_mtm_params(current_url)
+
+        # We want to log the current simulation url stripped from any query parameters
+        # except for mtm_ ones
+        bare_url = self.request.build_absolute_uri(self.request.path)
+        matomo_bare_url = update_qs(bare_url, mtm_params)
         debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
+        matomo_debug_url = update_qs(debug_url, mtm_params)
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")
         )
         form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
         form_url_with_edit = update_qs(form_url, {"edit": "true"})
+        matomo_missing_data_url = update_qs(missing_data_url, mtm_params)
 
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
@@ -394,14 +417,17 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context = {
                 **context,
                 **moulinette.get_debug_context(),
-                "matomo_custom_url": debug_url,
                 "result_url": result_url,
+                "matomo_custom_url": matomo_debug_url,
             }
+
+        # TODO This cannot happen, since we redirect to the form if data is missing
+        # Check that it can be safely removed
         elif moulinette and moulinette.has_missing_data():
-            context["matomo_custom_url"] = missing_data_url
+            context["matomo_custom_url"] = matomo_missing_data_url
 
         elif moulinette:
-            context["matomo_custom_url"] = stripped_url
+            context["matomo_custom_url"] = matomo_bare_url
             if moulinette.has_config() and moulinette.is_evaluation_available():
                 context["debug_url"] = debug_result_url
 
