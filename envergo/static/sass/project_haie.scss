@@ -46,6 +46,19 @@ div#app {
     #map {
       flex: 1;
       height: 100%;
+
+      .hedge {
+        stroke: #ca0020;
+        stroke-width: 5;
+        stroke-opacity: 0.75;
+
+        &:hover,
+        &.hovered {
+          stroke: #ca0020;
+          stroke-width: 7;
+          stroke-opacity: 0.95;
+        }
+      }
     }
 
     #sidebar {
@@ -88,6 +101,10 @@ div#app {
             button {
               visibility: visible;
             }
+          }
+
+          &:active {
+            background-color: #ca002040;
           }
         }
       }
