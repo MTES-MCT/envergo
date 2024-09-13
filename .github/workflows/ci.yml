@@ -3,7 +3,7 @@ name: CI
 # Enable Buildkit and let compose use it to speed up image building
 env:
   DATABASE_URL: 'postgis://envergo:envergo@localhost:5432/envergo'
-  USE_DOCKER: False
+  USE_DOCKER: True
   LANG: 'fr_FR.UTF-8'
   LC_ALL: 'fr_FR.UTF-8'
   DJANGO_SETTINGS_MODULE: 'config.settings.ci'
@@ -140,13 +140,15 @@ jobs:
       env:
         DJANGO_SETTINGS_MODULE: 'config.settings.ci'
     - name: Print DJANGO_SETTINGS_MODULE again
-      run: docker compose exec django env | grep SETTINGS
+      run: docker compose exec django env
+    - name: Print ENV_NAME
+      run:  docker compose run --rm  django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME)"
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database
       run:  docker compose run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
-#    - name: Wait for services to be ready
-#      run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
+    - name: Wait for services to be ready
+      run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
