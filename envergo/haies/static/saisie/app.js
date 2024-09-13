@@ -13,6 +13,7 @@ createApp({
 
     const normalStyle = { color: 'red', weight: 5, opacity: 0.75 };
     const hoveredStyle = { color: 'red', weight: 7, opacity: 0.95 };
+    const fitBoundsOptions = { padding: [25, 25] };
 
     const calculatePolylineLength = (latLngs) => {
       let length = 0;
@@ -61,6 +62,12 @@ createApp({
         polylineData.length = calculatePolylineLength(currentPolyline.getLatLngs());
       });
 
+      // Centrer la carte sur la polyline lors du clic
+      currentPolyline.on('click', () => {
+        const bounds = currentPolyline.getBounds();
+        map.fitBounds(bounds, fitBoundsOptions);
+      });
+
       // Gérer l'état de survol pour la polyline
       currentPolyline.on('mouseover', () => {
         currentPolyline.setStyle(hoveredStyle);
@@ -74,11 +81,15 @@ createApp({
       });
     };
 
-    const removePolyline = (index) => {
+    const removePolyline = (index, event) => {
       polylines[index].polylineLayer.remove();
       polylines.splice(index, 1);
       updatePolylineIds(); // Mettre à jour les identifiants après suppression
       nextId.value = polylines.length; // Réinitialiser le prochain identifiant
+
+      // Stop the event to bubble, triggering the list "click" event that would
+      // center the map on the deleted polyline
+      event.stopPropagation();
     };
 
     const handleMouseOver = (polyline) => {
@@ -87,6 +98,12 @@ createApp({
 
     const handleMouseOut = (polyline) => {
       polyline.polylineLayer.setStyle(normalStyle);
+    };
+
+    // Centrer la carte sur la polyline lorsque l'utilisateur clique sur l'entrée dans la liste
+    const handleClickOnList = (polyline) => {
+      const bounds = polyline.polylineLayer.getBounds();
+      map.fitBounds(bounds, fitBoundsOptions);
     };
 
     // Initialiser la carte Leaflet après le montage du composant
@@ -107,7 +124,8 @@ createApp({
       startDrawing,
       removePolyline,
       handleMouseOver,
-      handleMouseOut
+      handleMouseOut,
+      handleClickOnList,
     };
   }
 }).mount('#app');
