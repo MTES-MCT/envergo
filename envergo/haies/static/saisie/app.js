@@ -4,23 +4,51 @@ const normalStyle = { className: 'hedge' };
 const hoveredStyle = {};
 const fitBoundsOptions = { padding: [25, 25] };
 
-class Polyline {
+
+/**
+ * Represent a single hedge object.
+ *
+ * @param {L.Map} map - The Leaflet map object.
+ * @param {string} id - The identifier of the hedge (A, B, …, AA, AB, …).
+ * @param {function} onRemove - The callback function to call when the hedge is removed.
+ */
+class Hedge {
   constructor(map, id, onRemove) {
     this.id = id;
     this.map = map;
     this.onRemove = onRemove;
-    this.polylineLayer = map.editTools.startPolyline(null, normalStyle);
-    this.latLngs = this.polylineLayer.getLatLngs();
-    this.length = this.calculateLength();
+    this.polyline = map.editTools.startPolyline(null, normalStyle);
     this.isHovered = false;
-
-    this.polylineLayer.on('editable:vertex:new', this.updateLength.bind(this));
-    this.polylineLayer.on('editable:vertex:dragend', this.updateLength.bind(this));
-    this.polylineLayer.on('click', this.centerOnMap.bind(this));
-    this.polylineLayer.on('mouseover', this.handleMouseOver.bind(this));
-    this.polylineLayer.on('mouseout', this.handleMouseOut.bind(this));
+    this.latLngs = [];
+    this.length = 0;
   }
 
+  /**
+   * Set up event listeners and initialize object.
+   *
+   * INFO this code CANNOT be moved inside the constructor, because it prevent vue reactivity
+   * to work.
+   *
+   * Indeed, such an object is meant to be initialized like this:
+   * let hedge = reactive(new Hedge(map, id, onRemove));
+   * hedge.init();
+   *
+   * That way hedge is a proxy object, and methods with side effects (like `updateLength`)
+   * will trigger reactivity.
+   */
+  init() {
+    this.updateLength();
+
+    this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
+    this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
+    this.polyline.on('click', this.centerOnMap.bind(this));
+    this.polyline.on('mouseover', this.handleMouseOver.bind(this));
+    this.polyline.on('mouseout', this.handleMouseOut.bind(this));
+  }
+
+  /**
+   * What is the length of the hedge (in meters)?
+   */
   calculateLength() {
     let length = 0;
     for (let i = 0; i < this.latLngs.length - 1; i++) {
@@ -30,36 +58,37 @@ class Polyline {
   }
 
   updateLength() {
-    this.latLngs = this.polylineLayer.getLatLngs();
+    this.latLngs = this.polyline.getLatLngs();
     this.length = this.calculateLength();
   }
 
   handleMouseOver() {
-    this.polylineLayer.setStyle(hoveredStyle);
     this.isHovered = true;
-    if (this.polylineLayer._path) {
-      this.polylineLayer._path.classList.add("hovered");
+    this.polyline.setStyle(hoveredStyle);
+    if (this.polyline._path) {
+      this.polyline._path.classList.add("hovered");
     }
   }
 
   handleMouseOut() {
-    this.polylineLayer.setStyle(normalStyle);
     this.isHovered = false;
-    if (this.polylineLayer._path) {
-      this.polylineLayer._path.classList.remove("hovered");
+    this.polyline.setStyle(normalStyle);
+    if (this.polyline._path) {
+      this.polyline._path.classList.remove("hovered");
     }
   }
 
   centerOnMap() {
-    const bounds = this.polylineLayer.getBounds();
+    const bounds = this.polyline.getBounds();
     this.map.fitBounds(bounds, { padding: [25, 25] });
   }
 
   remove() {
-    this.polylineLayer.remove();
+    this.polyline.remove();
     this.onRemove(this);
   }
 }
+
 
 createApp({
 
@@ -67,10 +96,11 @@ createApp({
   delimiters: ["[[", "]]"],
 
   setup() {
-    const polylines = reactive([]);
+    const hedges = reactive([]);
     let map = null;
     let nextId = ref(0);
 
+    // Convert an array index into a string identifier (A, B, …, AA, AB, …)
     const getAlphaIdentifier = (index) => {
       let str = '';
       while (index >= 0) {
@@ -80,49 +110,54 @@ createApp({
       return str;
     };
 
-    const updatePolylineIds = () => {
-      polylines.forEach((polyline, index) => {
-        polyline.id = getAlphaIdentifier(index);
+    // Update all hedges identifiers (since they always must be in order)
+    const updateHedgeIds = () => {
+      hedges.forEach((hedge, index) => {
+        hedge.id = getAlphaIdentifier(index);
       });
     };
 
+    // Create a new hedge object
     const startDrawing = () => {
-      const polylineId = getAlphaIdentifier(nextId.value++);
-      const polyline = reactive(new Polyline(map, polylineId, removePolyline));
-      polylines.push(polyline);
+      const hedgeId = getAlphaIdentifier(nextId.value++);
+      const hedge = reactive(new Hedge(map, hedgeId, removeHedge));
+      hedge.init();
+      hedges.push(hedge);
     };
 
-    const removePolyline = (polyline) => {
-      let index = polylines.indexOf(polyline);
-      polylines.splice(index, 1);
-      updatePolylineIds();
-      nextId.value = polylines.length;
+    // Remove hedge from the object
+    // This method is called as a callback from the Hedge object itself
+    const removeHedge = (hedge) => {
+      let index = hedges.indexOf(hedge);
+      hedges.splice(index, 1);
+      updateHedgeIds();
+      nextId.value = hedges.length;
     };
 
+    // Center the map around all existing hedges
     const zoomOut = () => {
-      if (polylines.length > 0) {
-        const group = new L.featureGroup(polylines.map(p => p.polylineLayer));
+      if (hedges.length > 0) {
+        const group = new L.featureGroup(hedges.map(p => p.polyline));
         map.fitBounds(group.getBounds(), fitBoundsOptions);
       }
     };
 
-    // Initialiser la carte Leaflet après le montage du composant
+    // Mount the app component and initialize the leaflet map
     onMounted(() => {
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
       }).setView([43.6861, 3.5911], 17);
 
-      // Ajouter une couche de tuiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
       }).addTo(map);
     });
 
     return {
-      polylines,
+      hedges,
       startDrawing,
-      removePolyline,
+      removeHedge,
       zoomOut,
     };
   }
