@@ -11,8 +11,8 @@ createApp({
     let map = null;
     let nextId = ref(0);
 
-    const normalStyle = { color: 'red', weight: 3 };
-    const hoveredStyle = { color: 'red', weight: 5 };
+    const normalStyle = { color: 'red', weight: 5, opacity: 0.75 };
+    const hoveredStyle = { color: 'red', weight: 7, opacity: 0.95 };
 
     const calculatePolylineLength = (latLngs) => {
       let length = 0;
