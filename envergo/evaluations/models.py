@@ -26,6 +26,7 @@ from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.markdown import markdown_to_html
 from envergo.utils.tools import get_base_url
+from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -328,11 +329,16 @@ class Evaluation(models.Model):
         """
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
+
+        # Evaluations exist only for EnvErgo Amenagement:
+        evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
+        share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
+
         context = {
             "evaluation": self,
             "moulinette": moulinette,
-            # Evaluations exist only for EnvErgo Amenagement:
-            "evaluation_url": f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}",
+            "evaluation_url": evaluation_url,
+            "share_print_url": share_print_url,
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
