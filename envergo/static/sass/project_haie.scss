@@ -60,6 +60,10 @@ div#app {
       max-width: 40em;
       padding: 1rem;
 
+      div.actions {
+        margin-bottom: 1.5rem;
+      }
+
       div.title {
         display: flex;
         justify-content: space-between;
