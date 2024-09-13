@@ -133,10 +133,14 @@ jobs:
       run: npx playwright install --with-deps
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+    - name: Print DJANGO_SETTINGS_MODULE
+      run: echo $DJANGO_SETTINGS_MODULE
     - name: Launch services
-      run: docker compose up -d
+      run: echo $DJANGO_SETTINGS_MODULE && docker compose up -d
       env:
         DJANGO_SETTINGS_MODULE: 'config.settings.ci'
+    - name: Print DJANGO_SETTINGS_MODULE again
+      run: docker compose exec django env | grep SETTINGS
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database
