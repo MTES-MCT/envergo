@@ -337,6 +337,7 @@ class Evaluation(models.Model):
         context = {
             "evaluation": self,
             "moulinette": moulinette,
+            "evaluation_url": evaluation_url,
             "share_print_url": share_print_url,
         }
         context.update(moulinette.catalog)
