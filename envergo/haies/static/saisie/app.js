@@ -115,6 +115,13 @@ createApp({
       map.fitBounds(bounds, fitBoundsOptions);
     };
 
+    const zoomOut = () => {
+      if (polylines.length > 0) {
+        const group = new L.featureGroup(polylines.map(p => p.polylineLayer));
+        map.fitBounds(group.getBounds(), fitBoundsOptions);
+      }
+    };
+
     // Initialiser la carte Leaflet après le montage du composant
     onMounted(() => {
       map = L.map('map', {
@@ -135,6 +142,7 @@ createApp({
       handleMouseOver,
       handleMouseOut,
       handleClickOnList,
+      zoomOut,
     };
   }
 }).mount('#app');
