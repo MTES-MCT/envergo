@@ -23,11 +23,12 @@
                 :key="index"
                 :class="{ hovered: polyline.isHovered }"
                 @mouseover="handleMouseOver(polyline)"
-                @mouseout="handleMouseOut(polyline)">
+                @mouseout="handleMouseOut(polyline)"
+                @click="handleClickOnList(polyline)">
               <strong>[[ polyline.id ]]</strong>
               <span>[[ polyline.length.toFixed(0) ]] m</span>
               <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
-                      @click="removePolyline(index)">Supprimer</button>
+                      @click="removePolyline(index, $event)">Supprimer</button>
             </li>
           </ul>
         </template>
