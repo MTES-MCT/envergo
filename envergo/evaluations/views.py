@@ -139,6 +139,7 @@ class EvaluationDetail(
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-ar"})
         share_print_url = update_qs(current_url, {"mtm_campaign": "print-ar"})
 
+        context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
 

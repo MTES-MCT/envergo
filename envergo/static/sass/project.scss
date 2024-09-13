@@ -1194,9 +1194,11 @@ footer {
     color: linktext;
   }
 
-  a:not([href^="#"])::after {
+  a:not([href^="#"], .no-href-print)::after {
     content: " (" attr(href) ") ";
+  }
 
+  a:not([href^="#"])::after {
     // these styles are necessary to override some dsfr styles
     mask-size: auto;
     mask-image: none;

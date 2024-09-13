@@ -28,10 +28,8 @@
     <h2>Partager cet avis réglementaire ?</h2>
     <p class="fr-text">
       Vous pouvez partager l'avis
-      <a title="Partager l'avis réglementaire"
-         href="{{ share_print_url }}"
-         target="_blank"
-         rel="noopener external">via cette url</a>
+      <a title="Partager l'avis réglementaire" href="{{ share_print_url }}" class="no-href-print" target="_blank" rel="noopener external">via cette url</a><!--
+--><a title="Partager l'avis réglementaire" href="{{ share_print_url }}" class="no-href-print" target="_blank" rel="noopener external">({{ current_url }})</a>
     </p>
   </section>
 {% endblock %}
