@@ -18,12 +18,35 @@
         </div>
 
         <div class="title">
-          <h3 class="fr-h6">Haies à arracher</h3>
-          <button class="fr-btn fr-btn--secondary" @click="startDrawing">Tracer</button>
+          <h3 class="fr-h6">Haies à planter</h3>
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">Tracer</button>
         </div>
-        <template v-if="hedges.length > 0">
-          <ul id="hedge-list">
-            <li v-for="(hedge, index) in hedges"
+        <template v-if="hedges.TO_PLANT.length > 0">
+          <ul class="hedge-list to-plant">
+            <li v-for="(hedge, index) in hedges.TO_PLANT"
+                :key="index"
+                :class="{ hovered: hedge.isHovered }"
+                @mouseover="hedge.handleMouseOver()"
+                @mouseout="hedge.handleMouseOut()"
+                @click="hedge.centerOnMap()">
+              <strong>[[ hedge.id ]]</strong>
+              <span>[[ hedge.length.toFixed(0) ]] m</span>
+              <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                      @click.stop="hedge.remove()">Supprimer</button>
+            </li>
+          </ul>
+        </template>
+        <template v-else>
+          <p class="fr-text--light">Aucune haie à planter</p>
+        </template>
+
+        <div class="title">
+          <h3 class="fr-h6">Haies à arracher</h3>
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer</button>
+        </div>
+        <template v-if="hedges.TO_REMOVE.length > 0">
+          <ul class="hedge-list to-remove">
+            <li v-for="(hedge, index) in hedges.TO_REMOVE"
                 :key="index"
                 :class="{ hovered: hedge.isHovered }"
                 @mouseover="hedge.handleMouseOver()"

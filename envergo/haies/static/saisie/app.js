@@ -1,8 +1,21 @@
 const { createApp, ref, onMounted, reactive } = Vue
 
-const normalStyle = { className: 'hedge' };
-const hoveredStyle = {};
+const TO_PLANT = 'TO_PLANT';
+const TO_REMOVE = 'TO_REMOVE';
+
+// Those styles are overidden by the CSS file
+const styles = {
+  TO_PLANT: {
+    normal: { color: 'green', className: 'hedge to-plant' },
+    hovered: { color: 'darkgreen' },
+  },
+  TO_REMOVE: {
+    normal: { color: 'red', className: 'hedge to-remove' },
+    hovered: { color: 'darkred' },
+  },
+};
 const fitBoundsOptions = { padding: [25, 25] };
+
 
 
 /**
@@ -10,14 +23,16 @@ const fitBoundsOptions = { padding: [25, 25] };
  *
  * @param {L.Map} map - The Leaflet map object.
  * @param {string} id - The identifier of the hedge (A, B, …, AA, AB, …).
+ * @param {string} type - The type of the hedge (TO_PLANT, TO_REMOVE).
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, id, onRemove) {
+  constructor(map, id, type, onRemove) {
     this.id = id;
     this.map = map;
+    this.type = type;
     this.onRemove = onRemove;
-    this.polyline = map.editTools.startPolyline(null, normalStyle);
+    this.polyline = map.editTools.startPolyline(null, styles[type].normal);
     this.isHovered = false;
     this.latLngs = [];
     this.length = 0;
@@ -64,7 +79,7 @@ class Hedge {
 
   handleMouseOver() {
     this.isHovered = true;
-    this.polyline.setStyle(hoveredStyle);
+    this.polyline.setStyle(styles[this.type].hovered);
     if (this.polyline._path) {
       this.polyline._path.classList.add("hovered");
     }
@@ -72,7 +87,7 @@ class Hedge {
 
   handleMouseOut() {
     this.isHovered = false;
-    this.polyline.setStyle(normalStyle);
+    this.polyline.setStyle(styles[this.type].normal);
     if (this.polyline._path) {
       this.polyline._path.classList.remove("hovered");
     }
@@ -96,9 +111,15 @@ createApp({
   delimiters: ["[[", "]]"],
 
   setup() {
-    const hedges = reactive([]);
     let map = null;
-    let nextId = ref(0);
+    const hedges = {
+      TO_PLANT: reactive([]),
+      TO_REMOVE: reactive([])
+    };
+    const nextId = {
+      TO_PLANT: ref(0),
+      TO_REMOVE: ref(0),
+    };
 
     // Convert an array index into a string identifier (A, B, …, AA, AB, …)
     const getAlphaIdentifier = (index) => {
@@ -111,33 +132,44 @@ createApp({
     };
 
     // Update all hedges identifiers (since they always must be in order)
-    const updateHedgeIds = () => {
+    const updateHedgeIds = (hedges) => {
       hedges.forEach((hedge, index) => {
         hedge.id = getAlphaIdentifier(index);
       });
     };
 
     // Create a new hedge object
-    const startDrawing = () => {
-      const hedgeId = getAlphaIdentifier(nextId.value++);
-      const hedge = reactive(new Hedge(map, hedgeId, removeHedge));
+    const startDrawing = (type) => {
+      const hedgeId = getAlphaIdentifier(nextId[type].value++);
+      const hedge = reactive(new Hedge(map, hedgeId, type, removeHedge));
       hedge.init();
-      hedges.push(hedge);
+      hedges[type].push(hedge);
+    };
+
+    const startDrawingToPlant = () => {
+      return startDrawing(TO_PLANT);
+    };
+
+    const startDrawingToRemove = () => {
+      return startDrawing(TO_REMOVE);
     };
 
     // Remove hedge from the object
     // This method is called as a callback from the Hedge object itself
     const removeHedge = (hedge) => {
-      let index = hedges.indexOf(hedge);
-      hedges.splice(index, 1);
-      updateHedgeIds();
-      nextId.value = hedges.length;
+      let type = hedge.type;
+      let index = hedges[type].indexOf(hedge);
+      hedges[type].splice(index, 1);
+      updateHedgeIds(hedges[type]);
+      nextId[type].value = hedges[type].length;
     };
 
     // Center the map around all existing hedges
     const zoomOut = () => {
-      if (hedges.length > 0) {
-        const group = new L.featureGroup(hedges.map(p => p.polyline));
+      // The concat method does not modify the original arrays
+      let allHedges = hedges[TO_REMOVE].concat(hedges[TO_PLANT]);
+      if (allHedges.length > 0) {
+        const group = new L.featureGroup(allHedges.map(p => p.polyline));
         map.fitBounds(group.getBounds(), fitBoundsOptions);
       }
     };
@@ -156,7 +188,8 @@ createApp({
 
     return {
       hedges,
-      startDrawing,
+      startDrawingToPlant,
+      startDrawingToRemove,
       removeHedge,
       zoomOut,
     };
