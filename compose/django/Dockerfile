@@ -38,17 +38,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   gettext \
   # Geo tools
   binutils libproj-dev gdal-bin \
-  # Locale dependencies
-  locales \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/* \
-
-# Generate and set the locale
-RUN locale-gen fr_FR.UTF-8
-ENV LANG fr_FR.UTF-8
-ENV LANGUAGE fr_FR:fr
-ENV LC_ALL fr_FR.UTF-8
+  && rm -rf /var/lib/apt/lists/*
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
