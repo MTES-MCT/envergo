@@ -133,6 +133,12 @@ jobs:
       run: npx playwright install --with-deps
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+    - name: Install French locale
+      run: |
+        sudo apt update
+        sudo apt install -y language-pack-fr
+        sudo locale-gen fr_FR.UTF-8
+        sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
     - name: Print DJANGO_SETTINGS_MODULE
       run: echo $DJANGO_SETTINGS_MODULE
     - name: Launch services
