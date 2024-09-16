@@ -127,12 +127,14 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 18
-    - name: Install French locale
+    - name: Install french locale
       run: |
-        sudo apt update
-        sudo apt install -y language-pack-fr
-        sudo locale-gen fr_FR.UTF-8
-        sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
+        sudo apt install language-pack-fr
+        sudo locale-gen
+
+    - name: Activate french locale
+      run: |
+        sudo update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers
