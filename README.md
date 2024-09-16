@@ -196,7 +196,7 @@ pip-sync local.txt
 Pour mettre à jour l'image Docker, relancer `build` puis `up`.
 
 
-## Tests
+## Tests unitaires
 
 Les tests sont écrits avec [pytest](https://docs.pytest.org/). Tous les helpers de [pytest-django](https://pytest-django.readthedocs.io/en/latest/) sont disponibles.
 
@@ -214,6 +214,44 @@ Via Docker :
 docker-compose run --rm django pytest
 ```
 
+
+## Tests End-to-End
+
+Les tests end-to-end sont écrits avec [Playwright](https://playwright.dev/).
+Les tests E2E permet de valider que les chemins utilisateurs critiques (faire une simulation, demander un avis, répondre à une demande d'avis, etc) fonctionnent correctement.
+Cela permet en outre de vérifier le bon fonctionnement des composants JavaScript de plus en plus présent sur les pages et pour le moment non couvert par d'autre tests.
+
+Ils se basent sur une base de données de tests dédiée contenant une jeu de données minimum présent dans ce [fichier](e2e/fixtures/db_seed.json)  et que l’on peut remplir pour les besoins de chaque test.
+
+Ils tournent dans la CI de Github.
+
+
+### Lancer les tests E2E en local
+Pour lancer les tests E2E en local, il faut avant tout créer une base de données dédiée similaire à celle qui sera utilisée par la CI.
+Pour cela, il faut lancer les commandes suivantes :
+
+```bash
+$ . envs/postgres
+$ docker-compose exec postgres bash -c 'dropdb envergo-test -U "$POSTGRES_USER" -f'
+$ docker-compose exec postgres bash -c 'createdb envergo-test -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker-compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
+$ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+```
+
+Vous devez ensuite installer Playwright en suivant les instructions de la [documentation](https://playwright.dev/docs/intro#installing-playwright).
+
+Vous devez ensuite lancer l'application en pointant vers la base de test:
+
+```bash
+$ POSTGRES_DB=envergo-test docker compose up -d
+```
+
+Enfin vous pouvez lancer les tests avec l'une des commandes suivantes :
+
+```bash
+$ npx playwright test --ui # pour lancer les tests dans un navigateur
+$ npx playwright test # pour lancer les tests dans un shell
+```
 
 ## Recette et déploiement
 
