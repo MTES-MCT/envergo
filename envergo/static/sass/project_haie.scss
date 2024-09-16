@@ -47,7 +47,20 @@ div#app {
       flex: 1;
       height: 100%;
 
-      .hedge {
+      .hedge.to-plant {
+        stroke: #58c5cf;
+        stroke-width: 5;
+        stroke-opacity: 0.75;
+
+        &:hover,
+        &.hovered {
+          stroke: #58c5cf;
+          stroke-width: 7;
+          stroke-opacity: 0.95;
+        }
+      }
+
+      .hedge.to-remove {
         stroke: #ca0020;
         stroke-width: 5;
         stroke-opacity: 0.75;
@@ -81,7 +94,7 @@ div#app {
         }
       }
 
-      #hedge-list {
+      .hedge-list {
         margin: 0;
         padding: 0;
 
@@ -100,14 +113,30 @@ div#app {
 
           &:hover,
           &.hovered {
-            background-color: #ca00201f;
-
             button {
               visibility: visible;
             }
           }
+        }
 
-          &:active {
+        &.to-plant {
+          li:hover,
+          li.hovered {
+            background-color: #58c5cf1f;
+          }
+
+          li:active {
+            background-color: #58c5cf40;
+          }
+        }
+
+        &.to-remove {
+          li:hover,
+          li.hovered {
+            background-color: #ca00201f;
+          }
+
+          li:active {
             background-color: #ca002040;
           }
         }
