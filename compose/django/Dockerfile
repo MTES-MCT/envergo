@@ -46,6 +46,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 RUN locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
+ENV LANG fr_FR.UTF-8
+ENV LC_ALL fr_FR.UTF-8
+
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
 COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
