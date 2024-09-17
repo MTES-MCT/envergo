@@ -139,6 +139,8 @@ jobs:
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
     - name: Seed database
       run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+    - name: Install French locale
+      run:  docker compose exec django sh -c 'sed -i -e "s/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" /etc/locale.gen && locale-gen'
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
