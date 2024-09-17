@@ -14,7 +14,7 @@ const styles = {
     hovered: { color: 'darkred' },
   },
 };
-const fitBoundsOptions = { padding: [25, 25] };
+const fitBoundsOptions = { padding: [10, 10] };
 
 
 
@@ -105,6 +105,73 @@ class Hedge {
 }
 
 
+/**
+ * Encapsulate behaviour and properties for a list of hedges.
+ *
+ * @param {string} type - The type of the hedge list (TO_PLANT, TO_REMOVE).
+ */
+class HedgeList {
+  constructor(type) {
+    this.type = type;
+    this.hedges = reactive([]);
+    this.nextId = ref(0);
+  }
+
+  /**
+   * Iterate of the hedge array
+   *
+   * (I hate this stupid syntax)
+   */
+  *[Symbol.iterator]() {
+    for (let hedge of this.hedges) {
+      yield hedge;
+    }
+  }
+
+  /**
+   * Return the total length of all hedges (in meters) in the list.
+   */
+  get totalLength() {
+    return this.hedges.reduce((total, hedge) => total + hedge.length, 0);
+  }
+
+  /**
+   * Return the number of hedges in the list.
+   */
+  get count() {
+    return this.hedges.length;
+  }
+
+  addHedge(map, onRemove) {
+    const hedgeId = this.getAlphaIdentifier(this.nextId.value++);
+    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
+    hedge.init();
+    this.hedges.push(hedge);
+  }
+
+  removeHedge(hedge) {
+    let index = this.hedges.indexOf(hedge);
+    this.hedges.splice(index, 1);
+    this.updateHedgeIds();
+    this.nextId.value = this.hedges.length;
+  }
+
+  getAlphaIdentifier(index) {
+    let str = '';
+    while (index >= 0) {
+      str = String.fromCharCode((index % 26) + 65) + str;
+      index = Math.floor(index / 26) - 1;
+    }
+    return str;
+  }
+
+  updateHedgeIds() {
+    this.hedges.forEach((hedge, index) => {
+      hedge.id = this.getAlphaIdentifier(index);
+    });
+  }
+}
+
 createApp({
 
   // Prevent conflict with django template delimiters
@@ -113,37 +180,14 @@ createApp({
   setup() {
     let map = null;
     const hedges = {
-      TO_PLANT: reactive([]),
-      TO_REMOVE: reactive([])
-    };
-    const nextId = {
-      TO_PLANT: ref(0),
-      TO_REMOVE: ref(0),
+      TO_PLANT: new HedgeList(TO_PLANT),
+      TO_REMOVE: new HedgeList(TO_REMOVE),
     };
 
-    // Convert an array index into a string identifier (A, B, …, AA, AB, …)
-    const getAlphaIdentifier = (index) => {
-      let str = '';
-      while (index >= 0) {
-        str = String.fromCharCode((index % 26) + 65) + str;
-        index = Math.floor(index / 26) - 1;
-      }
-      return str;
-    };
-
-    // Update all hedges identifiers (since they always must be in order)
-    const updateHedgeIds = (hedges) => {
-      hedges.forEach((hedge, index) => {
-        hedge.id = getAlphaIdentifier(index);
-      });
-    };
-
-    // Create a new hedge object
     const startDrawing = (type) => {
-      const hedgeId = getAlphaIdentifier(nextId[type].value++);
-      const hedge = reactive(new Hedge(map, hedgeId, type, removeHedge));
-      hedge.init();
-      hedges[type].push(hedge);
+      let hedgeList = hedges[type];
+      let onRemove = hedgeList.removeHedge.bind(hedgeList);
+      hedgeList.addHedge(map, onRemove);
     };
 
     const startDrawingToPlant = () => {
@@ -154,20 +198,10 @@ createApp({
       return startDrawing(TO_REMOVE);
     };
 
-    // Remove hedge from the object
-    // This method is called as a callback from the Hedge object itself
-    const removeHedge = (hedge) => {
-      let type = hedge.type;
-      let index = hedges[type].indexOf(hedge);
-      hedges[type].splice(index, 1);
-      updateHedgeIds(hedges[type]);
-      nextId[type].value = hedges[type].length;
-    };
-
     // Center the map around all existing hedges
     const zoomOut = () => {
       // The concat method does not modify the original arrays
-      let allHedges = hedges[TO_REMOVE].concat(hedges[TO_PLANT]);
+      let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
         map.fitBounds(group.getBounds(), fitBoundsOptions);
@@ -190,7 +224,6 @@ createApp({
       hedges,
       startDrawingToPlant,
       startDrawingToRemove,
-      removeHedge,
       zoomOut,
     };
   }
