@@ -135,8 +135,6 @@ jobs:
         sudo apt install -y language-pack-fr
         sudo locale-gen fr_FR.UTF-8
         sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
-    - name: Build assets
-      run:  bash bin/build_assets.sh
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Set up Docker Buildx
@@ -147,6 +145,8 @@ jobs:
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
     - name: Seed database
       run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+    - name: Build assets
+      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django bash bin/build_assets.sh
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests

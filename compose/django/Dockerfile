@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential
 
+# build assets
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+  && apt-get install -y nodejs
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
 
@@ -40,9 +43,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   locales locales-all \
   # Geo tools
   binutils libproj-dev gdal-bin \
+  curl \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+  && apt-get install -y nodejs
 
 RUN locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
