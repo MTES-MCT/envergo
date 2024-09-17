@@ -79,11 +79,12 @@ div#app {
 
       div#statistics {
         background-color: #f6f6f6;
-        padding: 1rem;
+        padding: 0.5rem 1rem;
 
         table {
           width: 100%;
           border-collapse: collapse;
+          margin-bottom: 0.5rem;
 
           th,
           td {
@@ -109,6 +110,27 @@ div#app {
 
           tbody tr:last-child {
             border-bottom: 1px solid #ddd;
+          }
+        }
+
+        div#compensation {
+          border-left: 2px solid var(--border-plain-info);
+          padding-left: 0.5rem;
+
+          p {
+            margin-bottom: 0;
+          }
+
+          p.info {
+            color: var(--text-default-info);
+          }
+
+          &.success {
+            border-left-color: var(--border-plain-success);
+
+            p.info {
+              color: var(--text-default-success);
+            }
           }
         }
       }
