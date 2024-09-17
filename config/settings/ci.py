@@ -70,3 +70,4 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 ENV_NAME = "test"
 ENVERGO_AMENAGEMENT_DOMAIN = "localhost"
+LANGUAGE_CODE = "en-us"  # TODO: I force it in english because I can't achieve to run it in french in the github CI
