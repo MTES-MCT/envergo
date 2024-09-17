@@ -127,14 +127,6 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 18
-    - name: Install french locale
-      run: |
-        sudo apt install language-pack-fr
-        sudo locale-gen
-
-    - name: Activate french locale
-      run: |
-        sudo update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers
@@ -143,8 +135,6 @@ jobs:
       uses: docker/setup-buildx-action@v3
     - name: Launch services
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
-    - name: Install french locale in docker
-      run:  docker compose exec django bash -c 'locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"'
     - name: Migrate database
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
     - name: Seed database
