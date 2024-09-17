@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, reactive } = Vue
+const { createApp, ref, onMounted, reactive, computed } = Vue
 
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
@@ -183,6 +183,11 @@ createApp({
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
     };
+    const compensationRate = computed(() => {
+      let toPlant = hedges[TO_PLANT].totalLength;
+      let toRemove = hedges[TO_REMOVE].totalLength;
+      return toRemove > 0 ? toPlant / toRemove * 100 : 0;
+    });
 
     const startDrawing = (type) => {
       let hedgeList = hedges[type];
@@ -222,6 +227,7 @@ createApp({
 
     return {
       hedges,
+      compensationRate,
       startDrawingToPlant,
       startDrawingToRemove,
       zoomOut,

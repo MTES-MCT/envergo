@@ -35,6 +35,13 @@
               </tr>
             </tbody>
           </table>
+
+          <div id="compensation" :class="{ success: compensationRate >= 100 }">
+            <p class="rate">
+              <strong>Taux de compensation : [[ compensationRate.toFixed(0) ]] %</strong>
+            </p>
+            <p class="info">La compensation attendue est de 100 %</p>
+          </div>
         </div>
 
         <div id="hedge-lists">
