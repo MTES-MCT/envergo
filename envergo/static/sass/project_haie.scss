@@ -71,67 +71,107 @@ div#app {
     #sidebar {
       min-width: 30em;
       max-width: 40em;
-      padding: 1rem;
 
-      div.actions {
+      div#actions {
         margin-bottom: 1.5rem;
+        padding: 1rem;
       }
 
-      div.title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
+      div#statistics {
+        background-color: #f6f6f6;
+        padding: 1rem;
 
-        h3 {
-          margin-bottom: 0;
+        table {
+          width: 100%;
+          border-collapse: collapse;
+
+          th,
+          td {
+            font-weight: normal;
+            padding: 0.5rem 0;
+          }
+
+          thead tr th {
+            text-align: right;
+          }
+
+          tbody tr th {
+            text-align: left;
+          }
+
+          tbody tr td {
+            text-align: right;
+          }
+
+          tbody tr {
+            border-top: 1px solid #ddd;
+          }
+
+          tbody tr:last-child {
+            border-bottom: 1px solid #ddd;
+          }
         }
       }
 
-      .hedge-list {
-        margin: 0;
-        padding: 0;
+      div#hedge-lists {
+        padding: 1rem;
 
-        li {
+        div.title {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0.2rem 1rem;
-          margin-left: -1rem;
-          margin-right: -1rem;
-          cursor: pointer;
+          margin-bottom: 1.5rem;
 
-          button {
-            visibility: hidden;
+          h3 {
+            margin-bottom: 0;
           }
+        }
 
-          &:hover,
-          &.hovered {
+        .hedge-list {
+          margin: 0;
+          padding: 0;
+
+          li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2rem 1rem;
+            margin-left: -1rem;
+            margin-right: -1rem;
+            cursor: pointer;
+
             button {
-              visibility: visible;
+              visibility: hidden;
+            }
+
+            &:hover,
+            &.hovered {
+              button {
+                visibility: visible;
+              }
             }
           }
-        }
 
-        &.to-plant {
-          li:hover,
-          li.hovered {
-            background-color: #58c5cf1f;
+          &.to-plant {
+            li:hover,
+            li.hovered {
+              background-color: #58c5cf1f;
+            }
+
+            li:active {
+              background-color: #58c5cf40;
+            }
           }
 
-          li:active {
-            background-color: #58c5cf40;
-          }
-        }
+          &.to-remove {
+            li:hover,
+            li.hovered {
+              background-color: #ca00201f;
+            }
 
-        &.to-remove {
-          li:hover,
-          li.hovered {
-            background-color: #ca00201f;
-          }
-
-          li:active {
-            background-color: #ca002040;
+            li:active {
+              background-color: #ca002040;
+            }
           }
         }
       }
