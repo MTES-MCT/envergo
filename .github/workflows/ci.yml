@@ -142,7 +142,9 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Launch services
-      run: docker compose up -d
+      run: docker compose -f docker-compose.yml -f docker-compose.ci.web-e2e.yml up -d
+    - name: Print ENV_NAME
+      run:  docker compose run --rm  django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME)"
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database

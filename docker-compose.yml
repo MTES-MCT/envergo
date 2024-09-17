@@ -21,8 +21,6 @@ services:
       - .env
       - ./envs/django
       - ./envs/postgres
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.ci
     ports:
       - "8000:8000"
     command: /start
