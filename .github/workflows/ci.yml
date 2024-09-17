@@ -129,6 +129,12 @@ jobs:
         node-version: 18
     - name: Install dependencies
       run: npm ci
+    - name: Install French locale
+      run: |
+        sudo apt update
+        sudo apt install -y language-pack-fr
+        sudo locale-gen fr_FR.UTF-8
+        sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Set up Docker Buildx
@@ -139,8 +145,6 @@ jobs:
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
     - name: Seed database
       run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
-    - name: Install French locale
-      run:  docker compose exec django sh -c 'sed -i -e "s/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" /etc/locale.gen && locale-gen'
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
