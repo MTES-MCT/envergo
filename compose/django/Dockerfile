@@ -36,6 +36,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # Translations dependencies
   gettext \
+  # localisation dependencies \
+  locales locales-all \
   # Geo tools
   binutils libproj-dev gdal-bin \
   # cleaning up unused files
