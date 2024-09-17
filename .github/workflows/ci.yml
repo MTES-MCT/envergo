@@ -144,7 +144,9 @@ jobs:
     - name: Launch services
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
     - name: Check settings
-      run:  docker compose run --rm  django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME); print(settings.ENVERGO_AMENAGEMENT_DOMAIN)"
+      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm  django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME); print(settings.ENVERGO_AMENAGEMENT_DOMAIN)"
+    - name: Check settings 2
+      run:  docker compose exec django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME); print(settings.ENVERGO_AMENAGEMENT_DOMAIN)"
     - name: Migrate database
       run: docker compose run --rm django python manage.py migrate
     - name: Seed database
