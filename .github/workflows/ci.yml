@@ -143,14 +143,12 @@ jobs:
       uses: docker/setup-buildx-action@v3
     - name: Launch services
       run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
-    - name: Check settings
-      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm  django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME); print(settings.ENVERGO_AMENAGEMENT_DOMAIN)"
-    - name: Check settings 2
-      run:  docker compose exec django python manage.py shell -c "from django.conf import settings; print(settings.ENV_NAME); print(settings.ENVERGO_AMENAGEMENT_DOMAIN)"
+    - name: Install french locale in docker
+      run:  docker compose exec django bash -c 'apt install language-pack-fr && locale-gen && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"'
     - name: Migrate database
-      run: docker compose run --rm django python manage.py migrate
+      run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
     - name: Seed database
-      run:  docker compose run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
     - name: Wait for services to be ready
       run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
     - name: Run Playwright tests
