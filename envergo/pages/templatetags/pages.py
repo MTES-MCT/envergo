@@ -127,6 +127,26 @@ def project_owner_menu(context, is_slim=False):
     )
 
 
+@register.simple_tag(takes_context=True)
+def pilote_departments_menu(context, is_slim=False):
+    """Generate html for the "Equipes projet" collapsible menu."""
+    links = (
+        (
+            "moulinette_home",
+            "Indre",
+            [],
+        ),
+    )
+
+    return collapsible_menu(
+        context,
+        links,
+        "Départements pilotes",
+        "menu-pilote-department",
+        is_slim=is_slim,
+    )
+
+
 def collapsible_menu(
     context, links, label, menu_id, additional_routes=None, is_slim=False
 ):
