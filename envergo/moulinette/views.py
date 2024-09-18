@@ -1,11 +1,11 @@
 import json
 from collections import OrderedDict
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
@@ -457,10 +457,21 @@ class Triage(FormView):
     template_name = "haie/moulinette/triage.html"
 
     def form_valid(self, form):
-        if (
-            form.cleaned_data["element"] == "haie"
-            and form.cleaned_data["travaux"] == "arrachage"
-        ):
+        query_params = form.cleaned_data
+        if query_params["element"] == "haie" and query_params["travaux"] == "arrachage":
             return HttpResponseRedirect(reverse("moulinette_home"))
         else:
-            return HttpResponseRedirect(reverse("home"))
+            url = reverse("triage_result")
+            query_string = urlencode(query_params)
+            url_with_params = f"{url}?{query_string}"
+            return HttpResponseRedirect(url_with_params)
+
+
+class TriageResult(TemplateView):
+    template_name = "haie/moulinette/triage_result.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form_data = self.request.GET
+        context["form"] = TriageFormHaie(initial=form_data)
+        return context

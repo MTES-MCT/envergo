@@ -2,7 +2,9 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.moulinette.forms.fields import (
+    DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
     extract_choices,
@@ -215,12 +217,13 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
 
 
 class TriageFormHaie(forms.Form):
-    department = forms.CharField(
+    department = DisplayCharField(
         label="Département",
         required=True,
         initial="36",
+        get_display_value=lambda x: dict(DEPARTMENT_CHOICES).get(x, "Inconnu"),
     )
-    element = forms.ChoiceField(
+    element = DisplayChoiceField(
         label="Quel élément paysager est concerné ?",
         widget=forms.RadioSelect,
         choices=(
@@ -233,9 +236,10 @@ class TriageFormHaie(forms.Form):
             ),
         ),
         required=True,
+        display_label="Élément paysager :",
     )
 
-    travaux = forms.ChoiceField(
+    travaux = DisplayChoiceField(
         label="Quels sont les travaux envisagés ?",
         widget=forms.RadioSelect,
         choices=(
@@ -256,4 +260,5 @@ class TriageFormHaie(forms.Form):
             ),
         ),
         required=True,
+        display_label="Travaux envisagés :",
     )
