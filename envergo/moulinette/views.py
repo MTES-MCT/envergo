@@ -11,6 +11,7 @@ from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_address_from_coords
+from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
@@ -449,3 +450,17 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["edit_url"] = edit_url
 
         return context
+
+
+class Triage(FormView):
+    form_class = TriageFormHaie
+    template_name = "haie/moulinette/triage.html"
+
+    def form_valid(self, form):
+        if (
+            form.cleaned_data["element"] == "haie"
+            and form.cleaned_data["travaux"] == "arrachage"
+        ):
+            return HttpResponseRedirect(reverse("moulinette_home"))
+        else:
+            return HttpResponseRedirect(reverse("home"))

@@ -212,3 +212,48 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             )
 
         return data
+
+
+class TriageFormHaie(forms.Form):
+    department = forms.CharField(
+        label="Département",
+        required=True,
+        initial="36",
+    )
+    element = forms.ChoiceField(
+        label="Quel élément paysager est concerné ?",
+        widget=forms.RadioSelect,
+        choices=(
+            ("haie", "Une haie"),
+            ("bosquet", "Un bosquet"),
+            ("alignement", "Un alignement d'arbres"),
+            (
+                "autre",
+                "Autre",
+            ),
+        ),
+        required=True,
+    )
+
+    travaux = forms.ChoiceField(
+        label="Quels sont les travaux envisagés ?",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "arrachage",
+                mark_safe(
+                    "Arrachage<br />"
+                    '<span class="fr-hint-text">Toute intervention impliquant l\'enlèvement des souches</span>'
+                ),
+            ),
+            (
+                "entretien",
+                "Entretien",
+            ),
+            (
+                "autre",
+                "Autre",
+            ),
+        ),
+        required=True,
+    )

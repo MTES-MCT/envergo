@@ -132,7 +132,7 @@ def pilote_departments_menu(context, is_slim=False):
     """Generate html for the "Equipes projet" collapsible menu."""
     links = (
         (
-            "moulinette_home",
+            "triage",
             "Indre",
             [],
         ),
