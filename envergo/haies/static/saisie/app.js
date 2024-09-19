@@ -147,6 +147,8 @@ class HedgeList {
     const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
     hedge.init();
     this.hedges.push(hedge);
+
+    return hedge;
   }
 
   removeHedge(hedge) {
@@ -188,11 +190,21 @@ createApp({
       let toRemove = hedges[TO_REMOVE].totalLength;
       return toRemove > 0 ? toPlant / toRemove * 100 : 0;
     });
+    const showHelpBubble = ref(false);
 
     const startDrawing = (type) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      hedgeList.addHedge(map, onRemove);
+      const newHedge = hedgeList.addHedge(map, onRemove);
+
+      newHedge.polyline.on('editable:vertex:new', () => {
+        showHelpBubble.value = true;
+      });
+
+      // Cacher la bulle d'aide à la fin du tracé
+      newHedge.polyline.on('editable:drawing:end', () => {
+        showHelpBubble.value = false;
+      });
     };
 
     const startDrawingToPlant = () => {
@@ -202,6 +214,8 @@ createApp({
     const startDrawingToRemove = () => {
       return startDrawing(TO_REMOVE);
     };
+
+
 
     // Center the map around all existing hedges
     const zoomOut = () => {
@@ -231,6 +245,7 @@ createApp({
       startDrawingToPlant,
       startDrawingToRemove,
       zoomOut,
+      showHelpBubble,
     };
   }
 }).mount('#app');

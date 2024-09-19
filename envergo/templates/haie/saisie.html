@@ -9,7 +9,12 @@
 {% block container %}
   <div id="app">
     <div id="saisie-ui">
-      <div id="map"></div>
+      <div id="map">
+        <div v-if="showHelpBubble" class="help-bubble">
+          <span class="fr-icon-info-fill" aria-hidden="true"></span>
+          Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
+        </div>
+      </div>
 
       <div id="sidebar">
 

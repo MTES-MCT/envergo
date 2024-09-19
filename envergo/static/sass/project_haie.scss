@@ -72,6 +72,22 @@ div#app {
           stroke-opacity: 0.95;
         }
       }
+
+      .help-bubble {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        background-color: white;
+        color: var(--text-default-info);
+        padding: 0.25rem 1rem;
+        font-size: 1rem;
+        border-radius: 0.75rem;
+
+        &.hidden {
+          display: none;
+        }
+      }
     }
 
     #sidebar {
