@@ -10,10 +10,12 @@
 {% endblock %}
 
 {% block project_summary %}
-  <ul class="fr-mb-3w">
+  <ul class="fr-mb-3w color-text-mention-grey">
     {% for field in moulinette.triage_form %}
       <li>{% field_summary field %}</li>
     {% endfor %}
+  </ul>
+  <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
       <li>{% field_summary field %}</li>
     {% endfor %}
