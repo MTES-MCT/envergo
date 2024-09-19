@@ -40,6 +40,18 @@ html.nojs .js {
   color: $red;
 }
 
+.flex {
+  display: flex;
+}
+
+.justify-content-space-between {
+  justify-content: space-between;
+}
+
+.color-text-mention-grey {
+  color: var(--text-mention-grey);
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -1219,7 +1231,6 @@ footer {
   }
 
   .moulinette-result-body {
-    .flex-box,
     .fr-grid-row {
       display: block;
     }
@@ -1826,4 +1837,8 @@ main.demonstrateur_2150 {
       }
     }
   }
+}
+
+#moulinette-submit-button {
+  min-width: 8em;
 }

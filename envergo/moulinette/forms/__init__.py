@@ -188,6 +188,15 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        submitted_params = set(self.data.keys())
+        triage_fields = set(TriageFormHaie.base_fields.keys())
+
+        # Check if only the Triage form fields are submitted
+        if submitted_params.issubset(triage_fields):
+            self.is_bound = False
+
     def clean(self):
         data = super().clean()
 
