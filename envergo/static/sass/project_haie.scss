@@ -179,21 +179,51 @@ div#app {
       div#hedge-lists {
         padding: 1rem;
 
-        .hedge-list {
-          margin: 0;
-          padding: 0;
+        --title-spacing: 0 0 0.5rem 1.5rem;
 
-          li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        p {
+          padding-left: 1.5rem;
+        }
+
+        hr {
+          margin: 1rem 0;
+          padding-bottom: 3px;
+        }
+
+        table {
+          border-collapse: collapse;
+          width: 100%;
+
+          tr {
             padding: 0.2rem 1rem;
-            margin-left: -1rem;
-            margin-right: -1rem;
             cursor: pointer;
+
+            td,
+            th {
+              width: 1px;
+            }
+
+            th {
+              text-align: left;
+              padding: 0 2rem 0 1.5rem;
+              min-width: 6rem;
+            }
+
+            td {
+              text-align: right;
+            }
+
+            td:first-of-type {
+              min-width: 3rem;
+            }
+
+            td:last-child {
+              width: 100%;
+            }
 
             button {
               visibility: hidden;
+              margin-left: auto;
             }
 
             &:hover,
@@ -203,27 +233,27 @@ div#app {
               }
             }
           }
+        }
 
-          &.to-plant {
-            li:hover,
-            li.hovered {
-              background-color: #58c5cf1f;
-            }
-
-            li:active {
-              background-color: #58c5cf40;
-            }
+        .to-plant {
+          tr:hover,
+          tr.hovered {
+            background-color: #58c5cf1f;
           }
 
-          &.to-remove {
-            li:hover,
-            li.hovered {
-              background-color: #ca00201f;
-            }
+          tr:active {
+            background-color: #58c5cf40;
+          }
+        }
 
-            li:active {
-              background-color: #ca002040;
-            }
+        .to-remove {
+          tr:hover,
+          tr.hovered {
+            background-color: #ca00201f;
+          }
+
+          tr:active {
+            background-color: #ca002040;
           }
         }
       }
