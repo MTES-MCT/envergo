@@ -14,6 +14,7 @@ from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
 from django.http import QueryDict
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -22,9 +23,14 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.forms import (
+    MoulinetteFormAmenagement,
+    MoulinetteFormHaie,
+    TriageFormHaie,
+)
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -1126,6 +1132,11 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
+    @classmethod
+    def get_site_specific_context(cls):
+        """Add some data specific to the site in the context"""
+        return {}
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1381,6 +1392,20 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         return {}
+
+    @classmethod
+    def get_site_specific_context(cls):
+        form_data = {
+            "department": "36",  # this value should come from the url
+            # these values are hardcoded as we are necessarily in this context for the moulinette views
+            "element": "haie",
+            "travaux": "arrachage",
+        }
+
+        return {
+            "triage_url": update_qs(reverse("triage"), form_data),
+            "triage_form": TriageFormHaie(data=form_data),
+        }
 
 
 def get_moulinette_class_from_site(site):

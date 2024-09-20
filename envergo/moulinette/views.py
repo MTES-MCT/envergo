@@ -136,15 +136,11 @@ class MoulinetteMixin:
                 context.get("moulinette", None)
             )
 
-        form_data = {
-            "department": "36",  # this value should come from the url
-            # these values are hardcoded as we are necessarily in this context for the moulinette views
-            "element": "haie",
-            "travaux": "arrachage",
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        context = {
+            **context,
+            **MoulinetteClass.get_site_specific_context(),
         }
-
-        context["triage_url"] = update_qs(reverse("triage"), form_data)
-        context["triage_form"] = TriageFormHaie(data=form_data)
 
         return context
 
