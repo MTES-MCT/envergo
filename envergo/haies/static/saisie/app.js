@@ -118,7 +118,10 @@ class HedgeList {
   }
 
   /**
-   * Iterate of the hedge array
+   * Iterate on the hedge array
+   *
+   * This allows using `for (let hedge of hedges) { … }` syntax where `hedges`
+   * is an instance of `HedgeList`.
    *
    * (I hate this stupid syntax)
    */
@@ -143,7 +146,7 @@ class HedgeList {
   }
 
   addHedge(map, onRemove) {
-    const hedgeId = this.getAlphaIdentifier(this.nextId.value++);
+    const hedgeId = this.getIdentifier(this.nextId.value++);
     const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
     hedge.init();
     this.hedges.push(hedge);
@@ -158,18 +161,16 @@ class HedgeList {
     this.nextId.value = this.hedges.length;
   }
 
-  getAlphaIdentifier(index) {
-    let str = '';
-    while (index >= 0) {
-      str = String.fromCharCode((index % 26) + 65) + str;
-      index = Math.floor(index / 26) - 1;
-    }
-    return str;
+  getIdentifier(index) {
+    // P for "planter", A for "arracher"
+    let firstLetter = this.type === TO_PLANT ? 'P' : 'A';
+    let identifier = `${firstLetter}${index + 1}`;
+    return identifier;
   }
 
   updateHedgeIds() {
     this.hedges.forEach((hedge, index) => {
-      hedge.id = this.getAlphaIdentifier(index);
+      hedge.id = this.getIdentifier(index);
     });
   }
 }
