@@ -1,6 +1,6 @@
 import json
 from collections import OrderedDict
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
@@ -21,6 +21,7 @@ BODY_TPL = {
     RESULTS.action_requise: "moulinette/eval_body_action_requise.html",
     RESULTS.non_soumis: "moulinette/eval_body_non_soumis.html",
 }
+DATA_KEY = "TRIAGE_DATA"
 
 
 class MoulinetteMixin:
@@ -257,12 +258,6 @@ class MoulinetteMixin:
                         field.html_name, optional_form.data.getlist(field.html_name)
                     )
 
-        triage_params = moulinette.get_triage_params()
-        if triage_params:
-            get.update(
-                {key: form.data[key] for key in triage_params if key in form.data}
-            )
-
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
@@ -305,8 +300,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
-        context["triage_url"] = update_qs(reverse("triage"), form_data)
+        context["triage_url"] = reverse("triage")
         return context
 
 
@@ -382,7 +376,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
+
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -392,7 +386,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(result_url, {"edit": "true"})
-        triage_url = update_qs(reverse("triage"), form_data)
+        triage_url = reverse("triage")
+
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
         # For example, if the current url is /simulateur/resultat/?debug=true,
@@ -462,41 +457,52 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["is_admin"] = self.request.user.is_staff
         context["edit_url"] = edit_url
 
+        if DATA_KEY in self.request.session:
+            context["triage_form"] = TriageFormHaie(
+                initial=self.request.session.get(DATA_KEY, {})
+            )
+
         return context
 
 
-class Triage(FormView):
+class TriageMixin:
+    def get_form_data(self):
+        data = self.request.session.get(DATA_KEY, {})
+        return data
+
+    def get_initial(self):
+        """Populate the form with data from the session."""
+        return self.get_form_data()
+
+
+class Triage(TriageMixin, FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
 
-    def get_initial(self):
-        """Populate the form with data from the query string."""
-        return self.request.GET.dict()
-
     def form_valid(self, form):
-        query_params = form.cleaned_data
-        if query_params["element"] == "haie" and query_params["travaux"] == "arrachage":
-            url = reverse("moulinette_home")
+        self.request.session[DATA_KEY] = form.cleaned_data
+
+        if (
+            form.cleaned_data["element"] == "haie"
+            and form.cleaned_data["travaux"] == "arrachage"
+        ):
+            return HttpResponseRedirect(reverse("moulinette_home"))
         else:
-            url = reverse("triage_result")
-
-        query_string = urlencode(query_params)
-        url_with_params = f"{url}?{query_string}"
-        return HttpResponseRedirect(url_with_params)
+            return HttpResponseRedirect(reverse("triage_result"))
 
 
-class TriageResult(TemplateView):
+class TriageResult(TriageMixin, TemplateView):
     template_name = "haie/moulinette/triage_result.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
+        form_data = self.get_form_data()
         context["form"] = TriageFormHaie(initial=form_data)
 
         envergo_url = self.request.build_absolute_uri("/")
         current_url = self.request.build_absolute_uri()
         share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
-        edit_url = update_qs(reverse("triage"), form_data)
+        edit_url = reverse("triage")
 
         context["current_url"] = current_url
         context["share_print_url"] = share_print_url

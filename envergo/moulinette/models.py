@@ -22,11 +22,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.forms import (
-    MoulinetteFormAmenagement,
-    MoulinetteFormHaie,
-    TriageFormHaie,
-)
+from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
 
@@ -1130,12 +1126,6 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
-    @classmethod
-    @abstractmethod
-    def get_triage_params(cls):
-        """Add some data to display on the debug page"""
-        raise NotImplementedError
-
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1359,10 +1349,6 @@ class MoulinetteAmenagement(Moulinette):
             ),
         }
 
-    @classmethod
-    def get_triage_params(cls):
-        return set()
-
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["conditionnalite_pac", "dep"]
@@ -1395,14 +1381,6 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         return {}
-
-    @classmethod
-    def get_triage_params(cls):
-        return set(TriageFormHaie.base_fields.keys())
-
-    def triage_form(self):
-        """Get the instanciated triage form questions."""
-        return TriageFormHaie(self.raw_data)
 
 
 def get_moulinette_class_from_site(site):

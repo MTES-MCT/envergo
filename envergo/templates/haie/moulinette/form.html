@@ -6,14 +6,11 @@
       method="post"
       novalidate
       autocomplete="off"
-      action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+      action="{% url "moulinette_result" %}"
       id="moulinette-form">
   {% csrf_token %}
 
   {% include '_form_header.html' with form=form %}
-
-  <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-  {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
 
   <div class="form-section">
     {% include '_radio_snippet.html' with field=form.profil %}

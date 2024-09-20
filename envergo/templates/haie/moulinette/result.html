@@ -10,11 +10,13 @@
 {% endblock %}
 
 {% block project_summary %}
-  <ul class="fr-mb-3w color-text-mention-grey">
-    {% for field in moulinette.triage_form %}
-      <li>{% field_summary field %}</li>
-    {% endfor %}
-  </ul>
+  {% if triage_form %}
+    <ul class="fr-mb-3w color-text-mention-grey">
+      {% for field in triage_form %}
+        <li>{% field_summary field %}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
       <li>{% field_summary field %}</li>
