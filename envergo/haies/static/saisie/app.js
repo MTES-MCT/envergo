@@ -232,7 +232,12 @@ createApp({
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
+        zoomControl: false,
       }).setView([43.6861, 3.5911], 17);
+
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,

@@ -11,7 +11,11 @@
     <div id="saisie-ui">
       <div id="map">
 
-        <div id="draw-buttons">
+        <div class="controls top left">
+          <button class="fr-btn fr-btn--secondary" @click="zoomOut">Vue d'ensemble</button>
+        </div>
+
+        <div class="controls top right">
           <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer (à arracher)</button>
           <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">Tracer (à planter)</button>
         </div>
@@ -23,11 +27,6 @@
       </div>
 
       <div id="sidebar">
-
-        <div id="actions">
-          <button class="fr-btn fr-btn--secondary" @click="zoomOut">Vue d'ensemble</button>
-        </div>
-
         <div id="statistics">
           <table>
             <thead>
