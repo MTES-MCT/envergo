@@ -47,15 +47,29 @@ div#app {
       flex: 1;
       height: 100%;
 
-      div#draw-buttons {
+      div.controls {
         position: absolute;
-        top: 1rem;
-        right: 1rem;
         z-index: 1000;
 
+        &.top {
+          top: 1rem;
+        }
+
+        &.bottom {
+          bottom: 1rem;
+        }
+
+        &.left {
+          left: 1rem;
+        }
+
+        &.right {
+          right: 1rem;
+        }
+
         button {
-          margin-left: 1rem;
           background-color: white;
+          margin: 0 0.5rem;
 
           &:hover {
             background-color: #f6f6f6;
@@ -109,11 +123,6 @@ div#app {
     #sidebar {
       min-width: 30em;
       max-width: 40em;
-
-      div#actions {
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-      }
 
       div#statistics {
         background-color: #f6f6f6;
