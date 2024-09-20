@@ -10,6 +10,12 @@
   <div id="app">
     <div id="saisie-ui">
       <div id="map">
+
+        <div id="draw-buttons">
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer (à arracher)</button>
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">Tracer (à planter)</button>
+        </div>
+
         <div v-if="showHelpBubble" class="help-bubble">
           <span class="fr-icon-info-fill" aria-hidden="true"></span>
           Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
@@ -51,10 +57,7 @@
 
         <div id="hedge-lists">
 
-          <div class="title">
-            <h3 class="fr-h6">Haies à planter</h3>
-            <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">Tracer</button>
-          </div>
+          <h3 class="fr-h6">Haies à planter</h3>
           <template v-if="hedges.TO_PLANT.count > 0">
             <ul class="hedge-list to-plant">
               <li v-for="(hedge, index) in hedges.TO_PLANT"
@@ -74,10 +77,7 @@
             <p class="fr-text--light">Aucune haie à planter</p>
           </template>
 
-          <div class="title">
-            <h3 class="fr-h6">Haies à arracher</h3>
-            <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer</button>
-          </div>
+          <h3 class="fr-h6">Haies à arracher</h3>
           <template v-if="hedges.TO_REMOVE.count > 0">
             <ul class="hedge-list to-remove">
               <li v-for="(hedge, index) in hedges.TO_REMOVE"
