@@ -47,6 +47,22 @@ div#app {
       flex: 1;
       height: 100%;
 
+      div#draw-buttons {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 1000;
+
+        button {
+          margin-left: 1rem;
+          background-color: white;
+
+          &:hover {
+            background-color: #f6f6f6;
+          }
+        }
+      }
+
       .hedge.to-plant {
         stroke: #58c5cf;
         stroke-width: 5;
@@ -159,17 +175,6 @@ div#app {
 
       div#hedge-lists {
         padding: 1rem;
-
-        div.title {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-
-          h3 {
-            margin-bottom: 0;
-          }
-        }
 
         .hedge-list {
           margin: 0;
