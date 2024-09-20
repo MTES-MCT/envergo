@@ -1,6 +1,6 @@
 import json
 from collections import OrderedDict
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
@@ -21,7 +21,6 @@ BODY_TPL = {
     RESULTS.action_requise: "moulinette/eval_body_action_requise.html",
     RESULTS.non_soumis: "moulinette/eval_body_non_soumis.html",
 }
-DATA_KEY = "TRIAGE_DATA"
 
 
 class MoulinetteMixin:
@@ -136,6 +135,16 @@ class MoulinetteMixin:
             context["optional_forms"] = self.get_optional_forms(
                 context.get("moulinette", None)
             )
+
+        form_data = {
+            "department": "36",  # this value should come from the url
+            # these values are hardcoded as we are necessarily in this context for the moulinette views
+            "element": "haie",
+            "travaux": "arrachage",
+        }
+
+        context["triage_url"] = update_qs(reverse("triage"), form_data)
+        context["triage_form"] = TriageFormHaie(data=form_data)
 
         return context
 
@@ -298,11 +307,6 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         else:
             return res
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["triage_url"] = reverse("triage")
-        return context
-
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
@@ -386,7 +390,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(result_url, {"edit": "true"})
-        triage_url = reverse("triage")
 
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
@@ -412,7 +415,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
         context["base_result"] = "moulinette/base_result.html"
-        context["triage_url"] = triage_url
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
@@ -457,56 +459,57 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["is_admin"] = self.request.user.is_staff
         context["edit_url"] = edit_url
 
-        if DATA_KEY in self.request.session:
-            context["triage_form"] = TriageFormHaie(
-                initial=self.request.session.get(DATA_KEY, {})
-            )
-
         return context
 
 
-class TriageMixin:
-    def get_form_data(self):
-        data = self.request.session.get(DATA_KEY, {})
-        return data
-
-    def get_initial(self):
-        """Populate the form with data from the session."""
-        return self.get_form_data()
-
-
-class Triage(TriageMixin, FormView):
+class Triage(FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
 
+    def get_initial(self):
+        """Populate the form with data from the query string."""
+        return self.request.GET.dict()
+
     def form_valid(self, form):
-        self.request.session[DATA_KEY] = form.cleaned_data
-
-        if (
-            form.cleaned_data["element"] == "haie"
-            and form.cleaned_data["travaux"] == "arrachage"
-        ):
-            return HttpResponseRedirect(reverse("moulinette_home"))
+        query_params = form.cleaned_data
+        if query_params["element"] == "haie" and query_params["travaux"] == "arrachage":
+            url = reverse("moulinette_home")
         else:
-            return HttpResponseRedirect(reverse("triage_result"))
+            url = reverse("triage_result")
+            query_string = urlencode(query_params)
+            url = f"{url}?{query_string}"
+
+        return HttpResponseRedirect(url)
 
 
-class TriageResult(TriageMixin, TemplateView):
+class TriageResult(TemplateView):
     template_name = "haie/moulinette/triage_result.html"
+
+    def get(self, request, *args, **kwargs):
+        form_data = request.GET
+        form = TriageFormHaie(data=form_data)
+        if not form.is_valid():
+            url = reverse("triage")
+            query_string = urlencode(form_data)
+            url = f"{url}?{query_string}"
+            return HttpResponseRedirect(url)
+
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form_data = self.get_form_data()
-        context["form"] = TriageFormHaie(initial=form_data)
+        form_data = self.request.GET
+        form = TriageFormHaie(data=form_data)
 
         envergo_url = self.request.build_absolute_uri("/")
         current_url = self.request.build_absolute_uri()
         share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
-        edit_url = reverse("triage")
+        edit_url = update_qs(reverse("triage"), form_data)
 
         context["current_url"] = current_url
         context["share_print_url"] = share_print_url
         context["envergo_url"] = envergo_url
         context["edit_url"] = edit_url
+        context["form"] = form
 
         return context
