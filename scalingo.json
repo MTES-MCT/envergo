@@ -14,20 +14,23 @@
     "DJANGO_DEBUG": {
       "value": "True"
     },
-    "DJANGO_TRACKER_ENABLED": {
+    "DJANGO_AMENAGEMENT_TRACKER_ENABLED": {
       "value": "True"
     },
-    "DJANGO_TRACKER_URL": {
+    "DJANGO_AMENAGEMENT_TRACKER_URL": {
       "value": "https://stats.beta.gouv.fr/"
     },
-    "DJANGO_SITE_ID": {
+    "DJANGO_AMENAGEMENT_SITE_ID": {
       "value": "12"
     },
-    "DJANGO_TRACKER_URL_2": {
+    "DJANGO_AMENAGEMENT_TRACKER_URL_2": {
       "value": ""
     },
-    "DJANGO_SITE_ID_2": {
+    "DJANGO_AMENAGEMENT_SITE_ID_2": {
       "value": ""
+    },
+    "DJANGO_HAIE_SITE_ID": {
+      "value": "141"
     },
     "ENV_NAME": {
       "value": "staging"

@@ -98,10 +98,9 @@ class EvaluationAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "created_at",
-        "has_moulinette_url",
         "application_number",
         "urbanism_department_emails",
-        "request_link",
+        "nb_emails_sent",
         "nb_versions",
     ]
     form = EvaluationAdminForm
@@ -188,7 +187,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             super()
             .get_queryset(request)
             .select_related("request")
-            .annotate(nb_versions=Count("versions"))
+            .annotate(
+                nb_versions=Count("versions", distinct=True),
+                nb_emails_sent=Count("regulatory_notice_logs", distinct=True),
+            )
             .prefetch_related(
                 Prefetch(
                     "versions",
@@ -198,25 +200,9 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
         return qs
 
-    @admin.display(description=_("Versions"), ordering="nb_versions")
+    @admin.display(description="Nb. avis publiés", ordering="nb_versions")
     def nb_versions(self, obj):
         return obj.nb_versions
-
-    @admin.display(description=_("Request"), ordering="request")
-    def request_link(self, obj):
-        if not obj.request:
-            return ""
-
-        request = obj.request
-        request_admin_url = reverse(
-            "admin:evaluations_request_change", args=[request.reference]
-        )
-        link = f'<a href="{request_admin_url}">{request}</a>'
-        return mark_safe(link)
-
-    @admin.display(description=_("Url"), boolean=True)
-    def has_moulinette_url(self, obj):
-        return bool(obj.moulinette_url)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -335,6 +321,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                     event="email-send",
                     session_key="admin",
                     metadata=metadata,
+                    site=Site.objects.get(
+                        domain=settings.ENVERGO_AMENAGEMENT_DOMAIN
+                    ),  # Evaluations are only for Aménagement
                 )
 
             self.message_user(request, "Le rappel réglementaire a été envoyé.")
@@ -386,6 +375,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             },
         )
         return mark_safe(content)
+
+    @admin.display(description="Nb. emails envoyés")
+    def nb_emails_sent(self, obj):
+        return obj.nb_emails_sent
 
     @admin.display(description=_("Versions"))
     def versions(self, obj):

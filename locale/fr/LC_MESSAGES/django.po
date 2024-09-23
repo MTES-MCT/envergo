@@ -213,10 +213,6 @@ msgstr "E-mails envoyés"
 msgid "Legacy regulatory notice data"
 msgstr "Ancien format d'avis réglementaire"
 
-#: envergo/evaluations/admin.py:242
-msgid "Request"
-msgstr "Demande"
-
 #: envergo/evaluations/admin.py:254 envergo/moulinette/models.py:584
 msgid "Url"
 msgstr "Url"
