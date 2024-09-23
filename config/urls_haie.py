@@ -5,6 +5,9 @@ from .urls import urlpatterns as common_urlpatterns
 
 urlpatterns = [
     path("", include("envergo.pages.urls_haie")),
-    path(_("moulinette/"), include("envergo.moulinette.urls")),
+    path(
+        "indre/",
+        include([path(_("moulinette/"), include("envergo.moulinette.urls"))]),
+    ),
     path("haies/", include("envergo.haies.urls")),
 ] + common_urlpatterns
