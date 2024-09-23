@@ -79,8 +79,8 @@ class CatchmentAreaDebug(FormView):
         context = super().get_context_data(**kwargs)
 
         current_url = self.request.build_absolute_uri()
-        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
-        context["current_url"] = tracked_url
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-demo-bv"})
+        context["share_btn_url"] = share_btn_url
         context["debug"] = bool(self.request.GET.get("debug", False))
 
         form = context["form"]

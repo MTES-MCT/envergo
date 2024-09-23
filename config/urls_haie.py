@@ -9,4 +9,5 @@ urlpatterns = [
         "indre/",
         include([path(_("moulinette/"), include("envergo.moulinette.urls"))]),
     ),
+    path("haies/", include("envergo.haies.urls")),
 ] + common_urlpatterns

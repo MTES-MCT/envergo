@@ -1045,7 +1045,7 @@ div.hero-alt {
 
 // For print, move the project summary above the project result
 @media only print {
-  .moulinette-result-body main {
+  .moulinette-result-body #content {
     display: flex;
     flex-flow: column;
 
@@ -1194,9 +1194,11 @@ footer {
     color: linktext;
   }
 
-  a:not([href^="#"])::after {
+  a:not([href^="#"], .no-href-print)::after {
     content: " (" attr(href) ") ";
+  }
 
+  a:not([href^="#"])::after {
     // these styles are necessary to override some dsfr styles
     mask-size: auto;
     mask-image: none;
@@ -1731,6 +1733,8 @@ main.demonstrateur_2150 {
   * Handle the form display, along with the help sidebars
   */
 #content {
+  height: 100%;
+
   .help-sidebar-label {
     display: flex;
     align-items: center;
