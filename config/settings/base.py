@@ -82,7 +82,6 @@ LOCAL_APPS = [
     "envergo.confs.apps.ConfsConfig",
     "envergo.admin.config.EnvergoAdminConfig",
     "envergo.urlmappings",
-    "envergo.haies",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
