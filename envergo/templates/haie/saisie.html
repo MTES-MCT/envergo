@@ -13,13 +13,22 @@
 
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
           <div class="controls top left">
-            <button class="fr-btn fr-btn--secondary" @click="zoomOut">Vue d'ensemble</button>
+            <button class="fr-btn fr-btn--secondary" @click="zoomOut">
+              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
+              Vue d'ensemble
+            </button>
           </div>
         </template>
 
         <div class="controls top right">
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer (à arracher)</button>
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">Tracer (à planter)</button>
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">
+            <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
+            Tracer (à arracher)
+          </button>
+          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">
+            <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
+            Tracer (à planter)
+          </button>
         </div>
 
         <div v-if="showHelpBubble" class="help-bubble">
@@ -59,7 +68,10 @@
         <div id="hedge-lists">
 
           <div class="hedge-list to-remove">
-            <h3 class="fr-h6">Haies à arracher</h3>
+            <h3 class="fr-h6">
+              <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
+              Haies à arracher
+            </h3>
             <template v-if="hedges.TO_REMOVE.count > 0">
               <table>
                 <tbody>
@@ -87,7 +99,10 @@
           <hr>
 
           <div class="hedge-list to-plant">
-            <h3 class="fr-h6">Haies à planter</h3>
+            <h3 class="fr-h6">
+              <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
+              Haies à planter
+            </h3>
             <template v-if="hedges.TO_PLANT.count > 0">
               <table>
                 <tbody>
