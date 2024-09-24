@@ -11,9 +11,11 @@
     <div id="saisie-ui">
       <div id="map">
 
-        <div class="controls top left">
-          <button class="fr-btn fr-btn--secondary" @click="zoomOut">Vue d'ensemble</button>
-        </div>
+        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+          <div class="controls top left">
+            <button class="fr-btn fr-btn--secondary" @click="zoomOut">Vue d'ensemble</button>
+          </div>
+        </template>
 
         <div class="controls top right">
           <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">Tracer (à arracher)</button>
