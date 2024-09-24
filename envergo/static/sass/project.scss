@@ -1055,7 +1055,7 @@ div.hero-alt {
 
 // For print, move the project summary above the project result
 @media only print {
-  .moulinette-result-body main {
+  .moulinette-result-body #content {
     display: flex;
     flex-flow: column;
 

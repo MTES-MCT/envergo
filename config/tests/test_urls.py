@@ -2,6 +2,7 @@ import pytest
 from django.contrib.sites.models import Site
 from django.test import override_settings
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 
@@ -57,9 +58,8 @@ def test_haie_can_access_haie_pages(client, url):
 @pytest.mark.parametrize("url", AMENAGEMENT_URLS)
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_haie_cannot_access_amenagement_pages(client, url):
-    url = reverse(url)
-    response = client.get(url)
-    assert response.status_code == 404, f"Failed for URL: {url}"
+    with pytest.raises(NoReverseMatch):
+        url = reverse(url)
 
 
 @pytest.mark.parametrize("url", COMMON_URLS + AMENAGEMENT_URLS)
@@ -71,6 +71,5 @@ def test_amenagement_can_access_amenagement_pages(client, url):
 
 @pytest.mark.parametrize("url", HAIE_URLS)
 def test_amenagement_cannot_access_haie_pages(client, url):
-    url = reverse(url)
-    response = client.get(url)
-    assert response.status_code == 404, f"Failed for URL: {url}"
+    with pytest.raises(NoReverseMatch):
+        url = reverse(url)
