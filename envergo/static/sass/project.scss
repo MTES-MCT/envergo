@@ -771,6 +771,17 @@ main > .fr-notice {
   }
 }
 
+.img-icon {
+  display: inline-block;
+  vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
+
+  --icon-size: 1.5rem;
+
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: 0.25rem;
+}
+
 /**
  * Custom class for an accordion without a "+" button
  */
