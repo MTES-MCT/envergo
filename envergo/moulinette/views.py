@@ -136,6 +136,9 @@ class MoulinetteMixin:
                 context.get("moulinette", None)
             )
 
+        if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+            form_data = self.request.GET
+            context["triage_url"] = update_qs(reverse("triage"), form_data)
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -303,12 +306,6 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         else:
             return res
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
-        context["triage_url"] = update_qs(reverse("triage"), form_data)
-        return context
-
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
@@ -382,7 +379,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -392,7 +388,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
         edit_url = update_qs(result_url, {"edit": "true"})
-        triage_url = update_qs(reverse("triage"), form_data)
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
         # For example, if the current url is /simulateur/resultat/?debug=true,
@@ -417,7 +412,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
         context["base_result"] = "moulinette/base_result.html"
-        context["triage_url"] = triage_url
 
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
