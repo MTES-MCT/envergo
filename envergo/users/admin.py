@@ -1,17 +1,27 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from envergo.users.forms import UserCreationForm
+from envergo.utils.fields import NoIdnEmailField
 
 User = get_user_model()
+
+
+class NoIdnUserCreationForm(UserCreationForm):
+    email = NoIdnEmailField(
+        required=True,
+        label=_("Email address"),
+        widget=forms.EmailInput(attrs={"class": "vTextField"}),
+    )
 
 
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
 
-    add_form = UserCreationForm
+    add_form = NoIdnUserCreationForm
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         (_("Personal info"), {"fields": ("name",)}),
