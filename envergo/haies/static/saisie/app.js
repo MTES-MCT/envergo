@@ -102,6 +102,14 @@ class Hedge {
     this.polyline.remove();
     this.onRemove(this);
   }
+
+  toJSON() {
+    return {
+      id: this.id,
+      latLngs: this.latLngs.map((latLng) => ({ lat: latLng.lat, lng: latLng.lng })),
+      type: this.type,
+    };
+  }
 }
 
 
@@ -173,6 +181,10 @@ class HedgeList {
       hedge.id = this.getIdentifier(index);
     });
   }
+
+  toJSON() {
+    return this.hedges.map((hedge) => hedge.toJSON());
+  }
 }
 
 createApp({
@@ -228,6 +240,19 @@ createApp({
       }
     };
 
+    const saveData = () => {
+      const hedgesData = {
+        TO_PLANT: hedges[TO_PLANT].toJSON(),
+        TO_REMOVE: hedges[TO_REMOVE].toJSON(),
+      };
+      console.log(hedgesData);
+      // fetch('/api/save-hedges/', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(hedgesData),
+      // });
+    };
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       map = L.map('map', {
@@ -252,6 +277,7 @@ createApp({
       startDrawingToRemove,
       zoomOut,
       showHelpBubble,
+      saveData,
     };
   }
 }).mount('#app');
