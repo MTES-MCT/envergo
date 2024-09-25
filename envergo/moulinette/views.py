@@ -139,6 +139,10 @@ class MoulinetteMixin:
         if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
             form_data = self.request.GET
             context["triage_url"] = update_qs(reverse("triage"), form_data)
+            triage_form = TriageFormHaie(data=form_data)
+            if triage_form.is_valid():
+                context["triage_form"] = triage_form
+
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -301,7 +305,13 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         res = self.render_to_response(context)
-        if self.moulinette:
+
+        if (
+            self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+            and "triage_form" not in context
+        ):
+            return HttpResponseRedirect(context["triage_url"])
+        elif self.moulinette:
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
@@ -341,7 +351,12 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context = self.get_context_data()
         res = self.render_to_response(context)
         moulinette = self.moulinette
-        if moulinette:
+        if (
+            self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+            and "triage_form" not in context
+        ):
+            return HttpResponseRedirect(context["triage_url"])
+        elif moulinette:
             if (
                 "debug" not in self.request.GET
                 and not is_edit
@@ -482,10 +497,17 @@ class Triage(FormView):
 class TriageResult(TemplateView):
     template_name = "haie/moulinette/triage_result.html"
 
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        form = context["form"]
+        if not form.is_valid():
+            return HttpResponseRedirect(reverse("triage"))
+        return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form_data = self.request.GET
-        context["form"] = TriageFormHaie(initial=form_data)
+        context["form"] = TriageFormHaie(data=form_data)
 
         envergo_url = self.request.build_absolute_uri("/")
         current_url = self.request.build_absolute_uri()

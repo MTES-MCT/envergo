@@ -1400,10 +1400,6 @@ class MoulinetteHaie(Moulinette):
     def get_triage_params(cls):
         return set(TriageFormHaie.base_fields.keys())
 
-    def triage_form(self):
-        """Get the instanciated triage form questions."""
-        return TriageFormHaie(self.raw_data)
-
 
 def get_moulinette_class_from_site(site):
     """Return the correct Moulinette class depending on the current site."""
