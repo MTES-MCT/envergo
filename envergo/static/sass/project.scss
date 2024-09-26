@@ -40,19 +40,18 @@ html.nojs .js {
   color: $red;
 }
 
-.flex {
+.cta-group {
   display: flex;
-}
-
-.justify-content-space-between {
   justify-content: space-between;
 }
 
-.color-text-mention-grey {
+.color-text-light {
   color: var(--text-mention-grey);
 }
 
-.blue-line {
+hr.separator {
+  background: none;
+  border: none;
   border-top: 1px solid var(--border-action-high-blue-france);
 }
 

@@ -136,12 +136,8 @@ class MoulinetteMixin:
                 context.get("moulinette", None)
             )
 
-        if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
-            form_data = self.request.GET
-            context["triage_url"] = update_qs(reverse("triage"), form_data)
-            triage_form = TriageFormHaie(data=form_data)
-            if triage_form.is_valid():
-                context["triage_form"] = triage_form
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        context = {**context, **MoulinetteClass.get_extra_context(self.request)}
 
         return context
 
@@ -306,11 +302,8 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         context = self.get_context_data()
         res = self.render_to_response(context)
 
-        if (
-            self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
-            and "triage_form" not in context
-        ):
-            return HttpResponseRedirect(context["triage_url"])
+        if "redirect_url" in context:
+            return HttpResponseRedirect(context["redirect_url"])
         elif self.moulinette:
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
@@ -351,11 +344,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context = self.get_context_data()
         res = self.render_to_response(context)
         moulinette = self.moulinette
-        if (
-            self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
-            and "triage_form" not in context
-        ):
-            return HttpResponseRedirect(context["triage_url"])
+
+        if "redirect_url" in context:
+            return HttpResponseRedirect(context["redirect_url"])
         elif moulinette:
             if (
                 "debug" not in self.request.GET

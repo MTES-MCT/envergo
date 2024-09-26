@@ -14,6 +14,7 @@ from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
 from django.http import QueryDict
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -29,6 +30,7 @@ from envergo.moulinette.forms import (
 )
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -1136,6 +1138,14 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+
+        return {}
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1399,6 +1409,21 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_params(cls):
         return set(TriageFormHaie.base_fields.keys())
+
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+        context = {}
+        form_data = request.GET
+        context["triage_url"] = update_qs(reverse("triage"), form_data)
+        triage_form = TriageFormHaie(data=form_data)
+        if triage_form.is_valid():
+            context["triage_form"] = triage_form
+        else:
+            context["redirect_url"] = context["triage_url"]
+        return context
 
 
 def get_moulinette_class_from_site(site):
