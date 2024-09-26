@@ -36,7 +36,7 @@
   <script>
   window.addEventListener('load', function() {
 
-    var map = L.map('map', {maxZoom: 21});
+    let map = L.map('map', {maxZoom: 21});
 
     L.tileLayer("https://data.geopf.fr/wmts?" +
     "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
@@ -54,17 +54,17 @@
     }).addTo(map);
 
 
-    var bounds = L.latLngBounds();
+    let bounds = L.latLngBounds();
 
-    var hedgeData = {{ hedge_data|safe }};
-    hedgeData.TO_PLANT.map((hedge) => {
-      var polyline = new L.Polyline(hedge.latLngs, {color: 'green'});
-      bounds.extend(polyline.getBounds());
-      polyline.addTo(map);
-    });
+    const styles = {
+      TO_PLANT: {color: 'green', weight: 4, className: 'hedge to-plant' },
+      TO_REMOVE: { color: 'red', weight: 4, className: 'hedge to-remove' },
+    };
 
-    hedgeData.TO_REMOVE.map((hedge) => {
-      var polyline = new L.Polyline(hedge.latLngs, {color: "red"});
+    const hedgeData = {{ hedge_data|safe }};
+    hedgeData.map((hedge) => {
+      let style = styles[hedge.type];
+      var polyline = new L.Polyline(hedge.latLngs, style);
       bounds.extend(polyline.getBounds());
       polyline.addTo(map);
     });

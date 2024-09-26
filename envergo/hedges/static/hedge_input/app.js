@@ -240,11 +240,11 @@ createApp({
 
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
+    // Persist data to the server
     const saveData = () => {
-      const hedgesData = {
-        TO_PLANT: hedges[TO_PLANT].toJSON(),
-        TO_REMOVE: hedges[TO_REMOVE].toJSON(),
-      };
+      const hedgesToPlant = hedges[TO_PLANT].toJSON();
+      const hedgesToRemove = hedges[TO_REMOVE].toJSON();
+      const hedgesData = hedgesToPlant.concat(hedgesToRemove);
       fetch(saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
