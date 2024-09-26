@@ -1832,3 +1832,15 @@ main.demonstrateur_2150 {
     }
   }
 }
+
+.items-list {
+  line-height: 1.25rem;
+
+  ul {
+    margin-bottom: 0;
+
+    li:last-child {
+      padding-bottom: 0;
+    }
+  }
+}
