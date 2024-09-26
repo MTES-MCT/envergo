@@ -24,8 +24,16 @@
 
 <p>Une évaluation des incidences Natura 2000 (EIN) doit être réalisée.</p>
 
-{% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+{% if not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
+  <p>
+    <em>Si le projet est soumis à la Loi sur l'eau</em>, l'EIN doit être jointe au dossier Loi sur l'eau.
+  </p>
+  <p>
+    <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l'EIN est à déposer à la DDT(M) pour instruction. Délai
+    d'instruction : 2 mois.
+  </p>
 
+{% elif regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
   <p>L'EIN doit être jointe :</p>
 
   <ul>
@@ -39,17 +47,6 @@
     {% endif %}
 
   </ul>
-
-{% elif not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
-
-  <p>
-    <em>Si le projet est soumis à la Loi sur l'eau</em>, l'EIN doit y être jointe au dossier Loi sur l'eau.
-  </p>
-  <p>
-    <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l'EIN est à déposer à la DDT(M) pour instruction. Délai
-    d'instruction : 2 mois.
-  </p>
-
 {% else %}
 
   <ul>
@@ -99,8 +96,16 @@
 
   <h4>Comment déposer l’évaluation des incidences Natura 2000 ?</h4>
 
-  {% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
-
+  {% if not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
+    <p>
+      <em>Si le projet est soumis à la Loi sur l'eau</em>, l'EIN doit être jointe au dossier Loi sur l'eau.
+    </p>
+    <p>
+      <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l'EIN doit être adressée pour instruction à la DDT(M)
+      :
+    </p>
+    <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
+  {% elif regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
     <p>L'EIN doit être jointe aux différents dossiers d'autorisation concernant le projet :</p>
 
     <ul>
@@ -113,16 +118,6 @@
       {% endif %}
 
     </ul>
-  {% elif not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
-
-    <p>
-      <em>Si le projet est soumis à la Loi sur l'eau</em>, l'EIN doit être jointe au dossier Loi sur l'eau.
-    </p>
-    <p>
-      <em>Si le projet n'est pas soumis à la Loi sur l'eau</em>, l'EIN doit être adressée pour instruction à la DDT(M)
-      :
-    </p>
-    <div class="fr-highlight fr-mb-3w">{{ config.n2000_contact_ddtm_instruction|safe }}</div>
 
   {% else %}
 
@@ -133,22 +128,21 @@
   {% endif %}
 
   <h4>Comment l'instruction se déroule-t-elle ?</h4>
-
-  {% if regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
-
-    <p>
-      L'évaluation des incidences Natura 2000 est une pièce obligatoire de différents dossiers d'autorisation concernant le projet.
-    </p>
-
-    <p>Son instruction se fait dans le cadre de celle des dossiers, avec les mêmes procédures et les mêmes délais.</p>
-
-  {% elif not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
+  {% if not regulation.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
 
     <p>L'évaluation des incidences Natura 2000 est instruite par la DDT(M).</p>
 
     <p>
       L'instruction se fait soit dans le cadre du dossier Loi sur l'eau, soit directement, avec un délai d'instruction de 2 mois.
     </p>
+
+  {% elif regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+
+    <p>
+      L'évaluation des incidences Natura 2000 est une pièce obligatoire de différents dossiers d'autorisation concernant le projet.
+    </p>
+
+    <p>Son instruction se fait dans le cadre de celle des dossiers, avec les mêmes procédures et les mêmes délais.</p>
 
   {% else %}
 
