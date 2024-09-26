@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.template.response import TemplateResponse
 from django.urls import path
 
-from envergo.haies.models import HedgeData
+from envergo.hedges.models import HedgeData
 
 
 @admin.register(HedgeData)
@@ -26,7 +26,8 @@ class HedgeDataAdmin(admin.ModelAdmin):
         hedge_data = HedgeData.objects.get(id=object_id)
         context = {
             **self.admin_site.each_context(request),
+            "hedge_data": hedge_data,
         }
 
-        response = TemplateResponse(request, "haies/hedge_map.html", context)
+        response = TemplateResponse(request, "hedges/admin/hedge_map.html", context)
         return response

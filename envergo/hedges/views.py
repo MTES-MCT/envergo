@@ -5,11 +5,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, TemplateView
 
-from envergo.haies.models import HedgeData
+from envergo.hedges.models import HedgeData
 
 
-class Saisie(TemplateView):
-    template_name = "haie/saisie.html"
+class HedgeInput(TemplateView):
+    template_name = "hedges/input.html"
 
 
 @method_decorator(csrf_exempt, name="dispatch")
