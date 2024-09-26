@@ -6,8 +6,8 @@
 
 {% block html-classes %}saisie{% endblock %}
 
-{% block container %}
-  <div id="app">
+{% block main %}
+  <div id="app" data-save-url="{% url 'save_hedges' %}">
     <div id="saisie-ui">
       <div id="map">
 
@@ -56,7 +56,6 @@
               </tr>
             </tbody>
           </table>
-
           <div id="compensation" :class="{ success: compensationRate >= 100 }">
             <p class="rate">
               <strong>Le linéaire planté représente [[ compensationRate.toFixed(0) ]] % du linéaire arraché</strong>
@@ -64,9 +63,7 @@
             <p class="info">La proportion attendue est de 100 %</p>
           </div>
         </div>
-
         <div id="hedge-lists">
-
           <div class="hedge-list to-remove">
             <h3 class="fr-h6">
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
@@ -95,9 +92,7 @@
               <p class="fr-text--light">Aucune haie à arracher</p>
             </template>
           </div>
-
           <hr>
-
           <div class="hedge-list to-plant">
             <h3 class="fr-h6">
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
@@ -127,8 +122,11 @@
             </template>
           </div>
         </div>
-
-        <button class="fr-btn fr-btn--secondary" @click="saveData">Enregistrer</button>
+        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+          <div class="actions">
+            <button class="fr-btn fr-btn--secondary" @click="saveData">Enregistrer</button>
+          </div>
+        </template>
       </div>
     </div>
   </div>
