@@ -228,8 +228,6 @@ createApp({
       return startDrawing(TO_REMOVE);
     };
 
-
-
     // Center the map around all existing hedges
     const zoomOut = () => {
       // The concat method does not modify the original arrays
@@ -240,17 +238,23 @@ createApp({
       }
     };
 
+    const saveUrl = document.getElementById('app').dataset.saveUrl;
+
     const saveData = () => {
       const hedgesData = {
         TO_PLANT: hedges[TO_PLANT].toJSON(),
         TO_REMOVE: hedges[TO_REMOVE].toJSON(),
       };
-      console.log(hedgesData);
-      // fetch('/api/save-hedges/', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(hedgesData),
-      // });
+      fetch(saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(hedgesData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Data saved with ID:', data.id);
+        })
+        .catch((error) => console.error('Error:', error));
     };
 
     // Mount the app component and initialize the leaflet map
