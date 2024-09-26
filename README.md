@@ -42,14 +42,14 @@ Pour lancer l'environnement rapidement :
 ```bash
 $ git clone … && cd envergo
 $ touch .env
-$ docker-compose build
-$ docker-compose up
+$ docker compose build
+$ docker compose up
 ```
 
 Pour construire la base de données (dans un autre shell) :
 
 ```bash
-$ docker-compose run --rm django python manage.py migrate
+$ docker compose run --rm django python manage.py migrate
 ```
 
 Pour avoir accès aux fichiers `static` depuis le serveur de debug :
@@ -57,7 +57,7 @@ Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 ```bash
 $ npm install
 $ npm  run build
-$ docker-compose run --rm django python manage.py collectstatic
+$ docker compose run --rm django python manage.py collectstatic
 
 ```
 
@@ -81,17 +81,17 @@ les droits de création de base et d'extension.
 #### Résoudre l'erreur "raster does not exist"
 
 Dans les versions les plus récentes de postgis, il est nécessaire [d'installer l'extension "raster"](https://docs.djangoproject.com/fr/5.0/ref/contrib/gis/install/postgis/#post-installation).
-Si, lors du `docker-compose up` ci-dessus vous avez ce type d'erreur :
+Si, lors du `docker compose up` ci-dessus vous avez ce type d'erreur :
 
     envergo_postgres  | 2024-05-13 14:35:21.651 UTC [35] ERROR:  type "raster" does not exist at character 118
 
-Il vous faudra créer cette extension (dans un autre terminal, avec le `docker-compose up` qui tourne en parallèle) :
+Il vous faudra créer cette extension (dans un autre terminal, avec le `docker compose up` qui tourne en parallèle) :
 
 ```bash
-$ docker-compose run --rm postgres create_raster
+$ docker compose run --rm postgres create_raster
 ```
 
-Puis interrompre et relancer le `docker-compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
+Puis interrompre et relancer le `docker compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
 
 
 ### Qualité du code
@@ -211,7 +211,7 @@ pytest
 Via Docker :
 
 ```bash
-docker-compose run --rm django pytest
+docker compose run --rm django pytest
 ```
 
 
@@ -227,23 +227,31 @@ Ils tournent dans la CI de Github.
 
 
 ### Lancer les tests E2E en local
+
+#### Prérequis
 Pour lancer les tests E2E en local, il faut avant tout créer une base de données dédiée similaire à celle qui sera utilisée par la CI.
 Pour cela, il faut lancer les commandes suivantes :
 
 ```bash
 $ . envs/postgres
-$ docker-compose exec postgres bash -c 'dropdb envergo-test -U "$POSTGRES_USER" -f'
-$ docker-compose exec postgres bash -c 'createdb envergo-test -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
-$ docker-compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
+$ docker compose exec postgres bash -c 'dropdb --if-exists envergo-test -U "$POSTGRES_USER" -f'
+$ docker compose exec postgres bash -c 'createdb envergo-test -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
 $ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
 ```
 
-Vous devez ensuite installer Playwright en suivant les instructions de la [documentation](https://playwright.dev/docs/intro#installing-playwright).
+Vous devez ensuite installer Playwright avec les commandes suivantes:
+```bash
+$ npm install @playwright/test
+$ npx playwright install
+```
 
-Vous devez ensuite lancer l'application en pointant vers la base de test:
+#### Lancer les tests
+
+Vous devez tout d'abord lancer l'application en pointant vers la base de test et avec le bon fichier de settings :
 
 ```bash
-$ POSTGRES_DB=envergo-test docker compose up -d
+$ POSTGRES_DB=envergo-test docker compose -f docker-compose.yml -f docker-compose.e2e.yml  up -d
 ```
 
 Enfin vous pouvez lancer les tests avec l'une des commandes suivantes :
@@ -345,10 +353,10 @@ Alternative : récupérer le backup nocture depuis Scalingo.
 
 ```bash
 $ . envs/postgres
-$ docker-compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
-$ docker-compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
+$ docker compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
-$ docker-compose run --rm django python manage.py migrate
+$ docker compose run --rm django python manage.py migrate
 ```
 
 
