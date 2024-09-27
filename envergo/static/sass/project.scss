@@ -1833,10 +1833,14 @@ main.demonstrateur_2150 {
   }
 }
 
-.items-list {
-  line-height: 1.25rem;
+#evaluation-eligibility {
+  > div {
+    display: flex;
+    margin-top: 1rem;
+  }
 
-  ul {
+  .items-list {
+    line-height: 1.25rem;
     margin-bottom: 0;
 
     li:last-child {
