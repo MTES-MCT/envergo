@@ -10,12 +10,19 @@
 {% endblock %}
 
 {% block project_summary %}
-  <ul class="fr-mb-3w">
-    {% for field in moulinette.main_form %}
+  <ul class="fr-mb-3w color-text-light">
+    {% for field in triage_form %}
       <li>{% field_summary field %}</li>
     {% endfor %}
-    {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
   </ul>
+  <hr class="separator fr-mb-3w">
+</hr>
+<ul class="fr-mb-3w">
+  {% for field in moulinette.main_form %}
+    <li>{% field_summary field %}</li>
+  {% endfor %}
+  {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+</ul>
 {% endblock %}
 
 {% block regulations_results %}

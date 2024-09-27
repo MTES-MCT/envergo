@@ -1,24 +1,19 @@
 {% load utils %}
 
-{% if display_title %}
-  <h2 class="centered">Commencez à décrire votre projet de travaux sur haies</h2>
-  <p class="fr-text--lead">
-    Ce simulateur vous permet de connaître instantanément les autorisations à obtenir de l’administration, les procédures et les délais.
-    Il est anonyme et sans création de compte.
-    Département : Indre (36)
-  </p>
-  <p class="fr-text--light">Tous les champs sont obligatoires.</p>
-{% endif %}
+{% include 'haie/moulinette/_form_header.html' %}
 
 <form class="fr-mb-3w"
       method="post"
       novalidate
       autocomplete="off"
-      action="{% url "moulinette_result" %}"
+      action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
       id="moulinette-form">
   {% csrf_token %}
 
   {% include '_form_header.html' with form=form %}
+
+  <!-- Include current query parameters as hidden fields to keep Triage inputs -->
+  {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
 
   <div class="form-section">
     {% include '_radio_snippet.html' with field=form.profil %}
