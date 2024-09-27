@@ -1842,10 +1842,20 @@ main.demonstrateur_2150 {
   }
 }
 
-.items-list {
-  line-height: 1.25rem;
+#evaluation-eligibility {
+  background-color: var(--grey-975-100);
 
-  ul {
+  > div {
+    display: flex;
+    margin-top: 1rem;
+
+    div {
+      margin-right: 1rem;
+    }
+  }
+
+  .items-list {
+    line-height: 1.25rem;
     margin-bottom: 0;
 
     li:last-child {
