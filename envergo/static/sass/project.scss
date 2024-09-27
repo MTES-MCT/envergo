@@ -1834,9 +1834,15 @@ main.demonstrateur_2150 {
 }
 
 #evaluation-eligibility {
+  background-color: var(--grey-975-100);
+
   > div {
     display: flex;
     margin-top: 1rem;
+
+    div {
+      margin-right: 1rem;
+    }
   }
 
   .items-list {
