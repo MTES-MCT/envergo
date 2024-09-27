@@ -106,9 +106,38 @@
 
   <section id="simulateur" class="fr-pt-8w fr-pb-5w">
     <div class="fr-container">
-      <div id="moulinette-grid">
-        <div id="moulinette-col">
-          <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
+      <h3>Simuler un projet</h3>
+      <p>
+        Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à suivre.
+        <br />
+        <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
+      </p>
+      <div class="fr-grid-row">
+        <div class="fr-col-12 fr-col-sm-6 fr-col-lg-4">
+          <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-enlarge-link">
+            <div class="fr-tile__body">
+              <div class="fr-tile__content">
+                <h3 class="fr-tile__title">
+                  <a href="{% url 'moulinette_home' %}">Indre</a>
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="separator fr-mt-4w" />
+      <div class="fr-grid-row fr-grid-row--center">
+        <span id="department-search-title"  class="fr-text--lead">Le projet est situé dans un autre département ?</span>
+        <div class="fr-col-12 fr-grid-row fr-grid-row--center">
+          <div class="fr-search-bar" role="search">
+            <label class="fr-label" for="department-search">Code postal</label>
+            <input class="fr-input"
+                   placeholder="Code postal"
+                   type="search"
+                   id="department-search"
+                   name="department-search">
+            <button class="fr-btn">Rechercher</button>
+          </div>
         </div>
       </div>
     </div>
