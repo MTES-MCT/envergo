@@ -2,7 +2,9 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.moulinette.forms.fields import (
+    DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
     extract_choices,
@@ -186,6 +188,15 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        submitted_params = set(self.data.keys())
+        triage_fields = set(TriageFormHaie.base_fields.keys())
+
+        # Check if only the Triage form fields are submitted
+        if submitted_params.issubset(triage_fields):
+            self.is_bound = False
+
     def clean(self):
         data = super().clean()
 
@@ -212,3 +223,51 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             )
 
         return data
+
+
+class TriageFormHaie(forms.Form):
+    department = DisplayCharField(
+        label="Département",
+        required=True,
+        initial="36",
+        get_display_value=lambda x: dict(DEPARTMENT_CHOICES).get(x, "Inconnu"),
+    )
+    element = DisplayChoiceField(
+        label="Quel élément paysager est concerné ?",
+        widget=forms.RadioSelect,
+        choices=(
+            ("haie", "Une haie"),
+            ("bosquet", "Un bosquet"),
+            ("alignement", "Un alignement d'arbres"),
+            (
+                "autre",
+                "Autre",
+            ),
+        ),
+        required=True,
+        display_label="Élément paysager :",
+    )
+
+    travaux = DisplayChoiceField(
+        label="Quels sont les travaux envisagés ?",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "arrachage",
+                mark_safe(
+                    "Arrachage<br />"
+                    '<span class="fr-hint-text">Toute intervention impliquant l\'enlèvement des souches</span>'
+                ),
+            ),
+            (
+                "entretien",
+                "Entretien",
+            ),
+            (
+                "autre",
+                "Autre",
+            ),
+        ),
+        required=True,
+        display_label="Travaux envisagés :",
+    )
