@@ -9,7 +9,11 @@
       "size": "M"
     },
     {
-      "command": "10 * * * * python manage.py new_files_alert",
+      "command": "10 * * * * python manage.py new_files_admin_alert",
+      "size": "M"
+    },
+    {
+      "command": "10 * * * * python manage.py new_files_user_alert",
       "size": "M"
     }
   ]
