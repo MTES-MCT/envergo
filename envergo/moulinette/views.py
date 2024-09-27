@@ -75,10 +75,10 @@ class MoulinetteMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
 
         form = context["form"]
         if form.is_valid():
-            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
             moulinette = MoulinetteClass(
                 form.cleaned_data, form.data, self.should_activate_optional_criteria()
             )
@@ -136,7 +136,6 @@ class MoulinetteMixin:
                 context.get("moulinette", None)
             )
 
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         context = {**context, **MoulinetteClass.get_extra_context(self.request)}
 
         return context

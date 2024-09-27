@@ -13,7 +13,7 @@
           {% if request.user.is_authenticated %}
             <button class="fr-btn fr-btn--icon-left fr-fi-mail-line" type="submit">Partager par email</button>
           {% else %}
-            <div class="fr-alert fr-alert--warning fr-alert--yellow fr-alert--sm">
+            <div class="fr-alert fr-alert--warning fr-alert--soft-warning fr-alert--sm">
               <p>
                 Vous devez <a href="{% url 'login' %}">vous identifier</a> pour utiliser cette fonctionnalité.
               </p>
