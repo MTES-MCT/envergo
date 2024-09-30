@@ -1,0 +1,5 @@
+services:
+  django:
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.ci
+      - POSTGRES_DB=${POSTGRES_DB:-envergo}

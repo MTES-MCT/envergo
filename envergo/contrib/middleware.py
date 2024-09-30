@@ -15,6 +15,9 @@ class SetUrlConfBasedOnSite:
 
     def __call__(self, request):
         request.urlconf = "config.urls_amenagement"
+        print("request.get_host()", request.get_host())
+        print("settings.ENV_NAME", settings.ENV_NAME)
+        print("settings.DATABASES", settings.DATABASES)
         site = Site.objects.get_current(request)
         request.site = site
         if site.domain == settings.ENVERGO_HAIE_DOMAIN:

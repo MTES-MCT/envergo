@@ -10,6 +10,9 @@ services:
     build:
       context: .
       dockerfile: ./compose/django/Dockerfile
+    environment:
+      - LANG=fr_FR.UTF-8
+      - LC_ALL=fr_FR.UTF-8
     image: envergo_django
     container_name: envergo_django
     depends_on:
