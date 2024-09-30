@@ -145,7 +145,8 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             self.add_error(
                 None,
                 ValidationError(
-                    "Nous ne parvenons pas à situer votre projet. Merci d'indiquer a minima un code postal.",
+                    "Nous ne parvenons pas à situer votre projet. "
+                    "Merci de saisir quelques caractères et de sélectionner une option dans la liste.",
                     code="unknown_department",
                 ),
             )
