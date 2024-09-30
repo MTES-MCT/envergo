@@ -37,6 +37,10 @@ Il est recommandé de se baser sur la version docker.
 
 #### Avec Docker
 
+> NB : pour les commandes `docker compose`, cette documentation utilise la syntaxe de la version 2 en remplacant le tiret (`-`) par un espace et utlisant donc `docker compose` à la place de `docker-compose`.
+> Si vous avez une version plus ancienne, vous pouvez utiliser la syntaxe `docker-compose`.
+> [Plus d'infos...](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
+
 Pour lancer l'environnement rapidement :
 
 ```bash
