@@ -640,11 +640,11 @@ def test_petitioner_icpe(rf, moulinette_url):
 
 
 @pytest.mark.parametrize("footprint", [1200])
-def test_n2000_iota_only_no_bcc(rf, moulinette_url):
+def test_n2000_ein_out_of_n2000_site_no_bcc(rf, moulinette_url):
     eval, moulinette = fake_moulinette(
         moulinette_url, "soumis", "soumis", "non_soumis", "non_soumis"
     )
-    moulinette.regulations[1].configure_mock(iota_only=lambda: True)
+    moulinette.regulations[1].configure_mock(ein_out_of_n2000_site=lambda: True)
 
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
