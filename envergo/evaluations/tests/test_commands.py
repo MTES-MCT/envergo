@@ -98,19 +98,19 @@ def test_new_files_user_alert_with_new_file_lt_15min_ago(
 
     request = RequestFactory(created_at=time_1h30_ago)
     RequestFileFactory(request=request, uploaded_at=time_10min_ago)
-    call_command("new_files_admin_alert")
+    call_command("new_files_user_alert")
 
     assert len(mailoutbox) == 0
 
 
 def test_new_files_user_alert_with_new_file_gt_15min_ago(
-    mailoutbox, time_1h30_ago, time_10min_ago
+    mailoutbox, time_1h30_ago, time_20min_ago
 ):
-    """When a file was uploaded recently than 1hr, no alert is sent."""
+    """When a file was uploaded more than 15min ago, an alert is sent."""
 
     request = RequestFactory(created_at=time_1h30_ago)
-    RequestFileFactory(request=request, uploaded_at=time_10min_ago)
-    call_command("new_files_admin_alert")
+    RequestFileFactory(request=request, uploaded_at=time_20min_ago)
+    call_command("new_files_user_alert")
 
     assert len(mailoutbox) == 1
 
@@ -122,6 +122,25 @@ def test_new_files_user_alert_with_new_file_gt_30min_ago(
 
     request = RequestFactory(created_at=time_1h30_ago)
     RequestFileFactory(request=request, uploaded_at=time_45min_ago)
-    call_command("new_files_admin_alert")
+    call_command("new_files_user_alert")
 
     assert len(mailoutbox) == 0
+
+
+def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ago):
+    """The mail is sent to the right recipients."""
+
+    request = RequestFactory(user_type="instructor", created_at=time_1h30_ago)
+    RequestFileFactory(request=request, uploaded_at=time_20min_ago)
+    call_command("new_files_user_alert")
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+    assert email.to == ["instructor@example.org"]
+
+    request.user_type = "petitioner"
+    request.save()
+    call_command("new_files_user_alert")
+    assert len(mailoutbox) == 2
+    email = mailoutbox[1]
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
