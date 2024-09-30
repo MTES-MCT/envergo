@@ -246,7 +246,7 @@ def test_eval_wizard_all_steps(
     data = {
         "project_description": "Bla bla bla",
         "user_type": "instructor",
-        "urbanism_department_emails": ["contact@example.org"],
+        "urbanism_department_emails": ["urbanism@example.org"],
         "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
         "project_owner_phone": "0612345678",
     }
@@ -265,9 +265,50 @@ def test_eval_wizard_all_steps(
     assert len(callbacks) == 1
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].to == ["urbanism@example.org"]
     assert "Vous recevrez une réponse dans les trois jours ouvrés" in mailoutbox[0].body
     evalreq.refresh_from_db()
     assert evalreq.submitted is True
+
+
+def test_eval_wizard_request_confirmation_recipient(
+    settings,
+    client,
+    mailoutbox,
+    django_capture_on_commit_callbacks,
+    moulinette_config,
+):
+    """When the user is the petitioner, the confirmation email is sent to the project owner."""
+    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+
+    qs = Request.objects.all()
+    assert qs.count() == 0
+
+    url = reverse("request_eval_wizard_step_1")
+    data = {
+        "address": "42 rue du Test, 44000 Testville",
+        "project_description": "Bla bla bla",
+    }
+    res = client.post(url, data=data)
+    url = reverse("request_eval_wizard_step_2")
+    data = {
+        "user_type": "petitioner",
+        "send_eval_to_project_owner": True,
+        "project_owner_emails": "sponsor1@example.org,sponsor2@example.org",
+        "project_owner_phone": "0612345678",
+    }
+    res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    evalreq = qs[0]
+    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        res = client.post(url, data=data)
+    assert res.status_code == 302
+
+    assert len(callbacks) == 1
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].to == ["sponsor1@example.org", "sponsor2@example.org"]
 
 
 @patch("envergo.utils.mattermost.requests.post")
