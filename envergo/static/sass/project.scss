@@ -1827,6 +1827,15 @@ main.demonstrateur_2150 {
     #moulinette,
     #triage {
       max-width: 650px;
+
+      @media (width < 20em) {
+        #map-container {
+          &::before {
+            // switch from ratio 16x9 to ratio 4x3 when width < 320px/20em
+            padding-bottom: 75%;
+          }
+        }
+      }
     }
   }
 
