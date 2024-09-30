@@ -12,6 +12,7 @@ from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.evaluations.utils import extract_department_from_postal_code
+from envergo.geodata.models import Department
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
@@ -28,11 +29,14 @@ class HomeHaieView(TemplateView):
         data = request.POST
         postcode = data.get("postcode")
         department_code = extract_department_from_postal_code(postcode)
-
+        department = Department.objects.filter(department=department_code).first()
         context = self.get_context_data()
-        context["department"] = department_code
+        context["department"] = department
 
-        return HttpResponseRedirect(f"?department={department_code}#department-search")
+        # TODO get this information from a config
+        if department and department.department == "36":
+            return HttpResponseRedirect(reverse("triage"))
+        return self.render_to_response(context)
 
 
 class GeometriciansView(MoulinetteMixin, FormView):

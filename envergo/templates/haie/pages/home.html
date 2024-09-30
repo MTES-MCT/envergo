@@ -129,7 +129,7 @@
       <div class="fr-grid-row fr-grid-row--center">
         <span id="department-search-title"  class="fr-text--lead">Le projet est situé dans un autre département ?</span>
         <div class="fr-col-12 fr-grid-row fr-grid-row--center">
-          <form action="{% url 'home' %}" method="post">
+          <form action="#department-search" method="post">
             {% csrf_token %}
             <div class="fr-search-bar" role="search">
               <label class="fr-label" for="postcode">Code postal</label>
@@ -139,10 +139,21 @@
                      id="postcode"
                      name="postcode">
               <button type="submit" class="fr-btn">Rechercher</button>
-              {{ postcode }}
             </div>
           </form>
         </div>
+        {% if department %}
+          <div class="fr-notice fr-notice--warning fr-mt-4w">
+            <div class="fr-container">
+              <div class="fr-notice__body">
+                <p>
+                  <span class="fr-notice__title"></span>
+                  <span class="fr-notice__desc">Le guichet unique haie n'existe pas dans le department {{ department }}.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </section>
