@@ -11,6 +11,7 @@ from envergo.evaluations.models import USER_TYPES, Request
 from envergo.evaluations.utils import extract_department
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
+from envergo.utils.fields import NoIdnEmailField
 
 
 class EvaluationFormMixin(forms.Form):
@@ -163,7 +164,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         widget=forms.RadioSelect,
     )
     urbanism_department_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
@@ -173,7 +174,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         required=False,
     )
     project_owner_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
@@ -273,7 +274,7 @@ class RequestForm(WizardAddressForm, WizardContactForm):
 
 class EvaluationShareForm(forms.Form):
     emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Select your recipient(s) email address(es)"),
         help_text=_("Separate several addresses with a comma « , »"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
