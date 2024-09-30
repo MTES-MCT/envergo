@@ -33,7 +33,7 @@ class Command(BaseCommand):
         )
         groups = groupby(files, key=lambda file: file.request)
         for request, files in groups:
-            emails = request.get_rteequester_emails()
+            emails = request.get_requester_emails()
             faq_url = reverse("faq")
             contact_url = reverse("contact_us")
             file_upload_url = reverse(
