@@ -709,6 +709,37 @@ class MoulinetteConfig(models.Model):
         return self.department.get_department_display()
 
 
+class HaieDepartmentConfig(models.Model):
+    """
+    Some moulinette content depends on the department.
+    This object is dedicated to the Haie moulinette. For Amenagement, see MoulinetteConfig.
+    """
+
+    department = models.OneToOneField(
+        "geodata.Department",
+        verbose_name=_("Department"),
+        on_delete=models.PROTECT,
+        related_name="haie_config",
+    )
+
+    is_activated = models.BooleanField(
+        _("Is activated"),
+        help_text="Le guichet unique de la haie est-il disponible pour ce département ?",
+        default=False,
+    )
+
+    department_guichet_unique_url = models.URLField(
+        "Url du guichet unique de la haie du département (si existant)", blank=True
+    )
+
+    contacts_and_links = models.TextField(
+        "Liste des contacts et liens utiles", blank=True
+    )
+
+    def __str__(self):
+        return self.department.get_department_display()
+
+
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
     "autorisation_urba_pa_lotissement",
