@@ -22,14 +22,6 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
 class HomeHaieView(MoulinetteMixin, FormView):
     template_name = "haie/pages/home.html"
 
-    # TODO remove: temporary fix waiting for ticket GUHv1.3
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return {
-            "from_home": True,
-            **context,
-        }
-
 
 class GeometriciansView(MoulinetteMixin, FormView):
     template_name = "pages/geometricians.html"
