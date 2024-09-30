@@ -4,12 +4,14 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
+from envergo.evaluations.utils import extract_department_from_postal_code
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
@@ -19,8 +21,18 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class HomeHaieView(MoulinetteMixin, FormView):
+class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        postcode = data.get("postcode")
+        department_code = extract_department_from_postal_code(postcode)
+
+        context = self.get_context_data()
+        context["department"] = department_code
+
+        return HttpResponseRedirect(f"?department={department_code}#department-search")
 
 
 class GeometriciansView(MoulinetteMixin, FormView):

@@ -125,19 +125,23 @@
           </div>
         </div>
       </div>
-      <hr class="separator fr-mt-4w" />
+      <hr id="department-search" class="separator fr-mt-4w" />
       <div class="fr-grid-row fr-grid-row--center">
         <span id="department-search-title"  class="fr-text--lead">Le projet est situé dans un autre département ?</span>
         <div class="fr-col-12 fr-grid-row fr-grid-row--center">
-          <div class="fr-search-bar" role="search">
-            <label class="fr-label" for="department-search">Code postal</label>
-            <input class="fr-input"
-                   placeholder="Code postal"
-                   type="search"
-                   id="department-search"
-                   name="department-search">
-            <button class="fr-btn">Rechercher</button>
-          </div>
+          <form action="{% url 'home' %}" method="post">
+            {% csrf_token %}
+            <div class="fr-search-bar" role="search">
+              <label class="fr-label" for="postcode">Code postal</label>
+              <input class="fr-input"
+                     placeholder="Code postal"
+                     type="search"
+                     id="postcode"
+                     name="postcode">
+              <button type="submit" class="fr-btn">Rechercher</button>
+              {{ postcode }}
+            </div>
+          </form>
         </div>
       </div>
     </div>
