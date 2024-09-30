@@ -33,7 +33,7 @@ class Command(BaseCommand):
         )
         groups = groupby(files, key=lambda file: file.request)
         for request, files in groups:
-            emails = request.get_requester_emails()
+            emails = request.get_rteequester_emails()
             faq_url = reverse("faq")
             contact_url = reverse("contact_us")
             file_upload_url = reverse(
@@ -51,7 +51,7 @@ class Command(BaseCommand):
                 "evaluations/emails/new_files_user_alert.txt", context=context
             )
             email = EmailMultiAlternatives(
-                subject="[EnvErgo] Votre demande d'avis réglementaire",
+                subject="[EnvErgo] Votre mise à jour de documents",
                 body=body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=emails,
