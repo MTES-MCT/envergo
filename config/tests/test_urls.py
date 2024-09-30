@@ -28,7 +28,10 @@ COMMON_URLS = [
     "moulinette_result",
 ]
 
-HAIE_URLS = []
+HAIE_URLS = [
+    "triage",
+    "triage_result",
+]
 
 AMENAGEMENT_URLS = [
     # "/avis",

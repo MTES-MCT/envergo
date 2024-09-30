@@ -1,0 +1,20 @@
+[
+{
+  "model": "moulinette.criterion",
+  "fields": {
+    "backend_title": "Natura 2000 > EE",
+    "title": "Natura 2000 si cas par cas",
+    "subtitle": "ou étude d'impact",
+    "header": "« Liste nationale » Natura 2000 (2° du I de l'<a href=\"https://www.legifrance.gouv.fr/codes/id/LEGISCTA000022090322/\" target=\"_blank\" rel=\"noopener\">article R414-19 du Code de l'environnement</a>)",
+    "regulation": 2,
+    "activation_map": 36,
+    "activation_distance": 0,
+    "evaluator": "envergo.moulinette.regulations.natura2000.EvalEnv",
+    "weight": 5,
+    "required_action": "",
+    "required_action_stake": "",
+    "project_impact": "",
+    "discussion_contact": ""
+  }
+}
+]
