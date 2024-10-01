@@ -187,6 +187,11 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         required=True,
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
+    haies = forms.UUIDField(
+        label="Localisation des haies",
+        required=True,
+        widget=forms.HiddenInput,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
