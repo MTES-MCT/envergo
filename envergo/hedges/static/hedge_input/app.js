@@ -253,6 +253,7 @@ createApp({
         .then((response) => response.json())
         .then((data) => {
           console.log('Data saved with ID:', data.id);
+          window.parent.postMessage({ hedgeData: data });
         })
         .catch((error) => console.error('Error:', error));
     };

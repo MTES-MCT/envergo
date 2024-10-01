@@ -6,6 +6,8 @@
 
 {% block html-classes %}saisie{% endblock %}
 
+{% block header %}{% endblock %}
+
 {% block main %}
   <div id="app" data-save-url="{% url 'save_hedges' %}">
     <div id="saisie-ui">
@@ -132,12 +134,6 @@
   </div>
 {% endblock %}
 
-{% block header %}
-  <header role="banner" class="fr-header header-sticky header-slim">
-    {% include 'haie/_slim_header.html' %}
-
-  </header>
-{% endblock %}
 {% block after-content %}{% endblock %}
 {% block footer %}{% endblock %}
 
