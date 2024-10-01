@@ -65,13 +65,46 @@
               </div>
             </div>
 
-            <a class="fr-btn fr-btn--primary" href="{% url 'input_hedges' %}">Ouvrir le module de saisie</a>
+            <button id="hedge-input-open-btn"
+                    class="fr-btn fr-btn--primary"
+                    type="button"
+                    data-fr-opened="false"
+                    aria-controls="hedge-input-modal">Ouvrir le module de saisie</button>
           </div>
-        </div>
 
-        {% include 'haie/moulinette/_form_footer.html' %}
-      </form>
+          {% include 'haie/moulinette/_form_footer.html' %}
+        </form>
 
+      </div>
     </div>
-  </div>
-</div>
+
+    {% include 'haie/moulinette/_form_footer.html' %}
+  </form>
+
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
+
+  <script>
+  window.addEventListener("load", function() {
+    let btn = document.getElementById("hedge-input-open-btn");
+    let modal = document.getElementById("hedge-input-modal");
+    let hedgeIframe;
+
+    btn.addEventListener("click", function() {
+      hedgeIframe = window.open("{% url 'input_hedges' %}", "hedge-input-iframe");
+      modal.showModal();
+    });
+
+    window.addEventListener("message", function(event) {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data.hedgeData) {
+        hedgeIframe.close();
+        modal.close();
+      }
+    });
+
+
+  });
+  </script>

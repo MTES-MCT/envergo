@@ -2,12 +2,14 @@ import json
 
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, TemplateView
 
 from envergo.hedges.models import HedgeData
 
 
+@method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(TemplateView):
     template_name = "hedges/input.html"
 
