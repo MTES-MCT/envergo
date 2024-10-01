@@ -135,12 +135,15 @@
           <form action="#department-search" method="post">
             {% csrf_token %}
             <div class="fr-search-bar" role="search">
-              <label class="fr-label" for="postcode">Code postal</label>
-              <input class="fr-input"
-                     placeholder="Code postal"
-                     type="search"
-                     id="postcode"
-                     name="postcode">
+              <label class="fr-label" for="department">Department</label>
+
+              <select class="fr-input"  name="department" id="department">
+                <option value="">--- Choisir un département ---</option>
+                {% for option in departments %}
+                  <option value="{{ option.id }}"
+                          {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+              </select>
               <button type="submit" class="fr-btn">Rechercher</button>
             </div>
           </form>

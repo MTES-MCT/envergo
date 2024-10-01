@@ -131,9 +131,11 @@ def project_owner_menu(context, is_slim=False):
 @register.simple_tag(takes_context=True)
 def pilote_departments_menu(context, is_slim=False):
     """Generate html for the "Départements pilotes" collapsible menu."""
-    activated_departments = Department.objects.filter(
-        haie_config__is_activated=True
-    ).all()
+    activated_departments = (
+        Department.objects.defer("geometry")
+        .filter(haie_config__is_activated=True)
+        .all()
+    )
     links = (("triage", department, []) for department in activated_departments)
 
     return collapsible_menu(

@@ -11,7 +11,6 @@ from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
-from envergo.evaluations.utils import extract_department_from_postal_code
 from envergo.geodata.models import Department
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
@@ -27,20 +26,29 @@ class HomeHaieView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["activated_departments"] = Department.objects.filter(
-            haie_config__is_activated=True
-        ).all()
+        departments = (
+            Department.objects.defer("geometry").select_related("haie_config").all()
+        )
+        context["departments"] = departments
+        context["activated_departments"] = [
+            department
+            for department in departments
+            if department
+            and hasattr(department, "haie_config")
+            and department.haie_config.is_activated
+        ]
         return context
 
     def post(self, request, *args, **kwargs):
         data = request.POST
-        postcode = data.get("postcode")
-        department_code = extract_department_from_postal_code(postcode)
-        department = (
-            Department.objects.filter(department=department_code)
-            .select_related("haie_config")
-            .first()
-        )
+        department_id = data.get("department")
+        department = None
+        if department_id:
+            department = (
+                Department.objects.select_related("haie_config")
+                .defer("geometry")
+                .get(id=department_id)
+            )
 
         config = (
             department.haie_config
