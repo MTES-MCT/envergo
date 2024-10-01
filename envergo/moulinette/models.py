@@ -1456,6 +1456,15 @@ class MoulinetteHaie(Moulinette):
             context["triage_form"] = triage_form
         else:
             context["redirect_url"] = context["triage_url"]
+
+        department_code = request.GET.get("department", None)
+        department = (
+            Department.objects.defer("geometry")
+            .filter(haie_config__is_activated=True)
+            .get(department=department_code)
+        )
+        context["department"] = department
+
         return context
 
 

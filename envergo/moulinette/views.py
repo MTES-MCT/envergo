@@ -10,6 +10,7 @@ from django.views.generic import FormView, TemplateView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
@@ -467,6 +468,18 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 class Triage(FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        department_code = self.request.GET.get("department", None)
+        department = (
+            Department.objects.defer("geometry")
+            .filter(haie_config__is_activated=True)
+            .get(department=department_code)
+        )
+        context["department"] = department
+
+        return context
 
     def get_initial(self):
         """Populate the form with data from the query string."""

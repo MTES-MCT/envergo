@@ -1,7 +1,8 @@
-from django.urls import include, path
-from django.utils.translation import gettext_lazy as _
+from django.urls import path
 
 from envergo.moulinette.views import Triage, TriageResult
+
+from .urls import urlpatterns as common_urlpatterns
 
 urlpatterns = [
     path(
@@ -10,9 +11,8 @@ urlpatterns = [
         name="triage",
     ),
     path(
-        _("result/"),
+        "exclus",
         TriageResult.as_view(),
         name="triage_result",
     ),
-    path(_("moulinette/"), include("envergo.moulinette.urls")),
-]
+] + common_urlpatterns

@@ -1,4 +1,5 @@
 import random
+from urllib.parse import urlencode
 
 from django import template
 from django.urls import reverse
@@ -10,8 +11,7 @@ from envergo.moulinette.models import MoulinetteConfig
 register = template.Library()
 
 
-def nav_link(route, label, *event_data, aria_current=False):
-    url = reverse(route)
+def nav_link(url, label, *event_data, aria_current=False):
     aria_current = 'aria-current="page"' if aria_current else ""
 
     data_attrs = ""
@@ -42,7 +42,7 @@ def menu_item(context, route, label, *event_data, subroutes=[]):
         current_route = ""
 
     aria_current = route == current_route or current_route in subroutes
-    return nav_link(route, label, *event_data, aria_current=aria_current)
+    return nav_link(reverse(route), label, *event_data, aria_current=aria_current)
 
 
 @register.simple_tag(takes_context=True)
@@ -100,8 +100,8 @@ def faq_menu(context):
 def evaluation_menu(context):
     """Generate html for the "Mes avis réglementaires" collapsible menu."""
     links = (
-        ("evaluation_search", "Retrouver un avis", []),
-        ("dashboard", "Tableau de bord", []),
+        (reverse("evaluation_search"), "Retrouver un avis", []),
+        (reverse("dashboard"), "Tableau de bord", []),
     )
 
     # Other urls that can be reached from the menu
@@ -117,7 +117,7 @@ def project_owner_menu(context, is_slim=False):
     """Generate html for the "Equipes projet" collapsible menu."""
     links = (
         (
-            "geometricians",
+            reverse("geometricians"),
             "Géomètres-experts",
             ["GeometrePage", "SimulationClick", "Nav"],
         ),
@@ -136,7 +136,14 @@ def pilote_departments_menu(context, is_slim=False):
         .filter(haie_config__is_activated=True)
         .all()
     )
-    links = (("triage", department, []) for department in activated_departments)
+    links = (
+        (
+            f"{reverse('triage')}?{urlencode({'department': department.department})}",
+            department,
+            [],
+        )
+        for department in activated_departments
+    )
 
     return collapsible_menu(
         context,

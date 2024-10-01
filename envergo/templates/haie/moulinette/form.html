@@ -11,7 +11,7 @@
           Ce simulateur vous permet de connaître instantanément les autorisations à obtenir de l’administration, les
           procédures et les délais.
           Il est anonyme et sans création de compte.
-          Département : Indre (36)
+          Département : {{ department }}
         </p>
         <p class="fr-text--light">Tous les champs sont obligatoires.</p>
       {% endif %}
@@ -27,11 +27,6 @@
 
         <!-- Include current query parameters as hidden fields to keep Triage inputs -->
         {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endfor %}
-
-        <!-- TODO remove: temporary fix waiting for ticket GUHv1.3 -->
-        <input type="hidden" name="department" value="36" />
-        <input type="hidden" name="element" value="haie" />
-        <input type="hidden" name="travaux" value="arrachage" />
 
         <div class="form-section">
           {% include '_radio_snippet.html' with field=form.profil %}

@@ -114,7 +114,7 @@
               <div class="fr-tile__body">
                 <div class="fr-tile__content">
                   <h3 class="fr-tile__title">
-                    <a href="{% url 'moulinette_home' %}">{{ department }}</a>
+                    <a href="{% url 'triage' %}?department={{ department.department }}">{{ department }}</a>
                   </h3>
                 </div>
               </div>
