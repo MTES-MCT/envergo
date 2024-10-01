@@ -32,6 +32,41 @@
           {% include '_radio_snippet.html' with field=form.profil %}
           {% include '_radio_snippet.html' with field=form.motif %}
           {% include '_radio_snippet.html' with field=form.reimplantation %}
+
+          <div class="hedges-input ">
+            <div class="fr-table fr-table--sm">
+              <div class="fr-table__wrapper">
+                <div class="fr-table__container">
+                  <div class="fr-table__content">
+                    <table>
+                      <caption>Localisation des haies</caption>
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th scope="col">Nombre de tracés</th>
+                          <th scope="col">Total linéaires (m)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>Haies à arracher</th>
+                          <td>0</td>
+                          <td>0</td>
+                        </tr>
+                        <tr>
+                          <th>Haies à planter</th>
+                          <td>0</td>
+                          <td>0</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <a class="fr-btn fr-btn--primary" href="{% url 'input_hedges' %}">Ouvrir le module de saisie</a>
+          </div>
         </div>
 
         {% include 'haie/moulinette/_form_footer.html' %}
