@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext_lazy as _
 
 from envergo.users.models import User
+from envergo.utils.fields import NoIdnEmailField
 
 # This string is used in django's original AuthenticationForm
 # There is a typo in the string translation, so we add this variable here
@@ -17,7 +18,7 @@ _INVALID_LOGIN_ERROR_MSG = (
 
 
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(
+    email = NoIdnEmailField(
         label="Votre adresse e-mail",
         required=True,
         help_text="Nous enverrons un e-mail de confirmation à cette adresse avant de valider le compte.",

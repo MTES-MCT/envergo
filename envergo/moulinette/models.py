@@ -14,6 +14,7 @@ from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
 from django.http import QueryDict
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -22,9 +23,14 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.forms import (
+    MoulinetteFormAmenagement,
+    MoulinetteFormHaie,
+    TriageFormHaie,
+)
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -300,16 +306,18 @@ class Regulation(models.Model):
         ]
         return contacts
 
-    def iota_only(self):
-        """Is the IOTA criterion the only valid criterion.
+    def ein_out_of_n2000_site(self):
+        """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
 
         There is an edge case for the Natura2000 regulation.
         Projects can be subject to Natura2000 only
-        because they are subject to IOTA, even though they are outsite
+        because they are subject to IOTA or Evaluation Environnemental, even though they are outside
         Natura 2000 zones.
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
-        return criteria_slugs == ["iota"]
+        return criteria_slugs and all(
+            item in ["iota", "eval_env"] for item in criteria_slugs
+        )
 
     def autorisation_urba_needed(self):
         """Is an "autorisation d'urbanisme" needed?
@@ -1126,6 +1134,20 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def get_triage_params(cls):
+        """Add some data to display on the debug page"""
+        raise NotImplementedError
+
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+
+        return {}
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1349,6 +1371,10 @@ class MoulinetteAmenagement(Moulinette):
             ),
         }
 
+    @classmethod
+    def get_triage_params(cls):
+        return set()
+
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["conditionnalite_pac", "dep"]
@@ -1381,6 +1407,25 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         return {}
+
+    @classmethod
+    def get_triage_params(cls):
+        return set(TriageFormHaie.base_fields.keys())
+
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+        context = {}
+        form_data = request.GET
+        context["triage_url"] = update_qs(reverse("triage"), form_data)
+        triage_form = TriageFormHaie(data=form_data)
+        if triage_form.is_valid():
+            context["triage_form"] = triage_form
+        else:
+            context["redirect_url"] = context["triage_url"]
+        return context
 
 
 def get_moulinette_class_from_site(site):

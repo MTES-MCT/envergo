@@ -1,1 +1,13 @@
-{% include 'moulinette/_form_footer.html' %}
+{% extends 'moulinette/_form_footer.html' %}
+
+{% block submit-section %}
+  <div class="hide-print cta-group fr-mt-4w">
+    <div>
+      <a href="{{ triage_url }}"
+         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line">Étape précédente</a>
+    </div>
+    <div id="moulinette-submit-button">
+      <button type="submit" class="fr-btn">Valider</button>
+    </div>
+  </div>
+{% endblock %}
