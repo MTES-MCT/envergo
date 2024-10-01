@@ -4,6 +4,7 @@ from django import template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from envergo.geodata.models import Department
 from envergo.moulinette.models import MoulinetteConfig
 
 register = template.Library()
@@ -129,14 +130,11 @@ def project_owner_menu(context, is_slim=False):
 
 @register.simple_tag(takes_context=True)
 def pilote_departments_menu(context, is_slim=False):
-    """Generate html for the "Equipes projet" collapsible menu."""
-    links = (
-        (
-            "triage",
-            "Indre",
-            [],
-        ),
-    )
+    """Generate html for the "Départements pilotes" collapsible menu."""
+    activated_departments = Department.objects.filter(
+        haie_config__is_activated=True
+    ).all()
+    links = (("triage", department, []) for department in activated_departments)
 
     return collapsible_menu(
         context,
