@@ -108,7 +108,8 @@
     <div class="fr-container">
       <h3>Simuler un projet</h3>
       <p>
-        Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à suivre.
+        Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à
+        suivre.
         <br />
         <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
       </p>
@@ -127,7 +128,7 @@
       </div>
       <hr id="department-search" class="separator fr-mt-4w" />
       <div class="fr-grid-row fr-grid-row--center">
-        <span id="department-search-title"  class="fr-text--lead">Le projet est situé dans un autre département ?</span>
+        <span id="department-search-title" class="fr-text--lead">Le projet est situé dans un autre département ?</span>
         <div class="fr-col-12 fr-grid-row fr-grid-row--center">
           <form action="#department-search" method="post">
             {% csrf_token %}
@@ -142,19 +143,33 @@
             </div>
           </form>
         </div>
-        {% if department %}
-          <div class="fr-notice fr-notice--warning fr-mt-4w">
-            <div class="fr-container">
-              <div class="fr-notice__body">
-                <p>
-                  <span class="fr-notice__title"></span>
-                  <span class="fr-notice__desc">Le guichet unique haie n'existe pas dans le department {{ department }}.</span>
-                </p>
-              </div>
+      </div>
+      {% if department and config and config.department_guichet_unique_url %}
+        <p class="fr-mt-4w">Un guichet de la haie existe déjà pour le département {{ department }}.</p>
+        <p>
+          <a class="fr-btn"
+             href="{{ config.department_guichet_unique_url }}"
+             target="_blank">Aller au Guichet unique Haie pour ce
+          département</a>
+        </p>
+      {% elif department %}
+        <div class="fr-notice fr-notice--warning fr-mt-4w">
+          <div class="fr-container">
+            <div class="fr-notice__body">
+              <p>
+                <span class="fr-notice__title"></span>
+                <span class="fr-notice__desc">Le guichet unique haie n'existe pas dans le department {{ department }}.</span>
+              </p>
             </div>
           </div>
+        </div>
+        {% if config and config.contacts_and_links %}
+          <div id="contacts_and_links" class="fr-mt-4w fr-p-2w">
+            <h6>Liste des contacts et liens utiles</h6>
+            {{ config.contacts_and_links|safe }}
+          </div>
         {% endif %}
-      </div>
+      {% endif %}
     </div>
   </section>
 {% endblock %}

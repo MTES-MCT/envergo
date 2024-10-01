@@ -29,13 +29,24 @@ class HomeHaieView(TemplateView):
         data = request.POST
         postcode = data.get("postcode")
         department_code = extract_department_from_postal_code(postcode)
-        department = Department.objects.filter(department=department_code).first()
+        department = (
+            Department.objects.filter(department=department_code)
+            .select_related("haie_config")
+            .first()
+        )
+
+        config = (
+            department.haie_config
+            if department and hasattr(department, "haie_config")
+            else None
+        )
+
+        if config and config.is_activated:
+            return HttpResponseRedirect(reverse("triage"))
+
         context = self.get_context_data()
         context["department"] = department
-
-        # TODO get this information from a config
-        if department and department.department == "36":
-            return HttpResponseRedirect(reverse("triage"))
+        context["config"] = config
         return self.render_to_response(context)
 
 
