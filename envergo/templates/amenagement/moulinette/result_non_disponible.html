@@ -1,0 +1,34 @@
+{% extends base_result %}
+
+{% load evaluations static pages %}
+
+{% block result %}
+
+  <h1>Simulation réglementaire du projet</h1>
+
+  <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
+    <p class="fr-alert__title">Le simulateur EnvErgo n'est pas encore déployé dans votre département.</p>
+    <p>
+      Il est pour l'instant <a href="{% url 'faq_availability_info' %}">disponible dans {% nb_available_depts %} départements</a>.
+    </p>
+  </div>
+
+  <p>
+    👉 Testez le simulateur avec <a href="{% url 'moulinette_home' %}?created_surface=1250&existing_surface=1000&lng=-1.83425&lat=47.20490&is_lotissement=non">
+    cet exemple de projet : une extension de 1250 m² d'un bâtiment près des rives de la Loire, soumise à la Loi sur l'eau</a>.
+  </p>
+
+  {% include "_department_opt_in.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // Track a moulinette result page load
+    window.addEventListener('load', function() {
+      _paq.push(['trackEvent', 'Simulation', 'Result', '{{ department.department }}']);
+    });
+
+  </script>
+{% endblock %}

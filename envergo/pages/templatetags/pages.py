@@ -1,4 +1,5 @@
 import random
+from typing import Literal
 from urllib.parse import urlencode
 
 from django import template
@@ -6,7 +7,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.models import Department
-from envergo.moulinette.models import MoulinetteConfig
+from envergo.moulinette.models import HaieDepartmentConfig, MoulinetteConfig
 
 register = template.Library()
 
@@ -195,9 +196,10 @@ def collapsible_menu(
 
 
 @register.simple_tag()
-def nb_available_depts():
+def nb_available_depts(site: Literal["haie", "amenagement"] = "amenagement"):
     """Return nb of depts where EnvErgo is available."""
-
+    if site == "haie":
+        return HaieDepartmentConfig.objects.filter(is_activated=True).count()
     return MoulinetteConfig.objects.filter(is_activated=True).count()
 
 

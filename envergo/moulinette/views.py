@@ -329,9 +329,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         elif is_edit:
             template_name = "moulinette/home.html"
         elif not moulinette.has_config():
-            template_name = "moulinette/result_non_disponible.html"
+            template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/result_available_soon.html"
+            template_name = moulinette.get_result_available_soon_template()
         elif moulinette.has_missing_data():
             template_name = "moulinette/home.html"
         else:
@@ -475,8 +475,8 @@ class Triage(FormView):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(haie_config__is_activated=True)
-                .get(department=department_code)
+                .filter(department=department_code)
+                .first()
             )
             if department_code
             else None

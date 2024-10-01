@@ -1,0 +1,31 @@
+{% extends "moulinette/result_available_soon.html" %}
+
+{% block result %}
+
+  <h1>Simulation réglementaire du projet</h1>
+
+  <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
+    <p class="fr-alert__title">Le simulateur Envergo est en cours de déploiement dans votre département.</p>
+    <p>Il sera disponible d'ici à quelques semaines au plus tard.</p>
+  </div>
+
+  <p>
+    👉 Testez le simulateur avec <a href="{% url 'moulinette_home' %}?created_surface=1250&existing_surface=1000&lng=-1.83425&lat=47.20490&is_lotissement=non">
+    cet exemple de projet : une extension de
+    1250 m² d'un bâtiment près des rives de la Loire, soumise à
+    la Loi sur l'eau</a>.
+  </p>
+
+  <p>💡 Inscrivez-vous pour être informé·e de l’ouverture d’EnvErgo à votre département.</p>
+
+  <a target="_blank"
+     rel="noopener"
+     class="fr-btn fr-mb-5w"
+     href="https://tally.so/r/nG6lko">Signaler mon intérêt</a>
+
+  <p>
+    ⏱ Vous pouvez également <a href="{% url 'request_evaluation' %}">demander un avis réglementaire</a>
+    sur un projet, réalisé par l'équipe EnvErgo. Réponse en trois jours ouvrés.
+  </p>
+
+{% endblock %}
