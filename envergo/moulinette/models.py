@@ -1484,7 +1484,8 @@ class MoulinetteHaie(Moulinette):
             (
                 Department.objects.defer("geometry")
                 .select_related("haie_config")
-                .get(department=department_code)
+                .filter(department=department_code)
+                .first()
             )
             if department_code
             else None

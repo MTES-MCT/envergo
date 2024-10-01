@@ -11,7 +11,7 @@
           Ce simulateur vous permet de connaître instantanément les autorisations à obtenir de l’administration, les
           procédures et les délais.
           Il est anonyme et sans création de compte.
-          Département : {{ department }}
+          Département : {{ department|default_if_none:"Inconnu" }}
         </p>
         <p class="fr-text--light">Tous les champs sont obligatoires.</p>
       {% endif %}
