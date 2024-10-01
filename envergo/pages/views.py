@@ -25,6 +25,13 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
 class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["activated_departments"] = Department.objects.filter(
+            haie_config__is_activated=True
+        ).all()
+        return context
+
     def post(self, request, *args, **kwargs):
         data = request.POST
         postcode = data.get("postcode")

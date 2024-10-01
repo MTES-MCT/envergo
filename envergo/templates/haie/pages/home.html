@@ -114,17 +114,19 @@
         <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
       </p>
       <div class="fr-grid-row">
-        <div class="fr-col-12 fr-col-sm-6 fr-col-lg-4">
-          <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-enlarge-link">
-            <div class="fr-tile__body">
-              <div class="fr-tile__content">
-                <h3 class="fr-tile__title">
-                  <a href="{% url 'moulinette_home' %}">Indre</a>
-                </h3>
+        {% for department in activated_departments %}
+          <div class="fr-col-12 fr-col-sm-6 fr-col-lg-4 fr-mb-2w">
+            <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-enlarge-link fr-mr-2w">
+              <div class="fr-tile__body">
+                <div class="fr-tile__content">
+                  <h3 class="fr-tile__title">
+                    <a href="{% url 'moulinette_home' %}">{{ department }}</a>
+                  </h3>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        {% endfor %}
       </div>
       <hr id="department-search" class="separator fr-mt-4w" />
       <div class="fr-grid-row fr-grid-row--center">
