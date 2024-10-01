@@ -1827,6 +1827,15 @@ main.demonstrateur_2150 {
     #moulinette,
     #triage {
       max-width: 650px;
+
+      @media (width < 20em) {
+        #map-container {
+          &::before {
+            // switch from ratio 16x9 to ratio 4x3 when width < 320px/20em
+            padding-bottom: 75%;
+          }
+        }
+      }
     }
   }
 
@@ -1842,6 +1851,37 @@ main.demonstrateur_2150 {
       }
     }
   }
+}
+
+#evaluation-eligibility {
+  background-color: var(--grey-975-100);
+
+  > div {
+    display: flex;
+    margin-top: 1rem;
+
+    div {
+      margin-right: 1rem;
+    }
+  }
+
+  .items-list {
+    line-height: 1.25rem;
+    margin-bottom: 0;
+
+    li:last-child {
+      padding-bottom: 0;
+    }
+  }
+}
+
+.green-check {
+  color: var(--success-425-625);
+}
+
+#moulinette-title {
+  max-width: 700px;
+  margin: 1.5rem auto;
 }
 
 #moulinette-submit-button {

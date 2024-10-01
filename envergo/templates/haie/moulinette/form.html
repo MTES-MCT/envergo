@@ -1,25 +1,47 @@
 {% load utils %}
 
-{% include 'haie/moulinette/_form_header.html' %}
+{% if display_title %}
+  <h2 id="moulinette-title" class="centered">Commencez à décrire votre projet de travaux sur haies</h2>
+{% endif %}
+<div id="moulinette-grid">
+  <div id="moulinette-col" class="fr-col">
+    <div id="moulinette" class="moulinette">
+      {% if display_title %}
+        <p class="fr-text--lead">
+          Ce simulateur vous permet de connaître instantanément les autorisations à obtenir de l’administration, les
+          procédures et les délais.
+          Il est anonyme et sans création de compte.
+          Département : Indre (36)
+        </p>
+        <p class="fr-text--light">Tous les champs sont obligatoires.</p>
+      {% endif %}
+      <form class="fr-mb-3w"
+            method="post"
+            novalidate
+            autocomplete="off"
+            action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+            id="moulinette-form">
+        {% csrf_token %}
 
-<form class="fr-mb-3w"
-      method="post"
-      novalidate
-      autocomplete="off"
-      action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
-      id="moulinette-form">
-  {% csrf_token %}
+        {% include '_form_header.html' with form=form %}
 
-  {% include '_form_header.html' with form=form %}
+        <!-- Include current query parameters as hidden fields to keep Triage inputs -->
+        {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endfor %}
 
-  <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-  {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+        <!-- TODO remove: temporary fix waiting for ticket GUHv1.3 -->
+        <input type="hidden" name="department" value="36" />
+        <input type="hidden" name="element" value="haie" />
+        <input type="hidden" name="travaux" value="arrachage" />
 
-  <div class="form-section">
-    {% include '_radio_snippet.html' with field=form.profil %}
-    {% include '_radio_snippet.html' with field=form.motif %}
-    {% include '_radio_snippet.html' with field=form.reimplantation %}
+        <div class="form-section">
+          {% include '_radio_snippet.html' with field=form.profil %}
+          {% include '_radio_snippet.html' with field=form.motif %}
+          {% include '_radio_snippet.html' with field=form.reimplantation %}
+        </div>
+
+        {% include 'haie/moulinette/_form_footer.html' %}
+      </form>
+
+    </div>
   </div>
-
-  {% include 'haie/moulinette/_form_footer.html' %}
-</form>
+</div>
