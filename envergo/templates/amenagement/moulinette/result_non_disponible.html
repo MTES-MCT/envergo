@@ -1,4 +1,4 @@
-{% extends base_result %}
+{% extends "moulinette/result_non_disponible.html" %}
 
 {% load evaluations static pages %}
 
@@ -20,15 +20,4 @@
 
   {% include "_department_opt_in.html" %}
 
-{% endblock %}
-
-{% block extra_js %}
-  {{ block.super }}
-  <script>
-    // Track a moulinette result page load
-    window.addEventListener('load', function() {
-      _paq.push(['trackEvent', 'Simulation', 'Result', '{{ department.department }}']);
-    });
-
-  </script>
 {% endblock %}
