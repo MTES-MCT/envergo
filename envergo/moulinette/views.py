@@ -473,9 +473,13 @@ class Triage(FormView):
         context = super().get_context_data(**kwargs)
         department_code = self.request.GET.get("department", None)
         department = (
-            Department.objects.defer("geometry")
-            .filter(haie_config__is_activated=True)
-            .get(department=department_code)
+            (
+                Department.objects.defer("geometry")
+                .filter(haie_config__is_activated=True)
+                .get(department=department_code)
+            )
+            if department_code
+            else None
         )
         context["department"] = department
 

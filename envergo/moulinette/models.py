@@ -1459,9 +1459,13 @@ class MoulinetteHaie(Moulinette):
 
         department_code = request.GET.get("department", None)
         department = (
-            Department.objects.defer("geometry")
-            .filter(haie_config__is_activated=True)
-            .get(department=department_code)
+            (
+                Department.objects.defer("geometry")
+                .filter(haie_config__is_activated=True)
+                .get(department=department_code)
+            )
+            if department_code
+            else None
         )
         context["department"] = department
 
