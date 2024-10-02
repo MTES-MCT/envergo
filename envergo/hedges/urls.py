@@ -1,8 +1,8 @@
 from django.urls import path
 
-from envergo.hedges.views import HedgeInput, SaveHedgeDataView
+from envergo.hedges.views import HedgeInput
 
 urlpatterns = [
     path("input/", HedgeInput.as_view(), name="input_hedges"),
-    path("save/", SaveHedgeDataView.as_view(), name="save_hedges"),
+    path("input/<uuid:id>/", HedgeInput.as_view(), name="input_hedges"),
 ]
