@@ -1,7 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.moulinette.models import MoulinetteAmenagement
+from envergo.moulinette.models import Criterion, MoulinetteAmenagement
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
 pytestmark = pytest.mark.django_db
@@ -82,6 +82,18 @@ def test_zh_small_footprint_outside_wetlands(moulinette_data):
 def test_zh_small_footprint_inside_wetlands(moulinette_data):
     """Project with footprint < 100m² are not subject to the 3310."""
 
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
+    assert moulinette.natura2000.zone_humide.result == "non_soumis"
+
+
+@pytest.mark.parametrize("footprint", [150])
+def test_zh_small_footprint_inside_wetlands_with_custom_threshold(moulinette_data):
+    """Project with footprint < 100m² are not subject to the 3310."""
+    Criterion.objects.filter(title="Zone humide 44").update(
+        evaluator_settings={"threshold": 200}
+    )
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
