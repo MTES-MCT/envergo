@@ -9,7 +9,9 @@
 {% block header %}{% endblock %}
 
 {% block main %}
-  <div id="app" data-save-url="{% url 'save_hedges' %}">
+  <div id="app"
+       data-save-url="{{ save_url }}"
+       data-hedges-data='{{ hedge_data_json|safe }}'>
     <div id="saisie-ui">
       <div id="map">
 
