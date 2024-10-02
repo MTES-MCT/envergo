@@ -62,7 +62,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         else:
             wetland_status = "outside"
 
-        if self.catalog["created_surface"] >= 100:
+        if self.catalog["created_surface"] >= self.settings.get("threshold"):
             project_size = "big"
         else:
             project_size = "small"
