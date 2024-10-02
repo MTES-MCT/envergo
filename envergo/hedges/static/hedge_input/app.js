@@ -27,13 +27,18 @@ const fitBoundsOptions = { padding: [10, 10] };
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, id, type, onRemove) {
+  constructor(map, id, type, onRemove, latLngs) {
     this.id = id;
     this.map = map;
     this.type = type;
     this.onRemove = onRemove;
-    this.polyline = map.editTools.startPolyline(null, styles[type].normal);
     this.isHovered = false;
+
+    this.polyline = L.polyline(latLngs || [], styles[type].normal);
+    this.polyline.addTo(map);
+    this.polyline.enableEdit(map);
+    this.polyline.editor.continueForward();
+    // this.polyline = map.editTools.startPolyline(null, styles[type].normal);
     this.latLngs = [];
     this.length = 0;
   }
@@ -153,9 +158,9 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(map, onRemove) {
+  addHedge(map, onRemove, latLngs) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
-    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
+    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, latLngs));
     hedge.init();
     this.hedges.push(hedge);
 
@@ -205,10 +210,10 @@ createApp({
     });
     const showHelpBubble = ref(false);
 
-    const startDrawing = (type) => {
+    const addHedge = (type, latLngs) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      const newHedge = hedgeList.addHedge(map, onRemove);
+      const newHedge = hedgeList.addHedge(map, onRemove, latLngs);
 
       newHedge.polyline.on('editable:vertex:new', () => {
         showHelpBubble.value = true;
@@ -218,14 +223,16 @@ createApp({
       newHedge.polyline.on('editable:drawing:end', () => {
         showHelpBubble.value = false;
       });
+
+      return newHedge;
     };
 
     const startDrawingToPlant = () => {
-      return startDrawing(TO_PLANT);
+      return addHedge(TO_PLANT);
     };
 
     const startDrawingToRemove = () => {
-      return startDrawing(TO_REMOVE);
+      return addHedge(TO_REMOVE);
     };
 
     // Center the map around all existing hedges
@@ -258,6 +265,21 @@ createApp({
         .catch((error) => console.error('Error:', error));
     };
 
+    const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
+
+    const restoreHedges = () => {
+      savedHedgesData.forEach(hedgeData => {
+        const id = hedgeData.id;
+        const type = hedgeData.type;
+        const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
+        const hedgeList = hedges[type];
+
+        const hedge = addHedge(type, latLngs);
+        hedge.polyline.editor.disable();
+        hedge.id = id;
+      });
+    };
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       map = L.map('map', {
@@ -273,6 +295,8 @@ createApp({
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
       }).addTo(map);
+
+      restoreHedges();
     });
 
     return {
