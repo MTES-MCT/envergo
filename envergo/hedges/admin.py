@@ -9,9 +9,22 @@ from envergo.hedges.models import HedgeData
 
 @admin.register(HedgeData)
 class HedgeDataAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at")
+    list_display = (
+        "id",
+        "hedges_to_plant",
+        "length_to_plant",
+        "hedges_to_remove",
+        "length_to_remove",
+        "created_at",
+    )
     ordering = ("-created_at",)
-    readonly_fields = ["data"]
+    readonly_fields = [
+        "data",
+        "hedges_to_plant",
+        "length_to_plant",
+        "hedges_to_remove",
+        "length_to_remove",
+    ]
 
     def get_urls(self):
         urls = super().get_urls()
@@ -35,3 +48,15 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
         response = TemplateResponse(request, "hedges/admin/hedge_map.html", context)
         return response
+
+    def hedges_to_plant(self, obj):
+        return len(obj.hedges_to_plant())
+
+    def length_to_plant(self, obj):
+        return sum(h.length for h in obj.hedges_to_plant())
+
+    def hedges_to_remove(self, obj):
+        return len(obj.hedges_to_remove())
+
+    def length_to_remove(self, obj):
+        return sum(h.length for h in obj.hedges_to_remove())
