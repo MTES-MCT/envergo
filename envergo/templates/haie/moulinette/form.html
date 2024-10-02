@@ -19,14 +19,22 @@
             method="post"
             novalidate
             autocomplete="off"
-            action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+            action="{% url 'moulinette_result' %}"
             id="moulinette-form">
         {% csrf_token %}
 
         {% include '_form_header.html' with form=form %}
 
         <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-        {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endfor %}
+        <input type="hidden"
+               name="department"
+               value="{{ request.GET.department|default:'' }}" />
+        <input type="hidden"
+               name="element"
+               value="{{ request.GET.element|default:'' }}" />
+        <input type="hidden"
+               name="travaux"
+               value="{{ request.GET.travaux|default:'' }}" />
 
         <!-- TODO remove: temporary fix waiting for ticket GUHv1.3 -->
         <input type="hidden" name="department" value="36" />
