@@ -21,6 +21,7 @@ def n2000_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.natura2000.ZoneHumide",
             activation_map=france_map,
+            evaluator_settings={"threshold": 100},
         ),
         CriterionFactory(
             title="Zone inondable 44",
