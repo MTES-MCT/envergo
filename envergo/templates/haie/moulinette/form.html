@@ -50,13 +50,13 @@
                       <tbody>
                         <tr>
                           <th>Haies à arracher</th>
-                          <td>0</td>
-                          <td>0</td>
+                          <td id="hedges-to-remove">0</td>
+                          <td id="length-to-remove">0</td>
                         </tr>
                         <tr>
                           <th>Haies à planter</th>
-                          <td>0</td>
-                          <td>0</td>
+                          <td id="hedges-to-plant">0</td>
+                          <td id="length-to-plant">0</td>
                         </tr>
                       </tbody>
                     </table>
@@ -64,42 +64,52 @@
                 </div>
               </div>
             </div>
-
-            <button id="hedge-input-open-btn"
-                    class="fr-btn fr-btn--primary"
-                    type="button"
-                    data-fr-opened="false"
-                    aria-controls="hedge-input-modal">Ouvrir le module de saisie</button>
           </div>
 
-          {% include 'haie/moulinette/_form_footer.html' %}
-        </form>
+          <button id="hedge-input-open-btn"
+                  class="fr-btn fr-btn--primary"
+                  type="button"
+                  data-fr-opened="false"
+                  aria-controls="hedge-input-modal">Ouvrir le module de saisie</button>
+        </div>
 
-      </div>
+        {% include 'haie/moulinette/_form_footer.html' %}
+      </form>
     </div>
+  </div>
+</div>
 
-    {% include 'haie/moulinette/_form_footer.html' %}
-  </form>
+{% include 'haie/moulinette/_hedge_input_modal.html' %}
 
-  {% include 'haie/moulinette/_hedge_input_modal.html' %}
-
-  <script>
+<script>
   window.addEventListener("load", function() {
     let btn = document.getElementById("hedge-input-open-btn");
     let modal = document.getElementById("hedge-input-modal");
+    let hedgesField = document.getElementById("id_haies");
+    let hedgesToRemove = document.getElementById("hedges-to-remove");
+    let lengthToRemove = document.getElementById("length-to-remove");
+    let hedgesToPlant = document.getElementById("hedges-to-plant");
+    let lengthToPlant = document.getElementById("length-to-plant");
     let hedgeIframe;
 
+    // open the hedge input ui in a modal upon the button click
     btn.addEventListener("click", function() {
       hedgeIframe = window.open("{% url 'input_hedges' %}", "hedge-input-iframe");
       modal.showModal();
     });
 
+    // When the input is saved, close the modal
     window.addEventListener("message", function(event) {
       if (event.origin !== window.location.origin) {
         return;
       }
 
-      if (event.data.hedgeData) {
+      if (event.data.input_id) {
+        hedgesField.value = event.data.input_id;
+        hedgesToRemove.textContent = event.data.hedges_to_remove;
+        lengthToRemove.textContent = event.data.length_to_remove;
+        hedgesToPlant.textContent = event.data.hedges_to_plant;
+        lengthToPlant.textContent = event.data.length_to_plant;
         hedgeIframe.close();
         modal.close();
       }
@@ -107,4 +117,4 @@
 
 
   });
-  </script>
+</script>
