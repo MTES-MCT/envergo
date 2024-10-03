@@ -44,7 +44,9 @@ class HedgeInput(DetailView):
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
-            hedge_data = HedgeData.objects.create(data=data)
+            hedge_data, created = HedgeData.objects.update_or_create(
+                id=kwargs.get("id"), defaults={"data": data}
+            )
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
@@ -54,7 +56,8 @@ class HedgeInput(DetailView):
                     h.length for h in hedge_data.hedges_to_remove()
                 ),
             }
-            return JsonResponse(response_data, status=201)
+            status_code = 201 if created else 200
+            return JsonResponse(response_data, status=status_code)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
