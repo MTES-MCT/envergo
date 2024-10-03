@@ -9,6 +9,7 @@ from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
     Criterion,
+    HaieDepartmentConfig,
     MoulinetteConfig,
     MoulinetteTemplate,
     Perimeter,
@@ -315,3 +316,17 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
 class MoulinetteTemplateAdmin(admin.ModelAdmin):
     list_display = ["config", "key"]
     search_fields = ["content"]
+
+
+@admin.register(HaieDepartmentConfig)
+class HaieDepartmentConfigAdmin(admin.ModelAdmin):
+    list_display = ["department", "is_activated", "department_guichet_unique_url"]
+    list_filter = ["is_activated"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return (
+            qs.select_related("department")
+            .order_by("department__department")
+            .defer("department__geometry")
+        )
