@@ -1422,7 +1422,7 @@ class MoulinetteHaie(Moulinette):
     REGULATIONS = HAIE_REGULATIONS
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
-    result_available_soon = "haie/moulinette/result_available_soon.html"
+    result_available_soon = "haie/moulinette/result_non_disponible.html"
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie

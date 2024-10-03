@@ -469,6 +469,13 @@ class Triage(FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
 
+    def get(self, request, *args, **kwargs):
+        """This page should always have a department to be displayed."""
+        context = self.get_context_data()
+        if not context.get("department", None):
+            return HttpResponseRedirect(reverse("home"))
+        return self.render_to_response(self.get_context_data())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         department_code = self.request.GET.get("department", None)
