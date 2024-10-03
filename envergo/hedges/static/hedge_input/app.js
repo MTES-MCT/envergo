@@ -272,6 +272,10 @@ createApp({
         .catch((error) => console.error('Error:', error));
     };
 
+    const cancel = () => {
+      window.parent.postMessage({ action: 'cancel' });
+    }
+
     const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
 
     /**
@@ -316,6 +320,7 @@ createApp({
       zoomOut,
       showHelpBubble,
       saveData,
+      cancel,
     };
   }
 }).mount('#app');
