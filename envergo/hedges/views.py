@@ -31,7 +31,7 @@ class HedgeInput(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        hedge_data = json.dumps(self.object.data) if self.object else "{}"
+        hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
 
         if self.object:
