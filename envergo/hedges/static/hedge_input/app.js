@@ -274,12 +274,17 @@ createApp({
 
     const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
 
+    /**
+     * Restore hedges for existing inputs.
+     */
     const restoreHedges = () => {
       savedHedgesData.forEach(hedgeData => {
         const type = hedgeData.type;
         const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
+
+        // We don't restore ids, but since we restore hedges in the same order
+        // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs);
-        // hedge.id = id;
       });
     };
 
