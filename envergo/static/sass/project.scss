@@ -11,6 +11,11 @@ $red: #b94a48;
   scroll-behavior: smooth;
 }
 
+// Prevent  scrolling when a dialog is open
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 html.nojs .js {
   display: none !important;
 }
@@ -59,8 +64,6 @@ hr.separator {
  * Update some margins for paragraphs and lists
  */
 article {
-  padding-bottom: 1.5rem;
-
   --li-bottom: 0.5rem;
   --text-spacing: 0 0 1rem;
 
