@@ -27,18 +27,13 @@ const fitBoundsOptions = { padding: [10, 10] };
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, id, type, onRemove, latLngs) {
+  constructor(map, id, type, onRemove) {
     this.id = id;
     this.map = map;
     this.type = type;
     this.onRemove = onRemove;
     this.isHovered = false;
 
-    this.polyline = L.polyline(latLngs || [], styles[type].normal);
-    this.polyline.addTo(map);
-    this.polyline.enableEdit(map);
-    this.polyline.editor.continueForward();
-    // this.polyline = map.editTools.startPolyline(null, styles[type].normal);
     this.latLngs = [];
     this.length = 0;
   }
@@ -56,7 +51,19 @@ class Hedge {
    * That way hedge is a proxy object, and methods with side effects (like `updateLength`)
    * will trigger reactivity.
    */
-  init() {
+  init(latLngs = []) {
+    // this.polyline = L.polyline(latLngs || [], styles[type].normal);
+    // this.polyline.addTo(map);
+    // this.polyline.enableEdit(map);
+    // this.polyline.editor.continueForward();
+
+    this.polyline = this.map.editTools.startPolyline(null, styles[this.type].normal);
+    if (latLngs.length > 0) {
+      this.polyline.editor.connect();
+      latLngs.forEach((latLng) => this.polyline.editor.push(latLng));
+      this.polyline.editor.endDrawing();
+    }
+
     this.updateLength();
 
     this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
@@ -158,10 +165,10 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(map, onRemove, latLngs) {
+  addHedge(map, onRemove, latLngs = []) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
-    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, latLngs));
-    hedge.init();
+    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
+    hedge.init(latLngs);
     this.hedges.push(hedge);
 
     return hedge;
@@ -210,7 +217,7 @@ createApp({
     });
     const showHelpBubble = ref(false);
 
-    const addHedge = (type, latLngs) => {
+    const addHedge = (type, latLngs = []) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
       const newHedge = hedgeList.addHedge(map, onRemove, latLngs);
@@ -269,14 +276,10 @@ createApp({
 
     const restoreHedges = () => {
       savedHedgesData.forEach(hedgeData => {
-        const id = hedgeData.id;
         const type = hedgeData.type;
         const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
-        const hedgeList = hedges[type];
-
         const hedge = addHedge(type, latLngs);
-        hedge.polyline.editor.disable();
-        hedge.id = id;
+        // hedge.id = id;
       });
     };
 
@@ -297,6 +300,7 @@ createApp({
       }).addTo(map);
 
       restoreHedges();
+      zoomOut();
     });
 
     return {
