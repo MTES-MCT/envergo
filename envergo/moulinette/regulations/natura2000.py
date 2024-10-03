@@ -207,7 +207,7 @@ class EvalEnv(CriterionEvaluator):
             elif evalenv == RESULTS.non_soumis:
                 result = (RESULTS.non_soumis, RESULTS.non_soumis)
             else:
-                raise NotImplementedError()
+                result = (RESULTS.non_disponible, RESULTS.non_disponible)
         except AttributeError:
             # If there is no Loi sur l'eau regulation
             # for example, during unit tests

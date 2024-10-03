@@ -1,6 +1,9 @@
 <p>Le projet est soumis à déclaration préalable au titre de la conditionnalité PAC.</p>
-<p>
-  A noter : dans le cas du percement d’un chemin d’accès, la compensation de la haie n’est pas requise pour obtenir
-  l’autorisation de la DDT(M) au titre de la conditionnalité PAC. Cela ne présage pas des autres réglementations
-  environnementales qui s’appliquent.
-</p>
+
+{% if reimplantation == "compensation" %}
+  <p>
+    À noter : dans le cas du percement d’un chemin d’accès, la compensation de la haie n’est pas requise pour obtenir
+    l’autorisation de la DDT(M) au titre de la conditionnalité PAC. Cela ne présume pas des autres réglementations
+    environnementales qui s’appliquent.
+  </p>
+{% endif %}
