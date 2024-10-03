@@ -25,7 +25,7 @@ def to_geojson(obj, geometry_field="geometry"):
 
 
 @register.simple_tag(takes_context=True)
-def show_moulinette_form(context, display_title=True):
+def show_moulinette_form(context):
     """Display the moulinette form.
 
     We do so by selecting the correct template depending on the current domain.
@@ -34,7 +34,6 @@ def show_moulinette_form(context, display_title=True):
     template_name = MoulinetteClass.get_form_template()
 
     template = get_template(template_name)
-    context["display_title"] = display_title
     content = template.render(context.flatten())
     return content
 
