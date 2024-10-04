@@ -94,6 +94,10 @@
   {% include 'moulinette/_actions_banner.html' %}
 {% endblock %}
 
+{% block extra_css %}
+  {% include 'amenagement/moulinette/_form_styles.html' %}
+{% endblock %}
+
 {% block extra_js %}
   {{ block.super }}
   <script>

@@ -295,7 +295,9 @@ class MoulinetteMixin:
 
 
 class MoulinetteHome(MoulinetteMixin, FormView):
-    template_name = "moulinette/home.html"
+    def get_template_names(self):
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        return MoulinetteClass.get_home_template()
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -322,17 +324,18 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         is_admin = self.request.user.is_staff
 
         if moulinette is None:
-            template_name = "moulinette/home.html"
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            template_name = MoulinetteClass.get_home_template()
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
-            template_name = "moulinette/home.html"
+            template_name = moulinette.get_home_template()
         elif not moulinette.has_config():
             template_name = "moulinette/result_non_disponible.html"
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = "moulinette/result_available_soon.html"
         elif moulinette.has_missing_data():
-            template_name = "moulinette/home.html"
+            template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
 

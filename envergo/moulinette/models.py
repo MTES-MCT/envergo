@@ -863,6 +863,14 @@ class Moulinette(ABC):
 
         return self.templates.get(template_key, None)
 
+    @classmethod
+    def get_home_template(cls):
+        """Return the template to display the result page."""
+
+        if not hasattr(cls, "home_template"):
+            raise AttributeError("No result template found.")
+        return cls.home_template
+
     def get_result_template(self):
         """Return the template to display the result page."""
 
@@ -1151,6 +1159,7 @@ class Moulinette(ABC):
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
+    home_template = "amenagement/moulinette/home.html"
     result_template = "amenagement/moulinette/result.html"
     debug_result_template = "amenagement/moulinette/result_debug.html"
     form_template = "amenagement/moulinette/form.html"
@@ -1378,6 +1387,7 @@ class MoulinetteAmenagement(Moulinette):
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["conditionnalite_pac", "dep"]
+    home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
     form_template = "haie/moulinette/form.html"
