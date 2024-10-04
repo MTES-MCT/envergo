@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import USER_TYPES, Request
-from envergo.evaluations.utils import extract_department
+from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.fields import NoIdnEmailField
@@ -119,7 +119,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         department_input = data.get("department", None)
         if not department_input:
             # extract department from address
-            department_input = extract_department(address)
+            department_input = extract_department_from_address(address)
 
         if department_input and department_input not in address:
             # when a town is selected on its own, without a complete address, there is no zip code.

@@ -44,6 +44,7 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
+HAIE_REGULATIONS = ["conditionnalite_pac", "dep"]
 
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
@@ -709,6 +710,39 @@ class MoulinetteConfig(models.Model):
         return self.department.get_department_display()
 
 
+class HaieDepartmentConfig(models.Model):
+    """
+    Some moulinette content depends on the department.
+    This object is dedicated to the Haie moulinette. For Amenagement, see MoulinetteConfig.
+    """
+
+    regulations_available = HAIE_REGULATIONS
+
+    department = models.OneToOneField(
+        "geodata.Department",
+        verbose_name=_("Department"),
+        on_delete=models.PROTECT,
+        related_name="haie_config",
+    )
+
+    is_activated = models.BooleanField(
+        _("Is activated"),
+        help_text="Le guichet unique de la haie est-il disponible pour ce département ?",
+        default=False,
+    )
+
+    department_guichet_unique_url = models.URLField(
+        "Url du guichet unique de la haie du département (si existant)", blank=True
+    )
+
+    contacts_and_links = models.TextField(
+        "Liste des contacts et liens utiles", blank=True
+    )
+
+    def __str__(self):
+        return self.department.get_department_display()
+
+
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
     "autorisation_urba_pa_lotissement",
@@ -822,10 +856,10 @@ class Moulinette(ABC):
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
 
-        self.load_specific_data()
+        self.department = self.get_department()
 
         self.config = self.catalog["config"] = self.get_config()
-        if self.config and self.config.id:
+        if self.config and self.config.id and hasattr(self.config, "templates"):
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
@@ -845,11 +879,6 @@ class Moulinette(ABC):
     def evaluate(self):
         for regulation in self.regulations:
             regulation.evaluate(self)
-
-    @abstractmethod
-    def load_specific_data(self):
-        """Load data specific for a given moulinette instance."""
-        pass
 
     def has_config(self):
         return bool(self.config)
@@ -876,6 +905,20 @@ class Moulinette(ABC):
         if not hasattr(self, "debug_result_template"):
             raise AttributeError("No result template found.")
         return self.debug_result_template
+
+    def get_result_non_disponible_template(self):
+        """Return the template to display the result_non_disponible page."""
+
+        if not hasattr(self, "result_non_disponible"):
+            raise AttributeError("No result_non_disponible template found.")
+        return self.result_non_disponible
+
+    def get_result_available_soon_template(self):
+        """Return the template to display the result_available_soon page."""
+
+        if not hasattr(self, "result_available_soon"):
+            raise AttributeError("No result_available_soon template found.")
+        return self.result_available_soon
 
     @classmethod
     def get_main_form_class(cls):
@@ -1153,6 +1196,8 @@ class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
     result_template = "amenagement/moulinette/result.html"
     debug_result_template = "amenagement/moulinette/result_debug.html"
+    result_available_soon = "amenagement/moulinette/result_available_soon.html"
+    result_non_disponible = "amenagement/moulinette/result_non_disponible.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
 
@@ -1330,9 +1375,6 @@ class MoulinetteAmenagement(Moulinette):
 
         return summary
 
-    def load_specific_data(self):
-        self.department = self.get_department()
-
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
         department = (
@@ -1377,16 +1419,16 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "dep"]
+    REGULATIONS = HAIE_REGULATIONS
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
+    result_available_soon = "haie/moulinette/result_non_disponible.html"
+    result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
 
     def get_config(self):
-        return MoulinetteConfig(
-            is_activated=True, regulations_available=self.REGULATIONS
-        )
+        return getattr(self.department, "haie_config", None)
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
@@ -1400,10 +1442,6 @@ class MoulinetteHaie(Moulinette):
             summary["result"] = self.result_data()
 
         return summary
-
-    def load_specific_data(self):
-        """There is no specific needs for the Haie moulinette."""
-        pass
 
     def get_debug_context(self):
         return {}
@@ -1425,7 +1463,35 @@ class MoulinetteHaie(Moulinette):
             context["triage_form"] = triage_form
         else:
             context["redirect_url"] = context["triage_url"]
+
+        department_code = request.GET.get("department", None)
+        department = (
+            (
+                Department.objects.defer("geometry")
+                .filter(haie_config__is_activated=True, department=department_code)
+                .first()
+            )
+            if department_code
+            else None
+        )
+        context["department"] = department
+
         return context
+
+    def get_department(self):
+        department_code = self.raw_data.get("department", None)
+        department = (
+            (
+                Department.objects.defer("geometry")
+                .select_related("haie_config")
+                .filter(department=department_code)
+                .first()
+            )
+            if department_code
+            else None
+        )
+
+        return department
 
 
 def get_moulinette_class_from_site(site):

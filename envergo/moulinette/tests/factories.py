@@ -2,7 +2,13 @@ import factory
 from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
-from envergo.moulinette.models import Criterion, MoulinetteConfig, Perimeter, Regulation
+from envergo.moulinette.models import (
+    Criterion,
+    HaieDepartmentConfig,
+    MoulinetteConfig,
+    Perimeter,
+    Regulation,
+)
 
 
 class MoulinetteConfigFactory(DjangoModelFactory):
@@ -39,4 +45,12 @@ class PerimeterFactory(DjangoModelFactory):
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
     regulation = factory.SubFactory(RegulationFactory)
+    is_activated = True
+
+
+class HaieDepartmentConfigFactory(DjangoModelFactory):
+    class Meta:
+        model = HaieDepartmentConfig
+
+    department = factory.SubFactory(DepartmentFactory)
     is_activated = True

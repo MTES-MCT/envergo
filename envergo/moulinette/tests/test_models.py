@@ -13,6 +13,7 @@ from envergo.moulinette.models import (
 )
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
+    HaieDepartmentConfigFactory,
     MoulinetteConfigFactory,
     PerimeterFactory,
     RegulationFactory,
@@ -121,10 +122,11 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
 
 
 def test_moulinette_haie_has_specific_behavior():
+    HaieDepartmentConfigFactory()
     site = SiteFactory()
     site.domain = "haie.beta.gouv.fr"
     MoulinetteClass = get_moulinette_class_from_site(site)
-    moulinette = MoulinetteClass({}, {})
+    moulinette = MoulinetteClass({}, {"department": "44"})
     assert moulinette.is_evaluation_available()
     assert moulinette.get_main_form_class() == MoulinetteFormHaie
     assert moulinette.get_form_template() == "haie/moulinette/form.html"

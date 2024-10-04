@@ -1,0 +1,53 @@
+[
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 30,
+      "is_activated": true
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 46,
+      "is_activated": true
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 70,
+      "is_activated": true
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 71,
+      "is_activated": true
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 82,
+      "is_activated": true
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 10,
+      "is_activated": false,
+      "department_guichet_unique_url": "https://www.demarches-simplifiees.fr/commencer/guichet-haies-76-demandes-d-informations-sur-la-pr"
+    }
+  },
+  {
+    "model": "moulinette.HaieDepartmentConfig",
+    "fields": {
+      "department": 63,
+      "is_activated": false,
+      "contacts_and_links": "<address>\r\n    <strong>DDTM de Loire-Atlantique</strong><br />\r\n    Unité Police de l’eau<br />\r\n    Email : <a href=\"mailto:ddtm-see-guichet-unique@loire-atlantique.gouv.fr\">ddtm-see-guichet-unique@loire-atlantique.gouv.fr</a>\r\n  </address>"
+    }
+  }
+]

@@ -4,12 +4,14 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
+from envergo.geodata.models import Department
 from envergo.moulinette.models import MoulinetteConfig
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
@@ -19,8 +21,48 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class HomeHaieView(MoulinetteMixin, FormView):
+class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        departments = (
+            Department.objects.defer("geometry").select_related("haie_config").all()
+        )
+        context["departments"] = departments
+        context["activated_departments"] = [
+            department
+            for department in departments
+            if department
+            and hasattr(department, "haie_config")
+            and department.haie_config.is_activated
+        ]
+        return context
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        department_id = data.get("department")
+        department = None
+        if department_id:
+            department = (
+                Department.objects.select_related("haie_config")
+                .defer("geometry")
+                .get(id=department_id)
+            )
+
+        config = (
+            department.haie_config
+            if department and hasattr(department, "haie_config")
+            else None
+        )
+
+        if config and config.is_activated:
+            return HttpResponseRedirect(reverse("triage"))
+
+        context = self.get_context_data()
+        context["department"] = department
+        context["config"] = config
+        return self.render_to_response(context)
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
