@@ -33,27 +33,36 @@
           {% include '_radio_snippet.html' with field=form.motif %}
           {% include '_radio_snippet.html' with field=form.reimplantation %}
 
-          <div class="hedges-input ">
-            <div id="statistics" class="fr-mb-3w">
-              <table>
-                <thead>
-                  <tr>
-                    <th colspan="2">Cumul linéaire (m)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th>Haies à arracher</th>
-                    <td id="length-to-remove">0</td>
-                  </tr>
-                  <tr>
-                    <th>Haies à planter</th>
-                    <td id="length-to-plant">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div id="form-group-haies" class="hedges-input fr-input-group">
+            <fieldset class="fr-fieldset">
+              <legend class="fr-fieldset__legend">Localisation des haies</legend>
 
+              <div class="fr-fieldset__content">
+                {% if form.cleaned_data.haies %}
+                  <div id="statistics" class="fr-mb-3w">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th colspan="2">Cumul linéaire (m)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>Haies à arracher</th>
+                          <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
+                        </tr>
+                        <tr>
+                          <th>Haies à planter</th>
+                          <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  {% else %}
+                    <p>Aucune information renseignée</p>
+                  {% endif %}
+                </div>
+              </div>
+            </fieldset>
             <button id="hedge-input-open-btn"
                     class="fr-btn fr-btn--primary"
                     type="button"
