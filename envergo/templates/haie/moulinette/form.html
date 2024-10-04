@@ -33,44 +33,49 @@
           {% include '_radio_snippet.html' with field=form.motif %}
           {% include '_radio_snippet.html' with field=form.reimplantation %}
 
-          <div id="form-group-haies" class="hedges-input fr-input-group">
-            <fieldset class="fr-fieldset">
-              <legend class="fr-fieldset__legend">Localisation des haies</legend>
+          <div id="form-group-haies"
+               class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
+            <label for="id_haies">Localisation des haies</label>
 
-              <div class="fr-fieldset__content">
-                <div id="statistics-container">
-                  {% if form.cleaned_data.haies %}
-                    <div id="statistics" class="fr-mb-3w">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th colspan="2">Cumul linéaire (m)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <th>Haies à arracher</th>
-                            <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
-                          </tr>
-                          <tr>
-                            <th>Haies à planter</th>
-                            <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  {% else %}
-                    <p>Aucune information renseignée</p>
-                  {% endif %}
+            <div id="statistics-container">
+              {% if form.cleaned_data.haies %}
+                <div id="statistics" class="fr-mb-3w">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th colspan="2">Cumul linéaire (m)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th>Haies à arracher</th>
+                        <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
+                      </tr>
+                      <tr>
+                        <th>Haies à planter</th>
+                        <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            </fieldset>
+              {% else %}
+                <p>Aucune information renseignée</p>
+              {% endif %}
+            </div>
 
             <button id="hedge-input-open-btn"
                     class="fr-btn fr-btn--primary"
                     type="button"
                     data-fr-opened="false"
                     aria-controls="hedge-input-modal">Ouvrir le module de saisie</button>
+
+            {% if form.haies.errors %}
+              <p class="fr-error-text">
+                ↑
+                {{ form.haies.errors.0 }}
+                ↑
+              </p>
+            {% endif %}
           </div>
 
           {% include 'haie/moulinette/_form_footer.html' %}
@@ -83,7 +88,7 @@
 {% include 'haie/moulinette/_hedge_input_modal.html' %}
 
 <template id="hedge-data-statistics">
-  <div id="statistics">
+  <div id="statistics" class="fr-mb-3w">
     <table>
       <thead>
         <tr>
