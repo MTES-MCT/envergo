@@ -44,6 +44,9 @@ class HedgeData(models.Model):
         verbose_name = "Hedge data"
         verbose_name_plural = "Hedge data"
 
+    def __str__(self):
+        return str(self.id)
+
     def hedges(self):
         return [Hedge(**h) for h in self.data]
 
