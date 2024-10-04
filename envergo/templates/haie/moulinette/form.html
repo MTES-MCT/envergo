@@ -19,7 +19,7 @@
             method="post"
             novalidate
             autocomplete="off"
-            action="{% url 'moulinette_result' %}"
+            action="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
             id="moulinette-form">
         {% csrf_token %}
 

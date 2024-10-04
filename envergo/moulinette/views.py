@@ -218,9 +218,6 @@ class MoulinetteMixin:
 
         return form_classes
 
-    def form_valid(self, form):
-        return HttpResponseRedirect(self.get_results_url(form))
-
     def get_results_url(self, form):
         """Generates the GET url corresponding to the POST'ed moulinette query.
 
@@ -309,6 +306,9 @@ class MoulinetteHome(MoulinetteMixin, FormView):
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
+
+    def form_valid(self, form):
+        return HttpResponseRedirect(self.get_results_url(form))
 
 
 class MoulinetteResult(MoulinetteMixin, FormView):
