@@ -38,31 +38,34 @@
               <legend class="fr-fieldset__legend">Localisation des haies</legend>
 
               <div class="fr-fieldset__content">
-                {% if form.cleaned_data.haies %}
-                  <div id="statistics" class="fr-mb-3w">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th colspan="2">Cumul linéaire (m)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th>Haies à arracher</th>
-                          <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
-                        </tr>
-                        <tr>
-                          <th>Haies à planter</th>
-                          <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                <div id="statistics-container">
+                  {% if form.cleaned_data.haies %}
+                    <div id="statistics" class="fr-mb-3w">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th colspan="2">Cumul linéaire (m)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th>Haies à arracher</th>
+                            <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
+                          </tr>
+                          <tr>
+                            <th>Haies à planter</th>
+                            <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   {% else %}
                     <p>Aucune information renseignée</p>
                   {% endif %}
                 </div>
               </div>
             </fieldset>
+
             <button id="hedge-input-open-btn"
                     class="fr-btn fr-btn--primary"
                     type="button"
@@ -79,13 +82,35 @@
 
 {% include 'haie/moulinette/_hedge_input_modal.html' %}
 
+<template id="hedge-data-statistics">
+  <div id="statistics">
+    <table>
+      <thead>
+        <tr>
+          <th colspan="2">Cumul linéaire (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Haies à arracher</th>
+          <td id="length-to-remove">0</td>
+        </tr>
+        <tr>
+          <th>Haies à planter</th>
+          <td id="length-to-plant">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
 <script>
   window.addEventListener("load", function() {
     let btn = document.getElementById("hedge-input-open-btn");
     let modal = document.getElementById("hedge-input-modal");
     let hedgeIdField = document.getElementById("id_haies");
-    let lengthToRemove = document.getElementById("length-to-remove");
-    let lengthToPlant = document.getElementById("length-to-plant");
+    let hedgeDataStatsTpl = document.getElementById("hedge-data-statistics");
+    let statisticsContainer = document.getElementById("statistics-container");
     let hedgeIframe;
 
     // open the hedge input ui in a modal upon the button click
@@ -111,9 +136,15 @@
       }
 
       if (event.data.input_id) {
-        hedgeIdField.value = event.data.input_id;
+        let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
+        let lengthToRemove = statsContent.getElementById("length-to-remove");
+        let lengthToPlant = statsContent.getElementById("length-to-plant");
         lengthToRemove.textContent = event.data.length_to_remove;
         lengthToPlant.textContent = event.data.length_to_plant;
+        statisticsContainer.innerHTML = "";
+        statisticsContainer.appendChild(statsContent);
+
+        hedgeIdField.value = event.data.input_id;
         hedgeIframe.close();
         modal.close();
       }
