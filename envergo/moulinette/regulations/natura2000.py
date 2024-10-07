@@ -14,7 +14,7 @@ LIGHTBLUE = "#00BFFF"
 class ZoneHumideSettingsForm(forms.Form):
     threshold = forms.fields.IntegerField(
         label="Seuil réglementaire (en m²)",
-        help_text="Seuil à partir duquel le critère est applicable. (généralement 100m²)",
+        help_text="Seuil à partir duquel le critère est applicable (généralement 100m²).",
         required=True,
     )
 
