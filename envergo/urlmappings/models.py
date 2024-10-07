@@ -21,7 +21,7 @@ class UrlMapping(models.Model):
     """A mapping between a short key and a URL."""
 
     key = models.CharField(max_length=20, unique=True, default=generate_key)
-    url = models.URLField()
+    url = models.URLField(max_length=2048)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     def __str__(self):
