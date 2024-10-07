@@ -63,19 +63,21 @@
     </div>
   </section>
 
-  <section id="simulateur" class="fr-py-8w fr-mb-5w">
+  <section id="simulateur" class="fr-py-5w fr-mb-5w">
     <div class="fr-container">
       <h3>Simuler un projet</h3>
       <p>
-        Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à
-        suivre.
+        <span class="fr-text--lead">
+          Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à
+          suivre.
+        </span>
         <br />
         <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
       </p>
       <div class="fr-grid-row">
         {% for department in activated_departments %}
-          <div class="fr-col-12 fr-col-sm-6 fr-col-lg-4 fr-mb-2w">
-            <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-enlarge-link fr-mr-2w">
+          <div class="fr-col-12 fr-col-sm-6 fr-col-lg-2 fr-mb-2w">
+            <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-tile--no-icon fr-enlarge-link fr-mr-2w">
               <div class="fr-tile__body">
                 <div class="fr-tile__content">
                   <h3 class="fr-tile__title">
@@ -97,7 +99,7 @@
               <label class="fr-label" for="department">Department</label>
 
               <select class="fr-input"  name="department" id="department">
-                <option value="">--- Choisir un département ---</option>
+                <option value="" disabled>--- Choisir un département ---</option>
                 {% for option in departments %}
                   <option value="{{ option.id }}"
                           {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
@@ -122,7 +124,7 @@
             <div class="fr-notice__body">
               <p>
                 <span class="fr-notice__title"></span>
-                <span class="fr-notice__desc">Le guichet unique haie n'existe pas dans le department {{ department }}.</span>
+                <span class="fr-notice__desc">Le guichet unique haie n'existe pas encore dans le départment {{ department }}.</span>
               </p>
             </div>
           </div>
@@ -142,16 +144,16 @@
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-lg-8 fr-col-xl-6 alt fr-p-3w">
 
-          <h2 class="fr-h6">Quels types de projets ce simulateur couvre-t-il actuellement ?</h2>
+          <h2 class="fr-h6">Quels travaux le guichet unique de la haie couvre-t-il actuellement ?</h2>
           <hr>
           <p>
             <strong>Végétation concernée</strong>
             <br />
-            <span class="green-check">✔</span> Une haie
+            <span class="green-check">✔</span> Les haies
             <br />
-            ❌ Un bosquet
+            <span class="green-check">✔</span> Les alignements d’arbres
             <br />
-            ❌ Un alignement d’arbres
+            ❌ Les bosquets
             <br />
           </p>
           <p>
@@ -165,7 +167,7 @@
           <p>
             <strong>Localisation</strong>
             <br />
-            Simulateur uniquement en expérimentation dans quelques departements
+            En expérimentation dans cinq departements (02, 14, 36, 42, 49)
           </p>
         </div>
       </div>

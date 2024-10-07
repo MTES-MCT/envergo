@@ -711,8 +711,8 @@ class MoulinetteConfig(models.Model):
 
 
 class HaieDepartmentConfig(models.Model):
-    """
-    Some moulinette content depends on the department.
+    """Some moulinette content depends on the department.
+
     This object is dedicated to the Haie moulinette. For Amenagement, see MoulinetteConfig.
     """
 

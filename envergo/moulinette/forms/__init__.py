@@ -232,19 +232,18 @@ class TriageFormHaie(forms.Form):
         get_display_value=lambda x: dict(DEPARTMENT_CHOICES).get(x, "Inconnu"),
     )
     element = DisplayChoiceField(
-        label="Quel élément paysager est concerné ?",
+        label="Quel type de végétation est concerné ?",
         widget=forms.RadioSelect,
         choices=(
-            ("haie", "Une haie"),
-            ("bosquet", "Un bosquet"),
-            ("alignement", "Un alignement d'arbres"),
+            ("haie", "Haies ou alignements d’arbres"),
+            ("bosquet", "Bosquets"),
             (
                 "autre",
                 "Autre",
             ),
         ),
         required=True,
-        display_label="Élément paysager :",
+        display_label="Type de végétation :",
     )
 
     travaux = DisplayChoiceField(

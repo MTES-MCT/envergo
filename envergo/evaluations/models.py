@@ -665,6 +665,15 @@ class Request(models.Model):
         """Shortcut property"""
         return self.user_type == USER_TYPES.instructor
 
+    def get_requester_emails(self):
+        """Return emails of the user who requested the evaluation."""
+
+        return (
+            self.urbanism_department_emails
+            if self.is_from_instructor()
+            else self.project_owner_emails
+        )
+
     def create_evaluation(self):
         """Create an evaluation from this evaluation request."""
 

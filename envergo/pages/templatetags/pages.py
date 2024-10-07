@@ -3,6 +3,7 @@ from typing import Literal
 from urllib.parse import urlencode
 
 from django import template
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -132,11 +133,19 @@ def project_owner_menu(context, is_slim=False):
 @register.simple_tag(takes_context=True)
 def pilote_departments_menu(context, is_slim=False):
     """Generate html for the "Départements pilotes" collapsible menu."""
-    activated_departments = (
-        Department.objects.defer("geometry")
-        .filter(haie_config__is_activated=True)
-        .all()
-    )
+    cache_key = "activated_departments"
+    activated_departments = cache.get(cache_key)
+
+    if not activated_departments:
+        activated_departments = (
+            Department.objects.defer("geometry")
+            .filter(haie_config__is_activated=True)
+            .all()
+        )
+        cache.set(
+            cache_key, activated_departments, timeout=60 * 15
+        )  # Cache for 15 minutes
+
     links = (
         (
             f"{reverse('triage')}?{urlencode({'department': department.department})}",
@@ -198,9 +207,8 @@ def collapsible_menu(
 @register.simple_tag()
 def nb_available_depts(site: Literal["haie", "amenagement"] = "amenagement"):
     """Return nb of depts where EnvErgo is available."""
-    if site == "haie":
-        return HaieDepartmentConfig.objects.filter(is_activated=True).count()
-    return MoulinetteConfig.objects.filter(is_activated=True).count()
+    Config = {"haie": HaieDepartmentConfig, "amenagement": MoulinetteConfig}.get(site)
+    return Config.objects.filter(is_activated=True).count()
 
 
 @register.simple_tag(takes_context=True)

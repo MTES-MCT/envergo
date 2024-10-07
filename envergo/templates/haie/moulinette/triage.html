@@ -7,11 +7,7 @@
     <div id="moulinette-col" class="fr-col">
       <div id="triage">
         <h2 id="moulinette-title" class="centered">Commencez à décrire votre projet de travaux sur haies</h2>
-        <p class="fr-text--lead">
-          Ce simulateur vous permet de connaître instantanément les autorisations à obtenir de l’administration, les procédures et les délais.
-          Il est anonyme et sans création de compte.
-          Département : {{ department|default_if_none:"Inconnu" }}
-        </p>
+        {% include 'haie/moulinette/_form_introduction.html' %}
         <p class="fr-text--light">Tous les champs sont obligatoires.</p>
         <form class="fr-mb-3w" method="post" novalidate>
 
