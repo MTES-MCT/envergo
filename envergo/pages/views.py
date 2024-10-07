@@ -60,7 +60,7 @@ class HomeHaieView(TemplateView):
         if config and config.is_activated:
             query_params = {"department": department.department}
             return HttpResponseRedirect(
-                f"{reverse("triage")}?{urlencode(query_params)}"
+                f"{reverse('triage')}?{urlencode(query_params)}"
             )
 
         context = self.get_context_data()
