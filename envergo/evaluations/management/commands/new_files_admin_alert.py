@@ -1,6 +1,8 @@
 from datetime import timedelta
 from itertools import groupby
+from textwrap import dedent
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import F
 from django.urls import reverse
@@ -35,10 +37,14 @@ class Command(BaseCommand):
         groups = groupby(files, key=lambda file: file.request)
         for request, files in groups:
             url = reverse("admin:evaluations_request_change", args=[request.id])
-            message = f"""
-            Une demande d'avis a été mise à jour.
-            Adresse : {request.address}
-            {len(list(files))} nouveaux fichiers ont été ajoutés.
-            [Admin django](https://envergo.beta.gouv.fr/{url})
-            """
+            message = dedent(
+                f"""\
+                Une demande d'avis a été mise à jour.
+                Adresse : {request.address}
+                {len(list(files))} nouveaux fichiers ont été ajoutés.
+                [Admin django](https://envergo.beta.gouv.fr/{url})
+
+                ping {", ".join(settings.OPS_MATTERMOST_HANDLERS)}
+                """
+            )
             notify(message)
