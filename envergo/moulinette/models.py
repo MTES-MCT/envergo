@@ -658,20 +658,32 @@ class Perimeter(models.Model):
         return mark_safe(contact)
 
 
-class MoulinetteConfig(models.Model):
-    """Some moulinette content depends on the department."""
-
+class ConfigBase(models.Model):
     department = models.OneToOneField(
         "geodata.Department",
         verbose_name=_("Department"),
         on_delete=models.PROTECT,
-        related_name="moulinette_config",
+        related_name="%(class)s",
     )
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.department.get_department_display()
+
+
+class ConfigAmenagement(ConfigBase):
+    """Some moulinette content depends on the department.
+
+    This object is dedicated to the Amenagement moulinette. For Haie, see ConfigHaie.
+    """
+
     regulations_available = ArrayField(
         base_field=models.CharField(max_length=64, choices=REGULATIONS),
         blank=True,
@@ -703,33 +715,17 @@ class MoulinetteConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Moulinette config")
-        verbose_name_plural = _("Moulinette configs")
-
-    def __str__(self):
-        return self.department.get_department_display()
+        verbose_name = _("Config amenagement")
+        verbose_name_plural = _("Configs amenagement")
 
 
-class HaieDepartmentConfig(models.Model):
+class ConfigHaie(ConfigBase):
     """Some moulinette content depends on the department.
 
-    This object is dedicated to the Haie moulinette. For Amenagement, see MoulinetteConfig.
+    This object is dedicated to the Haie moulinette. For Amenagement, see ConfigAmenagement.
     """
 
     regulations_available = HAIE_REGULATIONS
-
-    department = models.OneToOneField(
-        "geodata.Department",
-        verbose_name=_("Department"),
-        on_delete=models.PROTECT,
-        related_name="haie_config",
-    )
-
-    is_activated = models.BooleanField(
-        _("Is activated"),
-        help_text="Le guichet unique de la haie est-il disponible pour ce département ?",
-        default=False,
-    )
 
     department_guichet_unique_url = models.URLField(
         "Url du guichet unique de la haie du département (si existant)", blank=True
@@ -741,6 +737,10 @@ class HaieDepartmentConfig(models.Model):
 
     def __str__(self):
         return self.department.get_department_display()
+
+    class Meta:
+        verbose_name = "Config haie"
+        verbose_name_plural = "Configs haie"
 
 
 TEMPLATE_KEYS = [
@@ -762,12 +762,12 @@ def get_all_template_keys():
 class MoulinetteTemplate(models.Model):
     """A custom moulinette template that can be admin edited.
 
-    Templates can be associated to departments (through MoulinetteConfig) or
+    Templates can be associated to departments (through ConfigAmenagement) or
     criteria.
     """
 
     config = models.ForeignKey(
-        "moulinette.MoulinetteConfig",
+        "moulinette.ConfigAmenagement",
         verbose_name=_("Config"),
         on_delete=models.PROTECT,
         related_name="templates",
@@ -1379,14 +1379,14 @@ class MoulinetteAmenagement(Moulinette):
         lng_lat = self.catalog["lng_lat"]
         department = (
             Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
+            .select_related("configamenagement")
+            .prefetch_related("configamenagement__templates")
             .first()
         )
         return department
 
     def get_config(self):
-        return getattr(self.department, "moulinette_config", None)
+        return getattr(self.department, "configamenagement", None)
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -1428,7 +1428,7 @@ class MoulinetteHaie(Moulinette):
     main_form_class = MoulinetteFormHaie
 
     def get_config(self):
-        return getattr(self.department, "haie_config", None)
+        return getattr(self.department, "confighaie", None)
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
@@ -1468,7 +1468,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(haie_config__is_activated=True, department=department_code)
+                .filter(confighaie__is_activated=True, department=department_code)
                 .first()
             )
             if department_code
@@ -1483,7 +1483,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .select_related("haie_config")
+                .select_related("confighaie")
                 .filter(department=department_code)
                 .first()
             )

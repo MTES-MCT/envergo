@@ -262,7 +262,7 @@ class Evaluation(models.Model):
         lng, lat = params["lng"], params["lat"]
         coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
         department = Department.objects.filter(geometry__contains=coords).first()
-        return department.moulinette_config if department else None
+        return department.configamenagement if department else None
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""

@@ -3,17 +3,17 @@ from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
 from envergo.moulinette.models import (
+    ConfigAmenagement,
+    ConfigHaie,
     Criterion,
-    HaieDepartmentConfig,
-    MoulinetteConfig,
     Perimeter,
     Regulation,
 )
 
 
-class MoulinetteConfigFactory(DjangoModelFactory):
+class ConfigAmenagementFactory(DjangoModelFactory):
     class Meta:
-        model = MoulinetteConfig
+        model = ConfigAmenagement
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
@@ -48,9 +48,9 @@ class PerimeterFactory(DjangoModelFactory):
     is_activated = True
 
 
-class HaieDepartmentConfigFactory(DjangoModelFactory):
+class ConfigHaieFactory(DjangoModelFactory):
     class Meta:
-        model = HaieDepartmentConfig
+        model = ConfigHaie
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True

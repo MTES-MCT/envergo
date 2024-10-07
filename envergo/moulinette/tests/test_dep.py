@@ -3,8 +3,8 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
     CriterionFactory,
-    HaieDepartmentConfigFactory,
     RegulationFactory,
 )
 
@@ -26,7 +26,7 @@ def dep_criteria(france_map):  # noqa
 
 
 def test_dep_is_soumis():
-    HaieDepartmentConfigFactory()
+    ConfigHaieFactory()
     data = {
         "profil": "autre",
         "motif": "chemin_acces",

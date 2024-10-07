@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.models import Department
-from envergo.moulinette.models import HaieDepartmentConfig, MoulinetteConfig
+from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 
 register = template.Library()
 
@@ -139,7 +139,7 @@ def pilote_departments_menu(context, is_slim=False):
     if not activated_departments:
         activated_departments = (
             Department.objects.defer("geometry")
-            .filter(haie_config__is_activated=True)
+            .filter(confighaie__is_activated=True)
             .all()
         )
         cache.set(
@@ -207,7 +207,7 @@ def collapsible_menu(
 @register.simple_tag()
 def nb_available_depts(site: Literal["haie", "amenagement"] = "amenagement"):
     """Return nb of depts where EnvErgo is available."""
-    Config = {"haie": HaieDepartmentConfig, "amenagement": MoulinetteConfig}.get(site)
+    Config = {"haie": ConfigHaie, "amenagement": ConfigAmenagement}.get(site)
     return Config.objects.filter(is_activated=True).count()
 
 

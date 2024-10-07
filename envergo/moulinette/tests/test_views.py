@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.moulinette.tests.factories import MoulinetteConfigFactory
+from envergo.moulinette.tests.factories import ConfigAmenagementFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -66,7 +66,7 @@ def test_moulinette_result_without_config_admin_access(client, admin_user):
 
 
 def test_moulinette_result_with_deactivated_config(client):
-    MoulinetteConfigFactory(is_activated=False)
+    ConfigAmenagementFactory(is_activated=False)
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -78,7 +78,7 @@ def test_moulinette_result_with_deactivated_config(client):
 
 
 def test_moulinette_result_with_deactivated_config_admin_access(client, admin_user):
-    MoulinetteConfigFactory(is_activated=False)
+    ConfigAmenagementFactory(is_activated=False)
     client.force_login(admin_user)
 
     url = reverse("moulinette_result")
@@ -92,7 +92,7 @@ def test_moulinette_result_with_deactivated_config_admin_access(client, admin_us
 
 
 def test_moulinette_result_with_activated_config(client):
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -113,7 +113,7 @@ def test_moulinette_result_without_params_redirects_to_home(client):
 def test_moulinette_result_form_error(client):
     """Bad params are cleaned from the result url."""
 
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("moulinette_result")
     params = (
@@ -131,7 +131,7 @@ def test_moulinette_result_form_error(client):
 
 def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
     """Analytics params are not cleaned from the result url."""
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&mtm_campaign=test"
@@ -143,7 +143,7 @@ def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
 
 
 def test_moulinette_result_custom_matomo_tracking_url(client):
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&mtm_campaign=test"

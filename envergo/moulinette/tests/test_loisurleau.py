@@ -3,8 +3,8 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     RegulationFactory,
 )
 
@@ -174,7 +174,7 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data):
 def test_3310_large_footprint_inside_doubt_department(moulinette_data):
     """Project with footprint > 1000m² inside a whole zh department."""
 
-    MoulinetteConfigFactory(zh_doubt=True)
+    ConfigAmenagementFactory(zh_doubt=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["within_potential_wetlands_deprartment"] = True
     moulinette.evaluate()

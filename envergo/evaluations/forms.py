@@ -128,10 +128,10 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
         department = (
             Department.objects.filter(department=department_input)
-            .select_related("moulinette_config")
+            .select_related("configamenagement")
             .first()
         )
-        if department and not department.is_activated():
+        if department and not department.is_amenagement_activated():
             self.add_error(
                 "department",
                 ValidationError(
