@@ -1,41 +1,41 @@
 [
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 30,
       "is_activated": true
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 46,
       "is_activated": true
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 70,
       "is_activated": true
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 71,
       "is_activated": true
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 82,
       "is_activated": true
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 10,
       "is_activated": false,
@@ -43,7 +43,7 @@
     }
   },
   {
-    "model": "moulinette.HaieDepartmentConfig",
+    "model": "moulinette.ConfigHaie",
     "fields": {
       "department": 63,
       "is_activated": false,
