@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
@@ -57,7 +58,10 @@ class HomeHaieView(TemplateView):
         )
 
         if config and config.is_activated:
-            return HttpResponseRedirect(reverse("triage"))
+            query_params = {"department": department.department}
+            return HttpResponseRedirect(
+                f"{reverse("triage")}?{urlencode(query_params)}"
+            )
 
         context = self.get_context_data()
         context["department"] = department
