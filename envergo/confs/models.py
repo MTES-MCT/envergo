@@ -54,3 +54,20 @@ class Setting(models.Model):
     class Meta:
         verbose_name = _("Setting")
         verbose_name_plural = _("Settings")
+
+
+class HostedFile(models.Model):
+    """A single file."""
+
+    file = models.FileField(_("File"), upload_to="f")
+    name = models.CharField(_("Name"), max_length=256)
+    description = models.TextField(_("Description"), blank=True)
+    uploaded_by = models.ForeignKey("users.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("Hosted file")
+        verbose_name_plural = _("Hosted files")
+
+    def __str__(self):
+        return self.name
