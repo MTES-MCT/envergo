@@ -142,16 +142,32 @@ class EvaluationDetail(
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
+        context["evaluation_content"] = self.get_evaluation_content()
+        return context
 
+    def get_evaluation_content(self):
+        """Select the correct version to display."""
+
+        # Staff can preview draft evaluations
+        selected_version_id = int(self.request.GET.get("version", -1))
+        selected_version = next(
+            (v for v in self.object.versions.all() if v.id == selected_version_id),
+            None,
+        )
+
+        # By default, we display the published version
         published_version = next(
             (v for v in self.object.versions.all() if v.published), None
         )
-        if published_version:
-            evaluation_content = published_version.content
+
+        if selected_version and self.request.user.is_staff:
+            content = selected_version.content
+        elif published_version:
+            content = published_version.content
         else:
-            evaluation_content = self.object.render_content()
-        context["evaluation_content"] = evaluation_content
-        return context
+            content = self.object.render_content()
+
+        return content
 
     def get(self, request, *args, **kwargs):
         # The Method Resolution Order (MRO) of python makes sure that
