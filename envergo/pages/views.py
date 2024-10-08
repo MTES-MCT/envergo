@@ -70,7 +70,7 @@ class HomeHaieView(TemplateView):
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
-    template_name = "pages/geometricians.html"
+    template_name = "amenagement/pages/geometricians.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
