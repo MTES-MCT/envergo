@@ -1067,12 +1067,12 @@ msgid "Is the moulinette available for this department?"
 msgstr "Le simulateur est-il activé pour ce départemnent ?"
 
 #: envergo/moulinette/models.py:685
-msgid "Moulinette config"
-msgstr "Config moulinette"
+msgid "Config amenagement"
+msgstr "Config amenagement"
 
 #: envergo/moulinette/models.py:686
-msgid "Moulinette configs"
-msgstr "Configs moulinette"
+msgid "Configs amenagement"
+msgstr "Configs amenagement"
 
 #: envergo/moulinette/models.py:717
 msgid "Config"

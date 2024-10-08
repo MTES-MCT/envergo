@@ -229,7 +229,6 @@ class TriageFormHaie(forms.Form):
     department = DisplayCharField(
         label="Département",
         required=True,
-        initial="36",
         get_display_value=lambda x: dict(DEPARTMENT_CHOICES).get(x, "Inconnu"),
     )
     element = DisplayChoiceField(

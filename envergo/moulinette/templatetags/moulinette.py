@@ -84,7 +84,7 @@ def show_criterion_body(context, regulation, criterion):
 def criterion_value(config, criterion, field):
     """Display a criterion static value.
 
-    If this value is overriden in the MoulinetteConfig instance,
+    If this value is overriden in the ConfigAmenagement or ConfigHaie instance,
     display the config value instead.
     """
     values = config.criteria_values

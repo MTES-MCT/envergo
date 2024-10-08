@@ -5,8 +5,8 @@ from pytest_django.asserts import assertTemplateUsed
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     RegulationFactory,
 )
 
@@ -236,7 +236,7 @@ def test_evalenv_terrain_assiette_systematique(moulinette_data):
 def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     """When no optional form is activated, we can show the result."""
 
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("moulinette_result")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
@@ -261,7 +261,7 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
 def test_evalenv_non_soumis_missing_optional_criteria(admin_client):
     """When optional data is missing, we don't show the result page."""
 
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("moulinette_result")
     params = (
@@ -276,7 +276,7 @@ def test_evalenv_non_soumis_missing_optional_criteria(admin_client):
 
 
 def test_evalenv_non_soumis_optional_criteria(admin_client):
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("moulinette_result")
     params = (
@@ -302,7 +302,7 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
 
 
 def test_evalenv_rubrique44(admin_client):
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     # Type d'equipement concerné et capacité d'accueil >= 1000 => Cas par cas
     url = reverse("moulinette_result")

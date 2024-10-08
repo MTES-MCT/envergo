@@ -10,7 +10,7 @@
 
 {% block container %}
 
-  <section id="hero" class="fr-mb-5w">
+  <section id="hero">
     <div class="fr-container">
 
       {% comment %}
@@ -63,6 +63,82 @@
     </div>
   </section>
 
+  <section id="simulateur" class="fr-py-5w fr-mb-5w">
+    <div class="fr-container">
+      <h3>Simuler un projet</h3>
+      <p>
+        <span class="fr-text--lead">
+          Vous envisagez des travaux sur vos haies ? Nous vous informons sur les règles de protection et les procédures à
+          suivre.
+        </span>
+        <br />
+        <span class="fr-text fr-text--sm">3 minutes, gratuit et anonyme</span>
+      </p>
+      <div class="fr-grid-row">
+        {% for department in activated_departments %}
+          <div class="fr-col-12 fr-col-sm-6 fr-col-lg-2 fr-mb-2w">
+            <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-tile--no-icon fr-enlarge-link fr-mr-2w">
+              <div class="fr-tile__body">
+                <div class="fr-tile__content">
+                  <h3 class="fr-tile__title">
+                    <a href="{% url 'triage' %}?department={{ department.department }}">{{ department }}</a>
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <hr id="department-search" class="separator fr-mt-4w" />
+      <div class="fr-grid-row fr-grid-row--center">
+        <span id="department-search-title" class="fr-text--lead">Le projet est situé dans un autre département ?</span>
+        <div class="fr-col-12 fr-grid-row fr-grid-row--center">
+          <form action="#department-search" method="post">
+            {% csrf_token %}
+            <div class="fr-search-bar" role="search">
+              <label class="fr-label" for="department">Department</label>
+
+              <select class="fr-input"  name="department" id="department">
+                <option value="" disabled>--- Choisir un département ---</option>
+                {% for option in departments %}
+                  <option value="{{ option.id }}"
+                          {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="fr-btn">Rechercher</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% if department and config and config.department_guichet_unique_url %}
+        <p class="fr-mt-4w">Un guichet de la haie existe déjà pour le département {{ department }}.</p>
+        <p>
+          <a class="fr-btn"
+             href="{{ config.department_guichet_unique_url }}"
+             target="_blank">Aller au Guichet unique Haie pour ce
+          département</a>
+        </p>
+      {% elif department %}
+        <div class="fr-notice fr-notice--warning fr-mt-4w">
+          <div class="fr-container">
+            <div class="fr-notice__body">
+              <p>
+                <span class="fr-notice__title"></span>
+                <span class="fr-notice__desc">Le guichet unique haie n'existe pas encore dans le département {{ department }}.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        {% if config and config.contacts_and_links %}
+          <div id="contacts_and_links" class="fr-mt-4w fr-p-2w">
+            <h6>Liste des contacts et liens utiles</h6>
+            {{ config.contacts_and_links|safe }}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </section>
+
   <section id="quand-demander" class="fr-mb-5w">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
@@ -96,10 +172,6 @@
         </div>
       </div>
     </div>
-  </section>
-
-  <section id="simulateur" class="fr-pt-8w fr-pb-5w">
-    <div class="fr-container">{% show_moulinette_form %}</div>
   </section>
 {% endblock %}
 

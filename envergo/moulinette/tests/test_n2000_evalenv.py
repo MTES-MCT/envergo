@@ -3,8 +3,8 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     RegulationFactory,
 )
 
@@ -18,7 +18,7 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def evalenv_criteria(france_map):  # noqa
-    MoulinetteConfigFactory(
+    ConfigAmenagementFactory(
         is_activated=True,
         ddtm_water_police_email="ddtm_email_test@example.org",
     )
