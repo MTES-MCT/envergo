@@ -143,9 +143,11 @@ class EvaluationDetail(
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
 
-        latest_version = self.object.versions.first()
-        if latest_version:
-            evaluation_content = latest_version.content
+        published_version = next(
+            (v for v in self.object.versions.all() if v.published), None
+        )
+        if published_version:
+            evaluation_content = published_version.content
         else:
             evaluation_content = self.object.render_content()
         context["evaluation_content"] = evaluation_content

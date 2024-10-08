@@ -512,7 +512,7 @@ def test_users_can_see_dashboard_menu(user, client):
 def test_eval_detail_shows_version_content(client):
     """The eval detail page shows the stored evaluation version content."""
 
-    version = VersionFactory(content="This is a version")
+    version = VersionFactory(content="This is a version", published=True)
     eval = EvaluationFactory(versions=[version])
     url = eval.get_absolute_url()
     res = client.get(url)
@@ -521,8 +521,20 @@ def test_eval_detail_shows_version_content(client):
     assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
 
 
-def test_eval_detail_shows_latest_version_content(client):
-    """The eval detail page shows the most recent version content."""
+def test_only_published_versions_are_shown(client):
+    """Unpublished versions are not displayed."""
+
+    version = VersionFactory(content="This is a version", published=False)
+    eval = EvaluationFactory(versions=[version])
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "This is a version" not in res.content.decode()
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+
+def test_eval_detail_shows_latest_published_version_content(client):
+    """The eval detail page shows the most recent published version content."""
 
     tz = get_current_timezone()
     versions = [
@@ -533,14 +545,19 @@ def test_eval_detail_shows_latest_version_content(client):
             content="This is version 3", created_at=datetime(2024, 1, 3, tzinfo=tz)
         ),
         VersionFactory(
-            content="This is version 2", created_at=datetime(2024, 1, 2, tzinfo=tz)
+            content="This is version 2",
+            created_at=datetime(2024, 1, 2, tzinfo=tz),
+            published=True,
+        ),
+        VersionFactory(
+            content="This is version 4", created_at=datetime(2024, 1, 4, tzinfo=tz)
         ),
     ]
     eval = EvaluationFactory(versions=versions)
     url = eval.get_absolute_url()
     res = client.get(url)
     assert res.status_code == 200
-    assert "This is version 3" in res.content.decode()
+    assert "This is version 2" in res.content.decode()
 
 
 def test_eval_detail_without_versions_renders_content(client):
