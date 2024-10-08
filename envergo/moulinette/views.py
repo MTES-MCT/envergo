@@ -436,6 +436,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         if moulinette:
             context["base_result"] = moulinette.get_result_template()
+            context["display_actions_banner"] = moulinette.result == RESULTS.soumis
+
         if moulinette and is_edit:
             context["matomo_custom_url"] = form_url_with_edit
         elif moulinette and is_debug:

@@ -381,3 +381,5 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
+
+DEMARCHES_SIMPLIFIEE_HAIE_URL = "https://www.demarches-simplifiees.fr/commencer/test-declaration-de-travaux-sur-haies"
