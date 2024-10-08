@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.db.utils import IntegrityError
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
@@ -569,3 +570,12 @@ def test_eval_detail_without_versions_renders_content(client):
     res = client.get(url)
     assert res.status_code == 200
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+
+def test_only_one_version_can_be_published():
+    versions = [
+        VersionFactory(content="This is a version", published=True),
+        VersionFactory(content="This is a version", published=True),
+    ]
+    with pytest.raises(IntegrityError):
+        EvaluationFactory(versions=versions)
