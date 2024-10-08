@@ -12,8 +12,9 @@ from envergo.moulinette.models import (
     get_moulinette_class_from_url,
 )
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
+    ConfigHaieFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -82,7 +83,7 @@ def test_moulinette_config(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert not moulinette.has_config()
 
-    MoulinetteConfigFactory(is_activated=False)
+    ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.has_config()
 
@@ -91,7 +92,7 @@ def test_moulinette_config(moulinette_data):
 def test_result_with_inactive_contact_data(moulinette_data):
     """Dept contact info is not activated, we cannot run the eval."""
 
-    MoulinetteConfigFactory(is_activated=False)
+    ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert not moulinette.is_evaluation_available()
 
@@ -100,7 +101,7 @@ def test_result_with_inactive_contact_data(moulinette_data):
 def test_result_with_contact_data(moulinette_data):
     """Dept contact info is set, we can run the eval."""
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
 
@@ -108,7 +109,7 @@ def test_result_with_contact_data(moulinette_data):
 @pytest.mark.parametrize("footprint", [50])
 def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     site = SiteFactory()
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     MoulinetteClass = get_moulinette_class_from_site(site)
     moulinette = MoulinetteClass(moulinette_data, moulinette_data)
     assert moulinette.is_evaluation_available()
@@ -121,10 +122,11 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
 
 
 def test_moulinette_haie_has_specific_behavior():
+    ConfigHaieFactory()
     site = SiteFactory()
     site.domain = "haie.beta.gouv.fr"
     MoulinetteClass = get_moulinette_class_from_site(site)
-    moulinette = MoulinetteClass({}, {})
+    moulinette = MoulinetteClass({}, {"department": "44"})
     assert moulinette.is_evaluation_available()
     assert moulinette.get_main_form_class() == MoulinetteFormHaie
     assert moulinette.get_form_template() == "haie/moulinette/form.html"

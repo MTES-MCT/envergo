@@ -25,7 +25,7 @@ def to_geojson(obj, geometry_field="geometry"):
 
 
 @register.simple_tag(takes_context=True)
-def show_moulinette_form(context, display_title=True):
+def show_moulinette_form(context):
     """Display the moulinette form.
 
     We do so by selecting the correct template depending on the current domain.
@@ -34,7 +34,6 @@ def show_moulinette_form(context, display_title=True):
     template_name = MoulinetteClass.get_form_template()
 
     template = get_template(template_name)
-    context["display_title"] = display_title
     content = template.render(context.flatten())
     return content
 
@@ -85,7 +84,7 @@ def show_criterion_body(context, regulation, criterion):
 def criterion_value(config, criterion, field):
     """Display a criterion static value.
 
-    If this value is overriden in the MoulinetteConfig instance,
+    If this value is overriden in the ConfigAmenagement or ConfigHaie instance,
     display the config value instead.
     """
     values = config.criteria_values

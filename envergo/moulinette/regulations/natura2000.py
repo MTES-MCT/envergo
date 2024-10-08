@@ -11,9 +11,18 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 
 
+class ZoneHumideSettingsForm(forms.Form):
+    threshold = forms.fields.IntegerField(
+        label="Seuil réglementaire (en m²)",
+        help_text="Seuil à partir duquel le critère est applicable (généralement 100m²).",
+        required=True,
+    )
+
+
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone humide"
     slug = "zone_humide"
+    settings_form_class = ZoneHumideSettingsForm
 
     CODES = [
         "soumis",
@@ -62,7 +71,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         else:
             wetland_status = "outside"
 
-        if self.catalog["created_surface"] >= 100:
+        if self.catalog["created_surface"] >= self.settings.get("threshold"):
             project_size = "big"
         else:
             project_size = "small"
