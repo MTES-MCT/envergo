@@ -4,6 +4,7 @@ from urllib.parse import quote_plus
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.core.files.storage import storages
 from django.db import transaction
 from django.db.models import Q
@@ -148,22 +149,39 @@ class EvaluationDetail(
     def get_evaluation_content(self):
         """Select the correct version to display."""
 
-        # Staff can preview draft evaluations
+        # Staff can preview a specific draft version
         selected_version_id = self.request.GET.get("version", "")
-        selected_version_id = (
-            int(selected_version_id) if selected_version_id.isnumeric() else None
-        )
-        selected_version = next(
-            (v for v in self.object.versions.all() if v.id == selected_version_id),
-            None,
-        )
+        if selected_version_id and not self.request.user.is_staff:
+            raise PermissionDenied("You cannot access specific versions")
+
+        if selected_version_id.isnumeric():
+            selected_version = next(
+                (
+                    v
+                    for v in self.object.versions.all()
+                    if v.id == int(selected_version_id)
+                ),
+                None,
+            )
+        else:
+            selected_version = None
+
+        if self.request.user.is_staff and selected_version_id and not selected_version:
+            raise Http404("Version not found")
+
+        # Admin can preview raw content (not saved in a version)
+        is_preview = "preview" in self.request.GET
+        if is_preview and not self.request.user.is_staff:
+            raise PermissionDenied("You cannot preview content")
 
         # By default, we display the published version
         published_version = next(
             (v for v in self.object.versions.all() if v.published), None
         )
 
-        if selected_version and self.request.user.is_staff:
+        if is_preview:
+            content = self.object.render_content()
+        elif selected_version:
             content = selected_version.content
         elif published_version:
             content = published_version.content

@@ -594,7 +594,22 @@ def test_admin_can_view_draft_versions(admin_client):
     assert "This is a published version" not in res.content.decode()
 
 
+def test_admin_can_view_current_content(admin_client):
+    """Admin can preview a specific version."""
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?version={draft.pk}"
+    res = admin_client.get(version_url)
+    assert res.status_code == 200
+    assert "This is a draft version" in res.content.decode()
+    assert "This is a published version" not in res.content.decode()
+
+
 def test_users_cannot_view_draft_versions(client):
+    """Users trying to view a custom version get a 404."""
 
     published = VersionFactory(content="This is a published version", published=True)
     draft = VersionFactory(content="This is a draft version", published=False)
@@ -602,6 +617,18 @@ def test_users_cannot_view_draft_versions(client):
     url = eval.get_absolute_url()
     version_url = f"{url}?version={draft.pk}"
     res = client.get(version_url)
+    assert res.status_code == 403
+
+
+def test_admin_can_view_unpublished_content(admin_client):
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?preview"
+    res = admin_client.get(version_url)
     assert res.status_code == 200
     assert "This is a draft version" not in res.content.decode()
-    assert "This is a published version" in res.content.decode()
+    assert "This is a published version" not in res.content.decode()
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
