@@ -1,3 +1,4 @@
+{% load static %}
 
 {% if versions %}
   <table id="sent_history">
@@ -5,6 +6,7 @@
       <tr>
         <td>Créée le</td>
         <td>Par</td>
+        <td>Publiée ?</td>
       </tr>
     </thead>
     <tbody>
@@ -12,9 +14,16 @@
       {% for version in versions %}
         <tr class="version_row">
           <td>
-            <a href="">{{ version.created_at|date:'SHORT_DATETIME_FORMAT' }}</a>
+            <a href="{{ evaluation.get_absolute_url }}?version={{ version.id }}">{{ version.created_at|date:'SHORT_DATETIME_FORMAT' }}</a>
           </td>
           <td>{{ version.created_by }}</td>
+          <td>
+            {% if version.published %}
+              <img src="{% static 'admin/img/icon-yes.svg' %}" alt="Oui" />
+            {% else %}
+              <img src="{% static 'admin/img/icon-yes.svg' %}" alt="Non" />
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
     </tbody>
