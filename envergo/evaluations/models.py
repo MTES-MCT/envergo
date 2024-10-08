@@ -369,11 +369,21 @@ class EvaluationVersion(models.Model):
         related_name="evaluation_versions",
     )
     content = models.TextField(_("Content"))
+    published = models.BooleanField(_("Is published?"), default=True)
 
     class Meta:
         verbose_name = _("Evaluation version")
         verbose_name_plural = _("Evaluation versions")
         ordering = ("-created_at",)
+
+        # Let's make sure a single version can be published at a time
+        constraints = [
+            models.UniqueConstraint(
+                fields=["evaluation"],
+                condition=models.Q(published=True),
+                name="unique_published_version",
+            )
+        ]
 
 
 class EvaluationEmail:
