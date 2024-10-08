@@ -16,5 +16,8 @@
     <li>
       <a href="{{ absolute_url }}" class="viewsitelink">Voir l'avis publié</a>
     </li>
+    <li>
+      <a href="{{ original.get_absolute_url }}?preview" class="viewsitelink">Prévisualiser</a>
+    </li>
   {% endif %}
 {% endblock %}
