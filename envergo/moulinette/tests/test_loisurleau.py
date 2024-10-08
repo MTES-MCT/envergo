@@ -3,8 +3,8 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     RegulationFactory,
 )
 
@@ -37,6 +37,20 @@ def loisurleau_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.Ruissellement",
             activation_map=france_map,
+        ),
+        CriterionFactory(
+            title="Écoulement EP sans BV",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.EcoulementSansBV",
+            activation_map=france_map,
+            is_optional=True,
+        ),
+        CriterionFactory(
+            title="Écoulement EP avec BV",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.EcoulementAvecBV",
+            activation_map=france_map,
+            is_optional=True,
         ),
     ]
     return criteria
@@ -174,7 +188,7 @@ def test_3310_large_footprint_outside_wetlands(moulinette_data):
 def test_3310_large_footprint_inside_doubt_department(moulinette_data):
     """Project with footprint > 1000m² inside a whole zh department."""
 
-    MoulinetteConfigFactory(zh_doubt=True)
+    ConfigAmenagementFactory(zh_doubt=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["within_potential_wetlands_deprartment"] = True
     moulinette.evaluate()
@@ -260,3 +274,83 @@ def test_3220_medium_footprint_within_potential_flood_zones(moulinette_data):
     moulinette.catalog["potential_flood_zones_within_0m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
+
+
+@pytest.mark.parametrize("footprint", [9000])
+def test_2150_big(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
+
+
+@pytest.mark.parametrize("footprint", [8000])
+def test_2150_medium(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "action_requise"
+
+
+@pytest.mark.parametrize("footprint", [7000])
+def test_2150_small(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis"
+
+
+@pytest.mark.parametrize("footprint", [10000])
+def test_2150_with_pv_sol_big(moulinette_data):
+    moulinette_data["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert (
+        moulinette.loi_sur_leau.ecoulement_sans_bv.result_code
+        == "action_requise_pv_sol"
+    )
+
+
+@pytest.mark.parametrize("footprint", [8000])
+def test_2150_with_pv_sol_small(moulinette_data):
+    moulinette_data["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis_pv_sol"
+
+
+@pytest.mark.parametrize("footprint", [10000])
+def test_2150_avec_bv_big(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "soumis"
+
+
+@pytest.mark.parametrize("footprint", [9000])
+def test_2150_avec_bv_medium(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
+
+
+@pytest.mark.parametrize("footprint", [7000])
+def test_2150_avec_bv_small(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
+
+
+@pytest.mark.parametrize("footprint", [10000])
+def test_2150_avec_bv_with_pv_sol_big(moulinette_data):
+    moulinette_data["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert (
+        moulinette.loi_sur_leau.ecoulement_avec_bv.result_code
+        == "action_requise_pv_sol"
+    )
+
+
+@pytest.mark.parametrize("footprint", [8000])
+def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
+    moulinette_data["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_pv_sol"

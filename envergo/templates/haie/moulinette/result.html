@@ -47,3 +47,9 @@
 {% block include_learn_more %}
   {% include 'haie/_learn_more.html' %}
 {% endblock %}
+
+{% block after-content %}
+  {% if display_actions_banner %}
+    {% include 'haie/moulinette/_actions_banner.html' %}
+  {% endif %}
+{% endblock %}

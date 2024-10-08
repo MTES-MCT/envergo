@@ -1,0 +1,17 @@
+Bonjour,
+
+Votre modification des documents attachés à la demande d'avis réglementaire {{ reference}} ({{ address }}) a bien été prise en compte.
+
+Vous pouvez ajouter ou retirer des documents à votre demande :
+
+{{ file_upload_url }}
+
+Notre page d'information sur les réglementations environnementales est consultable :
+
+{{ faq_url }}
+
+N'hésitez pas à nous contacter pour toute question sur cette demande d'avis réglementaire ou sur EnvErgo.
+
+{{ contact_url }}
+
+{% include 'emails/_email_signature.txt' %}
