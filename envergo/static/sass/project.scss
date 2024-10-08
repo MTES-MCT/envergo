@@ -1433,7 +1433,6 @@ main.home {
   }
 
   section#simulateur {
-    background-color: #e8edff;
     background-color: var(--info-950-100);
 
     h2 {
@@ -1890,4 +1889,12 @@ main.demonstrateur_2150 {
 
 #demarche-simplifiee-btn {
   box-shadow: inset 0 0 0 1px var(--blue-france-975-75);
+}
+
+#department-search-title {
+  color: var(--blue-france-sun-113-625);
+}
+
+#contacts_and_links {
+  background-color: var(--grey-975-100);
 }
