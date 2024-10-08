@@ -149,7 +149,10 @@ class EvaluationDetail(
         """Select the correct version to display."""
 
         # Staff can preview draft evaluations
-        selected_version_id = int(self.request.GET.get("version", -1))
+        selected_version_id = self.request.GET.get("version", "")
+        selected_version_id = (
+            int(selected_version_id) if selected_version_id.isnumeric() else None
+        )
         selected_version = next(
             (v for v in self.object.versions.all() if v.id == selected_version_id),
             None,
