@@ -316,9 +316,16 @@ class Evaluation(models.Model):
                 break
         return eligible
 
-    def create_version(self, author):
+    def unpublish(self):
+        """Unpublish the evaluation."""
+
+        self.versions.update(published=False)
+
+    def create_version(self, author, message):
         content = self.render_content()
-        version = EvaluationVersion(evaluation=self, created_by=author, content=content)
+        version = EvaluationVersion(
+            evaluation=self, created_by=author, content=content, message=message
+        )
         return version
 
     def render_content(self):
