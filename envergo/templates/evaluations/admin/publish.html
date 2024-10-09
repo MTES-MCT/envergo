@@ -1,0 +1,35 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media }}
+  <script src="{% static 'admin/js/cancel.js' %}" async></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+    › Publier
+  </div>
+{% endblock %}
+
+{% block field_sets %}
+  <fieldset class="module aligned">
+    <div class="form-row">
+      <div>
+        {{ form.message.errors }}
+        <div class="flex-container">
+          <label for="id_message">Message :</label>
+          {{ form.message }}
+        </div>
+      </div>
+    </div>
+  </fieldset>
+{% endblock %}
+
+{% block submit_buttons_bottom %}<input type="submit" value="Publier l'avis">{% endblock %}
