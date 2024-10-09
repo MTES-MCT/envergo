@@ -22,7 +22,7 @@
             {% if version.published %}
               <img src="{% static 'admin/img/icon-yes.svg' %}" alt="Oui" />
             {% else %}
-              <img src="{% static 'admin/img/icon-yes.svg' %}" alt="Non" />
+              <img src="{% static 'admin/img/icon-no.svg' %}" alt="Non" />
             {% endif %}
           </td>
           <td>{{ version.message|truncatechars:150 }}</td>
