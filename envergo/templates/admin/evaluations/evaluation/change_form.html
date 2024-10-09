@@ -22,3 +22,30 @@
     <a href="{{ absolute_url }}" class="viewsitelink">Voir l'avis publié</a>
   </li>
 {% endblock %}
+
+{% block admin_change_form_document_ready %}
+  {{ block.super }}
+  <script>
+
+    // Let's prevent users to leave form before it's saved
+    let form = document.getElementById("evaluation_form");
+    let formUpdated = false;
+    form.addEventListener("change", function () {
+      formUpdated = true;
+    });
+
+    // We only want to block external links, not form submission
+    form.addEventListener("submit", function () {
+      formUpdated = false;
+    });
+
+    window.addEventListener("beforeunload", function (event) {
+      // If the form was updated, display the default browser "are you sure?" message
+      if (formUpdated) {
+        event.preventDefault();
+        event.returnValue = "";
+        return "";
+      }
+    });
+  </script>
+{% endblock %}
