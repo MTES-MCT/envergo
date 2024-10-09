@@ -211,8 +211,9 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     @transaction.atomic()
     def publish_view(self, request, object_id, extra_context=None):
-        "The 'delete' admin view for this model."
+        """Publish a new version of the evaluation."""
 
+        # Stolen code from the "delete_view" method
         app_label = self.opts.app_label
         to_field = request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
         evaluation = self.get_object(request, unquote(object_id), to_field)
@@ -231,18 +232,14 @@ class EvaluationAdmin(admin.ModelAdmin):
                     admin_url = reverse(
                         "admin:evaluations_evaluation_change", args=[evaluation.uid]
                     )
-                    msg = _(
-                        '<a href="%(admin_url)s">The new version for evaluation %(reference)s has been created.</a>'
-                    ) % {
-                        "admin_url": admin_url,
-                        "reference": evaluation.reference,
-                    }
-                    self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
+                    msg = "Une nouvelle version de l'avis a été publiée."
+                    self.message_user(request, msg, level=messages.SUCCESS)
                     return HttpResponseRedirect(admin_url)
                 except Exception as e:
-                    error = _(
-                        "There was an error creating a new version: %(error)s"
-                    ) % {"error": e}
+                    error = (
+                        "Une erreur est survenue lors de la publication : %(error)s"
+                        % {"error": e}
+                    )
                     self.message_user(request, error, level=messages.ERROR)
 
         else:
