@@ -285,3 +285,6 @@ class EvaluationVersionForm(forms.ModelForm):
     class Meta:
         model = EvaluationVersion
         fields = ["message"]
+        labels = {
+            "message": "Expliquer la modification apportée à l'avis",
+        }
