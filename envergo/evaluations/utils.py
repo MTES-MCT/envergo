@@ -14,11 +14,15 @@ def extract_postal_code(address):
     return None
 
 
-def extract_department(address):
+def extract_department_from_address(address):
     """Extract the department as two (or three) digits from a stringified address.
     return None if no department is found.
     """
     postal_code = extract_postal_code(address)
+    return extract_department_from_postal_code(postal_code)
+
+
+def extract_department_from_postal_code(postal_code):
     department = None
     if postal_code:
         department = postal_code[:2]
@@ -33,5 +37,4 @@ def extract_department(address):
                 department = "2A"  # Corse-du-Sud
             elif 20200 <= code_number <= 20620:
                 department = "2B"  # Haute-Corse
-
     return department

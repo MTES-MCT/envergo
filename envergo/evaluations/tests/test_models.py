@@ -8,8 +8,8 @@ from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -19,7 +19,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def moulinette_config(france_map, loire_atlantique_department):  # noqa
-    MoulinetteConfigFactory(
+    ConfigAmenagementFactory(
         department=loire_atlantique_department,
         is_activated=True,
         ddtm_water_police_email="ddtm_email_test@example.org",

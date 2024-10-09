@@ -160,8 +160,8 @@ class Department(models.Model):
     def __str__(self):
         return self.get_department_display()
 
-    def is_activated(self):
-        config = getattr(self, "moulinette_config", None)
+    def is_amenagement_activated(self):
+        config = getattr(self, "configamenagement", None)
         return config and config.is_activated
 
 

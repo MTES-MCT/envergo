@@ -8,8 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
+    ConfigAmenagement,
+    ConfigHaie,
     Criterion,
-    MoulinetteConfig,
     MoulinetteTemplate,
     Perimeter,
     Regulation,
@@ -250,7 +251,7 @@ class PerimeterAdmin(admin.ModelAdmin):
         return obj.activation_map.departments
 
 
-class MoulinetteConfigForm(forms.ModelForm):
+class ConfigAmenagementForm(forms.ModelForm):
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
     )
@@ -276,7 +277,7 @@ class MoulinetteConfigForm(forms.ModelForm):
 
 
 class MoulinetteConfigTemplateForm(forms.ModelForm):
-    """Form to edit a MoulinetteTemplate in a MoulinetteConfig.
+    """Form to edit a MoulinetteTemplate in a ConfigAmenagement.
 
     We remove every key that is not a real template (autorisation_urba_*, etc.)
     """
@@ -295,10 +296,10 @@ class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
     form = MoulinetteConfigTemplateForm
 
 
-@admin.register(MoulinetteConfig)
-class MoulinetteConfigAdmin(admin.ModelAdmin):
+@admin.register(ConfigAmenagement)
+class ConfigAmenagementAdmin(admin.ModelAdmin):
     list_display = ["department", "is_activated", "zh_doubt"]
-    form = MoulinetteConfigForm
+    form = ConfigAmenagementForm
     inlines = [MoulinetteConfigTemplateInline]
     list_filter = ["is_activated", "zh_doubt"]
 
@@ -315,3 +316,17 @@ class MoulinetteConfigAdmin(admin.ModelAdmin):
 class MoulinetteTemplateAdmin(admin.ModelAdmin):
     list_display = ["config", "key"]
     search_fields = ["content"]
+
+
+@admin.register(ConfigHaie)
+class ConfigHaieAdmin(admin.ModelAdmin):
+    list_display = ["department", "is_activated", "department_guichet_unique_url"]
+    list_filter = ["is_activated"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return (
+            qs.select_related("department")
+            .order_by("department__department")
+            .defer("department__geometry")
+        )

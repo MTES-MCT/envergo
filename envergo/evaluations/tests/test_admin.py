@@ -7,7 +7,10 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
-from envergo.moulinette.tests.factories import CriterionFactory, MoulinetteConfigFactory
+from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
+    CriterionFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -92,7 +95,7 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
 def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)
@@ -126,7 +129,7 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
 def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)
@@ -156,7 +159,7 @@ def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
 def test_evaluation_email_recipient_overriding(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)
@@ -180,7 +183,7 @@ def test_evaluation_email_recipient_overriding(admin_client, evaluation, mailout
 def test_evaluation_email_with_empty_recipients(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
-    MoulinetteConfigFactory()
+    ConfigAmenagementFactory()
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)

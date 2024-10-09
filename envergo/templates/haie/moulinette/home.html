@@ -1,0 +1,8 @@
+{% extends "moulinette/home.html" %}
+
+{% load static %}
+
+{% block extra_js %}
+  <script>var SIMULATION_FORM_ID = "moulinette-form";</script>
+  <script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "moulinette/result_non_disponible.html" %}
+
+{% load pages %}
+
+{% block result %}
+
+  <h1>Simulation réglementaire du projet</h1>
+
+  <div class="fr-alert fr-alert--info fr-mt-8w fr-mb-5w">
+    <p class="fr-alert__title">Le guichet unique de la haie n'est pas encore déployé dans votre département.</p>
+    <p>Il est pour l'instant disponible dans {% nb_available_depts "haie" %} départements.</p>
+  </div>
+
+{% endblock %}

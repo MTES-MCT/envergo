@@ -1,0 +1,34 @@
+{% extends 'moulinette/_actions_banner.html' %}
+
+{% load static %}
+
+{% block actions %}
+  {% if is_admin %}
+    <div id="copy-btn-container" class="fr-col-12 fr-col-md-4">
+      <button id="copy-btn" class="fr-btn fr-btn--icon-left fr-icon-link">
+        Copier le lien
+        <span id="btn-clicked-message" class="fr-ml-2w">
+          <img id="btn-clicked-image"
+               src="{% static 'images/done.gif' %}"
+               alt="République française">
+          Lien copié !
+        </span>
+      </button>
+    </div>
+    {% if debug_url %}
+      <div id="debug-btn" class="fr-col-12 fr-col-md-4">
+        <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
+           href="{{ debug_url }}">Voir le debug</a>
+      </div>
+    {% elif result_url %}
+      <div id="debug-btn" class="fr-col-12 fr-col-md-4">
+        <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
+           href="{{ result_url }}">Voir la simulation</a>
+      </div>
+    {% endif %}
+  {% else %}
+    {% if display_feedback_form %}
+      {% include 'analytics/_feedback_form.html' %}
+    {% endif %}
+  {% endif %}
+{% endblock %}

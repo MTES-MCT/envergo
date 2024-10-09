@@ -4,8 +4,8 @@ from pytest_django.asserts import assertTemplateUsed
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     RegulationFactory,
 )
 
@@ -19,7 +19,7 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def evalenv_criteria(france_map):  # noqa
-    _config = MoulinetteConfigFactory(is_activated=True)  # noqa
+    _config = ConfigAmenagementFactory(is_activated=True)  # noqa
     regulation = RegulationFactory(regulation="eval_env")
     criteria = [
         CriterionFactory(

@@ -6,8 +6,8 @@ from django.urls import reverse
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Criterion, MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     Perimeter,
     PerimeterFactory,
     RegulationFactory,
@@ -55,7 +55,7 @@ def moulinette_data(footprint):
 def test_result_interdit(moulinette_data):
     """Test the default criterion result"""
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
@@ -67,7 +67,7 @@ def test_result_interdit(moulinette_data):
 def test_deactivated_regulation(moulinette_data):
     """Test single regulation deactivation in moulinette config."""
 
-    MoulinetteConfigFactory(is_activated=True, regulations_available=[])
+    ConfigAmenagementFactory(is_activated=True, regulations_available=[])
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
@@ -79,7 +79,7 @@ def test_deactivated_regulation(moulinette_data):
 def test_default_result_when_a_perimeter_is_found(moulinette_data):
     Criterion.objects.all().delete()
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
@@ -92,7 +92,7 @@ def test_default_result_when_a_perimeter_is_found(moulinette_data):
 def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
     Criterion.objects.all().delete()
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
 
@@ -109,7 +109,7 @@ def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
     Criterion.objects.all().delete()
     Perimeter.objects.all().delete()
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
@@ -122,7 +122,7 @@ def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
 def test_perimeter_map_display(moulinette_data, client):
     """The perimeter map should be displayed in the result page."""
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
     params = urlencode(moulinette_data)
@@ -143,7 +143,7 @@ def test_several_perimeter_maps_display(
 ):
     """When several perimeters are found, they are all displayed."""
 
-    MoulinetteConfigFactory(is_activated=True)
+    ConfigAmenagementFactory(is_activated=True)
     PerimeterFactory(
         name="Sage Test",
         activation_map=france_map,
