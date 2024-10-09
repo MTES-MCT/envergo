@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
-from envergo.evaluations.models import USER_TYPES, Request
+from envergo.evaluations.models import USER_TYPES, EvaluationVersion, Request
 from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
@@ -279,3 +279,9 @@ class EvaluationShareForm(forms.Form):
         help_text=_("Separate several addresses with a comma « , »"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
+
+
+class EvaluationVersionForm(forms.ModelForm):
+    class Meta:
+        model = EvaluationVersion
+        fields = ["message"]
