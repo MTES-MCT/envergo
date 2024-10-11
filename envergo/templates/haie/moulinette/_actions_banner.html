@@ -1,13 +1,18 @@
 {% extends 'moulinette/_actions_banner.html' %}
 
 {% block actions %}
-  {% if demarche_url %}
-    <div class="fr-col-12 fr-col-md-4 fr-col-offset-md-4">
-      <a id="demarche-simplifiee-btn"
-         target="_blank"
-         rel="noopener"
-         class="fr-btn"
-         href="{{ demarche_url }}">Commencer la procédure</a>
-    </div>
-  {% endif %}
+  <div class="fr-col-12 fr-col-md-4 fr-col-offset-md-4">
+    <form action="{% url 'demarchesimplifiee' %}" method="post">
+      {% csrf_token %}
+      <input type="hidden"
+             name="moulinette_url"
+             value="{{ request.build_absolute_uri }}" />
+      <input type="hidden"
+             name="profil"
+             value="{{ moulinette.main_form.profil.value }}" />
+      <button id="demarche-simplifiee-btn"
+              type="submit"
+              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line">Commencer la procédure</button>
+    </form>
+  </div>
 {% endblock %}
