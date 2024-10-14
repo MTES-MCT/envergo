@@ -282,11 +282,6 @@ class NewsFeed(Feed):
 class DemarcheSimplifieeView(FormView):
     form_class = DemarcheSimplifieeForm
 
-    def get_success_url(self):
-        referer = self.request.META.get("HTTP_REFERER")
-        home_url = reverse("home")
-        return referer or home_url
-
     def form_valid(self, form):
         moulinette_url = form.cleaned_data["moulinette_url"]
         profil = form.cleaned_data["profil"]
@@ -322,7 +317,7 @@ class DemarcheSimplifieeView(FormView):
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
-
+        redirect_url = None
         if not redirect_url:
             res = self.form_invalid(form)
         else:
@@ -336,4 +331,6 @@ class DemarcheSimplifieeView(FormView):
             "Une erreur technique nous a empêché de créer votre dossier. "
             "Veuillez nous excuser pour ce désagrément.",
         )
-        return HttpResponseRedirect(self.get_success_url())
+        return HttpResponseRedirect(
+            form.cleaned_data.get("moulinette_url", reverse("home"))
+        )
