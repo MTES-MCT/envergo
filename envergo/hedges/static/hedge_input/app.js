@@ -308,6 +308,15 @@ createApp({
         maxZoom: 19,
       }).addTo(map);
 
+      window.addEventListener('EnvErgo:citycode_selected', function (event) {
+        const coordinates = event.detail.coordinates;
+        const latLng = [coordinates[1], coordinates[0]];
+
+        // When an address is selected, place a marker and zoom on it
+        let zoomLevel = 19;
+        map.setView(latLng, zoomLevel);
+      });
+
       restoreHedges();
       zoomOut();
     });

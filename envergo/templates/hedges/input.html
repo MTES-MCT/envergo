@@ -25,7 +25,7 @@
       <div id="map">
 
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="controls top left">
+          <div class="controls bottom left">
             <button class="fr-btn fr-btn--secondary" @click="zoomOut">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
@@ -33,8 +33,21 @@
           </div>
         </template>
 
+        <div class="controls top left">
+          <div class="fr-search-bar" role="search">
+            <label class="fr-label" for="address">Rechercher</label>
+            <input class="fr-input"
+                   placeholder="Rechercher"
+                   type="search"
+                   id="id_address"
+                   name="address">
+            <button class="fr-btn fr-btn--secondary" title="Rechercher">Rechercher</button>
+          </div>
+        </div>
+
         <div class="controls top right">
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">
+          <button class="fr-btn fr-btn--secondary fr-mr-1w"
+                  @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer (à arracher)
           </button>
@@ -148,16 +161,24 @@
 
 {% block bottom_js %}
   {{ block.super }}
+  <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'leaflet-editable/src/Leaflet.Editable.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+
   <script defer src="{% static 'vue/dist/vue.global.js' %}"></script>
-  <script type="module" src="{% static 'hedge_input/app.js' %}"></script>
+  <script defer type="module" src="{% static 'hedge_input/app.js' %}"></script>
 {% endblock %}
 
 {% block css %}
   {{ block.super }}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+
 {% endblock %}

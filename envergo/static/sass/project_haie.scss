@@ -78,11 +78,14 @@ div#app {
 
         button {
           background-color: white;
-          margin: 0 0.5rem;
 
           &:hover {
             background-color: #f6f6f6;
           }
+        }
+
+        .autocomplete__wrapper {
+          margin-top: 0;
         }
       }
 
