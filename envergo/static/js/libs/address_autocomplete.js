@@ -1,7 +1,7 @@
 /**
  * Enrich the address field with an autocomplete feature.
  */
-(function(exports, accessibleAutocomplete) {
+(function (exports, accessibleAutocomplete) {
   'use strict';
 
   function debouncePromise(fn, time) {
@@ -29,7 +29,7 @@
   /**
    * Initialize the autocomplete element.
    **/
-  const AddressAutocomplete = function(fieldName) {
+  const AddressAutocomplete = function (fieldName) {
     this.inputName = fieldName;
     this.inputId = `id_${fieldName}`;
     this.inputElement = document.getElementById(this.inputId);
@@ -43,7 +43,7 @@
   /**
    * Hides the existing input to make room for the new one.
    **/
-  AddressAutocomplete.prototype.updateCurrentInput = function() {
+  AddressAutocomplete.prototype.updateCurrentInput = function () {
     this.inputElement.id = `${this.inputId}-input`;
     this.inputElement.style.display = 'none';
     this.inputElement.name = '';
@@ -52,7 +52,7 @@
   /**
    * Calls the autocomplete library to create a new input field.
    **/
-  AddressAutocomplete.prototype.enableAutocomplete = function() {
+  AddressAutocomplete.prototype.enableAutocomplete = function () {
 
     this.inputElement.parentNode.insertBefore(this.autocompleteContainer, this.inputElement);
 
@@ -63,13 +63,13 @@
       name: this.inputName,
       defaultValue: this.inputElement.value,
       templates: {
-        inputValue: function(item) {
+        inputValue: function (item) {
           if (typeof item === 'string') return item;
 
           const value = item ? item.properties.label : '';
           return value;
         },
-        suggestion: function(item) {
+        suggestion: function (item) {
           if (typeof item === 'string') return item;
 
           return `<div>
@@ -84,7 +84,7 @@
       tStatusQueryTooShort: (minQueryLength) => `Saisissez au moins ${minQueryLength} caractères pour voir des résultats`,
       tStatusNoResults: () => 'Aucun résultat de recherche',
       tStatusSelectedOption: (selectedOption, length, index) => `${selectedOption} ${index + 1} de ${length} est en surbrillance`,
-      tStatusResults: function(length, contentSelectedOption) {
+      tStatusResults: function (length, contentSelectedOption) {
         let result;
         if (length === 1) {
           result = `<span>1 résultat disponible. ${contentSelectedOption}</span>`;
@@ -93,12 +93,12 @@
         }
         return result;
       },
-      tAssistiveHint: function() {
+      tAssistiveHint: function () {
         return "Quand des résultats d'autocomplétion sont disponibles, utilisez " +
           "les flèches haut et bas pour les parcourir. Utilisez entrée pour " +
           "sélectionner. Sur périphérique tactile, explorez en glissant le doigt.";
       },
-      onConfirm: function(val) {
+      onConfirm: function (val) {
         if (val === undefined || !val.hasOwnProperty('properties')) return;
 
         if (val) {
@@ -112,7 +112,7 @@
           window.dispatchEvent(event);
         }
       },
-      source: function(query, populateResults) {
+      source: function (query, populateResults) {
         const event = new CustomEvent('EnvErgo:address_autocomplete_input', { detail: query });
         window.dispatchEvent(event);
         return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?autocomplete=1&q=${query}`)
@@ -130,6 +130,6 @@
 })(this, accessibleAutocomplete);
 
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
   new AddressAutocomplete(ADDRESS_AUTOCOMPLETE_FIELD_NAME || 'address');
 });
