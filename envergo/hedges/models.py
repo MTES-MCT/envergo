@@ -1,7 +1,9 @@
 import uuid
 
-from django.contrib.gis.geos import LineString
+# from django.contrib.gis.geos import LineString
 from django.db import models
+from pyproj import Geod
+from shapely import LineString
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -16,6 +18,8 @@ EPSG_WGS84 = 4326
 # Good for working in meters
 EPSG_MERCATOR = 3857
 
+EPSG_LAMB93 = 2154
+
 
 class Hedge:
     """Represent a single hedge."""
@@ -23,16 +27,17 @@ class Hedge:
     def __init__(self, id, latLngs, type):
         self.id = id  # The edge reference, e.g A1, A2…
         self.geometry = LineString(
-            [(latLng["lat"], latLng["lng"]) for latLng in latLngs], srid=EPSG_WGS84
+            [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
-        self.geometry.transform(EPSG_MERCATOR)
         self.type = type
 
     @property
     def length(self):
-        """TODO this gives a different value than leaflet. Need to investigate more."""
+        """Returns the geodesic length (in meters) of the line."""
 
-        return int(self.geometry.length)
+        geod = Geod(ellps="WGS84")
+        length = geod.geometry_length(self.geometry)
+        return int(length)
 
 
 class HedgeData(models.Model):
