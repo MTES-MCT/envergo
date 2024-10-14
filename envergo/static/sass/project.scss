@@ -11,6 +11,11 @@ $red: #b94a48;
   scroll-behavior: smooth;
 }
 
+// Prevent  scrolling when a dialog is open
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 html.nojs .js {
   display: none !important;
 }
@@ -26,7 +31,7 @@ html.nojs .js {
 }
 
 /**
- * Useful components
+* Useful components
  */
 .alert-debug {
   background-color: $white;
@@ -767,6 +772,17 @@ main > .fr-notice {
       font-weight: normal;
     }
   }
+}
+
+.img-icon {
+  display: inline-block;
+  vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
+
+  --icon-size: 1.5rem;
+
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: 0.25rem;
 }
 
 /**
@@ -1742,6 +1758,8 @@ main.demonstrateur_2150 {
   * Handle the form display, along with the help sidebars
   */
 #content {
+  height: 100%;
+
   .help-sidebar-label {
     display: flex;
     align-items: center;
