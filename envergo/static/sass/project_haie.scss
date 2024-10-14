@@ -233,6 +233,8 @@ dialog#hedge-input-modal {
   height: 100%;
   overscroll-behavior: contain;
   overflow: hidden;
+  border: none;
+  filter: drop-shadow(var(--lifted-shadow));
 }
 
 div#statistics {
