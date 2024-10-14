@@ -1018,6 +1018,10 @@ div.hero-alt {
       margin: 0;
     }
   }
+
+  footer#footer {
+    padding-bottom: 5rem;
+  }
 }
 
 @media only screen and (width > 991px) {
@@ -1074,14 +1078,6 @@ footer {
   padding-top: 0;
   box-shadow: initial;
   z-index: 1000; // to be above the leaflet map
-}
-
-@media only screen and (width <= 767px) {
-  #feedback-form,
-  #copy-btn-container,
-  #debug-btn {
-    display: none;
-  }
 }
 
 #action-banner {
