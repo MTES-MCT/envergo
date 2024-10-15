@@ -62,6 +62,7 @@
       minLength: 3,
       name: this.inputName,
       defaultValue: this.inputElement.value,
+      placeholder: this.inputElement.placeholder,
       templates: {
         inputValue: function (item) {
           if (typeof item === 'string') return item;
