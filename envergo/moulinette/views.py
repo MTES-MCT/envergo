@@ -5,10 +5,16 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import (
+    extract_matomo_bare_url_from_request,
+    is_request_from_a_bot,
+    log_event,
+)
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
@@ -292,6 +298,7 @@ class MoulinetteMixin:
         )
 
 
+@method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteHome(MoulinetteMixin, FormView):
     def get_template_names(self):
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
@@ -310,6 +317,14 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
+            self.request
+        )
+
+        return context
 
 
 class MoulinetteResult(MoulinetteMixin, FormView):
@@ -508,6 +523,9 @@ class Triage(FormView):
             else None
         )
         context["department"] = department
+        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
+            self.request
+        )
 
         return context
 
