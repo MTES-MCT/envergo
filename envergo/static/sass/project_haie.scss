@@ -40,6 +40,10 @@ div#app {
   display: flex;
   flex-direction: column;
 
+  &[v-cloak] {
+    visibility: hidden;
+  }
+
   header {
     display: flex;
     justify-content: space-between;
