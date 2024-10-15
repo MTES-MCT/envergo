@@ -230,6 +230,11 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             cleaned_data.pop("project_owner_emails", None)
             cleaned_data.pop("project_owner_phone", None)
 
+        # Remove urbanism_department fields if the user is a petitioner
+        if user_type == USER_TYPES.petitioner:
+            cleaned_data.pop("urbanism_department_emails", None)
+            cleaned_data.pop("urbanism_department_phone", None)
+
         return cleaned_data
 
 
