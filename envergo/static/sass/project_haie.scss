@@ -50,7 +50,7 @@ div#app {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    min-width: 62em; // size lg
+    min-width: 78em; // size xl
     position: relative;
 
     #map {
@@ -135,8 +135,7 @@ div#app {
     #sidebar {
       bottom: 0;
       overflow-y: scroll;
-      min-width: 30em;
-      max-width: 40em;
+      width: 25em;
 
       div#hedge-lists {
         padding: 1rem;
