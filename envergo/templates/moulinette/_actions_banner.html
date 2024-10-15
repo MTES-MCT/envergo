@@ -1,14 +1,10 @@
 <div id="action-banner" class="fr-py-1w hide-print">
-  <div class="fr-container">
-    <div class="fr-grid-row">
-      <div class="fr-col-12 fr-col-md-4">
-        <a href="{{ edit_url }}"
-           class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
-           data-event-category="Content"
-           data-event-action="Edit"
-           data-event-name="Main">Modifier le projet</a>
-      </div>
-      {% block actions %}{% endblock %}
-    </div>
+  <div class="banner-item">
+    <a href="{{ edit_url }}"
+       class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+       data-event-category="Content"
+       data-event-action="Edit"
+       data-event-name="Main">Modifier le projet</a>
   </div>
+  {% block actions %}{% endblock %}
 </div>
