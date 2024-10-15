@@ -1083,6 +1083,14 @@ footer {
 #action-banner {
   background-color: var(--blue-france-sun-113-625);
   text-align: center;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  width: 100vw;
+
+  .banner-item {
+    flex: 0 1 auto;
+  }
 
   #feedback-form {
     display: flex;
