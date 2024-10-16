@@ -11,9 +11,18 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 
 
+class ZoneHumideSettingsForm(forms.Form):
+    threshold = forms.fields.IntegerField(
+        label="Seuil réglementaire (en m²)",
+        help_text="Seuil à partir duquel le critère est applicable (généralement 100m²).",
+        required=True,
+    )
+
+
 class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone humide"
     slug = "zone_humide"
+    settings_form_class = ZoneHumideSettingsForm
 
     CODES = [
         "soumis",
@@ -62,7 +71,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         else:
             wetland_status = "outside"
 
-        if self.catalog["created_surface"] >= 100:
+        if self.catalog["created_surface"] >= self.settings.get("threshold"):
             project_size = "big"
         else:
             project_size = "small"
@@ -191,6 +200,29 @@ class IOTA(CriterionEvaluator):
             result = RESULTS.non_disponible
 
         self._result_code, self._result = result, result
+
+
+class EvalEnv(CriterionEvaluator):
+    choice_label = "Natura 2000 > EE"
+    slug = "eval_env"
+
+    def evaluate(self):
+        try:
+            evalenv = self.moulinette.eval_env.result
+            if evalenv == RESULTS.cas_par_cas:
+                result = ("soumis_cas_par_cas", RESULTS.soumis)
+            elif evalenv == RESULTS.systematique:
+                result = ("soumis_systematique", RESULTS.soumis)
+            elif evalenv == RESULTS.non_soumis:
+                result = (RESULTS.non_soumis, RESULTS.non_soumis)
+            else:
+                result = (RESULTS.non_disponible, RESULTS.non_disponible)
+        except AttributeError:
+            # If there is no Loi sur l'eau regulation
+            # for example, during unit tests
+            result = (RESULTS.non_disponible, RESULTS.non_disponible)
+
+        self._result_code, self._result = result
 
 
 AUTORISATION_URBA_CHOICES = (

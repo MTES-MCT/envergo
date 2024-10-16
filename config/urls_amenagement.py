@@ -16,7 +16,7 @@ urlpatterns = [
     path("evaluations/", include("envergo.evaluations.redirect_urls")),
     path("évaluations/", include("envergo.evaluations.redirect_urls")),
     path("avis/", include("envergo.evaluations.urls")),
-    path(_("moulinette/"), include("envergo.moulinette.urls")),
+    path(_("moulinette/"), include("envergo.moulinette.urls_amenagement")),
     path(_("geo/"), include("envergo.geodata.urls")),
     path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
 ] + common_urlpatterns

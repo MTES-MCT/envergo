@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "envergo.confs.apps.ConfsConfig",
     "envergo.admin.config.EnvergoAdminConfig",
     "envergo.urlmappings",
+    "envergo.hedges",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -381,3 +382,7 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
+
+DEMARCHES_SIMPLIFIEE_HAIE_URL = "https://www.demarches-simplifiees.fr/commencer/test-declaration-de-travaux-sur-haies"
+
+OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])

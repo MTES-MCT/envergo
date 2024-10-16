@@ -3,7 +3,7 @@ from textwrap import shorten
 from django import forms
 from django.contrib import admin
 
-from envergo.confs.models import SETTINGS_HELP, Setting, TopBar
+from envergo.confs.models import SETTINGS_HELP, HostedFile, Setting, TopBar
 
 
 class TopBarAdminForm(forms.ModelForm):
@@ -45,3 +45,14 @@ class SettingAdmin(admin.ModelAdmin):
     ):
         context.update({"settings_help": SETTINGS_HELP})
         return super().render_change_form(request, context, add, change, form_url, obj)
+
+
+@admin.register(HostedFile)
+class HostedFileAdmin(admin.ModelAdmin):
+    list_display = ["name", "file", "uploaded_by", "created_at"]
+    fields = ("file", "name", "description")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)

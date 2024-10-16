@@ -1,0 +1,19 @@
+{% extends 'haie/moulinette/result.html' %}
+
+{% load moulinette %}
+
+{% block project_summary %}
+  <ul class="fr-mb-3w color-text-light">
+    {% for field in triage_form %}
+      <li>{% field_summary field %}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+
+{% block result %}
+  <h1 class="fr-mb-5w">Simulation réglementaire</h1>
+  <div class="fr-alert fr-alert--warning fr-mt-8w fr-mb-5w">
+    <p class="fr-alert__title">Votre projet n'est pas encore pris en compte par le simulateur</p>
+    <p>Le simulateur du guichet unique de la haie couvre pour l’instant uniquement les travaux d’arrachage de haies.</p>
+  </div>
+{% endblock %}

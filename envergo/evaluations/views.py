@@ -135,9 +135,13 @@ class EvaluationDetail(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         current_url = self.request.build_absolute_uri()
-        tracked_url = update_qs(current_url, {"mtm_source": "shareBtn"})
-        context["current_url"] = tracked_url
-        context["light_url"] = current_url
+
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-ar"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-ar"})
+
+        context["current_url"] = current_url
+        context["share_btn_url"] = share_btn_url
+        context["share_print_url"] = share_print_url
 
         latest_version = self.object.versions.first()
         if latest_version:
@@ -392,7 +396,9 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
             and settings.TEST_EMAIL not in request.urbanism_department_emails
         ):
             transaction.on_commit(confirm_request)
-
+            mtm_keys = {
+                k: v for k, v in self.request.session.items() if k.startswith("mtm_")
+            }
             log_event(
                 "evaluation",
                 "request",
@@ -401,10 +407,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
                 request_url=reverse(
                     "admin:evaluations_request_change", args=[request.id]
                 ),
-                mtm_campaign=self.request.session.get("mtm_campaign", ""),
-                mtm_source=self.request.session.get("mtm_source", ""),
-                mtm_medium=self.request.session.get("mtm_medium", ""),
-                mtm_kwd=self.request.session.get("mtm_kwd", ""),
+                **mtm_keys,
             )
 
         return super().form_valid(form)

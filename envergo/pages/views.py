@@ -1,16 +1,19 @@
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
-from envergo.moulinette.models import MoulinetteConfig
+from envergo.geodata.models import Department
+from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 
@@ -19,12 +22,55 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class HomeHaieView(MoulinetteMixin, FormView):
+class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        departments = (
+            Department.objects.defer("geometry").select_related("confighaie").all()
+        )
+        context["departments"] = departments
+        context["activated_departments"] = [
+            department
+            for department in departments
+            if department
+            and hasattr(department, "confighaie")
+            and department.confighaie.is_activated
+        ]
+        return context
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        department_id = data.get("department")
+        department = None
+        if department_id:
+            department = (
+                Department.objects.select_related("confighaie")
+                .defer("geometry")
+                .get(id=department_id)
+            )
+
+        config = (
+            department.confighaie
+            if department and hasattr(department, "confighaie")
+            else None
+        )
+
+        if config and config.is_activated:
+            query_params = {"department": department.department}
+            return HttpResponseRedirect(
+                f"{reverse('triage')}?{urlencode(query_params)}"
+            )
+
+        context = self.get_context_data()
+        context["department"] = department
+        context["config"] = config
+        return self.render_to_response(context)
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
-    template_name = "pages/geometricians.html"
+    template_name = "amenagement/pages/geometricians.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -190,11 +236,11 @@ class AvailabilityInfo(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["configs_available"] = MoulinetteConfig.objects.filter(
+        context["configs_available"] = ConfigAmenagement.objects.filter(
             is_activated=True
         ).order_by("department")
 
-        context["configs_soon"] = MoulinetteConfig.objects.filter(
+        context["configs_soon"] = ConfigAmenagement.objects.filter(
             is_activated=False
         ).order_by("department")
 

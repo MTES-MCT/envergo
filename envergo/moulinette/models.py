@@ -14,6 +14,7 @@ from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
 from django.http import QueryDict
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -22,9 +23,14 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
-from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.forms import (
+    MoulinetteFormAmenagement,
+    MoulinetteFormHaie,
+    TriageFormHaie,
+)
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -38,6 +44,7 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
+HAIE_REGULATIONS = ["conditionnalite_pac", "dep"]
 
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
@@ -300,16 +307,18 @@ class Regulation(models.Model):
         ]
         return contacts
 
-    def iota_only(self):
-        """Is the IOTA criterion the only valid criterion.
+    def ein_out_of_n2000_site(self):
+        """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
 
         There is an edge case for the Natura2000 regulation.
         Projects can be subject to Natura2000 only
-        because they are subject to IOTA, even though they are outsite
+        because they are subject to IOTA or Evaluation Environnemental, even though they are outside
         Natura 2000 zones.
         """
         criteria_slugs = [c.slug for c in self.criteria.all()]
-        return criteria_slugs == ["iota"]
+        return criteria_slugs and all(
+            item in ["iota", "eval_env"] for item in criteria_slugs
+        )
 
     def autorisation_urba_needed(self):
         """Is an "autorisation d'urbanisme" needed?
@@ -649,20 +658,32 @@ class Perimeter(models.Model):
         return mark_safe(contact)
 
 
-class MoulinetteConfig(models.Model):
-    """Some moulinette content depends on the department."""
-
+class ConfigBase(models.Model):
     department = models.OneToOneField(
         "geodata.Department",
         verbose_name=_("Department"),
         on_delete=models.PROTECT,
-        related_name="moulinette_config",
+        related_name="%(class)s",
     )
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.department.get_department_display()
+
+
+class ConfigAmenagement(ConfigBase):
+    """Some moulinette content depends on the department.
+
+    This object is dedicated to the Amenagement moulinette. For Haie, see ConfigHaie.
+    """
+
     regulations_available = ArrayField(
         base_field=models.CharField(max_length=64, choices=REGULATIONS),
         blank=True,
@@ -694,11 +715,32 @@ class MoulinetteConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Moulinette config")
-        verbose_name_plural = _("Moulinette configs")
+        verbose_name = _("Config amenagement")
+        verbose_name_plural = _("Configs amenagement")
+
+
+class ConfigHaie(ConfigBase):
+    """Some moulinette content depends on the department.
+
+    This object is dedicated to the Haie moulinette. For Amenagement, see ConfigAmenagement.
+    """
+
+    regulations_available = HAIE_REGULATIONS
+
+    department_guichet_unique_url = models.URLField(
+        "Url du guichet unique de la haie du département (si existant)", blank=True
+    )
+
+    contacts_and_links = models.TextField(
+        "Liste des contacts et liens utiles", blank=True
+    )
 
     def __str__(self):
         return self.department.get_department_display()
+
+    class Meta:
+        verbose_name = "Config haie"
+        verbose_name_plural = "Configs haie"
 
 
 TEMPLATE_KEYS = [
@@ -720,12 +762,12 @@ def get_all_template_keys():
 class MoulinetteTemplate(models.Model):
     """A custom moulinette template that can be admin edited.
 
-    Templates can be associated to departments (through MoulinetteConfig) or
+    Templates can be associated to departments (through ConfigAmenagement) or
     criteria.
     """
 
     config = models.ForeignKey(
-        "moulinette.MoulinetteConfig",
+        "moulinette.ConfigAmenagement",
         verbose_name=_("Config"),
         on_delete=models.PROTECT,
         related_name="templates",
@@ -814,10 +856,10 @@ class Moulinette(ABC):
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
 
-        self.load_specific_data()
+        self.department = self.get_department()
 
         self.config = self.catalog["config"] = self.get_config()
-        if self.config and self.config.id:
+        if self.config and self.config.id and hasattr(self.config, "templates"):
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
@@ -838,11 +880,6 @@ class Moulinette(ABC):
         for regulation in self.regulations:
             regulation.evaluate(self)
 
-    @abstractmethod
-    def load_specific_data(self):
-        """Load data specific for a given moulinette instance."""
-        pass
-
     def has_config(self):
         return bool(self.config)
 
@@ -854,6 +891,14 @@ class Moulinette(ABC):
         """Return the MoulinetteTemplate with the given key."""
 
         return self.templates.get(template_key, None)
+
+    @classmethod
+    def get_home_template(cls):
+        """Return the template to display the result page."""
+
+        if not hasattr(cls, "home_template"):
+            raise AttributeError("No result template found.")
+        return cls.home_template
 
     def get_result_template(self):
         """Return the template to display the result page."""
@@ -868,6 +913,20 @@ class Moulinette(ABC):
         if not hasattr(self, "debug_result_template"):
             raise AttributeError("No result template found.")
         return self.debug_result_template
+
+    def get_result_non_disponible_template(self):
+        """Return the template to display the result_non_disponible page."""
+
+        if not hasattr(self, "result_non_disponible"):
+            raise AttributeError("No result_non_disponible template found.")
+        return self.result_non_disponible
+
+    def get_result_available_soon_template(self):
+        """Return the template to display the result_available_soon page."""
+
+        if not hasattr(self, "result_available_soon"):
+            raise AttributeError("No result_available_soon template found.")
+        return self.result_available_soon
 
     @classmethod
     def get_main_form_class(cls):
@@ -1126,11 +1185,28 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def get_triage_params(cls):
+        """Add some data to display on the debug page"""
+        raise NotImplementedError
+
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+
+        return {}
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
+    home_template = "amenagement/moulinette/home.html"
     result_template = "amenagement/moulinette/result.html"
     debug_result_template = "amenagement/moulinette/result_debug.html"
+    result_available_soon = "amenagement/moulinette/result_available_soon.html"
+    result_non_disponible = "amenagement/moulinette/result_non_disponible.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
 
@@ -1308,21 +1384,18 @@ class MoulinetteAmenagement(Moulinette):
 
         return summary
 
-    def load_specific_data(self):
-        self.department = self.get_department()
-
     def get_department(self):
         lng_lat = self.catalog["lng_lat"]
         department = (
             Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("moulinette_config")
-            .prefetch_related("moulinette_config__templates")
+            .select_related("configamenagement")
+            .prefetch_related("configamenagement__templates")
             .first()
         )
         return department
 
     def get_config(self):
-        return getattr(self.department, "moulinette_config", None)
+        return getattr(self.department, "configamenagement", None)
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -1349,18 +1422,23 @@ class MoulinetteAmenagement(Moulinette):
             ),
         }
 
+    @classmethod
+    def get_triage_params(cls):
+        return set()
+
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "dep"]
+    REGULATIONS = HAIE_REGULATIONS
+    home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
+    result_available_soon = "haie/moulinette/result_non_disponible.html"
+    result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
 
     def get_config(self):
-        return MoulinetteConfig(
-            is_activated=True, regulations_available=self.REGULATIONS
-        )
+        return getattr(self.department, "confighaie", None)
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
@@ -1375,12 +1453,58 @@ class MoulinetteHaie(Moulinette):
 
         return summary
 
-    def load_specific_data(self):
-        """There is no specific needs for the Haie moulinette."""
-        pass
-
     def get_debug_context(self):
         return {}
+
+    @classmethod
+    def get_triage_params(cls):
+        return set(TriageFormHaie.base_fields.keys())
+
+    @classmethod
+    def get_extra_context(cls, request):
+        """return extra context data for the moulinette views.
+        You can use this method to add some context specific to your site : Haie or Amenagement
+        """
+        context = {}
+        form_data = request.GET
+        context["triage_url"] = update_qs(reverse("triage"), form_data)
+
+        context["demarche_url"] = settings.DEMARCHES_SIMPLIFIEE_HAIE_URL
+
+        triage_form = TriageFormHaie(data=form_data)
+        if triage_form.is_valid():
+            context["triage_form"] = triage_form
+        else:
+            context["redirect_url"] = context["triage_url"]
+
+        department_code = request.GET.get("department", None)
+        department = (
+            (
+                Department.objects.defer("geometry")
+                .filter(confighaie__is_activated=True, department=department_code)
+                .first()
+            )
+            if department_code
+            else None
+        )
+        context["department"] = department
+
+        return context
+
+    def get_department(self):
+        department_code = self.raw_data.get("department", None)
+        department = (
+            (
+                Department.objects.defer("geometry")
+                .select_related("confighaie")
+                .filter(department=department_code)
+                .first()
+            )
+            if department_code
+            else None
+        )
+
+        return department
 
 
 def get_moulinette_class_from_site(site):

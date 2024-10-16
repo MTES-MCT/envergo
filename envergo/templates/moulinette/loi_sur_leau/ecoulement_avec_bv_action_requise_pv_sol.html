@@ -1,0 +1,51 @@
+<p>
+  🔍 Le seuil de 1 ha est entendu comme la surface totale du projet, y compris l'existant, augmentée de l'aire du bassin versant dont il intercepte les écoulements. Ce n'est pas la surface de la parcelle qui est prise en compte, mais bien celle du projet.
+</p>
+
+<p>
+  <strong>Action requise :</strong>
+</p>
+
+<p>Démontrer que le projet {{ criterion.required_action }}.</p>
+
+<p>
+  <strong>Pourquoi cette action est-elle requise ?</strong>
+</p>
+
+{% if final_surface >= 10000 %}
+  <p>
+    La surface du projet est supérieure à 1 ha. Or, si les écoulements d’eau de pluie sont modifiés sur une surface de plus de 1 ha, le projet sera soumis à la Loi sur l’eau.
+  </p>
+
+{% else %}
+  <p>
+    La surface du projet est proche de 1 ha. Or, si les écoulements d’eau de pluie sont modifiés sur une surface de plus
+    de 1 ha, en comptant la surface du bassin versant intercepté, le projet sera soumis à la Loi sur l’eau.
+  </p>
+
+{% endif %}
+
+<p>
+  Les panneaux photovoltaïques sont en général espacés, et permettent l’infiltration de l’eau dans le sol, cependant :
+</p>
+
+<ul>
+  <li>
+    le ruissellement au bas des panneaux peut engendrer la formation de couloirs d’écoulement, et augmente les risques
+    d’érosion ;
+  </li>
+  <li>
+    les impacts de la phase travaux (terrassement, tranchées pour l’enfouissement des câbles…) doivent être pris en
+    compte et ils peuvent être significatifs.
+  </li>
+</ul>
+
+<p>Une étude hydraulique doit donc être menée.</p>
+
+{% if moulinette.eval_env.result == "systematique" %}
+  <p>
+    Le projet étant soumis à évaluation environnementale (voir la section <a href="#regulation_eval_env">« Évaluation environnementale »</a> dans cette
+    page), une étude d’impact doit être réalisée. C’est dans le cadre de celle-ci que se fera l’étude hydraulique, et
+    qu’il sera déterminé si la surface impactée dépasse 1 ha.
+  </p>
+{% endif %}

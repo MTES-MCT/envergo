@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% load static moulinette %}
+
+{% block title %}Haies{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+
+  <div class="title-line">
+    <h1 class="fr-h6">Haies</h1>
+    <small>
+      <a href="{{ back_url }}">Revenir à l'admin</a>
+    </small>
+  </div>
+
+  <figure class="fr-content-media fr-mt-0" role="group">
+    <div class="ratio-16x9">
+      <div class="ratio-content">
+        <div class="leaflet-container">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+  </figure>
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script>
+  window.addEventListener('load', function() {
+
+    let map = L.map('map', {maxZoom: 21});
+
+    L.tileLayer("https://data.geopf.fr/wmts?" +
+    "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+    "&STYLE=normal" +
+    "&TILEMATRIXSET=PM" +
+    "&FORMAT=image/png" +
+    "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+    "&TILEMATRIX={z}" +
+    "&TILEROW={y}" +
+    "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    }).addTo(map);
+
+
+    let bounds = L.latLngBounds();
+
+    const styles = {
+      TO_PLANT: {color: 'green', weight: 4, className: 'hedge to-plant' },
+      TO_REMOVE: { color: 'red', weight: 4, className: 'hedge to-remove' },
+    };
+
+    const hedgeData = {{ hedge_data|safe }};
+    hedgeData.map((hedge) => {
+      let style = styles[hedge.type];
+      var polyline = new L.Polyline(hedge.latLngs, style);
+      bounds.extend(polyline.getBounds());
+      polyline.addTo(map);
+    });
+
+    map.fitBounds(bounds);
+  });
+  </script>
+{% endblock %}
