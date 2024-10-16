@@ -3,3 +3,10 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.ci
       - POSTGRES_DB=${POSTGRES_DB:-envergo}
+    env_file:
+      - ./envs/django
+      - ./envs/postgres
+
+  postgres:
+    env_file:
+      - ./envs/postgres
