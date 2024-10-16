@@ -64,7 +64,9 @@ def moulinette_url(footprint):
     return f"https://envergo.beta.gouv.fr?{url}"
 
 
-def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
+def fake_moulinette(
+    url, lse, n2000, evalenv, sage, sage_results_by_perimeter=None, **eval_kwargs
+):
     """Create a moulinette with custom regulation results."""
 
     eval_params = {
@@ -79,6 +81,7 @@ def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
 
     # We create mocks based on a real regulation, so it's easier to fake results
     regulation = RegulationFactory()
+    sage_perimeter = Mock(contact_email="sage@example.com")
     moulinette.regulations = [
         Mock(
             regulation,
@@ -105,11 +108,14 @@ def fake_moulinette(url, lse, n2000, evalenv, sage, **eval_kwargs):
             regulation,
             wraps=regulation,
             result=sage,
-            perimeters=Mock(
-                all=MagicMock(return_value=[Mock(contact_email="sage@example.com")])
-            ),
+            perimeters=Mock(all=MagicMock(return_value=[sage_perimeter])),
             slug="sage",
             do_not_call_in_templates=True,
+            results_by_perimeter=(
+                sage_results_by_perimeter
+                if sage_results_by_perimeter
+                else {sage_perimeter: sage}
+            ),
         ),
     ]
 
@@ -650,3 +656,47 @@ def test_n2000_ein_out_of_n2000_site_no_bcc(rf, moulinette_url):
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
     assert "ddtm_n2000@example.org" not in email.bcc
+
+
+@pytest.mark.parametrize("footprint", [1200])
+def test_multiple_sage(rf, moulinette_url):
+    """Test email when evalreq is:
+    - created by an instructor
+    - the eval result is "soumis"
+    - there is multiple Sage perimeter impacted with different results
+    """
+    eval_kwargs = {
+        "user_type": USER_TYPES.instructor,
+        "moulinette_url": moulinette_url,
+        "send_eval_to_project_owner": True,
+    }
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        "soumis",
+        "soumis",
+        "systematique",
+        "soumis",
+        sage_results_by_perimeter={
+            Mock(contact_email="sage_interdit@example.com"): "interdit",
+            Mock(contact_email="sage_action_requise@example.com"): "action_requise",
+            Mock(contact_email="sage_non_disponible@example.com"): "non_disponible",
+        },
+        **eval_kwargs,
+    )
+
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
+    assert email.cc == ["instructor@example.org"]
+
+    assert email.bcc == [
+        "ddtm_email_test@example.org",
+        "ddtm_n2000@example.org",
+        "dreal_evalenv@example.org",
+        "sage_action_requise@example.com",
+        "sage_interdit@example.com",
+    ]
+
+    body = email.body
+    assert "À transmettre au porteur" not in body
