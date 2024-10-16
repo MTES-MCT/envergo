@@ -326,7 +326,7 @@
     }
   },
   {
-    "model": "moulinette.moulinetteconfig",
+    "model": "moulinette.configamenagement",
     "pk": 1,
     "fields": {
       "department": 63,
