@@ -1,21 +1,15 @@
 {% if regulation.perimeters.all.count > 0 %}
-  {% for perimeter in regulation.perimeters.all %}
-    {% if perimeter.rules_url %}
-      <p>Le règlement du SAGE « {{ perimeter.name }} » sera prochainement pris en compte par EnvErgo.</p>
+  {% for perimeter, result in regulation.results_by_perimeter.items %}
 
-      <p>
-        <a target="_blank" rel="noopener" href="{{ perimeter.rules_url }}">Le règlement complet du SAGE « {{ perimeter.name }} »</a> est consultable en ligne.
-      </p>
+    {% if result == "non_soumis" %}
+      {% include 'moulinette/sage/result_non_soumis_single_perimeter.html' %}
+
+    {% elif result == "non_disponible" %}
+      {% include 'moulinette/sage/result_non_disponible_single_perimeter.html' %}
+
     {% else %}
-      <p>Le SAGE « {{ perimeter.name }} » ne dispose pas de règlement.</p>
-    {% endif %}
+      {% include 'moulinette/sage/result_non_active.html' %}
 
-    {% if perimeter.has_contact %}
-      <p>
-        <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-      </p>
-
-      {{ perimeter.contact }}
     {% endif %}
 
     {% if not forloop.last %}<hr>{% endif %}

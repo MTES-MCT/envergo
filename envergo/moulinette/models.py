@@ -72,6 +72,19 @@ def all_regulations():
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
+    result_cascade = [
+        RESULTS.interdit,
+        RESULTS.systematique,
+        RESULTS.cas_par_cas,
+        RESULTS.soumis,
+        RESULTS.action_requise,
+        RESULTS.a_verifier,
+        RESULTS.iota_a_verifier,
+        RESULTS.non_soumis,
+        RESULTS.non_concerne,
+        RESULTS.non_disponible,
+    ]
+
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
@@ -242,21 +255,9 @@ class Regulation(models.Model):
         # From this point, we made sure every data (regulation, perimeter) is existing
         # and activated
 
-        cascade = [
-            RESULTS.interdit,
-            RESULTS.systematique,
-            RESULTS.cas_par_cas,
-            RESULTS.soumis,
-            RESULTS.action_requise,
-            RESULTS.a_verifier,
-            RESULTS.iota_a_verifier,
-            RESULTS.non_soumis,
-            RESULTS.non_concerne,
-            RESULTS.non_disponible,
-        ]
         results = [criterion.result for criterion in self.criteria.all()]
         result = None
-        for status in cascade:
+        for status in self.result_cascade:
             if status in results:
                 result = status
                 break
@@ -267,8 +268,38 @@ class Regulation(models.Model):
                 result = RESULTS.non_soumis
             else:
                 result = RESULTS.non_disponible
-
         return result
+
+    @property
+    def results_by_perimeter(self):
+        if not self.has_perimeters:
+            return None
+
+        results_by_perimeter = {}
+
+        for perimeter in self.perimeters.all():
+            perimeter_criteria = self.criteria.filter(perimeter=perimeter)
+            results = [criterion.result for criterion in perimeter_criteria.all()]
+            result = None
+            for status in self.result_cascade:
+                if status in results:
+                    result = status
+                    break
+            # If there is no criterion at all, we have to set a default value
+            if result is None:
+                if perimeter.is_activated:
+                    result = RESULTS.non_soumis
+                else:
+                    result = RESULTS.non_disponible
+            results_by_perimeter[perimeter] = result
+
+        # sort based on the results cascade
+        return dict(
+            sorted(
+                results_by_perimeter.items(),
+                key=lambda item: self.result_cascade.index(item[1]),
+            )
+        )
 
     def required_actions(self, stake=None):
         """Return the list of required actions for the given stake."""

@@ -1,32 +1,13 @@
-{% for perimeter in regulation.perimeters.all %}
+{% for perimeter, result in regulation.results_by_perimeter.items %}
 
-  {% if perimeter.rules_url %}
-    <p>
-      Le projet n’est pas interdit par le règlement de SAGE « {{ perimeter.name }} » pour ce qui concerne les impacts sur zone humide.
-    </p>
+  {% if result == "non_soumis" %}
+    {% include 'moulinette/sage/result_non_soumis_single_perimeter.html' %}
 
-    <p>
-      <a target="_blank" rel="noopener" href="{{ perimeter.rules_url }}">Le règlement complet doit cependant être consulté</a>, pour tenir compte d’éventuelles autres obligations.
-    </p>
-
-    {% if perimeter.has_contact %}
-      <p>
-        <strong>Le porteur de projet est invité à se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-      </p>
-
-      {{ perimeter.contact }}
-    {% endif %}
+  {% elif result == "non_disponible" %}
+    {% include 'moulinette/sage/result_non_disponible_single_perimeter.html' %}
 
   {% else %}
-    <p>Le SAGE « {{ perimeter.name }} » ne dispose pas de règlement.</p>
-
-    {% if perimeter.has_contact %}
-      <p>
-        <strong>Le porteur peut se rapprocher de la structure en charge de l’animation du SAGE :</strong>
-      </p>
-
-      {{ perimeter.contact }}
-    {% endif %}
+    {% include 'moulinette/sage/result_non_active.html' %}
 
   {% endif %}
 
