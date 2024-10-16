@@ -277,9 +277,21 @@ class Regulation(models.Model):
 
         results_by_perimeter = {}
 
+        # Fetch already evaluated criteria
+        criteria_list = list(self.criteria.all())
+
+        grouped_criteria = {}
+
+        # Group the criteria by perimeter
+        for criterion in criteria_list:
+            perimeter = criterion.perimeter
+            if perimeter not in grouped_criteria:
+                grouped_criteria[perimeter] = []
+            grouped_criteria[perimeter].append(criterion)
+
         for perimeter in self.perimeters.all():
-            perimeter_criteria = self.criteria.filter(perimeter=perimeter)
-            results = [criterion.result for criterion in perimeter_criteria.all()]
+            perimeter_criteria = grouped_criteria.get(perimeter, [])
+            results = [criterion.result for criterion in perimeter_criteria]
             result = None
             for status in self.result_cascade:
                 if status in results:
