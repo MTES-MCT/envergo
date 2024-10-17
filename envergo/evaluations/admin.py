@@ -185,6 +185,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             msg = f"""
                 L'avis a été modifié ({obj.updated_at:%c}) après
                 la dernière publication ({latest_version.created_at:%c}).
+                Vous pouvez le prévisualiser puis le publier pour le rendre visiable au
+                pétitionnaire.
             """
             self.message_user(request, msg, level=messages.WARNING)
 
