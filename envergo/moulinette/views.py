@@ -10,7 +10,11 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import (
+    extract_matomo_bare_url_from_request,
+    is_request_from_a_bot,
+    log_event,
+)
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
@@ -315,6 +319,14 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
+            self.request
+        )
+
+        return context
+
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
@@ -508,6 +520,9 @@ class Triage(FormView):
             else None
         )
         context["department"] = department
+        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
+            self.request
+        )
 
         return context
 
