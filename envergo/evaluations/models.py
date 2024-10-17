@@ -226,6 +226,7 @@ class Evaluation(models.Model):
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    updated_at = models.DateTimeField(_("Date updated"), auto_now=True)
 
     class Meta:
         verbose_name = "Avis"

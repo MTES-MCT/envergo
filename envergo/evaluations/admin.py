@@ -163,6 +163,33 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
     )
 
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+
+        # Add warning message if the published version is outdated
+        latest_version = obj.versions.first()
+        if not latest_version:
+            self.message_user(
+                request,
+                "Il n'y a pas de version publiée pour cet avis.",
+                level=messages.WARNING,
+            )
+        elif not latest_version.published:
+            self.message_user(
+                request,
+                "La dernière version n'est pas publiée.",
+                level=messages.WARNING,
+            )
+        elif latest_version.created_at < obj.updated_at:
+            msg = f"""
+                L'avis a été modifié ({obj.updated_at:%c}) après
+                la dernière publication ({latest_version.created_at:%c}).
+            """
+            self.message_user(request, msg, level=messages.WARNING)
+
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
     def save_model(self, request, obj, form, change):
         """Synchronize the references."""
         if obj.request:
