@@ -5,10 +5,13 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
+from django.views.decorators.csrf import requires_csrf_token
+from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
@@ -273,3 +276,25 @@ class NewsFeed(Feed):
         base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
+
+
+@requires_csrf_token
+def server_error(request, template_name=ERROR_500_TEMPLATE_NAME):
+    """
+    500 error handler.
+
+    This method override django.views.defaults.server_error to pass a context, and display the right site base template
+    Templates: :template:`500.html`
+    """
+    try:
+        template = loader.get_template(template_name)
+    except TemplateDoesNotExist:
+        if template_name != ERROR_500_TEMPLATE_NAME:
+            # Reraise if it's a missing custom template.
+            raise
+        return HttpResponseServerError(
+            ERROR_PAGE_TEMPLATE % {"title": "Server Error (500)", "details": ""},
+        )
+    return HttpResponseServerError(
+        template.render({"base_template": request.base_template})
+    )
