@@ -88,8 +88,35 @@ div#app {
           }
         }
 
-        .autocomplete__wrapper {
-          margin-top: 0;
+        .fr-search-bar {
+          .autocomplete__wrapper {
+            margin-top: 0;
+          }
+
+          .fr-input,
+          .autocomplete__input {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            min-height: 2rem;
+            max-height: 2rem;
+            height: 2rem;
+          }
+
+          .fr-btn {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            padding: 0.25rem 0.75rem;
+            width: 2rem;
+            min-height: 2rem;
+            max-height: 2rem;
+            height: 2rem;
+
+            &::before,
+            &::after {
+              width: 0.75rem;
+              height: 0.75rem;
+            }
+          }
         }
       }
 
