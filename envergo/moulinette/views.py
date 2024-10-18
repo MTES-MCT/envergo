@@ -141,7 +141,6 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 5
 
-        context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["visitor_id"] = self.request.COOKIES.get(
             settings.VISITOR_COOKIE_NAME, ""
@@ -497,6 +496,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         context["is_admin"] = self.request.user.is_staff
         context["edit_url"] = edit_url
+        context["display_feedback_form"] = (
+            moulinette
+            and moulinette.is_evaluation_available()
+            and not self.request.GET.get("feedback", False)
+        )
 
         context["is_read_only"] = self.kwargs.get("reference") is not None
 
