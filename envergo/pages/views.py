@@ -18,6 +18,7 @@ from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
+from envergo.urlmappings.models import UrlMapping
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +287,10 @@ class DemarcheSimplifieeView(FormView):
         moulinette_url = form.cleaned_data["moulinette_url"]
         profil = form.cleaned_data["profil"]
 
+        read_only_mapping = UrlMapping.objects.create(url=moulinette_url)
+        read_only_url = reverse(
+            "moulinette_result_read_only", kwargs={"reference": read_only_mapping.key}
+        )
         # Ce code est particulièrement fragile.
         # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
         mapping_demarche_simplifiee = {
@@ -307,21 +312,21 @@ class DemarcheSimplifieeView(FormView):
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
         )
-        redirect_url = None
+        demarche_simplifiee_url = None
 
         if 200 <= response.status_code < 400:
             data = response.json()
-            redirect_url = data.get("dossier_url")
+            demarche_simplifiee_url = data.get("dossier_url")
         else:
             logger.error(
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
-        redirect_url = None
-        if not redirect_url:
+
+        if not demarche_simplifiee_url:
             res = self.form_invalid(form)
         else:
-            res = HttpResponseRedirect(redirect_url)
+            res = HttpResponseRedirect(read_only_url)
 
         return res
 
