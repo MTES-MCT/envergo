@@ -5,6 +5,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
@@ -292,6 +294,7 @@ class MoulinetteMixin:
         )
 
 
+@method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteHome(MoulinetteMixin, FormView):
     def get_template_names(self):
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
