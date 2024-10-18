@@ -27,7 +27,7 @@
 
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
           <div class="controls bottom left">
-            <button class="fr-btn fr-btn--secondary" @click="zoomOut">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
             </button>
@@ -35,24 +35,25 @@
         </template>
 
         <div class="controls top left">
-          <div class="fr-search-bar" role="search">
+          <div class="fr-search-bar fr-search-bar--sm" role="search">
             <label class="fr-label" for="address">Rechercher</label>
-            <input class="fr-input"
+            <input class="fr-input fr-input--sm"
                    placeholder="Rechercher"
                    type="search"
                    id="id_address"
                    name="address">
-            <button class="fr-btn fr-btn--secondary" title="Rechercher">Rechercher</button>
+            <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
           </div>
         </div>
 
         <div class="controls top right">
-          <button class="fr-btn fr-btn--secondary fr-mr-1w"
+          <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer (à arracher)
           </button>
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">
+          <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                  @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer (à planter)
           </button>
