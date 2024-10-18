@@ -1466,7 +1466,11 @@ class MoulinetteHaie(Moulinette):
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
         context = {}
-        form_data = request.GET
+        form_data = (
+            request.moulinette_data
+            if hasattr(request, "moulinette_data")
+            else request.GET
+        )
         context["triage_url"] = update_qs(reverse("triage"), form_data)
 
         triage_form = TriageFormHaie(data=form_data)

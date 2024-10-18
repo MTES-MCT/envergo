@@ -33,13 +33,15 @@
            rel="noopener external">consultable en ligne</a>
       </p>
       {% block project_summary %}{% endblock %}
-      <div class="button-container  hide-print">
-        <a href="{{ edit_url }}"
-           class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-           data-event-category="Content"
-           data-event-action="Edit"
-           data-event-name="Project">Modifier le projet</a>
-      </div>
+      {% if not is_read_only %}
+        <div class="button-container  hide-print">
+          <a href="{{ edit_url }}"
+             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+             data-event-category="Content"
+             data-event-action="Edit"
+             data-event-name="Project">Modifier le projet</a>
+        </div>
+      {% endif %}
     </section>
   </div>
 {% endblock %}

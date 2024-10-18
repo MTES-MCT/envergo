@@ -40,6 +40,11 @@ urlpatterns = [
         include(
             [
                 path("", MoulinetteResult.as_view(), name="moulinette_result"),
+                path(
+                    "<slug:reference>/",
+                    MoulinetteResult.as_view(),
+                    name="moulinette_result_read_only",
+                ),
                 # This is another "fake" url, only for matomo tracking
                 path(
                     _("debug/"),

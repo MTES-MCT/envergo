@@ -49,7 +49,7 @@
 {% endblock %}
 
 {% block after-content %}
-  {% if display_actions_banner %}
+  {% if display_actions_banner and not is_read_only %}
     {% include 'haie/moulinette/_actions_banner.html' %}
   {% endif %}
 {% endblock %}
