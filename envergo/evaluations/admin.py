@@ -17,6 +17,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, linebreaks, mark_safe
+from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
 from envergo.analytics.models import Event
@@ -182,9 +183,12 @@ class EvaluationAdmin(admin.ModelAdmin):
                 level=messages.WARNING,
             )
         elif latest_version.created_at < obj.updated_at:
+
+            local_updated_at = localtime(obj.updated_at)
+            local_published_at = localtime(latest_version.created_at)
             msg = f"""
-                L'avis a été modifié ({obj.updated_at:%c}) après
-                la dernière publication ({latest_version.created_at:%c}).
+                L'avis a été modifié ({local_updated_at:%c}) après
+                la dernière publication ({local_published_at:%c}).
                 Vous pouvez le prévisualiser puis le publier pour le rendre visiable au
                 pétitionnaire.
             """
