@@ -47,8 +47,8 @@
               <a class="fr-btn" href="{% url 'faq' %}">Questions fréquentes</a>
             </li>
             <li>
-              <a href="{% url 'request_evaluation' %}"
-                 class="fr-btn fr-btn--sm main-cta fr-hidden-lg fr-unhidden-xl"
+              <a {% if not is_request_btn_disabled %}href="{% url 'request_evaluation' %}"{% endif %}
+                 class="fr-btn fr-btn--sm {% if not is_request_btn_disabled %}main-cta{% endif %} fr-hidden-lg fr-unhidden-xl"
                  data-event-category="{{ tracking_name }}"
                  data-event-action="RequestClick"
                  data-event-name="CTA">Demander un avis réglementaire</a>
