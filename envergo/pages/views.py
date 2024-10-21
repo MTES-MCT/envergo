@@ -317,7 +317,7 @@ class DemarcheSimplifieeView(FormView):
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
-        redirect_url = None
+
         if not redirect_url:
             res = self.form_invalid(form)
         else:
