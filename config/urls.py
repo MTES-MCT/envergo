@@ -8,7 +8,11 @@ from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
+from envergo.pages.views import server_error
 from envergo.urlmappings.views import UrlMappingRedirect
+
+# customize error pages to handle multi-site
+handler500 = server_error
 
 # We redefine django auth patterns for better customization
 auth_patterns = [
@@ -86,7 +90,7 @@ if settings.DEBUG:
             default_views.page_not_found,
             kwargs={"exception": Exception("Page not Found")},
         ),
-        path("500/", default_views.server_error),
+        path("500/", server_error),
     ]
     if "debug_toolbar" in settings.INSTALLED_APPS:
         import debug_toolbar
