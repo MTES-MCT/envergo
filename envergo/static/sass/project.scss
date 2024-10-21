@@ -1101,6 +1101,7 @@ footer {
   text-align: center;
   display: flex;
   justify-content: space-around;
+  align-items: center;
   flex-wrap: wrap;
   width: 100vw;
 
@@ -1907,6 +1908,11 @@ main.demonstrateur_2150 {
 
 #moulinette-submit-button {
   min-width: 8em;
+}
+
+#demarche-simplifiee-form {
+  color: var(--text-inverted-blue-france);
+  min-width: 360px;
 }
 
 #demarche-simplifiee-btn {
