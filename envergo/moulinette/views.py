@@ -5,6 +5,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
@@ -126,7 +128,6 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 5
 
-        context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["visitor_id"] = self.request.COOKIES.get(
             settings.VISITOR_COOKIE_NAME, ""
@@ -293,6 +294,7 @@ class MoulinetteMixin:
         )
 
 
+@method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteHome(MoulinetteMixin, FormView):
     def get_template_names(self):
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
@@ -477,7 +479,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         context["is_admin"] = self.request.user.is_staff
         context["edit_url"] = edit_url
-
+        context["display_feedback_form"] = (
+            moulinette
+            and moulinette.is_evaluation_available()
+            and not self.request.GET.get("feedback", False)
+        )
         return context
 
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import date, timedelta
 from urllib.parse import urlencode
 
@@ -18,7 +19,10 @@ from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
+from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
+
+logger = logging.getLogger(__name__)
 
 
 class HomeAmenagementView(MoulinetteMixin, FormView):
@@ -276,6 +280,63 @@ class NewsFeed(Feed):
         base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
+
+
+class DemarcheSimplifieeView(FormView):
+    form_class = DemarcheSimplifieeForm
+
+    def form_valid(self, form):
+        moulinette_url = form.cleaned_data["moulinette_url"]
+        profil = form.cleaned_data["profil"]
+
+        # Ce code est particulièrement fragile.
+        # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
+        mapping_demarche_simplifiee = {
+            "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
+            "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
+        }
+        demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+
+        body = {
+            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                "PROFIL_FIELD_ID"
+            ]: mapping_demarche_simplifiee[profil],
+            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                "MOULINETTE_URL_FIELD_ID"
+            ]: moulinette_url,
+        }
+
+        response = requests.post(
+            api_url, json=body, headers={"Content-Type": "application/json"}
+        )
+        redirect_url = None
+
+        if 200 <= response.status_code < 400:
+            data = response.json()
+            redirect_url = data.get("dossier_url")
+        else:
+            logger.error(
+                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                extra={"response": response},
+            )
+
+        if not redirect_url:
+            res = self.form_invalid(form)
+        else:
+            res = HttpResponseRedirect(redirect_url)
+
+        return res
+
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            "Une erreur technique nous a empêché de créer votre dossier. "
+            "Veuillez nous excuser pour ce désagrément.",
+        )
+        return HttpResponseRedirect(
+            form.cleaned_data.get("moulinette_url", reverse("home"))
+        )
 
 
 @requires_csrf_token
