@@ -40,6 +40,10 @@ div#app {
   display: flex;
   flex-direction: column;
 
+  &[v-cloak] {
+    visibility: hidden;
+  }
+
   header {
     display: flex;
     justify-content: space-between;
@@ -84,8 +88,35 @@ div#app {
           }
         }
 
-        .autocomplete__wrapper {
-          margin-top: 0;
+        .fr-search-bar {
+          .autocomplete__wrapper {
+            margin-top: 0;
+          }
+
+          .fr-input,
+          .autocomplete__input {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            min-height: 2rem;
+            max-height: 2rem;
+            height: 2rem;
+          }
+
+          .fr-btn {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            padding: 0.25rem 0.75rem;
+            width: 2rem;
+            min-height: 2rem;
+            max-height: 2rem;
+            height: 2rem;
+
+            &::before,
+            &::after {
+              width: 0.75rem;
+              height: 0.75rem;
+            }
+          }
         }
       }
 
@@ -137,22 +168,33 @@ div#app {
       overflow-y: scroll;
       width: 25em;
 
+      div#compensation {
+        p.rate strong {
+          font-weight: 500;
+        }
+      }
+
       div#hedge-lists {
-        padding: 1rem;
+        padding: 16px;
 
-        --title-spacing: 0 0 0.5rem 1.5rem;
+        --title-spacing: 0 0 0.5rem 0;
 
-        h3 img {
-          margin-left: -2.25rem;
+        h3 {
+          font-weight: 500 !important;
+          font-size: 16px !important;
         }
 
-        p {
-          padding-left: 1.5rem;
+        h3 img {
+          margin-left: 0;
         }
 
         hr {
           margin: 1rem 0;
           padding-bottom: 3px;
+        }
+
+        p.fr-text--light {
+          font-size: 14px;
         }
 
         table {
@@ -166,16 +208,19 @@ div#app {
             td,
             th {
               width: 1px;
+              font-size: 14px;
             }
 
             th {
               text-align: left;
-              padding: 0 2rem 0 1.5rem;
+              padding-left: 2rem;
               min-width: 6rem;
+              font-weight: 900;
             }
 
             td {
               text-align: right;
+              color: #666;
             }
 
             td:first-of-type {
@@ -193,32 +238,16 @@ div#app {
 
             &:hover,
             &.hovered {
+              background-color: #f5f5f5;
+
               button {
                 visibility: visible;
               }
             }
-          }
-        }
 
-        .to-plant {
-          tr:hover,
-          tr.hovered {
-            background-color: #58c5cf1f;
-          }
-
-          tr:active {
-            background-color: #58c5cf40;
-          }
-        }
-
-        .to-remove {
-          tr:hover,
-          tr.hovered {
-            background-color: #ca00201f;
-          }
-
-          tr:active {
-            background-color: #ca002040;
+            &:active {
+              background-color: #ebebeb;
+            }
           }
         }
       }
@@ -237,12 +266,12 @@ dialog#hedge-input-modal {
 
 div#statistics {
   background-color: #f6f6f6;
-  padding: 0.5rem 1rem;
+  padding: 16px;
 
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 
     th,
     td {
