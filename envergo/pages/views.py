@@ -289,7 +289,8 @@ class DemarcheSimplifieeView(FormView):
 
         read_only_mapping = UrlMapping.objects.create(url=moulinette_url)
         read_only_url = reverse(
-            "moulinette_result_read_only", kwargs={"reference": read_only_mapping.key}
+            "moulinette_result_read_only",
+            kwargs={"moulinette_reference": read_only_mapping.key},
         )
         # Ce code est particulièrement fragile.
         # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.

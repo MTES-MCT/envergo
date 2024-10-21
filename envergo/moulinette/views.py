@@ -48,9 +48,9 @@ class MoulinetteMixin:
         moulinette_data = None
         if self.request.method == "GET":
             GET = self.clean_request_get_parameters()
-            if self.kwargs.get("reference"):
+            if self.kwargs.get("moulinette_reference"):
                 moulinette_url = UrlMapping.objects.filter(
-                    key=self.kwargs["reference"]
+                    key=self.kwargs["moulinette_reference"]
                 ).first()
                 if moulinette_url:
                     parsed_url = urlparse(moulinette_url.url)
@@ -502,7 +502,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             and not self.request.GET.get("feedback", False)
         )
 
-        context["is_read_only"] = self.kwargs.get("reference") is not None
+        context["is_read_only"] = self.kwargs.get("moulinette_reference") is not None
 
         return context
 

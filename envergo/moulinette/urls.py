@@ -41,7 +41,7 @@ urlpatterns = [
             [
                 path("", MoulinetteResult.as_view(), name="moulinette_result"),
                 path(
-                    "<slug:reference>/",
+                    "<slug:moulinette_reference>/",
                     MoulinetteResult.as_view(),
                     name="moulinette_result_read_only",
                 ),
