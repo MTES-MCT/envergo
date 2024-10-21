@@ -1,6 +1,6 @@
 {% extends 'moulinette/result.html' %}
 
-{% load moulinette %}
+{% load static moulinette %}
 
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
@@ -52,4 +52,8 @@
   {% if display_actions_banner and not is_read_only %}
     {% include 'haie/moulinette/_actions_banner.html' %}
   {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
 {% endblock %}

@@ -2,7 +2,9 @@
 
 {% block actions %}
   <div class="banner-item">
-    <form action="{% url 'demarchesimplifiee' %}" method="post">
+    <form id="demarche-simplifiee-form"
+          action="{% url 'demarchesimplifiee' %}"
+          method="post">
       {% csrf_token %}
       <input type="hidden"
              name="moulinette_url"

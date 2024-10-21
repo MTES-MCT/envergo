@@ -6,7 +6,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
@@ -326,16 +326,20 @@ class DemarcheSimplifieeView(FormView):
         if not demarche_simplifiee_url:
             res = self.form_invalid(form)
         else:
-            res = HttpResponseRedirect(read_only_url)
+            res = JsonResponse(
+                {
+                    "demarche_simplifiee_url": demarche_simplifiee_url,
+                    "read_only_url": read_only_url,
+                }
+            )
 
         return res
 
     def form_invalid(self, form):
-        messages.error(
-            self.request,
-            "Une erreur technique nous a empêché de créer votre dossier. "
-            "Veuillez nous excuser pour ce désagrément.",
-        )
-        return HttpResponseRedirect(
-            form.cleaned_data.get("moulinette_url", reverse("home"))
+        return JsonResponse(
+            {
+                "error_title": "Un problème technique empêche la création de votre dossier.",
+                "error_body": "Nous vous invitons à enregistrer votre simulation et à réessayer ultérieurement.",
+            },
+            status=400,
         )
