@@ -10,7 +10,7 @@
 
 {% block main %}
   <div id="app"
-       data-save-url="{{ save_url }}"
+       data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
     <header role="banner" class="fr-header">
