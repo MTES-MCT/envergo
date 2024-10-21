@@ -238,32 +238,16 @@ div#app {
 
             &:hover,
             &.hovered {
+              background-color: #f5f5f5;
+
               button {
                 visibility: visible;
               }
             }
-          }
-        }
 
-        .to-plant {
-          tr:hover,
-          tr.hovered {
-            background-color: #58c5cf1f;
-          }
-
-          tr:active {
-            background-color: #58c5cf40;
-          }
-        }
-
-        .to-remove {
-          tr:hover,
-          tr.hovered {
-            background-color: #ca00201f;
-          }
-
-          tr:active {
-            background-color: #ca002040;
+            &:active {
+              background-color: #ebebeb;
+            }
           }
         }
       }
