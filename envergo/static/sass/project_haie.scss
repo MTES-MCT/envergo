@@ -168,17 +168,27 @@ div#app {
       overflow-y: scroll;
       width: 25em;
 
-      div#hedge-lists {
-        padding: 1rem;
+      div#compensation {
+        p.rate strong {
+          font-weight: 500;
+        }
+      }
 
-        --title-spacing: 0 0 0.5rem 1.5rem;
+      div#hedge-lists {
+        padding: 16px;
+
+        --title-spacing: 0 0 0.5rem 0;
+
+        h3 {
+          font-weight: 500 !important;
+          font-size: 16px !important;
+        }
 
         h3 img {
-          margin-left: -2.25rem;
+          margin-left: 0;
         }
 
         p {
-          padding-left: 1.5rem;
         }
 
         hr {
@@ -201,7 +211,7 @@ div#app {
 
             th {
               text-align: left;
-              padding: 0 2rem 0 1.5rem;
+              padding-left: calc(var(--icon-size) + 16px);
               min-width: 6rem;
             }
 
@@ -268,12 +278,12 @@ dialog#hedge-input-modal {
 
 div#statistics {
   background-color: #f6f6f6;
-  padding: 0.5rem 1rem;
+  padding: 16px;
 
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 
     th,
     td {
