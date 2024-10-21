@@ -1,6 +1,7 @@
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
+from config.urls import handler500  # noqa
 from envergo.evaluations.views import ShortUrlAdminRedirectView
 from envergo.geodata.views import CatchmentAreaDebug
 

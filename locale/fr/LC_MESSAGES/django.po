@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-08 15:11+0200\n"
+"POT-Creation-Date: 2024-10-17 10:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr "Clé de session"
 msgid "Metadata"
 msgstr "Métadonnées"
 
-#: envergo/analytics/models.py:21 envergo/confs/models.py:66
+#: envergo/analytics/models.py:21 envergo/confs/models.py:73
 #: envergo/evaluations/models.py:228 envergo/evaluations/models.py:364
 #: envergo/evaluations/models.py:639 envergo/geodata/models.py:83
 #: envergo/geodata/models.py:133 envergo/pages/models.py:14
@@ -102,53 +102,53 @@ msgstr "Date de création"
 msgid "Events"
 msgstr "Évents"
 
-#: envergo/confs/models.py:13
+#: envergo/confs/models.py:14
 msgid "Message"
 msgstr "Message"
 
-#: envergo/confs/models.py:14
+#: envergo/confs/models.py:15
 msgid "Message (html)"
 msgstr "Message (html)"
 
-#: envergo/confs/models.py:15
+#: envergo/confs/models.py:16
 msgid "Is active"
 msgstr "Est actif"
 
-#: envergo/confs/models.py:16
+#: envergo/confs/models.py:17
 msgid "Updated at"
 msgstr "Mis à jour le"
 
-#: envergo/confs/models.py:50 envergo/confs/models.py:55
+#: envergo/confs/models.py:51 envergo/confs/models.py:56
 msgid "Setting"
 msgstr "Paramètre"
 
-#: envergo/confs/models.py:52
+#: envergo/confs/models.py:53
 msgid "Value"
 msgstr "Valeur"
 
-#: envergo/confs/models.py:56
+#: envergo/confs/models.py:57
 msgid "Settings"
 msgstr "Paramètres"
 
-#: envergo/confs/models.py:62 envergo/evaluations/models.py:736
+#: envergo/confs/models.py:69 envergo/evaluations/models.py:736
 #: envergo/geodata/models.py:51
 msgid "File"
 msgstr "Fichier"
 
-#: envergo/confs/models.py:63 envergo/evaluations/models.py:740
+#: envergo/confs/models.py:70 envergo/evaluations/models.py:740
 #: envergo/geodata/models.py:47 envergo/moulinette/models.py:589
 msgid "Name"
 msgstr "Nom"
 
-#: envergo/confs/models.py:64 envergo/geodata/models.py:61
+#: envergo/confs/models.py:71 envergo/geodata/models.py:61
 msgid "Description"
 msgstr "Description"
 
-#: envergo/confs/models.py:69
+#: envergo/confs/models.py:76
 msgid "Hosted file"
 msgstr "Fichier hébergé"
 
-#: envergo/confs/models.py:70
+#: envergo/confs/models.py:77
 msgid "Hosted files"
 msgstr "Fichiers hébergés"
 
@@ -210,10 +210,8 @@ msgid "Sent emails"
 msgstr "E-mails envoyés"
 
 #: envergo/evaluations/admin.py:161 envergo/evaluations/admin.py:384
-#, fuzzy
-#| msgid "Permissions"
 msgid "Versions"
-msgstr "Permissions"
+msgstr "Versions"
 
 #: envergo/evaluations/admin.py:356
 msgid "Sent history"
@@ -221,23 +219,17 @@ msgstr "E-mails envoyés"
 
 #: envergo/evaluations/admin.py:392
 msgid "Create a new version for this evaluation"
-msgstr ""
+msgstr "Créer une nouvelle version pour cette évaluation"
 
 #: envergo/evaluations/admin.py:395
-#, fuzzy
-#| msgid "Please, select one and only one request for this action."
 msgid "Please, select one and only one evaluation for this action."
 msgstr "Merci de sélectionner une et une seule demande pour cette action."
 
 #: envergo/evaluations/admin.py:404
-#, fuzzy, python-format
-#| msgid "There was an error creating your evaluation: %(error)s"
 msgid "There was an error creating a new version: %(error)s"
 msgstr "Une erreur a empêché la création de l'avis réglementaire : %(error)s"
 
 #: envergo/evaluations/admin.py:414
-#, fuzzy, python-format
-#| msgid "<a href=\"%(admin_url)s\">The new evaluation has been created.</a>"
 msgid ""
 "<a href=\"%(admin_url)s\">The new version for evaluation %(reference)s has "
 "been created.</a>"
@@ -283,7 +275,7 @@ msgstr "La valeur reçue lorsque vous avez demandé un avis réglementaire."
 msgid "Address of the project"
 msgstr "Adresse du projet"
 
-#: envergo/evaluations/forms.py:69 envergo/moulinette/forms/__init__.py:74
+#: envergo/evaluations/forms.py:69 envergo/moulinette/forms/__init__.py:75
 msgid "Type in a few characters to see suggestions"
 msgstr "Saisissez quelques caractères pour voir des suggestions"
 
@@ -411,14 +403,10 @@ msgid "Who are you?"
 msgstr "Êtes-vous ?"
 
 #: envergo/evaluations/models.py:218
-#, fuzzy
-#| msgid "Project sponsor phone number"
 msgid "Project owner phone"
 msgstr "Téléphone du porteur de projet"
 
 #: envergo/evaluations/models.py:221
-#, fuzzy
-#| msgid "Project sponsor phone number"
 msgid "Project owner company"
 msgstr "Téléphone du porteur de projet"
 
@@ -435,10 +423,8 @@ msgid "Evaluation"
 msgstr "Évaluation"
 
 #: envergo/evaluations/models.py:368
-#, fuzzy
-#| msgid "Created surface"
 msgid "Created by"
-msgstr "Surface créée"
+msgstr "Créé par"
 
 #: envergo/evaluations/models.py:371 envergo/moulinette/models.py:784
 #: envergo/pages/models.py:12
@@ -446,16 +432,12 @@ msgid "Content"
 msgstr "Contenu"
 
 #: envergo/evaluations/models.py:374
-#, fuzzy
-#| msgid "Evaluation file"
 msgid "Evaluation version"
-msgstr "Fichier d'évaluation"
+msgstr "Version de l'évaluation"
 
 #: envergo/evaluations/models.py:375
-#, fuzzy
-#| msgid "Evaluation requests"
 msgid "Evaluation versions"
-msgstr "Demandes d'avis"
+msgstr "Versions de l'évaluation"
 
 #: envergo/evaluations/models.py:600
 msgid "Additional data"
@@ -575,11 +557,11 @@ msgstr "Dernier clic"
 
 #: envergo/evaluations/models.py:789
 msgid "On error"
-msgstr ""
+msgstr "En erreur"
 
 #: envergo/evaluations/models.py:790
 msgid "Reject reason"
-msgstr ""
+msgstr "Raison du rejet"
 
 #: envergo/evaluations/models.py:793
 msgid "Recipient status"
@@ -655,11 +637,11 @@ msgstr "Valeur carto"
 msgid "Geo data"
 msgstr "Données Geo"
 
-#: envergo/geodata/forms.py:18 envergo/moulinette/forms/__init__.py:78
+#: envergo/geodata/forms.py:18 envergo/moulinette/forms/__init__.py:79
 msgid "Longitude"
 msgstr "Longitude"
 
-#: envergo/geodata/forms.py:21 envergo/moulinette/forms/__init__.py:81
+#: envergo/geodata/forms.py:21 envergo/moulinette/forms/__init__.py:82
 msgid "Latitude"
 msgstr "Latitude"
 
@@ -788,16 +770,12 @@ msgid "Department"
 msgstr "Département"
 
 #: envergo/geodata/models.py:171
-#, fuzzy
-#| msgid "File"
 msgid "Filename"
-msgstr "Fichier"
+msgstr "Nom du fichier"
 
 #: envergo/geodata/models.py:172
-#, fuzzy
-#| msgid "Data type"
 msgid "Data"
-msgstr "Valeur carto"
+msgstr "Données"
 
 #: envergo/geodata/models.py:178
 msgid "Catchment area tile"
@@ -835,26 +813,26 @@ msgstr "Évaluateur"
 msgid "Regulations available"
 msgstr "Réglementations activées"
 
-#: envergo/moulinette/forms/__init__.py:36
-#: envergo/moulinette/forms/__init__.py:67
+#: envergo/moulinette/forms/__init__.py:37
+#: envergo/moulinette/forms/__init__.py:68
 #: envergo/moulinette/regulations/evalenv.py:25
 #: envergo/moulinette/regulations/evalenv.py:136
 msgid "In square meters"
 msgstr "En m²"
 
-#: envergo/moulinette/forms/__init__.py:42
+#: envergo/moulinette/forms/__init__.py:43
 msgid "Existing surface before the project"
 msgstr "Surface au sol déjà impactée par l'existant"
 
-#: envergo/moulinette/forms/__init__.py:73
+#: envergo/moulinette/forms/__init__.py:74
 msgid "Search for the address to center the map"
 msgstr "Saisissez l'adresse ou la commune la plus proche du projet"
 
-#: envergo/moulinette/forms/__init__.py:94
+#: envergo/moulinette/forms/__init__.py:95
 msgid "This field is required"
 msgstr "Ce champ est obligatoire"
 
-#: envergo/moulinette/forms/__init__.py:103
+#: envergo/moulinette/forms/__init__.py:104
 msgid "The total surface must be greater than the created surface"
 msgstr ""
 "La surface impactée totale doit être au moins égale à celle des nouveaux "

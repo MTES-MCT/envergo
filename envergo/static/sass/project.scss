@@ -1034,6 +1034,15 @@ div.hero-alt {
       margin: 0;
     }
   }
+
+  footer#footer {
+    padding-bottom: 5rem;
+  }
+
+  // Crisp chat button
+  a.cc-1m2mf {
+    border: 2px solid var(--background-default-grey) !important;
+  }
 }
 
 @media only screen and (width > 991px) {
@@ -1092,17 +1101,17 @@ footer {
   z-index: 1000; // to be above the leaflet map
 }
 
-@media only screen and (width <= 767px) {
-  #feedback-form,
-  #copy-btn-container,
-  #debug-btn {
-    display: none;
-  }
-}
-
 #action-banner {
   background-color: var(--blue-france-sun-113-625);
   text-align: center;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  width: 100vw;
+
+  .banner-item {
+    flex: 0 1 auto;
+  }
 
   #feedback-form {
     display: flex;
