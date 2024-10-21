@@ -188,9 +188,6 @@ div#app {
           margin-left: 0;
         }
 
-        p {
-        }
-
         hr {
           margin: 1rem 0;
           padding-bottom: 3px;
@@ -211,7 +208,7 @@ div#app {
 
             th {
               text-align: left;
-              padding-left: calc(var(--icon-size) + 16px);
+              padding-left: 2rem;
               min-width: 6rem;
             }
 
