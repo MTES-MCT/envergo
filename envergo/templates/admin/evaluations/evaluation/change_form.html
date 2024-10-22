@@ -14,7 +14,13 @@
   </li>
   <li>
     <a href="{% url 'admin:evaluations_evaluation_publish' original.pk %}"
-       class="disableonchange">Publier</a>
+       class="disableonchange">
+      {% if published %}
+        ✅ Publié
+      {% else %}
+        ❗️ Publier
+      {% endif %}
+    </a>
   </li>
   <li>
     <a href="{{ absolute_url }}"
