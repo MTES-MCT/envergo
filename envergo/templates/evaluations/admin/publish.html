@@ -18,15 +18,45 @@
   </div>
 {% endblock %}
 
+{% block object-tools %}
+  <ul class="object-tools">
+    <li>
+      <a href="{{ object.get_absolute_url }}?preview"
+         class="viewsitelink disableonchange"
+         target="_blank"
+         rel="noopener">👀 Prévisualiser</a>
+    </li>
+    <li>
+      <a href="{{ object.get_absolute_url }}"
+         class="viewsitelink"
+         target="_blank"
+         rel="noopener">Voir l'avis publié</a>
+    </li>
+  </ul>
+{% endblock %}
+
 {% block field_sets %}
   <fieldset class="module aligned">
-    <h2>Commentaire sur la modification</h2>
+    <h2>Expliquer la modification apportée à l'avis</h2>
     <div class="form-row">
       <div>
         {{ form.message.errors }}
-        <div class="flex-container">
+        <div class="flex-container long-field">
           <label for="id_message">{{ form.message.label }}</label>
           {{ form.message }}
+        </div>
+        <div class="help">
+          <p>
+            Ce commentaire pourra être consulté par l’utilisateur. Il doit donc être rédigé sans familiarités, dans un langage clair et en évitant les termes trop techniques. Par exemple :
+          </p>
+
+          <p>
+            « Correction d’une erreur dans la surface du projet »
+            <br />
+            « Modification localisation suite à retour service urbanisme »
+            <br />
+            « Suite à mise à jour données zones humides »
+          </p>
         </div>
       </div>
     </div>
