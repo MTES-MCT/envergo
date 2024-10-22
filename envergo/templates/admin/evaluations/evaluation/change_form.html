@@ -8,11 +8,13 @@
   {% endif %}
   <li>
     <a href="{{ original.get_absolute_url }}?preview"
+       class="viewsitelink disableonchange"
        target="_blank"
-       rel="noopener">Prévisualiser</a>
+       rel="noopener">👀 Prévisualiser</a>
   </li>
   <li>
-    <a href="{% url 'admin:evaluations_evaluation_publish' original.pk %}">Publier</a>
+    <a href="{% url 'admin:evaluations_evaluation_publish' original.pk %}"
+       class="disableonchange">Publier</a>
   </li>
   <li>
     <a href="{{ absolute_url }}"
@@ -23,7 +25,7 @@
   {% if original.can_send_regulatory_reminder %}
     <li>
       <a href="{% url 'admin:evaluations_evaluation_email_avis' original.pk %}"
-         class="">✉️ Envoyer e-mail avis</a>
+         class="disableonchange">✉️ Envoyer e-mail avis</a>
     </li>
   {% endif %}
 {% endblock %}
@@ -34,23 +36,12 @@
 
     // Let's prevent users to leave form before it's saved
     let form = document.getElementById("evaluation_form");
-    let formUpdated = false;
+    let outlinks = document.querySelectorAll(".disableonchange");
+
     form.addEventListener("change", function () {
-      formUpdated = true;
-    });
-
-    // We only want to block external links, not form submission
-    form.addEventListener("submit", function () {
-      formUpdated = false;
-    });
-
-    window.addEventListener("beforeunload", function (event) {
-      // If the form was updated, display the default browser "are you sure?" message
-      if (formUpdated) {
-        event.preventDefault();
-        event.returnValue = "";
-        return "";
-      }
+      outlinks.forEach(function (link) {
+        link.classList.add("disabled");
+      });
     });
   </script>
 {% endblock %}

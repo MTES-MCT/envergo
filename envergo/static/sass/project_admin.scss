@@ -39,3 +39,8 @@ ul.messagelist li ul {
 .long-field input {
   width: 40em !important;
 }
+
+a.disabled {
+  pointer-events: none;
+  background-color: #ababab !important;
+}
