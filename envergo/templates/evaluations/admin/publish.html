@@ -18,6 +18,23 @@
   </div>
 {% endblock %}
 
+{% block object-tools %}
+  <ul class="object-tools">
+    <li>
+      <a href="{{ object.get_absolute_url }}?preview"
+         class="viewsitelink disableonchange"
+         target="_blank"
+         rel="noopener">👀 Prévisualiser</a>
+    </li>
+    <li>
+      <a href="{{ object.get_absolute_url }}"
+         class="viewsitelink"
+         target="_blank"
+         rel="noopener">Voir l'avis publié</a>
+    </li>
+  </ul>
+{% endblock %}
+
 {% block field_sets %}
   <fieldset class="module aligned">
     <h2>Expliquer la modification apportée à l'avis</h2>
