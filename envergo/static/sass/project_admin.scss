@@ -35,6 +35,7 @@ ul.messagelist li ul {
 }
 
 /* stylelint-disable-next-line */
-.vTextField {
+.vTextField,
+.long-field input {
   width: 40em !important;
 }
