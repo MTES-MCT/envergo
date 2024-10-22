@@ -194,6 +194,7 @@ TEMPLATES = [
                 "envergo.utils.context_processors.settings_context",
                 "envergo.utils.context_processors.multi_sites_context",
                 "envergo.analytics.context_processors.analytics",
+                "envergo.evaluations.context_processors.request_eval_context",
             ],
         },
     }
