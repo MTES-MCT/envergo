@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html, linebreaks, mark_safe
 from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
@@ -190,10 +191,10 @@ class EvaluationAdmin(admin.ModelAdmin):
             local_updated_at = localtime(obj.updated_at)
             local_published_at = localtime(latest_version.created_at)
             msg = f"""
-                L'avis a été modifié ({local_updated_at:%c}) après
-                la dernière publication ({local_published_at:%c}).
-                Vous pouvez le prévisualiser puis le publier pour le rendre visible au
-                pétitionnaire.
+                La dernière version enregistrée de cet avis
+                ({date_format(local_updated_at, "SHORT_DATETIME_FORMAT")})
+                n'a pas encore été publiée. Dernière publication 
+                ({date_format(local_published_at, "SHORT_DATETIME_FORMAT")}).
             """
             self.message_user(request, msg, level=messages.WARNING)
             published = False
