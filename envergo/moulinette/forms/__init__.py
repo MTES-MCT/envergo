@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES
+from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
@@ -155,6 +156,16 @@ MOTIF_CHOICES = (
 )
 
 
+class HedgeDataChoiceField(forms.ModelChoiceField):
+    """A custom model choice field for HedgeData objects."""
+
+    def __init__(self, *args, **kwargs):
+
+        kwargs["widget"] = forms.HiddenInput
+        kwargs["queryset"] = HedgeData.objects.all()
+        super().__init__(*args, **kwargs)
+
+
 class MoulinetteFormHaie(BaseMoulinetteForm):
     profil = forms.ChoiceField(
         label="J’effectue cette demande en tant que :",
@@ -186,6 +197,10 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         choices=extract_choices(REIMPLANTATION_CHOICES),
         required=True,
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
+    haies = HedgeDataChoiceField(
+        label="Localisation des haies",
+        required=True,
     )
 
     def __init__(self, *args, **kwargs):
@@ -229,23 +244,21 @@ class TriageFormHaie(forms.Form):
     department = DisplayCharField(
         label="Département",
         required=True,
-        initial="36",
         get_display_value=lambda x: dict(DEPARTMENT_CHOICES).get(x, "Inconnu"),
     )
     element = DisplayChoiceField(
-        label="Quel élément paysager est concerné ?",
+        label="Quel type de végétation est concerné ?",
         widget=forms.RadioSelect,
         choices=(
-            ("haie", "Une haie"),
-            ("bosquet", "Un bosquet"),
-            ("alignement", "Un alignement d'arbres"),
+            ("haie", "Haies ou alignements d’arbres"),
+            ("bosquet", "Bosquets"),
             (
                 "autre",
                 "Autre",
             ),
         ),
         required=True,
-        display_label="Élément paysager :",
+        display_label="Type de végétation :",
     )
 
     travaux = DisplayChoiceField(

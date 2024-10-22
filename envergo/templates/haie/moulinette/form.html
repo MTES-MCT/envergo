@@ -1,25 +1,160 @@
 {% load utils %}
 
-{% include 'haie/moulinette/_form_header.html' %}
+<h2 id="moulinette-title" class="centered">Commencez à décrire votre projet de travaux sur haies</h2>
 
-<form class="fr-mb-3w"
-      method="post"
-      novalidate
-      autocomplete="off"
-      action="{% url 'moulinette_result' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
-      id="moulinette-form">
-  {% csrf_token %}
+<div id="moulinette-grid">
+  <div id="moulinette-col" class="fr-col">
+    <div id="moulinette" class="moulinette">
+      {% include 'haie/moulinette/_form_introduction.html' %}
+      <p class="fr-text--light">Tous les champs sont obligatoires.</p>
+      <form class="fr-mb-3w"
+            method="post"
+            novalidate
+            autocomplete="off"
+            action="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
+            id="moulinette-form">
+        {% csrf_token %}
 
-  {% include '_form_header.html' with form=form %}
+        {% include '_form_header.html' with form=form %}
 
-  <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-  {% for key, value in request.GET.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+        <!-- Include current query parameters as hidden fields to keep Triage inputs -->
+        <input type="hidden"
+               name="department"
+               value="{{ request.GET.department|default:'' }}" />
+        <input type="hidden"
+               name="element"
+               value="{{ request.GET.element|default:'' }}" />
+        <input type="hidden"
+               name="travaux"
+               value="{{ request.GET.travaux|default:'' }}" />
 
-  <div class="form-section">
-    {% include '_radio_snippet.html' with field=form.profil %}
-    {% include '_radio_snippet.html' with field=form.motif %}
-    {% include '_radio_snippet.html' with field=form.reimplantation %}
+        <div class="form-section">
+          {% include '_radio_snippet.html' with field=form.profil %}
+          {% include '_radio_snippet.html' with field=form.motif %}
+          {% include '_radio_snippet.html' with field=form.reimplantation %}
+
+          <div id="form-group-haies"
+               class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
+            <label for="id_haies">Localisation des haies</label>
+
+            <div id="statistics-container" class="fr-mb-3w">
+              {% if form.cleaned_data.haies %}
+                <div id="statistics" class="fr-mb-3w">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th colspan="2">Cumul linéaire (m)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th>Haies à arracher</th>
+                        <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
+                      </tr>
+                      <tr>
+                        <th>Haies à planter</th>
+                        <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <p>Aucune information renseignée</p>
+              {% endif %}
+            </div>
+
+            <button id="hedge-input-open-btn"
+                    class="fr-btn fr-btn--primary"
+                    type="button"
+                    data-fr-opened="false"
+                    aria-controls="hedge-input-modal">Ouvrir le module de saisie ➔</button>
+
+            {% if form.haies.errors %}
+              <p class="fr-error-text">
+                ↑
+                {{ form.haies.errors.0 }}
+                ↑
+              </p>
+            {% endif %}
+          </div>
+
+          {% include 'haie/moulinette/_form_footer.html' %}
+        </form>
+      </div>
+    </div>
   </div>
+</div>
 
-  {% include 'haie/moulinette/_form_footer.html' %}
-</form>
+{% include 'haie/moulinette/_hedge_input_modal.html' %}
+
+<template id="hedge-data-statistics">
+  <div id="statistics" class="fr-mb-3w">
+    <table>
+      <thead>
+        <tr>
+          <th colspan="2">Cumul linéaire (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Haies à arracher</th>
+          <td id="length-to-remove">0</td>
+        </tr>
+        <tr>
+          <th>Haies à planter</th>
+          <td id="length-to-plant">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script>
+  window.addEventListener("load", function() {
+    let btn = document.getElementById("hedge-input-open-btn");
+    let modal = document.getElementById("hedge-input-modal");
+    let hedgeIdField = document.getElementById("id_haies");
+    let hedgeDataStatsTpl = document.getElementById("hedge-data-statistics");
+    let statisticsContainer = document.getElementById("statistics-container");
+    let hedgeIframe;
+
+    // open the hedge input ui in a modal upon the button click
+    btn.addEventListener("click", function() {
+      let saveUrl = "{% url 'input_hedges' %}";
+      let hedgeId = hedgeIdField.value;
+      if (hedgeId) {
+        saveUrl += hedgeId + "/";
+      }
+      hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
+      modal.showModal();
+    });
+
+    // When the input is saved, close the modal
+    window.addEventListener("message", function(event) {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data.action === "cancel") {
+        hedgeIframe.close();
+        modal.close();
+      }
+
+      if (event.data.input_id) {
+        let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
+        let lengthToRemove = statsContent.getElementById("length-to-remove");
+        let lengthToPlant = statsContent.getElementById("length-to-plant");
+        lengthToRemove.textContent = event.data.length_to_remove;
+        lengthToPlant.textContent = event.data.length_to_plant;
+        statisticsContainer.innerHTML = "";
+        statisticsContainer.appendChild(statsContent);
+
+        hedgeIdField.value = event.data.input_id;
+        hedgeIframe.close();
+        modal.close();
+      }
+    });
+
+
+  });
+</script>

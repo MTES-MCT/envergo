@@ -8,9 +8,10 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
 from envergo.evaluations.models import USER_TYPES, Request
-from envergo.evaluations.utils import extract_department
+from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
+from envergo.utils.fields import NoIdnEmailField
 
 
 class EvaluationFormMixin(forms.Form):
@@ -118,7 +119,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
         department_input = data.get("department", None)
         if not department_input:
             # extract department from address
-            department_input = extract_department(address)
+            department_input = extract_department_from_address(address)
 
         if department_input and department_input not in address:
             # when a town is selected on its own, without a complete address, there is no zip code.
@@ -127,10 +128,10 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
 
         department = (
             Department.objects.filter(department=department_input)
-            .select_related("moulinette_config")
+            .select_related("configamenagement")
             .first()
         )
-        if department and not department.is_activated():
+        if department and not department.is_amenagement_activated():
             self.add_error(
                 "department",
                 ValidationError(
@@ -145,7 +146,8 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             self.add_error(
                 None,
                 ValidationError(
-                    "Nous ne parvenons pas à situer votre projet. Merci d'indiquer a minima un code postal.",
+                    "Nous ne parvenons pas à situer votre projet. "
+                    "Merci de saisir quelques caractères et de sélectionner une option dans la liste.",
                     code="unknown_department",
                 ),
             )
@@ -162,7 +164,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         widget=forms.RadioSelect,
     )
     urbanism_department_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
     )
@@ -172,7 +174,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         required=False,
     )
     project_owner_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
@@ -272,7 +274,7 @@ class RequestForm(WizardAddressForm, WizardContactForm):
 
 class EvaluationShareForm(forms.Form):
     emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Select your recipient(s) email address(es)"),
         help_text=_("Separate several addresses with a comma « , »"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},

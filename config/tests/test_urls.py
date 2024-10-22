@@ -30,7 +30,6 @@ COMMON_URLS = [
 
 HAIE_URLS = [
     "triage",
-    "triage_result",
 ]
 
 AMENAGEMENT_URLS = [

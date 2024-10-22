@@ -262,7 +262,7 @@ class Evaluation(models.Model):
         lng, lat = params["lng"], params["lat"]
         coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
         department = Department.objects.filter(geometry__contains=coords).first()
-        return department.moulinette_config if department else None
+        return department.configamenagement if department else None
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
@@ -526,7 +526,7 @@ class EvaluationEmail:
             if (
                 moulinette.natura2000
                 and moulinette.natura2000.result == "soumis"
-                and not moulinette.natura2000.iota_only()
+                and not moulinette.natura2000.ein_out_of_n2000_site()
             ):
                 if config.ddtm_n2000_email:
                     bcc_recipients.append(config.ddtm_n2000_email)
@@ -664,6 +664,15 @@ class Request(models.Model):
     def is_from_instructor(self):
         """Shortcut property"""
         return self.user_type == USER_TYPES.instructor
+
+    def get_requester_emails(self):
+        """Return emails of the user who requested the evaluation."""
+
+        return (
+            self.urbanism_department_emails
+            if self.is_from_instructor()
+            else self.project_owner_emails
+        )
 
     def create_evaluation(self):
         """Create an evaluation from this evaluation request."""

@@ -1,4 +1,5 @@
 from django.contrib.sites.models import Site
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -54,3 +55,26 @@ class Setting(models.Model):
     class Meta:
         verbose_name = _("Setting")
         verbose_name_plural = _("Settings")
+
+
+def max_file_size(value):
+    size_limit = 10 * 1024 * 1024  # 10 mb
+    if value.size > size_limit:
+        raise ValidationError("La taille est pour le moment limité à 10 Mo.")
+
+
+class HostedFile(models.Model):
+    """A single file."""
+
+    file = models.FileField(_("File"), upload_to="f", validators=[max_file_size])
+    name = models.CharField(_("Name"), max_length=256)
+    description = models.TextField(_("Description"), blank=True)
+    uploaded_by = models.ForeignKey("users.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("Hosted file")
+        verbose_name_plural = _("Hosted files")
+
+    def __str__(self):
+        return self.name

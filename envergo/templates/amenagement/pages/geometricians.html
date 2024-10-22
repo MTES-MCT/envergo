@@ -69,13 +69,7 @@
   </section>
 
   <section id="simulateur" class="fr-pt-8w fr-pb-5w">
-    <div class="fr-container">
-      <div id="moulinette-grid">
-        <div id="moulinette-col">
-          <div id="moulinette" class="moulinette">{% show_moulinette_form %}</div>
-        </div>
-      </div>
-    </div>
+    <div class="fr-container">{% show_moulinette_form %}</div>
   </section>
 
   <section class="fr-container fr-pt-8w fr-pb-5w">
@@ -174,22 +168,11 @@
 {% endblock %}
 
 {% block extra_css %}
-  {% include 'moulinette/_form_styles.html' %}
+  {% include 'amenagement/moulinette/_form_styles.html' %}
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    var CSRF_TOKEN = '{{ csrf_token }}';
-    var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
-    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
-    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
-    var DEFAULT_ZOOM = {{ default_zoom }};
-    var LAT_FIELD_ID = 'id_lat';
-    var LNG_FIELD_ID = 'id_lng';
-    var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
-    var SIMULATION_FORM_ID = "moulinette-form";
-    var MAP_TYPE = "Form";  // This is only for analytics purpose
-  </script>
-  {% include 'moulinette/_form_scripts.html' %}
+  <script>var CSRF_TOKEN = '{{ csrf_token }}';</script>
+  {% include 'amenagement/moulinette/_form_scripts.html' %}
   <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
 {% endblock %}

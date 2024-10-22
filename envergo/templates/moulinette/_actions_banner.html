@@ -1,43 +1,10 @@
-{% load static %}
-
 <div id="action-banner" class="fr-py-1w hide-print">
-  <div class="fr-container">
-    <div class="fr-grid-row">
-      <div class="fr-col-12 fr-col-md-4">
-        <a href="{{ edit_url }}"
-           class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
-           data-event-category="Content"
-           data-event-action="Edit"
-           data-event-name="Main">Modifier le projet</a>
-      </div>
-      {% if is_admin %}
-        <div id="copy-btn-container" class="fr-col-12 fr-col-md-4">
-          <button id="copy-btn" class="fr-btn fr-btn--icon-left fr-icon-link">
-            Copier le lien
-            <span id="btn-clicked-message" class="fr-ml-2w">
-              <img id="btn-clicked-image"
-                   src="{% static 'images/done.gif' %}"
-                   alt="République française">
-              Lien copié !
-            </span>
-          </button>
-        </div>
-        {% if debug_url %}
-          <div id="debug-btn" class="fr-col-12 fr-col-md-4">
-            <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
-               href="{{ debug_url }}">Voir le debug</a>
-          </div>
-        {% elif result_url %}
-          <div id="debug-btn" class="fr-col-12 fr-col-md-4">
-            <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
-               href="{{ result_url }}">Voir la simulation</a>
-          </div>
-        {% endif %}
-      {% else %}
-        {% if display_feedback_form %}
-          {% include 'analytics/_feedback_form.html' %}
-        {% endif %}
-      {% endif %}
-    </div>
+  <div class="banner-item">
+    <a href="{{ edit_url }}"
+       class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+       data-event-category="Content"
+       data-event-action="Edit"
+       data-event-name="Main">Modifier le projet</a>
   </div>
+  {% block actions %}{% endblock %}
 </div>

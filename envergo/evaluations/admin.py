@@ -29,6 +29,7 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.moulinette.models import get_moulinette_class_from_url
+from envergo.utils.fields import NoIdnEmailField
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +45,13 @@ class EvalAdminFormMixin(EvaluationFormMixin):
         required=False,
     )
     urbanism_department_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
     project_owner_emails = SimpleArrayField(
-        forms.EmailField(),
+        NoIdnEmailField(),
         label=_("Project owner email(s)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),

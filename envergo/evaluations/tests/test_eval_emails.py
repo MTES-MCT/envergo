@@ -9,8 +9,8 @@ from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map, france_zh  # noqa
 from envergo.moulinette.regulations import RequiredAction, Stake
 from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
     CriterionFactory,
-    MoulinetteConfigFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -25,7 +25,7 @@ def override_settings(settings):
 
 @pytest.fixture(autouse=True)
 def moulinette_config(france_map, france_zh, loire_atlantique_department):  # noqa
-    MoulinetteConfigFactory(
+    ConfigAmenagementFactory(
         department=loire_atlantique_department,
         is_activated=True,
         ddtm_water_police_email="ddtm_email_test@example.org",
@@ -640,11 +640,11 @@ def test_petitioner_icpe(rf, moulinette_url):
 
 
 @pytest.mark.parametrize("footprint", [1200])
-def test_n2000_iota_only_no_bcc(rf, moulinette_url):
+def test_n2000_ein_out_of_n2000_site_no_bcc(rf, moulinette_url):
     eval, moulinette = fake_moulinette(
         moulinette_url, "soumis", "soumis", "non_soumis", "non_soumis"
     )
-    moulinette.regulations[1].configure_mock(iota_only=lambda: True)
+    moulinette.regulations[1].configure_mock(ein_out_of_n2000_site=lambda: True)
 
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
