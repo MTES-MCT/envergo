@@ -20,13 +20,16 @@
 
 {% block field_sets %}
   <fieldset class="module aligned">
-    <h2>Commentaire sur la modification</h2>
+    <h2>Expliquer la modification apportée à l'avis</h2>
     <div class="form-row">
       <div>
         {{ form.message.errors }}
-        <div class="flex-container">
+        <div class="flex-container long-field">
           <label for="id_message">{{ form.message.label }}</label>
           {{ form.message }}
+        </div>
+        <div class="help">
+          <div>{{ form.message.help_text }}</div>
         </div>
       </div>
     </div>

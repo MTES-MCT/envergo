@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-17 10:18+0200\n"
+"POT-Creation-Date: 2024-10-22 14:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,59 +18,59 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: config/urls.py:15
+#: config/urls.py:19
 msgid "login/"
 msgstr "connexion/"
 
-#: config/urls.py:16
+#: config/urls.py:20
 msgid "logout/"
 msgstr "deconnexion/"
 
-#: config/urls.py:18
+#: config/urls.py:22
 msgid "password_change/"
 msgstr "changement-mot-de-passe/"
 
-#: config/urls.py:23
+#: config/urls.py:27
 msgid "password_change/done/"
 msgstr "changement-mot-de-passe/terminé/"
 
-#: config/urls.py:28
+#: config/urls.py:32
 msgid "password_reset/"
 msgstr "raz-mot-de-passe/"
 
-#: config/urls.py:37
+#: config/urls.py:41
 msgid "password_reset/done/"
 msgstr "raz-mot-de-passe/terminé/"
 
-#: config/urls.py:42
+#: config/urls.py:46
 msgid "reset/<uidb64>/<token>/"
 msgstr "raz/<uidb64>/<token>/"
 
-#: config/urls.py:47
+#: config/urls.py:51
 msgid "reset/done/"
 msgstr "raz/terminé/"
 
-#: config/urls.py:56
+#: config/urls.py:60
 msgid "accounts/"
 msgstr "comptes/"
 
-#: config/urls.py:57
+#: config/urls.py:61
 msgid "users/"
 msgstr "votre-espace/"
 
-#: config/urls.py:58
+#: config/urls.py:62
 msgid "analytics/"
 msgstr "analytics/"
 
-#: config/urls.py:59
+#: config/urls.py:63
 msgid "feedback/"
 msgstr "feedback/"
 
-#: config/urls_amenagement.py:19 config/urls_haie.py:8
+#: config/urls_amenagement.py:20 config/urls_haie.py:10
 msgid "moulinette/"
 msgstr "simulateur/"
 
-#: config/urls_amenagement.py:20
+#: config/urls_amenagement.py:21
 msgid "geo/"
 msgstr "geo/"
 
@@ -91,8 +91,8 @@ msgid "Metadata"
 msgstr "Métadonnées"
 
 #: envergo/analytics/models.py:21 envergo/confs/models.py:73
-#: envergo/evaluations/models.py:228 envergo/evaluations/models.py:364
-#: envergo/evaluations/models.py:639 envergo/geodata/models.py:83
+#: envergo/evaluations/models.py:228 envergo/evaluations/models.py:372
+#: envergo/evaluations/models.py:662 envergo/geodata/models.py:83
 #: envergo/geodata/models.py:133 envergo/pages/models.py:14
 #: envergo/urlmappings/models.py:25
 msgid "Date created"
@@ -102,7 +102,7 @@ msgstr "Date de création"
 msgid "Events"
 msgstr "Évents"
 
-#: envergo/confs/models.py:14
+#: envergo/confs/models.py:14 envergo/evaluations/models.py:382
 msgid "Message"
 msgstr "Message"
 
@@ -130,12 +130,12 @@ msgstr "Valeur"
 msgid "Settings"
 msgstr "Paramètres"
 
-#: envergo/confs/models.py:69 envergo/evaluations/models.py:736
+#: envergo/confs/models.py:69 envergo/evaluations/models.py:759
 #: envergo/geodata/models.py:51
 msgid "File"
 msgstr "Fichier"
 
-#: envergo/confs/models.py:70 envergo/evaluations/models.py:740
+#: envergo/confs/models.py:70 envergo/evaluations/models.py:763
 #: envergo/geodata/models.py:47 envergo/moulinette/models.py:589
 msgid "Name"
 msgstr "Nom"
@@ -152,112 +152,93 @@ msgstr "Fichier hébergé"
 msgid "Hosted files"
 msgstr "Fichiers hébergés"
 
-#: envergo/evaluations/admin.py:39 envergo/evaluations/models.py:171
-#: envergo/evaluations/models.py:586
+#: envergo/evaluations/admin.py:42 envergo/evaluations/models.py:171
+#: envergo/evaluations/models.py:609
 msgid "Address"
 msgstr "Adresse"
 
-#: envergo/evaluations/admin.py:49 envergo/evaluations/forms.py:168
-#: envergo/evaluations/models.py:618
+#: envergo/evaluations/admin.py:52 envergo/evaluations/forms.py:168
+#: envergo/evaluations/models.py:641
 msgid "Urbanism department email address(es)"
 msgstr "Adresse(s) e-mail du service urbanisme"
 
-#: envergo/evaluations/admin.py:50 envergo/evaluations/admin.py:56
+#: envergo/evaluations/admin.py:53 envergo/evaluations/admin.py:59
 #: envergo/evaluations/forms.py:169 envergo/evaluations/forms.py:180
 #: envergo/evaluations/forms.py:280
 #, python-format
 msgid "The %(nth)s address is invalid:"
 msgstr "L'adresse n°%(nth)s est invalide :"
 
-#: envergo/evaluations/admin.py:55 envergo/evaluations/models.py:213
+#: envergo/evaluations/admin.py:58 envergo/evaluations/models.py:213
 msgid "Project owner email(s)"
 msgstr "Adresse(s) email du porteur de projet"
 
-#: envergo/evaluations/admin.py:60 envergo/evaluations/forms.py:82
-#: envergo/evaluations/models.py:155 envergo/evaluations/models.py:591
+#: envergo/evaluations/admin.py:63 envergo/evaluations/forms.py:82
+#: envergo/evaluations/models.py:155 envergo/evaluations/models.py:614
 msgid "Application number"
 msgstr "Numéro de demande de permis"
 
-#: envergo/evaluations/admin.py:62
+#: envergo/evaluations/admin.py:65
 msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
-#: envergo/evaluations/admin.py:69 envergo/evaluations/models.py:140
-#: envergo/evaluations/models.py:577
+#: envergo/evaluations/admin.py:72 envergo/evaluations/models.py:140
+#: envergo/evaluations/models.py:600
 msgid "Reference"
 msgstr "Référence"
 
-#: envergo/evaluations/admin.py:70
+#: envergo/evaluations/admin.py:73
 msgid "If you select an existing request, this value will be replaced."
 msgstr ""
 "Si vous associez cet avis réglementaire à une demande existante, cette "
 "valeur sera synchronisée."
 
-#: envergo/evaluations/admin.py:87
+#: envergo/evaluations/admin.py:90
 msgid "The moulinette url is invalid."
 msgstr "L'url moulinette est invalide."
 
-#: envergo/evaluations/admin.py:129 envergo/evaluations/admin.py:462
+#: envergo/evaluations/admin.py:130 envergo/evaluations/admin.py:508
 msgid "Project data"
 msgstr "Données projet"
 
-#: envergo/evaluations/admin.py:139 envergo/evaluations/admin.py:472
+#: envergo/evaluations/admin.py:140 envergo/evaluations/admin.py:518
 msgid "Contact info"
 msgstr "Infos de contact"
 
-#: envergo/evaluations/admin.py:157
+#: envergo/evaluations/admin.py:158
 msgid "Sent emails"
 msgstr "E-mails envoyés"
 
-#: envergo/evaluations/admin.py:161 envergo/evaluations/admin.py:384
+#: envergo/evaluations/admin.py:162 envergo/evaluations/admin.py:460
 msgid "Versions"
 msgstr "Versions"
 
-#: envergo/evaluations/admin.py:356
+#: envergo/evaluations/admin.py:432
 msgid "Sent history"
 msgstr "E-mails envoyés"
 
-#: envergo/evaluations/admin.py:392
-msgid "Create a new version for this evaluation"
-msgstr "Créer une nouvelle version pour cette évaluation"
-
-#: envergo/evaluations/admin.py:395
-msgid "Please, select one and only one evaluation for this action."
-msgstr "Merci de sélectionner une et une seule demande pour cette action."
-
-#: envergo/evaluations/admin.py:404
-msgid "There was an error creating a new version: %(error)s"
-msgstr "Une erreur a empêché la création de l'avis réglementaire : %(error)s"
-
-#: envergo/evaluations/admin.py:414
-msgid ""
-"<a href=\"%(admin_url)s\">The new version for evaluation %(reference)s has "
-"been created.</a>"
-msgstr ""
-"<a href=\"%(admin_url)s\">Le nouvel avis réglementaire a été créée.</a>"
-
-#: envergo/evaluations/admin.py:484
+#: envergo/evaluations/admin.py:530
 msgid "Meta info"
 msgstr "Infos meta"
 
-#: envergo/evaluations/admin.py:505
+#: envergo/evaluations/admin.py:551
 msgid "Résumé"
 msgstr "Résumé"
 
-#: envergo/evaluations/admin.py:549
+#: envergo/evaluations/admin.py:595
 msgid "Create a regulatory notice from this request"
 msgstr "Créer un avis réglementaire à partir de cette demande"
 
-#: envergo/evaluations/admin.py:554
+#: envergo/evaluations/admin.py:600
 msgid "Please, select one and only one request for this action."
 msgstr "Merci de sélectionner une et une seule demande pour cette action."
 
-#: envergo/evaluations/admin.py:562
+#: envergo/evaluations/admin.py:608
 #, python-format
 msgid "There was an error creating your evaluation: %(error)s"
 msgstr "Une erreur a empêché la création de l'avis réglementaire : %(error)s"
 
-#: envergo/evaluations/admin.py:571
+#: envergo/evaluations/admin.py:617
 #, python-format
 msgid "<a href=\"%(admin_url)s\">The new evaluation has been created.</a>"
 msgstr ""
@@ -285,7 +266,7 @@ msgstr ""
 "Si une demande de permis de construire ou d'aménager a déjà été déposée"
 
 #: envergo/evaluations/forms.py:87 envergo/evaluations/models.py:168
-#: envergo/evaluations/models.py:597
+#: envergo/evaluations/models.py:620
 msgid "Project description, comments"
 msgstr "Bref descriptif du projet et commentaires"
 
@@ -294,7 +275,7 @@ msgid "15 caractères commençant par « PA », « PC », « DP » ou « C
 msgstr "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
 
 #: envergo/evaluations/forms.py:172 envergo/evaluations/models.py:208
-#: envergo/evaluations/models.py:621
+#: envergo/evaluations/models.py:644
 msgid "Urbanism department phone number"
 msgstr "Téléphone de l'instructeur"
 
@@ -306,12 +287,12 @@ msgstr "Adresse(s) e-mail du porteur de projet"
 msgid "Petitioner, project manager…"
 msgstr "Pétitionnaire, maître d'œuvre…"
 
-#: envergo/evaluations/forms.py:183 envergo/evaluations/models.py:631
+#: envergo/evaluations/forms.py:183 envergo/evaluations/models.py:654
 msgid "Project sponsor phone number"
 msgstr "Téléphone du porteur de projet"
 
 #: envergo/evaluations/forms.py:188 envergo/evaluations/models.py:225
-#: envergo/evaluations/models.py:635
+#: envergo/evaluations/models.py:658
 msgid "Send evaluation to project sponsor"
 msgstr ""
 "Je souhaite qu'EnvErgo envoie aussi l'avis réglementaire au porteur de "
@@ -390,7 +371,7 @@ msgstr ""
 msgid "Regulatory reminder mention"
 msgstr "Mention libre de l'avis réglementaire"
 
-#: envergo/evaluations/models.py:191 envergo/evaluations/models.py:587
+#: envergo/evaluations/models.py:191 envergo/evaluations/models.py:610
 msgid "Moulinette url"
 msgstr "Url simulateur"
 
@@ -398,7 +379,7 @@ msgstr "Url simulateur"
 msgid "Moulinette metadata"
 msgstr "Métadonnées simulateur"
 
-#: envergo/evaluations/models.py:199 envergo/evaluations/models.py:612
+#: envergo/evaluations/models.py:199 envergo/evaluations/models.py:635
 msgid "Who are you?"
 msgstr "Êtes-vous ?"
 
@@ -410,7 +391,7 @@ msgstr "Téléphone du porteur de projet"
 msgid "Project owner company"
 msgstr "Téléphone du porteur de projet"
 
-#: envergo/evaluations/models.py:223 envergo/evaluations/models.py:633
+#: envergo/evaluations/models.py:223 envergo/evaluations/models.py:656
 msgid "Other contacts"
 msgstr "Autres contacts"
 
@@ -418,156 +399,168 @@ msgstr "Autres contacts"
 msgid "Is ICPE?"
 msgstr "Projet soumis à ICPE ?"
 
-#: envergo/evaluations/models.py:361
+#: envergo/evaluations/models.py:229
+msgid "Date updated"
+msgstr "Date de mise à jour"
+
+#: envergo/evaluations/models.py:369
 msgid "Evaluation"
 msgstr "Évaluation"
 
-#: envergo/evaluations/models.py:368
+#: envergo/evaluations/models.py:376
 msgid "Created by"
 msgstr "Créé par"
 
-#: envergo/evaluations/models.py:371 envergo/moulinette/models.py:784
+#: envergo/evaluations/models.py:379 envergo/moulinette/models.py:784
 #: envergo/pages/models.py:12
 msgid "Content"
 msgstr "Contenu"
 
-#: envergo/evaluations/models.py:374
+#: envergo/evaluations/models.py:380
+msgid "Is published?"
+msgstr "Publié ?"
+
+#: envergo/evaluations/models.py:384
+msgid "This message will be displayed to users."
+msgstr "Ce message sera visible aux utilisateurs."
+
+#: envergo/evaluations/models.py:388
 msgid "Evaluation version"
 msgstr "Version de l'évaluation"
 
-#: envergo/evaluations/models.py:375
+#: envergo/evaluations/models.py:389
 msgid "Evaluation versions"
 msgstr "Versions de l'évaluation"
 
-#: envergo/evaluations/models.py:600
+#: envergo/evaluations/models.py:623
 msgid "Additional data"
 msgstr "Fichiers complémentaires"
 
-#: envergo/evaluations/models.py:626
+#: envergo/evaluations/models.py:649
 msgid "Project sponsor email(s)"
 msgstr "Adresse(s) email du porteur de projet"
 
-#: envergo/evaluations/models.py:645
+#: envergo/evaluations/models.py:668
 msgid "Submitted"
 msgstr "Confirmé"
 
-#: envergo/evaluations/models.py:648
+#: envergo/evaluations/models.py:671
 msgid "Evaluation request"
 msgstr "Demande d'avis"
 
-#: envergo/evaluations/models.py:649
+#: envergo/evaluations/models.py:672
 msgid "Evaluation requests"
 msgstr "Demandes d'avis"
 
-#: envergo/evaluations/models.py:688
+#: envergo/evaluations/models.py:711
 msgid "There already is an evaluation associated with this request."
 msgstr "Cette demande est déjà associée avec un avis réglementaire existant."
 
-#: envergo/evaluations/models.py:744
+#: envergo/evaluations/models.py:767
 msgid "Request file"
 msgstr "Fichier join"
 
-#: envergo/evaluations/models.py:745
+#: envergo/evaluations/models.py:768
 msgid "Request files"
 msgstr "Fichiers joints"
 
-#: envergo/evaluations/models.py:758
+#: envergo/evaluations/models.py:781
 msgid "Sender"
 msgstr "Expéditeur"
 
-#: envergo/evaluations/models.py:760
+#: envergo/evaluations/models.py:783
 msgid "From"
 msgstr "De"
 
-#: envergo/evaluations/models.py:761
+#: envergo/evaluations/models.py:784
 msgid "To"
 msgstr "À"
 
-#: envergo/evaluations/models.py:762
+#: envergo/evaluations/models.py:785
 msgid "Cc"
 msgstr "Copie"
 
-#: envergo/evaluations/models.py:763
+#: envergo/evaluations/models.py:786
 msgid "Bcc"
 msgstr "Copie cachée"
 
-#: envergo/evaluations/models.py:764
+#: envergo/evaluations/models.py:787
 msgid "Text body"
 msgstr "Corps (texte)"
 
-#: envergo/evaluations/models.py:765
+#: envergo/evaluations/models.py:788
 msgid "Html body"
 msgstr "Corps (html)"
 
-#: envergo/evaluations/models.py:766
+#: envergo/evaluations/models.py:789
 msgid "Subject"
 msgstr "Sujet"
 
-#: envergo/evaluations/models.py:767
+#: envergo/evaluations/models.py:790
 msgid "Date sent"
 msgstr "Date d'envoi"
 
-#: envergo/evaluations/models.py:768
+#: envergo/evaluations/models.py:791
 msgid "Moulinette data"
 msgstr "Métadonnées simulateur"
 
-#: envergo/evaluations/models.py:769
+#: envergo/evaluations/models.py:792
 msgid "Moulinette result"
 msgstr "Résultat simulateur"
 
-#: envergo/evaluations/models.py:770
+#: envergo/evaluations/models.py:793
 msgid "Message id"
 msgstr "Message id"
 
-#: envergo/evaluations/models.py:773
+#: envergo/evaluations/models.py:796
 msgid "Regulatory notice log"
 msgstr "Log d'envois d'avis réglementaires"
 
-#: envergo/evaluations/models.py:774
+#: envergo/evaluations/models.py:797
 msgid "Regulatory notice logs"
 msgstr "Logs d'envois d'avis réglementaires"
 
-#: envergo/evaluations/models.py:782
+#: envergo/evaluations/models.py:805
 msgid "Recipient"
 msgstr "Destinataire"
 
-#: envergo/evaluations/models.py:783
+#: envergo/evaluations/models.py:806
 msgid "Status"
 msgstr "Statut"
 
-#: envergo/evaluations/models.py:784
+#: envergo/evaluations/models.py:807
 msgid "Latest status"
 msgstr "Dernier statut"
 
-#: envergo/evaluations/models.py:785
+#: envergo/evaluations/models.py:808
 msgid "Nb opened"
 msgstr "Nb ouvertures"
 
-#: envergo/evaluations/models.py:786
+#: envergo/evaluations/models.py:809
 msgid "Latest opened"
 msgstr "Dernière ouverture"
 
-#: envergo/evaluations/models.py:787
+#: envergo/evaluations/models.py:810
 msgid "Nb clicked"
 msgstr "Nb clics"
 
-#: envergo/evaluations/models.py:788
+#: envergo/evaluations/models.py:811
 msgid "Latest clicked"
 msgstr "Dernier clic"
 
-#: envergo/evaluations/models.py:789
+#: envergo/evaluations/models.py:812
 msgid "On error"
 msgstr "En erreur"
 
-#: envergo/evaluations/models.py:790
+#: envergo/evaluations/models.py:813
 msgid "Reject reason"
 msgstr "Raison du rejet"
 
-#: envergo/evaluations/models.py:793
+#: envergo/evaluations/models.py:816
 msgid "Recipient status"
 msgstr "Statut destinataire"
 
-#: envergo/evaluations/models.py:794
+#: envergo/evaluations/models.py:817
 msgid "Recipient statuses"
 msgstr "Statuts destinataires"
 
@@ -1043,23 +1036,23 @@ msgstr "Actualité"
 msgid "News items"
 msgstr "Actualités"
 
-#: envergo/pages/urls_amenagement.py:20 envergo/pages/urls_haie.py:15
+#: envergo/pages/urls_amenagement.py:20 envergo/pages/urls_haie.py:16
 msgid "legal-mentions/"
 msgstr "mentions-légales/"
 
-#: envergo/pages/urls_amenagement.py:21 envergo/pages/urls_haie.py:16
+#: envergo/pages/urls_amenagement.py:21 envergo/pages/urls_haie.py:17
 msgid "tos/"
 msgstr "cgu/"
 
-#: envergo/pages/urls_amenagement.py:22 envergo/pages/urls_haie.py:17
+#: envergo/pages/urls_amenagement.py:22 envergo/pages/urls_haie.py:18
 msgid "privacy/"
 msgstr "politique-de-confidentialité/"
 
-#: envergo/pages/urls_amenagement.py:29 envergo/pages/urls_haie.py:24
+#: envergo/pages/urls_amenagement.py:29 envergo/pages/urls_haie.py:25
 msgid "accessibility/"
 msgstr "accessibilité/"
 
-#: envergo/pages/urls_amenagement.py:34 envergo/pages/urls_haie.py:29
+#: envergo/pages/urls_amenagement.py:34 envergo/pages/urls_haie.py:30
 msgid "contact-us/"
 msgstr "contact/"
 
@@ -1110,6 +1103,7 @@ msgstr "Par %(filter_title)s"
 
 #: envergo/templates/admin/evaluations/regulatorynoticelogs/mail_body.html:19
 #: envergo/templates/evaluations/admin/email_avis.html:19
+#: envergo/templates/evaluations/admin/publish.html:13
 #: envergo/templates/pages/legal_mentions.html:15
 #: envergo/templates/pages/privacy.html:15
 #: envergo/templates/pages/terms_of_service.html:15
@@ -1186,6 +1180,22 @@ msgstr "enregistrement-succès/"
 #: envergo/users/urls.py:9
 msgid "login/<uidb64>/<token>/"
 msgstr "connexion/<uidb64>/<token>/"
+
+#~ msgid "Create a new version for this evaluation"
+#~ msgstr "Créer une nouvelle version pour cette évaluation"
+
+#~ msgid "Please, select one and only one evaluation for this action."
+#~ msgstr "Merci de sélectionner une et une seule demande pour cette action."
+
+#~ msgid "There was an error creating a new version: %(error)s"
+#~ msgstr ""
+#~ "Une erreur a empêché la création de l'avis réglementaire : %(error)s"
+
+#~ msgid ""
+#~ "<a href=\"%(admin_url)s\">The new version for evaluation %(reference)s "
+#~ "has been created.</a>"
+#~ msgstr ""
+#~ "<a href=\"%(admin_url)s\">Le nouvel avis réglementaire a été créée.</a>"
 
 #~ msgid "Moulinette config"
 #~ msgstr "Config moulinette"
