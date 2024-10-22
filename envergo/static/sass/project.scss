@@ -11,6 +11,11 @@ $red: #b94a48;
   scroll-behavior: smooth;
 }
 
+// Prevent  scrolling when a dialog is open
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 html.nojs .js {
   display: none !important;
 }
@@ -26,7 +31,7 @@ html.nojs .js {
 }
 
 /**
- * Useful components
+* Useful components
  */
 .alert-debug {
   background-color: $white;
@@ -769,6 +774,17 @@ main > .fr-notice {
   }
 }
 
+.img-icon {
+  display: inline-block;
+  vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
+
+  --icon-size: 1.5rem;
+
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: 0.25rem;
+}
+
 /**
  * Custom class for an accordion without a "+" button
  */
@@ -1018,6 +1034,15 @@ div.hero-alt {
       margin: 0;
     }
   }
+
+  footer#footer {
+    padding-bottom: 5rem;
+  }
+
+  // Crisp chat button
+  a.cc-1m2mf {
+    border: 2px solid var(--background-default-grey) !important;
+  }
 }
 
 @media only screen and (width > 991px) {
@@ -1076,17 +1101,17 @@ footer {
   z-index: 1000; // to be above the leaflet map
 }
 
-@media only screen and (width <= 767px) {
-  #feedback-form,
-  #copy-btn-container,
-  #debug-btn {
-    display: none;
-  }
-}
-
 #action-banner {
   background-color: var(--blue-france-sun-113-625);
   text-align: center;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  width: 100vw;
+
+  .banner-item {
+    flex: 0 1 auto;
+  }
 
   #feedback-form {
     display: flex;
@@ -1269,7 +1294,7 @@ footer {
 
   &.header-slim {
     .fr-header__body-row {
-      padding: 0.75rem 0;
+      padding: 0 0 0.75rem;
       line-height: 1rem;
 
       img {
@@ -1433,7 +1458,6 @@ main.home {
   }
 
   section#simulateur {
-    background-color: #e8edff;
     background-color: var(--info-950-100);
 
     h2 {
@@ -1743,6 +1767,8 @@ main.demonstrateur_2150 {
   * Handle the form display, along with the help sidebars
   */
 #content {
+  height: 100%;
+
   .help-sidebar-label {
     display: flex;
     align-items: center;
@@ -1886,4 +1912,16 @@ main.demonstrateur_2150 {
 
 #moulinette-submit-button {
   min-width: 8em;
+}
+
+#demarche-simplifiee-btn {
+  box-shadow: inset 0 0 0 1px var(--blue-france-975-75);
+}
+
+#department-search-title {
+  color: var(--blue-france-sun-113-625);
+}
+
+#contacts_and_links {
+  background-color: var(--grey-975-100);
 }

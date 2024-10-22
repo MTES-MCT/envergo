@@ -1,0 +1,18 @@
+{% extends 'moulinette/_actions_banner.html' %}
+
+{% block actions %}
+  <div class="banner-item">
+    <form action="{% url 'demarchesimplifiee' %}" method="post">
+      {% csrf_token %}
+      <input type="hidden"
+             name="moulinette_url"
+             value="{{ request.build_absolute_uri }}" />
+      <input type="hidden"
+             name="profil"
+             value="{{ moulinette.main_form.profil.value }}" />
+      <button id="demarche-simplifiee-btn"
+              type="submit"
+              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line">Commencer la procédure</button>
+    </form>
+  </div>
+{% endblock %}

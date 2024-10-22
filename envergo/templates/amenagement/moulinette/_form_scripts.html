@@ -1,5 +1,17 @@
 {% load static l10n %}
 
+<script>
+  var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';
+  var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+  var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+  var DEFAULT_ZOOM = {{ default_zoom }};
+  var LAT_FIELD_ID = 'id_lat';
+  var LNG_FIELD_ID = 'id_lng';
+  var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
+  var SIMULATION_FORM_ID = "moulinette-form";
+  var MAP_TYPE = "Form";  // This is only for analytics purpose
+</script>
+
 <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
 <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
 <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>

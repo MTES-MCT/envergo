@@ -229,23 +229,48 @@ class EcoulementSansBV(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
 
-    CODES = ["soumis", "action_requise", "non_soumis"]
+    CODES = [
+        "soumis",
+        "action_requise",
+        "non_soumis",
+        "action_requise_pv_sol",
+        "non_soumis_pv_sol",
+    ]
+
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "action_requise_pv_sol": RESULTS.action_requise,
+        "action_requise": RESULTS.action_requise,
+        "non_soumis_pv_sol": RESULTS.non_soumis,
+        "non_soumis": RESULTS.non_soumis,
+    }
 
     CODE_MATRIX = {
-        "big": "soumis",
-        "medium": "action_requise",
-        "small": "non_soumis",
+        ("gte_1ha", "non_pv_sol"): "soumis",
+        ("gte_9000", "non_pv_sol"): "soumis",
+        ("gte_8000", "non_pv_sol"): "action_requise",
+        ("lt_8000", "non_pv_sol"): "non_soumis",
+        ("gte_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("gte_9000", "pv_sol"): "action_requise_pv_sol",
+        ("gte_8000", "pv_sol"): "non_soumis_pv_sol",
+        ("lt_8000", "pv_sol"): "non_soumis_pv_sol",
     }
 
     def get_result_data(self):
         if self.catalog["final_surface"] >= 10000:
-            project_size = "big"
+            final_surface = "gte_1ha"
+        elif self.catalog["final_surface"] >= 9000:
+            final_surface = "gte_9000"
         elif self.catalog["final_surface"] >= 8000:
-            project_size = "medium"
+            final_surface = "gte_8000"
         else:
-            project_size = "small"
+            final_surface = "lt_8000"
 
-        return project_size
+        is_pv_sol = "non_pv_sol"
+        if self.moulinette.raw_data.get("evalenv_rubrique_30-localisation") == "sol":
+            is_pv_sol = "pv_sol"
+
+        return final_surface, is_pv_sol
 
 
 # This was the old evaluator name
@@ -258,27 +283,54 @@ class EcoulementAvecBV(CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP avec BV"
     slug = "ecoulement_avec_bv"
 
-    CODES = ["soumis", "action_requise_probable_1ha", "action_requise", "non_soumis"]
+    CODES = [
+        "soumis",
+        "action_requise_probable_1ha",
+        "action_requise",
+        "non_soumis",
+        "action_requise_pv_sol",
+        "non_soumis_pv_sol",
+    ]
 
     CODE_MATRIX = {
-        ("gt_11000", "gt_1ha"): "soumis",
-        ("gt_11000", "gt_7000"): "action_requise_probable_1ha",
-        ("gt_11000", "gt_500"): "action_requise",
-        ("gt_11000", "lt_500"): "non_soumis",
-        ("gt_9000", "gt_1ha"): "soumis",
-        ("gt_9000", "gt_7000"): "action_requise",
-        ("gt_9000", "gt_500"): "action_requise",
-        ("gt_9000", "lt_500"): "non_soumis",
-        ("lt_9000", "gt_1ha"): "soumis",
-        ("lt_9000", "gt_7000"): "non_soumis",
-        ("lt_9000", "gt_500"): "non_soumis",
-        ("lt_9000", "lt_500"): "non_soumis",
+        ("gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("gt_11000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("gt_11000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("gt_11000", "gt_9000", "non_pv_sol"): "action_requise_probable_1ha",
+        ("gt_11000", "gt_7000", "non_pv_sol"): "action_requise_probable_1ha",
+        ("gt_11000", "gt_500", "non_pv_sol"): "action_requise",
+        ("gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("gt_9000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
+        ("gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
+        ("gt_9000", "gt_500", "non_pv_sol"): "action_requise",
+        ("gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
+        ("lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
+        ("lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
+        ("lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
     }
 
     RESULT_MATRIX = {
         "soumis": RESULTS.soumis,
         "action_requise_probable_1ha": RESULTS.action_requise,
+        "action_requise_pv_sol": RESULTS.action_requise,
         "action_requise": RESULTS.action_requise,
+        "non_soumis_pv_sol": RESULTS.non_soumis,
         "non_soumis": RESULTS.non_soumis,
     }
 
@@ -303,6 +355,8 @@ class EcoulementAvecBV(CriterionEvaluator):
     def get_result_data(self):
         if self.catalog["final_surface"] >= 10000:
             final_surface = "gt_1ha"
+        elif self.catalog["final_surface"] >= 9000:
+            final_surface = "gt_9000"
         elif self.catalog["final_surface"] >= 7000:
             final_surface = "gt_7000"
         elif self.catalog["final_surface"] >= 500:
@@ -317,7 +371,11 @@ class EcoulementAvecBV(CriterionEvaluator):
         else:
             catchment_surface = "lt_9000"
 
-        return catchment_surface, final_surface
+        is_pv_sol = "non_pv_sol"
+        if self.moulinette.raw_data.get("evalenv_rubrique_30-localisation") == "sol":
+            is_pv_sol = "pv_sol"
+
+        return catchment_surface, final_surface, is_pv_sol
 
 
 class OtherCriteria(CriterionEvaluator):

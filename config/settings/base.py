@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "envergo.confs.apps.ConfsConfig",
     "envergo.admin.config.EnvergoAdminConfig",
     "envergo.urlmappings",
+    "envergo.hedges",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -381,3 +382,18 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
+
+DEMARCHES_SIMPLIFIEE = {
+    # Documentation API de pré-remplissage :
+    # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
+    "API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
+    "DEMARCHE_HAIE": {
+        "ID": "103363",
+        # Les ids des champs de la démarche peuvent être trouvés sur la page suivante:
+        # https://www.demarches-simplifiees.fr/preremplir/test-declaration-de-travaux-sur-haies
+        "PROFIL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk2MQ",
+        "MOULINETTE_URL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk0Mw",
+    },
+}
+
+OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])

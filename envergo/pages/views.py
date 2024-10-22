@@ -1,30 +1,83 @@
+import logging
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
+from django.views.decorators.csrf import requires_csrf_token
+from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
-from envergo.moulinette.models import MoulinetteConfig
+from envergo.geodata.models import Department
+from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
+from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
+
+logger = logging.getLogger(__name__)
 
 
 class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class HomeHaieView(MoulinetteMixin, FormView):
+class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        departments = (
+            Department.objects.defer("geometry").select_related("confighaie").all()
+        )
+        context["departments"] = departments
+        context["activated_departments"] = [
+            department
+            for department in departments
+            if department
+            and hasattr(department, "confighaie")
+            and department.confighaie.is_activated
+        ]
+        return context
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        department_id = data.get("department")
+        department = None
+        if department_id:
+            department = (
+                Department.objects.select_related("confighaie")
+                .defer("geometry")
+                .get(id=department_id)
+            )
+
+        config = (
+            department.confighaie
+            if department and hasattr(department, "confighaie")
+            else None
+        )
+
+        if config and config.is_activated:
+            query_params = {"department": department.department}
+            return HttpResponseRedirect(
+                f"{reverse('triage')}?{urlencode(query_params)}"
+            )
+
+        context = self.get_context_data()
+        context["department"] = department
+        context["config"] = config
+        return self.render_to_response(context)
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
-    template_name = "pages/geometricians.html"
+    template_name = "amenagement/pages/geometricians.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -190,11 +243,11 @@ class AvailabilityInfo(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["configs_available"] = MoulinetteConfig.objects.filter(
+        context["configs_available"] = ConfigAmenagement.objects.filter(
             is_activated=True
         ).order_by("department")
 
-        context["configs_soon"] = MoulinetteConfig.objects.filter(
+        context["configs_soon"] = ConfigAmenagement.objects.filter(
             is_activated=False
         ).order_by("department")
 
@@ -227,3 +280,82 @@ class NewsFeed(Feed):
         base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
+
+
+class DemarcheSimplifieeView(FormView):
+    form_class = DemarcheSimplifieeForm
+
+    def form_valid(self, form):
+        moulinette_url = form.cleaned_data["moulinette_url"]
+        profil = form.cleaned_data["profil"]
+
+        # Ce code est particulièrement fragile.
+        # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
+        mapping_demarche_simplifiee = {
+            "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
+            "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
+        }
+        demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+
+        body = {
+            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                "PROFIL_FIELD_ID"
+            ]: mapping_demarche_simplifiee[profil],
+            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                "MOULINETTE_URL_FIELD_ID"
+            ]: moulinette_url,
+        }
+
+        response = requests.post(
+            api_url, json=body, headers={"Content-Type": "application/json"}
+        )
+        redirect_url = None
+
+        if 200 <= response.status_code < 400:
+            data = response.json()
+            redirect_url = data.get("dossier_url")
+        else:
+            logger.error(
+                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                extra={"response": response},
+            )
+
+        if not redirect_url:
+            res = self.form_invalid(form)
+        else:
+            res = HttpResponseRedirect(redirect_url)
+
+        return res
+
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            "Une erreur technique nous a empêché de créer votre dossier. "
+            "Veuillez nous excuser pour ce désagrément.",
+        )
+        return HttpResponseRedirect(
+            form.cleaned_data.get("moulinette_url", reverse("home"))
+        )
+
+
+@requires_csrf_token
+def server_error(request, template_name=ERROR_500_TEMPLATE_NAME):
+    """
+    500 error handler.
+
+    This method override django.views.defaults.server_error to pass a context, and display the right site base template
+    Templates: :template:`500.html`
+    """
+    try:
+        template = loader.get_template(template_name)
+    except TemplateDoesNotExist:
+        if template_name != ERROR_500_TEMPLATE_NAME:
+            # Reraise if it's a missing custom template.
+            raise
+        return HttpResponseServerError(
+            ERROR_PAGE_TEMPLATE % {"title": "Server Error (500)", "details": ""},
+        )
+    return HttpResponseServerError(
+        template.render({"base_template": request.base_template})
+    )

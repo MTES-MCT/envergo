@@ -5,11 +5,14 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
-from django.views.generic import FormView, TemplateView
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import is_request_from_a_bot, log_event
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
@@ -125,7 +128,6 @@ class MoulinetteMixin:
             context["center_map"] = [1.7000, 47.000]
             context["default_zoom"] = 5
 
-        context["display_feedback_form"] = not self.request.GET.get("feedback", False)
         context["is_map_static"] = False
         context["visitor_id"] = self.request.COOKIES.get(
             settings.VISITOR_COOKIE_NAME, ""
@@ -144,6 +146,7 @@ class MoulinetteMixin:
         # We have to store the moulinette since there are no other way
         # to give parameters to `get_template_names`
         self.moulinette = context.get("moulinette", None)
+        self.triage_form = context.get("triage_form", None)
         return super().render_to_response(context, **response_kwargs)
 
     def get_additional_forms(self, moulinette):
@@ -215,9 +218,6 @@ class MoulinetteMixin:
                 form_classes.append(form_class)
 
         return form_classes
-
-    def form_valid(self, form):
-        return HttpResponseRedirect(self.get_results_url(form))
 
     def get_results_url(self, form):
         """Generates the GET url corresponding to the POST'ed moulinette query.
@@ -294,8 +294,11 @@ class MoulinetteMixin:
         )
 
 
+@method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteHome(MoulinetteMixin, FormView):
-    template_name = "moulinette/home.html"
+    def get_template_names(self):
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        return MoulinetteClass.get_home_template()
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -308,6 +311,9 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         else:
             return res
 
+    def form_valid(self, form):
+        return HttpResponseRedirect(self.get_results_url(form))
+
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
@@ -317,22 +323,26 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         """Check which template to use depending on the moulinette result."""
 
         moulinette = self.moulinette
+        triage_form = self.triage_form
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
         is_admin = self.request.user.is_staff
 
-        if moulinette is None:
-            template_name = "moulinette/home.html"
+        if moulinette is None and triage_form is None:
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            template_name = MoulinetteClass.get_home_template()
+        elif moulinette is None:
+            template_name = "haie/moulinette/triage_result.html"
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
-            template_name = "moulinette/home.html"
+            template_name = moulinette.get_home_template()
         elif not moulinette.has_config():
-            template_name = "moulinette/result_non_disponible.html"
+            template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
-            template_name = "moulinette/result_available_soon.html"
+            template_name = moulinette.get_result_available_soon_template()
         elif moulinette.has_missing_data():
-            template_name = "moulinette/home.html"
+            template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
 
@@ -343,6 +353,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context = self.get_context_data()
         res = self.render_to_response(context)
         moulinette = self.moulinette
+        triage_form = self.triage_form
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
@@ -361,6 +372,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             ):
                 self.log_moulinette_event(moulinette)
 
+            return res
+        elif triage_form is not None:
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
@@ -384,6 +397,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        moulinette = context.get("moulinette", None)
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -392,7 +407,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
         debug_result_url = update_qs(current_url, {"debug": "true"})
         result_url = remove_from_qs(current_url, "debug")
-        edit_url = update_qs(result_url, {"edit": "true"})
+        edit_url = (
+            update_qs(result_url, {"edit": "true"})
+            if moulinette
+            else context.get("triage_url", None)
+        )
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
         # For example, if the current url is /simulateur/resultat/?debug=true,
@@ -417,13 +436,13 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
         context["base_result"] = "moulinette/base_result.html"
-
-        moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
 
         if moulinette:
             context["base_result"] = moulinette.get_result_template()
+            context["display_actions_banner"] = moulinette.result == RESULTS.soumis
+
         if moulinette and is_edit:
             context["matomo_custom_url"] = form_url_with_edit
         elif moulinette and is_debug:
@@ -460,13 +479,40 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         context["is_admin"] = self.request.user.is_staff
         context["edit_url"] = edit_url
-
+        context["display_feedback_form"] = (
+            moulinette
+            and moulinette.is_evaluation_available()
+            and not self.request.GET.get("feedback", False)
+        )
         return context
 
 
 class Triage(FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
+
+    def get(self, request, *args, **kwargs):
+        """This page should always have a department to be displayed."""
+        context = self.get_context_data()
+        if not context.get("department", None):
+            return HttpResponseRedirect(reverse("home"))
+        return self.render_to_response(self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        department_code = self.request.GET.get("department", None)
+        department = (
+            (
+                Department.objects.defer("geometry")
+                .filter(department=department_code)
+                .first()
+            )
+            if department_code
+            else None
+        )
+        context["department"] = department
+
+        return context
 
     def get_initial(self):
         """Populate the form with data from the query string."""
@@ -477,36 +523,8 @@ class Triage(FormView):
         if query_params["element"] == "haie" and query_params["travaux"] == "arrachage":
             url = reverse("moulinette_home")
         else:
-            url = reverse("triage_result")
+            url = reverse("moulinette_result")
 
         query_string = urlencode(query_params)
         url_with_params = f"{url}?{query_string}"
         return HttpResponseRedirect(url_with_params)
-
-
-class TriageResult(TemplateView):
-    template_name = "haie/moulinette/triage_result.html"
-
-    def get(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        form = context["form"]
-        if not form.is_valid():
-            return HttpResponseRedirect(reverse("triage"))
-        return self.render_to_response(context)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form_data = self.request.GET
-        context["form"] = TriageFormHaie(data=form_data)
-
-        envergo_url = self.request.build_absolute_uri("/")
-        current_url = self.request.build_absolute_uri()
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
-        edit_url = update_qs(reverse("triage"), form_data)
-
-        context["current_url"] = current_url
-        context["share_print_url"] = share_print_url
-        context["envergo_url"] = envergo_url
-        context["edit_url"] = edit_url
-
-        return context

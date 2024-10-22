@@ -2,7 +2,11 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
+    CriterionFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -22,10 +26,12 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 
 def test_conditionnalite_pac_only_for_agri_pac():
+    ConfigHaieFactory()
     data = {
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
+        "department": "44",
     }
     for motif_choice in [
         "transfert_parcelles",
@@ -46,10 +52,12 @@ def test_conditionnalite_pac_only_for_agri_pac():
 
 
 def test_conditionnalite_pac_for_agri_pac():
+    ConfigHaieFactory()
     data = {
         "profil": "agri_pac",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
+        "department": "44",
     }
 
     moulinette = MoulinetteHaie(data, data, False)
