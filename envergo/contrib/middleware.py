@@ -17,8 +17,10 @@ class SetUrlConfBasedOnSite:
         request.urlconf = "config.urls_amenagement"
         site = Site.objects.get_current(request)
         request.site = site
+        request.base_template = "amenagement/base.html"
         if site.domain == settings.ENVERGO_HAIE_DOMAIN:
             request.urlconf = "config.urls_haie"
+            request.base_template = "haie/base.html"
 
         response = self.get_response(request)
 
