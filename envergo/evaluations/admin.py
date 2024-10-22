@@ -280,7 +280,11 @@ class EvaluationAdmin(admin.ModelAdmin):
                     self.message_user(request, error, level=messages.ERROR)
 
         else:
-            form = EvaluationVersionForm()
+            has_versions = evaluation.versions.exists()
+            initials = {}
+            if not has_versions:
+                initials["message"] = "Version initiale"
+            form = EvaluationVersionForm(initial=initials)
 
         object_name = str(self.opts.verbose_name)
         context = {
