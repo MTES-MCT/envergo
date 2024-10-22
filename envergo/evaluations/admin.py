@@ -170,18 +170,21 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         # Add warning message if the published version is outdated
         latest_version = obj.versions.first()
+        published = True
         if not latest_version:
             self.message_user(
                 request,
                 "Il n'y a pas de version publiée pour cet avis.",
                 level=messages.WARNING,
             )
+            published = False
         elif not latest_version.published:
             self.message_user(
                 request,
                 "La dernière version n'est pas publiée.",
                 level=messages.WARNING,
             )
+            published = False
         elif latest_version.created_at < obj.updated_at:
 
             local_updated_at = localtime(obj.updated_at)
@@ -193,7 +196,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                 pétitionnaire.
             """
             self.message_user(request, msg, level=messages.WARNING)
+            published = False
 
+        context["published"] = published
         return super().render_change_form(request, context, add, change, form_url, obj)
 
     def save_model(self, request, obj, form, change):
