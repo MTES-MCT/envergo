@@ -1,0 +1,37 @@
+<div class="fr-follow fr-py-8w hide-print">
+  <div class="fr-container">
+    <div class="fr-grid-row">
+      <div class="fr-col-12">
+        <div class="fr-follow__newsletter">
+          <div>
+            <h2 class="fr-h5">Abonnez-vous à notre lettre d’information</h2>
+            <p class="fr-text--sm">
+              Tous les 3 mois, recevez nos actualités sur la réglementation environnementale et les évolutions du service EnvErgo en lien avec votre activité professionnelle.
+            </p>
+            <p id="newsletter-email-hint-text"
+               class="fr-hint-text fr-hidden fr-unhidden-md">
+              En renseignant votre adresse électronique, vous acceptez de recevoir nos actualités par courriel. Désinscription en un clic.
+            </p>
+          </div>
+          <div>
+            <form action="{% url 'newsletter_opt_in' %}" method="post">
+              {% csrf_token %}
+
+              <input type="hidden"
+                     name="redirect_url"
+                     value="{{ request.build_absolute_uri }}" />
+              {% include '_field_snippet.html' with field=newsletter_opt_in_form.type %}
+              {% include '_field_snippet.html' with field=newsletter_opt_in_form.email %}
+              <button class="fr-btn fr-mt-2w"
+                      title="S‘abonner à notre lettre d’information"
+                      type="submit">M'abonner</button>
+            </form>
+            <p id="newsletter-email-hint-text" class="fr-hint-text fr-hidden-md">
+              En renseignant votre adresse électronique, vous acceptez de recevoir nos actualités par courriel. Désinscription en un clic.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

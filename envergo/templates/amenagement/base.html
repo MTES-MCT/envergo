@@ -23,13 +23,14 @@
 {% endblock %}
 
 {% block after-content %}
-  <section class="fr-py-8w alt hide-print">
+  <section class="fr-py-8w hide-print">
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include 'amenagement/_learn_more.html' %}</div>
       </div>
     </div>
   </section>
+  {% include 'amenagement/_newsletter_opt_in.html' %}
 {% endblock %}
 
 {% block footer %}

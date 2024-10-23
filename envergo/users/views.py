@@ -1,12 +1,13 @@
 from braces.views import AnonymousRequiredMixin, MessageMixin
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlsafe_base64_decode
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, FormView, TemplateView
 
-from envergo.users.forms import RegisterForm
+from envergo.users.forms import NewsletterOptInForm, RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import send_account_activation_email
 
@@ -89,3 +90,25 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 return HttpResponseRedirect(redirect_url)
 
         return super().get(request, *args, **kwargs)
+
+
+class NewsletterOptIn(FormView):
+    form_class = NewsletterOptInForm
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            "Votre inscription a bien été prise en compte.",
+        )
+        return HttpResponseRedirect(form.cleaned_data["redirect_url"])
+
+    def form_invalid(self, form):
+        message = "Nous n'avons pas pu enregistrer votre inscription à la newsletter."
+        for field, errors in form.errors.items():
+            field_label = form[field].label
+            for error in errors:
+                message += f"<br/>{field_label} : {error}"
+        messages.error(self.request, message)
+        return HttpResponseRedirect(
+            form.cleaned_data.get("redirect_url", reverse("home"))
+        )

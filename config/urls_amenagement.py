@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from config.urls import handler500  # noqa
 from envergo.evaluations.views import ShortUrlAdminRedirectView
 from envergo.geodata.views import CatchmentAreaDebug
+from envergo.users.views import NewsletterOptIn
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -20,4 +21,5 @@ urlpatterns = [
     path(_("moulinette/"), include("envergo.moulinette.urls_amenagement")),
     path(_("geo/"), include("envergo.geodata.urls")),
     path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
+    path("newsletter/", NewsletterOptIn.as_view(), name="newsletter_opt_in"),
 ] + common_urlpatterns

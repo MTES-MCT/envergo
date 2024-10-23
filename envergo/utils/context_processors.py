@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 
+from envergo.users.forms import NewsletterOptInForm
+
 
 def settings_context(_request):
     """Settings available by default to the templates context."""
@@ -44,4 +46,10 @@ def multi_sites_context(_request):
     # _request.base_template has been populated by a middleware
     return {
         "base_template": _request.base_template,
+    }
+
+
+def newsletter_context(_request):
+    return {
+        "newsletter_opt_in_form": NewsletterOptInForm(),
     }
