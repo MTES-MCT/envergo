@@ -289,7 +289,9 @@ class MoulinetteConfigTemplateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         templates = list(list_moulinette_templates())
-        self.fields["key"].choices = zip(templates, templates)
+        self.fields["key"].choices = [
+            ("", "---------"),
+        ] + list(zip(templates, templates))
 
 
 class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
