@@ -16,20 +16,22 @@ class Command(BaseCommand):
             key__in=[tuple[0] for tuple in get_all_template_keys()]
         ).select_related("config__department", "criterion")
 
-        for obsolete_template in obsolete_templates:
-            if obsolete_template.criterion:
+        for template in obsolete_templates:
+            if template.criterion:
                 url = reverse(
                     "admin:moulinette_criterion_change",
-                    args=[obsolete_template.criterion.id],
+                    args=[template.criterion.id],
                 )
-                intro = f'Le critère "{obsolete_template.criterion.title}"[{obsolete_template.criterion.id}]'
-            elif obsolete_template.config:
+                intro = (
+                    f'Le critère "{template.criterion.title}"[{template.criterion.id}]'
+                )
+            elif template.config:
                 url = reverse(
                     "admin:moulinette_configamenagement_change",
-                    args=[obsolete_template.config.id],
+                    args=[template.config.id],
                 )
-                config = obsolete_template.config
-                intro = f'La config amènagement du département "{config.department}"[{config.id}]'
+                config = template.config
+                intro = f'La config Aménagement du département "{config.department}"[{config.id}]'
             else:
                 raise NotImplementedError(
                     "This template is not linked to a criterion or a config"
@@ -43,7 +45,9 @@ class Command(BaseCommand):
 
             message = dedent(
                 f"""\
-                {intro} référence un template obsolète : id={obsolete_template.id} clef="{obsolete_template.key}".
+                ### Anomalie de configuration
+
+                {intro} référence un gabarit moulinette obsolète : id={template.id} clef="{template.key}".
                 Il faudrait soit :
                 * le mettre à jour
                 * le supprimer
