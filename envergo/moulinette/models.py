@@ -1467,7 +1467,9 @@ class MoulinetteHaie(Moulinette):
         """
         context = {}
         form_data = request.GET
-        context["triage_url"] = update_qs(reverse("triage"), form_data)
+        context["triage_url"] = update_qs(
+            reverse("triage"), {**form_data.dict(), "edit": "true"}
+        )
 
         context["demarche_url"] = settings.DEMARCHES_SIMPLIFIEE_HAIE_URL
 

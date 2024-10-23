@@ -11,7 +11,7 @@ from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
-    extract_matomo_bare_url_from_request,
+    extract_matomo_url_from_request,
     is_request_from_a_bot,
     log_event,
 )
@@ -321,9 +321,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
-            self.request
-        )
+        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context
 
@@ -520,9 +518,7 @@ class Triage(FormView):
             else None
         )
         context["department"] = department
-        context["matomo_custom_url"] = extract_matomo_bare_url_from_request(
-            self.request
-        )
+        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context
 
