@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
@@ -42,6 +43,7 @@ class Command(BaseCommand):
                 if settings.CONFIG_MATTERMOST_HANDLERS
                 else ""
             )
+            current_site = Site.objects.first()
 
             message = dedent(
                 f"""\
@@ -52,7 +54,7 @@ class Command(BaseCommand):
                 * le mettre à jour
                 * le supprimer
                 * s'assurer que la liste des templates disponibles est correcte
-                [Admin django](https://envergo.beta.gouv.fr{url})
+                [Admin django](https://{current_site.domain}/{url})
                 {ping}
                 """
             )
