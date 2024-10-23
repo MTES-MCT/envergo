@@ -378,7 +378,11 @@ class EvaluationVersion(models.Model):
     )
     content = models.TextField(_("Content"))
     published = models.BooleanField(_("Is published?"), default=True)
-    message = models.CharField(_("Message"), max_length=1024)
+    message = models.CharField(
+        _("Message"),
+        max_length=1024,
+        help_text=_("This message will be displayed to users."),
+    )
 
     class Meta:
         verbose_name = _("Evaluation version")

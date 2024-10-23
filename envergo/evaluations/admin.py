@@ -16,7 +16,9 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html, linebreaks, mark_safe
+from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
 from envergo.analytics.models import Event
@@ -169,25 +171,35 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         # Add warning message if the published version is outdated
         latest_version = obj.versions.first()
+        published = True
         if not latest_version:
             self.message_user(
                 request,
                 "Il n'y a pas de version publiée pour cet avis.",
                 level=messages.WARNING,
             )
+            published = False
         elif not latest_version.published:
             self.message_user(
                 request,
                 "La dernière version n'est pas publiée.",
                 level=messages.WARNING,
             )
+            published = False
         elif latest_version.created_at < obj.updated_at:
+
+            local_updated_at = localtime(obj.updated_at)
+            local_published_at = localtime(latest_version.created_at)
             msg = f"""
-                L'avis a été modifié ({obj.updated_at:%c}) après
-                la dernière publication ({latest_version.created_at:%c}).
+                La dernière version enregistrée de cet avis
+                ({date_format(local_updated_at, "SHORT_DATETIME_FORMAT")})
+                n'a pas encore été publiée. Dernière publication 
+                ({date_format(local_published_at, "SHORT_DATETIME_FORMAT")}).
             """
             self.message_user(request, msg, level=messages.WARNING)
+            published = False
 
+        context["published"] = published
         return super().render_change_form(request, context, add, change, form_url, obj)
 
     def save_model(self, request, obj, form, change):
@@ -268,7 +280,11 @@ class EvaluationAdmin(admin.ModelAdmin):
                     self.message_user(request, error, level=messages.ERROR)
 
         else:
-            form = EvaluationVersionForm()
+            has_versions = evaluation.versions.exists()
+            initials = {}
+            if not has_versions:
+                initials["message"] = "Version initiale"
+            form = EvaluationVersionForm(initial=initials)
 
         object_name = str(self.opts.verbose_name)
         context = {
