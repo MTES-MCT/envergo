@@ -193,8 +193,8 @@ class EvaluationAdmin(admin.ModelAdmin):
             msg = f"""
                 La dernière version enregistrée de cet avis
                 ({date_format(local_updated_at, "SHORT_DATETIME_FORMAT")})
-                n'a pas encore été publiée. Dernière publication 
-                ({date_format(local_published_at, "SHORT_DATETIME_FORMAT")}).
+                n'a pas encore été publiée. Dernière publication :
+                {date_format(local_published_at, "SHORT_DATETIME_FORMAT")}.
             """
             self.message_user(request, msg, level=messages.WARNING)
             published = False
