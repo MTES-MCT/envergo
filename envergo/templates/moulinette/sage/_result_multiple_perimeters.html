@@ -1,0 +1,26 @@
+{% for perimeter, result in regulation.results_by_perimeter.items %}
+  {% if result == "interdit" %}
+    {% include 'moulinette/sage/result_interdit_single_perimeter.html' %}
+
+  {% elif result == "action_requise" %}
+    {% include 'moulinette/sage/result_action_requise_single_perimeter.html' %}
+
+  {% elif result == "a_verifier" %}
+    {% include 'moulinette/sage/result_a_verifier_single_perimeter.html' %}
+
+  {% elif result == "non_soumis" %}
+    {% include 'moulinette/sage/result_non_soumis_single_perimeter.html' %}
+
+  {% elif result == "non_concerne" %}
+    {% include 'moulinette/sage/result_non_concerne_single_perimeter.html' %}
+
+  {% elif result == "non_disponible" %}
+    {% include 'moulinette/sage/result_non_disponible_single_perimeter.html' %}
+
+  {% else %}
+    {% include 'moulinette/sage/result_non_active.html' %}
+
+  {% endif %}
+
+  {% if not forloop.last %}<hr>{% endif %}
+{% endfor %}
