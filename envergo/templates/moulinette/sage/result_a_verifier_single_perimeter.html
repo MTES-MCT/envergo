@@ -1,0 +1,61 @@
+{% load utils %}
+
+<p>
+  Le projet est <strong>susceptible d'être interdit</strong> au titre du  SAGE « {{ perimeter.name }} ».
+</p>
+
+<p>
+  En effet, le règlement de SAGE interdit tout projet soumis à la Loi sur l'eau qui impacterait une zone humide.
+  Or, le projet se situe sur une zone humide référencée et au vu des informations saisies, il est susceptible d'être soumis à la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »)</a>.
+</p>
+
+<h3>Marche à suivre</h3>
+
+<p>
+  Pour déterminer si le projet est autorisé, le porteur doit mener les études pour établir s'il est soumis à la Loi sur l'eau.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add_string:perimeter.id %}
+
+<div class="more fr-collapse"
+     id="read-more-{{ regulation.slug|add_string:perimeter.id }}">
+
+  <p>Il convient de :</p>
+
+  <p>
+    <strong>1/ Se rapprocher d'un bureau d'études disposant d'une expertise environnementale et lui communiquer ces éléments.</strong>
+  </p>
+
+  <p>
+    Les études pourront révéler que le projet est interdit en l’état, qui devra donc être modifié pour respecter le règlement de SAGE.
+  </p>
+
+  <p>
+    <strong>2/ Se rapprocher de la structure en charge de l’animation du SAGE</strong>
+  </p>
+
+  {% for perimeter in regulation.perimeters.all %}{{ perimeter.contact }}{% endfor %}
+
+  <h4 class="fr-h4">Sanctions en cas d'omission</h4>
+
+  <div class="fr-alert fr-alert--info fr-my-3w">
+    <p>
+      S'il s'avère que le projet est réalisé sans respecter le règlement de SAGE, le responsable s'expose à des sanctions administratives et pénales, qui peuvent aller jusqu'à :
+    </p>
+
+    <ul class="fr-mb-0">
+      <li>
+        <strong>obligation de remettre le terrain en son état initial ;</strong>
+      </li>
+      <li>
+        amende de catégorie 5 : 1 500 € (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006836872/"
+   target="_blank"
+   rel="noopener">article R.212-48 du code de l'environnement</a>).
+      </li>
+    </ul>
+
+  </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add_string:perimeter.id %}
+
+</div>
