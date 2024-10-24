@@ -22,18 +22,18 @@
       {% endif %}
     </a>
   </li>
-  <li>
-    <a href="{{ absolute_url }}"
-       class="viewsitelink"
-       target="_blank"
-       rel="noopener">Voir l'avis publié</a>
-  </li>
   {% if original.can_send_regulatory_reminder %}
     <li>
       <a href="{% url 'admin:evaluations_evaluation_email_avis' original.pk %}"
          class="disableonchange">✉️ Envoyer e-mail avis</a>
     </li>
   {% endif %}
+  <li>
+    <a href="{{ absolute_url }}"
+       class="viewsitelink"
+       target="_blank"
+       rel="noopener">Voir l'avis publié</a>
+  </li>
 {% endblock %}
 
 {% block admin_change_form_document_ready %}
