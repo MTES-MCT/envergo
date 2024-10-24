@@ -553,8 +553,9 @@ class EvaluationEmail:
                 "action_requise",
             )
         ):
-            perimeters = self.moulinette.sage.perimeters.all()
-            for perimeter in perimeters:
+            for perimeter, result in self.moulinette.sage.results_by_perimeter.items():
+                if result not in ("interdit", "soumis", "action_requise"):
+                    continue
                 if perimeter.contact_email:
                     bcc_recipients.append(perimeter.contact_email)
                 else:
