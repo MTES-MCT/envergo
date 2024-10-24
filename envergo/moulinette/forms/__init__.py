@@ -165,6 +165,11 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
         kwargs["queryset"] = HedgeData.objects.all()
         super().__init__(*args, **kwargs)
 
+    def get_display_value(self, value):
+        data = self.clean(value)
+        display_value = f"{data.length_to_remove()} m / {data.length_to_plant()} m"
+        return display_value
+
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
     profil = forms.ChoiceField(
@@ -199,7 +204,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
     haies = HedgeDataChoiceField(
-        label="Localisation des haies",
+        label="Linéaire de haies à arracher / planter",
         required=True,
     )
 
