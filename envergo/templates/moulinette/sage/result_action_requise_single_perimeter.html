@@ -37,9 +37,7 @@
     <strong>2/ Se rapprocher de la structure en charge de l’animation du SAGE</strong>
   </p>
 
-  {% for perimeter in regulation.perimeters.all %}
-    {% if perimeter.url %}{{ perimeter.contact }}{% endif %}
-  {% endfor %}
+  {% if perimeter.has_contact %}{{ perimeter.contact }}{% endif %}
 
   <h4 class="fr-h4">Sanctions en cas d'omission</h4>
 
