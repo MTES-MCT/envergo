@@ -548,3 +548,35 @@ class Triage(FormView):
         query_string = urlencode(query_params)
         url_with_params = f"{url}?{query_string}"
         return HttpResponseRedirect(url_with_params)
+
+
+class PetitionProjectDetail(MoulinetteMixin, FormView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.moulinette = None
+
+    def get(self, request, *args, **kwargs):
+        moulinette_data = QueryDict(
+            "profil=autre&motif=autre&reimplantation=non&department=36&travaux=arrachage"
+        )
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        self.moulinette = MoulinetteClass(
+            moulinette_data, moulinette_data, self.should_activate_optional_criteria()
+        )
+
+        if self.moulinette.has_missing_data():
+            raise NotImplementedError("We do not handle uncompleted project yet")
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["moulinette"] = self.moulinette
+        context["base_result"] = self.moulinette.get_result_template()
+        context["is_read_only"] = True
+        return context
+
+    def get_template_names(self):
+        """Check which template to use depending on the moulinette result."""
+        moulinette = self.moulinette
+        return [moulinette.get_result_template()]

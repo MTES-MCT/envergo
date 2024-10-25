@@ -2,6 +2,7 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
+from envergo.moulinette.views import PetitionProjectDetail
 from envergo.pages.views import (
     DemarcheSimplifieeView,
     HomeHaieView,
@@ -33,8 +34,13 @@ urlpatterns = [
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
     path(
-        "demarchesimplifiee",
+        "demarchesimplifiee/",
         DemarcheSimplifieeView.as_view(),
         name="demarchesimplifiee",
+    ),
+    path(
+        "projet/",
+        PetitionProjectDetail.as_view(),
+        name="projet",
     ),
 ]
