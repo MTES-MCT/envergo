@@ -60,107 +60,107 @@ div#app {
     #map {
       flex: 1;
       font-family: Marianne, arial, sans-serif;
+    }
 
-      div.controls {
-        position: absolute;
-        z-index: 1000;
+    div.controls {
+      position: absolute;
+      z-index: 1000;
 
-        &.top {
-          top: 1rem;
-        }
-
-        &.bottom {
-          bottom: 1rem;
-        }
-
-        &.left {
-          left: 1rem;
-        }
-
-        &.right {
-          right: 1rem;
-        }
-
-        button {
-          background-color: white;
-
-          &:hover {
-            background-color: #f6f6f6;
-          }
-        }
-
-        .fr-search-bar {
-          .autocomplete__wrapper {
-            margin-top: 0;
-          }
-
-          .fr-input,
-          .autocomplete__input {
-            font-size: 0.875rem;
-            line-height: 1.5rem;
-            min-height: 2rem;
-            max-height: 2rem;
-            height: 2rem;
-          }
-
-          .fr-btn {
-            font-size: 0.875rem;
-            line-height: 1.5rem;
-            padding: 0.25rem 0.75rem;
-            width: 2rem;
-            min-height: 2rem;
-            max-height: 2rem;
-            height: 2rem;
-
-            &::before,
-            &::after {
-              width: 0.75rem;
-              height: 0.75rem;
-            }
-          }
-        }
+      &.top {
+        top: 1rem;
       }
 
-      .hedge.to-plant {
-        stroke: #58c5cf;
-        stroke-width: 5;
-        stroke-opacity: 0.75;
-
-        &:hover,
-        &.hovered {
-          stroke: #58c5cf;
-          stroke-width: 7;
-          stroke-opacity: 0.95;
-        }
-      }
-
-      .hedge.to-remove {
-        stroke: #ca0020;
-        stroke-width: 5;
-        stroke-opacity: 0.75;
-
-        &:hover,
-        &.hovered {
-          stroke: #ca0020;
-          stroke-width: 7;
-          stroke-opacity: 0.95;
-        }
-      }
-
-      .help-bubble {
-        position: absolute;
+      &.bottom {
         bottom: 1rem;
-        left: 1rem;
-        z-index: 1000;
-        background-color: white;
-        color: var(--text-default-info);
-        padding: 0.25rem 1rem;
-        font-size: 1rem;
-        border-radius: 0.75rem;
+      }
 
-        &.hidden {
-          display: none;
+      &.left {
+        left: 1rem;
+      }
+
+      &.right {
+        right: 1rem;
+      }
+
+      button {
+        background-color: white;
+
+        &:hover {
+          background-color: #f6f6f6;
         }
+      }
+
+      .fr-search-bar {
+        .autocomplete__wrapper {
+          margin-top: 0;
+        }
+
+        .fr-input,
+        .autocomplete__input {
+          font-size: 0.875rem;
+          line-height: 1.5rem;
+          min-height: 2rem;
+          max-height: 2rem;
+          height: 2rem;
+        }
+
+        .fr-btn {
+          font-size: 0.875rem;
+          line-height: 1.5rem;
+          padding: 0.25rem 0.75rem;
+          width: 2rem;
+          min-height: 2rem;
+          max-height: 2rem;
+          height: 2rem;
+
+          &::before,
+          &::after {
+            width: 0.75rem;
+            height: 0.75rem;
+          }
+        }
+      }
+    }
+
+    .hedge.to-plant {
+      stroke: #58c5cf;
+      stroke-width: 5;
+      stroke-opacity: 0.75;
+
+      &:hover,
+      &.hovered {
+        stroke: #58c5cf;
+        stroke-width: 7;
+        stroke-opacity: 0.95;
+      }
+    }
+
+    .hedge.to-remove {
+      stroke: #ca0020;
+      stroke-width: 5;
+      stroke-opacity: 0.75;
+
+      &:hover,
+      &.hovered {
+        stroke: #ca0020;
+        stroke-width: 7;
+        stroke-opacity: 0.95;
+      }
+    }
+
+    .help-bubble {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 1000;
+      background-color: white;
+      color: var(--text-default-info);
+      padding: 0.25rem 1rem;
+      font-size: 1rem;
+      border-radius: 0.75rem;
+
+      &.hidden {
+        display: none;
       }
     }
 

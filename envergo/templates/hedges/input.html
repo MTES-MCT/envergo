@@ -24,7 +24,6 @@
 
     <div id="saisie-ui">
       <div id="map">
-
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
           <div class="controls bottom left">
             <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
@@ -33,18 +32,6 @@
             </button>
           </div>
         </template>
-
-        <div class="controls top left">
-          <div class="fr-search-bar fr-search-bar--sm" role="search">
-            <label class="fr-label" for="address">Rechercher</label>
-            <input class="fr-input fr-input--sm"
-                   placeholder="Rechercher"
-                   type="search"
-                   id="id_address"
-                   name="address">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
-          </div>
-        </div>
 
         <div class="controls top right">
           <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
@@ -62,6 +49,21 @@
         <div v-if="showHelpBubble" class="help-bubble">
           <span class="fr-icon-info-fill" aria-hidden="true"></span>
           Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
+        </div>
+      </div>
+
+      {% comment %}
+      There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
+      {% endcomment %}
+      <div class="controls top left">
+        <div class="fr-search-bar fr-search-bar--sm" role="search">
+          <label class="fr-label" for="address">Rechercher</label>
+          <input class="fr-input fr-input--sm"
+                 placeholder="Rechercher"
+                 type="search"
+                 id="id_address"
+                 name="address">
+          <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
         </div>
       </div>
 
