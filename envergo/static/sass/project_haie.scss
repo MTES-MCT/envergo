@@ -93,6 +93,12 @@ div#app {
       .fr-search-bar {
         .autocomplete__wrapper {
           margin-top: 0;
+
+          .autocomplete__option {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-family: inherit;
+          }
         }
 
         .fr-input,

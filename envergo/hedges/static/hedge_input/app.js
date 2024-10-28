@@ -298,7 +298,7 @@ createApp({
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
-      }).setView([43.6861, 3.5911], 17);
+      }).setView([43.6861, 3.5911], 14);
 
       L.control.zoom({
         position: 'bottomright'
