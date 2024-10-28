@@ -1,0 +1,66 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media }}
+  <script src="{% static 'admin/js/cancel.js' %}" async></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+    › Publier
+  </div>
+{% endblock %}
+
+{% block object-tools %}
+  <ul class="object-tools">
+    <li>
+      <a href="{{ object.get_absolute_url }}?preview"
+         class="viewsitelink disableonchange"
+         target="_blank"
+         rel="noopener">👀 Prévisualiser</a>
+    </li>
+    <li>
+      <a href="{{ object.get_absolute_url }}"
+         class="viewsitelink"
+         target="_blank"
+         rel="noopener">Voir l'avis publié</a>
+    </li>
+  </ul>
+{% endblock %}
+
+{% block field_sets %}
+  <fieldset class="module aligned">
+    <h2>Expliquer la modification apportée à l'avis</h2>
+    <div class="form-row">
+      <div>
+        {{ form.message.errors }}
+        <div class="flex-container long-field">
+          <label for="id_message">{{ form.message.label }}</label>
+          {{ form.message }}
+        </div>
+        <div class="help">
+          <p>
+            Ce commentaire pourra être consulté par l’utilisateur. Il doit donc être rédigé sans familiarités, dans un langage clair et en évitant les termes trop techniques. Par exemple :
+          </p>
+
+          <p>
+            « Correction d’une erreur dans la surface du projet »
+            <br />
+            « Modification localisation suite à retour service urbanisme »
+            <br />
+            « Suite à mise à jour données zones humides »
+          </p>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+{% endblock %}
+
+{% block submit_buttons_bottom %}<input type="submit" value="Publier l'avis">{% endblock %}

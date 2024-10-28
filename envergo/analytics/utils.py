@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 
 from envergo.analytics.models import Event
+from envergo.utils.urls import extract_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -76,3 +77,16 @@ def set_visitor_id_cookie(response, value):
         httponly=settings.SESSION_COOKIE_HTTPONLY or None,
         samesite=settings.SESSION_COOKIE_SAMESITE,
     )
+
+
+def extract_matomo_url_from_request(request):
+    """Extract bare urls with matomo params from request."""
+
+    current_url = request.build_absolute_uri()
+    params = extract_mtm_params(current_url)
+    is_edit = bool(request.GET.get("edit", False))
+    if is_edit:
+        params["edit"] = "true"
+    bare_url = request.build_absolute_uri(request.path)
+
+    return update_qs(bare_url, params)
