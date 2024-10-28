@@ -40,6 +40,10 @@ div#app {
   display: flex;
   flex-direction: column;
 
+  &[v-cloak] {
+    visibility: hidden;
+  }
+
   header {
     display: flex;
     justify-content: space-between;
@@ -50,107 +54,148 @@ div#app {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    min-width: 62em; // size lg
+    min-width: 78em; // size xl
     position: relative;
 
     #map {
       flex: 1;
+      font-family: Marianne, arial, sans-serif;
+    }
 
-      div.controls {
-        position: absolute;
-        z-index: 1000;
+    div.controls {
+      position: absolute;
+      z-index: 1000;
 
-        &.top {
-          top: 1rem;
+      &.top {
+        top: 1rem;
+      }
+
+      &.bottom {
+        bottom: 1rem;
+      }
+
+      &.left {
+        left: 1rem;
+      }
+
+      &.right {
+        right: 1rem;
+      }
+
+      button {
+        background-color: white;
+
+        &:hover {
+          background-color: #f6f6f6;
+        }
+      }
+
+      .fr-search-bar {
+        .autocomplete__wrapper {
+          margin-top: 0;
         }
 
-        &.bottom {
-          bottom: 1rem;
+        .fr-input,
+        .autocomplete__input {
+          font-size: 0.875rem;
+          line-height: 1.5rem;
+          min-height: 2rem;
+          max-height: 2rem;
+          height: 2rem;
         }
 
-        &.left {
-          left: 1rem;
-        }
+        .fr-btn {
+          font-size: 0.875rem;
+          line-height: 1.5rem;
+          padding: 0.25rem 0.75rem;
+          width: 2rem;
+          min-height: 2rem;
+          max-height: 2rem;
+          height: 2rem;
 
-        &.right {
-          right: 1rem;
-        }
-
-        button {
-          background-color: white;
-          margin: 0 0.5rem;
-
-          &:hover {
-            background-color: #f6f6f6;
+          &::before,
+          &::after {
+            width: 0.75rem;
+            height: 0.75rem;
           }
         }
       }
+    }
 
-      .hedge.to-plant {
+    .hedge.to-plant {
+      stroke: #58c5cf;
+      stroke-width: 5;
+      stroke-opacity: 0.75;
+
+      &:hover,
+      &.hovered {
         stroke: #58c5cf;
-        stroke-width: 5;
-        stroke-opacity: 0.75;
-
-        &:hover,
-        &.hovered {
-          stroke: #58c5cf;
-          stroke-width: 7;
-          stroke-opacity: 0.95;
-        }
+        stroke-width: 7;
+        stroke-opacity: 0.95;
       }
+    }
 
-      .hedge.to-remove {
+    .hedge.to-remove {
+      stroke: #ca0020;
+      stroke-width: 5;
+      stroke-opacity: 0.75;
+
+      &:hover,
+      &.hovered {
         stroke: #ca0020;
-        stroke-width: 5;
-        stroke-opacity: 0.75;
-
-        &:hover,
-        &.hovered {
-          stroke: #ca0020;
-          stroke-width: 7;
-          stroke-opacity: 0.95;
-        }
+        stroke-width: 7;
+        stroke-opacity: 0.95;
       }
+    }
 
-      .help-bubble {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        z-index: 1000;
-        background-color: white;
-        color: var(--text-default-info);
-        padding: 0.25rem 1rem;
-        font-size: 1rem;
-        border-radius: 0.75rem;
+    .help-bubble {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 1000;
+      background-color: white;
+      color: var(--text-default-info);
+      padding: 0.25rem 1rem;
+      font-size: 1rem;
+      border-radius: 0.75rem;
 
-        &.hidden {
-          display: none;
-        }
+      &.hidden {
+        display: none;
       }
     }
 
     #sidebar {
       bottom: 0;
       overflow-y: scroll;
-      min-width: 30em;
-      max-width: 40em;
+      width: 25em;
+
+      div#compensation {
+        p.rate strong {
+          font-weight: 500;
+        }
+      }
 
       div#hedge-lists {
-        padding: 1rem;
+        padding: 16px;
 
-        --title-spacing: 0 0 0.5rem 1.5rem;
+        --title-spacing: 0 0 0.5rem 0;
 
-        h3 img {
-          margin-left: -2.25rem;
+        h3 {
+          font-weight: 500 !important;
+          font-size: 16px !important;
         }
 
-        p {
-          padding-left: 1.5rem;
+        h3 img {
+          margin-left: 0;
         }
 
         hr {
           margin: 1rem 0;
           padding-bottom: 3px;
+        }
+
+        p.fr-text--light {
+          font-size: 14px;
         }
 
         table {
@@ -164,16 +209,19 @@ div#app {
             td,
             th {
               width: 1px;
+              font-size: 14px;
             }
 
             th {
               text-align: left;
-              padding: 0 2rem 0 1.5rem;
+              padding-left: 2rem;
               min-width: 6rem;
+              font-weight: 900;
             }
 
             td {
               text-align: right;
+              color: #666;
             }
 
             td:first-of-type {
@@ -191,39 +239,19 @@ div#app {
 
             &:hover,
             &.hovered {
+              background-color: #f5f5f5;
+
               button {
                 visibility: visible;
               }
             }
-          }
-        }
 
-        .to-plant {
-          tr:hover,
-          tr.hovered {
-            background-color: #58c5cf1f;
-          }
-
-          tr:active {
-            background-color: #58c5cf40;
-          }
-        }
-
-        .to-remove {
-          tr:hover,
-          tr.hovered {
-            background-color: #ca00201f;
-          }
-
-          tr:active {
-            background-color: #ca002040;
+            &:active {
+              background-color: #ebebeb;
+            }
           }
         }
       }
-    }
-
-    div.actions {
-      padding: 1.5rem;
     }
   }
 }
@@ -239,12 +267,12 @@ dialog#hedge-input-modal {
 
 div#statistics {
   background-color: #f6f6f6;
-  padding: 0.5rem 1rem;
+  padding: 16px;
 
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 
     th,
     td {

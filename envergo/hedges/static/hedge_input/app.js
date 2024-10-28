@@ -308,6 +308,14 @@ createApp({
         maxZoom: 19,
       }).addTo(map);
 
+      // Zoom on the selected address
+      window.addEventListener('EnvErgo:citycode_selected', function (event) {
+        const coordinates = event.detail.coordinates;
+        const latLng = [coordinates[1], coordinates[0]];
+        let zoomLevel = 19;
+        map.setView(latLng, zoomLevel);
+      });
+
       restoreHedges();
       zoomOut();
     });
