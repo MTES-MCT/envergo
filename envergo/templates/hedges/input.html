@@ -10,6 +10,7 @@
 
 {% block main %}
   <div id="app"
+       v-cloak
        data-save-url="{{ save_url }}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
@@ -23,10 +24,9 @@
 
     <div id="saisie-ui">
       <div id="map">
-
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="controls top left">
-            <button class="fr-btn fr-btn--secondary" @click="zoomOut">
+          <div class="controls bottom left">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
             </button>
@@ -34,11 +34,13 @@
         </template>
 
         <div class="controls top right">
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToRemove">
+          <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+                  @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer (à arracher)
           </button>
-          <button class="fr-btn fr-btn--secondary" @click="startDrawingToPlant">
+          <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                  @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer (à planter)
           </button>
@@ -50,9 +52,24 @@
         </div>
       </div>
 
-      <div id="sidebar">
+      {% comment %}
+      There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
+      {% endcomment %}
+      <div class="controls top left">
+        <div class="fr-search-bar fr-search-bar--sm" role="search">
+          <label class="fr-label" for="address">Rechercher</label>
+          <input class="fr-input fr-input--sm"
+                 placeholder="Rechercher"
+                 type="search"
+                 id="id_address"
+                 name="address">
+          <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
+        </div>
+      </div>
+
+      <div id="sidebar" class="fr-text--sm">
         <div id="statistics">
-          <table>
+          <table id="summary">
             <thead>
               <tr>
                 <th colspan="2">Cumul linéaire</th>
@@ -78,7 +95,7 @@
         </div>
         <div id="hedge-lists">
           <div class="hedge-list to-remove">
-            <h3 class="fr-h6">
+            <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à arracher
             </h3>
@@ -107,7 +124,7 @@
           </div>
           <hr>
           <div class="hedge-list to-plant">
-            <h3 class="fr-h6">
+            <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
             </h3>
@@ -131,13 +148,10 @@
               </table>
             </template>
             <template v-else>
-              <p class="fr-text--light">Aucune haie à planter</p>
+              <p class="fr-text--light">Aucune haie tracée</p>
             </template>
           </div>
         </div>
-        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="actions"></div>
-        </template>
       </div>
     </div>
   </div>
@@ -148,16 +162,24 @@
 
 {% block bottom_js %}
   {{ block.super }}
+  <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'leaflet-editable/src/Leaflet.Editable.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
+
   <script defer src="{% static 'vue/dist/vue.global.js' %}"></script>
-  <script type="module" src="{% static 'hedge_input/app.js' %}"></script>
+  <script defer type="module" src="{% static 'hedge_input/app.js' %}"></script>
 {% endblock %}
 
 {% block css %}
   {{ block.super }}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
+
 {% endblock %}
