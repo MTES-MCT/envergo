@@ -1,8 +1,5 @@
-from django.utils.translation import gettext_lazy as _
-
-
 def request_eval_context(request):
-    context = {}
-    if request.path.startswith(f"/avis/{_('form/')}"):
-        context["is_request_btn_disabled"] = True
+    """The "demander un avis" CTA must be disabled on the actual action form page."""
+
+    context = {"is_request_btn_disabled": request.path.startswith("/avis/formulaire/")}
     return context
