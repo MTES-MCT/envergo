@@ -552,7 +552,10 @@ class Triage(FormView):
 
     def form_valid(self, form):
         query_params = form.cleaned_data
-        if query_params["element"] == "haie" and query_params["travaux"] == "arrachage":
+        if (
+            query_params["element"] == "haie"
+            and query_params["travaux"] == "destruction"
+        ):
             url = reverse("moulinette_home")
         else:
             url = reverse("moulinette_result")

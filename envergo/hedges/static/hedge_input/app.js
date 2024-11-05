@@ -182,8 +182,8 @@ class HedgeList {
   }
 
   getIdentifier(index) {
-    // P for "planter", A for "arracher"
-    let firstLetter = this.type === TO_PLANT ? 'P' : 'A';
+    // P for "planter", D for "détruire"
+    let firstLetter = this.type === TO_PLANT ? 'P' : 'D';
     let identifier = `${firstLetter}${index + 1}`;
     return identifier;
   }
