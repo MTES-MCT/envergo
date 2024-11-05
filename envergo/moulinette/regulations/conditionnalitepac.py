@@ -30,7 +30,7 @@ class Bcae8Form(forms.Form):
     )
 
     motif_qc = forms.ChoiceField(
-        label="Quelle est la raison de l’arrachage de la haie ?",
+        label="Quelle est la raison de la destruction de la haie ?",
         widget=forms.RadioSelect,
         choices=(
             (
