@@ -6,7 +6,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils.formats import date_format
@@ -21,6 +21,7 @@ from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
+from envergo.urlmappings.models import UrlMapping
 
 logger = logging.getLogger(__name__)
 
@@ -289,6 +290,11 @@ class DemarcheSimplifieeView(FormView):
         moulinette_url = form.cleaned_data["moulinette_url"]
         profil = form.cleaned_data["profil"]
 
+        read_only_mapping = UrlMapping.objects.create(url=moulinette_url)
+        read_only_url = reverse(
+            "moulinette_result_read_only",
+            kwargs={"moulinette_reference": read_only_mapping.key},
+        )
         # Ce code est particulièrement fragile.
         # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
         mapping_demarche_simplifiee = {
@@ -310,32 +316,36 @@ class DemarcheSimplifieeView(FormView):
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
         )
-        redirect_url = None
+        demarche_simplifiee_url = None
 
         if 200 <= response.status_code < 400:
             data = response.json()
-            redirect_url = data.get("dossier_url")
+            demarche_simplifiee_url = data.get("dossier_url")
         else:
             logger.error(
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
 
-        if not redirect_url:
+        if not demarche_simplifiee_url:
             res = self.form_invalid(form)
         else:
-            res = HttpResponseRedirect(redirect_url)
+            res = JsonResponse(
+                {
+                    "demarche_simplifiee_url": demarche_simplifiee_url,
+                    "read_only_url": read_only_url,
+                }
+            )
 
         return res
 
     def form_invalid(self, form):
-        messages.error(
-            self.request,
-            "Une erreur technique nous a empêché de créer votre dossier. "
-            "Veuillez nous excuser pour ce désagrément.",
-        )
-        return HttpResponseRedirect(
-            form.cleaned_data.get("moulinette_url", reverse("home"))
+        return JsonResponse(
+            {
+                "error_title": "Un problème technique empêche la création de votre dossier.",
+                "error_body": "Nous vous invitons à enregistrer votre simulation et à réessayer ultérieurement.",
+            },
+            status=400,
         )
 
 

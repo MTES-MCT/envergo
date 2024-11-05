@@ -21,6 +21,7 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
+from envergo.urlmappings.models import UrlMapping
 from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
 
 BODY_TPL = {
@@ -49,9 +50,21 @@ class MoulinetteMixin:
         }
 
         moulinette_data = None
-        GET = self.clean_request_get_parameters()
-        if self.request.method == "GET" and GET:
-            moulinette_data = GET
+        if self.request.method == "GET":
+            GET = self.clean_request_get_parameters()
+            if self.kwargs.get("moulinette_reference"):
+                moulinette_url = UrlMapping.objects.filter(
+                    key=self.kwargs["moulinette_reference"]
+                ).first()
+                if moulinette_url:
+                    parsed_url = urlparse(moulinette_url.url)
+                    query_string = parsed_url.query
+                    moulinette_data = QueryDict(query_string)
+                    # Save the moulinette data in the request object
+                    # we will need it for things like triage form or params validation
+                    self.request.moulinette_data = moulinette_data
+            elif GET:
+                moulinette_data = GET
         elif self.request.method in ("POST", "PUT"):
             moulinette_data = self.request.POST
 
@@ -360,7 +373,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         is_edit = bool(self.request.GET.get("edit", False))
-        context = self.get_context_data()
+        context = self.get_context_data(**kwargs)
         res = self.render_to_response(context)
         moulinette = self.moulinette
         triage_form = self.triage_form
@@ -397,7 +410,11 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         expected_qs = parse_qs(urlparse(expected_url).query)
         expected_params = set(expected_qs.keys())
         current_url = request.get_full_path()
-        current_qs = parse_qs(urlparse(current_url).query)
+        current_qs = (
+            request.moulinette_data
+            if hasattr(request, "moulinette_data")
+            else parse_qs(urlparse(current_url).query)
+        )
         current_params = set(current_qs.keys())
 
         # We don't want to take analytics params into account, so they stay in the url
@@ -495,6 +512,9 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             and moulinette.is_evaluation_available()
             and not self.request.GET.get("feedback", False)
         )
+
+        context["is_read_only"] = self.kwargs.get("moulinette_reference") is not None
+
         return context
 
 
