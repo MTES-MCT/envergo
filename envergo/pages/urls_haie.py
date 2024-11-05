@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
 from envergo.pages.views import (
+    DemarcheSimplifieeView,
     HomeHaieView,
     LegalMentionsView,
     Outlinks,
@@ -31,4 +32,9 @@ urlpatterns = [
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
+    path(
+        "demarchesimplifiee",
+        DemarcheSimplifieeView.as_view(),
+        name="demarchesimplifiee",
+    ),
 ]
