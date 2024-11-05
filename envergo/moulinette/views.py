@@ -17,7 +17,6 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.urlmappings.models import UrlMapping
 from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
 
 BODY_TPL = {
@@ -46,21 +45,9 @@ class MoulinetteMixin:
         }
 
         moulinette_data = None
-        if self.request.method == "GET":
-            GET = self.clean_request_get_parameters()
-            if self.kwargs.get("moulinette_reference"):
-                moulinette_url = UrlMapping.objects.filter(
-                    key=self.kwargs["moulinette_reference"]
-                ).first()
-                if moulinette_url:
-                    parsed_url = urlparse(moulinette_url.url)
-                    query_string = parsed_url.query
-                    moulinette_data = QueryDict(query_string)
-                    # Save the moulinette data in the request object
-                    # we will need it for things like triage form or params validation
-                    self.request.moulinette_data = moulinette_data
-            elif GET:
-                moulinette_data = GET
+        GET = self.clean_request_get_parameters()
+        if self.request.method == "GET" and GET:
+            moulinette_data = GET
         elif self.request.method in ("POST", "PUT"):
             moulinette_data = self.request.POST
 
@@ -501,9 +488,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             and moulinette.is_evaluation_available()
             and not self.request.GET.get("feedback", False)
         )
-
-        context["is_read_only"] = self.kwargs.get("moulinette_reference") is not None
-
         return context
 
 
@@ -548,35 +532,3 @@ class Triage(FormView):
         query_string = urlencode(query_params)
         url_with_params = f"{url}?{query_string}"
         return HttpResponseRedirect(url_with_params)
-
-
-class PetitionProjectDetail(MoulinetteMixin, FormView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.moulinette = None
-
-    def get(self, request, *args, **kwargs):
-        moulinette_data = QueryDict(
-            "profil=autre&motif=autre&reimplantation=non&department=36&travaux=arrachage"
-        )
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        self.moulinette = MoulinetteClass(
-            moulinette_data, moulinette_data, self.should_activate_optional_criteria()
-        )
-
-        if self.moulinette.has_missing_data():
-            raise NotImplementedError("We do not handle uncompleted project yet")
-
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["moulinette"] = self.moulinette
-        context["base_result"] = self.moulinette.get_result_template()
-        context["is_read_only"] = True
-        return context
-
-    def get_template_names(self):
-        """Check which template to use depending on the moulinette result."""
-        moulinette = self.moulinette
-        return [moulinette.get_result_template()]

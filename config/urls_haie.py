@@ -7,4 +7,5 @@ urlpatterns = [
     path("", include("envergo.pages.urls_haie")),
     path(_("moulinette/"), include("envergo.moulinette.urls_haie")),
     path("haies/", include("envergo.hedges.urls")),
+    path("projet/", include("envergo.petitions.urls_haie")),
 ] + common_urlpatterns

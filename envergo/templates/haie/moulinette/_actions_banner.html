@@ -3,7 +3,7 @@
 {% block actions %}
   <div class="banner-item">
     <form id="demarche-simplifiee-form"
-          action="{% url 'demarchesimplifiee' %}"
+          action="{% url 'petition_project_create' %}"
           method="post">
       {% csrf_token %}
       <input type="hidden"
@@ -12,6 +12,9 @@
       <input type="hidden"
              name="profil"
              value="{{ moulinette.main_form.profil.value }}" />
+      <input type="hidden"
+             name="haies"
+             value="{{ moulinette.main_form.haies.value }}" />
       <button id="demarche-simplifiee-btn"
               type="submit"
               class="fr-btn  fr-btn--icon-right fr-icon-external-link-line">Commencer la procédure</button>
