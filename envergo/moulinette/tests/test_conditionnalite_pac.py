@@ -29,11 +29,15 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 def test_conditionnalite_pac_only_for_agri_pac():
     ConfigHaieFactory()
+    haies = MagicMock()
+    haies.length_to_remove.return_value = 10
     data = {
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "haies": haies,
+        "lineaire_total": 100,
     }
     for motif_choice in [
         "transfert_parcelles",
