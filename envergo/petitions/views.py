@@ -19,7 +19,6 @@ class PetitionProjectCreate(FormView):
     form_class = PetitionProjectForm
 
     def form_valid(self, form):
-        moulinette_url = form.cleaned_data["moulinette_url"]
         profil = form.cleaned_data["profil"]
 
         form.instance.hedges_data = form.cleaned_data["haies"].data
@@ -45,7 +44,7 @@ class PetitionProjectCreate(FormView):
             ]: mapping_demarche_simplifiee[profil],
             settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
                 "MOULINETTE_URL_FIELD_ID"
-            ]: moulinette_url,
+            ]: self.request.build_absolute_uri(read_only_url),
         }
 
         response = requests.post(
@@ -96,13 +95,12 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         parsed_url = urlparse(petition_project.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
-        moulinette_data = {
-            key: value[0] if isinstance(value, list) and len(value) <= 1 else value
-            for key, value in QueryDict(query_string).items()
-        }
+        moulinette_data = QueryDict(query_string)
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(
-            moulinette_data, moulinette_data, self.should_activate_optional_criteria()
+            moulinette_data.dict(),
+            moulinette_data.dict(),
+            self.should_activate_optional_criteria(),
         )
         # Save the moulinette data in the request object
         # we will need it for things like triage form or params validation
