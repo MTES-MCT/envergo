@@ -24,6 +24,8 @@ class PetitionProjectCreate(FormView):
 
         form.instance.hedges_data = form.cleaned_data["haies"].data
         petition_project = form.save()
+
+        # At petition project creation, we also create a pre-filled dossier on demarches-simplifiees.fr
         read_only_url = reverse(
             "petition_project",
             kwargs={"reference": petition_project.reference},
