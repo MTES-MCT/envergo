@@ -389,7 +389,7 @@ msgstr "Téléphone du porteur de projet"
 
 #: envergo/evaluations/models.py:221
 msgid "Project owner company"
-msgstr "Téléphone du porteur de projet"
+msgstr "Société du porteur de projet"
 
 #: envergo/evaluations/models.py:223 envergo/evaluations/models.py:656
 msgid "Other contacts"
