@@ -244,6 +244,15 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
 
         return data
 
+    def clean_haies(self):
+        haies = self.cleaned_data["haies"]
+        if haies.length_to_remove() == 0:
+            self.add_error(
+                "haies",
+                "Vous devez indiquer les haies à arracher.",
+            )
+        return haies
+
 
 class TriageFormHaie(forms.Form):
     department = DisplayCharField(
