@@ -777,12 +777,15 @@ main > .fr-notice {
 .img-icon {
   display: inline-block;
   vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
-
-  --icon-size: 1.5rem;
-
   width: var(--icon-size);
   height: var(--icon-size);
   margin-right: 0.25rem;
+
+  --icon-size: 1.5rem;
+}
+
+button .img-icon {
+  --icon-size: 1rem;
 }
 
 /**
@@ -1038,6 +1041,11 @@ div.hero-alt {
   footer#footer {
     padding-bottom: 5rem;
   }
+
+  // Crisp chat button
+  a.cc-1m2mf {
+    border: 2px solid var(--background-default-grey) !important;
+  }
 }
 
 @media only screen and (width > 991px) {
@@ -1290,7 +1298,7 @@ footer {
 
   &.header-slim {
     .fr-header__body-row {
-      padding: 0 0 0.75rem;
+      padding: 0.75rem 0;
       line-height: 1rem;
 
       img {

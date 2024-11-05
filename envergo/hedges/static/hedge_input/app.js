@@ -298,7 +298,7 @@ createApp({
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
-      }).setView([43.6861, 3.5911], 17);
+      }).setView([43.6861, 3.5911], 14);
 
       L.control.zoom({
         position: 'bottomright'
@@ -307,6 +307,14 @@ createApp({
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
       }).addTo(map);
+
+      // Zoom on the selected address
+      window.addEventListener('EnvErgo:citycode_selected', function (event) {
+        const coordinates = event.detail.coordinates;
+        const latLng = [coordinates[1], coordinates[0]];
+        let zoomLevel = 19;
+        map.setView(latLng, zoomLevel);
+      });
 
       restoreHedges();
       zoomOut();

@@ -50,6 +50,7 @@ class VersionFactory(DjangoModelFactory):
     evaluation = factory.SubFactory(EvaluationFactory)
     created_by = factory.SubFactory("envergo.users.tests.factories.UserFactory")
     content = factory.Faker("text")
+    published = False
 
 
 class RequestFactory(DjangoModelFactory):

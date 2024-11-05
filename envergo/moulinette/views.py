@@ -10,7 +10,11 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import (
+    extract_matomo_url_from_request,
+    is_request_from_a_bot,
+    log_event,
+)
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
@@ -314,6 +318,12 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
+
+        return context
+
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
@@ -440,6 +450,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["share_print_url"] = share_print_url
         context["envergo_url"] = self.request.build_absolute_uri("/")
         context["base_result"] = "moulinette/base_result.html"
+        context["matomo_custom_url"] = matomo_bare_url
+
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
 
@@ -463,7 +475,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context["matomo_custom_url"] = matomo_missing_data_url
 
         elif moulinette:
-            context["matomo_custom_url"] = matomo_bare_url
             if moulinette.has_config() and moulinette.is_evaluation_available():
                 context["debug_url"] = debug_result_url
 
@@ -515,6 +526,7 @@ class Triage(FormView):
             else None
         )
         context["department"] = department
+        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context
 
