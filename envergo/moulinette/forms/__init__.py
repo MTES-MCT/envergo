@@ -206,6 +206,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     haies = HedgeDataChoiceField(
         label="Linéaire de haies à arracher / planter",
         required=True,
+        error_messages={
+            "required": "Localisez précisément les haies concernées par les travaux en ouvrant le module de saisie."
+        },
     )
 
     def __init__(self, *args, **kwargs):
