@@ -93,11 +93,13 @@ class Bcae8(CriterionEvaluator):
     }
 
     def get_result_data(self):
+        is_petit = False
         lineaire_detruit = self.catalog["haies"].length_to_remove()
-        is_petit = (
-            lineaire_detruit <= 5
-            or lineaire_detruit <= 0.02 * self.catalog["lineaire_total"]
-        )
+        if "lineaire_total" in self.catalog:
+            is_petit = (
+                lineaire_detruit <= 5
+                or lineaire_detruit <= 0.02 * self.catalog["lineaire_total"]
+            )
 
         return (
             self.catalog["profil"],

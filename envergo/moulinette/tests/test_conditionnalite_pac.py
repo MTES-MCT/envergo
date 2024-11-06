@@ -37,7 +37,6 @@ def test_conditionnalite_pac_only_for_agri_pac():
         "reimplantation": "remplacement",
         "department": "44",
         "haies": haies,
-        "lineaire_total": 100,
     }
     for motif_choice in [
         "transfert_parcelles",
