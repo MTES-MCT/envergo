@@ -7,7 +7,7 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 class Bcae8Form(forms.Form):
     lineaire_total = DisplayIntegerField(
-        label="Linéaire total de haie sur l’exploitation :",
+        label="Linéaire total de haies sur l’exploitation :",
         required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
