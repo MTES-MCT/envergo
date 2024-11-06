@@ -190,7 +190,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         required=True,
     )
     motif = forms.ChoiceField(
-        label="Quelle est la raison de l’arrachage de la haie ?",
+        label="Quelle est la raison de la destruction de la haie ?",
         widget=forms.RadioSelect,
         choices=MOTIF_CHOICES,
         required=True,
@@ -204,7 +204,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
     haies = HedgeDataChoiceField(
-        label="Linéaire de haies à arracher / planter",
+        label="Linéaire de haies à détruire / planter",
         required=True,
         error_messages={
             "required": "Localisez précisément les haies concernées par les travaux en ouvrant le module de saisie."
@@ -274,15 +274,27 @@ class TriageFormHaie(forms.Form):
         widget=forms.RadioSelect,
         choices=(
             (
-                "arrachage",
+                "destruction",
                 mark_safe(
-                    "Arrachage<br />"
-                    '<span class="fr-hint-text">Toute intervention impliquant l\'enlèvement des souches</span>'
+                    """Destruction<br />
+                    <span class="fr-hint-text">
+                        Intervention qui supprime définitivement la végétation : arrachage
+                        ou coupe à blanc sur une espèce qui ne recèpe pas (ex : chêne,
+                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…)
+                    </span>
+                    """
                 ),
             ),
             (
                 "entretien",
-                "Entretien",
+                mark_safe(
+                    """Entretien<br />
+                    <span class="fr-hint-text">
+                        Intervention qui permet la repousse de la végétation : élagage, taille,
+                        coupe à blanc sur une espèce capable de recéper.
+                    </span>
+                    """
+                ),
             ),
             (
                 "autre",
