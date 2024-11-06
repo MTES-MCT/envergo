@@ -7,6 +7,7 @@ from django.http import JsonResponse, QueryDict
 from django.urls import reverse
 from django.views.generic import FormView
 
+from envergo.hedges.models import HedgeData
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
@@ -95,16 +96,21 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         parsed_url = urlparse(petition_project.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
-        moulinette_data = QueryDict(query_string)
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        self.moulinette = MoulinetteClass(
-            moulinette_data.dict(),
-            moulinette_data.dict(),
-            self.should_activate_optional_criteria(),
-        )
+        raw_data = QueryDict(query_string)
         # Save the moulinette data in the request object
         # we will need it for things like triage form or params validation
-        self.request.moulinette_data = moulinette_data
+        self.request.moulinette_data = raw_data
+
+        moulinette_data = raw_data.dict()
+        # fetch the haie data from the db
+        moulinette_data["haies"] = HedgeData.objects.get(id=moulinette_data["haies"])
+
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        self.moulinette = MoulinetteClass(
+            moulinette_data,
+            moulinette_data,
+            self.should_activate_optional_criteria(),
+        )
 
         if self.moulinette.has_missing_data():
             raise NotImplementedError("We do not handle uncompleted project yet")
