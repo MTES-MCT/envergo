@@ -398,3 +398,8 @@ DEMARCHES_SIMPLIFIEE = {
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
+
+BREVO = {
+    "API_URL": env("BREVO_API_URL", default="https://api.brevo.com/v3/"),
+    "API_KEY": env("BREVO_API_KEY", default=None),
+}

@@ -1,4 +1,8 @@
+import logging
+
+import requests
 from braces.views import AnonymousRequiredMixin, MessageMixin
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
@@ -10,6 +14,8 @@ from django.views.generic import CreateView, FormView, TemplateView
 from envergo.users.forms import NewsletterOptInForm, RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import send_account_activation_email
+
+logger = logging.getLogger(__name__)
 
 
 class Register(AnonymousRequiredMixin, CreateView):
@@ -96,18 +102,59 @@ class NewsletterOptIn(FormView):
     form_class = NewsletterOptInForm
 
     def form_valid(self, form):
-        messages.success(
-            self.request,
-            "Votre inscription a bien été prise en compte.",
-        )
-        return HttpResponseRedirect(form.cleaned_data["redirect_url"])
+        """Send the form data to Brevo API."""
+        if not settings.BREVO.get("API_KEY"):
+            form.add_error(
+                None, "La configuration de la newsletter n'est pas correcte."
+            )
+            return self.form_invalid(form)
+
+        api_url = f"{settings.BREVO["API_URL"]}contacts/"
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": settings.BREVO["API_KEY"],
+        }
+
+        body = {
+            "updateEnabled": True,  # Update the contact if it already exists
+            "email": form.cleaned_data["email"],
+            "attributes": {
+                "TYPE": form.cleaned_data["type"],
+                "OPT_IN_NEWSLETTER": True,
+            },
+        }
+
+        response = requests.post(api_url, json=body, headers=headers)
+
+        if 200 <= response.status_code < 400:
+            messages.success(
+                self.request,
+                "Votre inscription a bien été prise en compte.",
+            )
+            res = HttpResponseRedirect(form.cleaned_data["redirect_url"])
+        else:
+            logger.error(
+                "Error while creating/updating contact via Brevo API",
+                extra={"response": response},
+            )
+            res = self.form_invalid(form)
+
+        return res
 
     def form_invalid(self, form):
         message = "Nous n'avons pas pu enregistrer votre inscription à la newsletter."
+        # Handle field-specific errors
         for field, errors in form.errors.items():
-            field_label = form[field].label
-            for error in errors:
-                message += f"<br/>{field_label} : {error}"
+            if field != "__all__":
+                field_label = form[field].label
+                for error in errors:
+                    message += f"<br/>{field_label} : {error}"
+
+        # Handle non-field errors
+        if "__all__" in form.errors:
+            for error in form.errors["__all__"]:
+                message += f"<br/>{error}"
+
         messages.error(self.request, message)
         return HttpResponseRedirect(
             form.cleaned_data.get("redirect_url", reverse("home"))
