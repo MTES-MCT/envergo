@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _("Legal mentions") }}{% endblock %}
+
+{% block top-bar %}{% endblock %}
+
+{% block article %}
+  <h1>Mentions légales</h1>
+
+  <h2>Éditeurs</h2>
+
+  <p>
+    Le Guichet unique de la haie est édité par la Fabrique Numérique du
+    Ministère de la transition écologique, de l’énergie, du climat et de la prévention des risques (Grande Arche de la Défense, 92055 La Défense CEDEX), avec l'appui de l'incubateur de services numériques Beta.gouv.fr de la direction interministérielle du numérique
+    (DINUM).
+  </p>
+
+  <h2>Directeurs ou directrices de la publication</h2>
+
+  <p>M. Philippe MAZENC, directeur général de l'aménagement, du logement et de la nature (DGALN).</p>
+
+  <h2>Hébergeur</h2>
+
+  <p>Scalingo SAS, 15 avenue du Rhin, 67100 Strasbourg, France.</p>
+
+  <h2>Traitement des données à caractère personnel</h2>
+
+  <p>
+    Le Guichet unique de la haie traite certaines données à caractère personnel conformément à la réglementation prévue par le règlement (UE) n° 2016/679 dit « RGPD » et la loi n° 78-17 relative à l’informatique, aux fichiers et aux libertés.
+  </p>
+
+  <p>
+    Seules sont recueillies les données expressément nécessaires au bon
+    fonctionnement du service et au respect des obligations légales de l'éditeur.
+  </p>
+
+  <p>
+    Les seules données recueillies sont celles fournies directement par les usagers
+    dans le contexte de l'utilisation du service.
+  </p>
+
+  <h3>Vos droits</h3>
+
+  <p>Vous disposez :</p>
+
+  <ul>
+    <li>d'un droit d'information et d'un droit d'accès à vos données ;</li>
+    <li>d'un droit de rectification ;</li>
+    <li>d'un droit d'opposition ;</li>
+    <li>d'un droit à la limitation du traitement.</li>
+  </ul>
+
+  <p>Pour les exercer, contactez-nous à : contact@haie.beta.gouv.fr</p>
+
+  <p>
+    Puisque ce sont des droits personnels, nous ne traiterons votre demande que si nous sommes en mesure de vous identifier. Dans le cas où nous ne parvenons pas à vous identifier, nous pouvons être amenés à vous demander une preuve de votre identité.
+  </p>
+
+  <p>
+    Pour vous aider dans votre démarche, vous trouverez un modèle de courrier élaboré par la CNIL ici : <a href="https://www.cnil.fr/fr/modele/courrier/exercer-son-droit-dacces">https://www.cnil.fr/fr/modele/courrier/exercer-son-droit-dacces</a>
+  </p>
+
+  <p>
+    Nous nous engageons à vous répondre dans un délai raisonnable qui ne saurait dépasser un mois à compter de la réception de votre demande.
+  </p>
+
+  <h3>Responsable du traitement</h3>
+
+  <p>
+    Les co-responsables du traitement de vos données à caractère personnel sont la direction générale de l'aménagement, du logement et de la nature au sein du Ministère en charge de l’environnement, et la direction générale de la performance économique et environnementale des entreprises du ministère en charge de l’agriculture.
+  </p>
+
+  <h2>Cookies</h2>
+
+  <p>
+    Un cookie est un fichier déposé sur votre terminal lors de la visite d’un site. Il a pour but de collecter des informations relatives à votre navigation et de vous adresser des services adaptés à votre terminal (ordinateur, mobile ou tablette).
+  </p>
+  <p>
+    En application de l’article 5(3) de la directive 2002/58/CE modifiée concernant le traitement des données à caractère personnel et la protection de la vie privée dans le secteur des communications électroniques, transposée à l’article 82 de la loi n° 78-17 du 6 janvier 1978 relative à l’informatique, aux fichiers et aux libertés, les traceurs ou cookies suivent deux régimes distincts :
+  </p>
+  <ul>
+    <li>
+      Les cookies strictement nécessaires au service ou ayant pour finalité exclusive de faciliter la communication par voie électronique sont dispensés de consentement préalable au titre de l’article 82 de la loi n° 78-17 du 6 janvier 1978.
+    </li>
+    <li>
+      Les cookies n’étant pas strictement nécessaires au service ou n’ayant pas pour finalité exclusive de faciliter la communication par voie électronique doivent être consentis par l’utilisateur.
+    </li>
+  </ul>
+  <p>
+    Ce consentement de la personne concernée pour une ou plusieurs finalités spécifiques constitue une base légale au sens du RGPD et doit être entendu au sens de l'article 6-1 a) du RGPD et à la libre circulation des données.
+  </p>
+
+  <p>Cookies recensés sur le Guichet unique de la haie :</p>
+
+  <p>
+    <strong>MATOMO</strong> une solution de mesure d’audience dans sa version anonymisée et exemptée de consentement et validée par la CNIL.
+  </p>
+  <p>Même si le suivi est anonyme, vous pouvez vous opposer au suivi de votre navigation sur ce site web.</p>
+
+  <p>Vous pouvez choisir de ne pas transmettre d'informations à matomo :</p>
+
+  <iframe id="stats-optout"
+          style="width: 100%"
+          src="//stats.beta.gouv.fr/index.php?module=CoreAdminHome&action=optOut&language=fr"></iframe>
+
+  <iframe id="stats-optout"
+          style="width: 100%"
+          src="//stats.data.gouv.fr/index.php?module=CoreAdminHome&action=optOut&language=fr"></iframe>
+
+  {% if visitor_id %}
+    <p>
+      Nous réalisons également un suivi statistique de certaines actions de navigation (par exemple les étapes d’utilisation du simulateur ou l’utilisation de l’outil de saisie du linéaire de haie) qui sont stockées localement et de manière anonyme, afin de mieux comprendre l'utilisation du service.
+    </p>
+
+    <p>
+      Vous avez la possibilité de refuser que les événements dont vous êtes à
+      l'origine soient pris en compte. Votre refus sera à renouveler tous les 13 mois, durée de vie maximum du cookie.
+    </p>
+
+    <form class="fr-mb-3w"
+          method="post"
+          action="{% url 'disable_visitor_cookie' %}">
+      {% csrf_token %}
+      <button type="submit" class="fr-btn">Désactiver le cookie de suivi local</button>
+    </form>
+  {% endif %}
+
+  <h2>Licence</h2>
+
+  <p>
+    Quelques icônes issues du projet <a href="https://remixicon.com" target="_blank" rel="noopener">Remix Icon par Remix Design</a>.
+  </p>
+
+{% endblock %}

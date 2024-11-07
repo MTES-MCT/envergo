@@ -4,7 +4,6 @@ from django.views.generic import RedirectView, TemplateView
 
 from envergo.pages.views import (
     HomeHaieView,
-    LegalMentionsView,
     Outlinks,
     PrivacyView,
     TermsOfServiceView,
@@ -12,7 +11,11 @@ from envergo.pages.views import (
 
 urlpatterns = [
     path("", HomeHaieView.as_view(), name="home"),
-    path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
+    path(
+        _("legal-mentions/"),
+        PrivacyView.as_view(template_name="haie/pages/legal_mentions.html"),
+        name="legal_mentions",
+    ),
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(_("privacy/"), PrivacyView.as_view(), name="privacy"),
     path(
