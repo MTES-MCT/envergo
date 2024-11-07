@@ -6,7 +6,11 @@ from envergo.evaluations.models import generate_reference
 
 
 class PetitionProject(models.Model):
-    """A petition project by a project owner."""
+    """A petition project by a project owner.
+
+    A petition project will store any data needed to follow up a request concerning a hedge.
+    Both the project owner and the public administration will be able to follow up the request.
+    """
 
     reference = models.CharField(
         _("Reference"),
