@@ -3,7 +3,9 @@ from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse, QueryDict
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
 
@@ -21,56 +23,58 @@ class PetitionProjectCreate(FormView):
 
     def form_valid(self, form):
         profil = form.cleaned_data["profil"]
-
         form.instance.hedges_data = form.cleaned_data["haies"].data
-        petition_project = form.save()
 
-        # At petition project creation, we also create a pre-filled dossier on demarches-simplifiees.fr
-        read_only_url = reverse(
-            "petition_project",
-            kwargs={"reference": petition_project.reference},
-        )
-        # Ce code est particulièrement fragile.
-        # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
-        mapping_demarche_simplifiee = {
-            "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
-            "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
-        }
-        demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+        with transaction.atomic():
+            petition_project = form.save()
 
-        body = {
-            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                "PROFIL_FIELD_ID"
-            ]: mapping_demarche_simplifiee[profil],
-            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                "MOULINETTE_URL_FIELD_ID"
-            ]: self.request.build_absolute_uri(read_only_url),
-        }
-
-        response = requests.post(
-            api_url, json=body, headers={"Content-Type": "application/json"}
-        )
-        demarche_simplifiee_url = None
-
-        if 200 <= response.status_code < 400:
-            data = response.json()
-            demarche_simplifiee_url = data.get("dossier_url")
-        else:
-            logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
-                extra={"response": response},
+            # At petition project creation, we also create a pre-filled dossier on demarches-simplifiees.fr
+            read_only_url = reverse(
+                "petition_project",
+                kwargs={"reference": petition_project.reference},
             )
+            # Ce code est particulièrement fragile.
+            # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
+            mapping_demarche_simplifiee = {
+                "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
+                "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
+            }
+            demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
+            api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
 
-        if not demarche_simplifiee_url:
-            res = self.form_invalid(form)
-        else:
-            res = JsonResponse(
-                {
-                    "demarche_simplifiee_url": demarche_simplifiee_url,
-                    "read_only_url": read_only_url,
-                }
+            body = {
+                settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                    "PROFIL_FIELD_ID"
+                ]: mapping_demarche_simplifiee[profil],
+                settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
+                    "MOULINETTE_URL_FIELD_ID"
+                ]: self.request.build_absolute_uri(read_only_url),
+            }
+
+            response = requests.post(
+                api_url, json=body, headers={"Content-Type": "application/json"}
             )
+            demarche_simplifiee_url = None
+            if 200 <= response.status_code < 400:
+                data = response.json()
+                demarche_simplifiee_url = data.get("dossier_url")
+            else:
+                logger.error(
+                    "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                    extra={"response": response},
+                )
+
+            if not demarche_simplifiee_url:
+                res = self.form_invalid(form)
+                # Rollback the transaction to avoid saving the petition project
+                transaction.set_rollback(True)
+            else:
+                res = JsonResponse(
+                    {
+                        "demarche_simplifiee_url": demarche_simplifiee_url,
+                        "read_only_url": read_only_url,
+                    }
+                )
 
         return res
 
@@ -90,8 +94,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.moulinette = None
 
     def get(self, request, *args, **kwargs):
-        petition_project = PetitionProject.objects.get(
-            reference=self.kwargs["reference"]
+        petition_project = get_object_or_404(
+            PetitionProject, reference=self.kwargs["reference"]
         )
         parsed_url = urlparse(petition_project.moulinette_url)
         query_string = parsed_url.query
@@ -103,7 +107,9 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
 
         moulinette_data = raw_data.dict()
         # fetch the haie data from the db
-        moulinette_data["haies"] = HedgeData.objects.get(id=moulinette_data["haies"])
+        moulinette_data["haies"] = get_object_or_404(
+            HedgeData, id=moulinette_data["haies"]
+        )
 
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(
@@ -113,7 +119,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         )
 
         if self.moulinette.has_missing_data():
-            raise NotImplementedError("We do not handle uncompleted project yet")
+            # this should not happen, unless we have stored an incomplete project
+            raise NotImplementedError("We do not handle uncompleted project")
 
         return super().get(request, *args, **kwargs)
 

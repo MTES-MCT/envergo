@@ -6,7 +6,11 @@ from envergo.evaluations.models import generate_reference
 
 
 class PetitionProject(models.Model):
-    """A petition project by a project owner."""
+    """A petition project by a project owner.
+
+    A petition project will store any data needed to follow up a request concerning a hedge.
+    Both the project owner and the public administration will be able to follow up the request.
+    """
 
     reference = models.CharField(
         _("Reference"),
@@ -18,7 +22,7 @@ class PetitionProject(models.Model):
     )
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
-    hedges_data = models.JSONField()
+    hedges_data = models.JSONField(_("Hedges data"))
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)

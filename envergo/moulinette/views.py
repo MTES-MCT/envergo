@@ -396,18 +396,22 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         expected_url = self.get_results_url(context["form"])
         expected_qs = parse_qs(urlparse(expected_url).query)
         expected_params = set(expected_qs.keys())
-        current_url = request.get_full_path()
-        current_qs = (
-            request.moulinette_data
-            if hasattr(request, "moulinette_data")
-            else parse_qs(urlparse(current_url).query)
-        )
-        current_params = set(current_qs.keys())
+        moulinette_data = self.get_moulinette_data()
+        current_params = set(moulinette_data.keys())
 
         # We don't want to take analytics params into account, so they stay in the url
         current_params = set([p for p in current_params if not p.startswith("mtm_")])
 
         return expected_params == current_params
+
+    def get_moulinette_data(self):
+        current_url = self.request.get_full_path()
+        current_qs = (
+            self.request.moulinette_data
+            if hasattr(self.request, "moulinette_data")
+            else parse_qs(urlparse(current_url).query)
+        )
+        return current_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
