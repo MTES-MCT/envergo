@@ -7,7 +7,6 @@ from envergo.pages.views import (
     AvailabilityInfo,
     GeometriciansView,
     HomeAmenagementView,
-    LegalMentionsView,
     NewsFeed,
     NewsView,
     Outlinks,
@@ -17,7 +16,11 @@ from envergo.pages.views import (
 
 urlpatterns = [
     path("", HomeAmenagementView.as_view(), name="home"),
-    path(_("legal-mentions/"), LegalMentionsView.as_view(), name="legal_mentions"),
+    path(
+        _("legal-mentions/"),
+        TemplateView.as_view(template_name="amenagement/pages/legal_mentions.html"),
+        name="legal_mentions",
+    ),
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(_("privacy/"), PrivacyView.as_view(), name="privacy"),
     path(
