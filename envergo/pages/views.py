@@ -170,10 +170,6 @@ class GeometriciansView(MoulinetteMixin, FormView):
         return context
 
 
-class LegalMentionsView(TemplateView):
-    template_name = "pages/legal_mentions.html"
-
-
 class TermsOfServiceView(TemplateView):
     template_name = "pages/terms_of_service.html"
 
