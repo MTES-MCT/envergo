@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
 
+from envergo.analytics.utils import log_event
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.views import MoulinetteMixin
@@ -122,6 +123,17 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             # this should not happen, unless we have stored an incomplete project
             raise NotImplementedError("We do not handle uncompleted project")
 
+        log_event(
+            "dossier",
+            "visit",
+            self.request,
+            **{
+                "reference": petition_project.reference,
+                "department": moulinette_data.get("department"),
+                "longueur_detruite": moulinette_data["haies"].length_to_remove(),
+                "longueur_plantee": moulinette_data["haies"].length_to_plant(),
+            },
+        )
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
