@@ -22,7 +22,7 @@ class PetitionProject(models.Model):
     )
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
-    hedges_data = models.JSONField()
+    hedges_data = models.JSONField(_("Hedges data"))
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
