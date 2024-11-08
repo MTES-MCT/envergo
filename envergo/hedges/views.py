@@ -7,6 +7,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 
+from envergo.hedges.forms import HedgeDataForm
 from envergo.hedges.models import HedgeData
 
 
@@ -39,6 +40,7 @@ class HedgeInput(DetailView):
         else:
             save_url = reverse("input_hedges")
         context["save_url"] = save_url
+        context["hedge_data_form"] = HedgeDataForm()
         return context
 
     def post(self, request, *args, **kwargs):

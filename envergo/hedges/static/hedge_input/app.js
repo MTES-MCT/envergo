@@ -120,6 +120,7 @@ class Hedge {
       id: this.id,
       latLngs: this.latLngs.map((latLng) => ({ lat: latLng.lat, lng: latLng.lng })),
       type: this.type,
+      additionalData: this.additionalData,
     };
   }
 }
@@ -229,9 +230,38 @@ createApp({
       // Cacher la bulle d'aide à la fin du tracé
       newHedge.polyline.on('editable:drawing:end', () => {
         showHelpBubble.value = false;
+        showHedgeModal(newHedge);
       });
 
       return newHedge;
+    };
+
+    // Show the "description de la haie" form modal
+    const showHedgeModal = (hedge) => {
+      const dialog = document.getElementById("hedge-data-dialog");
+      const form = dialog.querySelector("form");
+      dsfr(dialog).modal.disclose();
+
+      // Save form data to the hedge object
+      // This is the form submit event handler
+      const saveModalData = (event) => {
+        event.preventDefault();
+
+        const hedgeType = document.getElementById("id_hedge_type").value;
+        const isOnPacField = document.getElementById("id_sur_parcelle_pac").checked;
+        const isNearPond = document.getElementById("id_proximite_mare").checked;
+        hedge.additionalData = {
+          type: hedgeType,
+          onPacField: isOnPacField,
+          nearPond: isNearPond,
+        };
+
+        // Reset the form and hide the modal
+        form.reset();
+        dsfr(dialog).modal.conceal();
+      };
+
+      form.addEventListener("submit", saveModalData, { once: true });
     };
 
     const startDrawingToPlant = () => {
