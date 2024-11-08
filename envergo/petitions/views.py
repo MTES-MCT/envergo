@@ -10,7 +10,6 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from envergo.analytics.utils import log_event
-from envergo.hedges.models import HedgeData
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
@@ -24,7 +23,7 @@ class PetitionProjectCreate(FormView):
 
     def form_valid(self, form):
         profil = form.cleaned_data["profil"]
-        form.instance.hedges_data = form.cleaned_data["haies"].data
+        form.instance.hedge_data = form.cleaned_data["haies"]
 
         with transaction.atomic():
             petition_project = form.save()
@@ -96,7 +95,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         petition_project = get_object_or_404(
-            PetitionProject, reference=self.kwargs["reference"]
+            PetitionProject.objects.select_related("hedge_data"),
+            reference=self.kwargs["reference"],
         )
         parsed_url = urlparse(petition_project.moulinette_url)
         query_string = parsed_url.query
@@ -107,10 +107,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.request.moulinette_data = raw_data
 
         moulinette_data = raw_data.dict()
-        # fetch the haie data from the db
-        moulinette_data["haies"] = get_object_or_404(
-            HedgeData, id=moulinette_data["haies"]
-        )
+        moulinette_data["haies"] = petition_project.hedge_data
 
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(

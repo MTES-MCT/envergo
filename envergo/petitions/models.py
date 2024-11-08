@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import generate_reference
+from envergo.hedges.models import HedgeData
 
 
 class PetitionProject(models.Model):
@@ -22,7 +23,10 @@ class PetitionProject(models.Model):
     )
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
-    hedges_data = models.JSONField(_("Hedges data"))
+    hedge_data = models.ForeignKey(
+        HedgeData,
+        on_delete=models.PROTECT,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
