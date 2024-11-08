@@ -124,8 +124,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             raise NotImplementedError("We do not handle uncompleted project")
 
         log_event(
-            "dossier",
-            "visit",
+            "projet",
+            "consultation",
             self.request,
             **{
                 "reference": petition_project.reference,
