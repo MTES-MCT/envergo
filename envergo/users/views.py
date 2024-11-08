@@ -109,7 +109,7 @@ class NewsletterOptIn(FormView):
             )
             return self.form_invalid(form)
 
-        api_url = f"{settings.BREVO["API_URL"]}contacts/"
+        api_url = f"{settings.BREVO['API_URL']}contacts/"
         headers = {
             "Content-Type": "application/json",
             "api-key": settings.BREVO["API_KEY"],
