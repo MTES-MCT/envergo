@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
@@ -27,11 +29,14 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 def test_conditionnalite_pac_only_for_agri_pac():
     ConfigHaieFactory()
+    haies = MagicMock()
+    haies.length_to_remove.return_value = 10
     data = {
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "haies": haies,
     }
     for motif_choice in [
         "transfert_parcelles",
@@ -58,20 +63,21 @@ def test_conditionnalite_pac_for_agri_pac():
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "haies": MagicMock(),
     }
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_disponible", data
 
-    data["lineaire_detruit"] = 5
+    data["haies"].length_to_remove.return_value = 5
     data["lineaire_total"] = 100
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "non_soumis_petit", data
 
-    data["lineaire_detruit"] = 6
+    data["haies"].length_to_remove.return_value = 6
     data["lineaire_total"] = 100
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -80,7 +86,7 @@ def test_conditionnalite_pac_for_agri_pac():
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
     ), data
 
-    data["lineaire_detruit"] = 6
+    data["haies"].length_to_remove.return_value = 6
     data["lineaire_total"] = 300
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -101,7 +107,7 @@ def test_conditionnalite_pac_for_agri_pac():
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
     ), data
 
-    data["lineaire_detruit"] = 11
+    data["haies"].length_to_remove.return_value = 11
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
@@ -184,7 +190,7 @@ def test_conditionnalite_pac_for_agri_pac():
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
     ), data
 
-    data["lineaire_detruit"] = 10
+    data["haies"].length_to_remove.return_value = 10
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data

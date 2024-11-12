@@ -220,6 +220,23 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             "Provide one or several addresses separated by commas « , »"
         )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        user_type = cleaned_data.get("user_type")
+        send_eval_to_project_owner = cleaned_data.get("send_eval_to_project_owner")
+
+        # Remove project owner fields if the user does not want to send the evaluation to the project owner
+        if not send_eval_to_project_owner and user_type == USER_TYPES.instructor:
+            cleaned_data.pop("project_owner_emails", None)
+            cleaned_data.pop("project_owner_phone", None)
+
+        # Remove urbanism_department fields if the user is a petitioner
+        if user_type == USER_TYPES.petitioner:
+            cleaned_data.pop("urbanism_department_emails", None)
+            cleaned_data.pop("urbanism_department_phone", None)
+
+        return cleaned_data
+
 
 # See https://docs.djangoproject.com/en/4.2/topics/http/file-uploads/#uploading-multiple-files
 class MultipleFileInput(forms.ClearableFileInput):

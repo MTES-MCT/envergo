@@ -37,19 +37,23 @@ Il est recommandé de se baser sur la version docker.
 
 #### Avec Docker
 
+> NB : pour les commandes `docker compose`, cette documentation utilise la syntaxe de la version 2 en remplacant le tiret (`-`) par un espace et utlisant donc `docker compose` à la place de `docker-compose`.
+> Si vous avez une version plus ancienne, vous pouvez utiliser la syntaxe `docker-compose`.
+> [Plus d'infos...](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
+
 Pour lancer l'environnement rapidement :
 
 ```bash
 $ git clone … && cd envergo
 $ touch .env
-$ docker-compose build
-$ docker-compose up
+$ docker compose build
+$ docker compose up
 ```
 
 Pour construire la base de données (dans un autre shell) :
 
 ```bash
-$ docker-compose run --rm django python manage.py migrate
+$ docker compose run --rm django python manage.py migrate
 ```
 
 Pour avoir accès aux fichiers `static` depuis le serveur de debug :
@@ -57,7 +61,7 @@ Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 ```bash
 $ npm install
 $ npm  run build
-$ docker-compose run --rm django python manage.py collectstatic
+$ docker compose run --rm django python manage.py collectstatic
 
 ```
 
@@ -81,17 +85,17 @@ les droits de création de base et d'extension.
 #### Résoudre l'erreur "raster does not exist"
 
 Dans les versions les plus récentes de postgis, il est nécessaire [d'installer l'extension "raster"](https://docs.djangoproject.com/fr/5.0/ref/contrib/gis/install/postgis/#post-installation).
-Si, lors du `docker-compose up` ci-dessus vous avez ce type d'erreur :
+Si, lors du `docker compose up` ci-dessus vous avez ce type d'erreur :
 
     envergo_postgres  | 2024-05-13 14:35:21.651 UTC [35] ERROR:  type "raster" does not exist at character 118
 
-Il vous faudra créer cette extension (dans un autre terminal, avec le `docker-compose up` qui tourne en parallèle) :
+Il vous faudra créer cette extension (dans un autre terminal, avec le `docker compose up` qui tourne en parallèle) :
 
 ```bash
-$ docker-compose run --rm postgres create_raster
+$ docker compose run --rm postgres create_raster
 ```
 
-Puis interrompre et relancer le `docker-compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
+Puis interrompre et relancer le `docker compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
 
 
 ### Qualité du code
@@ -196,7 +200,7 @@ pip-sync local.txt
 Pour mettre à jour l'image Docker, relancer `build` puis `up`.
 
 
-## Tests
+## Tests unitaires
 
 Les tests sont écrits avec [pytest](https://docs.pytest.org/). Tous les helpers de [pytest-django](https://pytest-django.readthedocs.io/en/latest/) sont disponibles.
 
@@ -211,9 +215,55 @@ pytest
 Via Docker :
 
 ```bash
-docker-compose run --rm django pytest
+docker compose run --rm django pytest
 ```
 
+
+## Tests End-to-End
+
+Les tests end-to-end sont écrits avec [Playwright](https://playwright.dev/).
+Les tests E2E permet de valider que les chemins utilisateurs critiques (faire une simulation, demander un avis, répondre à une demande d'avis, etc) fonctionnent correctement.
+Cela permet en outre de vérifier le bon fonctionnement des composants JavaScript de plus en plus présent sur les pages et pour le moment non couvert par d'autre tests.
+
+Ils se basent sur une base de données de tests dédiée contenant une jeu de données minimum présent dans ce [fichier](e2e/fixtures/db_seed.json)  et que l’on peut remplir pour les besoins de chaque test.
+
+Ils tournent dans la CI de Github.
+
+
+### Lancer les tests E2E en local
+
+#### Prérequis
+Pour lancer les tests E2E en local, il faut avant tout créer une base de données dédiée similaire à celle qui sera utilisée par la CI.
+Pour cela, il faut lancer les commandes suivantes :
+
+```bash
+$ . envs/postgres
+$ docker compose exec postgres bash -c 'dropdb --if-exists envergo-test -U "$POSTGRES_USER" -f'
+$ docker compose exec postgres bash -c 'createdb envergo-test -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py migrate
+$ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+```
+
+Vous devez ensuite installer Playwright avec les commandes suivantes:
+```bash
+$ npm install @playwright/test
+$ npx playwright install
+```
+
+#### Lancer les tests
+
+Vous devez tout d'abord lancer l'application en pointant vers la base de test et avec le bon fichier de settings :
+
+```bash
+$ POSTGRES_DB=envergo-test docker compose -f docker-compose.yml -f docker-compose.e2e.yml  up -d
+```
+
+Enfin vous pouvez lancer les tests avec l'une des commandes suivantes :
+
+```bash
+$ npx playwright test --ui # pour lancer les tests dans un navigateur
+$ npx playwright test # pour lancer les tests dans un shell
+```
 
 ## Recette et déploiement
 
@@ -307,10 +357,10 @@ Alternative : récupérer le backup nocture depuis Scalingo.
 
 ```bash
 $ . envs/postgres
-$ docker-compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
-$ docker-compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
+$ docker compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
+$ docker compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
-$ docker-compose run --rm django python manage.py migrate
+$ docker compose run --rm django python manage.py migrate
 ```
 
 

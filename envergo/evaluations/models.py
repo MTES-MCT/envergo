@@ -576,8 +576,9 @@ class EvaluationEmail:
                 "action_requise",
             )
         ):
-            perimeters = self.moulinette.sage.perimeters.all()
-            for perimeter in perimeters:
+            for perimeter, result in self.moulinette.sage.results_by_perimeter.items():
+                if result not in ("interdit", "soumis", "action_requise"):
+                    continue
                 if perimeter.contact_email:
                     bcc_recipients.append(perimeter.contact_email)
                 else:
@@ -726,14 +727,6 @@ class Request(models.Model):
             send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
-
-    def save(self, *args, **kwargs):
-        # do not store project owner emails and phone if the user does not want to send the eval to the project owner
-        if not self.send_eval_to_project_owner:
-            self.project_owner_emails = []
-            self.project_owner_phone = ""
-
-        super().save(*args, **kwargs)
 
 
 def request_file_format(instance, filename):
