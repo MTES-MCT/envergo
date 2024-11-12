@@ -173,9 +173,12 @@
 
               <form>
                 <div class="fr-modal__content fr-pt-4w">
-                  <h1 id="hedge-data-dialog-title" class="fr-modal__title">
+                  <h1 id="hedge-data-dialog-title" class="fr-modal__title fr-mb-1w">
                     Description de la haie <span id="hedge-data-dialog-hedge-name"></span>
                   </h1>
+                  <p class="fr-tag fr-mb-3w">
+                    Longueur : <span id="hedge-data-dialog-hedge-length"></span>m
+                  </p>
 
                   {% include '_form_snippet.html' with form=hedge_data_form %}
                 </div>
