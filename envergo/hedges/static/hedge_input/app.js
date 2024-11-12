@@ -240,6 +240,18 @@ createApp({
     const showHedgeModal = (hedge) => {
       const dialog = document.getElementById("hedge-data-dialog");
       const form = dialog.querySelector("form");
+      const hedgeTypeField = document.getElementById("id_hedge_type");
+      const pacField = document.getElementById("id_sur_parcelle_pac");
+      const nearPondField = document.getElementById("id_proximite_mare");
+
+      // Pre-fill the form with hedge data if it's an edition
+      if (hedge.additionalData) {
+        hedgeTypeField.value = hedge.additionalData.type;
+        pacField.checked = hedge.additionalData.onPacField;
+        nearPondField.checked = hedge.additionalData.nearPond;
+      } else {
+        form.reset();
+      }
       dsfr(dialog).modal.disclose();
 
       // Save form data to the hedge object
@@ -247,9 +259,9 @@ createApp({
       const saveModalData = (event) => {
         event.preventDefault();
 
-        const hedgeType = document.getElementById("id_hedge_type").value;
-        const isOnPacField = document.getElementById("id_sur_parcelle_pac").checked;
-        const isNearPond = document.getElementById("id_proximite_mare").checked;
+        const hedgeType = hedgeTypeField.value;
+        const isOnPacField = pacField.checked;
+        const isNearPond = nearPondField.checked;
         hedge.additionalData = {
           type: hedgeType,
           onPacField: isOnPacField,
@@ -262,6 +274,11 @@ createApp({
       };
 
       form.addEventListener("submit", saveModalData, { once: true });
+    };
+
+    // Open the form modal to edit an existing hedge
+    const editHedge = (hedge) => {
+      showHedgeModal(hedge);
     };
 
     const startDrawingToPlant = () => {
@@ -359,6 +376,7 @@ createApp({
       showHelpBubble,
       saveData,
       cancel,
+      editHedge,
     };
   }
 }).mount('#app');
