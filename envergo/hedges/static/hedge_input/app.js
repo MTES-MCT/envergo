@@ -243,6 +243,7 @@ createApp({
       const hedgeTypeField = document.getElementById("id_hedge_type");
       const pacField = document.getElementById("id_sur_parcelle_pac");
       const nearPondField = document.getElementById("id_proximite_mare");
+      const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
 
       // Pre-fill the form with hedge data if it's an edition
       if (hedge.additionalData) {
@@ -252,6 +253,9 @@ createApp({
       } else {
         form.reset();
       }
+      hedgeName.textContent = hedge.id;
+
+
       dsfr(dialog).modal.disclose();
 
       // Save form data to the hedge object
