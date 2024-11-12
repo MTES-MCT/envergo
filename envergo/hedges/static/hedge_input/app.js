@@ -277,7 +277,15 @@ createApp({
         dsfr(dialog).modal.conceal();
       };
 
+
+      // Save data upon form submission
       form.addEventListener("submit", saveModalData, { once: true });
+
+      // If the modal is closed without saving, let's make sure to remove the
+      // event listener.
+      dialog.addEventListener("dsfr.conceal", () => {
+        form.removeEventListener("submit", saveModalData);
+      });
     };
 
     // Open the form modal to edit an existing hedge
