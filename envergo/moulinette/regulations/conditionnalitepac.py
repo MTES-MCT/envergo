@@ -6,16 +6,8 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 
 class Bcae8Form(forms.Form):
-    lineaire_detruit = DisplayIntegerField(
-        label="Linéaire de haie détruit :",
-        required=True,
-        min_value=0,
-        widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
-        display_unit="m",
-    )
-
     lineaire_total = DisplayIntegerField(
-        label="Linéaire total de haie sur l’exploitation :",
+        label="Linéaire total de haies sur l’exploitation :",
         required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
@@ -102,11 +94,11 @@ class Bcae8(CriterionEvaluator):
 
     def get_result_data(self):
         is_petit = False
-        if "lineaire_detruit" in self.catalog and "lineaire_total" in self.catalog:
+        lineaire_detruit = self.catalog["haies"].length_to_remove()
+        if "lineaire_total" in self.catalog:
             is_petit = (
-                self.catalog["lineaire_detruit"] <= 5
-                or self.catalog["lineaire_detruit"]
-                <= 0.02 * self.catalog["lineaire_total"]
+                lineaire_detruit <= 5
+                or lineaire_detruit <= 0.02 * self.catalog["lineaire_total"]
             )
 
         return (
@@ -114,7 +106,7 @@ class Bcae8(CriterionEvaluator):
             self.catalog["motif"],
             self.catalog["reimplantation"],
             is_petit,
-            self.catalog.get("lineaire_detruit"),
+            lineaire_detruit,
             self.catalog.get("amenagement_dup"),
             self.catalog.get("motif_qc"),
         )
