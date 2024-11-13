@@ -1,6 +1,6 @@
 import logging
 from datetime import date, timedelta
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
 from django.conf import settings
@@ -17,7 +17,7 @@ from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.geodata.models import Department
-from envergo.moulinette.models import ConfigAmenagement
+from envergo.moulinette.models import ConfigAmenagement, ConfigHaie, MoulinetteHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
@@ -282,30 +282,54 @@ class NewsFeed(Feed):
         return item_url
 
 
+def get_value_from_source(moulinette_url, moulinette, source, mapping):
+    if source == "moulinette_url":
+        value = moulinette_url
+    elif source.endswith(".result"):
+        regulation_slug = source[:-7]
+        regulation_result = getattr(moulinette, regulation_slug, None)
+        if regulation_result is None:
+            raise  # TODO
+        value = regulation_result.result
+    else:
+        value = moulinette.catalog.get(source, None)
+
+    mapped_value = mapping.get(value, value)
+
+    # Handle boolean values as strings 😞
+    return {
+        True: "true",
+        False: "false",
+    }.get(mapped_value, mapped_value)
+
+
 class DemarcheSimplifieeView(FormView):
     form_class = DemarcheSimplifieeForm
 
     def form_valid(self, form):
         moulinette_url = form.cleaned_data["moulinette_url"]
-        profil = form.cleaned_data["profil"]
+        parsed_url = urlparse(moulinette_url)
+        moulinette_data = parse_qs(parsed_url.query)
+        # Flatten the dictionary
+        for key, value in moulinette_data.items():
+            if isinstance(value, list) and len(value) == 1:
+                moulinette_data[key] = value[0]
+        department = moulinette_data.get("department", None)
+        if not department:
+            raise ValueError("No department found in moulinette URL")  # TODO
 
-        # Ce code est particulièrement fragile.
-        # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
-        mapping_demarche_simplifiee = {
-            "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
-            "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
-        }
-        demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
+        config = ConfigHaie.objects.get(
+            department__department=department
+        )  # TODO handle DoesNotExist
+        demarche_id = config.demarche_simplifiee_number  # TODO what if not set ?
         api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
 
-        body = {
-            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                "PROFIL_FIELD_ID"
-            ]: mapping_demarche_simplifiee[profil],
-            settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                "MOULINETTE_URL_FIELD_ID"
-            ]: moulinette_url,
-        }
+        body = {}
+        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+        for field in config.demarche_simplifiee_pre_fill_config:
+            body[f"champ_{field["id"]}"] = get_value_from_source(
+                moulinette_url, moulinette, field["value"], field.get("mapping", {})
+            )  # TODO what if no value or id ?
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}

@@ -44,3 +44,13 @@ a.disabled {
   pointer-events: none;
   background-color: #ababab !important;
 }
+
+#id_demarche_simplifiee_pre_fill_config_helptext {
+  ul {
+    margin-left: 1.5em;
+
+    li {
+      list-style: initial;
+    }
+  }
+}

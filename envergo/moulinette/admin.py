@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
@@ -6,11 +8,13 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.admin import DepartmentsListFilter
+from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import (
     REGULATIONS,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
+    MoulinetteHaie,
     MoulinetteTemplate,
     Perimeter,
     Regulation,
@@ -318,8 +322,138 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
+def get_demarche_simplifiee_value_sources():
+
+    moulinette_instance = MoulinetteHaie({}, {})
+    identified_sources = {("moulinette_url", "Url de la simulation")}
+    main_form_fields = {
+        (key, field.label)
+        for key, field in MoulinetteHaie.main_form_class.base_fields.items()
+    }
+    triage_form_fields = {
+        (key, field.label) for key, field in TriageFormHaie.base_fields.items()
+    }
+
+    regulation_sources = []
+    for regulation in moulinette_instance.regulations.all():
+        regulation_sources.append(
+            (
+                f"{regulation.slug}.result",
+                f"Résultat de la réglementation {regulation.regulation}",
+            )
+        )
+        for criterion in regulation.criteria.all():
+            form_class = criterion.evaluator.form_class
+            if form_class:
+                regulation_sources.extend(
+                    [
+                        (key, field.label)
+                        for key, field in form_class.base_fields.items()
+                    ]
+                )
+
+    return (
+        identified_sources
+        | triage_form_fields
+        | main_form_fields
+        | set(regulation_sources)
+    )
+
+
+class JSONWidget(forms.Textarea):
+    def format_value(self, value):
+        if value is None:
+            return ""
+        try:
+            # Format the JSON in a readable way
+            return json.dumps(json.loads(value), indent=4, sort_keys=True)
+        except (TypeError, ValueError):
+            return value
+
+
+class ConfigHaieAdminForm(forms.ModelForm):
+    class Meta:
+        model = ConfigHaie
+        fields = "__all__"
+        widgets = {
+            "demarche_simplifiee_pre_fill_config": JSONWidget(
+                attrs={"rows": 20, "cols": 80}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["demarche_simplifiee_pre_fill_config"].help_text = (
+            self.get_demarche_simplifiee_pre_fill_config_help_text()
+        )
+
+    def get_demarche_simplifiee_pre_fill_config_help_text(self):
+        return f"""
+        Ce champ doit comporter un tableau au format json comportant une entrée pour chaque champ ou annotation privée à pré-remplir dans Démarches Simplifiées avec des données provenant du guichet unique de la haie.
+        Chaque entrée comporte les clés suivantes :
+        <ul>
+            <li>id : l'id du champ ou de l'annotation privée côté Démarche Simplifiées</li>
+            <li>value : la source de la valeur côté guichet unique de la haie</li>
+            <li>mapping (facultatif) : un tableau de correspondance entre les valeurs côté guichet unique de la haie et les valeurs côté Démarches Simplifiées</li>
+        </ul>
+
+        <h3>Exemple </h3>
+        <pre>
+        [
+          {{
+          "id" : "Q2hhbXAtNDU0Mzk0Mw",
+          "value": "profil",
+          "mapping": {{
+                    "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
+                    "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC"
+                }}
+          }}, {{
+          "id" : "Q2hhbXAtNDU1OTU2Mw",
+          "value": "bcae8.result",
+          "mapping": {{
+                    "non_soumis": false,
+                    "soumis": true
+                }}
+          }}, {{
+          "id" : "Q2hhbXAtNDU0Mzk0Mw",
+          "value": "moulinette_url"
+          }}
+        ]
+        </pre>
+
+        <h3>Comment trouver les ids des champs ou des annotations privées ?</h3>
+
+        Pour trouver les ids des champs ou des annotations privées, vous pouvez consulter le schéma json de votre démarche :
+        <ul>
+            <li>
+                Trouver le slug (version url du nom) de votre démarche.<br/>
+                Il est affiché à la fin de l'url de commencement dans la carte de votre démarche dans la liste suivante https://www.demarches-simplifiees.fr/admin/procedures
+            </li>
+            <li>Compléter puis consulter l'url suivante : https://www.demarches-simplifiees.fr/preremplir/{{slug de la démarche}}/schema</li>
+            <li>Les ids des champs sont indiqués ici : revision > champDescriptors > index [0...n] > id</li>
+            <li>Les ids des annotations sont indiqués ici : revision > annotationDescriptors > index [0...n] > id</li>
+        </ul>
+
+
+        <h3>Quelles sont les sources de valeurs autorisées ? </h3>
+        <ul><li>
+        {
+            "</li><li>".join([f"{key} ({label})" for key, label in get_demarche_simplifiee_value_sources()])
+        }
+        </li></ul>
+        <h3>Comment fonctionne le mapping ?</h3>
+
+        Ce mapping est nécessaire dans le cas des questions de type choix (simple ou multiple) ou les questions de type
+        checkbox. Il faut que la valeur du pré-remplissage soit
+        rigoureusement la même que la valeur du label dans Démarche Simplifiée. Si ce n'est pas le cas, il faut utiliser
+         le mapping pour faire correspondre les valeurs.
+
+        """
+
+
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
+    form = ConfigHaieAdminForm
     list_display = ["department", "is_activated", "department_guichet_unique_url"]
     list_filter = ["is_activated"]
 

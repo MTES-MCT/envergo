@@ -735,6 +735,21 @@ class ConfigHaie(ConfigBase):
         "Liste des contacts et liens utiles", blank=True
     )
 
+    demarche_simplifiee_number = models.IntegerField(
+        "Numéro de la démarche sur démarche simplifiée",
+        blank=True,
+        null=True,
+        help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
+        "https://www.demarches-simplifiees.fr/admin/procedures",
+    )
+
+    demarche_simplifiee_pre_fill_config = models.JSONField(
+        "Configuration du pré-remplissage de la démarche",
+        blank=True,
+        null=False,
+        default=list,
+    )
+
     def __str__(self):
         return self.department.get_department_display()
 
