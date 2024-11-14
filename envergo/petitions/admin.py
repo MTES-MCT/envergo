@@ -7,7 +7,18 @@ from envergo.petitions.models import PetitionProject
 class PetitionProjectAdmin(admin.ModelAdmin):
     list_display = (
         "reference",
-        "moulinette_url",
+        "length_to_remove",
+        "length_to_plant",
         "created_at",
     )
     ordering = ("-created_at",)
+
+    def length_to_plant(self, obj):
+        return obj.hedge_data.length_to_plant()
+
+    length_to_plant.short_description = "Linéaire à planter"
+
+    def length_to_remove(self, obj):
+        return obj.hedge_data.length_to_remove()
+
+    length_to_remove.short_description = "Linéaire à détruire"
