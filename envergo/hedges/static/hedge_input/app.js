@@ -257,9 +257,6 @@ createApp({
       hedgeName.textContent = hedge.id;
       hedgeLength.textContent = hedge.length.toFixed(0);
 
-
-      dsfr(dialog).modal.disclose();
-
       // Save form data to the hedge object
       // This is the form submit event handler
       const saveModalData = (event) => {
@@ -288,6 +285,8 @@ createApp({
       dialog.addEventListener("dsfr.conceal", () => {
         form.removeEventListener("submit", saveModalData);
       });
+
+      dsfr(dialog).modal.disclose();
     };
 
     // Open the form modal to edit an existing hedge
