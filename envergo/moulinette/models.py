@@ -1,6 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from itertools import groupby
+from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
@@ -273,6 +275,19 @@ class Regulation(models.Model):
 
     @property
     def results_by_perimeter(self):
+        """Compute global result for each perimeter for which this regulation is activated.
+
+        When there is several perimeters, we may want to display some different
+        information depending on the result of each single perimeter.
+        E.g. if the project is impacting two different SAGE, we may have some
+        different required actions for each of them.
+
+        This method is using the same cascading logic as the `result` property,
+        to reduce multiple criteria results to a single value.
+
+        The results are sorted based on the result cascade, because we want to
+        display first the most restrictive results.
+        """
         if not self.has_perimeters:
             return None
 
@@ -280,15 +295,10 @@ class Regulation(models.Model):
 
         # Fetch already evaluated criteria
         criteria_list = list(self.criteria.all())
-
-        grouped_criteria = {}
-
-        # Group the criteria by perimeter
-        for criterion in criteria_list:
-            perimeter = criterion.perimeter
-            if perimeter not in grouped_criteria:
-                grouped_criteria[perimeter] = []
-            grouped_criteria[perimeter].append(criterion)
+        criteria_list.sort(key=attrgetter("perimeter"))
+        grouped_criteria = {
+            k: list(v) for k, v in groupby(criteria_list, key=attrgetter("perimeter"))
+        }
 
         for perimeter in self.perimeters.all():
             perimeter_criteria = grouped_criteria.get(perimeter, [])
@@ -307,7 +317,7 @@ class Regulation(models.Model):
             results_by_perimeter[perimeter] = result
 
         # sort based on the results cascade
-        return dict(
+        return OrderedDict(
             sorted(
                 results_by_perimeter.items(),
                 key=lambda item: self.result_cascade.index(item[1]),
