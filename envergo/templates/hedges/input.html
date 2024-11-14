@@ -110,11 +110,11 @@
                     <th>[[ hedge.id ]]</th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="editHedge(hedge)">Modifier</button>
                     </td>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="editHedge(hedge)">Modifier</button>
+                              @click.stop="hedge.remove()">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -143,11 +143,11 @@
                     <th>[[ hedge.id ]]</th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="editHedge(hedge)">Modifier</button>
                     </td>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="editHedge(hedge)">Modifier</button>
+                              @click.stop="hedge.remove()">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
