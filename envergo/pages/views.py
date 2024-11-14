@@ -339,8 +339,12 @@ class DemarcheSimplifieeView(FormView):
                 )
                 continue
 
-            body[f"champ_{field["id"]}"] = self.get_value_from_source(
-                moulinette_url, moulinette, field["value"], field.get("mapping", {})
+            body[f"champ_{field['id']}"] = self.get_value_from_source(
+                moulinette_url,
+                moulinette,
+                field["value"],
+                field.get("mapping", {}),
+                config,
             )
 
         response = requests.post(
