@@ -1106,11 +1106,11 @@ msgstr "Linéaires de haies"
 
 #: envergo/petitions/models.py:31
 msgid "Petition project"
-msgstr "Projet de pétition"
+msgstr "Projet de dossier"
 
 #: envergo/petitions/models.py:32
 msgid "Petition projects"
-msgstr "Projets de pétition"
+msgstr "Projets de dossier"
 
 #: envergo/templates/admin/choice_filter.html:3
 #, python-format

@@ -200,6 +200,13 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
 
         if self.moulinette.has_missing_data():
             # this should not happen, unless we have stored an incomplete project
+            # If we add some new regulations, or adding evaluators on existing ones, we could have obsolete moulinette
+            # we should implement static simulation/project to avoid this case.
+            logger.warning(
+                "A petition project has missing data. This should not happen unless regulations have changed."
+                "We should implement static simulation/project to avoid this case.",
+                extra={"reference": petition_project.reference},
+            )
             raise NotImplementedError("We do not handle uncompleted project")
 
         log_event(
