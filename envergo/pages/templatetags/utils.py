@@ -4,6 +4,7 @@ from django.forms.widgets import (
     CheckboxSelectMultiple,
     FileInput,
     RadioSelect,
+    Select,
 )
 
 register = template.Library()
@@ -28,6 +29,13 @@ def is_radio(field):
     """Is the given field a radio select?."""
 
     return isinstance(field.field.widget, RadioSelect)
+
+
+@register.filter
+def is_select(field):
+    """Is the given field a select?."""
+
+    return isinstance(field.field.widget, Select)
 
 
 @register.filter
