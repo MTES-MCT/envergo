@@ -8,13 +8,11 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.admin import DepartmentsListFilter
-from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import (
     REGULATIONS,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
-    MoulinetteHaie,
     MoulinetteTemplate,
     Perimeter,
     Regulation,
@@ -322,44 +320,6 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-def get_demarche_simplifiee_value_sources():
-
-    moulinette_instance = MoulinetteHaie({}, {})
-    identified_sources = {("moulinette_url", "Url de la simulation")}
-    main_form_fields = {
-        (key, field.label)
-        for key, field in MoulinetteHaie.main_form_class.base_fields.items()
-    }
-    triage_form_fields = {
-        (key, field.label) for key, field in TriageFormHaie.base_fields.items()
-    }
-
-    regulation_sources = []
-    for regulation in moulinette_instance.regulations.all():
-        regulation_sources.append(
-            (
-                f"{regulation.slug}.result",
-                f"Résultat de la réglementation {regulation.regulation}",
-            )
-        )
-        for criterion in regulation.criteria.all():
-            form_class = criterion.evaluator.form_class
-            if form_class:
-                regulation_sources.extend(
-                    [
-                        (key, field.label)
-                        for key, field in form_class.base_fields.items()
-                    ]
-                )
-
-    return (
-        identified_sources
-        | triage_form_fields
-        | main_form_fields
-        | set(regulation_sources)
-    )
-
-
 class JSONWidget(forms.Textarea):
     def format_value(self, value):
         if value is None:
@@ -409,7 +369,7 @@ class ConfigHaieAdminForm(forms.ModelForm):
                 }}
           }}, {{
           "id" : "Q2hhbXAtNDU1OTU2Mw",
-          "value": "bcae8.result",
+          "value": "conditionnalite_pac.result",
           "mapping": {{
                     "non_soumis": false,
                     "soumis": true
@@ -438,7 +398,7 @@ class ConfigHaieAdminForm(forms.ModelForm):
         <h3>Quelles sont les sources de valeurs autorisées ? </h3>
         <ul><li>
         {
-            "</li><li>".join([f"{key} ({label})" for key, label in get_demarche_simplifiee_value_sources()])
+            "</li><li>".join([f"{key} ({label})" for key, label in ConfigHaie.get_demarche_simplifiee_value_sources()])
         }
         </li></ul>
         <h3>Comment fonctionne le mapping ?</h3>
