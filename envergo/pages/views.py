@@ -289,8 +289,16 @@ def get_value_from_source(moulinette_url, moulinette, source, mapping):
         regulation_slug = source[:-7]
         regulation_result = getattr(moulinette, regulation_slug, None)
         if regulation_result is None:
-            raise  # TODO
-        value = regulation_result.result
+            logger.warning(
+                "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                extra={
+                    "regulation_slug": regulation_slug,
+                    "moulinette_url": moulinette_url,
+                },
+            )
+            value = None
+        else:
+            value = regulation_result.result
     else:
         value = moulinette.catalog.get(source, None)
 
@@ -307,6 +315,20 @@ class DemarcheSimplifieeView(FormView):
     form_class = DemarcheSimplifieeForm
 
     def form_valid(self, form):
+        redirect_url = self.pre_fill_demarche_simplifiee(form)
+
+        if not redirect_url:
+            res = self.form_invalid(form)
+        else:
+            res = HttpResponseRedirect(redirect_url)
+
+        return res
+
+    def pre_fill_demarche_simplifiee(self, form):
+        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+
+        Return the url of the created dossier if successful, None otherwise
+        """
         moulinette_url = form.cleaned_data["moulinette_url"]
         parsed_url = urlparse(moulinette_url)
         moulinette_data = parse_qs(parsed_url.query)
@@ -314,28 +336,46 @@ class DemarcheSimplifieeView(FormView):
         for key, value in moulinette_data.items():
             if isinstance(value, list) and len(value) == 1:
                 moulinette_data[key] = value[0]
-        department = moulinette_data.get("department", None)
+        department = moulinette_data.get("department")  # department is mandatory
         if not department:
-            raise ValueError("No department found in moulinette URL")  # TODO
+            logger.error(
+                "Moulinette URL for guichet unique de la haie should always contain a department to "
+                "start a demarche simplifiée",
+                extra={"moulinette_url": moulinette_url},
+            )
+            return None
 
         config = ConfigHaie.objects.get(
             department__department=department
-        )  # TODO handle DoesNotExist
-        demarche_id = config.demarche_simplifiee_number  # TODO what if not set ?
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+        )  # it should always exist, otherwise the simulator would not be available
+        demarche_id = config.demarche_simplifiee_number
 
+        if not demarche_id:
+            logger.error(
+                "An activated department should always have a demarche_simplifiee_number",
+                extra={"haie config": config.id, "department": department},
+            )
+            return None
+
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
         for field in config.demarche_simplifiee_pre_fill_config:
+            if "id" not in field or "value" not in field:
+                logger.error(
+                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    extra={"haie config": config.id, "field": field},
+                )
+                continue
+
             body[f"champ_{field["id"]}"] = get_value_from_source(
                 moulinette_url, moulinette, field["value"], field.get("mapping", {})
-            )  # TODO what if no value or id ?
+            )
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
         )
         redirect_url = None
-
         if 200 <= response.status_code < 400:
             data = response.json()
             redirect_url = data.get("dossier_url")
@@ -344,13 +384,7 @@ class DemarcheSimplifieeView(FormView):
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
-
-        if not redirect_url:
-            res = self.form_invalid(form)
-        else:
-            res = HttpResponseRedirect(redirect_url)
-
-        return res
+        return redirect_url
 
     def form_invalid(self, form):
         messages.error(
