@@ -14,14 +14,6 @@
        data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
-    <header role="banner" class="fr-header">
-      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line"
-              @click="saveData">Enregistrer et revenir au simulateur</button>
-      <h1 class="fr-h4">Plan de situation des haies</h1>
-      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-right fr-icon-close-line"
-              @click="cancel">Annuler et fermer</button>
-    </header>
-
     <div id="saisie-ui">
       <div id="map">
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
@@ -161,6 +153,12 @@
         </div>
       </div>
     </div>
+
+    <footer>
+      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line "
+              @click="cancel">Retour</button>
+      <button class="fr-btn fr-btn--primary " @click="saveData">Enregistrer et poursuivre</button>
+    </footer>
 
     <dialog id="hedge-data-dialog"
             aria-labelledby="hedge-data-dialog-title"
