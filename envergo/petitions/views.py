@@ -1,5 +1,5 @@
 import logging
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from django.conf import settings
@@ -10,10 +10,15 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from envergo.analytics.utils import log_event
-from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.models import (
+    ConfigHaie,
+    MoulinetteHaie,
+    get_moulinette_class_from_site,
+)
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
+from envergo.utils.urls import extract_param_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -22,47 +27,18 @@ class PetitionProjectCreate(FormView):
     form_class = PetitionProjectForm
 
     def form_valid(self, form):
-        profil = form.cleaned_data["profil"]
-        form.instance.hedge_data = form.cleaned_data["haies"]
+        form.instance.hedge_data_id = extract_param_from_url(
+            form.cleaned_data["moulinette_url"], "haies"
+        )
 
         with transaction.atomic():
             petition_project = form.save()
-
-            # At petition project creation, we also create a pre-filled dossier on demarches-simplifiees.fr
             read_only_url = reverse(
                 "petition_project",
                 kwargs={"reference": petition_project.reference},
             )
-            # Ce code est particulièrement fragile.
-            # Un changement dans un label côté démarche simplifiées cassera ce mapping sans prévenir.
-            mapping_demarche_simplifiee = {
-                "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
-                "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
-            }
-            demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
-            api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
 
-            body = {
-                settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                    "PROFIL_FIELD_ID"
-                ]: mapping_demarche_simplifiee[profil],
-                settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][
-                    "MOULINETTE_URL_FIELD_ID"
-                ]: self.request.build_absolute_uri(read_only_url),
-            }
-
-            response = requests.post(
-                api_url, json=body, headers={"Content-Type": "application/json"}
-            )
-            demarche_simplifiee_url = None
-            if 200 <= response.status_code < 400:
-                data = response.json()
-                demarche_simplifiee_url = data.get("dossier_url")
-            else:
-                logger.error(
-                    "Error while pre-filling a dossier on demarches-simplifiees.fr",
-                    extra={"response": response},
-                )
+            demarche_simplifiee_url = self.pre_fill_demarche_simplifiee(form)
 
             if not demarche_simplifiee_url:
                 res = self.form_invalid(form)
@@ -77,6 +53,112 @@ class PetitionProjectCreate(FormView):
                 )
 
         return res
+
+    def pre_fill_demarche_simplifiee(self, form):
+        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+
+        Return the url of the created dossier if successful, None otherwise
+        """
+        moulinette_url = form.cleaned_data["moulinette_url"]
+        parsed_url = urlparse(moulinette_url)
+        moulinette_data = parse_qs(parsed_url.query)
+        # Flatten the dictionary
+        for key, value in moulinette_data.items():
+            if isinstance(value, list) and len(value) == 1:
+                moulinette_data[key] = value[0]
+        department = moulinette_data.get("department")  # department is mandatory
+        if not department:
+            logger.error(
+                "Moulinette URL for guichet unique de la haie should always contain a department to "
+                "start a demarche simplifiée",
+                extra={"moulinette_url": moulinette_url},
+            )
+            return None
+
+        config = ConfigHaie.objects.get(
+            department__department=department
+        )  # it should always exist, otherwise the simulator would not be available
+        demarche_id = config.demarche_simplifiee_number
+
+        if not demarche_id:
+            logger.error(
+                "An activated department should always have a demarche_simplifiee_number",
+                extra={"haie config": config.id, "department": department},
+            )
+            return None
+
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+        body = {}
+        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+        for field in config.demarche_simplifiee_pre_fill_config:
+            if "id" not in field or "value" not in field:
+                logger.error(
+                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    extra={"haie config": config.id, "field": field},
+                )
+                continue
+
+            body[f"champ_{field["id"]}"] = self.get_value_from_source(
+                moulinette_url, moulinette, field["value"], field.get("mapping", {})
+            )
+
+        response = requests.post(
+            api_url, json=body, headers={"Content-Type": "application/json"}
+        )
+        redirect_url = None
+        if 200 <= response.status_code < 400:
+            data = response.json()
+            redirect_url = data.get("dossier_url")
+        else:
+            logger.error(
+                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                extra={"response": response},
+            )
+        return redirect_url
+
+    def get_value_from_source(
+        self, moulinette_url, moulinette, source, mapping, config
+    ):
+        if source == "moulinette_url":
+            value = moulinette_url
+        elif source.endswith(".result"):
+            regulation_slug = source[:-7]
+            regulation_result = getattr(moulinette, regulation_slug, None)
+            if regulation_result is None:
+                logger.warning(
+                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                    extra={
+                        "regulation_slug": regulation_slug,
+                        "moulinette_url": moulinette_url,
+                        "haie config": config.id,
+                    },
+                )
+                value = None
+            else:
+                value = regulation_result.result
+        else:
+            value = moulinette.catalog.get(source, None)
+
+        if mapping:
+            # if the mapping object is not empty but do not contain the value, log an info
+            if value not in mapping:
+                logger.info(
+                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
+                    extra={
+                        "source": source,
+                        "mapping": mapping,
+                        "moulinette_url": moulinette_url,
+                        "haie config": config.id,
+                    },
+                )
+
+        mapped_value = mapping.get(value, value)
+
+        # Handle boolean values as strings 😞
+        return {
+            True: "true",
+            False: "false",
+        }.get(mapped_value, mapped_value)
 
     def form_invalid(self, form):
         return JsonResponse(
