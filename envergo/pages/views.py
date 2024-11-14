@@ -282,35 +282,6 @@ class NewsFeed(Feed):
         return item_url
 
 
-def get_value_from_source(moulinette_url, moulinette, source, mapping):
-    if source == "moulinette_url":
-        value = moulinette_url
-    elif source.endswith(".result"):
-        regulation_slug = source[:-7]
-        regulation_result = getattr(moulinette, regulation_slug, None)
-        if regulation_result is None:
-            logger.warning(
-                "Unable to get the regulation result to pre-fill a démarche simplifiée",
-                extra={
-                    "regulation_slug": regulation_slug,
-                    "moulinette_url": moulinette_url,
-                },
-            )
-            value = None
-        else:
-            value = regulation_result.result
-    else:
-        value = moulinette.catalog.get(source, None)
-
-    mapped_value = mapping.get(value, value)
-
-    # Handle boolean values as strings 😞
-    return {
-        True: "true",
-        False: "false",
-    }.get(mapped_value, mapped_value)
-
-
 class DemarcheSimplifieeView(FormView):
     form_class = DemarcheSimplifieeForm
 
@@ -368,7 +339,7 @@ class DemarcheSimplifieeView(FormView):
                 )
                 continue
 
-            body[f"champ_{field["id"]}"] = get_value_from_source(
+            body[f"champ_{field["id"]}"] = self.get_value_from_source(
                 moulinette_url, moulinette, field["value"], field.get("mapping", {})
             )
 
@@ -385,6 +356,50 @@ class DemarcheSimplifieeView(FormView):
                 extra={"response": response},
             )
         return redirect_url
+
+    def get_value_from_source(
+        self, moulinette_url, moulinette, source, mapping, config
+    ):
+        if source == "moulinette_url":
+            value = moulinette_url
+        elif source.endswith(".result"):
+            regulation_slug = source[:-7]
+            regulation_result = getattr(moulinette, regulation_slug, None)
+            if regulation_result is None:
+                logger.warning(
+                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                    extra={
+                        "regulation_slug": regulation_slug,
+                        "moulinette_url": moulinette_url,
+                        "haie config": config.id,
+                    },
+                )
+                value = None
+            else:
+                value = regulation_result.result
+        else:
+            value = moulinette.catalog.get(source, None)
+
+        if mapping:
+            # if the mapping object is not empty but do not contain the value, log an info
+            if value not in mapping:
+                logger.info(
+                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
+                    extra={
+                        "source": source,
+                        "mapping": mapping,
+                        "moulinette_url": moulinette_url,
+                        "haie config": config.id,
+                    },
+                )
+
+        mapped_value = mapping.get(value, value)
+
+        # Handle boolean values as strings 😞
+        return {
+            True: "true",
+            False: "false",
+        }.get(mapped_value, mapped_value)
 
     def form_invalid(self, form):
         messages.error(
