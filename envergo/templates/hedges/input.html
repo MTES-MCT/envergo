@@ -108,11 +108,15 @@
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
                     <th>[[ hedge.id ]]</th>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="editHedge(hedge)">Modifier</button>
+                    </td>
+                    <td>
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>
+                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -137,11 +141,15 @@
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
                     <th>[[ hedge.id ]]</th>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="editHedge(hedge)">Modifier</button>
+                    </td>
+                    <td>
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>
+                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -153,6 +161,37 @@
         </div>
       </div>
     </div>
+
+    <dialog id="hedge-data-dialog"
+            aria-labelledby="hedge-data-dialog-title"
+            role="dialog"
+            class="fr-modal">
+      <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-modal__body">
+
+              <form method="dialog">
+                <div class="fr-modal__content fr-pt-4w">
+                  <h1 id="hedge-data-dialog-title" class="fr-modal__title fr-mb-1w">
+                    Description de la haie <span id="hedge-data-dialog-hedge-name"></span>
+                  </h1>
+                  <p class="fr-tag fr-mb-3w">
+                    Longueur : <span id="hedge-data-dialog-hedge-length"></span>m
+                  </p>
+
+                  {% include '_form_snippet.html' with form=hedge_data_form %}
+                </div>
+
+                <div class="fr-modal__footer">
+                  <button type="submit" class="fr-btn">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
   </div>
 {% endblock %}
 
