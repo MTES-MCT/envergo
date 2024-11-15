@@ -354,19 +354,55 @@ createApp({
 
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
+      const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
+
+      const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/jpeg" +
+        "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
+
+      // Display layer switching control
+      const baseMaps = {
+        "Plan": planLayer,
+        "Satellite": satelliteLayer
+      };
+
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
+        layers: [satelliteLayer]
       }).setView([43.6861, 3.5911], 14);
+
+      L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
 
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {

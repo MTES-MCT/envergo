@@ -63,6 +63,10 @@ div#app {
     #map {
       flex: 1;
       font-family: Marianne, arial, sans-serif;
+
+      .leaflet-control-layers-toggle {
+        background-image: url("/static/icons/stack-line.svg");
+      }
     }
 
     div.controls {
@@ -83,6 +87,12 @@ div#app {
 
       &.right {
         right: 1rem;
+      }
+
+      &.inline-controls {
+        .leaflet-control {
+          clear: none;
+        }
       }
 
       button {
@@ -160,7 +170,7 @@ div#app {
     .help-bubble {
       position: absolute;
       bottom: 1rem;
-      left: 1rem;
+      left: 4rem;
       z-index: 1000;
       background-color: white;
       color: var(--text-default-info);
