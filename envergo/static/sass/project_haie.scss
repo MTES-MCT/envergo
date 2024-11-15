@@ -85,6 +85,12 @@ div#app {
         right: 1rem;
       }
 
+      &.inline-controls {
+        .leaflet-control {
+          clear: none;
+        }
+      }
+
       button {
         background-color: white;
 
@@ -160,7 +166,7 @@ div#app {
     .help-bubble {
       position: absolute;
       bottom: 1rem;
-      left: 1rem;
+      left: 4rem;
       z-index: 1000;
       background-color: white;
       color: var(--text-default-info);

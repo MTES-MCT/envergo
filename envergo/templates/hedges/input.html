@@ -17,7 +17,7 @@
     <div id="saisie-ui">
       <div id="map">
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="controls bottom left">
+          <div class="controls top left">
             <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
@@ -47,8 +47,9 @@
       {% comment %}
       There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
       {% endcomment %}
-      <div class="controls top left">
-        <div class="fr-search-bar fr-search-bar--sm" role="search">
+      <div class="controls top left inline-controls">
+        <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+             role="search">
           <label class="fr-label" for="address">Rechercher une commune</label>
           <input class="fr-input fr-input--sm"
                  placeholder="Rechercher une commune"
@@ -57,6 +58,16 @@
                  name="address">
           <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
         </div>
+
+        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+          <div class="leaflet-control">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
+              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
+              Vue d'ensemble
+            </button>
+          </div>
+        </template>
+
       </div>
 
       <div id="sidebar" class="fr-text--sm">
