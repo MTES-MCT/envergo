@@ -63,6 +63,10 @@ div#app {
     #map {
       flex: 1;
       font-family: Marianne, arial, sans-serif;
+
+      .leaflet-control-layers-toggle {
+        background-image: url("/static/icons/stack-line.svg");
+      }
     }
 
     div.controls {
