@@ -97,6 +97,7 @@ class EvaluationDetailMixin:
     def get_queryset(self):
         qs = (
             Evaluation.objects.exclude(moulinette_url="")
+            .filter(versions__isnull=False)
             .select_related("request")
             .prefetch_related(
                 Prefetch(
