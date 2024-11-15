@@ -38,7 +38,9 @@ class PetitionProjectCreate(FormView):
                 kwargs={"reference": petition_project.reference},
             )
 
-            demarche_simplifiee_url = self.pre_fill_demarche_simplifiee(form)
+            demarche_simplifiee_url = self.pre_fill_demarche_simplifiee(
+                petition_project
+            )
 
             if not demarche_simplifiee_url:
                 res = self.form_invalid(form)
@@ -54,12 +56,12 @@ class PetitionProjectCreate(FormView):
 
         return res
 
-    def pre_fill_demarche_simplifiee(self, form):
+    def pre_fill_demarche_simplifiee(self, project):
         """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
 
         Return the url of the created dossier if successful, None otherwise
         """
-        moulinette_url = form.cleaned_data["moulinette_url"]
+        moulinette_url = project.moulinette_url
         parsed_url = urlparse(moulinette_url)
         moulinette_data = parse_qs(parsed_url.query)
         # Flatten the dictionary
@@ -74,6 +76,7 @@ class PetitionProjectCreate(FormView):
                 extra={"moulinette_url": moulinette_url},
             )
             return None
+        moulinette_data["haies"] = project.hedge_data
 
         config = ConfigHaie.objects.get(
             department__department=department
@@ -99,7 +102,11 @@ class PetitionProjectCreate(FormView):
                 continue
 
             body[f"champ_{field["id"]}"] = self.get_value_from_source(
-                moulinette_url, moulinette, field["value"], field.get("mapping", {})
+                moulinette_url,
+                moulinette,
+                field["value"],
+                field.get("mapping", {}),
+                config,
             )
 
         response = requests.post(
@@ -161,6 +168,7 @@ class PetitionProjectCreate(FormView):
         }.get(mapped_value, mapped_value)
 
     def form_invalid(self, form):
+        logger.error("Unable to create a petition project", extra={"form": form.errors})
         return JsonResponse(
             {
                 "error_title": "Un problème technique empêche la création de votre dossier.",
