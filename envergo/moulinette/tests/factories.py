@@ -54,3 +54,4 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
+    demarche_simplifiee_number = 123456
