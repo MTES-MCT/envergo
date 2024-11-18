@@ -16,6 +16,7 @@ from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
+from envergo.analytics.utils import log_event
 from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
@@ -72,6 +73,16 @@ class HomeHaieView(TemplateView):
         context = self.get_context_data()
         context["department"] = department
         context["config"] = config
+
+        if department:
+            log_event(
+                "simulateur",
+                "localisation",
+                self.request,
+                **{
+                    "department": department.department,
+                },
+            )
         return self.render_to_response(context)
 
 
