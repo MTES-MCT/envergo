@@ -2,22 +2,15 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
-from envergo.pages.views import (
-    HomeHaieView,
-    Outlinks,
-    PrivacyView,
-    TermsOfServiceView,
-)
+from envergo.pages.views import HomeHaieView, Outlinks
 
 urlpatterns = [
     path("", HomeHaieView.as_view(), name="home"),
     path(
         _("legal-mentions/"),
-        PrivacyView.as_view(template_name="haie/pages/legal_mentions.html"),
+        TemplateView.as_view(template_name="haie/pages/legal_mentions.html"),
         name="legal_mentions",
     ),
-    path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
-    path(_("privacy/"), PrivacyView.as_view(), name="privacy"),
     path(
         "stats/",
         RedirectView.as_view(url="https://sites.google.com/view/stats-envergo/"),

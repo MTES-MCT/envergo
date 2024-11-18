@@ -173,16 +173,6 @@ class TermsOfServiceView(TemplateView):
     template_name = "pages/terms_of_service.html"
 
 
-class PrivacyView(TemplateView):
-    template_name = "pages/privacy.html"
-
-    def get_context_data(self, **kwargs):
-        visitor_id = self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
-        context = super().get_context_data(**kwargs)
-        context["visitor_id"] = visitor_id
-        return context
-
-
 class Outlinks(TemplateView):
     template_name = "pages/outlinks.html"
 
