@@ -21,7 +21,9 @@ class HedgeDataForm(forms.Form):
         """
         ),
     )
-    sur_parcelle_pac = forms.BooleanField(label="Sur parcelle PAC", required=False)
+    sur_parcelle_pac = forms.BooleanField(
+        label="Située sur parcelle PAC", required=False
+    )
     proximite_mare = forms.BooleanField(
-        label="Présence d'une mare à moins de 200m", required=False
+        label="Présence d'une mare à moins de 200 m", required=False
     )

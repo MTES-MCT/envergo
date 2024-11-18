@@ -251,6 +251,7 @@ div#app {
             button {
               visibility: hidden;
               margin-left: auto;
+              font-size: 14px;
 
               --hover-tint: var(--background-alt-grey-hover);
               --active-tint: var(--background-alt-grey-active);

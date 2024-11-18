@@ -267,8 +267,8 @@ createApp({
         const isNearPond = nearPondField.checked;
         hedge.additionalData = {
           type: hedgeType,
-          onPacField: isOnPacField,
-          nearPond: isNearPond,
+          surParcellePac: isOnPacField,
+          proximiteMare: isNearPond,
         };
 
         // Reset the form and hide the modal
