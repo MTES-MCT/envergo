@@ -106,3 +106,12 @@ def analytics(request):
     return {
         "matomo_dimensions": matomo_dimensions,
     }
+
+
+def visitor_id(request):
+    """Add the visitor id to the templates.
+
+    Mostly useful for legal mentions and privacy static pages.
+    """
+    visitor_id = request.COOKIES.get(VISITOR_COOKIE_NAME, "")
+    return {"visitor_id": visitor_id}

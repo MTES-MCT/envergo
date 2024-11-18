@@ -26,6 +26,15 @@ class DisableVisitorCookie(RedirectView):
 
     pattern_name = "legal_mentions"
 
+    def get_redirect_url(self, *args, **kwargs):
+        """Redirect to the previous page.
+
+        If somehow the referer is missing, we fallback to the default redirect url.
+        """
+        referer = self.request.META.get("HTTP_REFERER")
+        redirect_url = super().get_redirect_url(*args, **kwargs)
+        return referer or redirect_url
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         set_visitor_id_cookie(response, "")
