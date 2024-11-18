@@ -25,5 +25,5 @@ class HedgeDataForm(forms.Form):
         label="Située sur parcelle PAC", required=False
     )
     proximite_mare = forms.BooleanField(
-        label="Présence d'une mare à moins de 200m", required=False
+        label="Présence d'une mare à moins de 200 m", required=False
     )
