@@ -102,7 +102,7 @@ class PetitionProjectCreate(FormView):
                 continue
 
             body[f"champ_{field['id']}"] = self.get_value_from_source(
-                moulinette_url,
+                project,
                 moulinette,
                 field["value"],
                 field.get("mapping", {}),
@@ -124,7 +124,7 @@ class PetitionProjectCreate(FormView):
         return redirect_url
 
     def get_value_from_source(
-        self, moulinette_url, moulinette, source, mapping, config
+        self, petition_project, moulinette, source, mapping, config
     ):
         """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
 
@@ -133,7 +133,14 @@ class PetitionProjectCreate(FormView):
         Then it will map the value if a mapping is provided.
         """
         if source == "moulinette_url":
-            value = moulinette_url
+            value = petition_project.moulinette_url
+        elif source == "project_url":
+            value = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project",
+                    kwargs={"reference": petition_project.reference},
+                )
+            )
         elif source.endswith(".result"):
             regulation_slug = source[:-7]
             regulation_result = getattr(moulinette, regulation_slug, None)
@@ -142,7 +149,7 @@ class PetitionProjectCreate(FormView):
                     "Unable to get the regulation result to pre-fill a démarche simplifiée",
                     extra={
                         "regulation_slug": regulation_slug,
-                        "moulinette_url": moulinette_url,
+                        "moulinette_url": petition_project.moulinette_url,
                         "haie config": config.id,
                     },
                 )
@@ -160,7 +167,7 @@ class PetitionProjectCreate(FormView):
                     extra={
                         "source": source,
                         "mapping": mapping,
-                        "moulinette_url": moulinette_url,
+                        "moulinette_url": petition_project.moulinette_url,
                         "haie config": config.id,
                     },
                 )

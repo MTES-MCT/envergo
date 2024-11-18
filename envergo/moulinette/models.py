@@ -794,7 +794,8 @@ class ConfigHaie(ConfigBase):
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        "https://www.demarches-simplifiees.fr/admin/procedures",
+        '<a href="https://www.demarches-simplifiees.fr/admin/procedures" target="_blank" rel="noopener">'
+        "https://www.demarches-simplifiees.fr/admin/procedures</a>",
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
@@ -864,7 +865,10 @@ class ConfigHaie(ConfigBase):
          * the results of the regulations
         """
         moulinette_instance = MoulinetteHaie({}, {})
-        identified_sources = {("moulinette_url", "Url de la simulation")}
+        identified_sources = {
+            ("moulinette_url", "Url de la simulation"),
+            ("project_url", "Url du projet de pétition"),
+        }
         main_form_fields = {
             (key, field.label)
             for key, field in MoulinetteHaie.main_form_class.base_fields.items()
