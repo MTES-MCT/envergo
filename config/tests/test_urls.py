@@ -21,8 +21,6 @@ COMMON_URLS = [
     "contact_us",
     "accessibility",
     "stats",
-    "privacy",
-    "terms_of_service",
     "legal_mentions",
     "moulinette_home",
     "moulinette_result",
@@ -34,6 +32,8 @@ HAIE_URLS = [
 
 AMENAGEMENT_URLS = [
     # "/avis",
+    "privacy",
+    "terms_of_service",
     "zone_map",
     "2150_debug",
     "faq",

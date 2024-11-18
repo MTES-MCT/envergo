@@ -26,12 +26,14 @@
          target="_blank"
          rel="noopener">👀 Prévisualiser</a>
     </li>
-    <li>
-      <a href="{{ object.get_absolute_url }}"
-         class="viewsitelink"
-         target="_blank"
-         rel="noopener">Voir l'avis publié</a>
-    </li>
+    {% if object.versions.count > 0 %}
+      <li>
+        <a href="{{ object.get_absolute_url }}"
+           class="viewsitelink"
+           target="_blank"
+           rel="noopener">Voir l'avis publié</a>
+      </li>
+    {% endif %}
   </ul>
 {% endblock %}
 
