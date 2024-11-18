@@ -757,6 +757,8 @@ class ConfigHaie(ConfigBase):
     def clean(self):
         super().clean()
         if self.is_activated and self.demarche_simplifiee_pre_fill_config is not None:
+            # add constraints on the pre-fill configuration json to avoid unexpected entries
+
             if not isinstance(self.demarche_simplifiee_pre_fill_config, list):
                 raise ValidationError(
                     {
@@ -798,6 +800,16 @@ class ConfigHaie(ConfigBase):
 
     @classmethod
     def get_demarche_simplifiee_value_sources(cls):
+        """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
+
+        This method aggregates :
+         * some well known values (e.g. moulinette_url)
+         * the fields of all the forms that the user may have to fill in the guichet unique de la haie :
+            * the main form
+            * the triage form
+            * the forms of the criteria of involved regulations
+         * the results of the regulations
+        """
         moulinette_instance = MoulinetteHaie({}, {})
         identified_sources = {("moulinette_url", "Url de la simulation")}
         main_form_fields = {

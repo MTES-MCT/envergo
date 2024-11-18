@@ -364,6 +364,12 @@ class DemarcheSimplifieeView(FormView):
     def get_value_from_source(
         self, moulinette_url, moulinette, source, mapping, config
     ):
+        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
+
+        Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
+        Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
+        Then it will map the value if a mapping is provided.
+        """
         if source == "moulinette_url":
             value = moulinette_url
         elif source.endswith(".result"):

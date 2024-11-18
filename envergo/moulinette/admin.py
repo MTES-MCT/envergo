@@ -3,6 +3,7 @@ import json
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -321,6 +322,8 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
 
 
 class JSONWidget(forms.Textarea):
+    """A widget to prettily display formated JSON in a textarea."""
+
     def format_value(self, value):
         if value is None:
             return ""
@@ -348,67 +351,13 @@ class ConfigHaieAdminForm(forms.ModelForm):
         )
 
     def get_demarche_simplifiee_pre_fill_config_help_text(self):
-        return f"""
-        Ce champ doit comporter un tableau au format json comportant une entrée pour chaque champ ou annotation privée à pré-remplir dans Démarches Simplifiées avec des données provenant du guichet unique de la haie.
-        Chaque entrée comporte les clés suivantes :
-        <ul>
-            <li>id : l'id du champ ou de l'annotation privée côté Démarche Simplifiées</li>
-            <li>value : la source de la valeur côté guichet unique de la haie</li>
-            <li>mapping (facultatif) : un tableau de correspondance entre les valeurs côté guichet unique de la haie et les valeurs côté Démarches Simplifiées</li>
-        </ul>
-
-        <h3>Exemple </h3>
-        <pre>
-        [
-          {{
-          "id" : "Q2hhbXAtNDU0Mzk0Mw",
-          "value": "profil",
-          "mapping": {{
-                    "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
-                    "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC"
-                }}
-          }}, {{
-          "id" : "Q2hhbXAtNDU1OTU2Mw",
-          "value": "conditionnalite_pac.result",
-          "mapping": {{
-                    "non_soumis": false,
-                    "soumis": true
-                }}
-          }}, {{
-          "id" : "Q2hhbXAtNDU0Mzk0Mw",
-          "value": "moulinette_url"
-          }}
-        ]
-        </pre>
-
-        <h3>Comment trouver les ids des champs ou des annotations privées ?</h3>
-
-        Pour trouver les ids des champs ou des annotations privées, vous pouvez consulter le schéma json de votre démarche :
-        <ul>
-            <li>
-                Trouver le slug (version url du nom) de votre démarche.<br/>
-                Il est affiché à la fin de l'url de commencement dans la carte de votre démarche dans la liste suivante https://www.demarches-simplifiees.fr/admin/procedures
-            </li>
-            <li>Compléter puis consulter l'url suivante : https://www.demarches-simplifiees.fr/preremplir/{{slug de la démarche}}/schema</li>
-            <li>Les ids des champs sont indiqués ici : revision > champDescriptors > index [0...n] > id</li>
-            <li>Les ids des annotations sont indiqués ici : revision > annotationDescriptors > index [0...n] > id</li>
-        </ul>
-
-
-        <h3>Quelles sont les sources de valeurs autorisées ? </h3>
-        <ul><li>
-        {
-            "</li><li>".join([f"{key} ({label})" for key, label in ConfigHaie.get_demarche_simplifiee_value_sources()])
+        context = {
+            "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),
         }
-        </li></ul>
-        <h3>Comment fonctionne le mapping ?</h3>
-
-        Ce mapping est nécessaire dans le cas des questions de type choix (simple ou multiple) ou les questions de type
-        checkbox. Il faut que la valeur du pré-remplissage soit
-        rigoureusement la même que la valeur du label dans Démarche Simplifiée. Si ce n'est pas le cas, il faut utiliser
-         le mapping pour faire correspondre les valeurs.
-
-        """
+        return render_to_string(
+            "admin/moulinette/confighaie/demarche_simplifiee_pre_fill_config_help_text.html",
+            context,
+        )
 
 
 @admin.register(ConfigHaie)
