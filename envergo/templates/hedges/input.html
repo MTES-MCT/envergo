@@ -11,7 +11,7 @@
 {% block main %}
   <div id="app"
        v-cloak
-       data-save-url="{{ save_url }}"
+       data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
     <header role="banner" class="fr-header">
@@ -90,7 +90,6 @@
             <p class="rate">
               <strong>Le linéaire planté représente [[ compensationRate.toFixed(0) ]] % du linéaire détruit</strong>
             </p>
-            <p class="info">La proportion attendue est de 100 %</p>
           </div>
         </div>
         <div id="hedge-lists">

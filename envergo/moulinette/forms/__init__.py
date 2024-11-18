@@ -33,21 +33,29 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         ),
         required=True,
         min_value=0,
+        max_value=10000000,
         help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         display_unit="m²",
         display_label="Surface nouvellement impactée par le projet :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     existing_surface = DisplayIntegerField(
         label=_("Existing surface before the project"),
         required=False,
         min_value=0,
+        max_value=10000000,
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
         display_unit="m²",
         display_label="Surface déjà impactée avant le projet :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     final_surface = DisplayIntegerField(
         label=mark_safe(
@@ -64,11 +72,15 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         ),
         required=False,
         min_value=0,
+        max_value=10000000,
         help_text="Surface au sol impactée totale, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         display_unit="m²",
         display_label="Surface impactée totale, y compris l'existant :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     address = forms.CharField(
         label=_("Search for the address to center the map"),
@@ -246,6 +258,15 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             )
 
         return data
+
+    def clean_haies(self):
+        haies = self.cleaned_data["haies"]
+        if haies.length_to_remove() == 0:
+            self.add_error(
+                "haies",
+                "Vous devez indiquer les haies à arracher.",
+            )
+        return haies
 
 
 class TriageFormHaie(forms.Form):

@@ -1,6 +1,6 @@
 import logging
 from datetime import date, timedelta
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
@@ -17,9 +17,8 @@ from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.geodata.models import Department
-from envergo.moulinette.models import ConfigAmenagement, ConfigHaie, MoulinetteHaie
+from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
-from envergo.pages.forms import DemarcheSimplifieeForm
 from envergo.pages.models import NewsItem
 
 logger = logging.getLogger(__name__)
@@ -170,22 +169,8 @@ class GeometriciansView(MoulinetteMixin, FormView):
         return context
 
 
-class LegalMentionsView(TemplateView):
-    template_name = "pages/legal_mentions.html"
-
-
 class TermsOfServiceView(TemplateView):
     template_name = "pages/terms_of_service.html"
-
-
-class PrivacyView(TemplateView):
-    template_name = "pages/privacy.html"
-
-    def get_context_data(self, **kwargs):
-        visitor_id = self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
-        context = super().get_context_data(**kwargs)
-        context["visitor_id"] = visitor_id
-        return context
 
 
 class Outlinks(TemplateView):
@@ -280,146 +265,6 @@ class NewsFeed(Feed):
         base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
-
-
-class DemarcheSimplifieeView(FormView):
-    form_class = DemarcheSimplifieeForm
-
-    def form_valid(self, form):
-        redirect_url = self.pre_fill_demarche_simplifiee(form)
-
-        if not redirect_url:
-            res = self.form_invalid(form)
-        else:
-            res = HttpResponseRedirect(redirect_url)
-
-        return res
-
-    def pre_fill_demarche_simplifiee(self, form):
-        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
-
-        Return the url of the created dossier if successful, None otherwise
-        """
-        moulinette_url = form.cleaned_data["moulinette_url"]
-        parsed_url = urlparse(moulinette_url)
-        moulinette_data = parse_qs(parsed_url.query)
-        # Flatten the dictionary
-        for key, value in moulinette_data.items():
-            if isinstance(value, list) and len(value) == 1:
-                moulinette_data[key] = value[0]
-        department = moulinette_data.get("department")  # department is mandatory
-        if not department:
-            logger.error(
-                "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
-                extra={"moulinette_url": moulinette_url},
-            )
-            return None
-
-        config = ConfigHaie.objects.get(
-            department__department=department
-        )  # it should always exist, otherwise the simulator would not be available
-        demarche_id = config.demarche_simplifiee_number
-
-        if not demarche_id:
-            logger.error(
-                "An activated department should always have a demarche_simplifiee_number",
-                extra={"haie config": config.id, "department": department},
-            )
-            return None
-
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
-        body = {}
-        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-        for field in config.demarche_simplifiee_pre_fill_config:
-            if "id" not in field or "value" not in field:
-                logger.error(
-                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
-                    extra={"haie config": config.id, "field": field},
-                )
-                continue
-
-            body[f"champ_{field['id']}"] = self.get_value_from_source(
-                moulinette_url,
-                moulinette,
-                field["value"],
-                field.get("mapping", {}),
-                config,
-            )
-
-        response = requests.post(
-            api_url, json=body, headers={"Content-Type": "application/json"}
-        )
-        redirect_url = None
-        if 200 <= response.status_code < 400:
-            data = response.json()
-            redirect_url = data.get("dossier_url")
-        else:
-            logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
-                extra={"response": response},
-            )
-        return redirect_url
-
-    def get_value_from_source(
-        self, moulinette_url, moulinette, source, mapping, config
-    ):
-        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
-
-        Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
-        Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
-        Then it will map the value if a mapping is provided.
-        """
-        if source == "moulinette_url":
-            value = moulinette_url
-        elif source.endswith(".result"):
-            regulation_slug = source[:-7]
-            regulation_result = getattr(moulinette, regulation_slug, None)
-            if regulation_result is None:
-                logger.warning(
-                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
-                    extra={
-                        "regulation_slug": regulation_slug,
-                        "moulinette_url": moulinette_url,
-                        "haie config": config.id,
-                    },
-                )
-                value = None
-            else:
-                value = regulation_result.result
-        else:
-            value = moulinette.catalog.get(source, None)
-
-        if mapping:
-            # if the mapping object is not empty but do not contain the value, log an info
-            if value not in mapping:
-                logger.info(
-                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
-                    extra={
-                        "source": source,
-                        "mapping": mapping,
-                        "moulinette_url": moulinette_url,
-                        "haie config": config.id,
-                    },
-                )
-
-        mapped_value = mapping.get(value, value)
-
-        # Handle boolean values as strings 😞
-        return {
-            True: "true",
-            False: "false",
-        }.get(mapped_value, mapped_value)
-
-    def form_invalid(self, form):
-        messages.error(
-            self.request,
-            "Une erreur technique nous a empêché de créer votre dossier. "
-            "Veuillez nous excuser pour ce désagrément.",
-        )
-        return HttpResponseRedirect(
-            form.cleaned_data.get("moulinette_url", reverse("home"))
-        )
 
 
 @requires_csrf_token

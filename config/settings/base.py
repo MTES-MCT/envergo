@@ -83,6 +83,7 @@ LOCAL_APPS = [
     "envergo.admin.config.EnvergoAdminConfig",
     "envergo.urlmappings",
     "envergo.hedges",
+    "envergo.petitions",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -194,6 +195,7 @@ TEMPLATES = [
                 "envergo.utils.context_processors.settings_context",
                 "envergo.utils.context_processors.multi_sites_context",
                 "envergo.analytics.context_processors.analytics",
+                "envergo.analytics.context_processors.visitor_id",
                 "envergo.evaluations.context_processors.request_eval_context",
             ],
         },
