@@ -104,8 +104,13 @@ class NewsletterOptIn(FormView):
     def form_valid(self, form):
         """Send the form data to Brevo API."""
         if not settings.BREVO.get("API_KEY"):
+            logger.error(
+                "No Brevo API key found in settings for newsletter opt-in",
+                extra={"form": form},
+            )
             form.add_error(
-                None, "La configuration de la newsletter n'est pas correcte."
+                None,
+                "Le service n'est pas disponible actuellement. Merci de réessayer plus tard.",
             )
             return self.form_invalid(form)
 
