@@ -118,7 +118,7 @@ class EvaluationDetail(
     """
 
     event_category = "evaluation"
-    event_action = "visit"
+    event_action_amenagement = "visit"
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)

@@ -290,9 +290,16 @@ class MoulinetteMixin:
             k: v for k, v in self.request.session.items() if k.startswith("mtm_")
         }
         export.update(mtm_keys)
+
+        action = (
+            self.event_action_haie
+            if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+            else self.event_action_amenagement
+        )
+
         log_event(
             self.event_category,
-            self.event_action,
+            action,
             self.request,
             **export,
         )
@@ -327,7 +334,8 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
 class MoulinetteResult(MoulinetteMixin, FormView):
     event_category = "simulateur"
-    event_action = "soumission"
+    event_action_amenagement = "soumission"
+    event_action_haie = "soumission_d"
 
     def get_template_names(self):
         """Check which template to use depending on the moulinette result."""
@@ -515,6 +523,15 @@ class Triage(FormView):
         context = self.get_context_data()
         if not context.get("department", None):
             return HttpResponseRedirect(reverse("home"))
+
+        log_event(
+            "simulateur",
+            "localisation",
+            self.request,
+            **{
+                "department": context["department"].department,
+            },
+        )
         return self.render_to_response(self.get_context_data())
 
     def get_context_data(self, **kwargs):

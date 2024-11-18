@@ -69,6 +69,12 @@ class PetitionProjectCreate(FormView):
                 # Rollback the transaction to avoid saving the petition project
                 transaction.set_rollback(True)
             else:
+                log_event(
+                    "dossier",
+                    "creation",
+                    self.request,
+                    **petition_project.get_log_event_data(),
+                )
                 res = JsonResponse(
                     {
                         "demarche_simplifiee_url": demarche_simplifiee_url,
@@ -131,12 +137,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             "projet",
             "consultation",
             self.request,
-            **{
-                "reference": petition_project.reference,
-                "department": moulinette_data.get("department"),
-                "longueur_detruite": moulinette_data["haies"].length_to_remove(),
-                "longueur_plantee": moulinette_data["haies"].length_to_plant(),
-            },
+            **petition_project.get_log_event_data(),
         )
         return super().get(request, *args, **kwargs)
 
