@@ -29,12 +29,12 @@
           <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
-            Tracer (à détruire)
+            Tracer une haie à détruire
           </button>
           <button class="fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
-            Tracer (à planter)
+            Tracer une haie Fà planter
           </button>
         </div>
 
@@ -50,9 +50,9 @@
       <div class="controls top left inline-controls">
         <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
              role="search">
-          <label class="fr-label" for="address">Rechercher une commune</label>
+          <label class="fr-label" for="address">Rechercher une commune ou une adresse</label>
           <input class="fr-input fr-input--sm"
-                 placeholder="Rechercher une commune"
+                 placeholder="Rechercher une commune ou une adresse"
                  type="search"
                  id="id_address"
                  name="address">
