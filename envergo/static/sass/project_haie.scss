@@ -70,32 +70,13 @@ div#app {
     }
 
     div.controls {
-      position: absolute;
-      z-index: 1000;
-
-      &.top {
-        top: 1rem;
-      }
-
-      &.bottom {
-        bottom: 1rem;
-      }
-
-      &.left {
-        left: 1rem;
-      }
-
-      &.right {
-        right: 1rem;
-      }
-
       &.inline-controls {
         .leaflet-control {
           clear: none;
         }
       }
 
-      button {
+      button.fr-btn--secondary {
         background-color: white;
 
         &:hover {
@@ -121,21 +102,21 @@ div#app {
           min-height: 2rem;
           max-height: 2rem;
           height: 2rem;
+          width: 20rem;
         }
 
         .fr-btn {
-          font-size: 0.875rem;
           line-height: 1.5rem;
           padding: 0.25rem 0.75rem;
-          width: 2rem;
+          width: 2.2rem;
           min-height: 2rem;
           max-height: 2rem;
           height: 2rem;
 
           &::before,
           &::after {
-            width: 0.75rem;
-            height: 0.75rem;
+            width: 1rem;
+            height: 1rem;
           }
         }
       }
@@ -203,10 +184,16 @@ div#app {
           padding: 0 16px;
           font-weight: 500 !important;
           font-size: 16px !important;
-        }
+          display: flex;
+          align-items: center;
 
-        h3 img {
-          margin-left: 0;
+          img {
+            margin-left: 0;
+          }
+
+          .fr-tag {
+            margin-left: auto;
+          }
         }
 
         hr {
@@ -292,64 +279,6 @@ dialog#hedge-data-dialog {
   #form-group-hedge_type label span.label-content {
     display: flex;
     justify-content: space-between;
-  }
-}
-
-div#statistics {
-  background-color: #f6f6f6;
-  padding: 16px;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-
-    th,
-    td {
-      font-weight: normal;
-      padding: 0.5rem 0;
-    }
-
-    thead tr th {
-      text-align: right;
-    }
-
-    tbody tr th {
-      text-align: left;
-    }
-
-    tbody tr td {
-      text-align: right;
-    }
-
-    tbody tr {
-      border-top: 1px solid #ddd;
-    }
-
-    tbody tr:last-child {
-      border-bottom: 1px solid #ddd;
-    }
-  }
-
-  div#compensation {
-    border-left: 2px solid var(--border-plain-info);
-    padding-left: 0.5rem;
-
-    p {
-      margin-bottom: 0;
-    }
-
-    p.info {
-      color: var(--text-default-info);
-    }
-
-    &.success {
-      border-left-color: var(--border-plain-success);
-
-      p.info {
-        color: var(--text-default-success);
-      }
-    }
   }
 }
 

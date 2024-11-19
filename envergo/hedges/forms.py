@@ -6,7 +6,7 @@ TYPES = (
     ("buissonnante", "Haie buissonnante basse"),
     ("arbustive", "Haie arbustive basse"),
     ("alignement", "Alignement d'arbres"),
-    ("mixte", "Mixte"),
+    ("mixte", "Haie mixte"),
 )
 
 

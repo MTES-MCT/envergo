@@ -266,7 +266,7 @@ createApp({
         const isOnPacField = pacField.checked;
         const isNearPond = nearPondField.checked;
         hedge.additionalData = {
-          type: hedgeType,
+          typeHaie: hedgeType,
           surParcellePac: isOnPacField,
           proximiteMare: isNearPond,
         };
