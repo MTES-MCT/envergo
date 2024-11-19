@@ -68,6 +68,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
+              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.count > 0">
               <table>
@@ -101,6 +102,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
+              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.count > 0">
               <table>

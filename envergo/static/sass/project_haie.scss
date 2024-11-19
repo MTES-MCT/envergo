@@ -184,10 +184,16 @@ div#app {
           padding: 0 16px;
           font-weight: 500 !important;
           font-size: 16px !important;
-        }
+          display: flex;
+          align-items: center;
 
-        h3 img {
-          margin-left: 0;
+          img {
+            margin-left: 0;
+          }
+
+          .fr-tag {
+            margin-left: auto;
+          }
         }
 
         hr {
