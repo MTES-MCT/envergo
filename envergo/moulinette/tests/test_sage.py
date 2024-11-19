@@ -165,7 +165,10 @@ def test_several_perimeter_maps_display(
 
 @pytest.mark.parametrize("footprint", [1000])
 def test_several_perimeter_may_have_different_results(
-    moulinette_data, sage_criteria, france_map, client  # noqa
+    moulinette_data,
+    sage_criteria,
+    france_map,  # noqa
+    client,  # noqa
 ):
     """When several perimeters are found, their respective results are displayed."""
 
@@ -182,6 +185,15 @@ def test_several_perimeter_may_have_different_results(
         name="Sage Test",
         activation_map=france_map,
         regulation=sage_criteria[0].regulation,
+    )
+
+    CriterionFactory(
+        title="Zone humide",
+        regulation=sage_criteria[0].regulation,
+        perimeter=sage_test,
+        evaluator="envergo.moulinette.regulations.sage.ImpactZoneHumide",
+        evaluator_settings={"threshold": 15000000},
+        activation_map=france_map,
     )
 
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data, False)
