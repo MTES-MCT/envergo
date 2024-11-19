@@ -69,7 +69,7 @@ def analytics(request):
     was decided that we manually build the facets here."""
 
     # Disable analytics facets for guichet unique de la haie
-    if request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+    if hasattr(request, "site") and request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
         return {}
 
     visitor_id = request.COOKIES.get(VISITOR_COOKIE_NAME, None)
