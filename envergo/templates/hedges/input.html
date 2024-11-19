@@ -34,7 +34,7 @@
           <button class="fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
-            Tracer une haie Fà planter
+            Tracer une haie à planter
           </button>
         </div>
 
@@ -71,30 +71,6 @@
       </div>
 
       <div id="sidebar" class="fr-text--sm">
-        <div id="statistics">
-          <table id="summary">
-            <thead>
-              <tr>
-                <th colspan="2">Cumul linéaire</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th>Haies à détruire</th>
-                <td>[[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</td>
-              </tr>
-              <tr>
-                <th>Haies à planter</th>
-                <td>[[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</td>
-              </tr>
-            </tbody>
-          </table>
-          <div id="compensation" :class="{ success: compensationRate >= 100 }">
-            <p class="rate">
-              <strong>Le linéaire planté représente [[ compensationRate.toFixed(0) ]] % du linéaire détruit</strong>
-            </p>
-          </div>
-        </div>
         <div id="hedge-lists">
           <div class="hedge-list to-remove">
             <h3>

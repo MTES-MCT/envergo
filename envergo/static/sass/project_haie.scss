@@ -295,64 +295,6 @@ dialog#hedge-data-dialog {
   }
 }
 
-div#statistics {
-  background-color: #f6f6f6;
-  padding: 16px;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-
-    th,
-    td {
-      font-weight: normal;
-      padding: 0.5rem 0;
-    }
-
-    thead tr th {
-      text-align: right;
-    }
-
-    tbody tr th {
-      text-align: left;
-    }
-
-    tbody tr td {
-      text-align: right;
-    }
-
-    tbody tr {
-      border-top: 1px solid #ddd;
-    }
-
-    tbody tr:last-child {
-      border-bottom: 1px solid #ddd;
-    }
-  }
-
-  div#compensation {
-    border-left: 2px solid var(--border-plain-info);
-    padding-left: 0.5rem;
-
-    p {
-      margin-bottom: 0;
-    }
-
-    p.info {
-      color: var(--text-default-info);
-    }
-
-    &.success {
-      border-left-color: var(--border-plain-success);
-
-      p.info {
-        color: var(--text-default-success);
-      }
-    }
-  }
-}
-
 div#form-group-haies {
   label {
     display: block;
