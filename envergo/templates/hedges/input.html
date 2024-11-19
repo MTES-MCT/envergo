@@ -16,22 +16,14 @@
 
     <div id="saisie-ui">
       <div id="map">
-        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="controls top left">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
-              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
-              Vue d'ensemble
-            </button>
-          </div>
-        </template>
 
-        <div class="controls top right">
-          <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+        <div class="controls leaflet-top leaflet-right">
+          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
-          <button class="fr-btn fr-btn--sm fr-btn--secondary"
+          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
@@ -47,16 +39,16 @@
       {% comment %}
       There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
       {% endcomment %}
-      <div class="controls top left inline-controls">
+      <div class="controls leaflet-top leaflet-left inline-controls">
         <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
              role="search">
           <label class="fr-label" for="address">Rechercher une commune ou une adresse</label>
-          <input class="fr-input fr-input--sm"
+          <input class="fr-input"
                  placeholder="Rechercher une commune ou une adresse"
                  type="search"
                  id="id_address"
                  name="address">
-          <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
+          <button class="fr-btn fr-btn--sm" title="Rechercher">Rechercher</button>
         </div>
 
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">

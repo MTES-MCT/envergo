@@ -70,32 +70,13 @@ div#app {
     }
 
     div.controls {
-      position: absolute;
-      z-index: 1000;
-
-      &.top {
-        top: 1rem;
-      }
-
-      &.bottom {
-        bottom: 1rem;
-      }
-
-      &.left {
-        left: 1rem;
-      }
-
-      &.right {
-        right: 1rem;
-      }
-
       &.inline-controls {
         .leaflet-control {
           clear: none;
         }
       }
 
-      button {
+      button.fr-btn--secondary {
         background-color: white;
 
         &:hover {
@@ -121,21 +102,21 @@ div#app {
           min-height: 2rem;
           max-height: 2rem;
           height: 2rem;
+          width: 20rem;
         }
 
         .fr-btn {
-          font-size: 0.875rem;
           line-height: 1.5rem;
           padding: 0.25rem 0.75rem;
-          width: 2rem;
+          width: 2.2rem;
           min-height: 2rem;
           max-height: 2rem;
           height: 2rem;
 
           &::before,
           &::after {
-            width: 0.75rem;
-            height: 0.75rem;
+            width: 1rem;
+            height: 1rem;
           }
         }
       }
