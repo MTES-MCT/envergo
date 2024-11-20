@@ -3,7 +3,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 
-from envergo.analytics.forms import YOU_ARE_CHOICES
 from envergo.users.models import User
 from envergo.utils.fields import NoIdnEmailField
 
@@ -62,7 +61,16 @@ class NewsletterOptInForm(forms.Form):
     type = forms.ChoiceField(
         required=True,
         label="Vous êtes",
-        choices=(("", "Sélectionner une option"),) + YOU_ARE_CHOICES,
+        choices=(
+            ("", "Sélectionner une option"),
+            ("instructeur", "Service instructeur urbanisme"),
+            ("amenageur", "Aménageur"),
+            ("geometre", "Géomètre"),
+            ("bureau", "Bureau d'études"),
+            ("architecte", "Architecte"),
+            ("particulier", "Particulier"),
+            ("autre", "Autre"),
+        ),
         widget=AllowDisabledSelect(attrs={"placeholder": "Sélectionnez votre type"}),
     )
     email = forms.EmailField(
