@@ -16,7 +16,7 @@
 <pre>
         [
           {
-            "id" : "Q2hhbXAtNDU0Mzk0Mw==",
+            "id" : "Q2hhbXAtNDU0Mzk2MQ==",
             "value": "profil",
             "mapping": {
               "autre": "Autre (collectivité, aménageur, gestionnaire de réseau, particulier, etc.)",
@@ -34,7 +34,7 @@
           },
           {
             "id" : "Q2hhbXAtNDU0Mzk0Mw==",
-            "value": "url_moulinette"
+            "value": "url_projet"
           }
         ]
         </pre>
@@ -60,9 +60,13 @@
 </ul>
 
 <h3>Quelles sont les sources de valeurs autorisées ?</h3>
-<ul>
-  {% for key, label in sources %}<li>{{ key }} ({{ label }})</li>{% endfor %}
-</ul>
+{% for title, set in sources.items %}
+  <h5>{{ title }} :</h5>
+  <ul>
+    {% for key, label in set %}<li>{{ key }} ({{ label }})</li>{% endfor %}
+  </ul>
+{% endfor %}
+
 <h3>Comment fonctionne le mapping ?</h3>
 
 <p>
