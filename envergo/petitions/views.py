@@ -82,8 +82,8 @@ class PetitionProjectCreate(FormView):
                 extra={"moulinette_url": moulinette_url},
             )
             return None
-        moulinette_data["haies"] = project.hedge_data
 
+        moulinette_data["haies"] = project.hedge_data
         config = ConfigHaie.objects.get(
             department__department=department
         )  # it should always exist, otherwise the simulator would not be available
@@ -107,8 +107,8 @@ class PetitionProjectCreate(FormView):
                 )
                 continue
 
-            body[f"champ_{field["id"]}"] = self.get_value_from_source(
-                moulinette_url,
+            body[f"champ_{field['id']}"] = self.get_value_from_source(
+                project,
                 moulinette,
                 field["value"],
                 field.get("mapping", {}),
@@ -130,10 +130,25 @@ class PetitionProjectCreate(FormView):
         return redirect_url
 
     def get_value_from_source(
-        self, moulinette_url, moulinette, source, mapping, config
+        self, petition_project, moulinette, source, mapping, config
     ):
-        if source == "moulinette_url":
-            value = moulinette_url
+        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
+
+        Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
+        Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
+        Then it will map the value if a mapping is provided.
+        """
+        if source == "url_moulinette":
+            value = petition_project.moulinette_url
+        elif source == "url_projet":
+            value = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project",
+                    kwargs={"reference": petition_project.reference},
+                )
+            )
+        elif source == "ref_projet":
+            value = petition_project.reference
         elif source.endswith(".result"):
             regulation_slug = source[:-7]
             regulation_result = getattr(moulinette, regulation_slug, None)
@@ -142,7 +157,7 @@ class PetitionProjectCreate(FormView):
                     "Unable to get the regulation result to pre-fill a démarche simplifiée",
                     extra={
                         "regulation_slug": regulation_slug,
-                        "moulinette_url": moulinette_url,
+                        "moulinette_url": petition_project.moulinette_url,
                         "haie config": config.id,
                     },
                 )
@@ -160,7 +175,7 @@ class PetitionProjectCreate(FormView):
                     extra={
                         "source": source,
                         "mapping": mapping,
-                        "moulinette_url": moulinette_url,
+                        "moulinette_url": petition_project.moulinette_url,
                         "haie config": config.id,
                     },
                 )
@@ -190,6 +205,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.moulinette = None
 
     def get(self, request, *args, **kwargs):
+
+        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
         petition_project = get_object_or_404(
             PetitionProject.objects.select_related("hedge_data"),
             reference=self.kwargs["reference"],

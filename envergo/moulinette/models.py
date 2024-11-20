@@ -794,7 +794,8 @@ class ConfigHaie(ConfigBase):
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        "https://www.demarches-simplifiees.fr/admin/procedures",
+        '<a href="https://www.demarches-simplifiees.fr/admin/procedures" target="_blank" rel="noopener">'
+        "https://www.demarches-simplifiees.fr/admin/procedures</a>",
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
@@ -810,6 +811,8 @@ class ConfigHaie(ConfigBase):
     def clean(self):
         super().clean()
         if self.is_activated and self.demarche_simplifiee_pre_fill_config is not None:
+            # add constraints on the pre-fill configuration json to avoid unexpected entries
+
             if not isinstance(self.demarche_simplifiee_pre_fill_config, list):
                 raise ValidationError(
                     {
@@ -819,7 +822,9 @@ class ConfigHaie(ConfigBase):
                 )
 
             availables_sources = {
-                item[0] for item in self.get_demarche_simplifiee_value_sources()
+                tup[0]
+                for value in self.get_demarche_simplifiee_value_sources().values()
+                for tup in value
             }
             for field in self.demarche_simplifiee_pre_fill_config:
                 if (
@@ -851,19 +856,42 @@ class ConfigHaie(ConfigBase):
 
     @classmethod
     def get_demarche_simplifiee_value_sources(cls):
+        """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
+
+        This method aggregates :
+         * some well known values (e.g. moulinette_url)
+         * the fields of all the forms that the user may have to fill in the guichet unique de la haie :
+            * the main form
+            * the triage form
+            * the forms of the criteria of involved regulations
+         * the results of the regulations
+        """
+
         moulinette_instance = MoulinetteHaie({}, {})
-        identified_sources = {("moulinette_url", "Url de la simulation")}
+        identified_sources = {
+            ("url_moulinette", "Url de la simulation"),
+            ("url_projet", "Url du projet de pétition"),
+            ("ref_projet", "Référence du projet de pétition"),
+        }
+        available_sources = {
+            "Valeurs identifiées": identified_sources,
+            "Résultats de réglementation": set(),
+        }
+
         main_form_fields = {
             (key, field.label)
             for key, field in MoulinetteHaie.main_form_class.base_fields.items()
         }
+        available_sources["Formulaire principal"] = main_form_fields
+
         triage_form_fields = {
             (key, field.label) for key, field in TriageFormHaie.base_fields.items()
         }
+        available_sources["Formulaire de triage"] = triage_form_fields
 
-        regulation_sources = []
         for regulation in moulinette_instance.regulations.all():
-            regulation_sources.append(
+            regulation_sources = set()
+            available_sources["Résultats de réglementation"].add(
                 (
                     f"{regulation.slug}.result",
                     f"Résultat de la réglementation {regulation.regulation}",
@@ -872,19 +900,19 @@ class ConfigHaie(ConfigBase):
             for criterion in regulation.criteria.all():
                 form_class = criterion.evaluator.form_class
                 if form_class:
-                    regulation_sources.extend(
-                        [
+                    regulation_sources.update(
+                        {
                             (key, field.label)
                             for key, field in form_class.base_fields.items()
-                        ]
+                        }
                     )
 
-        return (
-            identified_sources
-            | triage_form_fields
-            | main_form_fields
-            | set(regulation_sources)
-        )
+            if regulation_sources:
+                available_sources[f"Formulaire de {regulation.title}"] = (
+                    regulation_sources
+                )
+
+        return available_sources
 
     class Meta:
         verbose_name = "Config haie"
