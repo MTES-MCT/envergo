@@ -132,15 +132,17 @@ class PetitionProjectCreate(FormView):
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
-        if source == "moulinette_url":
+        if source == "url_moulinette":
             value = petition_project.moulinette_url
-        elif source == "project_url":
+        elif source == "url_projet":
             value = self.request.build_absolute_uri(
                 reverse(
                     "petition_project",
                     kwargs={"reference": petition_project.reference},
                 )
             )
+        elif source == "ref_projet":
+            value = petition_project.reference
         elif source.endswith(".result"):
             regulation_slug = source[:-7]
             regulation_result = getattr(moulinette, regulation_slug, None)
@@ -197,6 +199,8 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.moulinette = None
 
     def get(self, request, *args, **kwargs):
+
+        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
         petition_project = get_object_or_404(
             PetitionProject.objects.select_related("hedge_data"),
             reference=self.kwargs["reference"],

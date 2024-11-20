@@ -329,7 +329,7 @@ class JSONWidget(forms.Textarea):
             return ""
         try:
             # Format the JSON in a readable way
-            return json.dumps(json.loads(value), indent=4, sort_keys=True)
+            return json.dumps(json.loads(value), indent=4)
         except (TypeError, ValueError):
             return value
 

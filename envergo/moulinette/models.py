@@ -866,8 +866,9 @@ class ConfigHaie(ConfigBase):
         """
         moulinette_instance = MoulinetteHaie({}, {})
         identified_sources = {
-            ("moulinette_url", "Url de la simulation"),
-            ("project_url", "Url du projet de pétition"),
+            ("url_moulinette", "Url de la simulation"),
+            ("url_projet", "Url du projet de pétition"),
+            ("ref_projet", "Référence du projet de pétition"),
         }
         main_form_fields = {
             (key, field.label)
