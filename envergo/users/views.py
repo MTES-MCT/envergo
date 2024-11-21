@@ -9,6 +9,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlsafe_base64_decode
+from django.views import View
 from django.views.generic import CreateView, FormView, TemplateView
 
 from envergo.users.forms import NewsletterOptInForm, RegisterForm
@@ -121,20 +122,29 @@ class NewsletterOptIn(FormView):
         }
 
         body = {
-            "updateEnabled": True,  # Update the contact if it already exists
             "email": form.cleaned_data["email"],
+            "includeListIds": [
+                settings.BREVO["NEWSLETTER_LISTS"].get(
+                    form.cleaned_data["email"],
+                    settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                )
+            ],
             "attributes": {
                 "TYPE": form.cleaned_data["type"],
                 "OPT_IN_NEWSLETTER": True,
             },
+            "redirectionUrl": self.request.build_absolute_uri(
+                reverse("newsletter_confirmation")
+            ),
+            "templateId": settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"],
         }
 
         response = requests.post(api_url, json=body, headers=headers)
 
         if 200 <= response.status_code < 400:
-            messages.success(
+            messages.info(
                 self.request,
-                "Votre inscription a bien été prise en compte.",
+                "Vous avez reçu un e-mail de confirmation pour valider votre inscription à la newsletter.",
             )
             res = HttpResponseRedirect(form.cleaned_data["redirect_url"])
         else:
@@ -164,3 +174,11 @@ class NewsletterOptIn(FormView):
         return HttpResponseRedirect(
             form.cleaned_data.get("redirect_url", reverse("home"))
         )
+
+
+class NewsletterDoubleOptInConfirmation(View):
+    def get(self, request, *args, **kwargs):
+        messages.success(
+            request, "Votre inscription à la newsletter EnvErgo est confirmée !"
+        )
+        return HttpResponseRedirect(reverse("home"))

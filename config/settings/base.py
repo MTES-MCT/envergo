@@ -402,4 +402,16 @@ OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
 BREVO = {
     "API_URL": env("BREVO_API_URL", default="https://api.brevo.com/v3/"),
     "API_KEY": env("BREVO_API_KEY", default=None),
+    "NEWSLETTER_LISTS": {
+        "instructeur": env("BREVO_NEWSLETTER_LIST_INSTRUCTEUR", default=None),
+        "amenageur": env("BREVO_NEWSLETTER_LIST_AMENAGEUR", default=None),
+        "geometre": env("BREVO_NEWSLETTER_LIST_GEOMETRE", default=None),
+        "bureau": env("BREVO_NEWSLETTER_LIST_BUREAU", default=None),
+        "architecte": env("BREVO_NEWSLETTER_LIST_ARCHITECTE", default=None),
+        "particulier": env("BREVO_NEWSLETTER_LIST_PARTICULIER", default=None),
+        "autre": env("BREVO_NEWSLETTER_LIST_AUTRE", default=None),
+    },
+    "NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID": env(
+        "BREVO_NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID", default=None
+    ),
 }
