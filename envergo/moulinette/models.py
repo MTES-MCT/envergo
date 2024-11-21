@@ -868,30 +868,30 @@ class ConfigHaie(ConfigBase):
         """
 
         moulinette_instance = MoulinetteHaie({}, {})
+        triage_form_fields = {
+            (key, field.label) for key, field in TriageFormHaie.base_fields.items()
+        }
+        main_form_fields = {
+            (key, field.label)
+            for key, field in MoulinetteHaie.main_form_class.base_fields.items()
+        }
+
         identified_sources = {
             ("url_moulinette", "Url de la simulation"),
             ("url_projet", "Url du projet de pétition"),
             ("ref_projet", "Référence du projet de pétition"),
         }
+
         available_sources = {
-            "Valeurs identifiées": identified_sources,
-            "Résultats de réglementation": set(),
+            "Formulaire de triage": triage_form_fields,
+            "Formulaire principal": main_form_fields,
         }
 
-        main_form_fields = {
-            (key, field.label)
-            for key, field in MoulinetteHaie.main_form_class.base_fields.items()
-        }
-        available_sources["Formulaire principal"] = main_form_fields
-
-        triage_form_fields = {
-            (key, field.label) for key, field in TriageFormHaie.base_fields.items()
-        }
-        available_sources["Formulaire de triage"] = triage_form_fields
+        regulation_results = set()
 
         for regulation in moulinette_instance.regulations.all():
             regulation_sources = set()
-            available_sources["Résultats de réglementation"].add(
+            regulation_results.add(
                 (
                     f"{regulation.slug}.result",
                     f"Résultat de la réglementation {regulation.regulation}",
@@ -911,6 +911,9 @@ class ConfigHaie(ConfigBase):
                 available_sources[f"Formulaire de {regulation.title}"] = (
                     regulation_sources
                 )
+
+        available_sources["Résultats de réglementation"] = regulation_results
+        available_sources["Variables identifiées"] = identified_sources
 
         return available_sources
 
