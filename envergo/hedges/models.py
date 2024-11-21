@@ -24,12 +24,13 @@ EPSG_LAMB93 = 2154
 class Hedge:
     """Represent a single hedge."""
 
-    def __init__(self, id, latLngs, type):
+    def __init__(self, id, latLngs, type, additionalData=None):
         self.id = id  # The edge reference, e.g A1, A2…
         self.geometry = LineString(
             [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
+        self.additionalData = additionalData
 
     @property
     def length(self):
