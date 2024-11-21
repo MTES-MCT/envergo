@@ -115,7 +115,7 @@ class NewsletterOptIn(FormView):
             )
             return self.form_invalid(form)
 
-        api_url = f"{settings.BREVO['API_URL']}contacts/"
+        api_url = f"{settings.BREVO['API_URL']}contacts/doubleOptinConfirmation"
         headers = {
             "Content-Type": "application/json",
             "api-key": settings.BREVO["API_KEY"],
@@ -125,7 +125,7 @@ class NewsletterOptIn(FormView):
             "email": form.cleaned_data["email"],
             "includeListIds": [
                 settings.BREVO["NEWSLETTER_LISTS"].get(
-                    form.cleaned_data["email"],
+                    form.cleaned_data["type"],
                     settings.BREVO["NEWSLETTER_LISTS"]["autre"],
                 )
             ],
