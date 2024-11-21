@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 
 from envergo.users.models import User
@@ -40,3 +41,41 @@ class RegisterForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data["email"]
         return email.lower()
+
+
+class AllowDisabledSelect(Select):
+    """A select widget (drop down list) that will disable options where the value is set to an empty string"""
+
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
+        option_dict = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        if not value:
+            option_dict["attrs"]["disabled"] = "disabled"
+        return option_dict
+
+
+class NewsletterOptInForm(forms.Form):
+    type = forms.ChoiceField(
+        required=True,
+        label="Vous êtes",
+        choices=(
+            ("", "Sélectionner une option"),
+            ("instructeur", "Service instructeur urbanisme"),
+            ("amenageur", "Aménageur"),
+            ("geometre", "Géomètre"),
+            ("bureau", "Bureau d'études"),
+            ("architecte", "Architecte"),
+            ("particulier", "Particulier"),
+            ("autre", "Autre"),
+        ),
+        widget=AllowDisabledSelect(attrs={"placeholder": "Sélectionnez votre type"}),
+    )
+    email = forms.EmailField(
+        required=True,
+        label="Votre adresse email",
+        widget=forms.EmailInput(attrs={"placeholder": "ex. : nom@domaine.fr"}),
+    )
+    redirect_url = forms.CharField(required=True, widget=forms.HiddenInput())

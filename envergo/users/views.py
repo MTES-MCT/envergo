@@ -1,14 +1,22 @@
+import logging
+
+import requests
 from braces.views import AnonymousRequiredMixin, MessageMixin
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlsafe_base64_decode
-from django.views.generic import CreateView, TemplateView
+from django.views import View
+from django.views.generic import CreateView, FormView, TemplateView
 
-from envergo.users.forms import RegisterForm
+from envergo.users.forms import NewsletterOptInForm, RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import send_account_activation_email
+
+logger = logging.getLogger(__name__)
 
 
 class Register(AnonymousRequiredMixin, CreateView):
@@ -89,3 +97,88 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 return HttpResponseRedirect(redirect_url)
 
         return super().get(request, *args, **kwargs)
+
+
+class NewsletterOptIn(FormView):
+    form_class = NewsletterOptInForm
+
+    def form_valid(self, form):
+        """Send the form data to Brevo API."""
+        if not settings.BREVO.get("API_KEY"):
+            logger.error(
+                "No Brevo API key found in settings for newsletter opt-in",
+                extra={"form": form},
+            )
+            form.add_error(
+                None,
+                "Le service n'est pas disponible actuellement. Merci de réessayer plus tard.",
+            )
+            return self.form_invalid(form)
+
+        api_url = f"{settings.BREVO['API_URL']}contacts/doubleOptinConfirmation"
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": settings.BREVO["API_KEY"],
+        }
+
+        body = {
+            "email": form.cleaned_data["email"],
+            "includeListIds": [
+                settings.BREVO["NEWSLETTER_LISTS"].get(
+                    form.cleaned_data["type"],
+                    settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                )
+            ],
+            "attributes": {
+                "TYPE": form.cleaned_data["type"],
+                "OPT_IN_NEWSLETTER": True,
+            },
+            "redirectionUrl": self.request.build_absolute_uri(
+                reverse("newsletter_confirmation")
+            ),
+            "templateId": settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"],
+        }
+
+        response = requests.post(api_url, json=body, headers=headers)
+
+        if 200 <= response.status_code < 400:
+            messages.info(
+                self.request,
+                "Vous avez reçu un e-mail de confirmation pour valider votre inscription à la newsletter.",
+            )
+            res = HttpResponseRedirect(form.cleaned_data["redirect_url"])
+        else:
+            logger.error(
+                "Error while creating/updating contact via Brevo API",
+                extra={"response": response},
+            )
+            res = self.form_invalid(form)
+
+        return res
+
+    def form_invalid(self, form):
+        message = "Nous n'avons pas pu enregistrer votre inscription à la newsletter."
+        # Handle field-specific errors
+        for field, errors in form.errors.items():
+            if field != "__all__":
+                field_label = form[field].label
+                for error in errors:
+                    message += f"<br/>{field_label} : {error}"
+
+        # Handle non-field errors
+        if "__all__" in form.errors:
+            for error in form.errors["__all__"]:
+                message += f"<br/>{error}"
+
+        messages.error(self.request, message)
+        return HttpResponseRedirect(
+            form.cleaned_data.get("redirect_url", reverse("home"))
+        )
+
+
+class NewsletterDoubleOptInConfirmation(View):
+    def get(self, request, *args, **kwargs):
+        messages.success(
+            request, "Votre inscription à la newsletter EnvErgo est confirmée !"
+        )
+        return HttpResponseRedirect(reverse("home"))
