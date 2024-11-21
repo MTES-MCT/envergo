@@ -47,4 +47,4 @@ class Command(BaseCommand):
                 ping {", ".join(settings.OPS_MATTERMOST_HANDLERS)}
                 """
             )
-            notify(message)
+            notify(message, "amenagement")
