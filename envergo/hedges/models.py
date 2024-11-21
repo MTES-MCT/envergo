@@ -30,7 +30,7 @@ class Hedge:
             [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
-        self.additionalData = additionalData
+        self.additionalData = additionalData or {}
 
     @property
     def length(self):
@@ -39,6 +39,10 @@ class Hedge:
         geod = Geod(ellps="WGS84")
         length = geod.geometry_length(self.geometry)
         return int(length)
+
+    @property
+    def is_on_pac(self):
+        return self.additionalData.get("surParcellePac", False)
 
 
 class HedgeData(models.Model):
@@ -52,6 +56,9 @@ class HedgeData(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+    def __iter__(self):
+        return iter(self.hedges())
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
