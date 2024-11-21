@@ -1,4 +1,5 @@
 import logging
+from textwrap import dedent
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -18,6 +19,8 @@ from envergo.moulinette.models import (
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
+from envergo.utils.mattermost import notify
+from envergo.utils.tools import display_form_details
 from envergo.utils.urls import extract_param_from_url
 
 logger = logging.getLogger(__name__)
@@ -94,6 +97,17 @@ class PetitionProjectCreate(FormView):
                 "An activated department should always have a demarche_simplifiee_number",
                 extra={"haie config": config.id, "department": department},
             )
+            url = reverse("admin:moulinette_confighaie_change", args=[config.id])
+            message = dedent(
+                f"""\
+                ### Problème de configuration du guichet unique de la haie
+
+                Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées
+                * Département : {department}
+                * [Lien vers l'admin]({self.request.build_absolute_uri(url)})
+                """
+            )
+            notify(message)
             return None
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
@@ -105,6 +119,20 @@ class PetitionProjectCreate(FormView):
                     "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
                     extra={"haie config": config.id, "field": field},
                 )
+                url = reverse("admin:moulinette_confighaie_change", args=[config.id])
+                message = dedent(
+                    f"""\
+                    ### Problème de configuration du guichet unique de la haie
+
+                    Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une valeur.
+                    Le mapping est optionnel.
+
+                    * Département : {department}
+                    * Champ : {field}
+                    * [Lien vers l'admin]({self.request.build_absolute_uri(url)})
+                    """
+                )
+                notify(message)
                 continue
 
             body[f"champ_{field['id']}"] = self.get_value_from_source(
@@ -127,6 +155,29 @@ class PetitionProjectCreate(FormView):
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
                 extra={"response": response},
             )
+
+            message = dedent(
+                f"""\
+                ### Une erreur est survenue lors du pré-remplissage d'un dossier sur demarches-simplifiees.fr
+
+                L'API a retourné une erreur lors de la création du dossier.
+
+                **Requête:**
+                * url : {api_url}
+                * body :
+                ```
+                {body}
+                ```
+
+                **Réponse:**
+                * status : {response.status_code}
+                * content:
+                ```
+                {response.text}
+                ```
+                """
+            )
+            notify(message)
         return redirect_url
 
     def get_value_from_source(
@@ -161,6 +212,21 @@ class PetitionProjectCreate(FormView):
                         "haie config": config.id,
                     },
                 )
+
+                url = reverse("admin:moulinette_confighaie_change", args=[config.id])
+                message = dedent(
+                    f"""\
+                       ### Potentiel problème de configuration du guichet unique de la haie
+
+                       La configuration demande de pré-remplir un champ avec la valeur de **{source}** mais la
+                       moulinette n'a pas de résultat pour la réglementation **{regulation_slug}**.
+
+                       * Département : {config.department}
+                       * [Lien vers l'admin]({self.request.build_absolute_uri(url)})
+                       """
+                )
+                notify(message)
+
                 value = None
             else:
                 value = regulation_result.result
@@ -180,6 +246,25 @@ class PetitionProjectCreate(FormView):
                     },
                 )
 
+                url = reverse("admin:moulinette_confighaie_change", args=[config.id])
+                message = dedent(
+                    f"""\
+               ### Potentiel problème de configuration du guichet unique de la haie
+
+               La configuration demande de pré-remplir un champ avec la valeur de **{source}**.
+               Un mapping est défini pour ce champ, mais la valeur effective de la moulinette n'est pas dans ce mapping.
+
+               * Valeur : {value}
+               * mapping :
+               ```
+               {mapping}
+               ```
+               * Département : {config.department}
+               * [Lien vers l'admin]({self.request.build_absolute_uri(url)})
+               """
+                )
+                notify(message)
+
         mapped_value = mapping.get(value, value)
 
         # Handle boolean values as strings 😞
@@ -190,6 +275,20 @@ class PetitionProjectCreate(FormView):
 
     def form_invalid(self, form):
         logger.error("Unable to create a petition project", extra={"form": form.errors})
+
+        message = dedent(
+            f"""\
+            ### Une erreur est survenue lors du pré-remplissage d'un dossier sur demarches-simplifiees.fr
+
+            Un message d'erreur a été envoyé à l'utilisateur l'invitant à réessayer.
+
+            * form :
+            ```
+            {display_form_details(form)}
+            ```
+            """
+        )
+        notify(message)
         return JsonResponse(
             {
                 "error_title": "Un problème technique empêche la création de votre dossier.",
