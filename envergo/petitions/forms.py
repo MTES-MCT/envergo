@@ -12,7 +12,7 @@ class PetitionProjectForm(forms.ModelForm):
     dossier on demarches-simplifiees.fr.
     """
 
-    profil = MoulinetteFormHaie.base_fields["profil"]
+    localisation_pac = MoulinetteFormHaie.base_fields["localisation_pac"]
     haies = MoulinetteFormHaie.base_fields["haies"]
 
     class Meta:
