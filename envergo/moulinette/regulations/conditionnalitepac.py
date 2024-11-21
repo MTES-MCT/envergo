@@ -5,13 +5,29 @@ from envergo.moulinette.forms import DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
+def keep_fields(fields, keys):
+    """Only keep selected fields from the field list.
+
+    This is a tiny helper to make the code more readable.
+    """
+    return {k: v for k, v in fields.items() if k in keys}
+
+
 class Bcae8Form(forms.Form):
     lineaire_total = DisplayIntegerField(
-        label="Linéaire total de haies sur l’exploitation :",
+        label="Linéaire total de haies sur l’exploitation déclarée à la PAC (en m) :",
+        help_text="Si la valeur exacte est inconnue, une estimation est suffisante",
         required=True,
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
         display_unit="m",
+    )
+
+    transfert_parcelles = forms.ChoiceField(
+        label="Le projet est-il réalisé à l'occasion d'un transfert de parcelles ?",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
     )
 
     amenagement_dup = forms.ChoiceField(
@@ -21,8 +37,17 @@ class Bcae8Form(forms.Form):
         required=True,
     )
 
-    motif_qc = forms.ChoiceField(
-        label="Quelle est la raison de la destruction de la haie ?",
+    meilleur_emplacement = forms.ChoiceField(
+        label="""
+        Le projet est-il accompagné par un organisme agréé, en mesure de délivrer une
+        attestation de meilleur emplacement environnemental ?""",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
+
+    motif_pac = forms.ChoiceField(
+        label="Le projet est-il réalisé pour l’un de ces motifs prévus par les règles de conditionnalité PAC ?",
         widget=forms.RadioSelect,
         choices=(
             (
@@ -31,7 +56,7 @@ class Bcae8Form(forms.Form):
             ),
             (
                 "gestion_sanitaire",
-                "Décision du préfet pour gestion sanitaire de la haie",
+                "Décision du préfet pour gestion sanitaire de la haie (éradication d’une maladie)",
             ),
             (
                 "rehabilitation_fosse",
@@ -44,15 +69,56 @@ class Bcae8Form(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        profil = self.data.get("profil")
-        if profil == "autre":
+        localisation_pac = self.data.get("localisation_pac")
+        if localisation_pac == "non":
+            # We know the result will be "non soumis"
             self.fields = {}
-        elif profil == "agri_pac":
-            motif = self.data.get("motif")
-            if not motif == "amenagement":
-                self.fields.pop("amenagement_dup")
-            if not motif == "autre":
-                self.fields.pop("motif_qc")
+            return
+
+        motif = self.data.get("motif")
+        if motif == "amelioration_culture":
+            self.fields = keep_fields(
+                self.fields, ("lineaire_total", "transfert_parcelles")
+            )
+        elif motif == "amenagement":
+            self.fields = keep_fields(
+                self.fields, ("lineaire_total", "amenagement_dup")
+            )
+        elif motif == "amelioration_ecologique":
+            self.fields = keep_fields(
+                self.fields,
+                ("lineaire_total", "meilleur_emplacement", "motif_pac"),
+            )
+        elif motif in ("securite", "amelioration_ecologique", "autre"):
+            self.fields = keep_fields(
+                self.fields,
+                ("lineaire_total", "motif_pac"),
+            )
+        else:
+            self.fields = keep_fields(
+                self.fields,
+                ("lineaire_total",),
+            )
+
+    def clean(self):
+        data = super().clean()
+        meilleur_emplacement = data.get("meilleur_emplacement")
+        reimplantation = self.data.get("reimplantation")
+
+        if meilleur_emplacement == "oui" and reimplantation == "remplacement":
+            self.add_error(
+                "meilleur_emplacement",
+                """Le remplacement de la haie au même endroit est incompatible avec le
+                meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
+                des réponses du formulaire.""",
+            )
+        elif meilleur_emplacement == "oui" and reimplantation == "non":
+            self.add_error(
+                "meilleur_emplacement",
+                """L’absence de réimplantation de la haie est incompatible avec le
+                meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
+                des réponses du formulaire.""",
+            )
 
 
 class Bcae8(CriterionEvaluator):
