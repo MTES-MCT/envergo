@@ -159,85 +159,175 @@ class Bcae8(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        is_petit = False
-        lineaire_detruit = self.catalog["haies"].length_to_remove()
+        is_small = False
+        haies = self.catalog["haies"]
+        lineaire_detruit = haies.length_to_remove()
+        lineaire_detruit_pac = 0
+        lineaire_type_4_sur_parcelle_pac = 0
+        ratio_detruit = 0
         if "lineaire_total" in self.catalog:
-            is_petit = (
-                lineaire_detruit <= 5
-                or lineaire_detruit <= 0.02 * self.catalog["lineaire_total"]
-            )
+            lineaire_total = self.catalog["lineaire_total"]
+            for haie in haies:
+                if haie.is_on_pac and haie.hedge_type != "alignement":
+                    lineaire_detruit_pac += haie.length
+
+                if haie.is_on_pac and haie.hedge_type == "alignement":
+                    lineaire_type_4_sur_parcelle_pac += haie.length
+
+            ratio_detruit = lineaire_detruit_pac / lineaire_total
+
+            is_small = ratio_detruit <= 2 or lineaire_detruit_pac <= 5
 
         return (
-            self.catalog["profil"],
+            # Main vars
             self.catalog["motif"],
             self.catalog["reimplantation"],
-            is_petit,
+            self.catalog["localisation_pac"],
+            # Additional vars
             lineaire_detruit,
+            self.catalog.get("transfert_parcelles"),
             self.catalog.get("amenagement_dup"),
-            self.catalog.get("motif_qc"),
+            self.catalog.get("meilleur_emplacement"),
+            self.catalog.get("motif_pac"),
+            # Computed vars
+            lineaire_detruit_pac,
+            lineaire_type_4_sur_parcelle_pac,
+            ratio_detruit,
+            is_small,
         )
 
     def get_result_code(self, result_data):
         """Override the default method to avoid an oversize (and hard to debug) matrix."""
         (
-            profil,
             motif,
             reimplantation,
-            is_petit,
+            localisation_pac,
             lineaire_detruit,
+            transfert_parcelles,
             amenagement_dup,
-            motif_qc,
+            meilleur_emplacement,
+            motif_pac,
+            lineaire_detruit_pac,
+            lineaire_type_4_sur_parcelle_pac,
+            ratio_detruit,
+            is_small,
         ) = result_data
 
-        if profil == "agri_pac":
-            if reimplantation == "remplacement":
-                if is_petit:
-                    result_code = "non_soumis_petit"
-                else:
-                    result_code = "soumis_remplacement"
-            elif reimplantation == "compensation":
-                if is_petit:
-                    result_code = "non_soumis_petit"
-                else:
-                    if motif == "transfert_parcelles":
-                        result_code = "soumis_transfert_parcelles"
-                    elif motif == "meilleur_emplacement":
-                        result_code = "soumis_meilleur_emplacement"
+        if localisation_pac == "oui":
+            if is_small:
+                if reimplantation == "remplacement":
+                    if motif == "chemin_access":
+                        # X
+                        pass
+                    else:
+                        result_code = "dispense_petit"
+                elif reimplantation == "replantation":
+                    result_code == "dispense_petit"
+                elif reimplantation == "non":
+                    if motif == "amelioration_culture":
+                        if transfert_parcelles == "oui":
+                            result_code = "interdit_transfert_parcelles"
+                        else:
+                            result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":
-                        if lineaire_detruit <= 10:
+                        if lineaire_detruit_pac <= 10:
                             result_code = "soumis_chemin_acces"
-                        else:  # lineaire_detruit > 10
+                        else:
                             result_code = "interdit_chemin_acces"
+                    elif motif == "securite":
+                        if motif_pac != "aucun":
+                            result_code = "soumis_autre"
+                        else:
+                            result_code = "interdit_securite"
                     elif motif == "amenagement":
                         if amenagement_dup == "oui":
                             result_code = "soumis_amenagement"
-                        else:  # amenagement_dup=non
+                        else:
                             result_code = "interdit_amenagement"
-                    else:  # motif=autre
-                        if motif_qc == "aucun":
-                            result_code = "interdit_autre"
-                        else:  # motif_qc=protection_incendie, gestion_sanitaire, rehabilitation_fosse
+                    elif motif == "amelioration_ecologique":
+                        # X
+                        pass
+                    elif motif == "embellissement":
+                        result_code = "interdit_embellissement"
+                    elif motif == "autre":
+                        if motif_pac != "aucun":
                             result_code = "soumis_autre"
-            else:  # reimplantation=non
-                if motif == "chemin_acces":
-                    if lineaire_detruit <= 10:
-                        result_code = "soumis_chemin_acces"
-                    else:  # lineaire_detruit > 10
-                        result_code = "interdit_chemin_acces"
-                elif motif == "autre":
-                    if motif_qc == "aucun":
-                        result_code = "interdit_autre"
-                    else:  # motif_qc=protection_incendie, gestion_sanitaire, rehabilitation_fosse
-                        result_code = "soumis_autre"
-                elif motif == "amenagement":
-                    if amenagement_dup == "oui":
-                        result_code = "soumis_amenagement"
-                    else:  # amenagement_dup=non
-                        result_code = "interdit_amenagement"
-                else:  # motif=transfert_parcelles
-                    result_code = "interdit_transfert_parcelles"
-        else:
-            # SI profil=autre → non_soumis
+                        else:
+                            result_code = "interdit_autre"
+
+            elif not is_small:
+                if reimplantation == "remplacement":
+                    if motif == "chemin_access":
+                        # X
+                        pass
+                    else:
+                        result_code = "soumis_remplacement"
+                elif reimplantation == "replantation":
+                    if motif == "amelioration_culture":
+                        if transfert_parcelles == "oui":
+                            result_code = "soumis_transfert_parcelles"
+                        else:
+                            result_code = "interdit_amelioration_culture"
+                    elif motif == "chemin_access":
+                        if lineaire_detruit_pac <= 10:
+                            result_code = "soumis_chemin_acces"
+                        else:
+                            result_code = "interdit_chemin_acces"
+                    elif motif == "securite":
+                        if motif_pac != "aucun":
+                            result_code = "soumis_autre"
+                        else:
+                            result_code = "interdit_securite"
+                    elif motif == "amenagement":
+                        if amenagement_dup == "oui":
+                            result_code = "soumis_amenagement"
+                        else:
+                            result_code = "interdit_amenagement"
+                    elif motif == "amelioration_ecologique":
+                        if meilleur_emplacement == "oui":
+                            result_code = "soumis_meilleur_emplacement"
+                        else:
+                            result_code = "interdit_amelioration_ecologique"
+                    elif motif == "embellissement":
+                        result_code = "interdit_embellissement"
+                    elif motif == "autre":
+                        if motif_pac != "aucun":
+                            result_code = "soumis_autre"
+                        else:
+                            result_code = "interdit_autre"
+                elif reimplantation == "non":
+                    if motif == "amelioration_culture":
+                        if transfert_parcelles == "oui":
+                            result_code = "interdit_transfert_parcelles"
+                        else:
+                            result_code = "interdit_amelioration_culture"
+                    elif motif == "chemin_access":
+                        if lineaire_detruit_pac <= 10:
+                            result_code = "soumis_chemin_acces"
+                        else:
+                            result_code = "interdit_chemin_acces"
+                    elif motif == "securite":
+                        if motif_pac != "aucun":
+                            result_code = "soumis_autre"
+                        else:
+                            result_code = "interdit_securite"
+                    elif motif == "amenagement":
+                        if amenagement_dup == "oui":
+                            result_code = "soumis_amenagement"
+                        else:
+                            result_code = "interdit_amenagement"
+                    elif motif == "amelioration_ecologique":
+                        # X
+                        pass
+                    elif motif == "embellissement":
+                        result_code = "interdit_embellissement"
+                    elif motif == "autre":
+                        if motif_pac != "aucun":
+                            result_code = "soumis_autre"
+                        else:
+                            result_code = "interdit_autre"
+
+        elif localisation_pac == "non":
             result_code = "non_soumis"
 
         return result_code
