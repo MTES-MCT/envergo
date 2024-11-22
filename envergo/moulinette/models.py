@@ -878,8 +878,8 @@ class ConfigHaie(ConfigBase):
 
         identified_sources = {
             ("url_moulinette", "Url de la simulation"),
-            ("url_projet", "Url du projet de pétition"),
-            ("ref_projet", "Référence du projet de pétition"),
+            ("url_projet", "Url du projet de dossier"),
+            ("ref_projet", "Référence du projet de dossier"),
         }
 
         available_sources = {
