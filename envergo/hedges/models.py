@@ -44,6 +44,10 @@ class Hedge:
     def is_on_pac(self):
         return self.additionalData.get("surParcellePac", False)
 
+    @property
+    def hedge_type(self):
+        return self.additionalData.get("typeHaie", None)
+
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
