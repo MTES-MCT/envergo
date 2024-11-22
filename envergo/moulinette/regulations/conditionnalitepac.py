@@ -222,7 +222,7 @@ class Bcae8(CriterionEvaluator):
                     else:
                         result_code = "dispense_petit"
                 elif reimplantation == "replantation":
-                    result_code == "dispense_petit"
+                    result_code = "dispense_petit"
                 elif reimplantation == "non":
                     if motif == "amelioration_culture":
                         if transfert_parcelles == "oui":
