@@ -514,7 +514,7 @@ class AlertList(List[Alert]):
                     "Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une "
                     "valeur. Le mapping est optionnel."
                 )
-                lines.append(f"* Champ : {alert.extra["field"]}")
+                lines.append(f"* Champ : {alert.extra['field']}")
 
             elif alert.key == "ds_api_http_error":
                 lines.append(
@@ -524,17 +524,17 @@ class AlertList(List[Alert]):
                     dedent(
                         f"""
                 **Requête:**
-                * url : {alert.extra["api_url"]}
+                * url : {alert.extra['api_url']}
                 * body :
                 ```
-                {alert.extra["request_body"]}
+                {alert.extra['request_body']}
                 ```
 
                 **Réponse:**
-                * status : {alert.extra["response"].status_code}
+                * status : {alert.extra['response'].status_code}
                 * content:
                 ```
-                {alert.extra["response"].text}
+                {alert.extra['response'].text}
                 ```
                 """
                     )
