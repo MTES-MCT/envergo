@@ -908,11 +908,11 @@ class ConfigHaie(ConfigBase):
                     )
 
             if regulation_sources:
-                available_sources[
-                    f"Questions complémentaires pour {regulation.title}"
-                ] = regulation_sources
+                available_sources[f'Questions complémentaires "{regulation.title}"'] = (
+                    regulation_sources
+                )
 
-        available_sources["Résultats de réglementation"] = regulation_results
+        available_sources["Résultats réglementation"] = regulation_results
         available_sources["Variables projet"] = identified_sources
 
         return available_sources
