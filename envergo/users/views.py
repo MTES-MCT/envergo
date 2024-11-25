@@ -124,9 +124,11 @@ class NewsletterOptIn(FormView):
         body = {
             "email": form.cleaned_data["email"],
             "includeListIds": [
-                settings.BREVO["NEWSLETTER_LISTS"].get(
-                    form.cleaned_data["type"],
-                    settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                int(
+                    settings.BREVO["NEWSLETTER_LISTS"].get(
+                        form.cleaned_data["type"],
+                        settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                    )
                 )
             ],
             "attributes": {
