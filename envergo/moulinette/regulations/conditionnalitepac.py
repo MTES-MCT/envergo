@@ -126,24 +126,9 @@ class Bcae8(CriterionEvaluator):
     slug = "bcae8"
     form_class = Bcae8Form
 
-    CODES = [
-        "non_soumis",
-        "non_soumis_petit",
-        "soumis_remplacement",
-        "soumis_transfert_parcelles",
-        "soumis_meilleur_emplacement",
-        "soumis_chemin_acces",
-        "soumis_amenagement",
-        "soumis_autre",
-        "interdit_transfert_parcelles",
-        "interdit_meilleur_emplacement",
-        "interdit_chemin_acces",
-        "interdit_amenagement",
-        "interdit_autre",
-    ]
-
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
+        "dispense_petit": RESULTS.non_soumis,
         "non_soumis_petit": RESULTS.non_soumis,
         "soumis_remplacement": RESULTS.soumis,
         "soumis_transfert_parcelles": RESULTS.soumis,
@@ -158,10 +143,21 @@ class Bcae8(CriterionEvaluator):
         "interdit_autre": RESULTS.interdit,
     }
 
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        lineaire_type_4_sur_parcelle_pac = 0
+        if "lineaire_total" in self.catalog:
+            haies = self.catalog["haies"]
+            for haie in haies:
+                if haie.is_on_pac and haie.hedge_type == "alignement":
+                    lineaire_type_4_sur_parcelle_pac += haie.length
+        catalog["lineaire_type_4_sur_parcelle_pac"] = lineaire_type_4_sur_parcelle_pac
+
+        return catalog
+
     def get_result_data(self):
         is_small = False
         haies = self.catalog["haies"]
-        lineaire_detruit = haies.length_to_remove()
         lineaire_detruit_pac = 0
         lineaire_type_4_sur_parcelle_pac = 0
         ratio_detruit = 0
@@ -175,7 +171,6 @@ class Bcae8(CriterionEvaluator):
                     lineaire_type_4_sur_parcelle_pac += haie.length
 
             ratio_detruit = lineaire_detruit_pac / lineaire_total
-
             is_small = ratio_detruit <= 2 or lineaire_detruit_pac <= 5
 
         return (
@@ -184,15 +179,12 @@ class Bcae8(CriterionEvaluator):
             self.catalog["reimplantation"],
             self.catalog["localisation_pac"],
             # Additional vars
-            lineaire_detruit,
             self.catalog.get("transfert_parcelles"),
             self.catalog.get("amenagement_dup"),
             self.catalog.get("meilleur_emplacement"),
             self.catalog.get("motif_pac"),
             # Computed vars
             lineaire_detruit_pac,
-            lineaire_type_4_sur_parcelle_pac,
-            ratio_detruit,
             is_small,
         )
 
@@ -202,14 +194,11 @@ class Bcae8(CriterionEvaluator):
             motif,
             reimplantation,
             localisation_pac,
-            lineaire_detruit,
             transfert_parcelles,
             amenagement_dup,
             meilleur_emplacement,
             motif_pac,
             lineaire_detruit_pac,
-            lineaire_type_4_sur_parcelle_pac,
-            ratio_detruit,
             is_small,
         ) = result_data
 
