@@ -129,7 +129,6 @@ class Bcae8(CriterionEvaluator):
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
         "dispense_petit": RESULTS.non_soumis,
-        "non_soumis_petit": RESULTS.non_soumis,
         "soumis_remplacement": RESULTS.soumis,
         "soumis_transfert_parcelles": RESULTS.soumis,
         "soumis_meilleur_emplacement": RESULTS.soumis,
@@ -137,9 +136,13 @@ class Bcae8(CriterionEvaluator):
         "soumis_amenagement": RESULTS.soumis,
         "soumis_autre": RESULTS.soumis,
         "interdit_transfert_parcelles": RESULTS.interdit,
+        "interdit_amelioration_culture": RESULTS.interdit,
+        "interdit_amelioration_ecologique": RESULTS.interdit,
         "interdit_meilleur_emplacement": RESULTS.interdit,
         "interdit_chemin_acces": RESULTS.interdit,
         "interdit_amenagement": RESULTS.interdit,
+        "interdit_embellissement": RESULTS.interdit,
+        "interdit_securite": RESULTS.interdit,
         "interdit_autre": RESULTS.interdit,
     }
 
@@ -202,7 +205,9 @@ class Bcae8(CriterionEvaluator):
             is_small,
         ) = result_data
 
-        if localisation_pac == "oui":
+        if localisation_pac == "non" or lineaire_detruit_pac == 0:
+            result_code = "non_soumis"
+        else:
             if is_small:
                 if reimplantation == "remplacement":
                     if motif == "chemin_access":
@@ -315,8 +320,5 @@ class Bcae8(CriterionEvaluator):
                             result_code = "soumis_autre"
                         else:
                             result_code = "interdit_autre"
-
-        elif localisation_pac == "non":
-            result_code = "non_soumis"
 
         return result_code
