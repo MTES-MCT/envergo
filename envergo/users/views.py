@@ -138,7 +138,7 @@ class NewsletterOptIn(FormView):
             "redirectionUrl": self.request.build_absolute_uri(
                 reverse("newsletter_confirmation")
             ),
-            "templateId": settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"],
+            "templateId": int(settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"]),
         }
 
         response = requests.post(api_url, json=body, headers=headers)
