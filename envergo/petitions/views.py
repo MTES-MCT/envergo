@@ -7,11 +7,12 @@ import requests
 from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse, QueryDict
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.views import View
 from django.views.generic import FormView
 
-from envergo.analytics.utils import log_event
+from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteHaie,
@@ -48,7 +49,7 @@ class PetitionProjectCreate(FormView):
         with transaction.atomic():
             petition_project = form.save()
             read_only_url = reverse(
-                "petition_project",
+                "petition_project_auto_redirection",
                 kwargs={"reference": petition_project.reference},
             )
 
@@ -71,6 +72,7 @@ class PetitionProjectCreate(FormView):
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
+                    **get_matomo_tags(self.request),
                 )
                 res = JsonResponse(
                     {
@@ -342,12 +344,16 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             )
             raise NotImplementedError("We do not handle uncompleted project")
 
-        log_event(
-            "projet",
-            "consultation",
-            self.request,
-            **petition_project.get_log_event_data(),
-        )
+        # Log the consultation event only if it is not after an automatic redirection due to dossier creation
+        if not request.session.pop("auto_redirection", False):
+            log_event(
+                "projet",
+                "consultation",
+                self.request,
+                **petition_project.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -361,6 +367,14 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         """Check which template to use depending on the moulinette result."""
         moulinette = self.moulinette
         return [moulinette.get_result_template()]
+
+
+class PetitionProjectAutoRedirection(View):
+    def get(self, request, *args, **kwargs):
+        # Set a flag in the session
+        request.session["auto_redirection"] = True
+        # Redirect to the petition_project view
+        return redirect(reverse("petition_project", kwargs=kwargs))
 
 
 class Alert:
