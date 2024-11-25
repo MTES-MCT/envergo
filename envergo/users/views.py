@@ -150,7 +150,12 @@ class NewsletterOptIn(FormView):
         else:
             logger.error(
                 "Error while creating/updating contact via Brevo API",
-                extra={"response": response},
+                extra={
+                    "response.status_code": response.status_code,
+                    "response.text": response.text,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
             )
             res = self.form_invalid(form)
 
