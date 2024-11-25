@@ -1,0 +1,27 @@
+{% load utils %}
+
+<div id="form-group-{{ field.html_name }}"
+     class="fr-select-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-select-group--error{% endif %}">
+
+  {% include '_label.html' %}
+
+  {% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
+
+    {% if field.errors %}
+      {{ field|add_classes:'fr-select fr-input--error' }}
+    {% else %}
+      {{ field|add_classes:'fr-select' }}
+    {% endif %}
+
+    {% if nest_field_class %}</div>{% endif %}
+
+  {% if field.help_text and bottom_help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+
+  {% if field.errors %}
+    <p class="fr-error-text">
+      ↑
+      {{ field.errors.0 }}
+      ↑
+    </p>
+  {% endif %}
+</div>

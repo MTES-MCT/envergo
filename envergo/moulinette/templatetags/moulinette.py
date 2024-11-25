@@ -158,10 +158,11 @@ def field_summary(field):
         value = field.value()
 
     # try to add thousands separator
-    try:
-        value = intcomma(value)
-    except (TypeError, ValueError):
-        pass
+    if value.isdigit():
+        try:
+            value = intcomma(value)
+        except (TypeError, ValueError):
+            pass
 
     label = field.label
     if hasattr(field.field, "display_label"):

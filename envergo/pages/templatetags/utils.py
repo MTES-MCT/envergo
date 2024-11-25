@@ -4,6 +4,7 @@ from django.forms.widgets import (
     CheckboxSelectMultiple,
     FileInput,
     RadioSelect,
+    Select,
 )
 
 register = template.Library()
@@ -28,6 +29,13 @@ def is_radio(field):
     """Is the given field a radio select?."""
 
     return isinstance(field.field.widget, RadioSelect)
+
+
+@register.filter
+def is_select(field):
+    """Is the given field a select?."""
+
+    return isinstance(field.field.widget, Select)
 
 
 @register.filter
@@ -87,3 +95,9 @@ def envergo_submit_row(context):
 def to_list(item):
     """turn a single item into a list"""
     return [item]
+
+
+@register.filter
+def add_string(arg1, arg2):
+    """concatenate arg1 & arg2"""
+    return str(arg1) + str(arg2)

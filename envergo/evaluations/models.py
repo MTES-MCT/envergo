@@ -226,6 +226,7 @@ class Evaluation(models.Model):
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    updated_at = models.DateTimeField(_("Date updated"), auto_now=True)
 
     class Meta:
         verbose_name = "Avis"
@@ -316,9 +317,16 @@ class Evaluation(models.Model):
                 break
         return eligible
 
-    def create_version(self, author):
+    def unpublish(self):
+        """Unpublish the evaluation."""
+
+        self.versions.update(published=False)
+
+    def create_version(self, author, message):
         content = self.render_content()
-        version = EvaluationVersion(evaluation=self, created_by=author, content=content)
+        version = EvaluationVersion(
+            evaluation=self, created_by=author, content=content, message=message
+        )
         return version
 
     def render_content(self):
@@ -369,11 +377,26 @@ class EvaluationVersion(models.Model):
         related_name="evaluation_versions",
     )
     content = models.TextField(_("Content"))
+    published = models.BooleanField(_("Is published?"), default=True)
+    message = models.CharField(
+        _("Message"),
+        max_length=1024,
+        help_text=_("This message will be displayed to users."),
+    )
 
     class Meta:
         verbose_name = _("Evaluation version")
         verbose_name_plural = _("Evaluation versions")
         ordering = ("-created_at",)
+
+        # Let's make sure a single version can be published at a time
+        constraints = [
+            models.UniqueConstraint(
+                fields=["evaluation"],
+                condition=models.Q(published=True),
+                name="unique_published_version",
+            )
+        ]
 
 
 class EvaluationEmail:
@@ -553,8 +576,9 @@ class EvaluationEmail:
                 "action_requise",
             )
         ):
-            perimeters = self.moulinette.sage.perimeters.all()
-            for perimeter in perimeters:
+            for perimeter, result in self.moulinette.sage.results_by_perimeter.items():
+                if result not in ("interdit", "soumis", "action_requise"):
+                    continue
                 if perimeter.contact_email:
                     bcc_recipients.append(perimeter.contact_email)
                 else:
@@ -703,14 +727,6 @@ class Request(models.Model):
             send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
-
-    def save(self, *args, **kwargs):
-        # do not store project owner emails and phone if the user does not want to send the eval to the project owner
-        if not self.send_eval_to_project_owner:
-            self.project_owner_emails = []
-            self.project_owner_phone = ""
-
-        super().save(*args, **kwargs)
 
 
 def request_file_format(instance, filename):

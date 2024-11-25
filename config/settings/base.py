@@ -83,6 +83,7 @@ LOCAL_APPS = [
     "envergo.admin.config.EnvergoAdminConfig",
     "envergo.urlmappings",
     "envergo.hedges",
+    "envergo.petitions",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -195,6 +196,8 @@ TEMPLATES = [
                 "envergo.utils.context_processors.multi_sites_context",
                 "envergo.utils.context_processors.newsletter_context",
                 "envergo.analytics.context_processors.analytics",
+                "envergo.analytics.context_processors.visitor_id",
+                "envergo.evaluations.context_processors.request_eval_context",
             ],
         },
     }
@@ -398,6 +401,7 @@ DEMARCHES_SIMPLIFIEE = {
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
+CONFIG_MATTERMOST_HANDLERS = env.list("DJANGO_CONFIG_MATTERMOST_HANDLERS", default=[])
 
 BREVO = {
     "API_URL": env("BREVO_API_URL", default="https://api.brevo.com/v3/"),

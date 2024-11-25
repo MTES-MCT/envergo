@@ -161,3 +161,46 @@ def test_several_perimeter_maps_display(
         in res.content.decode()
     )
     assert "« Sage Test »" in res.content.decode()
+
+
+@pytest.mark.parametrize("footprint", [1000])
+def test_several_perimeter_may_have_different_results(
+    moulinette_data,
+    sage_criteria,
+    france_map,  # noqa
+    client,  # noqa
+):
+    """When several perimeters are found, their respective results are displayed."""
+
+    ConfigAmenagementFactory(is_activated=True)
+
+    sage_non_disponible = PerimeterFactory(
+        name="Sage Non Disponible",
+        activation_map=france_map,
+        regulation=sage_criteria[0].regulation,
+        is_activated=False,
+    )
+
+    sage_test = PerimeterFactory(
+        name="Sage Test",
+        activation_map=france_map,
+        regulation=sage_criteria[0].regulation,
+    )
+
+    CriterionFactory(
+        title="Zone humide",
+        regulation=sage_criteria[0].regulation,
+        perimeter=sage_test,
+        evaluator="envergo.moulinette.regulations.sage.ImpactZoneHumide",
+        evaluator_settings={"threshold": 15000000},
+        activation_map=france_map,
+    )
+
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data, False)
+    moulinette.catalog["forbidden_wetlands_within_25m"] = True
+    moulinette.evaluate()
+    assert moulinette.sage.results_by_perimeter == {
+        sage_criteria[0].perimeter: "interdit",
+        sage_test: "non_soumis",
+        sage_non_disponible: "non_disponible",
+    }

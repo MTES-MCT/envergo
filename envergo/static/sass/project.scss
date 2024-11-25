@@ -777,12 +777,15 @@ main > .fr-notice {
 .img-icon {
   display: inline-block;
   vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
-
-  --icon-size: 1.5rem;
-
   width: var(--icon-size);
   height: var(--icon-size);
   margin-right: 0.25rem;
+
+  --icon-size: 1.5rem;
+}
+
+button .img-icon {
+  --icon-size: 1rem;
 }
 
 /**
@@ -1106,6 +1109,7 @@ footer {
   text-align: center;
   display: flex;
   justify-content: space-around;
+  align-items: center;
   flex-wrap: wrap;
   width: 100vw;
 
@@ -1281,9 +1285,11 @@ footer {
 }
 
 .fr-header {
-  .fr-header__logo {
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
+  @media (width >= 62em) {
+    .fr-header__logo {
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+    }
   }
 
   .fr-nav__link,
@@ -1293,9 +1299,11 @@ footer {
   }
 
   &.header-slim {
-    .fr-header__body-row {
-      padding: 0 0 0.75rem;
-      line-height: 1rem;
+    @media (width >= 62em) {
+      .fr-header__body-row {
+        padding: 0.75rem 0;
+        line-height: 1rem;
+      }
 
       img {
         max-height: 2rem;
@@ -1332,7 +1340,7 @@ footer {
     top: 0;
     z-index: 2000;
 
-    .fr-btn {
+    .fr-btn:not(.fr-btn--menu) {
       // Dsfr style for this selector is weirdly specific
       // So !important is necessary to override it
       font-size: 0.875rem !important;
@@ -1912,6 +1920,11 @@ main.demonstrateur_2150 {
 
 #moulinette-submit-button {
   min-width: 8em;
+}
+
+#demarche-simplifiee-form {
+  color: var(--text-inverted-blue-france);
+  min-width: 360px;
 }
 
 #demarche-simplifiee-btn {

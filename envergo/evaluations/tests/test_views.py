@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.db.utils import IntegrityError
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
@@ -512,7 +513,7 @@ def test_users_can_see_dashboard_menu(user, client):
 def test_eval_detail_shows_version_content(client):
     """The eval detail page shows the stored evaluation version content."""
 
-    version = VersionFactory(content="This is a version")
+    version = VersionFactory(content="This is a version", published=True)
     eval = EvaluationFactory(versions=[version])
     url = eval.get_absolute_url()
     res = client.get(url)
@@ -521,8 +522,20 @@ def test_eval_detail_shows_version_content(client):
     assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
 
 
-def test_eval_detail_shows_latest_version_content(client):
-    """The eval detail page shows the most recent version content."""
+def test_only_published_versions_are_shown(client):
+    """Unpublished versions are not displayed."""
+
+    version = VersionFactory(content="This is a version", published=False)
+    eval = EvaluationFactory(versions=[version])
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "This is a version" not in res.content.decode()
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+
+def test_eval_detail_shows_latest_published_version_content(client):
+    """The eval detail page shows the most recent published version content."""
 
     tz = get_current_timezone()
     versions = [
@@ -533,22 +546,88 @@ def test_eval_detail_shows_latest_version_content(client):
             content="This is version 3", created_at=datetime(2024, 1, 3, tzinfo=tz)
         ),
         VersionFactory(
-            content="This is version 2", created_at=datetime(2024, 1, 2, tzinfo=tz)
+            content="This is version 2",
+            created_at=datetime(2024, 1, 2, tzinfo=tz),
+            published=True,
+        ),
+        VersionFactory(
+            content="This is version 4", created_at=datetime(2024, 1, 4, tzinfo=tz)
         ),
     ]
     eval = EvaluationFactory(versions=versions)
     url = eval.get_absolute_url()
     res = client.get(url)
     assert res.status_code == 200
-    assert "This is version 3" in res.content.decode()
+    assert "This is version 2" in res.content.decode()
 
 
-def test_eval_detail_without_versions_renders_content(client):
-    """When there is no existing version, the eval detail page renders the content dynamically."""
+def test_eval_detail_without_versions_does_not_render_content(client):
+    """When there is no existing version, the eval detail page is not available."""
     eval = EvaluationFactory(versions=[])
     assert eval.versions.count() == 0
 
     url = eval.get_absolute_url()
     res = client.get(url)
+    assert res.status_code == 404
+
+
+def test_only_one_version_can_be_published():
+    versions = [
+        VersionFactory(content="This is a version", published=True),
+        VersionFactory(content="This is a version", published=True),
+    ]
+    with pytest.raises(IntegrityError):
+        EvaluationFactory(versions=versions)
+
+
+def test_admin_can_view_draft_versions(admin_client):
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?version={draft.pk}"
+    res = admin_client.get(version_url)
     assert res.status_code == 200
+    assert "This is a draft version" in res.content.decode()
+    assert "This is a published version" not in res.content.decode()
+
+
+def test_admin_can_view_current_content(admin_client):
+    """Admin can preview a specific version."""
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?version={draft.pk}"
+    res = admin_client.get(version_url)
+    assert res.status_code == 200
+    assert "This is a draft version" in res.content.decode()
+    assert "This is a published version" not in res.content.decode()
+
+
+def test_users_cannot_view_draft_versions(client):
+    """Users trying to view a custom version get a 404."""
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?version={draft.pk}"
+    res = client.get(version_url)
+    assert res.status_code == 403
+
+
+def test_admin_can_view_unpublished_content(admin_client):
+
+    published = VersionFactory(content="This is a published version", published=True)
+    draft = VersionFactory(content="This is a draft version", published=False)
+    eval = EvaluationFactory(versions=[published, draft])
+    url = eval.get_absolute_url()
+    version_url = f"{url}?preview"
+    res = admin_client.get(version_url)
+    assert res.status_code == 200
+    assert "This is a draft version" not in res.content.decode()
+    assert "This is a published version" not in res.content.decode()
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()

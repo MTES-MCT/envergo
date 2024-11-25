@@ -4,21 +4,25 @@ from urllib.parse import urlparse
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.options import TO_FIELD_VAR
 from django.contrib.admin.utils import unquote
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html, linebreaks, mark_safe
+from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
 from envergo.analytics.models import Event
-from envergo.evaluations.forms import EvaluationFormMixin
+from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
     EvaluationVersion,
@@ -113,8 +117,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         "urbanism_department_emails",
     ]
     readonly_fields = ["reference", "request", "sent_history", "versions"]
-    actions = ["create_version"]
-
     fieldsets = (
         (
             None,
@@ -163,25 +165,48 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
     )
 
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+
+        # Add warning message if the published version is outdated
+        latest_version = obj.versions.first()
+        published = True
+        if not latest_version:
+            self.message_user(
+                request,
+                "Il n'y a pas de version publiée pour cet avis.",
+                level=messages.WARNING,
+            )
+            published = False
+        elif not latest_version.published:
+            self.message_user(
+                request,
+                "La dernière version n'est pas publiée.",
+                level=messages.WARNING,
+            )
+            published = False
+        elif latest_version.created_at < obj.updated_at:
+
+            local_updated_at = localtime(obj.updated_at)
+            local_published_at = localtime(latest_version.created_at)
+            msg = f"""
+                La dernière version enregistrée de cet avis
+                ({date_format(local_updated_at, "SHORT_DATETIME_FORMAT")})
+                n'a pas encore été publiée. Dernière publication :
+                {date_format(local_published_at, "SHORT_DATETIME_FORMAT")}.
+            """
+            self.message_user(request, msg, level=messages.WARNING)
+            published = False
+
+        context["published"] = published
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
     def save_model(self, request, obj, form, change):
         """Synchronize the references."""
         if obj.request:
             obj.reference = obj.request.reference
         super().save_model(request, obj, form, change)
-
-        # We want to pro-render the evaluation content and save the result in a new
-        # version.
-        # But since it's a work-in-progress, the indermediate development step is that
-        # we just keep a single version and just override it everytime the evaluation
-        # is updated
-        latest_version = obj.versions.first()
-        evaluation_content = obj.render_content()
-        if latest_version:
-            latest_version.content = evaluation_content
-        else:
-            latest_version = obj.create_version(request.user)
-
-        latest_version.save()
 
     def get_queryset(self, request):
         qs = (
@@ -213,8 +238,69 @@ class EvaluationAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.evaluation_email),
                 name="evaluations_evaluation_email_avis",
             ),
+            path(
+                "<path:object_id>/publish/",
+                self.admin_site.admin_view(self.publish_view),
+                name="evaluations_evaluation_publish",
+            ),
         ]
         return custom_urls + urls
+
+    @transaction.atomic()
+    def publish_view(self, request, object_id, extra_context=None):
+        """Publish a new version of the evaluation."""
+
+        # Stolen code from the "delete_view" method
+        app_label = self.opts.app_label
+        to_field = request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
+        evaluation = self.get_object(request, unquote(object_id), to_field)
+        if evaluation is None:
+            return self._get_obj_does_not_exist_redirect(request, self.opts, object_id)
+
+        if request.POST:
+            # validate form and create new vesion
+            form = EvaluationVersionForm(request.POST)
+            if form.is_valid():
+                message = form.cleaned_data.get("message")
+                try:
+                    evaluation.unpublish()
+                    version = evaluation.create_version(request.user, message)
+                    version.save()
+                    admin_url = reverse(
+                        "admin:evaluations_evaluation_change", args=[evaluation.uid]
+                    )
+                    msg = "Une nouvelle version de l'avis a été publiée."
+                    self.message_user(request, msg, level=messages.SUCCESS)
+                    return HttpResponseRedirect(admin_url)
+                except Exception as e:
+                    error = (
+                        "Une erreur est survenue lors de la publication : %(error)s"
+                        % {"error": e}
+                    )
+                    self.message_user(request, error, level=messages.ERROR)
+
+        else:
+            has_versions = evaluation.versions.exists()
+            initials = {}
+            if not has_versions:
+                initials["message"] = "Version initiale"
+            form = EvaluationVersionForm(initial=initials)
+
+        object_name = str(self.opts.verbose_name)
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Publier l'avis réglementaire",
+            "subtitle": None,
+            "object_name": object_name,
+            "object": evaluation,
+            "opts": self.opts,
+            "app_label": app_label,
+            "form": form,
+            **(extra_context or {}),
+        }
+
+        response = TemplateResponse(request, "evaluations/admin/publish.html", context)
+        return response
 
     def evaluation_email(self, request, object_id):
         if not self.has_view_or_change_permission(request):
@@ -388,36 +474,6 @@ class EvaluationAdmin(admin.ModelAdmin):
             {"evaluation": obj, "versions": obj.versions.all()},
         )
         return mark_safe(content)
-
-    @admin.action(description=_("Create a new version for this evaluation"))
-    def create_version(self, request, queryset):
-        if queryset.count() > 1:
-            error = _("Please, select one and only one evaluation for this action.")
-            self.message_user(request, error, level=messages.ERROR)
-            return
-
-        evaluation = queryset[0]
-        try:
-            version = evaluation.create_version(request.user)
-            version.save()
-        except Exception as e:
-            error = _("There was an error creating a new version: %(error)s") % {
-                "error": e
-            }
-            self.message_user(request, error, level=messages.ERROR)
-            return
-
-        admin_url = reverse(
-            "admin:evaluations_evaluation_change", args=[evaluation.uid]
-        )
-        msg = _(
-            '<a href="%(admin_url)s">The new version for evaluation %(reference)s has been created.</a>'
-        ) % {
-            "admin_url": admin_url,
-            "reference": evaluation.reference,
-        }
-        self.message_user(request, mark_safe(msg), level=messages.SUCCESS)
-        return
 
 
 class RequestFileInline(admin.TabularInline):
