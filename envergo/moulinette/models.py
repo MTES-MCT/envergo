@@ -1495,10 +1495,7 @@ class MoulinetteHaie(Moulinette):
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
-        # TODO
-        summary = {
-            "haie": "this is a haie simulation",
-        }
+        summary = self.raw_data.copy()
         summary.update(self.cleaned_additional_data())
 
         if self.is_evaluation_available():

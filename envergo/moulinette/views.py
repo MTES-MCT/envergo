@@ -12,6 +12,7 @@ from django.views.generic import FormView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
     extract_matomo_url_from_request,
+    get_matomo_tags,
     is_request_from_a_bot,
     log_event,
 )
@@ -286,16 +287,17 @@ class MoulinetteMixin:
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
 
-        mtm_keys = {
-            k: v for k, v in self.request.session.items() if k.startswith("mtm_")
-        }
-        export.update(mtm_keys)
+        action = self.event_action_amenagement
+        if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+            action = self.event_action_haie
+            export["longueur_detruite"] = (
+                moulinette.catalog["haies"].length_to_remove()
+                if "haies" in moulinette.catalog
+                else None
+            )
 
-        action = (
-            self.event_action_haie
-            if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN
-            else self.event_action_amenagement
-        )
+        mtm_keys = get_matomo_tags(self.request)
+        export.update(mtm_keys)
 
         log_event(
             self.event_category,
@@ -392,6 +394,13 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
             return res
         elif triage_form is not None:
+            log_event(
+                "simulateur",
+                "soumission_autre",
+                self.request,
+                **self.request.GET.dict(),
+                **get_matomo_tags(self.request),
+            )
             return res
         else:
             return HttpResponseRedirect(reverse("moulinette_home"))
@@ -523,7 +532,6 @@ class Triage(FormView):
         context = self.get_context_data()
         if not context.get("department", None):
             return HttpResponseRedirect(reverse("home"))
-
         log_event(
             "simulateur",
             "localisation",
@@ -531,6 +539,7 @@ class Triage(FormView):
             **{
                 "department": context["department"].department,
             },
+            **get_matomo_tags(self.request),
         )
         return self.render_to_response(self.get_context_data())
 
