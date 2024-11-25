@@ -51,7 +51,7 @@ class Hedge {
    * That way hedge is a proxy object, and methods with side effects (like `updateLength`)
    * will trigger reactivity.
    */
-  init(latLngs = []) {
+  init(latLngs = [], additionalData = {}) {
     // this.polyline = L.polyline(latLngs || [], styles[type].normal);
     // this.polyline.addTo(map);
     // this.polyline.enableEdit(map);
@@ -63,6 +63,7 @@ class Hedge {
       latLngs.forEach((latLng) => this.polyline.editor.push(latLng));
       this.polyline.editor.endDrawing();
     }
+    this.additionalData = additionalData;
 
     this.updateLength();
 
@@ -120,6 +121,7 @@ class Hedge {
       id: this.id,
       latLngs: this.latLngs.map((latLng) => ({ lat: latLng.lat, lng: latLng.lng })),
       type: this.type,
+      additionalData: this.additionalData,
     };
   }
 }
@@ -165,10 +167,10 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(map, onRemove, latLngs = []) {
+  addHedge(map, onRemove, latLngs = [], additionalData = {}) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
     const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
-    hedge.init(latLngs);
+    hedge.init(latLngs, additionalData);
     this.hedges.push(hedge);
 
     return hedge;
@@ -217,10 +219,10 @@ createApp({
     });
     const showHelpBubble = ref(false);
 
-    const addHedge = (type, latLngs = []) => {
+    const addHedge = (type, latLngs = [], additionalData = {}) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      const newHedge = hedgeList.addHedge(map, onRemove, latLngs);
+      const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
 
       newHedge.polyline.on('editable:vertex:new', () => {
         showHelpBubble.value = true;
@@ -229,9 +231,68 @@ createApp({
       // Cacher la bulle d'aide à la fin du tracé
       newHedge.polyline.on('editable:drawing:end', () => {
         showHelpBubble.value = false;
+        showHedgeModal(newHedge);
       });
 
       return newHedge;
+    };
+
+    // Show the "description de la haie" form modal
+    const showHedgeModal = (hedge) => {
+      const dialog = document.getElementById("hedge-data-dialog");
+      const form = dialog.querySelector("form");
+      const hedgeTypeField = document.getElementById("id_hedge_type");
+      const pacField = document.getElementById("id_sur_parcelle_pac");
+      const nearPondField = document.getElementById("id_proximite_mare");
+      const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
+      const hedgeLength = document.getElementById("hedge-data-dialog-hedge-length");
+
+      // Pre-fill the form with hedge data if it's an edition
+      if (hedge.additionalData) {
+        hedgeTypeField.value = hedge.additionalData.typeHaie;
+        pacField.checked = hedge.additionalData.surParcellePac;
+        nearPondField.checked = hedge.additionalData.proximiteMare;
+      } else {
+        form.reset();
+      }
+      hedgeName.textContent = hedge.id;
+      hedgeLength.textContent = hedge.length.toFixed(0);
+
+      // Save form data to the hedge object
+      // This is the form submit event handler
+      const saveModalData = (event) => {
+        event.preventDefault();
+
+        const hedgeType = hedgeTypeField.value;
+        const isOnPacField = pacField.checked;
+        const isNearPond = nearPondField.checked;
+        hedge.additionalData = {
+          typeHaie: hedgeType,
+          surParcellePac: isOnPacField,
+          proximiteMare: isNearPond,
+        };
+
+        // Reset the form and hide the modal
+        form.reset();
+        dsfr(dialog).modal.conceal();
+      };
+
+
+      // Save data upon form submission
+      form.addEventListener("submit", saveModalData, { once: true });
+
+      // If the modal is closed without saving, let's make sure to remove the
+      // event listener.
+      dialog.addEventListener("dsfr.conceal", () => {
+        form.removeEventListener("submit", saveModalData);
+      });
+
+      dsfr(dialog).modal.disclose();
+    };
+
+    // Open the form modal to edit an existing hedge
+    const editHedge = (hedge) => {
+      showHedgeModal(hedge);
     };
 
     const startDrawingToPlant = () => {
@@ -285,28 +346,65 @@ createApp({
       savedHedgesData.forEach(hedgeData => {
         const type = hedgeData.type;
         const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
+        const additionalData = hedgeData.additionalData;
 
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
-        const hedge = addHedge(type, latLngs);
+        const hedge = addHedge(type, latLngs, additionalData);
       });
     };
 
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
+      const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
+
+      const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/jpeg" +
+        "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
+
+      // Display layer switching control
+      const baseMaps = {
+        "Plan": planLayer,
+        "Satellite": satelliteLayer
+      };
+
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
+        layers: [satelliteLayer]
       }).setView([43.6861, 3.5911], 14);
+
+      L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
 
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {
@@ -329,6 +427,7 @@ createApp({
       showHelpBubble,
       saveData,
       cancel,
+      editHedge,
     };
   }
 }).mount('#app');
