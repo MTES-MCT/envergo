@@ -878,13 +878,13 @@ class ConfigHaie(ConfigBase):
 
         identified_sources = {
             ("url_moulinette", "Url de la simulation"),
-            ("url_projet", "Url du projet de pétition"),
-            ("ref_projet", "Référence du projet de pétition"),
+            ("url_projet", "Url du projet de dossier"),
+            ("ref_projet", "Référence du projet de dossier"),
         }
 
         available_sources = {
-            "Formulaire de triage": triage_form_fields,
-            "Formulaire principal": main_form_fields,
+            "Fléchage": triage_form_fields,
+            "Questions principales": main_form_fields,
         }
 
         regulation_results = set()
@@ -908,12 +908,12 @@ class ConfigHaie(ConfigBase):
                     )
 
             if regulation_sources:
-                available_sources[f"Formulaire de {regulation.title}"] = (
+                available_sources[f'Questions complémentaires "{regulation.title}"'] = (
                     regulation_sources
                 )
 
-        available_sources["Résultats de réglementation"] = regulation_results
-        available_sources["Variables identifiées"] = identified_sources
+        available_sources["Résultats réglementation"] = regulation_results
+        available_sources["Variables projet"] = identified_sources
 
         return available_sources
 

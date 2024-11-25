@@ -1,4 +1,7 @@
 import json
+import secrets
+
+from django.conf import settings
 
 
 def get_base_url(site_domain):
@@ -17,3 +20,14 @@ def display_form_details(form):
         form_details["errors"][str(field)] = errors
 
     return json.dumps(form_details, indent=4)
+
+
+def generate_key():
+    """Generate a short random and readable key."""
+
+    # letters and numbers without l, 1, i, O, 0, etc.
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    length = settings.URLMAPPING_KEY_LENGTH
+    key = "".join(secrets.choice(alphabet) for i in range(length))
+
+    return key
