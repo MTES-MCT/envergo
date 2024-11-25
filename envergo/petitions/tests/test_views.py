@@ -5,7 +5,7 @@ from django.test import RequestFactory
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import PetitionProjectFactory
-from envergo.petitions.views import PetitionProjectCreate
+from envergo.petitions.views import AlertList, PetitionProjectCreate
 
 pytestmark = pytest.mark.django_db
 
@@ -29,11 +29,15 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     factory = RequestFactory()
     request = factory.get("")
     view.request = request
+    request.alerts = AlertList(request)
 
     petition_project = PetitionProjectFactory()
-    demarche_simplifiee_url = view.pre_fill_demarche_simplifiee(petition_project)
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+        petition_project
+    )
 
     assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert dossier_number == 21075665
 
     # Assert the body of the requests.post call
     expected_body = {
