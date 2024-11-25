@@ -1,20 +1,8 @@
-import secrets
-
-from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-
-def generate_key():
-    """Generate a short random and readable key."""
-
-    # letters and numbers without l, 1, i, O, 0, etc.
-    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
-    length = settings.URLMAPPING_KEY_LENGTH
-    key = "".join(secrets.choice(alphabet) for i in range(length))
-
-    return key
+from envergo.utils.tools import generate_key
 
 
 class UrlMapping(models.Model):

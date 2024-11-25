@@ -21,7 +21,7 @@ from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
-from envergo.utils.tools import display_form_details
+from envergo.utils.tools import display_form_details, generate_key
 from envergo.utils.urls import extract_param_from_url
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,9 @@ class PetitionProjectCreate(FormView):
                 extra={"haie config": config.id, "department": department},
             )
 
-            self.request.alerts.append(Alert("missing_demarche_simplifiee_number"))
+            self.request.alerts.append(
+                Alert("missing_demarche_simplifiee_number", is_fatal=True)
+            )
             return None
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
@@ -161,6 +163,7 @@ class PetitionProjectCreate(FormView):
                         "api_url": api_url,
                         "request_body": body,
                     },
+                    is_fatal=True,
                 )
             )
         return redirect_url, dossier_number
@@ -265,13 +268,28 @@ class PetitionProjectCreate(FormView):
         }.get(mapped_value, mapped_value)
 
     def form_invalid(self, form):
-        logger.error("Unable to create a petition project", extra={"form": form.errors})
+        logger.error("Unable to create a petition project", extra={"form": form})
 
         self.request.alerts.form = form
+        self.request.alerts.user_error_reference = generate_key()
+
+        if form.errors:
+            self.request.alerts.append(Alert("invalid_form", is_fatal=True))
+
+        if len(self.request.alerts) == 0:
+            self.request.alerts.append(Alert("unknown_error", is_fatal=True))
+
         return JsonResponse(
             {
                 "error_title": "Un problème technique empêche la création de votre dossier.",
-                "error_body": "Nous vous invitons à enregistrer votre simulation et à réessayer ultérieurement.",
+                "error_body": f"""
+                Nous avons été notifiés et travaillons à la résolution de cette erreur.
+
+                Référence de l’erreur : ‘{self.request.alerts.user_error_reference}’
+
+                Merci de vous faire connaître en nous transmettant la référence de l’erreur en nous écrivant à \
+                contact@haie.beta.gouv.fr . Nous vous accompagnerons pour vous permettre de déposer votre demande sans \
+                encombres.""",
             },
             status=400,
         )
@@ -345,9 +363,10 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
 
 
 class Alert:
-    def __init__(self, key, extra: dict[str, Any] = dict):
+    def __init__(self, key, extra: dict[str, Any] = dict, is_fatal=False):
         self.key = key
         self.extra = extra
+        self.is_fatal = is_fatal
 
 
 class AlertList(List[Alert]):
@@ -357,6 +376,7 @@ class AlertList(List[Alert]):
         self._config = None
         self._petition_project = None
         self._form = None
+        self._user_error_reference = None
 
     @property
     def petition_project(self):
@@ -381,6 +401,14 @@ class AlertList(List[Alert]):
     @form.setter
     def form(self, value):
         self._form = value
+
+    @property
+    def user_error_reference(self):
+        return self._user_error_reference
+
+    @user_error_reference.setter
+    def user_error_reference(self, value):
+        self._user_error_reference = value
 
     def append(self, item: Alert) -> None:
         if not isinstance(item, Alert):
@@ -449,6 +477,11 @@ class AlertList(List[Alert]):
                     f"{self.config.department}]({config_url})"
                 )
 
+            lines.append(
+                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference}` l’invitant "
+                f"à nous contacter."
+            )
+
             if self.form:
                 lines.append(
                     f"""
@@ -463,15 +496,10 @@ class AlertList(List[Alert]):
 
         for alert in self:
             index = index + 1
-            if alert.key in (
-                "pre_fill_failure",
-                "ds_api_http_error",
-                "missing_demarche_simplifiee_number",
-            ):
+            if alert.is_fatal:
                 lines.append("")
                 lines.append(f"#### :x: Description de l’erreur #{index}")
             else:
-
                 lines.append("")
                 lines.append(f"#### :warning: Description de l’anomalie #{index}")
 
@@ -537,6 +565,18 @@ class AlertList(List[Alert]):
                ```
                """
                     )
+                )
+
+            elif alert.key == "invalid_form":
+                lines.append("Le formulaire contient des erreurs")
+
+            elif alert.key == "unknown_error":
+                lines.append("Nous ne savons pas d'où provient ce problème...")
+
+            else:
+                logger.error(
+                    "Unknown alert key during petition project creation",
+                    extra={"alert": alert},
                 )
 
         return "\n".join(lines)
