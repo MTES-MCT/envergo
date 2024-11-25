@@ -68,6 +68,10 @@ def analytics(request):
     We use matomo custom dimensions, but instead of storing raw data, it
     was decided that we manually build the facets here."""
 
+    # Disable analytics facets for guichet unique de la haie
+    if hasattr(request, "site") and request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+        return {}
+
     visitor_id = request.COOKIES.get(VISITOR_COOKIE_NAME, None)
     if not visitor_id:
         return {}

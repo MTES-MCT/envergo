@@ -14,35 +14,19 @@
        data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
-    <header role="banner" class="fr-header">
-      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line"
-              @click="saveData">Enregistrer et revenir au simulateur</button>
-      <h1 class="fr-h4">Plan de situation des haies</h1>
-      <button class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-right fr-icon-close-line"
-              @click="cancel">Annuler et fermer</button>
-    </header>
-
     <div id="saisie-ui">
       <div id="map">
-        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
-          <div class="controls bottom left">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
-              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
-              Vue d'ensemble
-            </button>
-          </div>
-        </template>
 
-        <div class="controls top right">
-          <button class="fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+        <div class="controls leaflet-top leaflet-right">
+          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
-            Tracer (à détruire)
+            Tracer une haie à détruire
           </button>
-          <button class="fr-btn fr-btn--sm fr-btn--secondary"
+          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
-            Tracer (à planter)
+            Tracer une haie à planter
           </button>
         </div>
 
@@ -55,48 +39,36 @@
       {% comment %}
       There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
       {% endcomment %}
-      <div class="controls top left">
-        <div class="fr-search-bar fr-search-bar--sm" role="search">
-          <label class="fr-label" for="address">Rechercher une commune</label>
-          <input class="fr-input fr-input--sm"
-                 placeholder="Rechercher une commune"
+      <div class="controls leaflet-top leaflet-left inline-controls">
+        <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+             role="search">
+          <label class="fr-label" for="address">Rechercher une commune ou une adresse</label>
+          <input class="fr-input"
+                 placeholder="Rechercher une commune ou une adresse"
                  type="search"
                  id="id_address"
                  name="address">
-          <button class="fr-btn fr-btn--sm fr-btn--secondary" title="Rechercher">Rechercher</button>
+          <button class="fr-btn fr-btn--sm" title="Rechercher">Rechercher</button>
         </div>
+
+        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+          <div class="leaflet-control">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
+              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
+              Vue d'ensemble
+            </button>
+          </div>
+        </template>
+
       </div>
 
       <div id="sidebar" class="fr-text--sm">
-        <div id="statistics">
-          <table id="summary">
-            <thead>
-              <tr>
-                <th colspan="2">Cumul linéaire</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th>Haies à détruire</th>
-                <td>[[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</td>
-              </tr>
-              <tr>
-                <th>Haies à planter</th>
-                <td>[[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</td>
-              </tr>
-            </tbody>
-          </table>
-          <div id="compensation" :class="{ success: compensationRate >= 100 }">
-            <p class="rate">
-              <strong>Le linéaire planté représente [[ compensationRate.toFixed(0) ]] % du linéaire détruit</strong>
-            </p>
-          </div>
-        </div>
         <div id="hedge-lists">
           <div class="hedge-list to-remove">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
+              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.count > 0">
               <table>
@@ -108,11 +80,15 @@
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
                     <th>[[ hedge.id ]]</th>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="editHedge(hedge)">Modifier</button>
+                    </td>
+                    <td>
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>
+                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -126,6 +102,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
+              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.count > 0">
               <table>
@@ -137,11 +114,15 @@
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
                     <th>[[ hedge.id ]]</th>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline fr-icon-close-line"
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="editHedge(hedge)">Modifier</button>
+                    </td>
+                    <td>
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>
+                    <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -153,6 +134,44 @@
         </div>
       </div>
     </div>
+
+    <footer>
+      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line "
+              @click="cancel">Retour</button>
+      <button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
+              @click="saveData">Enregistrer et poursuivre</button>
+    </footer>
+
+    <dialog id="hedge-data-dialog"
+            aria-labelledby="hedge-data-dialog-title"
+            role="dialog"
+            class="fr-modal">
+      <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col-12 fr-col-md-7 fr-col-lg-6 fr-col-xl-5">
+            <div class="fr-modal__body">
+
+              <form method="dialog">
+                <div class="fr-modal__content fr-pt-4w">
+                  <h1 id="hedge-data-dialog-title" class="fr-modal__title fr-mb-1w">
+                    Description de la haie <span id="hedge-data-dialog-hedge-name"></span>
+                  </h1>
+                  <p class="fr-tag fr-mb-3w">
+                    Longueur : <span id="hedge-data-dialog-hedge-length"></span> m
+                  </p>
+
+                  {% include '_form_snippet.html' with form=hedge_data_form %}
+                </div>
+
+                <div class="fr-modal__footer">
+                  <button type="submit" class="fr-btn">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
   </div>
 {% endblock %}
 
