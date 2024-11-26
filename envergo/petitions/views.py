@@ -40,7 +40,7 @@ class PetitionProjectCreate(FormView):
                 "agri_pac": "Exploitant-e agricole bénéficiaire de la PAC",
             }
             demarche_id = settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"]["ID"]
-            api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+            api_url = f"{settings.DEMARCHES_SIMPLIFIEE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
 
             body = {
                 settings.DEMARCHES_SIMPLIFIEE["DEMARCHE_HAIE"][

@@ -1,20 +1,30 @@
+import logging
+from datetime import datetime, timedelta
 from textwrap import dedent
 
 import requests
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     help = "Fetch freshly submitted dossier on Démarches Simplifiées and notify admins."
 
     def handle(self, *args, **options):
-        api_url = "https://www.demarches-simplifiees.fr/api/v2/graphql"
+        # get all the dossier updated in the last hour
+        api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
+        now_utc = datetime.utcnow()
+        one_hour_ago_utc = now_utc - timedelta(hours=1)
+        iso8601_one_hour_ago = one_hour_ago_utc.isoformat() + "Z"
 
         handled_demarches = []
 
@@ -23,32 +33,19 @@ class Command(BaseCommand):
             if demarche_number in handled_demarches:
                 continue
 
-            project_field_id = next(
-                (
-                    field
-                    for field in activated_department.demarche_simplifiee_pre_fill_config
-                    if field["source"] == "project_reference"
-                ),
-                None,
-            )
-            if project_field_id is None:
-                raise  # TODO
-
             has_next_page = True
             cursor = None
             while has_next_page:
 
                 variables = f"""{{
                       "demarcheNumber":{demarche_number},
-                      "state":"en_construction",
-                      "updatedSince": {"2024-11-19T11:23:00+01:00"},
+                      "updatedSince": {iso8601_one_hour_ago},
                       "after":{cursor if cursor else "null"}
-                    }}"""  # TODO date
+                    }}"""
 
                 query = """
                 query getDemarche(
                     $demarcheNumber: Int!,
-                    $state: DossierState,
                     $updatedSince: ISO8601DateTime,
                     $after: String
                     )
@@ -70,26 +67,35 @@ class Command(BaseCommand):
                                 nodes {
                                     number
                                     state
-                                    champs{
-                                        id
-                                        label
-                                        stringValue
-                                        prefilled
-                                    }
                                 }
                             }
                     }
                 }"""
-
+                body = {
+                    "query": query,
+                    "variables": variables,
+                }
                 response = requests.post(
                     api_url,
-                    json={"query": query, "variables": variables},
+                    json=body,
                     headers={
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer MzE3ZmQ1ZTQtOGYwMC00ZjU5LTk2OGMtZGU1NDEyNWIyYmQ3OzFjM1ZOTUx"
-                        "TYjk5eWJSS2NKYWVweDJneg==",  # TODO
+                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_BEARER_TOKEN"]}",
                     },
                 )
+
+                if response.status_code >= 400:
+                    logger.error(
+                        "Demarches simplifiees API request failed",
+                        extra={
+                            "response.text": response.text,
+                            "response.status_code": response.status_code,
+                            "request.url": api_url,
+                            "request.body": body,
+                        },
+                    )
+                    # TODO notification ?
+                    break
 
                 data = response.json()
 
@@ -100,7 +106,17 @@ class Command(BaseCommand):
                     .get("nodes", None)
                 )
                 if dossiers is None:
-                    raise  # TODO
+                    logger.error(
+                        "Demarches simplifiees API response is not well formated",
+                        extra={
+                            "response.json": data,
+                            "response.status_code": response.status_code,
+                            "request.url": api_url,
+                            "request.body": body,
+                        },
+                    )
+                    # TODO notification ?
+                    break
 
                 has_next_page = (
                     data.get["data"]["demarche"]["dossiers"]
@@ -115,50 +131,48 @@ class Command(BaseCommand):
 
                 for dossier in dossiers:
                     dossier_number = dossier["number"]
-                    project_field = next(
-                        (
-                            champ
-                            for champ in dossier["champs"]
-                            if champ["id"] == project_field_id
-                        ),
-                        None,
-                    )
-                    if project_field is None:
-                        raise  # TODO
-
-                    if not project_field["prefilled"]:
-                        raise  # TODO
-
-                    project_reference = project_field["stringValue"]
-
                     project = PetitionProject.objects.filter(
-                        reference=project_reference
+                        demarches_simplifiees_dossier_number=dossier_number
                     ).first()
                     if project is None:
-                        raise  # TODO
+                        logger.warning(
+                            "A demarches simplifiees dossier has no corresponding project, it may have been "
+                            "created without the guh",
+                            extra={
+                                "dossier_number": dossier_number,
+                                "demarche_number": demarche_number,
+                            },
+                        )
+                        # TODO notification ?
+                        continue
 
-                    department = extract_param_from_url(
-                        project.moulinette_url, "department"
-                    )
+                    if project.demarches_simplifiees_state is None:
+                        # first time we have some data about this dossier
+                        department = extract_param_from_url(
+                            project.moulinette_url, "department"
+                        )
 
-                    ds_url = (
-                        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-                        f"{dossier_number}"
-                    )  # TODO
-                    admin_url = reverse(
-                        "admin:petitions_petitionproject_change",
-                        args=[project_reference],
-                    )
-                    message = dedent(
-                        f"""\
-                        ## Nouveau dossier GUH {department}
-                        [Démarches simplifiées]({ds_url})
-                        [Admin django](https://haie.beta.gouv.fr/{admin_url})
-                        —
-                        Linéaire détruit : {project.hedge_data.length_to_remove()} m
-                        —
-                        """
-                    )
-                    notify(message, "haie")
+                        ds_url = (
+                            f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+                            f"{dossier_number}"
+                        )
+                        admin_url = reverse(
+                            "admin:petitions_petitionproject_change",
+                            args=[project.reference],
+                        )
+                        message = dedent(
+                            f"""\
+                                ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
+                                [Démarches simplifiées]({ds_url})
+                                [Admin django](https://haie.beta.gouv.fr/{admin_url})
+                                —
+                                Linéaire détruit : {project.hedge_data.length_to_remove()} m
+                                —
+                                """
+                        )
+                        notify(message, "haie")
+
+                    project.demarches_simplifiees_state = dossier["state"]
+                    project.save()
 
             handled_demarches.append(demarche_number)

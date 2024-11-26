@@ -390,7 +390,7 @@ ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.
 DEMARCHES_SIMPLIFIEE = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
-    "API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
+    "PRE_FILL_API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
     "DEMARCHE_HAIE": {
         "ID": "103363",
         # Les ids des champs de la démarche peuvent être trouvés sur la page suivante:
@@ -398,6 +398,8 @@ DEMARCHES_SIMPLIFIEE = {
         "PROFIL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk2MQ",
         "MOULINETTE_URL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk0Mw",
     },
+    "GRAPHQL_API_URL": "https://www.demarches-simplifiees.fr/api/v2/graphql",
+    "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
