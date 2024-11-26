@@ -1168,10 +1168,8 @@ class Moulinette(ABC):
     def is_evaluation_available(self):
         return self.config and self.config.is_activated
 
-    def has_missing_data(self):
-        """Make sure all the data required to compute the result is provided."""
-
-        form_errors = []
+    def form_errors(self):
+        form_errors = {}
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 form = criterion.get_form()
@@ -1185,12 +1183,16 @@ class Moulinette(ABC):
                         criterion.is_optional
                         and self.activate_optional_criteria
                         and form.is_activated()
-                    ):
-                        form_errors.append(not form.is_valid())
-                    elif not criterion.is_optional:
-                        form_errors.append(not form.is_valid())
+                    ) or not criterion.is_optional:
+                        for k, v in form.errors.items():
+                            form_errors[k] = v
 
-        return any(form_errors)
+        return form_errors
+
+    def has_missing_data(self):
+        """Make sure all the data required to compute the result is provided."""
+
+        return bool(self.form_errors())
 
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
