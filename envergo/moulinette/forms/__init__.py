@@ -127,7 +127,7 @@ REIMPLANTATION_CHOICES = (
         "Oui, en remplaçant la haie détruite au même endroit",
     ),
     (
-        "compensation",
+        "replantation",
         mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
         "Oui, en plantant une haie à un autre endroit",
     ),
@@ -137,34 +137,83 @@ REIMPLANTATION_CHOICES = (
 
 MOTIF_CHOICES = (
     (
-        "transfert_parcelles",
+        "amelioration_culture",
         mark_safe(
-            "Transfert de parcelles entre exploitations<br />"
-            '<span class="fr-hint-text">Agrandissement, échange de parcelles, nouvelle installation…</span>'
+            """
+            Amélioration des conditions d’exploitation agricole<br />
+            <span class="fr-hint-text">
+                Faciliter l’exploitation mécanique ou la culture des parcelles
+            </span>
+            """
         ),
     ),
     (
         "chemin_acces",
         mark_safe(
-            "Créer un chemin d’accès<br />"
-            '<span class="fr-hint-text">Chemin nécessaire pour l’accès et l’exploitation de la parcelle</span>'
+            """
+            Création d’un accès à la parcelle<br/>
+            <span class="fr-hint-text">
+                Brèche dans une haie pour créer un chemin, permettre le passage d’engins…
+            </span>
+            """
         ),
     ),
     (
-        "meilleur_emplacement",
+        "securite",
         mark_safe(
-            "Replanter la haie à un meilleur emplacement environnemental<br />"
-            '<span class="fr-hint-text">Plantation justifiée par un organisme agréé</span>'
+            """
+            Mise en sécurité<br/>
+            <span class="fr-hint-text">
+                Sécurité des riverains, de la voirie, d’une installation attenante,
+                réparation suite à un effondrement…
+            </span>
+            """
         ),
     ),
     (
         "amenagement",
-        "Réaliser une opération d’aménagement foncier",
+        mark_safe(
+            """
+            Opération d’aménagement foncier<br/>
+            <span class="fr-hint-text">
+                Création ou agrandissement d’un bâtiment, d’un lotissement, d’une infrastructure…
+            </span>
+            """
+        ),
+    ),
+    (
+        "amelioration_ecologique",
+        mark_safe(
+            """
+            Amélioration écologique<br/>
+            <span class="fr-hint-text">
+                Restauration de la continuité écologique, réimplantation sur un meilleur
+                emplacement environnemental…
+            </span>
+            """
+        ),
+    ),
+    (
+        "embellissement",
+        mark_safe(
+            """
+            Embellissement ou agrément<br/>
+            <span class="fr-hint-text">
+                Amélioration de l’ensoleillement d’une habitation, dégagement d’une vue
+                depuis un jardin…
+            </span>
+            """
+        ),
     ),
     (
         "autre",
         "Autre",
     ),
+)
+
+LOCALISATION_CHOICES = (
+    ("oui", "Oui, au moins une des haies"),
+    ("non", "Non, aucune des haies"),
 )
 
 
@@ -184,25 +233,8 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
 
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
-    profil = forms.ChoiceField(
-        label="J’effectue cette demande en tant que :",
-        widget=forms.RadioSelect,
-        choices=(
-            ("agri_pac", "Exploitant-e agricole bénéficiaire de la PAC"),
-            (
-                "autre",
-                mark_safe(
-                    "Autre<br />"
-                    '<span class="fr-hint-text">'
-                    "Collectivité, aménageur, gestionnaire de réseau, particulier, etc."
-                    "</span>"
-                ),
-            ),
-        ),
-        required=True,
-    )
     motif = forms.ChoiceField(
-        label="Quelle est la raison de la destruction de la haie ?",
+        label="Pour quelle raison la destruction de haie a-t-elle lieu ?",
         widget=forms.RadioSelect,
         choices=MOTIF_CHOICES,
         required=True,
@@ -214,6 +246,12 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         choices=extract_choices(REIMPLANTATION_CHOICES),
         required=True,
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
+    localisation_pac = forms.ChoiceField(
+        label="Les haies à détruire sont-elles situées sur des parcelles agricoles déclarées à la PAC ?",
+        widget=forms.RadioSelect,
+        choices=LOCALISATION_CHOICES,
+        required=True,
     )
     haies = HedgeDataChoiceField(
         label="Linéaire de haies à détruire / planter",
@@ -237,25 +275,41 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
 
         reimplantation = data.get("reimplantation")
         motif = data.get("motif")
+        localisation_pac = data.get("localisation_pac")
+        haies = data.get("haies")
 
-        if reimplantation == "remplacement" and motif == "meilleur_emplacement":
+        if motif == "chemin_acces" and reimplantation == "remplacement":
             self.add_error(
-                "motif",
-                "Le remplacement de la haie au même endroit est incompatible avec le meilleur emplacement"
-                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+                "reimplantation",
+                """Le remplacement de la haie au même endroit est incompatible avec la
+                raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
             )
-        elif reimplantation == "remplacement" and motif == "chemin_acces":
+        elif motif == "amelioration_ecologique" and reimplantation == "non":
             self.add_error(
-                "motif",
-                "Le remplacement de la haie au même endroit est incompatible avec le percement d'un chemin"
-                " d'accès. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
+                "reimplantation",
+                """La destruction de la haie sans réimplantation est incompatible avec la raison
+                « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
             )
-        elif reimplantation == "non" and motif == "meilleur_emplacement":
-            self.add_error(
-                "motif",
-                "L’absence de réimplantation de la haie est incompatible avec le meilleur emplacement"
-                " environnemental. Veuillez modifier l'une ou l'autre des réponses du formulaire.",
-            )
+        elif localisation_pac == "oui" and haies:
+            on_pac_values = [h.is_on_pac for h in haies]
+            if not any(on_pac_values):
+                self.add_error(
+                    "haies",
+                    """Aucune des haies saisies n’est marquée comme située sur une
+                    parcelle PAC, mais il est indiqué dans le formulaire que « oui, au moins
+                    une des haies » est située sur une parcelle PAC. Modifiez la réponse
+                    du formulaire ou modifiez les haies.""",
+                )
+        elif localisation_pac == "non" and haies:
+            on_pac_values = [h.is_on_pac for h in haies]
+            if any(on_pac_values):
+                self.add_error(
+                    "haies",
+                    """Au moins une des haies saisies est marquée comme située sur une
+                    parcelle PAC, mais il est indiqué dans le formulaire que « non,
+                    aucune des haies » n’est située sur une parcelle PAC. Modifiez la
+                    réponse du formulaire ou modifiez les haies.""",
+                )
 
         return data
 
