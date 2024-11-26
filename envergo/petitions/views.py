@@ -284,12 +284,13 @@ class PetitionProjectCreate(FormView):
                 "error_title": "Un problème technique empêche la création de votre dossier.",
                 "error_body": f"""
                 Nous avons été notifiés et travaillons à la résolution de cette erreur.
-
-                Référence de l’erreur : ‘{self.request.alerts.user_error_reference}’
-
-                Merci de vous faire connaître en nous transmettant la référence de l’erreur en nous écrivant à \
-                contact@haie.beta.gouv.fr . Nous vous accompagnerons pour vous permettre de déposer votre demande sans \
-                encombres.""",
+                <br/>
+                Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
+                <br/>
+                Merci de vous faire connaître en nous transmettant cet identifiant en nous écrivant à \
+                contact@haie.beta.gouv.fr
+                <br/>
+                Nous vous accompagnerons pour vous permettre de déposer votre demande sans encombres.""",
             },
             status=400,
         )
@@ -432,24 +433,19 @@ class AlertList(List[Alert]):
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
 
-            dossier_link = ""
+            lines.append("Un dossier a été créé sur démarches-simplifiées : ")
+            lines.append(f"* [projet dans l’admin]({projet_url})")
+
             if self.config:
                 dossier_url = (
                     f"https://www.demarches-simplifiees.fr/procedures/"
                     f"{self.config.demarche_simplifiee_number}/dossiers/"
                     f"{self.petition_project.demarches_simplifiees_dossier_number}"
                 )
-                dossier_link = f", [dossier DS]({dossier_url})"
-
-            lines.append(
-                f"Un dossier a été créé sur démarches-simplifiées ([projet dans l’admin]"
-                f"({projet_url}){dossier_link})."
-            )
-            if dossier_link:
                 lines.append(
-                    f":icon-info: Le lien vers Démarches Simplifiées ne sera fonctionnel que lorsque le dossier "
-                    f"n°{self.petition_project.demarches_simplifiees_dossier_number}  aura été soumis par le "
-                    f"pétitionnaire"
+                    f"* [dossier DS n°{self.petition_project.demarches_simplifiees_dossier_number}]"
+                    f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
+                    f" par le pétitionnaire)"
                 )
             if config_url:
                 lines.append("")
@@ -478,8 +474,8 @@ class AlertList(List[Alert]):
                 )
 
             lines.append(
-                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference}` l’invitant "
-                f"à nous contacter."
+                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference.upper()}` "
+                f"l’invitant à nous contacter."
             )
 
             if self.form:
