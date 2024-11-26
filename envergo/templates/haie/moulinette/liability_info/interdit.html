@@ -6,13 +6,14 @@
   </p>
   <br />
 
-  <div class="demarches-simplifiees-form-container">
-    Vous pouvez donc
-    <a class="demarche-simplifiee-btn" href="#">poursuivre la simulation et déposer une demande d’autorisation.</a>
-    Elle sera examinée, mais il est probable qu’un refus soit prononcé.
-  </div>
-  <br />
-
+  {% if not is_read_only %}
+    <p>
+      Vous pouvez donc
+      <a class="demarche-simplifiee-btn" href="#">poursuivre la simulation et déposer une demande d’autorisation.</a>
+      Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+    </p>
+    <br />
+  {% endif %}
   <p>
     N'hésitez pas à
     <a href="{% url 'contact_us' %}">contacter le guichet unique</a>
