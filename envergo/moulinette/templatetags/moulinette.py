@@ -186,3 +186,33 @@ def field_summary(field):
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
 
     return mark_safe(html)
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_moulinette_result(context, result, hedges_field):
+    """Render the global moulinette result content."""
+    context_data = context.flatten()
+    context_data["length_to_remove"] = hedges_field.field.clean(
+        hedges_field.value()
+    ).length_to_remove()
+
+    template_name = f"haie/moulinette/result/{result}.html"
+    try:
+        content = render_to_string((template_name,), context_data)
+    except TemplateDoesNotExist:
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_moulinette_liability_info(context, result):
+    """Render the liability_info content depending on the moulinette result."""
+
+    template_name = f"haie/moulinette/liability_info/{result}.html"
+    try:
+        content = render_to_string((template_name,), context.flatten())
+    except TemplateDoesNotExist:
+        content = ""
+
+    return content

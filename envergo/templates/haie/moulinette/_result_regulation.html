@@ -2,11 +2,15 @@
 
 {% load moulinette %}
 
+{% block regulation_title %}
+  <h4>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h4>
+{% endblock %}
+
 {% block regulation_body %}
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
       {% if criterion.should_be_displayed %}
-        <div class="alt fr-p-3w fr-mb-3w">{% show_criterion_body regulation criterion %}</div>
+        <p>{% show_criterion_body regulation criterion %}</p>
       {% endif %}
     {% endfor %}
   {% endif %}
