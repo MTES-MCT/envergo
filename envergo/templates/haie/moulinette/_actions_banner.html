@@ -1,9 +1,11 @@
 {% extends 'moulinette/_actions_banner.html' %}
 
 {% block actions %}
-  <div class="banner-item">
-    <a id="demarche-simplifiee-banner-btn"
-       class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn"
-       href="#">Commencer la procédure</a>
-  </div>
+  {% if moulinette.result == "soumis" %}
+    <div class="banner-item">
+      <a id="demarche-simplifiee-banner-btn"
+         class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn"
+         href="#">Commencer la procédure</a>
+    </div>
+  {% endif %}
 {% endblock %}
