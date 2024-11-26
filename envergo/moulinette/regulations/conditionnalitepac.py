@@ -151,9 +151,7 @@ class Bcae8(CriterionEvaluator):
         lineaire_type_4_sur_parcelle_pac = 0
         if "lineaire_total" in self.catalog:
             haies = self.catalog["haies"]
-            for haie in haies:
-                if haie.is_on_pac and haie.hedge_type == "alignement":
-                    lineaire_type_4_sur_parcelle_pac += haie.length
+            lineaire_type_4_sur_parcelle_pac = haies.lineaire_type_4_sur_parcelle_pac()
         catalog["lineaire_type_4_sur_parcelle_pac"] = lineaire_type_4_sur_parcelle_pac
 
         return catalog
@@ -162,19 +160,12 @@ class Bcae8(CriterionEvaluator):
         is_small = False
         haies = self.catalog["haies"]
         lineaire_detruit_pac = 0
-        lineaire_type_4_sur_parcelle_pac = 0
         ratio_detruit = 0
         if "lineaire_total" in self.catalog:
             lineaire_total = self.catalog["lineaire_total"]
-            for haie in haies:
-                if haie.is_on_pac and haie.hedge_type != "alignement":
-                    lineaire_detruit_pac += haie.length
-
-                if haie.is_on_pac and haie.hedge_type == "alignement":
-                    lineaire_type_4_sur_parcelle_pac += haie.length
-
+            lineaire_detruit_pac = haies.lineaire_detruit_pac()
             ratio_detruit = lineaire_detruit_pac / lineaire_total
-            is_small = ratio_detruit <= 2 or lineaire_detruit_pac <= 5
+            is_small = ratio_detruit <= 0.02 or lineaire_detruit_pac <= 5
 
         return (
             # Main vars
