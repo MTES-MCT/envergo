@@ -125,7 +125,8 @@ div#app {
     .hedge.to-plant {
       stroke: #0f0;
       stroke-width: 6px;
-      filter: drop-shadow(white 1px 1px 0);
+      filter: drop-shadow(#fff 1px 1px 0) drop-shadow(#fff -1px 1px 0)
+        drop-shadow(#fff 1px -1px 0) drop-shadow(#fff -1px -1px 0);
 
       &:hover,
       &.hovered {
@@ -136,7 +137,7 @@ div#app {
     .hedge.to-remove {
       stroke: #f00;
       stroke-width: 6px;
-      stroke-dasharray: 10 12;
+      stroke-dasharray: 12 10;
       stroke-linecap: square;
       filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
         drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
