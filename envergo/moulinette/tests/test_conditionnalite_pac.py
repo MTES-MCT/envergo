@@ -118,7 +118,7 @@ def test_bcae8_small_interdit_amelioration_culture():
     ), data
 
 
-def test_bcae8_small_soumis_chemin_access():
+def test_bcae8_small_soumis_chemin_acces():
     ConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
@@ -139,7 +139,7 @@ def test_bcae8_small_soumis_chemin_access():
     ), data
 
 
-def test_bcae8_small_interdit_chemin_access():
+def test_bcae8_small_interdit_chemin_acces():
     ConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
