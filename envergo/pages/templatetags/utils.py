@@ -53,6 +53,18 @@ def add_classes(field, classes):
     return field.as_widget(attrs={"class": " ".join(all_classes)})
 
 
+@register.filter
+def compute_input_classes(field):
+    """Compute css classes for the field widget html."""
+    classes = "fr-input"
+    if field.errors:
+        classes = classes + " fr-input--error"
+    if field.field.widget.input_type == "select":
+        classes = classes + " fr-select"
+
+    return add_classes(field, classes)
+
+
 @register.inclusion_tag("admin/submit_line.html", takes_context=True)
 def envergo_submit_row(context):
     """Custom submit line for admin edition templates.
