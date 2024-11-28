@@ -257,7 +257,8 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         label="Linéaire de haies à détruire / planter",
         required=True,
         error_messages={
-            "required": "Localisez précisément les haies concernées par les travaux en ouvrant le module de saisie."
+            "required": """Aucune haie n’a été saisie. Cliquez sur le bouton ci-dessus pour
+            localiser les haies à détruire."""
         },
     )
 
