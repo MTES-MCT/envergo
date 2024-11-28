@@ -201,7 +201,7 @@ class Bcae8(CriterionEvaluator):
         else:
             if is_small:
                 if reimplantation == "remplacement":
-                    if motif == "chemin_access":
+                    if motif == "chemin_acces":
                         # X
                         pass
                     else:
@@ -242,7 +242,7 @@ class Bcae8(CriterionEvaluator):
 
             elif not is_small:
                 if reimplantation == "remplacement":
-                    if motif == "chemin_access":
+                    if motif == "chemin_acces":
                         # X
                         pass
                     else:
@@ -253,7 +253,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "soumis_transfert_parcelles"
                         else:
                             result_code = "interdit_amelioration_culture"
-                    elif motif == "chemin_access":
+                    elif motif == "chemin_acces":
                         if lineaire_detruit_pac <= 10:
                             result_code = "soumis_chemin_acces"
                         else:
@@ -286,7 +286,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "interdit_transfert_parcelles"
                         else:
                             result_code = "interdit_amelioration_culture"
-                    elif motif == "chemin_access":
+                    elif motif == "chemin_acces":
                         if lineaire_detruit_pac <= 10:
                             result_code = "soumis_chemin_acces"
                         else:
