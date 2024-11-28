@@ -295,7 +295,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             on_pac_values = [h.is_on_pac for h in haies]
             if not any(on_pac_values):
                 self.add_error(
-                    "haies",
+                    "localisation_pac",
                     """Aucune des haies saisies n’est marquée comme située sur une
                     parcelle PAC, mais il est indiqué dans le formulaire que « oui, au moins
                     une des haies » est située sur une parcelle PAC. Modifiez la réponse
@@ -305,7 +305,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             on_pac_values = [h.is_on_pac for h in haies]
             if any(on_pac_values):
                 self.add_error(
-                    "haies",
+                    "localisation_pac",
                     """Au moins une des haies saisies est marquée comme située sur une
                     parcelle PAC, mais il est indiqué dans le formulaire que « non,
                     aucune des haies » n’est située sur une parcelle PAC. Modifiez la
