@@ -57,9 +57,12 @@ def add_classes(field, classes):
 def compute_input_classes(field):
     """Compute css classes for the field widget html."""
     classes = "fr-input"
-    if field.errors:
+    if hasattr(field, "errors") and field.errors:
         classes = classes + " fr-input--error"
-    if field.field.widget.input_type == "select":
+    if (
+        hasattr(field.field.widget, "input_type")
+        and field.field.widget.input_type == "select"
+    ):
         classes = classes + " fr-select"
 
     return add_classes(field, classes)
