@@ -397,14 +397,13 @@ createApp({
         doubleClickZoom: false,
         zoomControl: false,
         layers: [satelliteLayer]
-      }).setView([43.6861, 3.5911], 14);
+      });
 
       L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
-
 
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {
@@ -414,7 +413,19 @@ createApp({
         map.setView(latLng, zoomLevel);
       });
 
+      // Here, we want to restore existing hedges
+      // If there are any, set view to see them all
+      // Otherwise, set a default view with a zoom level of 14
+      // There is a catch though. If we set a zoom level of 14 in the
+      // first `setView` call, it triggers a bug with hedges polylines middle
+      // markers that are displayed outside of the actual line. That's because
+      // the marker positions are calculated with a precision that is dependant
+      // on the zoom level.
+      // So we have to set the view with a zoom maxed out, restore the markers,
+      // then zoom out.
+      map.setView([43.6861, 3.5911], 22);
       restoreHedges();
+      map.setZoom(14);
       zoomOut();
     });
 
