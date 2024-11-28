@@ -40,6 +40,14 @@ class Hedge:
         length = geod.geometry_length(self.geometry)
         return int(length)
 
+    @property
+    def is_on_pac(self):
+        return self.additionalData.get("surParcellePac", False)
+
+    @property
+    def hedge_type(self):
+        return self.additionalData.get("typeHaie", None)
+
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -67,3 +75,10 @@ class HedgeData(models.Model):
 
     def length_to_remove(self):
         return sum(h.length for h in self.hedges_to_remove())
+
+    def lineaire_detruit_pac(self):
+        return sum(
+            h.length
+            for h in self.hedges_to_remove()
+            if h.is_on_pac and h.hedge_type != "alignement"
+        )
