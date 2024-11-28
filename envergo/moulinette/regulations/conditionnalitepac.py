@@ -21,6 +21,7 @@ class Bcae8Form(forms.Form):
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
         display_unit="m",
+        display_help_text="",
     )
 
     transfert_parcelles = forms.ChoiceField(
