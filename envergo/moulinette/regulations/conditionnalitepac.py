@@ -148,10 +148,14 @@ class Bcae8(CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
+        lineaire_detruit_pac = 0
         lineaire_type_4_sur_parcelle_pac = 0
         if "lineaire_total" in self.catalog:
             haies = self.catalog["haies"]
+            lineaire_detruit_pac = haies.lineaire_detruit_pac()
             lineaire_type_4_sur_parcelle_pac = haies.lineaire_type_4_sur_parcelle_pac()
+
+        catalog["lineaire_detruit_pac"] = lineaire_detruit_pac
         catalog["lineaire_type_4_sur_parcelle_pac"] = lineaire_type_4_sur_parcelle_pac
 
         return catalog
