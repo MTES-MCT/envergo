@@ -144,8 +144,8 @@
         let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
         let lengthToRemove = statsContent.getElementById("length-to-remove");
         let lengthToPlant = statsContent.getElementById("length-to-plant");
-        lengthToRemove.textContent = event.data.length_to_remove;
-        lengthToPlant.textContent = event.data.length_to_plant;
+        lengthToRemove.textContent = event.data.length_to_remove.toFixed();
+        lengthToPlant.textContent = event.data.length_to_plant.toFixed();
         statisticsContainer.innerHTML = "";
         statisticsContainer.appendChild(statsContent);
 

@@ -21,6 +21,7 @@ class Bcae8Form(forms.Form):
         min_value=0,
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
         display_unit="m",
+        display_help_text="",
     )
 
     transfert_parcelles = forms.ChoiceField(
@@ -148,10 +149,14 @@ class Bcae8(CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
+        lineaire_detruit_pac = 0
         lineaire_type_4_sur_parcelle_pac = 0
         if "lineaire_total" in self.catalog:
             haies = self.catalog["haies"]
+            lineaire_detruit_pac = haies.lineaire_detruit_pac()
             lineaire_type_4_sur_parcelle_pac = haies.lineaire_type_4_sur_parcelle_pac()
+
+        catalog["lineaire_detruit_pac"] = lineaire_detruit_pac
         catalog["lineaire_type_4_sur_parcelle_pac"] = lineaire_type_4_sur_parcelle_pac
 
         return catalog
@@ -201,7 +206,7 @@ class Bcae8(CriterionEvaluator):
         else:
             if is_small:
                 if reimplantation == "remplacement":
-                    if motif == "chemin_access":
+                    if motif == "chemin_acces":
                         # X
                         pass
                     else:
@@ -242,7 +247,7 @@ class Bcae8(CriterionEvaluator):
 
             elif not is_small:
                 if reimplantation == "remplacement":
-                    if motif == "chemin_access":
+                    if motif == "chemin_acces":
                         # X
                         pass
                     else:
@@ -253,7 +258,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "soumis_transfert_parcelles"
                         else:
                             result_code = "interdit_amelioration_culture"
-                    elif motif == "chemin_access":
+                    elif motif == "chemin_acces":
                         if lineaire_detruit_pac <= 10:
                             result_code = "soumis_chemin_acces"
                         else:
@@ -286,7 +291,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "interdit_transfert_parcelles"
                         else:
                             result_code = "interdit_amelioration_culture"
-                    elif motif == "chemin_access":
+                    elif motif == "chemin_acces":
                         if lineaire_detruit_pac <= 10:
                             result_code = "soumis_chemin_acces"
                         else:
