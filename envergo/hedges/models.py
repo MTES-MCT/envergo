@@ -38,7 +38,7 @@ class Hedge:
 
         geod = Geod(ellps="WGS84")
         length = geod.geometry_length(self.geometry)
-        return int(length)
+        return length
 
     @property
     def is_on_pac(self):
@@ -68,13 +68,13 @@ class HedgeData(models.Model):
         return [Hedge(**h) for h in self.data if h["type"] == TO_PLANT]
 
     def length_to_plant(self):
-        return sum(h.length for h in self.hedges_to_plant())
+        return round(sum(h.length for h in self.hedges_to_plant()))
 
     def hedges_to_remove(self):
         return [Hedge(**h) for h in self.data if h["type"] == TO_REMOVE]
 
     def length_to_remove(self):
-        return sum(h.length for h in self.hedges_to_remove())
+        return round(sum(h.length for h in self.hedges_to_remove()))
 
     def lineaire_detruit_pac(self):
         return sum(
