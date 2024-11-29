@@ -35,40 +35,36 @@
 
           <div id="form-group-haies"
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
-            <label for="id_haies">Localisation des haies</label>
-
-            <div id="statistics-container" class="fr-mb-3w">
-              {% if form.cleaned_data.haies %}
-                <div id="statistics" class="fr-mb-3w">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th colspan="2">Cumul linéaire (m)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th>Haies à détruire</th>
-                        <td id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</td>
-                      </tr>
-                      <tr>
-                        <th>Haies à planter</th>
-                        <td id="length-to-plant">{{ form.cleaned_data.haies.length_to_plant }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+            <label for="id_haies">Localisation des haies à détruire</label>
+            {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
+              {% if hedges_to_remove|length > 0 %}
+                <div id="statistics-container" class="fr-mb-3w">
+                  <div id="statistics" class="fr-mb-3w">
+                    <p>
+                      {# djlint:off #}{{ hedges_to_remove|length }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
+                    </p>
+                    <p>
+                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</span> m
+                    </p>
+                    <p>dont {{ form.cleaned_data.haies.lineaire_detruit_pac }} m situés sur des parcelles PAC</p>
+                  </div>
                 </div>
+                <button id="hedge-input-open-btn"
+                        class="fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+                        type="button"
+                        data-fr-opened="false"
+                        aria-controls="hedge-input-modal">Modifier les haies</button>
               {% else %}
-                <p>Aucune information renseignée</p>
+                <div id="statistics-container" class="fr-mb-3w">
+                  <p>Aucune haie renseignée</p>
+                </div>
+                <button id="hedge-input-open-btn"
+                        class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
+                        type="button"
+                        data-fr-opened="false"
+                        aria-controls="hedge-input-modal">Localiser les haies</button>
               {% endif %}
-            </div>
-
-            <button id="hedge-input-open-btn"
-                    class="fr-btn fr-btn--primary"
-                    type="button"
-                    data-fr-opened="false"
-                    aria-controls="hedge-input-modal">Ouvrir le module de saisie ➔</button>
-
+            {% endwith %}
             {% if form.haies.errors %}
               <p class="fr-error-text">
                 ↑
@@ -79,8 +75,8 @@
           </div>
 
           {% include 'haie/moulinette/_form_footer.html' %}
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -89,23 +85,13 @@
 
 <template id="hedge-data-statistics">
   <div id="statistics" class="fr-mb-3w">
-    <table>
-      <thead>
-        <tr>
-          <th colspan="2">Cumul linéaire (m)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>Haies à détruire</th>
-          <td id="length-to-remove">0</td>
-        </tr>
-        <tr>
-          <th>Haies à planter</th>
-          <td id="length-to-plant">0</td>
-        </tr>
-      </tbody>
-    </table>
+    <p id="hedges-to-remove-count">Aucun tracé</p>
+    <p>
+      Linéaire total : <span id="length-to-remove">0</span> m
+    </p>
+    <p>
+      dont <span id="lineaire-detruit-pac">0</span> m situés sur des parcelles PAC
+    </p>
   </div>
 </template>
 
@@ -143,9 +129,11 @@
       if (event.data.input_id) {
         let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
         let lengthToRemove = statsContent.getElementById("length-to-remove");
-        let lengthToPlant = statsContent.getElementById("length-to-plant");
+        let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
+        let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
         lengthToRemove.textContent = event.data.length_to_remove.toFixed();
-        lengthToPlant.textContent = event.data.length_to_plant.toFixed();
+        lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac.toFixed();
+        hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
         statisticsContainer.innerHTML = "";
         statisticsContainer.appendChild(statsContent);
 
