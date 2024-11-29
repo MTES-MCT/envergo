@@ -1,11 +1,13 @@
 {% extends 'moulinette/_actions_banner.html' %}
 
+{% block edit_label %}Modifier le projet de destruction{% endblock %}
+
 {% block actions %}
-  {% if moulinette.result == "soumis" %}
-    <div class="banner-item">
+  <div class="banner-item">
+    {% if moulinette.result == "soumis" %}
       <a id="demarche-simplifiee-banner-btn"
          class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn"
          href="#">Commencer la procédure</a>
-    </div>
-  {% endif %}
+    {% endif %}
+  </div>
 {% endblock %}
