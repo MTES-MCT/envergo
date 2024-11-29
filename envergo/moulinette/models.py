@@ -1388,17 +1388,6 @@ class Moulinette(ABC):
 
         return {}
 
-    def group_regulations_by_result(self):
-        """Group regulations by result."""
-        regulations_list = list(self.regulations)
-        regulations_list.sort(key=lambda reg: RESULT_CASCADE.index(reg.result))
-
-        # Group the regulations by their result
-        return {
-            key: list(group)
-            for key, group in groupby(regulations_list, key=attrgetter("result"))
-        }
-
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]

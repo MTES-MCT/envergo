@@ -39,8 +39,9 @@
     Ce simulateur est fourni à titre informatif, et ne vaut pas position de l’administration.
     <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
+  {% group_regulations_for_display moulinette as grouped_regulations %}
 
-  {% for result, regulations in moulinette.group_regulations_by_result.items %}
+  {% for result, regulations in grouped_regulations.items %}
     {% if result == "interdit" %}
       <h3>Réglementations interdisant le projet</h3>
     {% elif result == "soumis" and moulinette.result != "soumis" %}
@@ -48,7 +49,7 @@
     {% elif result == "soumis" %}
       <h3>Réglementations concernant le projet</h3>
     {% else %}
-      <h3>Réglementations non applicables au projet</h3>
+      <h3>Autres réglementations</h3>
     {% endif %}
 
     {% for regulation in regulations %}
