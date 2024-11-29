@@ -46,7 +46,7 @@
                     <p>
                       Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</span> m
                     </p>
-                    <p>dont {{ form.cleaned_data.haies.lineaire_detruit_pac }} m situés sur des parcelles PAC</p>
+                    <p>dont {{ form.cleaned_data.haies.lineaire_detruit_pac|floatformat:0 }} m situés sur des parcelles PAC</p>
                   </div>
                 </div>
                 <button id="hedge-input-open-btn"
