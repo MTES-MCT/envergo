@@ -335,8 +335,37 @@ createApp({
         .catch((error) => console.error('Error:', error));
     };
 
+    // Cancel the input and return to the main form
+    // We confirm with a modal if some hedges have been drawn
     const cancel = () => {
-      window.parent.postMessage({ action: 'cancel' });
+      const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
+      if (totalHedges > 0) {
+        const dialog = document.getElementById("confirmation-modal");
+        const confirmCancel = document.getElementById("btn-quit-without-saving");
+        const dismissCancel = document.getElementById("btn-back-to-map");
+
+        const confirmHandler = () => {
+          dsfr(dialog).modal.conceal();
+          window.parent.postMessage({ action: 'cancel' });
+        };
+
+        const dismissHandler = () => {
+          dsfr(dialog).modal.conceal();
+        };
+
+        const concealHandler = () => {
+          confirmCancel.removeEventListener("click", confirmHandler);
+          dismissCancel.removeEventListener("click", dismissHandler);
+        };
+
+        confirmCancel.addEventListener("click", confirmHandler, { once: true });
+        dismissCancel.addEventListener("click", dismissHandler, { once: true });
+        dialog.addEventListener("dsfr.conceal", concealHandler, { once: true });
+
+        dsfr(dialog).modal.disclose();
+      } else {
+        window.parent.postMessage({ action: 'cancel' });
+      }
     }
 
     const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
