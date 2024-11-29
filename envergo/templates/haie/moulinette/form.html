@@ -131,8 +131,8 @@
         let lengthToRemove = statsContent.getElementById("length-to-remove");
         let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
         let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
-        lengthToRemove.textContent = event.data.length_to_remove;
-        lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac;
+        lengthToRemove.textContent = event.data.length_to_remove.toFixed();
+        lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac.toFixed();
         hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
         statisticsContainer.innerHTML = "";
         statisticsContainer.appendChild(statsContent);
