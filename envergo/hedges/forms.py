@@ -5,8 +5,8 @@ TYPES = (
     ("degradee", "Haie dégradée ou résiduelle basse"),
     ("buissonnante", "Haie buissonnante basse"),
     ("arbustive", "Haie arbustive basse"),
-    ("alignement", "Alignement d'arbres"),
     ("mixte", "Haie mixte"),
+    ("alignement", "Alignement d'arbres"),
 )
 
 
@@ -22,7 +22,7 @@ class HedgeDataForm(forms.Form):
         ),
     )
     sur_parcelle_pac = forms.BooleanField(
-        label="Située sur parcelle PAC", required=False
+        label="Située sur une parcelle PAC", required=False
     )
     proximite_mare = forms.BooleanField(
         label="Présence d'une mare à moins de 200 m", required=False
