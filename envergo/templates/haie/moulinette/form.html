@@ -41,8 +41,7 @@
                 <div id="statistics-container" class="fr-mb-3w">
                   <div id="statistics" class="fr-mb-3w">
                     <p>
-                      {{ hedges_to_remove|length }} tracé
-                      {% if hedges_to_remove|length > 1 %}s{% endif %}
+                      {# djlint:off #}{{ hedges_to_remove|length }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                     </p>
                     <p>
                       Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</span> m
