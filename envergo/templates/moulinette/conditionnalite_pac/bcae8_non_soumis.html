@@ -1,3 +1,11 @@
+<p>Le projet n’est pas soumis à déclaration préalable au titre de la conditionnalité PAC.</p>
+
 <p>
-  Le projet n’est pas soumis à déclaration préalable au titre de la conditionnalité PAC, car seuls les exploitants agricoles demandeurs d’aides PAC soumises à la conditionnalité sont concernés.
+  En effet, au vu des informations saisies, aucune des haies détruites ne se situe sur des parcelles déclarées à la PAC.
 </p>
+
+{% if lineaire_type_4_sur_parcelle_pac > 0 %}
+  <p>
+    À noter : Les alignements d’arbres ne sont pas concernés par les règles de conditionnalité PAC. Ce simulateur tient compte de cet aspect de la réglementation.
+  </p>
+{% endif %}

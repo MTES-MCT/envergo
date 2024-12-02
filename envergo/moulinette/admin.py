@@ -1,6 +1,9 @@
+import json
+
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -320,8 +323,48 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
+class JSONWidget(forms.Textarea):
+    """A widget to prettily display formated JSON in a textarea."""
+
+    def format_value(self, value):
+        if value is None:
+            return ""
+        try:
+            # Format the JSON in a readable way
+            return json.dumps(json.loads(value), indent=4)
+        except (TypeError, ValueError):
+            return value
+
+
+class ConfigHaieAdminForm(forms.ModelForm):
+    class Meta:
+        model = ConfigHaie
+        fields = "__all__"
+        widgets = {
+            "demarche_simplifiee_pre_fill_config": JSONWidget(
+                attrs={"rows": 20, "cols": 80}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["demarche_simplifiee_pre_fill_config"].help_text = (
+            self.get_demarche_simplifiee_pre_fill_config_help_text()
+        )
+
+    def get_demarche_simplifiee_pre_fill_config_help_text(self):
+        context = {
+            "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),
+        }
+        return render_to_string(
+            "admin/moulinette/confighaie/demarche_simplifiee_pre_fill_config_help_text.html",
+            context,
+        )
+
+
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
+    form = ConfigHaieAdminForm
     list_display = ["department", "is_activated", "department_guichet_unique_url"]
     list_filter = ["is_activated"]
 
