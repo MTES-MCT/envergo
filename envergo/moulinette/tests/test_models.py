@@ -1,4 +1,5 @@
 import pytest
+from django.core.exceptions import ValidationError
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
@@ -6,6 +7,7 @@ from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
 from envergo.moulinette.models import (
+    ConfigHaie,
     MoulinetteAmenagement,
     MoulinetteHaie,
     get_moulinette_class_from_site,
@@ -134,3 +136,76 @@ def test_moulinette_haie_has_specific_behavior():
 
     MoulinetteClass = get_moulinette_class_from_url("haie.beta.gouv.fr")
     assert MoulinetteClass is MoulinetteHaie
+
+
+def test_config_haie_has_missing_demarche_simplifiee_number(
+    loire_atlantique_department,  # noqa
+):
+    config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
+    with pytest.raises(ValidationError):
+        config_haie.validate_constraints()
+
+
+def test_config_haie_has_invalid_demarche_simplifiee_config(
+    loire_atlantique_department,  # noqa
+):
+    with pytest.raises(ValidationError) as exc_info:
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            demarche_simplifiee_number="123456789",
+            demarche_simplifiee_pre_fill_config={"foo": "bar"},
+        )
+        config_haie.clean()
+    assert exc_info.value.messages == [
+        "Cette configuration doit être une liste de champs (ou d'annotations privées) à pré-remplir"
+    ]
+
+    with pytest.raises(ValidationError) as exc_info:
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            demarche_simplifiee_number="123456789",
+            demarche_simplifiee_pre_fill_config=[{"foo": "bar"}],
+        )
+        config_haie.clean()
+    assert exc_info.value.messages == [
+        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté Démarches Simplifiées et la "
+        "source de la valeur côté guichet unique de la haie."
+    ]
+
+    with pytest.raises(ValidationError) as exc_info:
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            demarche_simplifiee_number="123456789",
+            demarche_simplifiee_pre_fill_config=[{"id": "123456789", "value": "bar"}],
+        )
+        config_haie.clean()
+    assert exc_info.value.messages == [
+        "La source de la valeur bar n'est pas valide pour le champ dont l'id est 123456789"
+    ]
+
+    with pytest.raises(
+        ValidationError,
+        match="Le mapping du champ dont l'id est 123456789 doit être un dictionnaire.",
+    ):
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            demarche_simplifiee_number="123456789",
+            demarche_simplifiee_pre_fill_config=[
+                {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
+            ],
+        )
+        config_haie.clean()
+
+    config_haie = ConfigHaie(
+        department=loire_atlantique_department,
+        is_activated=True,
+        demarche_simplifiee_number="123456789",
+        demarche_simplifiee_pre_fill_config=[
+            {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
+        ],
+    )
+    config_haie.clean()

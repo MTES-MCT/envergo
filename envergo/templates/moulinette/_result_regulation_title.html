@@ -1,0 +1,10 @@
+{% load evaluations %}
+
+<span class="content">
+  {{ regulation.title }}
+  {% if regulation.subtitle %}
+    <br />
+    <span class="undertitle">{{ regulation.subtitle }}</span>
+  {% endif %}
+</span>
+{% result_tag regulation.result %}

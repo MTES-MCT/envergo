@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import generate_reference
 from envergo.hedges.models import HedgeData
+from envergo.utils.urls import extract_param_from_url
 
 
 class PetitionProject(models.Model):
@@ -28,6 +29,10 @@ class PetitionProject(models.Model):
         on_delete=models.PROTECT,
     )
 
+    demarches_simplifiees_dossier_number = models.IntegerField(
+        help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -37,3 +42,16 @@ class PetitionProject(models.Model):
 
     def __str__(self):
         return self.reference
+
+    def get_log_event_data(self):
+        department = extract_param_from_url(self.moulinette_url, "department")
+        return {
+            "reference": self.reference,
+            "department": department,
+            "longueur_detruite": (
+                self.hedge_data.length_to_remove() if self.hedge_data else None
+            ),
+            "longueur_plantee": (
+                self.hedge_data.length_to_plant() if self.hedge_data else None
+            ),
+        }

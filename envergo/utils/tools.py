@@ -1,3 +1,5 @@
+import json
+import secrets
 from typing import Literal
 
 from django.conf import settings
@@ -15,3 +17,26 @@ def get_site_literal(site: Site) -> Literal["haie", "amenagement"]:
         return "haie"
 
     return "amenagement"
+
+
+def display_form_details(form):
+    form_details = {"fields": {}, "errors": {}}
+
+    for field in form:
+        form_details["fields"][str(field.label)] = field.value()
+
+    for field, errors in form.errors.items():
+        form_details["errors"][str(field)] = errors
+
+    return json.dumps(form_details, indent=4)
+
+
+def generate_key():
+    """Generate a short random and readable key."""
+
+    # letters and numbers without l, 1, i, O, 0, etc.
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    length = settings.URLMAPPING_KEY_LENGTH
+    key = "".join(secrets.choice(alphabet) for i in range(length))
+
+    return key

@@ -29,9 +29,9 @@
                value="{{ request.GET.travaux|default:'' }}" />
 
         <div class="form-section">
-          {% include '_radio_snippet.html' with field=form.profil %}
           {% include '_radio_snippet.html' with field=form.motif %}
           {% include '_radio_snippet.html' with field=form.reimplantation %}
+          {% include '_radio_snippet.html' with field=form.localisation_pac %}
 
           <div id="form-group-haies"
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
@@ -144,8 +144,8 @@
         let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
         let lengthToRemove = statsContent.getElementById("length-to-remove");
         let lengthToPlant = statsContent.getElementById("length-to-plant");
-        lengthToRemove.textContent = event.data.length_to_remove;
-        lengthToPlant.textContent = event.data.length_to_plant;
+        lengthToRemove.textContent = event.data.length_to_remove.toFixed();
+        lengthToPlant.textContent = event.data.length_to_plant.toFixed();
         statisticsContainer.innerHTML = "";
         statisticsContainer.appendChild(statsContent);
 

@@ -1,6 +1,7 @@
 import json
 import logging
 import string
+from itertools import groupby
 
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
@@ -9,6 +10,7 @@ from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
+from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.models import get_moulinette_class_from_site
 
@@ -179,10 +181,82 @@ def field_summary(field):
     )
     html = f"<strong>{label}</strong> {value}"
     if hasattr(field.field, "display_help_text"):
-        html += (
-            f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
-        )
+        if field.field.display_help_text:
+            html += f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
     elif field.help_text:
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
 
     return mark_safe(html)
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_moulinette_result(context, result, hedges_field):
+    """Render the global moulinette result content."""
+    context_data = context.flatten()
+    context_data["length_to_remove"] = hedges_field.field.clean(
+        hedges_field.value()
+    ).length_to_remove()
+
+    template_name = f"haie/moulinette/result/{result}.html"
+    try:
+        content = render_to_string((template_name,), context_data)
+    except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH global result is missing.",
+            extra={"result": result, "template_name": template_name},
+        )
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_moulinette_liability_info(context, result):
+    """Render the liability_info content depending on the moulinette result."""
+
+    template_name = f"haie/moulinette/liability_info/{result}.html"
+    try:
+        content = render_to_string((template_name,), context.flatten())
+    except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH liability info is missing.",
+            extra={"result": result, "template_name": template_name},
+        )
+        content = ""
+
+    return content
+
+
+def get_display_result(regulation):
+    other_results = [
+        RESULTS.systematique,
+        RESULTS.cas_par_cas,
+        RESULTS.action_requise,
+        RESULTS.a_verifier,
+        RESULTS.iota_a_verifier,
+        RESULTS.non_soumis,
+        RESULTS.non_concerne,
+        RESULTS.non_disponible,
+    ]
+
+    return regulation.result if regulation.result not in other_results else "autre"
+
+
+@register.simple_tag
+def group_regulations_for_display(moulinette):
+    """Group regulations by result : "interdit" and "soumis" first, then the rest in an "autre" category."""
+    regulations_list = list(moulinette.regulations)
+
+    result_cascade = [
+        RESULTS.interdit,
+        RESULTS.soumis,
+        "autre",
+    ]
+
+    regulations_list.sort(key=lambda reg: result_cascade.index(get_display_result(reg)))
+
+    # Group the regulations by their result
+    return {
+        key: list(group)
+        for key, group in groupby(regulations_list, key=get_display_result)
+    }

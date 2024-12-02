@@ -32,9 +32,9 @@ def test_conditionnalite_pac_only_for_agri_pac():
     haies = MagicMock()
     haies.length_to_remove.return_value = 10
     data = {
-        "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
+        "localisation_pac": "non",
         "department": "44",
         "haies": haies,
     }
@@ -45,7 +45,7 @@ def test_conditionnalite_pac_only_for_agri_pac():
         "amenagement",
         "autre",
     ]:
-        for reimplantation_choice in ["remplacement", "compensation", "non"]:
+        for reimplantation_choice in ["remplacement", "replantation", "non"]:
             data["motif"] = motif_choice
             data["reimplantation"] = reimplantation_choice
             moulinette = MoulinetteHaie(data, data, False)
@@ -56,165 +56,60 @@ def test_conditionnalite_pac_only_for_agri_pac():
             )
 
 
-def test_conditionnalite_pac_for_agri_pac():
+def test_bcae8_impossible_case():
+    """Impossible simulation data.
+
+    This data configuration is prevented by the form validation.
+    """
     ConfigHaieFactory()
     data = {
-        "profil": "agri_pac",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
+        "localisation_pac": "oui",
         "department": "44",
         "haies": MagicMock(),
+        "lineaire_total": 100,
     }
+    data["haies"].lineaire_detruit_pac.return_value = 4
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_disponible", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_disponible", data
 
-    data["haies"].length_to_remove.return_value = 5
-    data["lineaire_total"] = 100
+
+def test_bcae8_small_dispense_petit():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_soumis_petit", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
 
-    data["haies"].length_to_remove.return_value = 6
-    data["lineaire_total"] = 100
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
-    ), data
 
-    data["haies"].length_to_remove.return_value = 6
-    data["lineaire_total"] = 300
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "non_soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_soumis_petit", data
+def test_bcae8_small_interdit_transfert_parcelles():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 100,
+        "transfert_parcelles": "oui",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
 
-    data["reimplantation"] = "compensation"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "non_soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_soumis_petit", data
-
-    data["lineaire_total"] = 100
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
-    ), data
-
-    data["haies"].length_to_remove.return_value = 11
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
-    ), data
-
-    data["motif"] = "meilleur_emplacement"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code
-        == "soumis_meilleur_emplacement"
-    ), data
-
-    data["motif"] = "transfert_parcelles"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
-    ), data
-
-    data["motif"] = "amenagement"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "non_disponible", data
-
-    data["amenagement_dup"] = "oui"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
-    ), data
-
-    data["amenagement_dup"] = "non"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
-    ), data
-
-    data["motif"] = "autre"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "non_disponible", data
-
-    data["motif_qc"] = "aucun"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre", data
-
-    data["motif_qc"] = "gestion_sanitaire"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_autre", data
-
-    data["reimplantation"] = "non"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_autre", data
-
-    data["motif_qc"] = "aucun"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre", data
-
-    data["motif"] = "chemin_acces"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
-    ), data
-
-    data["haies"].length_to_remove.return_value = 10
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
-    ), data
-
-    data["motif"] = "amenagement"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "interdit", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
-    ), data
-
-    data["amenagement_dup"] = "oui"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
-    ), data
-
-    data["motif"] = "transfert_parcelles"
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
@@ -222,3 +117,271 @@ def test_conditionnalite_pac_for_agri_pac():
         moulinette.conditionnalite_pac.bcae8.result_code
         == "interdit_transfert_parcelles"
     ), data
+
+
+def test_bcae8_small_interdit_amelioration_culture():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_amelioration_culture"
+    ), data
+
+
+def test_bcae8_small_soumis_chemin_acces():
+    ConfigHaieFactory()
+    data = {
+        "motif": "chemin_acces",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
+    ), data
+
+
+def test_bcae8_small_interdit_chemin_acces():
+    ConfigHaieFactory()
+    data = {
+        "motif": "chemin_acces",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 11
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
+    ), data
+
+
+def test_bcae8_small_interdit_securite():
+    ConfigHaieFactory()
+    data = {
+        "motif": "securite",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+        "motif_pac": "aucun",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_securite", data
+
+
+def test_bcae8_small_soumis_amenagement():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amenagement",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "amenagement_dup": "oui",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    ), data
+
+
+def test_bcae8_small_interdit_amenagement():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amenagement",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "amenagement_dup": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
+    ), data
+
+
+def test_bcae8_small_interdit_embellissement():
+    ConfigHaieFactory()
+    data = {
+        "motif": "embellissement",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
+    ), data
+
+
+def test_bcae8_big_soumis_remplacement():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
+    ), data
+
+
+def test_bcae8_big_soumis_transfer_parcelles():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "oui",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
+    ), data
+
+
+def test_bcae8_big_interdit_amelioration_culture():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_amelioration_culture"
+    ), data
+
+
+def test_bcae8_big_interdit_embellissement():
+    ConfigHaieFactory()
+    data = {
+        "motif": "embellissement",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
+    ), data
+
+
+def test_bcae8_big_soumis_autre():
+    ConfigHaieFactory()
+    data = {
+        "motif": "autre",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "motif_pac": "protection_incendie",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_autre", data
+
+
+def test_bcae8_big_interdit_autre():
+    ConfigHaieFactory()
+    data = {
+        "motif": "autre",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "motif_pac": "aucun",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "interdit", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre", data
