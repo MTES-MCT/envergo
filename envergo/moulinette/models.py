@@ -67,6 +67,20 @@ REGULATIONS = Choices(
 )
 
 
+RESULT_CASCADE = [
+    RESULTS.interdit,
+    RESULTS.systematique,
+    RESULTS.cas_par_cas,
+    RESULTS.soumis,
+    RESULTS.action_requise,
+    RESULTS.a_verifier,
+    RESULTS.iota_a_verifier,
+    RESULTS.non_soumis,
+    RESULTS.non_concerne,
+    RESULTS.non_disponible,
+]
+
+
 # This is to use in model fields `default` attribute
 def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
@@ -74,19 +88,6 @@ def all_regulations():
 
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
-
-    result_cascade = [
-        RESULTS.interdit,
-        RESULTS.systematique,
-        RESULTS.cas_par_cas,
-        RESULTS.soumis,
-        RESULTS.action_requise,
-        RESULTS.a_verifier,
-        RESULTS.iota_a_verifier,
-        RESULTS.non_soumis,
-        RESULTS.non_concerne,
-        RESULTS.non_disponible,
-    ]
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
     weight = models.PositiveIntegerField(_("Order"), default=1)
@@ -260,7 +261,7 @@ class Regulation(models.Model):
 
         results = [criterion.result for criterion in self.criteria.all()]
         result = None
-        for status in self.result_cascade:
+        for status in RESULT_CASCADE:
             if status in results:
                 result = status
                 break
@@ -304,7 +305,7 @@ class Regulation(models.Model):
             criteria = grouped_criteria.get(perimeter, [])
             results = [criterion.result for criterion in criteria]
             result = None
-            for status in self.result_cascade:
+            for status in RESULT_CASCADE:
                 if status in results:
                     result = status
                     break
@@ -320,7 +321,7 @@ class Regulation(models.Model):
         return OrderedDict(
             sorted(
                 results_by_perimeter.items(),
-                key=lambda item: self.result_cascade.index(item[1]),
+                key=lambda item: RESULT_CASCADE.index(item[1]),
             )
         )
 

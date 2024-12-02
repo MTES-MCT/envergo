@@ -1,0 +1,14 @@
+<form id="demarche-simplifiee-form"
+      action="{% url 'petition_project_create' %}"
+      method="post">
+  {% csrf_token %}
+  <input type="hidden"
+         name="moulinette_url"
+         value="{{ request.build_absolute_uri }}" />
+  <input type="hidden"
+         name="profil"
+         value="{{ moulinette.main_form.profil.value }}" />
+  <input type="hidden"
+         name="haies"
+         value="{{ moulinette.main_form.haies.value }}" />
+</form>
