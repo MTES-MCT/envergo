@@ -224,8 +224,10 @@ createApp({
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
       const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
 
-      newHedge.polyline.on('editable:vertex:new', () => {
-        showHelpBubble.value = true;
+      newHedge.polyline.on('editable:vertex:new', (event) => {
+        if(event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
+          showHelpBubble.value = true;
+        }
       });
 
       // Cacher la bulle d'aide à la fin du tracé
