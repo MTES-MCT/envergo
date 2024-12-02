@@ -1,8 +1,12 @@
+import logging
+
 from django import forms
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
+
+logger = logging.getLogger(__name__)
 
 
 def keep_fields(fields, keys):
@@ -202,6 +206,8 @@ class Bcae8(CriterionEvaluator):
             is_small,
         ) = result_data
 
+        result_code = None
+
         if localisation_pac == "non" or lineaire_detruit_pac == 0:
             result_code = "non_soumis"
         else:
@@ -317,5 +323,10 @@ class Bcae8(CriterionEvaluator):
                             result_code = "soumis_autre"
                         else:
                             result_code = "interdit_autre"
+
+        # This case should not happen, but better be safe
+        if result_code is None:
+            logger.error("No result code found for %s", result_data)
+            result_code = RESULTS.non_disponible
 
         return result_code
