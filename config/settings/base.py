@@ -58,6 +58,7 @@ DJANGO_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     # "django.contrib.admin",  # it's overriden below
     "django.forms",
     "django.contrib.gis",
