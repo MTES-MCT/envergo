@@ -25,7 +25,7 @@ window.addEventListener('load', function () {
         event.preventDefault();
 
         // Replace form button by a loader
-        const submitButton = document.getElementById("demarche-simplifiee-btn");
+        const submitButton = document.getElementById("demarche-simplifiee-banner-btn");
         let originalButton = null;
         const textNode = document.createTextNode('Redirection vers Démarches simplifiées…');
         if (submitButton) {
@@ -76,6 +76,16 @@ window.addEventListener('load', function () {
               textNode.parentNode.replaceChild(originalButton, textNode);
             }
           });
+      });
+
+      // There is multiples buttons that can submit the form across the result page
+      const submitButtons = document.querySelectorAll('.demarche-simplifiee-btn');
+      submitButtons.forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.preventDefault();
+          var submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+          demarcheForm.dispatchEvent(submitEvent);
+        });
       });
     }
   })(this);

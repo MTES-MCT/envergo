@@ -224,8 +224,10 @@ createApp({
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
       const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
 
-      newHedge.polyline.on('editable:vertex:new', () => {
-        showHelpBubble.value = true;
+      newHedge.polyline.on('editable:vertex:new', (event) => {
+        if(event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
+          showHelpBubble.value = true;
+        }
       });
 
       // Cacher la bulle d'aide à la fin du tracé
@@ -333,8 +335,37 @@ createApp({
         .catch((error) => console.error('Error:', error));
     };
 
+    // Cancel the input and return to the main form
+    // We confirm with a modal if some hedges have been drawn
     const cancel = () => {
-      window.parent.postMessage({ action: 'cancel' });
+      const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
+      if (totalHedges > 0) {
+        const dialog = document.getElementById("confirmation-modal");
+        const confirmCancel = document.getElementById("btn-quit-without-saving");
+        const dismissCancel = document.getElementById("btn-back-to-map");
+
+        const confirmHandler = () => {
+          dsfr(dialog).modal.conceal();
+          window.parent.postMessage({ action: 'cancel' });
+        };
+
+        const dismissHandler = () => {
+          dsfr(dialog).modal.conceal();
+        };
+
+        const concealHandler = () => {
+          confirmCancel.removeEventListener("click", confirmHandler);
+          dismissCancel.removeEventListener("click", dismissHandler);
+        };
+
+        confirmCancel.addEventListener("click", confirmHandler, { once: true });
+        dismissCancel.addEventListener("click", dismissHandler, { once: true });
+        dialog.addEventListener("dsfr.conceal", concealHandler, { once: true });
+
+        dsfr(dialog).modal.disclose();
+      } else {
+        window.parent.postMessage({ action: 'cancel' });
+      }
     }
 
     const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
@@ -397,14 +428,13 @@ createApp({
         doubleClickZoom: false,
         zoomControl: false,
         layers: [satelliteLayer]
-      }).setView([43.6861, 3.5911], 14);
+      });
 
       L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
-
 
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {
@@ -414,7 +444,19 @@ createApp({
         map.setView(latLng, zoomLevel);
       });
 
+      // Here, we want to restore existing hedges
+      // If there are any, set view to see them all
+      // Otherwise, set a default view with a zoom level of 14
+      // There is a catch though. If we set a zoom level of 14 in the
+      // first `setView` call, it triggers a bug with hedges polylines middle
+      // markers that are displayed outside of the actual line. That's because
+      // the marker positions are calculated with a precision that is dependant
+      // on the zoom level.
+      // So we have to set the view with a zoom maxed out, restore the markers,
+      // then zoom out.
+      map.setView([43.6861, 3.5911], 22);
       restoreHedges();
+      map.setZoom(14);
       zoomOut();
     });
 

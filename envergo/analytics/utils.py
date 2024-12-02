@@ -90,3 +90,7 @@ def extract_matomo_url_from_request(request):
     bare_url = request.build_absolute_uri(request.path)
 
     return update_qs(bare_url, params)
+
+
+def get_matomo_tags(request):
+    return {k: v for k, v in request.session.items() if k.startswith("mtm_")}

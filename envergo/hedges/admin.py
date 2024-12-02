@@ -53,10 +53,10 @@ class HedgeDataAdmin(admin.ModelAdmin):
         return len(obj.hedges_to_plant())
 
     def length_to_plant(self, obj):
-        return sum(h.length for h in obj.hedges_to_plant())
+        return obj.length_to_plant()
 
     def hedges_to_remove(self, obj):
         return len(obj.hedges_to_remove())
 
     def length_to_remove(self, obj):
-        return sum(h.length for h in obj.hedges_to_remove())
+        return obj.length_to_remove()
