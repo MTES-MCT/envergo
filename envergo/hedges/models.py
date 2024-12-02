@@ -30,7 +30,7 @@ class Hedge:
             [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
-        self.additionalData = additionalData
+        self.additionalData = additionalData or {}
 
     @property
     def length(self):
@@ -39,6 +39,14 @@ class Hedge:
         geod = Geod(ellps="WGS84")
         length = geod.geometry_length(self.geometry)
         return length
+
+    @property
+    def is_on_pac(self):
+        return self.additionalData.get("surParcellePac", False)
+
+    @property
+    def hedge_type(self):
+        return self.additionalData.get("typeHaie", None)
 
 
 class HedgeData(models.Model):
@@ -52,6 +60,9 @@ class HedgeData(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+    def __iter__(self):
+        return iter(self.hedges())
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
@@ -67,3 +78,21 @@ class HedgeData(models.Model):
 
     def length_to_remove(self):
         return round(sum(h.length for h in self.hedges_to_remove()))
+
+    def lineaire_detruit_pac(self):
+        return round(
+            sum(
+                h.length
+                for h in self.hedges_to_remove()
+                if h.is_on_pac and h.hedge_type != "alignement"
+            )
+        )
+
+    def lineaire_type_4_sur_parcelle_pac(self):
+        return round(
+            sum(
+                h.length
+                for h in self.hedges_to_remove()
+                if h.is_on_pac and h.hedge_type == "alignement"
+            )
+        )
