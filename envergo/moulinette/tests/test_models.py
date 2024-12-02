@@ -195,7 +195,7 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
             is_activated=True,
             demarche_simplifiee_number="123456789",
             demarche_simplifiee_pre_fill_config=[
-                {"id": "123456789", "value": "profil", "mapping": "bar"}
+                {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
             ],
         )
         config_haie.clean()
@@ -205,7 +205,7 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         is_activated=True,
         demarche_simplifiee_number="123456789",
         demarche_simplifiee_pre_fill_config=[
-            {"id": "123456789", "value": "profil", "mapping": {"foo": "bar"}}
+            {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
         ],
     )
     config_haie.clean()
