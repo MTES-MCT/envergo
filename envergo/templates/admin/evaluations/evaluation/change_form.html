@@ -28,12 +28,18 @@
          class="disableonchange">✉️ Envoyer e-mail avis</a>
     </li>
   {% endif %}
-  <li>
-    <a href="{{ absolute_url }}"
-       class="viewsitelink"
-       target="_blank"
-       rel="noopener">Voir l'avis publié</a>
-  </li>
+  {% if original.versions.count > 0 %}
+    <li>
+      <a href="{{ absolute_url }}"
+         class="viewsitelink"
+         target="_blank"
+         rel="noopener">Voir l'avis publié</a>
+    </li>
+  {% else %}
+    <li>
+      <a href="" class="disabled">⚠️ Aucun avis publié</a>
+    </li>
+  {% endif %}
 {% endblock %}
 
 {% block admin_change_form_document_ready %}

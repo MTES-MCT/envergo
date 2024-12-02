@@ -10,8 +10,9 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Case, F, IntegerField, Prefetch, Q
+from django.db.models import Case, CheckConstraint, F, IntegerField, Prefetch, Q
 from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
@@ -294,14 +295,14 @@ class Regulation(models.Model):
 
         # Fetch already evaluated criteria
         criteria_list = list(self.criteria.all())
-        criteria_list.sort(key=attrgetter("perimeter"))
+        criteria_list.sort(key=attrgetter("perimeter_id"))
         grouped_criteria = {
             k: list(v) for k, v in groupby(criteria_list, key=attrgetter("perimeter"))
         }
 
         for perimeter in self.perimeters.all():
-            perimeter_criteria = grouped_criteria.get(perimeter, [])
-            results = [criterion.result for criterion in perimeter_criteria]
+            criteria = grouped_criteria.get(perimeter, [])
+            results = [criterion.result for criterion in criteria]
             result = None
             for status in self.result_cascade:
                 if status in results:
@@ -788,12 +789,144 @@ class ConfigHaie(ConfigBase):
         "Liste des contacts et liens utiles", blank=True
     )
 
+    demarche_simplifiee_number = models.IntegerField(
+        "Numéro de la démarche sur démarche simplifiée",
+        blank=True,
+        null=True,
+        help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
+        '<a href="https://www.demarches-simplifiees.fr/admin/procedures" target="_blank" rel="noopener">'
+        "https://www.demarches-simplifiees.fr/admin/procedures</a>",
+    )
+
+    demarche_simplifiee_pre_fill_config = models.JSONField(
+        "Configuration du pré-remplissage de la démarche",
+        blank=True,
+        null=False,
+        default=list,
+    )
+
     def __str__(self):
         return self.department.get_department_display()
+
+    def clean(self):
+        super().clean()
+        if self.is_activated and self.demarche_simplifiee_pre_fill_config is not None:
+            # add constraints on the pre-fill configuration json to avoid unexpected entries
+
+            if not isinstance(self.demarche_simplifiee_pre_fill_config, list):
+                raise ValidationError(
+                    {
+                        "demarche_simplifiee_pre_fill_config": "Cette configuration doit être une liste de champs"
+                        " (ou d'annotations privées) à pré-remplir"
+                    }
+                )
+
+            availables_sources = {
+                tup[0]
+                for value in self.get_demarche_simplifiee_value_sources().values()
+                for tup in value
+            }
+            for field in self.demarche_simplifiee_pre_fill_config:
+                if (
+                    not isinstance(field, dict)
+                    or "id" not in field
+                    or "value" not in field
+                ):
+                    raise ValidationError(
+                        {
+                            "demarche_simplifiee_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
+                            " au moins l'id côté Démarches Simplifiées et la "
+                            "source de la valeur côté guichet unique de la haie."
+                        }
+                    )
+                if field["value"] not in availables_sources:
+                    raise ValidationError(
+                        {
+                            "demarche_simplifiee_pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
+                            f"valide pour le champ dont l'id est {field['id']}"
+                        }
+                    )
+                if "mapping" in field and not isinstance(field["mapping"], dict):
+                    raise ValidationError(
+                        {
+                            "demarche_simplifiee_pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
+                            f"doit être un dictionnaire."
+                        }
+                    )
+
+    @classmethod
+    def get_demarche_simplifiee_value_sources(cls):
+        """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
+
+        This method aggregates :
+         * some well known values (e.g. moulinette_url)
+         * the fields of all the forms that the user may have to fill in the guichet unique de la haie :
+            * the main form
+            * the triage form
+            * the forms of the criteria of involved regulations
+         * the results of the regulations
+        """
+
+        moulinette_instance = MoulinetteHaie({}, {})
+        triage_form_fields = {
+            (key, field.label) for key, field in TriageFormHaie.base_fields.items()
+        }
+        main_form_fields = {
+            (key, field.label)
+            for key, field in MoulinetteHaie.main_form_class.base_fields.items()
+        }
+
+        identified_sources = {
+            ("url_moulinette", "Url de la simulation"),
+            ("url_projet", "Url du projet de dossier"),
+            ("ref_projet", "Référence du projet de dossier"),
+        }
+
+        available_sources = {
+            "Fléchage": triage_form_fields,
+            "Questions principales": main_form_fields,
+        }
+
+        regulation_results = set()
+
+        for regulation in moulinette_instance.regulations.all():
+            regulation_sources = set()
+            regulation_results.add(
+                (
+                    f"{regulation.slug}.result",
+                    f"Résultat de la réglementation {regulation.regulation}",
+                )
+            )
+            for criterion in regulation.criteria.all():
+                form_class = criterion.evaluator.form_class
+                if form_class:
+                    regulation_sources.update(
+                        {
+                            (key, field.label)
+                            for key, field in form_class.base_fields.items()
+                        }
+                    )
+
+            if regulation_sources:
+                available_sources[f'Questions complémentaires "{regulation.title}"'] = (
+                    regulation_sources
+                )
+
+        available_sources["Résultats réglementation"] = regulation_results
+        available_sources["Variables projet"] = identified_sources
+
+        return available_sources
 
     class Meta:
         verbose_name = "Config haie"
         verbose_name_plural = "Configs haie"
+        constraints = [
+            CheckConstraint(
+                check=Q(is_activated=False)
+                | Q(demarche_simplifiee_number__isnull=False),
+                name="demarche_simplifiee_number_required_if_activated",
+            )
+        ]
 
 
 TEMPLATE_KEYS = [

@@ -561,15 +561,14 @@ def test_eval_detail_shows_latest_published_version_content(client):
     assert "This is version 2" in res.content.decode()
 
 
-def test_eval_detail_without_versions_renders_content(client):
-    """When there is no existing version, the eval detail page renders the content dynamically."""
+def test_eval_detail_without_versions_does_not_render_content(client):
+    """When there is no existing version, the eval detail page is not available."""
     eval = EvaluationFactory(versions=[])
     assert eval.versions.count() == 0
 
     url = eval.get_absolute_url()
     res = client.get(url)
-    assert res.status_code == 200
-    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+    assert res.status_code == 404
 
 
 def test_only_one_version_can_be_published():

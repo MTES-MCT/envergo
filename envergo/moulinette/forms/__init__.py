@@ -33,21 +33,29 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         ),
         required=True,
         min_value=0,
+        max_value=10000000,
         help_text="Surface au sol nouvellement impactée par le projet",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         display_unit="m²",
         display_label="Surface nouvellement impactée par le projet :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     existing_surface = DisplayIntegerField(
         label=_("Existing surface before the project"),
         required=False,
         min_value=0,
+        max_value=10000000,
         help_text="Construction, voirie, espaces verts, remblais et bassins",
         widget=forms.HiddenInput,
         display_unit="m²",
         display_label="Surface déjà impactée avant le projet :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     final_surface = DisplayIntegerField(
         label=mark_safe(
@@ -64,11 +72,15 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         ),
         required=False,
         min_value=0,
+        max_value=10000000,
         help_text="Surface au sol impactée totale, en comptant l'existant",
         widget=forms.TextInput(attrs={"placeholder": _("In square meters")}),
         display_unit="m²",
         display_label="Surface impactée totale, y compris l'existant :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
+        error_messages={
+            "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
+        },
     )
     address = forms.CharField(
         label=_("Search for the address to center the map"),
@@ -287,9 +299,9 @@ class TriageFormHaie(forms.Form):
                 mark_safe(
                     """Destruction<br />
                     <span class="fr-hint-text">
-                        Intervention qui supprime définitivement la végétation : arrachage
-                        ou coupe à blanc sur une espèce qui ne recèpe pas (ex : chêne,
-                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…)
+                        Intervention qui supprime définitivement la végétation : arrachage,
+                        coupe à blanc sur une espèce qui ne recèpe pas (ex : chêne,
+                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…), etc.
                     </span>
                     """
                 ),
@@ -299,8 +311,8 @@ class TriageFormHaie(forms.Form):
                 mark_safe(
                     """Entretien<br />
                     <span class="fr-hint-text">
-                        Intervention qui permet la repousse de la végétation : élagage, taille,
-                        coupe à blanc sur une espèce capable de recéper.
+                        Intervention qui permet la repousse durable de la végétation : élagage, taille,
+                        coupe à blanc sur une espèce capable de recéper, etc.
                     </span>
                     """
                 ),

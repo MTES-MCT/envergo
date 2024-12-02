@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 Une demande d'avis a été mise à jour.
                 Adresse : {request.address}
                 {len(list(files))} nouveaux fichiers ont été ajoutés.
-                [Admin django](https://envergo.beta.gouv.fr/{url})
+                [Admin django](https://envergo.beta.gouv.fr{url})
 
                 ping {", ".join(settings.OPS_MATTERMOST_HANDLERS)}
                 """

@@ -105,6 +105,11 @@ class EvaluationDetailMixin:
                 )
             )
         )
+
+        # AR not yet published should not be displayed unless in preview
+        if "preview" not in self.request.GET:
+            qs = qs.filter(versions__isnull=False).distinct()
+
         return qs
 
 

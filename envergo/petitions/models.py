@@ -29,6 +29,10 @@ class PetitionProject(models.Model):
         on_delete=models.PROTECT,
     )
 
+    demarches_simplifiees_dossier_number = models.IntegerField(
+        help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 

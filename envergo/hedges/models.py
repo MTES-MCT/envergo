@@ -24,12 +24,13 @@ EPSG_LAMB93 = 2154
 class Hedge:
     """Represent a single hedge."""
 
-    def __init__(self, id, latLngs, type):
+    def __init__(self, id, latLngs, type, additionalData=None):
         self.id = id  # The edge reference, e.g A1, A2…
         self.geometry = LineString(
             [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
+        self.additionalData = additionalData
 
     @property
     def length(self):
@@ -37,7 +38,7 @@ class Hedge:
 
         geod = Geod(ellps="WGS84")
         length = geod.geometry_length(self.geometry)
-        return int(length)
+        return length
 
 
 class HedgeData(models.Model):
@@ -59,10 +60,10 @@ class HedgeData(models.Model):
         return [Hedge(**h) for h in self.data if h["type"] == TO_PLANT]
 
     def length_to_plant(self):
-        return sum(h.length for h in self.hedges_to_plant())
+        return round(sum(h.length for h in self.hedges_to_plant()))
 
     def hedges_to_remove(self):
         return [Hedge(**h) for h in self.data if h["type"] == TO_REMOVE]
 
     def length_to_remove(self):
-        return sum(h.length for h in self.hedges_to_remove())
+        return round(sum(h.length for h in self.hedges_to_remove()))
