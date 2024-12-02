@@ -1,5 +1,7 @@
 {% extends "multisite_base.html" %}
 
+{% load static %}
+
 {% block app_title %}
   {% block title %}
   {% endblock title %}
@@ -35,4 +37,9 @@
 
 {% block footer %}
   {% include 'amenagement/_footer.html' %}
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script defer src="{% static 'js/libs/newsletter_form.js' %}"></script>
 {% endblock %}

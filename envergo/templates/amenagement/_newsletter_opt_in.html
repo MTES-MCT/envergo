@@ -13,13 +13,11 @@
               En renseignant votre adresse électronique, vous acceptez de recevoir nos actualités par courriel. Désinscription en un clic.
             </p>
           </div>
-          <div>
-            <form action="{% url 'newsletter_opt_in' %}" method="post">
+          <div id="newsletter-optin-form-container">
+            <form id="newsletter-optin-form"
+                  action="{% url 'newsletter_opt_in' %}"
+                  method="post">
               {% csrf_token %}
-
-              <input type="hidden"
-                     name="redirect_url"
-                     value="{{ request.build_absolute_uri }}" />
               {% include '_field_snippet.html' with field=newsletter_opt_in_form.type %}
               {% include '_field_snippet.html' with field=newsletter_opt_in_form.email %}
               <button class="fr-btn fr-mt-2w"

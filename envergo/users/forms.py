@@ -78,4 +78,3 @@ class NewsletterOptInForm(forms.Form):
         label="Votre adresse email",
         widget=forms.EmailInput(attrs={"placeholder": "ex. : nom@domaine.fr"}),
     )
-    redirect_url = forms.CharField(required=True, widget=forms.HiddenInput())
