@@ -50,7 +50,7 @@ class HedgeInput(DetailView):
                 "length_to_remove": sum(
                     h.length for h in hedge_data.hedges_to_remove()
                 ),
-                "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac(),
+                "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac_including_alignement(),
             }
             status_code = 201 if created else 200
             return JsonResponse(response_data, status=status_code)

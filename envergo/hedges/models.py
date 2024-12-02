@@ -76,9 +76,5 @@ class HedgeData(models.Model):
     def length_to_remove(self):
         return round(sum(h.length for h in self.hedges_to_remove()))
 
-    def lineaire_detruit_pac(self):
-        return sum(
-            h.length
-            for h in self.hedges_to_remove()
-            if h.is_on_pac and h.hedge_type != "alignement"
-        )
+    def lineaire_detruit_pac_including_alignement(self):
+        return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)

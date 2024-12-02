@@ -1,4 +1,4 @@
-{% load utils %}
+{% load utils humanize %}
 
 <h2 id="moulinette-title" class="centered">Commencez à décrire votre projet de travaux sur haies</h2>
 
@@ -41,12 +41,19 @@
                 <div id="statistics-container" class="fr-mb-3w">
                   <div id="statistics" class="fr-mb-3w">
                     <p>
-                      {# djlint:off #}{{ hedges_to_remove|length }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
+                      {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                     </p>
                     <p>
-                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove }}</span> m
+                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|intcomma }}</span> m
                     </p>
-                    <p>dont {{ form.cleaned_data.haies.lineaire_detruit_pac|floatformat:0 }} m situés sur des parcelles PAC</p>
+                    {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+                      <p>
+                        dont {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur des
+                        parcelles PAC
+                      </p>
+                    {% else %}
+                      <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
+                    {% endif %}
                   </div>
                 </div>
                 <button id="hedge-input-open-btn"
@@ -56,7 +63,9 @@
                         aria-controls="hedge-input-modal">Modifier les haies</button>
               {% else %}
                 <div id="statistics-container" class="fr-mb-3w">
-                  <p>Aucune haie renseignée</p>
+                  <p>
+                    <i>Aucune haie renseignée</i>
+                  </p>
                 </div>
                 <button id="hedge-input-open-btn"
                         class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
@@ -89,23 +98,22 @@
     <p>
       Linéaire total : <span id="length-to-remove">0</span> m
     </p>
-    <p>
-      dont <span id="lineaire-detruit-pac">0</span> m situés sur des parcelles PAC
-    </p>
+    <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
   </div>
 </template>
 
 <script>
-  window.addEventListener("load", function() {
+  window.addEventListener("load", function () {
     let btn = document.getElementById("hedge-input-open-btn");
     let modal = document.getElementById("hedge-input-modal");
     let hedgeIdField = document.getElementById("id_haies");
     let hedgeDataStatsTpl = document.getElementById("hedge-data-statistics");
     let statisticsContainer = document.getElementById("statistics-container");
+    let hedgeInputOpenBtn = document.getElementById("hedge-input-open-btn");
     let hedgeIframe;
 
     // open the hedge input ui in a modal upon the button click
-    btn.addEventListener("click", function() {
+    btn.addEventListener("click", function () {
       let saveUrl = "{% url 'input_hedges' %}";
       let hedgeId = hedgeIdField.value;
       if (hedgeId) {
@@ -116,7 +124,7 @@
     });
 
     // When the input is saved, close the modal
-    window.addEventListener("message", function(event) {
+    window.addEventListener("message", function (event) {
       if (event.origin !== window.location.origin) {
         return;
       }
@@ -127,15 +135,28 @@
       }
 
       if (event.data.input_id) {
-        let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
-        let lengthToRemove = statsContent.getElementById("length-to-remove");
-        let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
-        let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
-        lengthToRemove.textContent = event.data.length_to_remove.toFixed();
-        lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac.toFixed();
-        hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
-        statisticsContainer.innerHTML = "";
-        statisticsContainer.appendChild(statsContent);
+        if(event.data.length_to_remove === 0){
+          statisticsContainer.innerHTML = "<p><i>Aucune haie renseignée</i></p>"
+
+          hedgeInputOpenBtn.textContent = "Localiser les haies";
+          hedgeInputOpenBtn.classList.remove('fr-btn--secondary');
+          hedgeInputOpenBtn.classList.add('fr-btn--primary');
+        }
+        else {
+          let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
+          let lengthToRemove = statsContent.getElementById("length-to-remove");
+          let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
+          let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
+          lengthToRemove.textContent = Math.round(event.data.length_to_remove).toLocaleString('fr-FR');
+          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur des parcelles PAC" : `dont ${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur des parcelles PAC`;
+          hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove.toLocaleString('fr-FR')} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
+          statisticsContainer.innerHTML = "";
+          statisticsContainer.appendChild(statsContent);
+
+          hedgeInputOpenBtn.textContent = "Modifier les haies";
+          hedgeInputOpenBtn.classList.add('fr-btn--secondary');
+          hedgeInputOpenBtn.classList.remove('fr-btn--primary');
+        }
 
         hedgeIdField.value = event.data.input_id;
         hedgeIframe.close();
