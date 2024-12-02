@@ -211,7 +211,7 @@ MOTIF_CHOICES = (
     ),
 )
 
-LOCALISATION_CHOICES = (
+LOCALISATION_PAC_CHOICES = (
     ("oui", "Oui, au moins une des haies"),
     ("non", "Non, aucune des haies"),
 )
@@ -250,7 +250,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     localisation_pac = forms.ChoiceField(
         label="Les haies à détruire sont-elles situées sur des parcelles agricoles déclarées à la PAC ?",
         widget=forms.RadioSelect,
-        choices=LOCALISATION_CHOICES,
+        choices=LOCALISATION_PAC_CHOICES,
         required=True,
     )
     haies = HedgeDataChoiceField(
