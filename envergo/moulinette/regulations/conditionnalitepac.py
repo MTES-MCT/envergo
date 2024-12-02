@@ -101,6 +101,12 @@ class Bcae8Form(forms.Form):
                 ("lineaire_total",),
             )
 
+    def clean_lineaire_total(self):
+        lineaire_total = self.cleaned_data["lineaire_total"]
+        if lineaire_total <= 0:
+            raise forms.ValidationError("La valeur doit être positive.")
+        return lineaire_total
+
     def clean(self):
         data = super().clean()
         meilleur_emplacement = data.get("meilleur_emplacement")
