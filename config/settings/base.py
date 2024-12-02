@@ -390,13 +390,6 @@ DEMARCHES_SIMPLIFIEE = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
     "API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
-    "DEMARCHE_HAIE": {
-        "ID": "103363",
-        # Les ids des champs de la démarche peuvent être trouvés sur la page suivante:
-        # https://www.demarches-simplifiees.fr/preremplir/test-declaration-de-travaux-sur-haies
-        "PROFIL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk2MQ",
-        "MOULINETTE_URL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk0Mw",
-    },
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
