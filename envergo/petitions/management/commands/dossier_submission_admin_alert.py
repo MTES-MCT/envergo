@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 variables = f"""{{
                       "demarcheNumber":{demarche_number},
                       "updatedSince": "{iso8601_one_hour_ago}",
-                      "after":"{cursor if cursor else "null"}"
+                      "after":{f'"{cursor}"' if cursor else "null"}
                     }}"""
 
                 query = """
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                     json=body,
                     headers={
                         "Content-Type": "application/json",
-                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_BEARER_TOKEN"]}",
+                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE['GRAPHQL_API_BEARER_TOKEN']}",
                     },
                 )
 
@@ -182,7 +182,8 @@ class Command(BaseCommand):
                     .get("pageInfo", {})
                     .get("endCursor", None)
                 )
-
+                demarche_name = data["data"]["demarche"]["title"]
+                demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
                 for dossier in dossiers:
                     dossier_number = dossier["number"]
                     project = PetitionProject.objects.filter(
@@ -201,8 +202,7 @@ class Command(BaseCommand):
                         message = f"""\
                         ### Récupération des status des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
-                        Un dossier Démarches Simplifiées concernant la démarche n°{demarche_number} n'a pas de projet \
-                        associé.
+                        Un dossier Démarches Simplifiées concernant {demarche_label} n'a pas de projet associé.
                         Cela peut être dû à une création manuelle du dossier sans passer par la plateforme GUH.
                         Dossier concerné:
                         ```
@@ -215,7 +215,7 @@ class Command(BaseCommand):
                         notify(dedent(message), "haie")
                         continue
 
-                    if project.demarches_simplifiees_state is None:
+                    if not project.is_dossier_submitted:
                         # first time we have some data about this dossier
                         department = extract_param_from_url(
                             project.moulinette_url, "department"
@@ -231,6 +231,9 @@ class Command(BaseCommand):
                         )
                         message = f"""\
                             ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
+
+                            Un dossier a été soumis sur Démarches Simplifiées pour {demarche_label}.
+
                             [Démarches simplifiées]({ds_url})
                             [Admin django](https://haie.beta.gouv.fr/{admin_url})
                             —
