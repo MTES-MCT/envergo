@@ -79,7 +79,10 @@
                       @mouseover="hedge.handleMouseOver()"
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
-                    <th>[[ hedge.id ]]</th>
+                    <th>
+                      [[ hedge.id ]]
+                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                    </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="editHedge(hedge)">Modifier</button>

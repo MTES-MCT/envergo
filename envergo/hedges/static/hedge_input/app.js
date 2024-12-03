@@ -111,6 +111,17 @@ class Hedge {
     this.map.fitBounds(bounds, { padding: [25, 25] });
   }
 
+  // Make sure all additional data is filled
+  isValid() {
+    const { typeHaie, surParcellePac, proximiteMare } = this.additionalData;
+    const valid = (
+      typeHaie !== undefined &&
+      typeHaie &&
+      surParcellePac !== undefined &&
+      proximiteMare !== undefined);
+    return valid;
+  }
+
   remove() {
     this.polyline.remove();
     this.onRemove(this);
@@ -225,7 +236,7 @@ createApp({
       const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
 
       newHedge.polyline.on('editable:vertex:new', (event) => {
-        if(event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
+        if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           showHelpBubble.value = true;
         }
       });
