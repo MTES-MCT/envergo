@@ -130,7 +130,7 @@ class Command(BaseCommand):
                     notify(dedent(message), "haie")
                     break
 
-                data = response.json()
+                data = response.json() or {}
 
                 dossiers = (
                     data.get("data", {})
