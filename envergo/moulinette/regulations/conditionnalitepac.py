@@ -1,8 +1,12 @@
+import logging
+
 from django import forms
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import DisplayIntegerField
 from envergo.moulinette.regulations import CriterionEvaluator
+
+logger = logging.getLogger(__name__)
 
 
 def keep_fields(fields, keys):
@@ -101,6 +105,12 @@ class Bcae8Form(forms.Form):
                 ("lineaire_total",),
             )
 
+    def clean_lineaire_total(self):
+        lineaire_total = self.cleaned_data["lineaire_total"]
+        if lineaire_total <= 0:
+            raise forms.ValidationError("La valeur doit être positive.")
+        return lineaire_total
+
     def clean(self):
         data = super().clean()
         meilleur_emplacement = data.get("meilleur_emplacement")
@@ -195,6 +205,8 @@ class Bcae8(CriterionEvaluator):
             lineaire_detruit_pac,
             is_small,
         ) = result_data
+
+        result_code = None
 
         if localisation_pac == "non" or lineaire_detruit_pac == 0:
             result_code = "non_soumis"
@@ -311,5 +323,10 @@ class Bcae8(CriterionEvaluator):
                             result_code = "soumis_autre"
                         else:
                             result_code = "interdit_autre"
+
+        # This case should not happen, but better be safe
+        if result_code is None:
+            logger.error("No result code found for %s", result_data)
+            result_code = RESULTS.non_disponible
 
         return result_code

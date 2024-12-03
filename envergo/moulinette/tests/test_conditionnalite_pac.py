@@ -56,7 +56,11 @@ def test_conditionnalite_pac_only_for_agri_pac():
             )
 
 
-def test_bcae8_small_dispense_petit():
+def test_bcae8_impossible_case():
+    """Impossible simulation data.
+
+    This data configuration is prevented by the form validation.
+    """
     ConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
@@ -65,6 +69,25 @@ def test_bcae8_small_dispense_petit():
         "department": "44",
         "haies": MagicMock(),
         "lineaire_total": 100,
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "non_disponible", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_disponible", data
+
+
+def test_bcae8_small_dispense_petit():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -133,9 +156,10 @@ def test_bcae8_small_soumis_chemin_acces():
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
-    assert moulinette.result == "soumis", data
+    assert moulinette.result == "interdit", data
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_transfert_parcelles"
     ), data
 
 
@@ -156,7 +180,8 @@ def test_bcae8_small_interdit_chemin_acces():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_amelioration_culture"
     ), data
 
 

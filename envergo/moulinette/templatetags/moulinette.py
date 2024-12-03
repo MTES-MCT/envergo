@@ -201,6 +201,10 @@ def show_haie_moulinette_result(context, result, hedges_field):
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH global result is missing.",
+            extra={"result": result, "template_name": template_name},
+        )
         content = ""
 
     return content
@@ -214,6 +218,10 @@ def show_haie_moulinette_liability_info(context, result):
     try:
         content = render_to_string((template_name,), context.flatten())
     except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH liability info is missing.",
+            extra={"result": result, "template_name": template_name},
+        )
         content = ""
 
     return content

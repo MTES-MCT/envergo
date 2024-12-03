@@ -60,4 +60,4 @@ class Command(BaseCommand):
                 """
             )
 
-            notify(message)
+            notify(message, "amenagement")

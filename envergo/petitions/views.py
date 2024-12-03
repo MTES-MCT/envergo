@@ -37,7 +37,7 @@ class PetitionProjectCreate(FormView):
         res = super().dispatch(request, *args, **kwargs)
 
         if len(request.alerts) > 0:
-            notify(request.alerts.compute_message())
+            notify(request.alerts.compute_message(), "haie")
         return res
 
     def form_valid(self, form):
@@ -65,8 +65,6 @@ class PetitionProjectCreate(FormView):
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
                 petition_project.save()
 
-                self.request.alerts.petition_project = petition_project
-
                 log_event(
                     "dossier",
                     "creation",
@@ -74,6 +72,9 @@ class PetitionProjectCreate(FormView):
                     **petition_project.get_log_event_data(),
                     **get_matomo_tags(self.request),
                 )
+
+                self.request.alerts.petition_project = petition_project
+
                 res = JsonResponse(
                     {
                         "demarche_simplifiee_url": demarche_simplifiee_url,
@@ -122,7 +123,7 @@ class PetitionProjectCreate(FormView):
             )
             return None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
         for field in config.demarche_simplifiee_pre_fill_config:
@@ -447,24 +448,19 @@ class AlertList(List[Alert]):
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
 
-            dossier_link = ""
+            lines.append("Un dossier a été créé sur démarches-simplifiées : ")
+            lines.append(f"* [projet dans l’admin]({projet_url})")
+
             if self.config:
                 dossier_url = (
                     f"https://www.demarches-simplifiees.fr/procedures/"
                     f"{self.config.demarche_simplifiee_number}/dossiers/"
                     f"{self.petition_project.demarches_simplifiees_dossier_number}"
                 )
-                dossier_link = f", [dossier DS]({dossier_url})"
-
-            lines.append(
-                f"Un dossier a été créé sur démarches-simplifiées ([projet dans l’admin]"
-                f"({projet_url}){dossier_link})."
-            )
-            if dossier_link:
                 lines.append(
-                    f":icon-info: Le lien vers Démarches Simplifiées ne sera fonctionnel que lorsque le dossier "
-                    f"n°{self.petition_project.demarches_simplifiees_dossier_number}  aura été soumis par le "
-                    f"pétitionnaire"
+                    f"* [dossier DS n°{self.petition_project.demarches_simplifiees_dossier_number}]"
+                    f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
+                    f" par le pétitionnaire)"
                 )
             if config_url:
                 lines.append("")
@@ -493,8 +489,8 @@ class AlertList(List[Alert]):
                 )
 
             lines.append(
-                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference}` l’invitant "
-                f"à nous contacter."
+                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference.upper()}` "
+                f"l’invitant à nous contacter."
             )
 
             if self.form:

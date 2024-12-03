@@ -211,7 +211,7 @@ MOTIF_CHOICES = (
     ),
 )
 
-LOCALISATION_CHOICES = (
+LOCALISATION_PAC_CHOICES = (
     ("oui", "Oui, au moins une des haies"),
     ("non", "Non, aucune des haies"),
 )
@@ -250,7 +250,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     localisation_pac = forms.ChoiceField(
         label="Les haies à détruire sont-elles situées sur des parcelles agricoles déclarées à la PAC ?",
         widget=forms.RadioSelect,
-        choices=LOCALISATION_CHOICES,
+        choices=LOCALISATION_PAC_CHOICES,
         required=True,
     )
     haies = HedgeDataChoiceField(
@@ -298,20 +298,20 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             if not any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Aucune des haies saisies n’est marquée comme située sur une
-                    parcelle PAC, mais il est indiqué dans le formulaire que « oui, au moins
-                    une des haies » est située sur une parcelle PAC. Modifiez la réponse
-                    du formulaire ou modifiez les haies.""",
+                    """Il est indiqué que « oui, au moins une des haies » est située
+                    sur une parcelle PAC, mais aucune des haies saisies n’est marquée
+                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                    les haies.""",
                 )
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies]
             if any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Au moins une des haies saisies est marquée comme située sur une
-                    parcelle PAC, mais il est indiqué dans le formulaire que « non,
-                    aucune des haies » n’est située sur une parcelle PAC. Modifiez la
-                    réponse du formulaire ou modifiez les haies.""",
+                    """Il est indiqué que « non, aucune des haies » n’est située sur
+                    une parcelle PAC, mais au moins une des haies saisies est marquée
+                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                    les haies ci-dessous.""",
                 )
 
         return data
