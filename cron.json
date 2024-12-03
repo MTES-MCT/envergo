@@ -9,7 +9,7 @@
       "size": "M"
     },
     {
-      "command": "10 * * * * python manage.py new_files_admin_alert",
+      "command": "10 * * * * python manage.py admin_notifications",
       "size": "M"
     },
     {
@@ -18,10 +18,6 @@
     },
     {
       "command": "0 2 * * 1 python manage.py obsolete_moulinette_template_admin_alert",
-      "size": "M"
-    },
-    {
-      "command": "*/30 * * * * python manage.py dossier_submission_admin_alert",
       "size": "M"
     }
   ]
