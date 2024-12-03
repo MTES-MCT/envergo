@@ -329,7 +329,16 @@ createApp({
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
     // Persist data to the server
+    // We first check if all hedges are valid
     const saveData = () => {
+      const allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
+      const isValid = allHedges.every((hedge) => hedge.isValid());
+      if (!isValid) {
+        const dialog = document.getElementById("save-modal");
+        dsfr(dialog).modal.disclose();
+        return;
+      }
+
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
       const hedgesToRemove = hedges[TO_REMOVE].toJSON();
       const hedgesData = hedgesToPlant.concat(hedgesToRemove);
@@ -351,7 +360,7 @@ createApp({
     const cancel = () => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
       if (totalHedges > 0) {
-        const dialog = document.getElementById("confirmation-modal");
+        const dialog = document.getElementById("cancel-modal");
         const confirmCancel = document.getElementById("btn-quit-without-saving");
         const dismissCancel = document.getElementById("btn-back-to-map");
 
