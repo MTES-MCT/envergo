@@ -159,11 +159,12 @@ class Bcae8(CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog["haies"]
-        catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
-        catalog["lineaire_type_4_sur_parcelle_pac"] = (
-            haies.lineaire_type_4_sur_parcelle_pac()
-        )
+        haies = self.catalog.get("haies")
+        if haies:
+            catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
+            catalog["lineaire_type_4_sur_parcelle_pac"] = (
+                haies.lineaire_type_4_sur_parcelle_pac()
+            )
 
         return catalog
 
