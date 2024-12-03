@@ -12,7 +12,6 @@ class PetitionProjectForm(forms.ModelForm):
     dossier on demarches-simplifiees.fr.
     """
 
-    localisation_pac = MoulinetteFormHaie.base_fields["localisation_pac"]
     haies = MoulinetteFormHaie.base_fields["haies"]
 
     def __init__(self, *args, **kwargs):

@@ -37,7 +37,7 @@ class PetitionProjectCreate(FormView):
         res = super().dispatch(request, *args, **kwargs)
 
         if len(request.alerts) > 0:
-            notify(request.alerts.compute_message())
+            notify(request.alerts.compute_message(), "haie")
         return res
 
     def form_valid(self, form):

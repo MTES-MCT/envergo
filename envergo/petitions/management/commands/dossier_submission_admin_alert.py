@@ -23,13 +23,16 @@ class Command(BaseCommand):
         # get all the dossier updated in the last hour
         api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
         now_utc = datetime.utcnow()
+        # NB: if you change this timedelta, you should also change the cron job frequency
         one_hour_ago_utc = now_utc - timedelta(hours=1)
         iso8601_one_hour_ago = one_hour_ago_utc.isoformat() + "Z"
 
         handled_demarches = []
 
-        for activated_department in ConfigHaie.objects.filter(is_activated=True).all():
-            demarche_number = activated_department.demarche_number
+        for activated_department in ConfigHaie.objects.filter(
+            is_activated=True, demarche_simplifiee_number__isnull=False
+        ).all():
+            demarche_number = activated_department.demarche_simplifiee_number
             if demarche_number in handled_demarches:
                 continue
 
@@ -39,8 +42,8 @@ class Command(BaseCommand):
 
                 variables = f"""{{
                       "demarcheNumber":{demarche_number},
-                      "updatedSince": {iso8601_one_hour_ago},
-                      "after":{cursor if cursor else "null"}
+                      "updatedSince": "{iso8601_one_hour_ago}",
+                      "after":"{cursor if cursor else "null"}"
                     }}"""
 
                 query = """
@@ -55,7 +58,6 @@ class Command(BaseCommand):
                         title
                         number
                         dossiers(
-                            state: $state
                             updatedSince: $updatedSince
                             after: $after
                             )
@@ -84,6 +86,16 @@ class Command(BaseCommand):
                     },
                 )
 
+                logger.info(
+                    f"""
+                    Demarches simplifiees API request status: {response.status_code}"
+                    * response.text: {response.text},
+                    * response.status_code: {response.status_code},
+                    * request.url: {api_url},
+                    * request.body: {body},
+                    """,
+                )
+
                 if response.status_code >= 400:
                     logger.error(
                         "Demarches simplifiees API request failed",
@@ -94,7 +106,28 @@ class Command(BaseCommand):
                             "request.body": body,
                         },
                     )
-                    # TODO notification ?
+
+                    message = f"""\
+                    ### Récupération des status des dossiers depuis Démarches-simplifiées : :x: erreur
+
+                    L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de \
+                    la démarche n°{demarche_number}.
+
+                    Réponse de Démarches Simplifiées : {response.status_code}
+                    ```
+                    {response.text}
+                    ```
+
+                    Requête envoyée :
+                    * Url: {api_url}
+                    * Body:
+                    ```
+                    {body}
+                    ```
+
+                    Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+                    """
+                    notify(dedent(message), "haie")
                     break
 
                 data = response.json()
@@ -115,16 +148,37 @@ class Command(BaseCommand):
                             "request.body": body,
                         },
                     )
-                    # TODO notification ?
+
+                    message = f"""\
+                    ### Récupération des status des dossiers depuis Démarches-simplifiées : :warning: anomalie
+
+                    La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le status des \
+                    dossiers concernés n'a pas pu être récupéré.
+
+                    Réponse de Démarches Simplifiées : {response.status_code}
+                    ```
+                    {response.text}
+                    ```
+
+                    Requête envoyée :
+                    * Url: {api_url}
+                    * Body:
+                    ```
+                    {body}
+                    ```
+
+                    Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+                    """
+                    notify(dedent(message), "haie")
                     break
 
                 has_next_page = (
-                    data.get["data"]["demarche"]["dossiers"]
+                    data["data"]["demarche"]["dossiers"]
                     .get("pageInfo", {})
                     .get("hasNextPage", False)
                 )
                 cursor = (
-                    data.get["data"]["demarche"]["dossiers"]
+                    data["data"]["demarche"]["dossiers"]
                     .get("pageInfo", {})
                     .get("endCursor", None)
                 )
@@ -143,7 +197,22 @@ class Command(BaseCommand):
                                 "demarche_number": demarche_number,
                             },
                         )
-                        # TODO notification ?
+
+                        message = f"""\
+                        ### Récupération des status des dossiers depuis Démarches-simplifiées : :warning: anomalie
+
+                        Un dossier Démarches Simplifiées concernant la démarche n°{demarche_number} n'a pas de projet \
+                        associé.
+                        Cela peut être dû à une création manuelle du dossier sans passer par la plateforme GUH.
+                        Dossier concerné:
+                        ```
+                        {dossier}
+                        ```
+
+
+                        Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+                        """
+                        notify(dedent(message), "haie")
                         continue
 
                     if project.demarches_simplifiees_state is None:
@@ -160,17 +229,16 @@ class Command(BaseCommand):
                             "admin:petitions_petitionproject_change",
                             args=[project.reference],
                         )
-                        message = dedent(
-                            f"""\
-                                ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
-                                [Démarches simplifiées]({ds_url})
-                                [Admin django](https://haie.beta.gouv.fr/{admin_url})
-                                —
-                                Linéaire détruit : {project.hedge_data.length_to_remove()} m
-                                —
-                                """
-                        )
-                        notify(message, "haie")
+                        message = f"""\
+                            ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
+                            [Démarches simplifiées]({ds_url})
+                            [Admin django](https://haie.beta.gouv.fr/{admin_url})
+                            —
+                            Linéaire détruit : {project.hedge_data.length_to_remove()} m
+                            —
+                            """
+
+                        notify(dedent(message), "haie")
 
                     project.demarches_simplifiees_state = dossier["state"]
                     project.save()
