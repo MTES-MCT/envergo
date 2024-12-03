@@ -133,11 +133,10 @@ class Command(BaseCommand):
                 data = response.json() or {}
 
                 dossiers = (
-                    data.get("data", {})
-                    .get("demarche", {})
-                    .get("dossiers", {})
-                    .get("nodes", None)
-                )
+                    ((data.get("data") or {}).get("demarche") or {}).get("dossiers")
+                    or {}
+                ).get("nodes", None)
+
                 if dossiers is None:
                     logger.error(
                         "Demarches simplifiees API response is not well formated",
@@ -182,7 +181,7 @@ class Command(BaseCommand):
                     .get("pageInfo", {})
                     .get("endCursor", None)
                 )
-                demarche_name = data["data"]["demarche"]["title"]
+                demarche_name = data["data"]["demarche"].get("title", "Nom inconnu")
                 demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
                 for dossier in dossiers:
                     dossier_number = dossier["number"]
