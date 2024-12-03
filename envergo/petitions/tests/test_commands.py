@@ -1,59 +1,64 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from django.core.management import call_command
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.django_db
 
 
-@patch("envergo.evaluations.management.commands.new_files_admin_alert.notify")
+@patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("requests.post")
-def test_dossier_submission_admin_alert(mock_notify, mock_post):
-    mock_post.return_value.status_code = 200
-    mock_post.side_effect = [
-        {
-            "status_code": 200,
-            "json": lambda: {
-                "data": {
-                    "demarche": {
-                        "title": "(test) Guichet unique de la haie / Demande d'autorisation",
-                        "number": 103363,
-                        "dossiers": {
-                            "pageInfo": {
-                                "hasNextPage": True,
-                                "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
-                            },
-                            "nodes": [
-                                {
-                                    "number": 21059675,
-                                    "state": "en_construction",
-                                }
-                            ],
-                        },
-                    }
-                }
-            },
-        },
-        {
-            "status_code": 200,
-            "json": lambda: {
-                "data": {
-                    "demarche": {
-                        "title": "(test) Guichet unique de la haie / Demande d'autorisation",
-                        "number": 103363,
-                        "dossiers": {
-                            "pageInfo": {"hasNextPage": False, "endCursor": None},
-                            "nodes": [],
-                        },
-                    }
-                }
-            },
-        },
-    ]
+def test_dossier_submission_admin_alert(mock_post, mock_notify):
+    # Define the first mock response
+    mock_response_1 = Mock()
+    mock_response_1.status_code = 200
+    mock_response_1.json.return_value = {
+        "data": {
+            "demarche": {
+                "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                "number": 103363,
+                "dossiers": {
+                    "pageInfo": {
+                        "hasNextPage": True,
+                        "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
+                    },
+                    "nodes": [
+                        {
+                            "number": 21059675,
+                            "state": "en_construction",
+                        }
+                    ],
+                },
+            }
+        }
+    }
 
+    # Define the second mock response
+    mock_response_2 = Mock()
+    mock_response_2.status_code = 200
+    mock_response_2.json.return_value = {
+        "data": {
+            "demarche": {
+                "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                "number": 103363,
+                "dossiers": {
+                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                    "nodes": [],
+                },
+            }
+        }
+    }
+
+    mock_post.side_effect = [mock_response_1, mock_response_2]
+    PetitionProjectFactory()
     ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
+
+    args, kwargs = mock_notify.call_args
+    assert "Un dossier a été soumis sur Démarches Simplifiées" in args[0]
+    assert "haie" in args[1]
 
     mock_notify.assert_called_once()
