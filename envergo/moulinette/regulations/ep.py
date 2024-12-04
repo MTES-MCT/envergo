@@ -2,8 +2,8 @@ from envergo.moulinette.regulations import CriterionEvaluator
 
 
 class EspecesProtegees(CriterionEvaluator):
-    choice_label = "DEP > DEP"
-    slug = "dep"
+    choice_label = "EP > EP"
+    slug = "ep"
 
     CODE_MATRIX = {
         "soumis": "soumis",
