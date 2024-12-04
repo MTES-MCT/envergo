@@ -12,7 +12,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def dep_criteria(france_map):  # noqa
+def ep_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
@@ -25,7 +25,7 @@ def dep_criteria(france_map):  # noqa
     return criteria
 
 
-def test_dep_is_soumis():
+def test_ep_is_soumis():
     ConfigHaieFactory()
     data = {
         "profil": "autre",
