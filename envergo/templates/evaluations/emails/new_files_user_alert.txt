@@ -4,14 +4,14 @@ Votre modification des documents attachés à la demande d'avis réglementaire {
 
 Vous pouvez ajouter ou retirer des documents à votre demande :
 
-{{ file_upload_url }}
+<a href="{{ file_upload_url }}">{{ file_upload_url }}</a>
 
 Notre page d'information sur les réglementations environnementales est consultable :
 
-{{ faq_url }}
+<a href="{{ faq_url }}">{{ faq_url }}</a>
 
 N'hésitez pas à nous contacter pour toute question sur cette demande d'avis réglementaire ou sur EnvErgo.
 
-{{ contact_url }}
+<a href="{{ contact_url }}">{{ contact_url }}</a>
 
 {% include 'emails/_email_signature.txt' %}
