@@ -17,6 +17,8 @@
         <li>
           Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
         </li>
+      {% else %}
+        <li>Département : {{ moulinette.department }}</li>
       {% endif %}
     </ul>
 
