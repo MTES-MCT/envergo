@@ -10,13 +10,14 @@ def update_regulation_and_criterion(apps, schema_editor):
         dep.regulation = "ep"
         dep.save()
 
-    ep = Regulation.objects.get(regulation='ep')
     Criterion = apps.get_model("moulinette", "Criterion")
     dep_criterion = Criterion.objects.filter(backend_title='DEP > DEP').first()
     if dep_criterion:
         dep_criterion.backend_title = "EP > EP"
         dep_criterion.title = "« Espèces protégées »"
-        dep_criterion.regulation = ep
+        ep = Regulation.objects.filter(regulation='ep').first()
+        if ep:
+            dep_criterion.regulation = ep
         dep_criterion.save()
 
 
