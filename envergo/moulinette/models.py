@@ -47,7 +47,7 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
-HAIE_REGULATIONS = ["conditionnalite_pac", "dep"]
+HAIE_REGULATIONS = ["conditionnalite_pac", "ep"]
 
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
@@ -63,7 +63,7 @@ REGULATIONS = Choices(
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
-    ("dep", "Espèces protégées"),
+    ("ep", "« Espèces protégées »"),
 )
 
 
@@ -1029,7 +1029,7 @@ class Moulinette(ABC):
         "eval_env",
         "sage",
         "conditionnalite_pac",
-        "dep",
+        "ep",
     ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
