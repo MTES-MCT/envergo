@@ -16,9 +16,9 @@ def dep_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="dep")
     criteria = [
         CriterionFactory(
-            title="Dérogation espèces protégées",
+            title="Espèces protégées",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.dep.DerogationEspecesProtegees",
+            evaluator="envergo.moulinette.regulations.dep.EspecesProtegees",
             activation_map=france_map,
         ),
     ]

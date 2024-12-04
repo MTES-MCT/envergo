@@ -1,7 +1,7 @@
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
-class DerogationEspecesProtegees(CriterionEvaluator):
+class EspecesProtegees(CriterionEvaluator):
     choice_label = "DEP > DEP"
     slug = "dep"
 
