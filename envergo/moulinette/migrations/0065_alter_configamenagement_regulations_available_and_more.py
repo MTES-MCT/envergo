@@ -18,6 +18,8 @@ def update_regulation_and_criterion(apps, schema_editor):
         ep = Regulation.objects.filter(regulation='ep').first()
         if ep:
             dep_criterion.regulation = ep
+
+        dep_criterion.evaluator = "envergo.moulinette.regulations.ep.EspecesProtegees"
         dep_criterion.save()
 
 
