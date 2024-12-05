@@ -69,6 +69,9 @@ class Command(BaseCommand):
                                 nodes {
                                     number
                                     state
+                                    usager {
+                                        email
+                                        }
                                 }
                             }
                     }
@@ -228,6 +231,8 @@ class Command(BaseCommand):
                             "admin:petitions_petitionproject_change",
                             args=[project.reference],
                         )
+
+                        usager_email = (dossier.get("usager") or {}).get("email", None)
                         message = f"""\
                             ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
 
@@ -236,6 +241,7 @@ class Command(BaseCommand):
                             [Démarches simplifiées]({ds_url})
                             [Admin django](https://haie.beta.gouv.fr/{admin_url})
                             —
+                            Email de l'usager : {usager_email or "non renseigné"}
                             Linéaire détruit : {project.hedge_data.length_to_remove()} m
                             —
                             """
