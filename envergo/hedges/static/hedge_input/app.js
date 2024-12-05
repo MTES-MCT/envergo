@@ -415,6 +415,13 @@ createApp({
       });
     };
 
+    const invalidHedges = computed(() => {
+      const invalidHedges = hedges[TO_REMOVE].hedges.filter((hedge) => !hedge.isValid());
+      const invalidHedgesIds = invalidHedges.map((hedge) => hedge.id);
+      const invalidHedgeList = invalidHedgesIds.join(', ');
+      return invalidHedgeList;
+    });
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
@@ -500,6 +507,7 @@ createApp({
       saveData,
       cancel,
       editHedge,
+      invalidHedges,
     };
   }
 }).mount('#app');
