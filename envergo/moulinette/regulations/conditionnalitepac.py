@@ -26,6 +26,7 @@ class Bcae8Form(forms.Form):
         widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
         display_unit="m",
         display_help_text="",
+        display_label="Linéaire total de haies sur l’exploitation déclarée à la PAC :",
     )
 
     transfert_parcelles = forms.ChoiceField(

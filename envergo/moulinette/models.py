@@ -16,6 +16,7 @@ from django.db.models import Case, CheckConstraint, F, IntegerField, Prefetch, Q
 from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
+from django.forms import BoundField, Form
 from django.http import QueryDict
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -27,12 +28,14 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.forms import (
+    DisplayIntegerField,
     MoulinetteFormAmenagement,
     MoulinetteFormHaie,
     TriageFormHaie,
 )
 from envergo.moulinette.regulations import Map, MapPolygon
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
@@ -1695,6 +1698,34 @@ class MoulinetteHaie(Moulinette):
         )
 
         return department
+
+    def additional_fields(self):
+        """Get a {field_name: field} dict of all additional questions fields."""
+        fields = super().additional_fields()
+
+        # add an entry in the project summary
+        lineaire_detruit_pac = self.catalog.get("lineaire_detruit_pac", 0)
+        localisation_pac = self.catalog.get("localisation_pac", False)
+
+        if localisation_pac and lineaire_detruit_pac > 0:
+            mock_form = Form(data={"lineaire_detruit_pac": str(lineaire_detruit_pac)})
+            lineaire_detruit_pac = BoundField(
+                form=mock_form,
+                field=DisplayIntegerField(
+                    label="Linéaire de haie pris en compte pour la conditionnalité PAC :",
+                    display_help_text="Les alignements d’arbres sont exclus des règles de conditionnalité PAC.",
+                    required=False,
+                    min_value=0,
+                    display_unit="m",
+                ),
+                name="lineaire_detruit_pac",
+            )
+
+            fields = insert_before(
+                fields, "lineaire_detruit_pac", lineaire_detruit_pac, "lineaire_total"
+            )
+
+        return fields
 
 
 def get_moulinette_class_from_site(site):
