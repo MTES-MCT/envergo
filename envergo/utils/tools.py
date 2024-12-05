@@ -1,5 +1,6 @@
 import json
 import secrets
+from collections import OrderedDict
 from typing import Literal
 
 from django.conf import settings
@@ -40,3 +41,12 @@ def generate_key():
     key = "".join(secrets.choice(alphabet) for i in range(length))
 
     return key
+
+
+def insert_before(ordered_dict, new_key, new_value, before_key):
+    new_dict = OrderedDict()
+    for key, value in ordered_dict.items():
+        if key == before_key:
+            new_dict[new_key] = new_value
+        new_dict[key] = value
+    return new_dict
