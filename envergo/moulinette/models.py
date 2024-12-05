@@ -63,7 +63,7 @@ REGULATIONS = Choices(
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
-    ("ep", "« Espèces protégées »"),
+    ("ep", "Espèces protégées"),
 )
 
 

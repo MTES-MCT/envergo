@@ -14,7 +14,7 @@ def update_regulation_and_criterion(apps, schema_editor):
     dep_criterion = Criterion.objects.filter(backend_title='DEP > DEP').first()
     if dep_criterion:
         dep_criterion.backend_title = "EP > EP"
-        dep_criterion.title = "« Espèces protégées »"
+        dep_criterion.title = "Espèces protégées"
         ep = Regulation.objects.filter(regulation='ep').first()
         if ep:
             dep_criterion.regulation = ep
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
-                        ("ep", "« Espèces protégées »"),
+                        ("ep", "Espèces protégées"),
                     ],
                     max_length=64,
                 ),
@@ -649,7 +649,7 @@ class Migration(migrations.Migration):
                     ("eval_env", "Évaluation environnementale"),
                     ("sage", "Règlement de SAGE"),
                     ("conditionnalite_pac", "Conditionnalité PAC"),
-                    ("ep", "« Espèces protégées »"),
+                    ("ep", "Espèces protégées"),
                 ],
                 max_length=64,
                 verbose_name="Regulation",

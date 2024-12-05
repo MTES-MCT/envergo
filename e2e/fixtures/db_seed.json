@@ -303,7 +303,7 @@
     "model": "moulinette.criterion",
     "fields": {
       "backend_title": "DEP > DEP",
-      "title": "« Espèces protégées »",
+      "title": "Espèces protégées",
       "subtitle": "",
       "header": "",
       "regulation": 6,
