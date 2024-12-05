@@ -336,23 +336,33 @@ createApp({
       if (!isValid) {
         const dialog = document.getElementById("save-modal");
         dsfr(dialog).modal.disclose();
-        return;
-      }
 
-      const hedgesToPlant = hedges[TO_PLANT].toJSON();
-      const hedgesToRemove = hedges[TO_REMOVE].toJSON();
-      const hedgesData = hedgesToPlant.concat(hedgesToRemove);
-      fetch(saveUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(hedgesData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log('Data saved with ID:', data.input_id);
-          window.parent.postMessage(data);
+        // This hackish code is there to prevent a weird dsfr quirk
+        // The dsfr modal is designed to be opened throught a button
+        // Here, we use the js api to disclose the modal. If we add the
+        // usual close button with the "aria-controls" attribute, the modal
+        // just won't open. I've been banging my head for an entire day on this.
+        const closeBtn = dialog.querySelector(".fr-btn--close");
+        closeBtn.addEventListener("click", () => {
+          dsfr(dialog).modal.conceal();
+        }, "once");
+      }
+      else {
+        const hedgesToPlant = hedges[TO_PLANT].toJSON();
+        const hedgesToRemove = hedges[TO_REMOVE].toJSON();
+        const hedgesData = hedgesToPlant.concat(hedgesToRemove);
+        fetch(saveUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(hedgesData),
         })
-        .catch((error) => console.error('Error:', error));
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Data saved with ID:', data.input_id);
+            window.parent.postMessage(data);
+          })
+          .catch((error) => console.error('Error:', error));
+      }
     };
 
     // Cancel the input and return to the main form
