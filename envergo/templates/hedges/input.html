@@ -11,6 +11,7 @@
 {% block main %}
   <div id="app"
        v-cloak
+       data-mode="removal"
        data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
@@ -18,12 +19,14 @@
       <div id="map">
 
         <div class="controls leaflet-top leaflet-right">
-          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+          <button v-if="mode === 'removal'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
-          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
+          <button v-if="mode === 'plantation'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
@@ -64,7 +67,7 @@
 
       <div id="sidebar" class="fr-text--sm">
         <div id="hedge-lists">
-          <div class="hedge-list to-remove">
+          <div v-if="mode === 'removal'" class="hedge-list to-remove">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
@@ -98,7 +101,7 @@
             </template>
           </div>
           <hr>
-          <div class="hedge-list to-plant">
+          <div v-if="mode === 'plantation'" class="hedge-list to-plant">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter

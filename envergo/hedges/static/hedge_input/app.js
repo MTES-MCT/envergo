@@ -208,6 +208,9 @@ createApp({
 
   setup() {
     let map = null;
+
+    const mode = document.getElementById('app').dataset.mode;
+
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
@@ -461,6 +464,7 @@ createApp({
     });
 
     return {
+      mode,
       hedges,
       compensationRate,
       startDrawingToPlant,
