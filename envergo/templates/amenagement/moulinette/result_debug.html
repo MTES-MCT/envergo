@@ -13,9 +13,13 @@
       <li>Surface existante: {{ existing_surface }} m²</li>
       <li>Surface créée: {{ created_surface }} m²</li>
       <li>Surface finale: {{ final_surface }} m²</li>
-      <li>
-        Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
-      </li>
+      {% if moulinette.config %}
+        <li>
+          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+        </li>
+      {% else %}
+        <li>Département : {{ moulinette.department }}</li>
+      {% endif %}
     </ul>
 
     {% if moulinette.loi_sur_leau.ecoulement_avec_bv %}
