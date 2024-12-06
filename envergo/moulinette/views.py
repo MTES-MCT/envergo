@@ -357,12 +357,12 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
             template_name = moulinette.get_home_template()
+        elif moulinette.has_missing_data():
+            template_name = moulinette.get_home_template()
         elif not moulinette.has_config():
             template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = moulinette.get_result_available_soon_template()
-        elif moulinette.has_missing_data():
-            template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
 

@@ -159,6 +159,10 @@ def field_summary(field):
     else:
         value = field.value()
 
+    # This should not happen
+    if value is None:
+        value = ""
+
     # try to add thousands separator
     if value.isdigit():
         try:
