@@ -868,7 +868,9 @@ class ConfigHaie(ConfigBase):
          * the results of the regulations
         """
 
-        moulinette_instance = MoulinetteHaie({}, {})
+        regulations = Regulation.objects.filter(
+            regulation__in=MoulinetteHaie.REGULATIONS
+        ).prefetch_related("criteria")
         triage_form_fields = {
             (key, field.label) for key, field in TriageFormHaie.base_fields.items()
         }
@@ -890,7 +892,7 @@ class ConfigHaie(ConfigBase):
 
         regulation_results = set()
 
-        for regulation in moulinette_instance.regulations.all():
+        for regulation in regulations.all():
             regulation_sources = set()
             regulation_results.add(
                 (
@@ -1695,6 +1697,12 @@ class MoulinetteHaie(Moulinette):
         )
 
         return department
+
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
+        regulations = super().get_regulations().prefetch_related("perimeters")
+        return regulations
 
 
 def get_moulinette_class_from_site(site):
