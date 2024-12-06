@@ -7,11 +7,7 @@
 
   {% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
 
-    {% if field.errors %}
-      {{ field|add_classes:'fr-input fr-input--error' }}
-    {% else %}
-      {{ field|add_classes:'fr-input' }}
-    {% endif %}
+    {{ field|compute_input_classes }}
 
     {% if nest_field_class %}</div>{% endif %}
 
