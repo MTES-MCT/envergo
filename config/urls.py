@@ -14,7 +14,6 @@ handler500 = server_error
 
 urlpatterns = [
     path("anymail/", include("anymail.urls")),
-    path(_("users/"), include("envergo.users.urls")),
     path(_("analytics/"), include("envergo.analytics.urls")),
     path(_("feedback/"), include("envergo.analytics.urls")),
     path("urlmappings/", include("envergo.urlmappings.urls")),
