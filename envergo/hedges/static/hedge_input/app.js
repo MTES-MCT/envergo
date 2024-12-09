@@ -385,6 +385,11 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData);
+        if(type === "TO_PLANT" && mode=== "removal") {
+          hedge.polyline.disableEdit();
+        }else if(type === "TO_REMOVE" && mode=== "plantation") {
+          hedge.polyline.disableEdit();
+        }
       });
     };
 

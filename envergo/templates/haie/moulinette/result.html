@@ -63,6 +63,8 @@
     {% endif %}
   {% endfor %}
   {% include 'haie/moulinette/_demarches_simplifiees_form.html' %}
+
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
 {% endblock %}
 
 {% block after-content %}
@@ -72,5 +74,7 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script>var INPUT_HEDGES_URL = "{% url 'input_hedges' %}";</script>
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
+  <script defer src="{% static 'js/libs/haie_result_plantation.js' %}"></script>
 {% endblock %}

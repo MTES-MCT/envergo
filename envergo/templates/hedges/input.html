@@ -11,7 +11,7 @@
 {% block main %}
   <div id="app"
        v-cloak
-       data-mode="removal"
+       data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
@@ -67,7 +67,7 @@
 
       <div id="sidebar" class="fr-text--sm">
         <div id="hedge-lists">
-          <div v-if="mode === 'removal'" class="hedge-list to-remove">
+          <div class="hedge-list to-remove">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
@@ -83,11 +83,11 @@
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
                     <th>[[ hedge.id ]]</th>
-                    <td>
+                    <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="editHedge(hedge)">Modifier</button>
                     </td>
-                    <td>
+                    <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>

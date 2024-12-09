@@ -34,6 +34,9 @@ class HedgeInput(DetailView):
         hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
         context["hedge_data_form"] = HedgeDataForm()
+
+        context["mode"] = self.request.GET.get("mode", "removal")
+
         return context
 
     def post(self, request, *args, **kwargs):
