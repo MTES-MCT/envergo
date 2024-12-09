@@ -1,17 +1,21 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
 from config.celery_app import app
 from envergo.users.models import User
 from envergo.utils.auth import make_token_login_url
-from envergo.utils.tools import get_base_url
+from envergo.utils.tools import get_base_url, get_site_literal
 
-LOGIN_SUBJECT = "[EnvErgo] Activation de votre compte"
+REGISTER_SUBJECT = {
+    "amenagement": "[EnvErgo] Activation de votre compte",
+    "haie": "[Guichet unique de la haie] Activation de votre compte",
+}
 
 
 @app.task
-def send_account_activation_email(user_email, site_domain):
+def send_account_activation_email(user_email, side_id):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -28,25 +32,33 @@ def send_account_activation_email(user_email, site_domain):
         # on our site.
         return
 
+    try:
+        site = Site.objects.get(id=side_id)
+    except Site.DoesNotExist:
+        return
+
+    site_literal = get_site_literal(site)
     login_url = make_token_login_url(user)
-    base_url = get_base_url(site_domain)
+    base_url = get_base_url(site.domain)
     full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
 
-    txt_template = "emails/activate_account.txt"
-    html_template = "emails/activate_account.html"
+    txt_template = f"{site_literal}/emails/activate_account.txt"
+    html_template = f"{site_literal}/emails/activate_account.html"
     context = {
         "base_url": base_url,
         "user_name": user.name,
         "full_login_url": full_login_url,
     }
+    subject = REGISTER_SUBJECT[site_literal]
+    frm = settings.SITE_FROM_EMAIL[site_literal]
 
     txt_body = render_to_string(txt_template, context)
     html_body = render_to_string(html_template, context)
     send_mail(
-        LOGIN_SUBJECT,
+        subject,
         txt_body,
         html_message=html_body,
         recipient_list=[user.email],
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        from_email=frm,
         fail_silently=False,
     )
