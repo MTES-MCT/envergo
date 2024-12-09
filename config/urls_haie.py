@@ -4,6 +4,7 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
 from config.urls import handler500  # noqa
+from envergo.users.views import Register, RegisterSuccess, TokenLogin
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -66,6 +67,23 @@ auth_patterns = [
             template_name="registration/password_reset_complete.html"
         ),
         name="password_reset_complete",
+    ),
+    path(
+        _("register/"),
+        Register.as_view(template_name="haie/registration/register.html"),
+        name="register",
+    ),
+    path(
+        _("register-success/"),
+        RegisterSuccess.as_view(
+            template_name="haie/registration/register_success.html"
+        ),
+        name="register_success",
+    ),
+    path(
+        _("login/<uidb64>/<token>/"),
+        TokenLogin.as_view(template_name="haie/registration/login_error.html"),
+        name="token_login",
     ),
 ]
 

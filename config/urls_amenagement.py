@@ -78,6 +78,7 @@ auth_patterns = [
 urlpatterns = [
     path("", include("envergo.pages.urls_amenagement")),
     path(_("accounts/"), include(auth_patterns)),
+    path(_("users/"), include("envergo.users.urls")),
     path(
         "a/<slug:reference>/",
         ShortUrlAdminRedirectView.as_view(),
