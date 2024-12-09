@@ -352,6 +352,13 @@ class ConfigHaieAdminForm(forms.ModelForm):
             self.get_demarche_simplifiee_pre_fill_config_help_text()
         )
 
+        # Let's not fetch the department geometries when displaying the
+        # department select widget
+        if "department" in self.fields:
+            self.fields["department"].queryset = self.fields[
+                "department"
+            ].queryset.defer("geometry")
+
     def get_demarche_simplifiee_pre_fill_config_help_text(self):
         context = {
             "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),

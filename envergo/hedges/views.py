@@ -48,11 +48,10 @@ class HedgeInput(DetailView):
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
-                "length_to_plant": sum(h.length for h in hedge_data.hedges_to_plant()),
+                "length_to_plant": hedge_data.length_to_plant(),
                 "hedges_to_remove": len(hedge_data.hedges_to_remove()),
-                "length_to_remove": sum(
-                    h.length for h in hedge_data.hedges_to_remove()
-                ),
+                "length_to_remove": hedge_data.length_to_remove(),
+                "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac_including_alignement(),
             }
             status_code = 201 if created else 200
             return JsonResponse(response_data, status=status_code)

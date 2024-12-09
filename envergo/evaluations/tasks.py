@@ -34,7 +34,7 @@ def confirm_request_to_admin(request_id, host):
         },
     )
     logger.info(f"[mattermost] message body {message_body}")
-    notify(message_body)
+    notify(message_body, "amenagement")
 
 
 @app.task
