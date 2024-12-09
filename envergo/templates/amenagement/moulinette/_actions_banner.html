@@ -3,6 +3,13 @@
 {% load static %}
 
 {% block actions %}
+  <div class="banner-item">
+    <a href="{{ edit_url }}"
+       class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+       data-event-category="Content"
+       data-event-action="Edit"
+       data-event-name="Main">Modifier le projet</a>
+  </div>
   {% if is_admin %}
     <div id="copy-btn-container" class="fr-hidden fr-unhidden-md banner-item">
       <button id="copy-btn" class="fr-btn fr-btn--icon-left fr-icon-link">
