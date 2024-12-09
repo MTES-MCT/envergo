@@ -495,8 +495,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             context["matomo_custom_url"] = matomo_missing_data_url
 
         elif moulinette:
-            if moulinette.has_config() and moulinette.is_evaluation_available():
-                context["debug_url"] = debug_result_url
+            context["debug_url"] = debug_result_url
 
         if moulinette and moulinette.catalog:
             lng = moulinette.catalog.get("lng")
