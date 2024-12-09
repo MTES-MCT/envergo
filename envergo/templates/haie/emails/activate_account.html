@@ -1,0 +1,35 @@
+{% extends 'emails/_base.html' %}
+
+{% block email_title %}Activation compte Guichet unique de la haie{% endblock %}
+
+{% block content %}
+
+  <p>Bonjour,</p>
+
+  <p>Vous venez de faire la demande d’une création de compte instructeur « guichet unique de la haie »</p>
+
+  <p>Il reste deux étapes :</p>
+
+  <p>1/ Activer votre compte pour confirmer votre identité.  Il vous suffit de cliquer sur le lien suivant :</p>
+
+  <p>
+    <a href="{{ full_login_url }}">Activez votre compte.</a>
+  </p>
+
+  <p>Vous pouvez également copier ce lien dans votre navigateur :</p>
+
+  <p>{{ full_login_url }}</p>
+
+  <p>
+    2/ La validation de votre compte instructeur par l'équipe du guichet unique. Elle interviendra dans les 24 h ouvrées. Vous recevrez la confirmation par email.
+  </p>
+
+  <p>
+    Si vous ne recevez aucune réponse dans ce délai, n’hésitez pas à nous contacter par retour d’email à <a href="mailto:contact@haie.beta.gouv.fr">contact@haie.beta.gouv.fr</a>
+  </p>
+
+  <p>Si vous n'êtes pas à l'initiative de cette demande, merci de ne pas prendre cet e-mail en compte.</p>
+
+  {% include 'haie/emails/_email_signature.html' %}
+
+{% endblock %}
