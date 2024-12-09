@@ -22,7 +22,12 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
+from envergo.utils.urls import (
+    extract_mtm_params,
+    remove_from_qs,
+    update_fragment,
+    update_qs,
+)
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -556,14 +561,13 @@ class MoulinetteResultPlantation(MoulinetteResult):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
+        context["is_result_plantation"] = True
         context["is_ready_for_submission"] = (
             moulinette.result == "soumis" if moulinette else None
         )
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
-        context["edit_plantation_url"] = update_qs(
-            result_d_url, {"edit-plantation": "true"}
-        )
+        context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 

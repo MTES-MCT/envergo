@@ -8,8 +8,12 @@
   {% if not is_read_only %}
     <p>
       Vous pouvez donc
-      <a class="hedge-input-open-btn" href="#">poursuivre la simulation et déposer une demande d’autorisation.</a>
-      Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+      {% if is_result_plantation %}
+        <a class="demarche-simplifiee-btn" href="#">poursuivre la simulation et déposer une demande d’autorisation.</a>
+        Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+      {% else %}
+        <a class="hedge-input-open-btn" href="#">poursuivre la simulation et décrire le projet de plantation.</a>
+      {% endif %}
     </p>
   {% endif %}
   <p>

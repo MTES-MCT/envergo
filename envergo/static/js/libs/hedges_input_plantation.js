@@ -5,12 +5,9 @@ window.addEventListener("load", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const hedgeId = urlParams.get('haies');
 
-  const query = new URLSearchParams(window.location.search);
-
   let hedgeIframe;
 
   const openModal = function () {
-    query.delete('edit_plantation');
     let saveUrl = INPUT_HEDGES_URL;
     if (hedgeId) {
       saveUrl += hedgeId + "/";
@@ -22,7 +19,7 @@ window.addEventListener("load", function () {
     modal.showModal();
   }
 
-  if (query.get('edit_plantation')) {
+  if (window.location.hash === '#plantation') {
     openModal();
   }
 
@@ -45,6 +42,7 @@ window.addEventListener("load", function () {
     }
 
     if (event.data.input_id) {
+      const query = new URLSearchParams(window.location.search);
       query.set("haies", event.data.input_id);
       window.location.href = `${RESULT_P_URL}?${query.toString()}`;
     }
