@@ -430,3 +430,8 @@ BREVO = {
         "BREVO_NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID", default=None
     ),
 }
+
+SITE_FROM_EMAIL = {
+    "amenagement": "contact@amenagement.local",
+    "haie": "contact@haie.local",
+}
