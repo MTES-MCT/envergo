@@ -208,6 +208,9 @@ createApp({
 
   setup() {
     let map = null;
+
+    const mode = document.getElementById('app').dataset.mode;
+
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
@@ -382,6 +385,11 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData);
+        if(type === "TO_PLANT" && mode=== "removal") {
+          hedge.polyline.disableEdit();
+        }else if(type === "TO_REMOVE" && mode=== "plantation") {
+          hedge.polyline.disableEdit();
+        }
       });
     };
 
@@ -461,6 +469,7 @@ createApp({
     });
 
     return {
+      mode,
       hedges,
       compensationRate,
       startDrawingToPlant,
