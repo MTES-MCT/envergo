@@ -1,17 +1,9 @@
 {% load evaluations moulinette %}
 
 <section class="regulation fr-mb-5w" id="regulation_{{ regulation.slug }}">
-  <h2>
-    <span class="content">
-      {{ regulation.title }}
-      {% if regulation.subtitle %}
-        <br />
-        <span class="undertitle">{{ regulation.subtitle }}</span>
-      {% endif %}
-    </span>
-    {% result_tag regulation.result %}
-
-  </h2>
+  {% block regulation_title %}
+    <h2>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h2>
+  {% endblock %}
 
   {% if regulation.display_perimeter %}
     {% perimeter_detail regulation %}

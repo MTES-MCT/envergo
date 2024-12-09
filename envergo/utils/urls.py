@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qs, urlencode, urlparse, urlsplit, urlunsplit
 
 
 def update_qs(url, params):
@@ -30,3 +30,9 @@ def extract_mtm_params(url):
     query = parse_qs(bits.query)
     mtm_params = {k: v for k, v in query.items() if k.startswith("mtm_")}
     return mtm_params
+
+
+def extract_param_from_url(url, param_name):
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    return query_params.get(param_name, [None])[0]

@@ -309,10 +309,6 @@ section.regulation {
     align-items: center;
     line-height: 2rem;
 
-    &::before {
-      content: "• "; /* stylelint-disable-line */
-    }
-
     span.content {
       margin-right: 0.5em;
       white-space: nowrap;
@@ -1927,7 +1923,7 @@ main.demonstrateur_2150 {
   min-width: 360px;
 }
 
-#demarche-simplifiee-btn {
+#demarche-simplifiee-banner-btn {
   box-shadow: inset 0 0 0 1px var(--blue-france-975-75);
 }
 
@@ -1937,4 +1933,35 @@ main.demonstrateur_2150 {
 
 #contacts_and_links {
   background-color: var(--grey-975-100);
+}
+
+// override the dsfr styles for the newsletter form
+.fr-follow {
+  .fr-follow__newsletter .fr-label {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: initial;
+    margin: initial;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border: initial;
+    display: block;
+    font-weight: 700;
+    line-height: 1.5rem;
+  }
+
+  .fr-grid-row > :first-child:last-child > div {
+    justify-content: space-around;
+  }
+
+  .fr-follow__newsletter form {
+    min-width: 350px;
+
+    button {
+      margin-left: auto;
+      display: block;
+    }
+  }
 }

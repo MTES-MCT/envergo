@@ -195,6 +195,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "envergo.utils.context_processors.settings_context",
                 "envergo.utils.context_processors.multi_sites_context",
+                "envergo.utils.context_processors.newsletter_context",
                 "envergo.analytics.context_processors.analytics",
                 "envergo.analytics.context_processors.visitor_id",
                 "envergo.evaluations.context_processors.request_eval_context",
@@ -348,7 +349,8 @@ TEST_EMAIL = "test@test.fr"
 
 # Third party integration settings
 
-MATTERMOST_ENDPOINT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
+MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
+MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
@@ -390,15 +392,27 @@ ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.
 DEMARCHES_SIMPLIFIEE = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
-    "API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
-    "DEMARCHE_HAIE": {
-        "ID": "103363",
-        # Les ids des champs de la démarche peuvent être trouvés sur la page suivante:
-        # https://www.demarches-simplifiees.fr/preremplir/test-declaration-de-travaux-sur-haies
-        "PROFIL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk2MQ",
-        "MOULINETTE_URL_FIELD_ID": "champ_Q2hhbXAtNDU0Mzk0Mw",
-    },
+    "PRE_FILL_API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
+    "GRAPHQL_API_URL": "https://www.demarches-simplifiees.fr/api/v2/graphql",
+    "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
 CONFIG_MATTERMOST_HANDLERS = env.list("DJANGO_CONFIG_MATTERMOST_HANDLERS", default=[])
+
+BREVO = {
+    "API_URL": env("BREVO_API_URL", default="https://api.brevo.com/v3/"),
+    "API_KEY": env("BREVO_API_KEY", default=None),
+    "NEWSLETTER_LISTS": {
+        "instructeur": env("BREVO_NEWSLETTER_LIST_INSTRUCTEUR", default=None),
+        "amenageur": env("BREVO_NEWSLETTER_LIST_AMENAGEUR", default=None),
+        "geometre": env("BREVO_NEWSLETTER_LIST_GEOMETRE", default=None),
+        "bureau": env("BREVO_NEWSLETTER_LIST_BUREAU", default=None),
+        "architecte": env("BREVO_NEWSLETTER_LIST_ARCHITECTE", default=None),
+        "particulier": env("BREVO_NEWSLETTER_LIST_PARTICULIER", default=None),
+        "autre": env("BREVO_NEWSLETTER_LIST_AUTRE", default=None),
+    },
+    "NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID": env(
+        "BREVO_NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID", default=None
+    ),
+}
