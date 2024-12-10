@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-03 06:45+0100\n"
+"POT-Creation-Date: 2024-12-10 18:04+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,11 +66,11 @@ msgstr "analytics/"
 msgid "feedback/"
 msgstr "feedback/"
 
-#: config/urls_amenagement.py:20 config/urls_haie.py:10
+#: config/urls_amenagement.py:21 config/urls_haie.py:10
 msgid "moulinette/"
 msgstr "simulateur/"
 
-#: config/urls_amenagement.py:21
+#: config/urls_amenagement.py:22
 msgid "geo/"
 msgstr "geo/"
 
@@ -94,7 +94,7 @@ msgstr "Métadonnées"
 #: envergo/evaluations/models.py:228 envergo/evaluations/models.py:372
 #: envergo/evaluations/models.py:663 envergo/geodata/models.py:83
 #: envergo/geodata/models.py:133 envergo/pages/models.py:14
-#: envergo/petitions/models.py:54 envergo/urlmappings/models.py:13
+#: envergo/petitions/models.py:55 envergo/urlmappings/models.py:13
 msgid "Date created"
 msgstr "Date de création"
 
@@ -184,7 +184,7 @@ msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
 #: envergo/evaluations/admin.py:73 envergo/evaluations/models.py:140
-#: envergo/evaluations/models.py:601 envergo/petitions/models.py:28
+#: envergo/evaluations/models.py:601 envergo/petitions/models.py:29
 msgid "Reference"
 msgstr "Référence"
 
@@ -373,7 +373,7 @@ msgid "Regulatory reminder mention"
 msgstr "Mention libre de l'avis réglementaire"
 
 #: envergo/evaluations/models.py:191 envergo/evaluations/models.py:611
-#: envergo/petitions/models.py:35
+#: envergo/petitions/models.py:36
 msgid "Moulinette url"
 msgstr "Url simulateur"
 
@@ -413,7 +413,7 @@ msgstr "Évaluation"
 msgid "Created by"
 msgstr "Créé par"
 
-#: envergo/evaluations/models.py:379 envergo/moulinette/models.py:971
+#: envergo/evaluations/models.py:379 envergo/moulinette/models.py:973
 #: envergo/pages/models.py:12
 msgid "Content"
 msgstr "Contenu"
@@ -566,7 +566,7 @@ msgstr "Statut destinataire"
 msgid "Recipient statuses"
 msgstr "Statuts destinataires"
 
-#: envergo/evaluations/urls.py:24 envergo/moulinette/urls.py:23
+#: envergo/evaluations/urls.py:24 envergo/moulinette/urls.py:29
 msgid "form/"
 msgstr "formulaire/"
 
@@ -928,7 +928,7 @@ msgstr "Impact du projet"
 msgid "Discussion contact (html)"
 msgstr "Contact pour discussion (html)"
 
-#: envergo/moulinette/models.py:525 envergo/moulinette/models.py:965
+#: envergo/moulinette/models.py:525 envergo/moulinette/models.py:967
 msgid "Criterion"
 msgstr "Critère"
 
@@ -996,19 +996,19 @@ msgstr "Config amenagement"
 msgid "Configs amenagement"
 msgstr "Configs amenagement"
 
-#: envergo/moulinette/models.py:958
+#: envergo/moulinette/models.py:960
 msgid "Config"
 msgstr "Config"
 
-#: envergo/moulinette/models.py:970
+#: envergo/moulinette/models.py:972
 msgid "Key"
 msgstr "Clé"
 
-#: envergo/moulinette/models.py:974
+#: envergo/moulinette/models.py:976
 msgid "Moulinette template"
 msgstr "Gabarit moulinette"
 
-#: envergo/moulinette/models.py:975
+#: envergo/moulinette/models.py:977
 msgid "Moulinette templates"
 msgstr "Gabarits moulinette"
 
@@ -1016,15 +1016,23 @@ msgstr "Gabarits moulinette"
 msgid "Le projet concerne-t-il un lotissement ?"
 msgstr "Le projet concerne-t-il un lotissement ?"
 
-#: envergo/moulinette/urls.py:31
+#: envergo/moulinette/urls.py:24
+msgid "out_of_scope/"
+msgstr "resultat_nspp/"
+
+#: envergo/moulinette/urls.py:36
 msgid "missing-data/"
 msgstr "questions-complementaires/"
 
-#: envergo/moulinette/urls.py:39
+#: envergo/moulinette/urls.py:41
+msgid "invalid/"
+msgstr "erreur-validation/"
+
+#: envergo/moulinette/urls.py:49
 msgid "result/"
 msgstr "resultat/"
 
-#: envergo/moulinette/urls.py:45
+#: envergo/moulinette/urls.py:55
 msgid "debug/"
 msgstr ""
 
@@ -1128,19 +1136,19 @@ msgstr "Refusé"
 msgid "No follow-up"
 msgstr "Classé sans suite "
 
-#: envergo/petitions/models.py:43
+#: envergo/petitions/models.py:44
 msgid "Dossier number on demarches-simplifiees.fr"
 msgstr "Numéro de dossier dans demarches-simplifiees.fr"
 
-#: envergo/petitions/models.py:47
+#: envergo/petitions/models.py:48
 msgid "State of the dossier on demarches-simplifiees.fr"
 msgstr "Status du dossier dans demarches-simplifiees.fr"
 
-#: envergo/petitions/models.py:57
+#: envergo/petitions/models.py:58
 msgid "Petition project"
 msgstr "Projet de dossier"
 
-#: envergo/petitions/models.py:58
+#: envergo/petitions/models.py:59
 msgid "Petition projects"
 msgstr "Projets de dossier"
 
@@ -1202,7 +1210,7 @@ msgstr "Dates importantes"
 msgid "Users"
 msgstr "Utilisateurices"
 
-#: envergo/users/forms.py:14
+#: envergo/users/forms.py:15
 #, python-format
 msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "

@@ -311,6 +311,14 @@ class WizardStepMixin:
         self.request.session.pop(DATA_KEY, None)
         self.request.session.modified = True
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = self.get_form(self.get_form_class())
+        if form.is_bound and not form.is_valid():
+            # has it is not a complete url, Matomo concatenate it to the current url, which is OK for us
+            context["matomo_custom_url"] = "erreur-validation/"
+        return context
+
 
 class RequestEvalWizardHome(TemplateView):
     template_name = "evaluations/eval_request_wizard_home.html"
