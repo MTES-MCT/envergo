@@ -1135,9 +1135,6 @@ msgstr "Classé sans suite "
 #: envergo/petitions/models.py:43
 msgid "Dossier number on demarches-simplifiees.fr"
 msgstr "Numéro de dossier dans demarches-simplifiees.fr"
-#: envergo/petitions/models.py:33
-msgid "Dossier number on demarches-simplifiees.fr"
-msgstr "Dossier number on demarches-simplifiees.fr"
 
 #: envergo/petitions/models.py:47
 msgid "State of the dossier on demarches-simplifiees.fr"
