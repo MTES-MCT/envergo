@@ -91,6 +91,10 @@
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
                     </td>
+                    <td v-if="mode === 'plantation'">
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="displayHedge(hedge)">Voir la description</button>
+                    </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
                 </tbody>

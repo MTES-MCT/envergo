@@ -243,7 +243,7 @@ createApp({
     };
 
     // Show the "description de la haie" form modal
-    const showHedgeModal = (hedge) => {
+    const showHedgeModal = (hedge, isReadonly) => {
       const dialog = document.getElementById("hedge-data-dialog");
       const form = dialog.querySelector("form");
       const hedgeTypeField = document.getElementById("id_hedge_type");
@@ -251,6 +251,18 @@ createApp({
       const nearPondField = document.getElementById("id_proximite_mare");
       const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
       const hedgeLength = document.getElementById("hedge-data-dialog-hedge-length");
+      const resetForm = () => {
+              form.reset();
+              const inputs = form.querySelectorAll("input");
+              const selects = form.querySelectorAll("select");
+
+              inputs.forEach(input => input.disabled = false);
+              selects.forEach(select => select.disabled = false);
+              const submitButton = form.querySelector("button[type='submit']");
+              submitButton.innerText = "Enregistrer";
+            }
+
+      resetForm();
 
       // Pre-fill the form with hedge data if it's an edition
       if (hedge.additionalData) {
@@ -282,9 +294,27 @@ createApp({
         dsfr(dialog).modal.conceal();
       };
 
+      const closeModal = (event) => {
+        event.preventDefault();
+        // Reset the form and hide the modal
+        dsfr(dialog).modal.conceal();
+      };
 
-      // Save data upon form submission
-      form.addEventListener("submit", saveModalData, { once: true });
+      if(isReadonly) {
+        const inputs = form.querySelectorAll("input");
+        const selects = form.querySelectorAll("select");
+
+        inputs.forEach(input => input.disabled = true);
+        selects.forEach(select => select.disabled = true);
+        const submitButton = form.querySelector("button[type='submit']");
+        submitButton.innerText = "Retour";
+
+        form.addEventListener("submit", closeModal, {once: true});
+      }
+      else {
+        // Save data upon form submission
+        form.addEventListener("submit", saveModalData, {once: true});
+      }
 
       // If the modal is closed without saving, let's make sure to remove the
       // event listener.
@@ -297,7 +327,12 @@ createApp({
 
     // Open the form modal to edit an existing hedge
     const editHedge = (hedge) => {
-      showHedgeModal(hedge);
+      showHedgeModal(hedge, false);
+    };
+
+    // Open the form modal to display an existing hedge
+    const displayHedge = (hedge) => {
+      showHedgeModal(hedge, true);
     };
 
     const startDrawingToPlant = () => {
@@ -479,6 +514,7 @@ createApp({
       saveData,
       cancel,
       editHedge,
+      displayHedge,
     };
   }
 }).mount('#app');
