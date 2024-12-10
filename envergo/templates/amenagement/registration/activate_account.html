@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Votre identité est confirmée{% endblock %}
+
+{% block article %}
+  <h1>Votre identité est confirmée</h1>
+
+  <p class="lead">Votre compte est désormais actif.</p>
+
+  <p>
+    <a href="{% url 'login' %}">Vous pouvez vous connecter.</a>
+  </p>
+
+{% endblock %}
