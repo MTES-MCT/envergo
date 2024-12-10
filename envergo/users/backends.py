@@ -1,0 +1,24 @@
+from django.contrib.auth.backends import ModelBackend
+
+from envergo.utils.tools import get_site_literal
+
+
+class AuthBackend(ModelBackend):
+    """Custom Backend for EnvErgo.
+
+    Login requirements are different for Amenagement and Haies.
+    """
+
+    def authenticate(self, request, *args, **kwargs):
+        self.site_literal = get_site_literal(request.site)
+        return super().authenticate(request, *args, **kwargs)
+
+    def user_can_authenticate(self, user):
+        if self.site_literal == "amenagement":
+            can_auth = getattr(user, "is_active", True)
+        else:
+            can_auth = getattr(user, "is_active", True) and getattr(
+                user, "is_confirmed_by_admin", True
+            )
+
+        return can_auth
