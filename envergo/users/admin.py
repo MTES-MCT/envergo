@@ -30,6 +30,7 @@ class UserAdmin(auth_admin.UserAdmin):
             {
                 "fields": (
                     "is_active",
+                    "is_confirmed_by_admin",
                     "is_staff",
                     "is_superuser",
                     "groups",

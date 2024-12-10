@@ -42,6 +42,9 @@ class User(AbstractUser):
 
     email = models.EmailField(_("Email address"), unique=True)
     name = CharField(_("Name of User"), blank=True, max_length=255)
+    is_confirmed_by_admin = models.BooleanField(
+        _("Confirmed by an admin"), default=False
+    )
 
     username = None  # type: ignore
     first_name = None  # type: ignore
