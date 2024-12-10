@@ -68,7 +68,7 @@ click-repl==0.3.0
     # via
     #   -r base.txt
     #   celery
-django==4.2.13
+django==4.2.17
     # via
     #   -r base.txt
     #   django-allauth
