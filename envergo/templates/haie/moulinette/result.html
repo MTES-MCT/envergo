@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>var INPUT_HEDGES_URL = "{% url 'input_hedges' %}";</script>
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges_mode'  mode='plantation' %}";</script>
   <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input_plantation.js' %}"></script>

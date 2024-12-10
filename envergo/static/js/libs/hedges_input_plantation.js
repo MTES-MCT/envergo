@@ -8,12 +8,10 @@ window.addEventListener("load", function () {
   let hedgeIframe;
 
   const openModal = function () {
-    let saveUrl = INPUT_HEDGES_URL;
+    let saveUrl = HEDGES_PLANTATION_URL;
     if (hedgeId) {
       saveUrl += hedgeId + "/";
     }
-
-    saveUrl += "?mode=plantation";
 
     hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
     modal.showModal();
