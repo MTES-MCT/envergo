@@ -4,7 +4,6 @@ import requests
 from braces.views import AnonymousRequiredMixin, MessageMixin
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
@@ -63,10 +62,10 @@ class RegisterSuccess(AnonymousRequiredMixin, TemplateView):
     template_name = "registration/register_success.html"
 
 
-class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
+class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
     """Check token and authenticates user."""
 
-    template_name = "registration/login_error.html"
+    template_name = "registration/activate_account.html"
 
     def get(self, request, *args, **kwargs):
         uidb64 = kwargs["uidb64"]
@@ -80,21 +79,10 @@ class TokenLogin(AnonymousRequiredMixin, MessageMixin, TemplateView):
             token = kwargs["token"]
             if default_token_generator.check_token(user, token):
                 is_first_login = user.last_login is None
-                login(self.request, user)
 
                 if is_first_login:
                     user.is_active = True
                     user.save()
-                    msg = "Vous venez d'activer votre espace EnvErgo. Bienvenue !"
-                else:
-                    msg = (
-                        "Vous êtes maintenant connecté·e. "
-                        "Vous pouvez changer votre mot de passe si vous le souhaitez."
-                    )
-
-                self.messages.success(msg)
-                redirect_url = reverse("password_change")
-                return HttpResponseRedirect(redirect_url)
 
         return super().get(request, *args, **kwargs)
 

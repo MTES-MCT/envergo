@@ -5,8 +5,6 @@
 {% block article %}
   <h1>Connectez-vous pour accéder à votre espace EnvErgo</h1>
 
-  {{ site.domain }}
-
   <form method="post" action="" novalidate class="fr-mb-3w">
     {% csrf_token %}
     {% include '_form_snippet.html' with form=form %}
