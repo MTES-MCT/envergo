@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 
 from config.celery_app import app
 from envergo.users.models import User
-from envergo.utils.auth import make_token_login_url
+from envergo.utils.auth import make_activate_account_url
 from envergo.utils.tools import get_base_url, get_site_literal
 
 REGISTER_SUBJECT = {
@@ -38,16 +38,16 @@ def send_account_activation_email(user_email, side_id):
         return
 
     site_literal = get_site_literal(site)
-    login_url = make_token_login_url(user)
+    activate_url = make_activate_account_url(user)
     base_url = get_base_url(site.domain)
-    full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
+    full_activate_url = "{base_url}{url}".format(base_url=base_url, url=activate_url)
 
     txt_template = f"{site_literal}/emails/activate_account.txt"
     html_template = f"{site_literal}/emails/activate_account.html"
     context = {
         "base_url": base_url,
         "user_name": user.name,
-        "full_login_url": full_login_url,
+        "full_activate_url": full_activate_url,
     }
     subject = REGISTER_SUBJECT[site_literal]
     frm = settings.SITE_FROM_EMAIL[site_literal]
