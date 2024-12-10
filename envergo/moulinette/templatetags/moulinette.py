@@ -211,6 +211,24 @@ def show_haie_moulinette_result(context, result, hedges_field):
 
 
 @register.simple_tag(takes_context=True)
+def show_haie_plantation_result(context, result):
+    """Render the global plantation result content."""
+    context_data = context.flatten()
+
+    template_name = f"haie/moulinette/result_plantation/{result}.html"
+    try:
+        content = render_to_string((template_name,), context_data)
+    except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH global plantation result is missing.",
+            extra={"result": result, "template_name": template_name},
+        )
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
 def show_haie_moulinette_liability_info(context, result):
     """Render the liability_info content depending on the moulinette result."""
 

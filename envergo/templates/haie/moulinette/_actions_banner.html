@@ -1,13 +1,41 @@
 {% extends 'moulinette/_actions_banner.html' %}
 
-{% block edit_label %}Modifier le projet de destruction{% endblock %}
-
 {% block actions %}
+  {% if is_result_plantation %}
+    <div class="banner-item">
+      <a href="{{ edit_plantation_url }}"
+         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+         data-event-category="Content"
+         data-event-action="Edit"
+         data-event-name="Main">Modifier le projet de plantation</a>
+    </div>
+  {% else %}
+    <div class="banner-item">
+      <a href="{{ edit_url }}"
+         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+         data-event-category="Content"
+         data-event-action="Edit"
+         data-event-name="Main">
+        {% if moulinette.result == "soumis" %}
+          Modifier le projet de destruction
+        {% else %}
+          Modifier le projet
+        {% endif %}
+      </a>
+    </div>
+
+  {% endif %}
   <div class="banner-item">
-    {% if moulinette.result == "soumis" %}
-      <a id="demarche-simplifiee-banner-btn"
-         class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn"
-         href="#">Commencer la procédure</a>
+    {% if is_ready_for_submission %}
+      <button id="demarche-simplifiee-banner-btn"
+              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn">
+        Déposer une demande d'autorisation
+      </button>
+    {% elif moulinette.result == "soumis" %}
+      <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
     {% endif %}
   </div>
 {% endblock %}

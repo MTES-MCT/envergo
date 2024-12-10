@@ -34,6 +34,9 @@ class HedgeInput(DetailView):
         hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
         context["hedge_data_form"] = HedgeDataForm()
+
+        context["mode"] = self.request.GET.get("mode", "removal")
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -45,11 +48,9 @@ class HedgeInput(DetailView):
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
-                "length_to_plant": sum(h.length for h in hedge_data.hedges_to_plant()),
+                "length_to_plant": hedge_data.length_to_plant(),
                 "hedges_to_remove": len(hedge_data.hedges_to_remove()),
-                "length_to_remove": sum(
-                    h.length for h in hedge_data.hedges_to_remove()
-                ),
+                "length_to_remove": hedge_data.length_to_remove(),
                 "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac_including_alignement(),
             }
             status_code = 201 if created else 200

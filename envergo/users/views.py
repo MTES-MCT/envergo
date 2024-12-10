@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
@@ -124,9 +124,11 @@ class NewsletterOptIn(FormView):
         body = {
             "email": form.cleaned_data["email"],
             "includeListIds": [
-                settings.BREVO["NEWSLETTER_LISTS"].get(
-                    form.cleaned_data["type"],
-                    settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                int(
+                    settings.BREVO["NEWSLETTER_LISTS"].get(
+                        form.cleaned_data["type"],
+                        settings.BREVO["NEWSLETTER_LISTS"]["autre"],
+                    )
                 )
             ],
             "attributes": {
@@ -136,44 +138,35 @@ class NewsletterOptIn(FormView):
             "redirectionUrl": self.request.build_absolute_uri(
                 reverse("newsletter_confirmation")
             ),
-            "templateId": settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"],
+            "templateId": int(settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"]),
         }
 
         response = requests.post(api_url, json=body, headers=headers)
 
         if 200 <= response.status_code < 400:
-            messages.info(
-                self.request,
-                "Vous avez reçu un e-mail de confirmation pour valider votre inscription à la newsletter.",
-            )
-            res = HttpResponseRedirect(form.cleaned_data["redirect_url"])
+            res = JsonResponse({"status": "ok"})
         else:
             logger.error(
                 "Error while creating/updating contact via Brevo API",
-                extra={"response": response},
+                extra={
+                    "response.status_code": response.status_code,
+                    "response.text": response.text,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
             )
+
+            form.add_error(
+                None,
+                "Le service n'est pas disponible actuellement. Merci de réessayer plus tard.",
+            )
+
             res = self.form_invalid(form)
 
         return res
 
     def form_invalid(self, form):
-        message = "Nous n'avons pas pu enregistrer votre inscription à la newsletter."
-        # Handle field-specific errors
-        for field, errors in form.errors.items():
-            if field != "__all__":
-                field_label = form[field].label
-                for error in errors:
-                    message += f"<br/>{field_label} : {error}"
-
-        # Handle non-field errors
-        if "__all__" in form.errors:
-            for error in form.errors["__all__"]:
-                message += f"<br/>{error}"
-
-        messages.error(self.request, message)
-        return HttpResponseRedirect(
-            form.cleaned_data.get("redirect_url", reverse("home"))
-        )
+        return JsonResponse({"status": "error", "errors": form.errors}, status=400)
 
 
 class NewsletterDoubleOptInConfirmation(View):

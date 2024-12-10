@@ -305,6 +305,8 @@ class PetitionProjectCreate(FormView):
 
 
 class PetitionProjectDetail(MoulinetteMixin, FormView):
+    template_name = "haie/moulinette/result_plantation.html"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.moulinette = None
@@ -363,11 +365,6 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
         return context
-
-    def get_template_names(self):
-        """Check which template to use depending on the moulinette result."""
-        moulinette = self.moulinette
-        return [moulinette.get_result_template()]
 
 
 class PetitionProjectAutoRedirection(View):
