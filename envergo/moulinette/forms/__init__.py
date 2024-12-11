@@ -321,7 +321,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if haies.length_to_remove() == 0:
             self.add_error(
                 "haies",
-                "Vous devez indiquer les haies à arracher.",
+                "Merci de saisir au moins une haie à détruire.",
             )
         return haies
 
