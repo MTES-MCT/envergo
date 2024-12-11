@@ -7,7 +7,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 
-from envergo.hedges.forms import HedgeDataForm
+from envergo.hedges.forms import HedgeToPlantDataForm, HedgeToRemoveDataForm
 from envergo.hedges.models import HedgeData
 from envergo.utils.urls import update_fragment
 
@@ -37,7 +37,9 @@ class HedgeInput(DetailView):
         context["mode"] = mode
         hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
-        context["hedge_data_form"] = HedgeDataForm()
+        context["hedge_data_form"] = (
+            HedgeToRemoveDataForm() if mode == "removal" else HedgeToPlantDataForm()
+        )
 
         form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
         context["matomo_custom_url"] = update_fragment(

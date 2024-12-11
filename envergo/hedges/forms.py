@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django import forms
 from django.utils.safestring import mark_safe
 
@@ -10,7 +12,7 @@ TYPES = (
 )
 
 
-class HedgeDataForm(forms.Form):
+class HedgeDataBaseForm(forms.Form):
     hedge_type = forms.ChoiceField(
         choices=TYPES,
         label=mark_safe(
@@ -21,9 +23,59 @@ class HedgeDataForm(forms.Form):
         """
         ),
     )
-    sur_parcelle_pac = forms.BooleanField(
-        label="Située sur une parcelle PAC", required=False
-    )
     proximite_mare = forms.BooleanField(
-        label="Présence d'une mare à moins de 200 m", required=False
+        label="Mare à moins de 200 m",
+        required=False,
     )
+    proximite_point_eau = forms.BooleanField(
+        label="Mare ou ruisseau à moins de 10 m",
+        required=False,
+    )
+    connexion_boisement = forms.BooleanField(
+        label="Connectée à un boisement ou à une autre haie",
+        required=False,
+    )
+
+
+class HedgeToRemoveDataForm(HedgeDataBaseForm):
+    sur_parcelle_pac = forms.BooleanField(
+        label="Située sur une parcelle PAC",
+        required=False,
+    )
+    vieil_arbre = forms.BooleanField(
+        label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Reorder the fields
+        self.fields = OrderedDict(
+            [
+                ("hedge_type", self.fields["hedge_type"]),
+                ("sur_parcelle_pac", self.fields["sur_parcelle_pac"]),
+                ("vieil_arbre", self.fields["vieil_arbre"]),
+                ("proximite_mare", self.fields["proximite_mare"]),
+                ("proximite_point_eau", self.fields["proximite_point_eau"]),
+                ("connexion_boisement", self.fields["connexion_boisement"]),
+            ]
+        )
+
+
+class HedgeToPlantDataForm(HedgeDataBaseForm):
+
+    sous_ligne_electrique = forms.BooleanField(
+        label="Située sous une ligne électrique",
+        required=False,
+    )
+    proximite_voirie = forms.BooleanField(
+        label="Située en bordure de voirie", required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove the 'degradee' option from hedge_type choices
+        self.fields["hedge_type"].choices = [
+            choice for choice in TYPES if choice[0] != "degradee"
+        ]
