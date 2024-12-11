@@ -294,7 +294,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             )
 
         if localisation_pac == "oui" and haies:
-            on_pac_values = [h.is_on_pac for h in haies]
+            on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if not any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
@@ -304,7 +304,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                     les haies.""",
                 )
         elif localisation_pac == "non" and haies:
-            on_pac_values = [h.is_on_pac for h in haies]
+            on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
