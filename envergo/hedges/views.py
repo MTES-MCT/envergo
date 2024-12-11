@@ -1,6 +1,7 @@
 import json
 
 from django.http import JsonResponse
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +9,7 @@ from django.views.generic import DetailView
 
 from envergo.hedges.forms import HedgeDataForm
 from envergo.hedges.models import HedgeData
+from envergo.utils.urls import update_fragment
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -30,10 +32,18 @@ class HedgeInput(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        mode = self.kwargs.get("mode", "removal")
 
+        context["mode"] = mode
         hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
         context["hedge_data_form"] = HedgeDataForm()
+
+        form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
+        context["matomo_custom_url"] = update_fragment(
+            form_url, "saisie_d" if mode == "removal" else "saisie_p"
+        )
+
         return context
 
     def post(self, request, *args, **kwargs):

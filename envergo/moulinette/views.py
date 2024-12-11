@@ -22,7 +22,12 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
+from envergo.utils.urls import (
+    extract_mtm_params,
+    remove_from_qs,
+    update_fragment,
+    update_qs,
+)
 
 BODY_TPL = {
     RESULTS.soumis: "moulinette/eval_body_soumis.html",
@@ -518,6 +523,52 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             and moulinette.is_evaluation_available()
             and not self.request.GET.get("feedback", False)
         )
+        return context
+
+
+class MoulinetteResultPlantation(MoulinetteResult):
+    event_category = "simulateur"
+    event_action_haie = "soumission_p"
+
+    def get_template_names(self):
+        """Check which template to use depending on the moulinette result."""
+
+        moulinette = self.moulinette
+        triage_form = self.triage_form
+        is_edit = bool(self.request.GET.get("edit", False))
+        is_admin = self.request.user.is_staff
+
+        if moulinette is None and triage_form is None:
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            template_name = MoulinetteClass.get_home_template()
+        elif moulinette is None:
+            template_name = "haie/moulinette/triage_result.html"
+        elif is_edit:
+            template_name = "TODO"  # TODO
+        elif not moulinette.has_config():
+            template_name = moulinette.get_result_non_disponible_template()
+        elif not (moulinette.is_evaluation_available() or is_admin):
+            template_name = moulinette.get_result_available_soon_template()
+        elif moulinette.has_missing_data():
+            template_name = moulinette.get_home_template()
+        elif moulinette.has_missing_data():  # TODO missing only hedges to plant
+            template_name = moulinette.get_result_template()
+        else:
+            template_name = "haie/moulinette/result_plantation.html"
+
+        return [template_name]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = context.get("moulinette", None)
+        context["is_result_plantation"] = True
+        context["is_ready_for_submission"] = (
+            moulinette.result == "soumis" if moulinette else None
+        )
+
+        result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
+        context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
+        context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
 
