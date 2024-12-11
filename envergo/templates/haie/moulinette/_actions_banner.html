@@ -1,7 +1,7 @@
 {% extends 'moulinette/_actions_banner.html' %}
 
 {% block actions %}
-  {% if is_result_plantation %}
+  {% if is_result_plantation and moulinette.result == "soumis" %}
     <div class="banner-item">
       <a href="{{ edit_plantation_url }}"
          class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
