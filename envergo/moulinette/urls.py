@@ -47,6 +47,18 @@ urlpatterns = [
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_invalid_form",
                 ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie_d/",
+                    RedirectView.as_view(pattern_name="moulinette_home"),
+                    name="moulinette_saisie_d",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie_p/",
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_saisie_p",
+                ),
             ]
         ),
     ),
