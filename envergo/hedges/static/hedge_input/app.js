@@ -280,18 +280,24 @@ createApp({
         }
       }
 
-      const dialog = document.getElementById("hedge-data-dialog");
+      // There is two edge data dialogs as edges to plant and to remove have differrent properties
+      // By default we take the dialog of the current mode.
+      // If the form is readonly, then we display the other mode dialog.
+      const dialogMode = isReadonly ? (mode === "removal" ? "plantation" : "removal") : mode;
+
+      const dialogId= `${dialogMode}-hedge-data-dialog`
+      const dialog = document.getElementById(dialogId);
       const form = dialog.querySelector("form");
-      const hedgeTypeField = document.getElementById("id_hedge_type");
-      const pacField = document.getElementById("id_sur_parcelle_pac");
-      const nearPondField = document.getElementById("id_proximite_mare");
-      const oldTreeField = document.getElementById("id_vieil_arbre");
-      const nearWaterField = document.getElementById("id_proximite_point_eau");
-      const woodlandConnectionField = document.getElementById("id_connexion_boisement");
-      const underPowerLineField = document.getElementById("id_sous_ligne_electrique");
-      const nearbyRoadField = document.getElementById("id_proximite_voirie");
-      const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
-      const hedgeLength = document.getElementById("hedge-data-dialog-hedge-length");
+      const hedgeTypeField = document.getElementById(`${dialogMode}_id_hedge_type`);
+      const pacField = document.getElementById(`${dialogMode}_id_sur_parcelle_pac`);
+      const nearPondField = document.getElementById(`${dialogMode}_id_proximite_mare`);
+      const oldTreeField = document.getElementById(`${dialogMode}_id_vieil_arbre`);
+      const nearWaterField = document.getElementById(`${dialogMode}_id_proximite_point_eau`);
+      const woodlandConnectionField = document.getElementById(`${dialogMode}_id_connexion_boisement`);
+      const underPowerLineField = document.getElementById(`${dialogMode}_id_sous_ligne_electrique`);
+      const nearbyRoadField = document.getElementById(`${dialogMode}_id_proximite_voirie`);
+      const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
+      const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
       const resetForm = () => {
               form.reset();
               const inputs = form.querySelectorAll("input");

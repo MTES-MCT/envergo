@@ -1,0 +1,30 @@
+<dialog id="{{ dialog_id }}"
+        aria-labelledby="{{ dialog_id }}-title"
+        role="dialog"
+        class="fr-modal hedge-data-dialog">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-7 fr-col-lg-6 fr-col-xl-5">
+        <div class="fr-modal__body">
+
+          <form method="dialog">
+            <div class="fr-modal__content fr-pt-4w">
+              <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+                Description de la haie <span class="hedge-data-dialog-hedge-name"></span>
+              </h1>
+              <p class="fr-tag fr-mb-3w">
+                Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
+              </p>
+
+              {% include '_form_snippet.html' with form=form %}
+            </div>
+
+            <div class="fr-modal__footer">
+              <button type="submit" class="fr-btn">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
