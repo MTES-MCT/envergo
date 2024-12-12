@@ -17,6 +17,7 @@ from envergo.users.tasks import (
     send_account_activation_email,
     send_new_account_notification,
 )
+from envergo.utils.auth import make_activate_account_url
 from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,10 @@ class Register(AnonymousRequiredMixin, CreateView):
         self.object.save()
 
         user_email = form.cleaned_data["email"]
-        send_account_activation_email.delay(user_email, self.request.site.id)
+        activate_url = make_activate_account_url(self.object)
+        send_account_activation_email.delay(
+            user_email, self.request.site.id, activate_url
+        )
         return response
 
     def form_invalid(self, form):
@@ -54,7 +58,10 @@ class Register(AnonymousRequiredMixin, CreateView):
             and form["email"].errors.as_data()[0].code == "unique"
         ):
             user_email = form.data["email"]
-            send_account_activation_email.delay(user_email, self.request.site.id)
+            activate_url = make_activate_account_url(self.object)
+            send_account_activation_email.delay(
+                user_email, self.request.site.id, activate_url
+            )
             return HttpResponseRedirect(self.success_url)
         else:
             return super().form_invalid(form)
