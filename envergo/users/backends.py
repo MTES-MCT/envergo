@@ -17,10 +17,19 @@ class AuthBackend(ModelBackend):
 
         if hasattr(self, "site_literal"):
             if self.site_literal == "amenagement":
-                can_auth = getattr(user, "is_active", True)
+                can_auth = all(
+                    (
+                        getattr(user, "access_amenagement", True),
+                        getattr(user, "is_active", True),
+                    )
+                )
             else:
-                can_auth = getattr(user, "is_active", True) and getattr(
-                    user, "is_confirmed_by_admin", True
+                can_auth = all(
+                    (
+                        getattr(user, "access_haie", True),
+                        getattr(user, "is_active", True),
+                        getattr(user, "is_confirmed_by_admin", True),
+                    )
                 )
         else:
             can_auth = super().user_can_authenticate(user)
