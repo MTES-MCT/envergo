@@ -2,10 +2,12 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from config.celery_app import app
 from envergo.users.models import User
 from envergo.utils.auth import make_activate_account_url
+from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url, get_site_literal
 
 REGISTER_SUBJECT = {
@@ -62,3 +64,26 @@ def send_account_activation_email(user_email, side_id):
         from_email=frm,
         fail_silently=False,
     )
+
+
+@app.task
+def send_new_account_notification(user_id):
+    """Warn admins of new haie account registrations."""
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return
+
+    user, domain = user.email.split("@")
+    anon_email = f"{user[0]}***@{domain}"
+
+    user_url = reverse("admin:users_user_change", args=[user_id])
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    full_user_url = f"{base_url}{user_url}"
+
+    message_body = render_to_string(
+        "users/mattermost_new_account_notif.txt",
+        context={"user_url": full_user_url, "anon_email": anon_email},
+    )
+    notify(message_body, "haie")
