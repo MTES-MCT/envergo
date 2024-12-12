@@ -9,7 +9,6 @@ from django.views.generic import DetailView
 
 from envergo.hedges.forms import HedgeDataForm
 from envergo.hedges.models import HedgeData
-from envergo.utils.urls import update_fragment
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -39,11 +38,11 @@ class HedgeInput(DetailView):
         context["hedge_data_json"] = hedge_data
         context["hedge_data_form"] = HedgeDataForm()
 
-        form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
-        context["matomo_custom_url"] = update_fragment(
-            form_url, "saisie_d" if mode == "removal" else "saisie_p"
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            reverse("moulinette_saisie_d")
+            if mode == "removal"
+            else reverse("moulinette_saisie_p")
         )
-
         return context
 
     def post(self, request, *args, **kwargs):
