@@ -1,17 +1,23 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from config.celery_app import app
 from envergo.users.models import User
-from envergo.utils.auth import make_token_login_url
-from envergo.utils.tools import get_base_url
+from envergo.utils.auth import make_activate_account_url
+from envergo.utils.mattermost import notify
+from envergo.utils.tools import get_base_url, get_site_literal
 
-LOGIN_SUBJECT = "[EnvErgo] Activation de votre compte"
+REGISTER_SUBJECT = {
+    "amenagement": "[EnvErgo] Activation de votre compte",
+    "haie": "[Guichet unique de la haie] Activation de votre compte",
+}
 
 
 @app.task
-def send_account_activation_email(user_email, site_domain):
+def send_account_activation_email(user_email, side_id):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -28,25 +34,56 @@ def send_account_activation_email(user_email, site_domain):
         # on our site.
         return
 
-    login_url = make_token_login_url(user)
-    base_url = get_base_url(site_domain)
-    full_login_url = "{base_url}{url}".format(base_url=base_url, url=login_url)
+    try:
+        site = Site.objects.get(id=side_id)
+    except Site.DoesNotExist:
+        return
 
-    txt_template = "emails/activate_account.txt"
-    html_template = "emails/activate_account.html"
+    site_literal = get_site_literal(site)
+    activate_url = make_activate_account_url(user)
+    base_url = get_base_url(site.domain)
+    full_activate_url = "{base_url}{url}".format(base_url=base_url, url=activate_url)
+
+    txt_template = f"{site_literal}/emails/activate_account.txt"
+    html_template = f"{site_literal}/emails/activate_account.html"
     context = {
         "base_url": base_url,
         "user_name": user.name,
-        "full_login_url": full_login_url,
+        "full_activate_url": full_activate_url,
     }
+    subject = REGISTER_SUBJECT[site_literal]
+    frm = settings.SITE_FROM_EMAIL[site_literal]
 
     txt_body = render_to_string(txt_template, context)
     html_body = render_to_string(html_template, context)
     send_mail(
-        LOGIN_SUBJECT,
+        subject,
         txt_body,
         html_message=html_body,
         recipient_list=[user.email],
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        from_email=frm,
         fail_silently=False,
     )
+
+
+@app.task
+def send_new_account_notification(user_id):
+    """Warn admins of new haie account registrations."""
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return
+
+    user, domain = user.email.split("@")
+    anon_email = f"{user[0]}***@{domain}"
+
+    user_url = reverse("admin:users_user_change", args=[user_id])
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    full_user_url = f"{base_url}{user_url}"
+
+    message_body = render_to_string(
+        "users/mattermost_new_account_notif.txt",
+        context={"user_url": full_user_url, "anon_email": anon_email},
+    )
+    notify(message_body, "haie")
