@@ -45,6 +45,10 @@ class User(AbstractUser):
     is_confirmed_by_admin = models.BooleanField(
         _("Confirmed by an admin"), default=False
     )
+    access_amenagement = models.BooleanField(
+        _("Access amenagement site"), default=False
+    )
+    access_haie = models.BooleanField(_("Access haie site"), default=False)
 
     username = None  # type: ignore
     first_name = None  # type: ignore

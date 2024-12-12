@@ -14,6 +14,7 @@ from django.views.generic import CreateView, FormView, TemplateView
 from envergo.users.forms import NewsletterOptInForm, RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import send_account_activation_email
+from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,11 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
 
                 if is_first_login:
                     user.is_active = True
+                    site_literal = get_site_literal(self.request.site)
+                    if site_literal == "amenagement":
+                        user.access_amenagement = True
+                    elif site_literal == "haie":
+                        user.access_haie = True
                     user.save()
 
         return super().get(request, *args, **kwargs)
