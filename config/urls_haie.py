@@ -57,14 +57,14 @@ auth_patterns = [
     path(
         _("reset/<uidb64>/<token>/"),
         auth_views.PasswordResetConfirmView.as_view(
-            template_name="registration/password_reset_confirm.html"
+            template_name="haie/registration/password_reset_confirm.html"
         ),
         name="password_reset_confirm",
     ),
     path(
         _("reset/done/"),
         auth_views.PasswordResetCompleteView.as_view(
-            template_name="registration/password_reset_complete.html"
+            template_name="haie/registration/password_reset_complete.html"
         ),
         name="password_reset_complete",
     ),

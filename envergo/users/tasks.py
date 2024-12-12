@@ -40,7 +40,7 @@ def send_account_activation_email(user_email, side_id, activate_url):
 
     site_literal = get_site_literal(site)
     base_url = get_base_url(site.domain)
-    full_activate_url = "{base_url}{url}".format(base_url=base_url, url=activate_url)
+    full_activate_url = f"{base_url}{activate_url}"
 
     txt_template = f"{site_literal}/emails/activate_account.txt"
     html_template = f"{site_literal}/emails/activate_account.html"
