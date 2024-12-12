@@ -6,7 +6,6 @@ from django.urls import reverse
 
 from config.celery_app import app
 from envergo.users.models import User
-from envergo.utils.auth import make_activate_account_url
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url, get_site_literal
 
@@ -17,7 +16,7 @@ REGISTER_SUBJECT = {
 
 
 @app.task
-def send_account_activation_email(user_email, side_id):
+def send_account_activation_email(user_email, side_id, activate_url):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -40,9 +39,8 @@ def send_account_activation_email(user_email, side_id):
         return
 
     site_literal = get_site_literal(site)
-    activate_url = make_activate_account_url(user)
     base_url = get_base_url(site.domain)
-    full_activate_url = "{base_url}{url}".format(base_url=base_url, url=activate_url)
+    full_activate_url = f"{base_url}{activate_url}"
 
     txt_template = f"{site_literal}/emails/activate_account.txt"
     html_template = f"{site_literal}/emails/activate_account.html"
