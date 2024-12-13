@@ -364,6 +364,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         context["moulinette"] = self.moulinette
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
+        context["plantation_evaluation"] = self.moulinette.catalog["haies"].evaluate()
         return context
 
 
