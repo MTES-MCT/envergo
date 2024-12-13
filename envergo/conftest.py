@@ -19,6 +19,16 @@ def user() -> User:
 
 
 @pytest.fixture
+def amenagement_user() -> User:
+    return UserFactory(access_amenagement=True, access_haie=False)
+
+
+@pytest.fixture
+def haie_user() -> User:
+    return UserFactory(access_amenagement=False, access_haie=True)
+
+
+@pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
 
