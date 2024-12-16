@@ -111,6 +111,17 @@ class Hedge {
     this.map.fitBounds(bounds, { padding: [25, 25] });
   }
 
+  // Make sure all additional data is filled
+  isValid() {
+    const { typeHaie, surParcellePac, proximiteMare } = this.additionalData;
+    const valid = (
+      typeHaie !== undefined &&
+      typeHaie &&
+      surParcellePac !== undefined &&
+      proximiteMare !== undefined);
+    return valid;
+  }
+
   remove() {
     this.polyline.remove();
     this.onRemove(this);
@@ -228,7 +239,7 @@ createApp({
       const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
 
       newHedge.polyline.on('editable:vertex:new', (event) => {
-        if(event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
+        if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           showHelpBubble.value = true;
         }
       });
@@ -356,21 +367,40 @@ createApp({
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
     // Persist data to the server
+    // We first check if all hedges are valid
     const saveData = () => {
-      const hedgesToPlant = hedges[TO_PLANT].toJSON();
-      const hedgesToRemove = hedges[TO_REMOVE].toJSON();
-      const hedgesData = hedgesToPlant.concat(hedgesToRemove);
-      fetch(saveUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(hedgesData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log('Data saved with ID:', data.input_id);
-          window.parent.postMessage(data);
+      const allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
+      const isValid = allHedges.every((hedge) => hedge.isValid());
+      if (!isValid) {
+        const dialog = document.getElementById("save-modal");
+        dsfr(dialog).modal.disclose();
+
+        // This hackish code is there to prevent a weird dsfr quirk
+        // The dsfr modal is designed to be opened throught a button
+        // Here, we use the js api to disclose the modal. If we add the
+        // usual close button with the "aria-controls" attribute, the modal
+        // just won't open. I've been banging my head for an entire day on this.
+        const closeBtn = dialog.querySelector(".fr-btn--close");
+        closeBtn.addEventListener("click", () => {
+          dsfr(dialog).modal.conceal();
+        }, "once");
+      }
+      else {
+        const hedgesToPlant = hedges[TO_PLANT].toJSON();
+        const hedgesToRemove = hedges[TO_REMOVE].toJSON();
+        const hedgesData = hedgesToPlant.concat(hedgesToRemove);
+        fetch(saveUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(hedgesData),
         })
-        .catch((error) => console.error('Error:', error));
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Data saved with ID:', data.input_id);
+            window.parent.postMessage(data);
+          })
+          .catch((error) => console.error('Error:', error));
+      }
     };
 
     // Cancel the input and return to the main form
@@ -378,7 +408,7 @@ createApp({
     const cancel = () => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
       if (totalHedges > 0) {
-        const dialog = document.getElementById("confirmation-modal");
+        const dialog = document.getElementById("cancel-modal");
         const confirmCancel = document.getElementById("btn-quit-without-saving");
         const dismissCancel = document.getElementById("btn-back-to-map");
 
@@ -427,6 +457,13 @@ createApp({
         }
       });
     };
+
+    const invalidHedges = computed(() => {
+      const invalidHedges = hedges[TO_REMOVE].hedges.filter((hedge) => !hedge.isValid());
+      const invalidHedgesIds = invalidHedges.map((hedge) => hedge.id);
+      const invalidHedgeList = invalidHedgesIds.join(', ');
+      return invalidHedgeList;
+    });
 
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
@@ -515,6 +552,7 @@ createApp({
       cancel,
       editHedge,
       displayHedge,
+      invalidHedges,
     };
   }
 }).mount('#app');

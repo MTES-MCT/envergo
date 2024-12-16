@@ -336,6 +336,15 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         context = super().get_context_data(**kwargs)
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
+        form = context["form"]
+        if form.is_bound and not form.is_valid():
+            mtm_params = extract_mtm_params(self.request.build_absolute_uri())
+            invalid_form_url = self.request.build_absolute_uri(
+                reverse("moulinette_invalid_form")
+            )
+            matomo_invalid_form_url = update_qs(invalid_form_url, mtm_params)
+            context["matomo_custom_url"] = matomo_invalid_form_url
+
         return context
 
 
@@ -362,12 +371,12 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
             template_name = moulinette.get_home_template()
+        elif moulinette.has_missing_data():
+            template_name = moulinette.get_home_template()
         elif not moulinette.has_config():
             template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = moulinette.get_result_available_soon_template()
-        elif moulinette.has_missing_data():
-            template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
 
@@ -470,6 +479,14 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
         form_url_with_edit = update_qs(form_url, {"edit": "true"})
         matomo_missing_data_url = update_qs(missing_data_url, mtm_params)
+        out_of_scope_result_url = self.request.build_absolute_uri(
+            reverse("moulinette_result_out_of_scope")
+        )
+        matomo_out_of_scope_result_url = update_qs(out_of_scope_result_url, mtm_params)
+        invalid_form_url = self.request.build_absolute_uri(
+            reverse("moulinette_invalid_form")
+        )
+        matomo_invalid_form_url = update_qs(invalid_form_url, mtm_params)
 
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
@@ -494,13 +511,16 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 "matomo_custom_url": matomo_debug_url,
             }
 
-        # TODO This cannot happen, since we redirect to the form if data is missing
-        # Check that it can be safely removed
         elif moulinette and moulinette.has_missing_data():
-            context["matomo_custom_url"] = matomo_missing_data_url
+            if context["additional_forms_bound"]:
+                context["matomo_custom_url"] = matomo_invalid_form_url
+            else:
+                context["matomo_custom_url"] = matomo_missing_data_url
 
         elif moulinette:
             context["debug_url"] = debug_result_url
+        elif context.get("triage_form", None):
+            context["matomo_custom_url"] = matomo_out_of_scope_result_url
 
         if moulinette and moulinette.catalog:
             lng = moulinette.catalog.get("lng")
