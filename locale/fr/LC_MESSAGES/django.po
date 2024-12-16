@@ -1036,6 +1036,10 @@ msgstr "resultat/"
 msgid "debug/"
 msgstr ""
 
+#: envergo/moulinette/urls.py:53
+msgid "result_p/"
+msgstr "resultat-plantation/"
+
 #: envergo/pages/models.py:13
 msgid "Content HTML"
 msgstr "Contenu HTML"
@@ -1357,6 +1361,12 @@ msgstr "connexion/<uidb64>/<token>/"
 
 #~ msgid "One or two letters"
 #~ msgstr "1 ou 2 lettres"
+
+#~ msgid "Prefix"
+#~ msgstr "Préfixe"
+
+#~ msgid "3 chars long number"
+#~ msgstr "Nombre à 3 chiffres"
 
 #~ msgid "Parcel"
 #~ msgstr "Parcelle"

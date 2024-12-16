@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs, urlencode, urlparse, urlsplit, urlunsplit
+from urllib.parse import parse_qs, urlencode, urlparse, urlsplit, urlunparse, urlunsplit
 
 
 def update_qs(url, params):
@@ -36,3 +36,17 @@ def extract_param_from_url(url, param_name):
     parsed_url = urlparse(url)
     query_params = parse_qs(parsed_url.query)
     return query_params.get(param_name, [None])[0]
+
+
+def update_fragment(url, fragment):
+    """Update the fragment of a given URL."""
+    parts = urlparse(url)
+    new_parts = (
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        parts.params,
+        parts.query,
+        fragment,
+    )
+    return urlunparse(new_parts)

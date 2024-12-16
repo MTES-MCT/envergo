@@ -4,6 +4,7 @@ from textwrap import dedent
 
 import requests
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         one_hour_ago_utc = now_utc - timedelta(hours=1)
         iso8601_one_hour_ago = one_hour_ago_utc.isoformat() + "Z"
 
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
 
         for activated_department in ConfigHaie.objects.filter(
@@ -111,25 +113,25 @@ class Command(BaseCommand):
                     )
 
                     message = f"""\
-                    ### Récupération des status des dossiers depuis Démarches-simplifiées : :x: erreur
+### Récupération des status des dossiers depuis Démarches-simplifiées : :x: erreur
 
-                    L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de \
-                    la démarche n°{demarche_number}.
+L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de
+la démarche n°{demarche_number}.
 
-                    Réponse de Démarches Simplifiées : {response.status_code}
-                    ```
-                    {response.text}
-                    ```
+Réponse de Démarches Simplifiées : {response.status_code}
+```
+{response.text}
+```
 
-                    Requête envoyée :
-                    * Url: {api_url}
-                    * Body:
-                    ```
-                    {body}
-                    ```
+Requête envoyée :
+* Url: {api_url}
+* Body:
+```
+{body}
+```
 
-                    Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-                    """
+Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+"""
                     notify(dedent(message), "haie")
                     break
 
@@ -229,7 +231,7 @@ class Command(BaseCommand):
                         )
                         admin_url = reverse(
                             "admin:petitions_petitionproject_change",
-                            args=[project.reference],
+                            args=[project.pk],
                         )
 
                         usager_email = (dossier.get("usager") or {}).get("email", None)
@@ -239,7 +241,7 @@ class Command(BaseCommand):
                             Un dossier a été soumis sur Démarches Simplifiées pour {demarche_label}.
 
                             [Démarches simplifiées]({ds_url})
-                            [Admin django](https://haie.beta.gouv.fr/{admin_url})
+                            [Admin django](https://{current_site.domain}{admin_url})
                             —
                             Email de l'usager : {usager_email or "non renseigné"}
                             Linéaire détruit : {project.hedge_data.length_to_remove()} m

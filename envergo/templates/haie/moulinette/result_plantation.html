@@ -1,0 +1,31 @@
+{% extends 'haie/moulinette/result_base.html' %}
+
+{% load static moulinette %}
+
+{% block result_header %}
+  <div class="fr-alert fr-alert--success fr-mb-3w">
+    <h3 class="fr-alert__title">La plantation envisagée est suffisante</h3>
+    <p>Le projet de plantation décrit dans le simulateur apparaît acceptable au regard des haies détruites :</p>
+    <ul>
+      <li>Le linéaire planté est suffisant</li>
+      <li>La qualité de la haie plantée est suffisante au regard de celle des haies détruites</li>
+    </ul>
+
+    {% if moulinette.result != "interdit" %}
+      <p class="fr-hint-text">
+        Cette estimation n'est pas une position définitive de l'administration. Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_plantation_result moulinette.result %}</div>
+
+  <p class="fr-hint-text fr-mb-3w">
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+    <a href="#liability-info" class="hide-print">En savoir plus.</a>
+  </p>
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
+{% endblock %}

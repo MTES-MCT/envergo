@@ -2,7 +2,11 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteHome, MoulinetteResult
+from envergo.moulinette.views import (
+    MoulinetteHome,
+    MoulinetteResult,
+    MoulinetteResultPlantation,
+)
 
 urlpatterns = [
     # Redirections history
@@ -30,18 +34,31 @@ urlpatterns = [
         include(
             [
                 path("", MoulinetteHome.as_view(), name="moulinette_home"),
-                # We need these urls to exist, but they are "fake" urls, they are only
-                # used to be logged in matomo, so we can correctly track the funnel
+                # We need this url to exist, but it's a "fake" url, it's only
+                # used to be logged in matomo, so we can correctry track the funnel
                 # moulinette home > missing data > final result
                 path(
                     _("missing-data/"),
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_missing_data",
                 ),
+                # This is another "fake" url, only for matomo tracking
                 path(
                     _("invalid/"),
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_invalid_form",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie-destruction/",
+                    RedirectView.as_view(pattern_name="moulinette_home"),
+                    name="moulinette_saisie_d",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie-plantation/",
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_saisie_p",
                 ),
             ]
         ),
@@ -56,6 +73,18 @@ urlpatterns = [
                     _("debug/"),
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_result_debug",
+                ),
+            ]
+        ),
+    ),
+    path(
+        _("result_p/"),
+        include(
+            [
+                path(
+                    "",
+                    MoulinetteResultPlantation.as_view(),
+                    name="moulinette_result_plantation",
                 ),
             ]
         ),
