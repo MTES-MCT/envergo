@@ -252,15 +252,15 @@ createApp({
       const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
       const hedgeLength = document.getElementById("hedge-data-dialog-hedge-length");
       const resetForm = () => {
-              form.reset();
-              const inputs = form.querySelectorAll("input");
-              const selects = form.querySelectorAll("select");
+        form.reset();
+        const inputs = form.querySelectorAll("input");
+        const selects = form.querySelectorAll("select");
 
-              inputs.forEach(input => input.disabled = false);
-              selects.forEach(select => select.disabled = false);
-              const submitButton = form.querySelector("button[type='submit']");
-              submitButton.innerText = "Enregistrer";
-            }
+        inputs.forEach(input => input.disabled = false);
+        selects.forEach(select => select.disabled = false);
+        const submitButton = form.querySelector("button[type='submit']");
+        submitButton.innerText = "Enregistrer";
+      }
 
       resetForm();
 
@@ -296,7 +296,7 @@ createApp({
 
       const closeModal = (event) => {
         event.preventDefault();
-        // Reset the form and hide the modal
+        // Hide the modal
         dsfr(dialog).modal.conceal();
       };
 
@@ -420,9 +420,9 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData);
-        if(type === "TO_PLANT" && mode=== "removal") {
+        if (type === "TO_PLANT" && mode === "removal") {
           hedge.polyline.disableEdit();
-        }else if(type === "TO_REMOVE" && mode=== "plantation") {
+        } else if (type === "TO_REMOVE" && mode === "plantation") {
           hedge.polyline.disableEdit();
         }
       });
