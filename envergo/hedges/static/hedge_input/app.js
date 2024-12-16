@@ -299,15 +299,15 @@ createApp({
       const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
       const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
       const resetForm = () => {
-              form.reset();
-              const inputs = form.querySelectorAll("input");
-              const selects = form.querySelectorAll("select");
+        form.reset();
+        const inputs = form.querySelectorAll("input");
+        const selects = form.querySelectorAll("select");
 
-              inputs.forEach(input => input.disabled = false);
-              selects.forEach(select => select.disabled = false);
-              const submitButton = form.querySelector("button[type='submit']");
-              submitButton.innerText = "Enregistrer";
-            }
+        inputs.forEach(input => input.disabled = false);
+        selects.forEach(select => select.disabled = false);
+        const submitButton = form.querySelector("button[type='submit']");
+        submitButton.innerText = "Enregistrer";
+      }
 
       resetForm();
 
@@ -365,7 +365,7 @@ createApp({
 
       const closeModal = (event) => {
         event.preventDefault();
-        // Reset the form and hide the modal
+        // Hide the modal
         dsfr(dialog).modal.conceal();
       };
 
