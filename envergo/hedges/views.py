@@ -1,6 +1,7 @@
 import json
 
 from django.http import JsonResponse
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
@@ -30,10 +31,18 @@ class HedgeInput(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        mode = self.kwargs.get("mode", "removal")
 
+        context["mode"] = mode
         hedge_data = json.dumps(self.object.data) if self.object else "[]"
         context["hedge_data_json"] = hedge_data
         context["hedge_data_form"] = HedgeDataForm()
+
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            reverse("moulinette_saisie_d")
+            if mode == "removal"
+            else reverse("moulinette_saisie_p")
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -45,11 +54,10 @@ class HedgeInput(DetailView):
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
-                "length_to_plant": sum(h.length for h in hedge_data.hedges_to_plant()),
+                "length_to_plant": hedge_data.length_to_plant(),
                 "hedges_to_remove": len(hedge_data.hedges_to_remove()),
-                "length_to_remove": sum(
-                    h.length for h in hedge_data.hedges_to_remove()
-                ),
+                "length_to_remove": hedge_data.length_to_remove(),
+                "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac_including_alignement(),
             }
             status_code = 201 if created else 200
             return JsonResponse(response_data, status=status_code)

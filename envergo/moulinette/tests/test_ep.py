@@ -12,20 +12,20 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def dep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="dep")
+def ep_criteria(france_map):  # noqa
+    regulation = RegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
-            title="Dérogation espèces protégées",
+            title="Espèces protégées",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.dep.DerogationEspecesProtegees",
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegees",
             activation_map=france_map,
         ),
     ]
     return criteria
 
 
-def test_dep_is_soumis():
+def test_ep_is_soumis():
     ConfigHaieFactory()
     data = {
         "profil": "autre",

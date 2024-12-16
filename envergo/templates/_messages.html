@@ -1,5 +1,5 @@
 {% if messages %}
-  <div class="messages fr-pt-5w">
+  <div class="messages fr-py-5w">
     {% for message in messages %}
       <div class="fr-alert fr-alert--{{ message.tags|default:'info' }} fr-alert--sm">
         <p>{{ message|safe }}</p>

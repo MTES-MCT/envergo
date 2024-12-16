@@ -47,13 +47,18 @@ class Command(BaseCommand):
                 "contact_url": f"{base_url}{contact_url}",
                 "file_upload_url": f"{base_url}{file_upload_url}",
             }
-            body = render_to_string(
+            txt_body = render_to_string(
                 "evaluations/emails/new_files_user_alert.txt", context=context
             )
+            html_body = render_to_string(
+                "evaluations/emails/new_files_user_alert.html", context=context
+            )
+
             email = EmailMultiAlternatives(
                 subject="[EnvErgo] Votre mise à jour de documents",
-                body=body,
+                body=txt_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=emails,
             )
+            email.attach_alternative(html_body, "text/html")
             email.send()

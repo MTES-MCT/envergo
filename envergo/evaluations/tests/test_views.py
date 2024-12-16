@@ -193,7 +193,9 @@ def test_eval_wizard_step_1_and_2(
 ):
     """The evalreq is saved but not submitted."""
 
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
 
     qs = Request.objects.all()
     assert qs.count() == 0
@@ -233,7 +235,9 @@ def test_eval_wizard_all_steps(
     django_capture_on_commit_callbacks,
     moulinette_config,
 ):
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
 
     qs = Request.objects.all()
     assert qs.count() == 0
@@ -280,7 +284,9 @@ def test_eval_wizard_request_confirmation_recipient(
     moulinette_config,
 ):
     """When the user is the petitioner, the confirmation email is sent to the project owner."""
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
 
     qs = Request.objects.all()
     assert qs.count() == 0
@@ -323,7 +329,9 @@ def test_eval_is_only_submitted_once(
 ):
     """We only send the notifications once."""
 
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
 
     qs = Request.objects.all()
     assert qs.count() == 0
@@ -371,7 +379,9 @@ def test_eval_wizard_all_steps_with_test_email(
 ):
     """Test evalreq are not submitted."""
 
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
     settings.TEST_EMAIL = "test@test.org"
 
     qs = Request.objects.all()
@@ -417,7 +427,9 @@ def test_confirmation_email_override(
     django_capture_on_commit_callbacks,
     moulinette_config,
 ):
-    settings.MATTERMOST_ENDPOINT = "https://example.org/mattermost-endpoint/"
+    settings.MATTERMOST_ENDPOINT_AMENAGEMENT = (
+        "https://example.org/mattermost-endpoint/"
+    )
 
     Setting.objects.create(
         setting="evalreq_confirmation_email_delay_mention",

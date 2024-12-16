@@ -167,7 +167,7 @@ div#app {
     #sidebar {
       bottom: 0;
       overflow-y: scroll;
-      width: 25em;
+      width: 28em;
 
       div#compensation {
         p.rate strong {
@@ -224,6 +224,12 @@ div#app {
               text-align: left;
               font-weight: 900;
               padding-left: 16px;
+              white-space: nowrap;
+
+              span.fr-badge {
+                display: inline;
+                margin-left: 0.75rem;
+              }
             }
 
             td {
@@ -283,7 +289,7 @@ dialog#hedge-data-dialog {
 }
 
 div#statistics {
-  background-color: #f6f6f6;
+  background-color: var(--grey-975-100);
   padding: 16px;
 
   table {

@@ -19,6 +19,7 @@ from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
 from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
+from envergo.utils.tools import get_site_literal
 
 
 class DisableVisitorCookie(RedirectView):
@@ -79,7 +80,7 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
                 "origin_url": feedback_origin,
             },
         )
-        notify(message_body)
+        notify(message_body, get_site_literal(self.request.site))
         log_event("FeedbackDialog", "Respond", self.request, **metadata)
         return HttpResponse(message_body)
 
@@ -132,7 +133,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
                 "origin_url": feedback_origin,
             },
         )
-        notify(message_body)
+        notify(message_body, get_site_literal(self.request.site))
         log_event("FeedbackDialog", "FormSubmit", self.request, **metadata)
         return super().form_valid(form)
 

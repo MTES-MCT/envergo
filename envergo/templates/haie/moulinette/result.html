@@ -1,75 +1,19 @@
-{% extends 'moulinette/result.html' %}
+{% extends 'haie/moulinette/result_base.html' %}
 
 {% load static moulinette %}
 
-{% block header %}
-  <header role="banner" class="fr-header header-sticky header-slim">
-    {% include 'haie/_slim_header.html' %}
-
-  </header>
-{% endblock %}
-
-{% block project_summary %}
-  <ul class="fr-mb-3w color-text-light">
-    {% for field in triage_form %}
-      <li>{% field_summary field %}</li>
-    {% endfor %}
-  </ul>
-  <hr class="separator fr-mb-3w" />
-  <ul class="fr-mb-3w">
-    {% for field in moulinette.main_form %}
-      <li>{% field_summary field %}</li>
-    {% endfor %}
-    {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
-  </ul>
-{% endblock %}
-
-{% block result %}
-  {% if config and not config.is_activated %}
-    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
-      Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
-      cette page grâce à votre statut d'admin.
-    </div>
-  {% endif %}
-  <h1 class="fr-mb-5w">Simulation réglementaire</h1>
+{% block result_header %}
   <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette.result moulinette.main_form.haies %}</div>
 
   <p class="fr-hint-text fr-mb-3w">
     Ce simulateur est fourni à titre informatif, et ne vaut pas position de l’administration.
     <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
-  {% group_regulations_for_display moulinette as grouped_regulations %}
-
-  {% for result, regulations in grouped_regulations.items %}
-    {% if result == "interdit" %}
-      <h3>Réglementations interdisant le projet</h3>
-    {% elif result == "soumis" and moulinette.result != "soumis" %}
-      <h3>Autres réglementations concernant le projet</h3>
-    {% elif result == "soumis" %}
-      <h3>Réglementations concernant le projet</h3>
-    {% else %}
-      <h3>Autres réglementations</h3>
-    {% endif %}
-
-    {% for regulation in regulations %}
-      {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
-    {% endfor %}
-
-    {% if forloop.counter0 == 0 %}
-      {% block liability_info %}
-        {% show_haie_moulinette_liability_info moulinette.result %}
-      {% endblock %}
-    {% endif %}
-  {% endfor %}
-  {% include 'haie/moulinette/_demarches_simplifiees_form.html' %}
-{% endblock %}
-
-{% block after-content %}
-  {% if not is_read_only %}
-    {% include 'haie/moulinette/_actions_banner.html' %}
-  {% endif %}
 {% endblock %}
 
 {% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='plantation' %}";</script>
+  <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
+  <script defer src="{% static 'js/libs/hedges_input_plantation.js' %}"></script>
 {% endblock %}

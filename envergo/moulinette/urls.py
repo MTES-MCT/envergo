@@ -2,7 +2,11 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteHome, MoulinetteResult
+from envergo.moulinette.views import (
+    MoulinetteHome,
+    MoulinetteResult,
+    MoulinetteResultPlantation,
+)
 
 urlpatterns = [
     # Redirections history
@@ -19,6 +23,12 @@ urlpatterns = [
         RedirectView.as_view(pattern_name="home", query_string=True),
         name="moulinette_home_redirect",
     ),
+    # This is another "fake" url, only for matomo tracking
+    path(
+        _("out_of_scope/"),
+        RedirectView.as_view(pattern_name="moulinette_result"),
+        name="moulinette_result_out_of_scope",
+    ),
     path(
         _("form/"),
         include(
@@ -31,6 +41,24 @@ urlpatterns = [
                     _("missing-data/"),
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_missing_data",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    _("invalid/"),
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_invalid_form",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie-destruction/",
+                    RedirectView.as_view(pattern_name="moulinette_home"),
+                    name="moulinette_saisie_d",
+                ),
+                # This is another "fake" url, only for matomo tracking
+                path(
+                    "saisie-plantation/",
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_saisie_p",
                 ),
             ]
         ),
@@ -45,6 +73,18 @@ urlpatterns = [
                     _("debug/"),
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_result_debug",
+                ),
+            ]
+        ),
+    ),
+    path(
+        _("result_p/"),
+        include(
+            [
+                path(
+                    "",
+                    MoulinetteResultPlantation.as_view(),
+                    name="moulinette_result_plantation",
                 ),
             ]
         ),

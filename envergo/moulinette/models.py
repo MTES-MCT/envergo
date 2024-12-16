@@ -50,7 +50,7 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
-HAIE_REGULATIONS = ["conditionnalite_pac", "dep"]
+HAIE_REGULATIONS = ["conditionnalite_pac", "ep"]
 
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
@@ -66,7 +66,7 @@ REGULATIONS = Choices(
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
-    ("dep", "Dérogation « espèces protégées »"),
+    ("ep", "Espèces protégées"),
 )
 
 
@@ -871,7 +871,9 @@ class ConfigHaie(ConfigBase):
          * the results of the regulations
         """
 
-        moulinette_instance = MoulinetteHaie({}, {})
+        regulations = Regulation.objects.filter(
+            regulation__in=MoulinetteHaie.REGULATIONS
+        ).prefetch_related("criteria")
         triage_form_fields = {
             (key, field.label) for key, field in TriageFormHaie.base_fields.items()
         }
@@ -893,7 +895,7 @@ class ConfigHaie(ConfigBase):
 
         regulation_results = set()
 
-        for regulation in moulinette_instance.regulations.all():
+        for regulation in regulations.all():
             regulation_sources = set()
             regulation_results.add(
                 (
@@ -1032,7 +1034,7 @@ class Moulinette(ABC):
         "eval_env",
         "sage",
         "conditionnalite_pac",
-        "dep",
+        "ep",
     ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
@@ -1698,6 +1700,12 @@ class MoulinetteHaie(Moulinette):
         )
 
         return department
+
+    def get_regulations(self):
+        """Find the activated regulations and their criteria."""
+
+        regulations = super().get_regulations().prefetch_related("perimeters")
+        return regulations
 
     def additional_fields(self):
         """Get a {field_name: field} dict of all additional questions fields."""

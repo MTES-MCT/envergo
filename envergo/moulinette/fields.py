@@ -6,7 +6,7 @@ from envergo.moulinette.forms.fields import NoInstanciateChoiceField
 from envergo.moulinette.regulations import (  # noqa
     CriterionEvaluator,
     conditionnalitepac,
-    dep,
+    ep,
     evalenv,
     loisurleau,
     natura2000,

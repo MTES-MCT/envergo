@@ -37,7 +37,7 @@ class PetitionProjectCreate(FormView):
         res = super().dispatch(request, *args, **kwargs)
 
         if len(request.alerts) > 0:
-            notify(request.alerts.compute_message())
+            notify(request.alerts.compute_message(), "haie")
         return res
 
     def form_valid(self, form):
@@ -123,7 +123,7 @@ class PetitionProjectCreate(FormView):
             )
             return None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
         for field in config.demarche_simplifiee_pre_fill_config:
@@ -306,6 +306,8 @@ class PetitionProjectCreate(FormView):
 
 
 class PetitionProjectDetail(MoulinetteMixin, FormView):
+    template_name = "haie/moulinette/result_plantation.html"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.moulinette = None
@@ -364,11 +366,6 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
         return context
-
-    def get_template_names(self):
-        """Check which template to use depending on the moulinette result."""
-        moulinette = self.moulinette
-        return [moulinette.get_result_template()]
 
 
 class PetitionProjectAutoRedirection(View):
