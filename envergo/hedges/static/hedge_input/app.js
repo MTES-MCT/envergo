@@ -113,12 +113,30 @@ class Hedge {
 
   // Make sure all additional data is filled
   isValid() {
-    const { typeHaie, surParcellePac, proximiteMare } = this.additionalData;
-    const valid = (
-      typeHaie !== undefined &&
-      typeHaie &&
-      surParcellePac !== undefined &&
-      proximiteMare !== undefined);
+    const { typeHaie,
+      surParcellePac,
+      proximiteMare,
+      vieilArbre,
+      proximitePointEau,
+      connexionBoisement,
+      sousLigneElectrique,
+      proximiteVoirie  } = this.additionalData;
+
+    const valid =
+      typeHaie !== undefined
+      && typeHaie
+      && proximitePointEau !== undefined
+      && connexionBoisement !== undefined
+      && proximiteMare !== undefined
+      &&(
+        (this.type === TO_REMOVE
+        && surParcellePac !== undefined
+        && vieilArbre !== undefined)
+        || (this.type === TO_PLANT
+        && sousLigneElectrique !== undefined
+        && proximiteVoirie !== undefined)
+      );
+
     return valid;
   }
 
@@ -255,13 +273,31 @@ createApp({
 
     // Show the "description de la haie" form modal
     const showHedgeModal = (hedge, isReadonly) => {
-      const dialog = document.getElementById("hedge-data-dialog");
+
+      const fillBooleanField = (fieldElement, fieldName, data) => {
+         if(fieldElement && data.hasOwnProperty(fieldName)) {
+          fieldElement.checked = data[fieldName];
+        }
+      }
+
+      // There is two edge data dialogs as edges to plant and to remove have differrent properties
+      // By default we take the dialog of the current mode.
+      // If the form is readonly, then we display the other mode dialog.
+      const dialogMode = isReadonly ? (mode === "removal" ? "plantation" : "removal") : mode;
+
+      const dialogId= `${dialogMode}-hedge-data-dialog`
+      const dialog = document.getElementById(dialogId);
       const form = dialog.querySelector("form");
-      const hedgeTypeField = document.getElementById("id_hedge_type");
-      const pacField = document.getElementById("id_sur_parcelle_pac");
-      const nearPondField = document.getElementById("id_proximite_mare");
-      const hedgeName = document.getElementById("hedge-data-dialog-hedge-name");
-      const hedgeLength = document.getElementById("hedge-data-dialog-hedge-length");
+      const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
+      const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
+      const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
+      const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
+      const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
+      const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
+      const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
+      const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
+      const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
+      const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
       const resetForm = () => {
         form.reset();
         const inputs = form.querySelectorAll("input");
@@ -278,8 +314,13 @@ createApp({
       // Pre-fill the form with hedge data if it's an edition
       if (hedge.additionalData) {
         hedgeTypeField.value = hedge.additionalData.typeHaie;
-        pacField.checked = hedge.additionalData.surParcellePac;
-        nearPondField.checked = hedge.additionalData.proximiteMare;
+        fillBooleanField(pacField, "surParcellePac", hedge.additionalData);
+        fillBooleanField(nearPondField, "proximiteMare", hedge.additionalData);
+        fillBooleanField(oldTreeField, "vieilArbre", hedge.additionalData);
+        fillBooleanField(nearWaterField, "proximitePointEau", hedge.additionalData);
+        fillBooleanField(woodlandConnectionField, "connexionBoisement", hedge.additionalData);
+        fillBooleanField(underPowerLineField, "sousLigneElectrique", hedge.additionalData);
+        fillBooleanField(nearbyRoadField, "proximiteVoirie", hedge.additionalData);
       } else {
         form.reset();
       }
@@ -292,13 +333,30 @@ createApp({
         event.preventDefault();
 
         const hedgeType = hedgeTypeField.value;
-        const isOnPacField = pacField.checked;
-        const isNearPond = nearPondField.checked;
         hedge.additionalData = {
           typeHaie: hedgeType,
-          surParcellePac: isOnPacField,
-          proximiteMare: isNearPond,
         };
+        if (pacField) {
+          hedge.additionalData.surParcellePac = pacField.checked;
+        }
+        if (nearPondField) {
+          hedge.additionalData.proximiteMare = nearPondField.checked;
+        }
+        if (oldTreeField) {
+          hedge.additionalData.vieilArbre = oldTreeField.checked;
+        }
+        if (nearWaterField) {
+          hedge.additionalData.proximitePointEau = nearWaterField.checked;
+        }
+        if (woodlandConnectionField) {
+          hedge.additionalData.connexionBoisement = woodlandConnectionField.checked;
+        }
+        if (underPowerLineField) {
+          hedge.additionalData.sousLigneElectrique = underPowerLineField.checked;
+        }
+        if (nearbyRoadField) {
+          hedge.additionalData.proximiteVoirie = nearbyRoadField.checked;
+        }
 
         // Reset the form and hide the modal
         form.reset();
@@ -369,8 +427,8 @@ createApp({
     // Persist data to the server
     // We first check if all hedges are valid
     const saveData = () => {
-      const allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
-      const isValid = allHedges.every((hedge) => hedge.isValid());
+      const hedgesToValidate = mode === "removal" ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
+      const isValid = hedgesToValidate.every((hedge) => hedge.isValid());
       if (!isValid) {
         const dialog = document.getElementById("save-modal");
         dsfr(dialog).modal.disclose();
@@ -450,16 +508,16 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData);
-        if (type === "TO_PLANT" && mode === "removal") {
+        if(type === TO_PLANT && mode === "removal") {
           hedge.polyline.disableEdit();
-        } else if (type === "TO_REMOVE" && mode === "plantation") {
+        }else if(type === TO_REMOVE && mode === "plantation") {
           hedge.polyline.disableEdit();
         }
       });
     };
 
     const invalidHedges = computed(() => {
-      const invalidHedges = hedges[TO_REMOVE].hedges.filter((hedge) => !hedge.isValid());
+      const invalidHedges = hedges[mode === "removal" ? TO_REMOVE : TO_PLANT].hedges.filter((hedge) => !hedge.isValid());
       const invalidHedgesIds = invalidHedges.map((hedge) => hedge.id);
       const invalidHedgeList = invalidHedgesIds.join(', ');
       return invalidHedgeList;
