@@ -288,14 +288,14 @@ createApp({
       const dialogId= `${dialogMode}-hedge-data-dialog`
       const dialog = document.getElementById(dialogId);
       const form = dialog.querySelector("form");
-      const hedgeTypeField = document.getElementById(`${dialogMode}_id_hedge_type`);
-      const pacField = document.getElementById(`${dialogMode}_id_sur_parcelle_pac`);
-      const nearPondField = document.getElementById(`${dialogMode}_id_proximite_mare`);
-      const oldTreeField = document.getElementById(`${dialogMode}_id_vieil_arbre`);
-      const nearWaterField = document.getElementById(`${dialogMode}_id_proximite_point_eau`);
-      const woodlandConnectionField = document.getElementById(`${dialogMode}_id_connexion_boisement`);
-      const underPowerLineField = document.getElementById(`${dialogMode}_id_sous_ligne_electrique`);
-      const nearbyRoadField = document.getElementById(`${dialogMode}_id_proximite_voirie`);
+      const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
+      const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
+      const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
+      const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
+      const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
+      const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
+      const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
+      const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
       const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
       const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
       const resetForm = () => {
