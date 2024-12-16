@@ -294,7 +294,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             )
 
         if localisation_pac == "oui" and haies:
-            on_pac_values = [h.is_on_pac for h in haies]
+            on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if not any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
@@ -304,7 +304,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                     les haies.""",
                 )
         elif localisation_pac == "non" and haies:
-            on_pac_values = [h.is_on_pac for h in haies]
+            on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
@@ -321,7 +321,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if haies.length_to_remove() == 0:
             self.add_error(
                 "haies",
-                "Vous devez indiquer les haies à arracher.",
+                "Merci de saisir au moins une haie à détruire.",
             )
         return haies
 

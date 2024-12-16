@@ -11,19 +11,22 @@
 {% block main %}
   <div id="app"
        v-cloak
-       data-save-url="{% url 'input_hedges' %}"
+       data-mode="{{ mode|default:'removal' }}"
+       data-save-url="{% url 'input_hedges' mode=mode %}"
        data-hedges-data='{{ hedge_data_json|safe }}'>
 
     <div id="saisie-ui">
       <div id="map">
 
         <div class="controls leaflet-top leaflet-right">
-          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+          <button v-if="mode === 'removal'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
-          <button class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
+          <button v-if="mode === 'plantation'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
@@ -79,14 +82,21 @@
                       @mouseover="hedge.handleMouseOver()"
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
-                    <th>[[ hedge.id ]]</th>
-                    <td>
+                    <th>
+                      [[ hedge.id ]]
+                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                    </th>
+                    <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="editHedge(hedge)">Modifier</button>
                     </td>
-                    <td>
+                    <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
+                    </td>
+                    <td v-if="mode === 'plantation'">
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="displayHedge(hedge)">Voir la description</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -94,11 +104,12 @@
               </table>
             </template>
             <template v-else>
-              <p class="fr-text--light">Aucune haie à détruire</p>
+              <p class="fr-text--light">Aucune haie tracée</p>
             </template>
           </div>
           <hr>
-          <div class="hedge-list to-plant">
+          <div v-if="mode === 'plantation' || hedges.TO_PLANT.count > 0"
+               class="hedge-list to-plant">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
@@ -113,14 +124,23 @@
                       @mouseover="hedge.handleMouseOver()"
                       @mouseout="hedge.handleMouseOut()"
                       @click="hedge.centerOnMap()">
-                    <th>[[ hedge.id ]]</th>
+                    <th>
+                      [[ hedge.id ]]
+                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                    </th>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                      <button v-if="mode === 'plantation'"
+                              class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="editHedge(hedge)">Modifier</button>
                     </td>
                     <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                      <button v-if="mode === 'plantation'"
+                              class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
+                    </td>
+                    <td v-if="mode === 'removal'">
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="displayHedge(hedge)">Voir la description</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -133,6 +153,53 @@
           </div>
         </div>
       </div>
+
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" %}
+
+      <dialog id="cancel-modal" class="fr-modal" role="dialog">
+        <div class="fr-container fr-container--fluid fr-container-md">
+          <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+              <div class="fr-modal__body">
+                <div class="fr-modal__content fr-pt-4w">
+                  <p>
+                    Souhaitez-vous vraiment quitter la carte de localisation des haies ? Vos modifications ne seront pas enregistrées.
+                  </p>
+                </div>
+                <div class="fr-modal__footer">
+                  <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                    <button id="btn-back-to-map" class="fr-btn">Rester sur la carte</button>
+                    <button id="btn-quit-without-saving" class="fr-btn fr-btn--secondary">Quitter sans enregistrer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="save-modal" class="fr-modal" role="dialog">
+        <div class="fr-container fr-container--fluid fr-container-md">
+          <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+              <div class="fr-modal__body">
+                <div class="fr-modal__header">
+                  <button class="fr-btn--close fr-btn" title="Fermer la fenêtre modale">Fermer</button>
+                </div>
+
+                <div class="fr-modal__content">
+                  <h1 class="fr-modal__title">Complétez la description des haies pour pouvoir poursuivre</h1>
+                  <p>
+                    Pour que le simulateur détermine les réglementations qui s’appliquent au projet, toutes les haies doivent être décrites complètement.
+                  </p>
+                  <p>Ces haies sont incomplètes : [[ invalidHedges ]]</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
     </div>
 
     <footer>
@@ -141,63 +208,10 @@
       <button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
               @click="saveData">Enregistrer et poursuivre</button>
     </footer>
-
-    <dialog id="hedge-data-dialog"
-            aria-labelledby="hedge-data-dialog-title"
-            role="dialog"
-            class="fr-modal">
-      <div class="fr-container fr-container--fluid fr-container-md">
-        <div class="fr-grid-row fr-grid-row--center">
-          <div class="fr-col-12 fr-col-md-7 fr-col-lg-6 fr-col-xl-5">
-            <div class="fr-modal__body">
-
-              <form method="dialog">
-                <div class="fr-modal__content fr-pt-4w">
-                  <h1 id="hedge-data-dialog-title" class="fr-modal__title fr-mb-1w">
-                    Description de la haie <span id="hedge-data-dialog-hedge-name"></span>
-                  </h1>
-                  <p class="fr-tag fr-mb-3w">
-                    Longueur : <span id="hedge-data-dialog-hedge-length"></span> m
-                  </p>
-
-                  {% include '_form_snippet.html' with form=hedge_data_form %}
-                </div>
-
-                <div class="fr-modal__footer">
-                  <button type="submit" class="fr-btn">Enregistrer</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </dialog>
-
-    <dialog id="confirmation-modal" class="fr-modal" role="dialog">
-      <div class="fr-container fr-container--fluid fr-container-md">
-        <div class="fr-grid-row fr-grid-row--center">
-          <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-            <div class="fr-modal__body">
-              <div class="fr-modal__content fr-pt-4w">
-                <p>
-                  Souhaitez-vous vraiment quitter la carte de localisation des haies ? Vos modifications ne seront pas enregistrées.
-                </p>
-              </div>
-              <div class="fr-modal__footer">
-                <div class="fr-btns-group fr-btns-group--left fr-btns-group--inline-reverse fr-btns-group--inline-lg">
-                  <button id="btn-back-to-map" class="fr-btn">Rester sur la carte</button>
-                  <button id="btn-quit-without-saving" class="fr-btn fr-btn--secondary">Quitter sans enregistrer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </dialog>
   </div>
 {% endblock %}
 
-{% block after-content %}{% endblock %}
+{% block extra_body %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block bottom_js %}

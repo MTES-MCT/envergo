@@ -114,7 +114,7 @@
 
     // open the hedge input ui in a modal upon the button click
     btn.addEventListener("click", function () {
-      let saveUrl = "{% url 'input_hedges' %}";
+      let saveUrl = "{% url 'input_hedges' mode='removal' %}";
       let hedgeId = hedgeIdField.value;
       if (hedgeId) {
         saveUrl += hedgeId + "/";
