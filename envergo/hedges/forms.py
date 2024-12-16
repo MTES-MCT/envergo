@@ -62,10 +62,6 @@ class HedgeToRemoveDataForm(HedgeDataBaseForm):
             ]
         )
 
-        # discriminate the fields id to enable two forms on the same page
-        for field_name, field in self.fields.items():
-            field.widget.attrs["id"] = f"removal_id_{field_name}"
-
 
 class HedgeToPlantDataForm(HedgeDataBaseForm):
 
@@ -83,7 +79,3 @@ class HedgeToPlantDataForm(HedgeDataBaseForm):
         self.fields["hedge_type"].choices = [
             choice for choice in TYPES if choice[0] != "degradee"
         ]
-
-        # discriminate the fields id to enable two forms on the same page
-        for field_name, field in self.fields.items():
-            field.widget.attrs["id"] = f"plantation_id_{field_name}"

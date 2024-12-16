@@ -392,8 +392,14 @@ ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.
 DEMARCHES_SIMPLIFIEE = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
-    "PRE_FILL_API_URL": "https://www.demarches-simplifiees.fr/api/public/v1/",
-    "GRAPHQL_API_URL": "https://www.demarches-simplifiees.fr/api/v2/graphql",
+    "PRE_FILL_API_URL": env(
+        "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
+        default="https://www.demarches-simplifiees.fr/api/public/v1/",
+    ),
+    "GRAPHQL_API_URL": env(
+        "DJANGO_DEMARCHE_SIMPLIFIE_GRAPHQL_API_URL",
+        default="https://www.demarches-simplifiees.fr/api/v2/graphql",
+    ),
     "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
 }
 

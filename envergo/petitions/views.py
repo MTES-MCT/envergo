@@ -162,7 +162,12 @@ class PetitionProjectCreate(FormView):
         else:
             logger.error(
                 "Error while pre-filling a dossier on demarches-simplifiees.fr",
-                extra={"response": response},
+                extra={
+                    "api_url": response.request.url,
+                    "request_body": response.request.body,
+                    "status_code": response.status_code,
+                    "response.text": response.text,
+                },
             )
             self.request.alerts.append(
                 Alert(
