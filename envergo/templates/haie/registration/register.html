@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}S'enregistrer{% endblock %}
+
+{% block article %}
+  <h1>Créez votre compte instructeur « guichet unique de la haie »</h1>
+
+  <p>
+    La création de compte est accessible <strong>uniquement aux agents de l'administration</strong> impliqués dans l'instruction ou la consultation des demandes d'autorisation déposées sur le guichet unique de la haie.
+  </p>
+
+  <form method="post" action="" novalidate class="fr-mb-3w">
+    {% csrf_token %}
+    {% include '_form_snippet.html' with form=form %}
+
+    <button type="submit" class="fr-btn">Créer mon compte instructeur</button>
+  </form>
+
+  <p class="fr-alert fr-alert--info">
+    Vous avez déjà un compte instructeur ?
+    <a href="{% url 'login' %}">Connectez-vous.</a>
+  </p>
+
+{% endblock %}

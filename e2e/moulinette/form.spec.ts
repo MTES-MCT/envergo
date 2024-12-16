@@ -3,8 +3,7 @@ import { test, expect } from '@playwright/test';
 test('Display a result with the available regulations', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('simulateur_nav_btn').click();
-  await page.getByLabel('Search for the address to center the map').fill('Vue');
-  await page.getByRole('option', { name: 'Vue 44, Loire-Atlantique,' }).click();
+  await page.dblclick('#map', { position: { x: 340, y: 230 } });
   await page.getByLabel('Nouveaux impacts').fill('500');
   await page.getByLabel('État final').fill('500');
   await page.getByRole('button', { name: 'Démarrer la simulation' }).click();
