@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-09 09:27+0100\n"
+"POT-Creation-Date: 2024-12-10 18:04+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,7 +94,7 @@ msgstr "Métadonnées"
 #: envergo/evaluations/models.py:228 envergo/evaluations/models.py:372
 #: envergo/evaluations/models.py:663 envergo/geodata/models.py:83
 #: envergo/geodata/models.py:133 envergo/pages/models.py:14
-#: envergo/petitions/models.py:37 envergo/urlmappings/models.py:13
+#: envergo/petitions/models.py:55 envergo/urlmappings/models.py:13
 msgid "Date created"
 msgstr "Date de création"
 
@@ -184,7 +184,7 @@ msgid "A 15 chars value starting with \"P\""
 msgstr "Une valeur à 15 caractères commençant par « PC » ou « PA »."
 
 #: envergo/evaluations/admin.py:73 envergo/evaluations/models.py:140
-#: envergo/evaluations/models.py:601 envergo/petitions/models.py:18
+#: envergo/evaluations/models.py:601 envergo/petitions/models.py:29
 msgid "Reference"
 msgstr "Référence"
 
@@ -373,7 +373,7 @@ msgid "Regulatory reminder mention"
 msgstr "Mention libre de l'avis réglementaire"
 
 #: envergo/evaluations/models.py:191 envergo/evaluations/models.py:611
-#: envergo/petitions/models.py:25
+#: envergo/petitions/models.py:36
 msgid "Moulinette url"
 msgstr "Url simulateur"
 
@@ -1152,7 +1152,7 @@ msgstr "Status du dossier dans demarches-simplifiees.fr"
 msgid "Petition project"
 msgstr "Projet de dossier"
 
-#: envergo/petitions/models.py:32
+#: envergo/petitions/models.py:59
 msgid "Petition projects"
 msgstr "Projets de dossier"
 

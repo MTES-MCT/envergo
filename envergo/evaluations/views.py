@@ -315,7 +315,7 @@ class WizardStepMixin:
         context = super().get_context_data(**kwargs)
         form = self.get_form(self.get_form_class())
         if form.is_bound and not form.is_valid():
-            # has it is not a complete url, Matomo concatenate it to the current url, which is OK for us
+            # as it is not a complete url, Matomo concatenate it to the current url, which is OK for us
             context["matomo_custom_url"] = "erreur-validation/"
         return context
 

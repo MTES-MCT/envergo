@@ -1716,6 +1716,8 @@ class MoulinetteHaie(Moulinette):
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:
+            # Create a fake form to add a field in the "caractéristiques du projet" panel
+            # It is a bit hacky but I cant find a better way to achieve this
             mock_form = Form(data={"lineaire_detruit_pac": str(lineaire_detruit_pac)})
             lineaire_detruit_pac = BoundField(
                 form=mock_form,
