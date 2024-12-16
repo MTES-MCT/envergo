@@ -133,3 +133,6 @@ class Species(models.Model):
     class Meta:
         verbose_name = "Espèce"
         verbose_name_plural = "Espèces"
+
+    def __str__(self):
+        return f"{self.common_name} ({self.scientific_name})"

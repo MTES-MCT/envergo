@@ -1,10 +1,11 @@
 import json
 
+from django import forms
 from django.contrib import admin
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HEDGE_TYPES, HedgeData, Species
 
 
 @admin.register(HedgeData)
@@ -60,3 +61,19 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     def length_to_remove(self, obj):
         return obj.length_to_remove()
+
+
+class SpeciesAdminForm(forms.ModelForm):
+    hedge_types = forms.MultipleChoiceField(
+        choices=HEDGE_TYPES,
+        widget=forms.CheckboxSelectMultiple,
+        label="Types de haies considérés",
+        required=False,
+    )
+
+
+@admin.register(Species)
+class SpeciesAdmin(admin.ModelAdmin):
+    list_display = ["common_name", "scientific_name"]
+    ordering = ["-common_name"]
+    form = SpeciesAdminForm
