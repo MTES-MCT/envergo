@@ -1,6 +1,7 @@
 import uuid
 from collections import defaultdict
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from pyproj import Geod
 from shapely import LineString
@@ -158,3 +159,37 @@ class HedgeData(models.Model):
             "mixte": lengths_by_type["mixte"],
             "alignement": lengths_by_type["alignement"],
         }
+
+
+HEDGE_TYPES = (
+    ("degradee", "Haie dégradée ou résiduelle basse"),
+    ("buissonnante", "Haie buissonnante basse"),
+    ("arbustive", "Haie arbustive"),
+    ("alignement", "Alignement d'arbres"),
+    ("mixte", "Haie mixte"),
+)
+
+
+class Species(models.Model):
+    """Represent a single species."""
+
+    common_name = models.CharField("Nom commun", max_length=255)
+    scientific_name = models.CharField("Nom scientifique", max_length=255)
+    hedge_types = ArrayField(
+        verbose_name="Types de haies considérés",
+        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
+    )
+
+    # Those fields are in french to match existing fields describing hedges
+    proximite_mare = models.BooleanField("Mare à moins de 200 m")
+    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
+    connexion_boisement = models.BooleanField(
+        "Connectée à un boisement ou à une autre haie"
+    )
+    vieil_arbre = models.BooleanField(
+        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+    )
+
+    class Meta:
+        verbose_name = "Espèce"
+        verbose_name_plural = "Espèces"
