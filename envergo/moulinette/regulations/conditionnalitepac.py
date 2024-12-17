@@ -146,7 +146,9 @@ class Bcae8(CriterionEvaluator):
         "soumis_meilleur_emplacement": RESULTS.soumis,
         "soumis_chemin_acces": RESULTS.soumis,
         "soumis_amenagement": RESULTS.soumis,
-        "soumis_autre": RESULTS.soumis,
+        "soumis_fosse": RESULTS.soumis,
+        "soumis_incendie": RESULTS.soumis,
+        "soumis_maladie": RESULTS.soumis,
         "interdit_transfert_parcelles": RESULTS.interdit,
         "interdit_amelioration_culture": RESULTS.interdit,
         "interdit_amelioration_ecologique": RESULTS.interdit,
@@ -194,6 +196,16 @@ class Bcae8(CriterionEvaluator):
             is_small,
         )
 
+    def get_result_motif_pac(self, motif_pac):
+        if motif_pac == "protection_incendie":
+            return "soumis_incendie"
+        elif motif_pac == "gestion_sanitaire":
+            return "soumis_maladie"
+        elif motif_pac == "rehabilitation_fosse":
+            return "soumis_fosse"
+        else:
+            raise ValueError("Unhandled motif_pac value: %s" % motif_pac)
+
     def get_result_code(self, result_data):
         """Override the default method to avoid an oversize (and hard to debug) matrix."""
         (
@@ -235,7 +247,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "interdit_chemin_acces"
                     elif motif == "securite":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
@@ -250,7 +262,7 @@ class Bcae8(CriterionEvaluator):
                         result_code = "interdit_embellissement"
                     elif motif == "autre":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_autre"
 
@@ -274,7 +286,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "interdit_chemin_acces"
                     elif motif == "securite":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
@@ -291,7 +303,7 @@ class Bcae8(CriterionEvaluator):
                         result_code = "interdit_embellissement"
                     elif motif == "autre":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_autre"
                 elif reimplantation == "non":
@@ -307,7 +319,7 @@ class Bcae8(CriterionEvaluator):
                             result_code = "interdit_chemin_acces"
                     elif motif == "securite":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
@@ -322,7 +334,7 @@ class Bcae8(CriterionEvaluator):
                         result_code = "interdit_embellissement"
                     elif motif == "autre":
                         if motif_pac != "aucun":
-                            result_code = "soumis_autre"
+                            result_code = self.get_result_motif_pac(motif_pac)
                         else:
                             result_code = "interdit_autre"
 

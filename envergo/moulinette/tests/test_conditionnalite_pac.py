@@ -351,7 +351,26 @@ def test_bcae8_big_interdit_embellissement():
     ), data
 
 
-def test_bcae8_big_soumis_autre():
+def test_bcae8_big_soumis_fosse():
+    ConfigHaieFactory()
+    data = {
+        "motif": "autre",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "motif_pac": "rehabilitation_fosse",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_fosse", data
+
+
+def test_bcae8_big_soumis_incendie():
     ConfigHaieFactory()
     data = {
         "motif": "autre",
@@ -367,7 +386,26 @@ def test_bcae8_big_soumis_autre():
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_autre", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_incendie", data
+
+
+def test_bcae8_big_soumis_maladie():
+    ConfigHaieFactory()
+    data = {
+        "motif": "autre",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "motif_pac": "gestion_sanitaire",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_maladie", data
 
 
 def test_bcae8_big_interdit_autre():

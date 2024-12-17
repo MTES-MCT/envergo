@@ -148,3 +148,16 @@ class HedgeData(models.Model):
             ],
         )
         return result
+
+    def is_removing_near_pond(self):
+        """Return True if at least one hedge to remove is near a pond."""
+        return any(
+            h.additionalData.get("proximiteMare", False)
+            for h in self.hedges_to_remove()
+        )
+
+    def is_removing_old_tree(self):
+        """Return True if at least one hedge to remove is containing old tree."""
+        return any(
+            h.additionalData.get("vieilArbre", False) for h in self.hedges_to_remove()
+        )
