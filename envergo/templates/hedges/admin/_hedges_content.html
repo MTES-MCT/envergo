@@ -1,0 +1,20 @@
+{% for hedge in hedges %}
+  <div class="hedge">
+
+    <ul>
+      <li>ID : {{ hedge.id }}</li>
+      <li>Type: {{ hedge.type }}</li>
+      {% for k, v in hedge.additionalData.items %}<li>{{ k }} : {{ v }}</li>{% endfor %}
+      <li>
+        <ul>
+          {% for species in hedge.get_species %}
+            <li>{{ species }}</li>
+          {% empty %}
+            <li>Aucune espèce trouvée</li>
+          {% endfor %}
+        </ul>
+      </li>
+    </ul>
+    <hr />
+  </div>
+{% endfor %}
