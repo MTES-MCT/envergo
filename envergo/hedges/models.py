@@ -1,7 +1,10 @@
+import operator
 import uuid
+from functools import reduce
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models import Q
 from pyproj import Geod
 from shapely import LineString
 
@@ -47,6 +50,46 @@ class Hedge:
     @property
     def hedge_type(self):
         return self.additionalData.get("typeHaie", None)
+
+    @property
+    def proximite_mare(self):
+        return self.additionalData.get("proximiteMare", None)
+
+    @property
+    def vieil_arbre(self):
+        return self.additionalData.get("vieilArbre", None)
+
+    @property
+    def proximite_point_eau(self):
+        return self.additionalData.get("proximitePointEau", None)
+
+    @property
+    def connexion_boisement(self):
+        return self.additionalData.get("connexionBoisement", None)
+
+    def get_species_filter(self):
+        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
+
+        exclude = []
+
+        if not self.proximite_mare:
+            exclude.append(Q(proximite_mare=True))
+        if not self.vieil_arbre:
+            exclude.append(Q(vieil_arbre=True))
+        if not self.proximite_point_eau:
+            exclude.append(Q(proximite_point_eau=True))
+        if not self.connexion_boisement:
+            exclude.append(Q(connexion_boisement=True))
+
+        q_exclude = reduce(operator.or_, exclude)
+        filter = q_hedge_type & ~q_exclude
+        return filter
+
+    def get_species(self):
+        """Return known specis in this hedge."""
+
+        qs = Species.objects.filter(self.get_species_filter())
+        return qs
 
 
 class HedgeData(models.Model):
@@ -99,6 +142,14 @@ class HedgeData(models.Model):
                 if h.is_on_pac and h.hedge_type == "alignement"
             )
         )
+
+    def get_all_species(self):
+        """Return all species in the set of hedges."""
+
+        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        union = reduce(operator.or_, filters)
+        qs = Species.objects.filter(union)
+        return qs
 
 
 HEDGE_TYPES = (

@@ -71,5 +71,5 @@ class HedgeToPlantDataForm(HedgeDataBaseForm):
         super().__init__(*args, **kwargs)
         # Remove the 'degradee' option from hedge_type choices
         self.fields["hedge_type"].choices = [
-            choice for choice in TYPES if choice[0] != "degradee"
+            choice for choice in HEDGE_TYPES if choice[0] != "degradee"
         ]
