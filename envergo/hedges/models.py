@@ -1,12 +1,22 @@
 import operator
 import uuid
+<<<<<<< HEAD
 from collections import defaultdict
 from functools import reduce
+||||||| parent of 58df3585 (List species for hedges)
+=======
+from functools import reduce
+>>>>>>> 58df3585 (List species for hedges)
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+<<<<<<< HEAD
 from django.db.models import Q
 from model_utils import Choices
+||||||| parent of 58df3585 (List species for hedges)
+=======
+from django.db.models import Q
+>>>>>>> 58df3585 (List species for hedges)
 from pyproj import Geod
 from shapely import LineString
 
@@ -86,6 +96,7 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sousLigneElectrique", None)
 
+<<<<<<< HEAD
     def get_species_filter(self):
         """Build the filter to get possible protected species.
 
@@ -116,6 +127,33 @@ class Hedge:
         qs = Species.objects.filter(self.get_species_filter())
         return qs
 
+||||||| parent of 58df3585 (List species for hedges)
+=======
+    def get_species_filter(self):
+        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
+
+        exclude = []
+
+        if not self.proximite_mare:
+            exclude.append(Q(proximite_mare=True))
+        if not self.vieil_arbre:
+            exclude.append(Q(vieil_arbre=True))
+        if not self.proximite_point_eau:
+            exclude.append(Q(proximite_point_eau=True))
+        if not self.connexion_boisement:
+            exclude.append(Q(connexion_boisement=True))
+
+        q_exclude = reduce(operator.or_, exclude)
+        filter = q_hedge_type & ~q_exclude
+        return filter
+
+    def get_species(self):
+        """Return known specis in this hedge."""
+
+        qs = Species.objects.filter(self.get_species_filter())
+        return qs
+
+>>>>>>> 58df3585 (List species for hedges)
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
