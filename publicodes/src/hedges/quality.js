@@ -3,7 +3,7 @@ import { parse } from 'yaml';
 import fs from 'fs';
 
 
-const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
+const rules = fs.readFileSync('./rules/hedgesQuality.publicodes', 'utf8');
 const parsedRules = parse(rules);
 const engine = new Engine(parsedRules);
 

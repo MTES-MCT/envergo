@@ -3,7 +3,7 @@ const fs = require('fs');
 const { parse } = require('yaml');
 
 
-const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
+const rules = fs.readFileSync('./rules/hedgesQuality.publicodes', 'utf8');
 
 
 test('doit indiquer que la qualité de la haie est suffisante', () => {
