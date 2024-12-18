@@ -12,7 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "publicodes": "^1.6.1"
+    "publicodes": "^1.6.1",
+    "yaml": "^2.6.1"
   },
   "devDependencies": {
     "gulp": "^5.0.0",
