@@ -3,7 +3,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Literal
 
-# from django.contrib.gis.geos import LineString
+import requests
+from django.conf import settings
 from django.db import models
 from pyproj import Geod
 from shapely import LineString
@@ -136,67 +137,53 @@ class HedgeData(models.Model):
         """
         return self.length_to_plant() >= self.minimum_length_to_plant()
 
-    def _get_length_to_compensate(self):
+    def _get_minimum_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
         for to_remove in self.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
 
         return {
-            "buissonnante": R
-            * (lengths_by_type["degradee"] + lengths_by_type["buissonnante"]),
+            "degradee": R * lengths_by_type["degradee"],
+            "buissonnante": R * lengths_by_type["buissonnante"],
             "arbustive": R * lengths_by_type["arbustive"],
             "mixte": R * lengths_by_type["mixte"],
             "alignement": R * lengths_by_type["alignement"],
         }
 
-    def is_planted_hedge_quality_sufficient(self):
-        """Returns True if the quality of hedges to plant is sufficient
+    def _get_lengths_to_plant(self):
+        lengths_by_type = defaultdict(int)
+        for to_plant in self.hedges_to_plant():
+            lengths_by_type[to_plant.hedge_type] += to_plant.length
 
-        Variables utilisées
+        return {
+            "buissonnante": lengths_by_type["buissonnante"],
+            "arbustive": lengths_by_type["arbustive"],
+            "mixte": lengths_by_type["mixte"],
+            "alignement": lengths_by_type["alignement"],
+        }
 
-            LD_i : linéaire détruit de type i
-            LP_i : linéaire planté de type i (saisi dans l’interface)
-            LPm_i : linéaire planté minimal de type i. Il se calcule ainsi :
+    def evaluate_hedge_plantation_quality(self):
+        url = f"{settings.PUBLICODES_SERVICE_URL}hedges/quality/"
+        headers = {"Content-Type": "application/json"}
+        data = {
+            "minimum_lengths_to_plant": self._get_minimum_lengths_to_plant(),
+            "lengths_to_plant": self._get_lengths_to_plant(),
+        }
 
-            LPm_2 = R x (LD_1+LD_2) // (puisque 1 doit être remplacé au moins par du 2)
-            LPm_3 = R x LD_3
-            LPm_4 = R x LD_4
-            LPm_5 = R x LD_5
+        response = requests.post(url, json=data, headers=headers)
 
-        Conditions à remplir
-
-            L’ensemble des conditions (R5), (R4), (R3) et (R2) doit être rempli :
-
-            Remplacement des haies de type 5 :
-            LP_5 ≥ LPm_5			(R5)
-
-            Remplacement des haies de type 4 (par du 4 ou du 5) :
-            LP_4 + LS_54 ≥ LPm_4		(R4)
-
-            où  LS_54 = MAX(0, LP_5-LPm_5)  est le reliquat de type 5 après utilisation en remplacement de 5, et
-            disponible en remplacement de haie de type 4
-
-            Remplacement des haies de type 3 (par du 3 ou du 5) :
-            LP_3 + LS_53 ≥ LPm_3		(R3)
-
-            où  LS_53 = MAX(0, LS_54 - MAX(0,LPm_4-LP_4))  est le reliquat de type 5 après utilisation pour du 5 ou du
-            4, et disponible en remplacement de haie de type 3
-
-            Remplacement des haies de type 2 (par du 2, du 3 ou du 5) :
-            LP_2 + LS_53 + LS_32 ≥ LPm_2	(R2)
-
-            où LS_52 = MAX(0, LS_53 - MAX(0,LPm_3-LP_3))  est le reliquat de type 5 après utilisation pour du 5, du 4
-            ou du 3, et disponible en remplacement de haie de type 2
-
-            et LS_32 = MAX(0, LP_3 - LPm_3) est le reliquat de type 3 après utilisation en remplacement de 3, et
-            disponible en remplacement de haie de type 2
-        """
-        pass
+        if response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status()
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
+        quality_evaluation = self.evaluate_hedge_plantation_quality()
+
         conditions = {
             "length_to_plant": self.is_length_to_plant_sufficient(),
+            "quality": quality_evaluation["isQualitySufficient"],
             "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
         }
         result = EvaluationResult(

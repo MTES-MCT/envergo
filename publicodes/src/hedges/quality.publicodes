@@ -51,22 +51,6 @@ Reliquat . de buissonnante en remplacement de dégradée:
     - Longueur à planter . buissonnante - Longueur à planter minimum . buissonnante
 
 
-Il y a assez en remplacement de :
-Il y a assez en remplacement de . mixte: Longueur à planter . mixte >= Longueur à planter minimum . mixte
-Il y a assez en remplacement de . alignement: Longueur à planter . alignement + Reliquat . de mixte en remplacement de alignement >= Longueur à planter minimum . alignement
-Il y a assez en remplacement de . arbustive: Longueur à planter . arbustive >= Longueur à planter minimum . arbustive
-Il y a assez en remplacement de . buissonnante : Longueur à planter . buissonnante + Reliquat . de arbustive en remplacement de buissonnante >= Longueur à planter minimum . buissonnante
-Il y a assez en remplacement de . dégradée : Reliquat . de mixte en remplacement de dégradée + Reliquat . de arbustive en remplacement de dégradée + Reliquat . de buissonnante en remplacement de dégradée >= Longueur à planter minimum . dégradée
-
-
-Qualité globalement suffisante:
-  toutes ces conditions:
-    - Il y a assez en remplacement de . mixte
-    - Il y a assez en remplacement de . alignement
-    - Il y a assez en remplacement de . arbustive
-    - Il y a assez en remplacement de . buissonnante
-    - Il y a assez en remplacement de . dégradée
-
 Manque :
 Manque . mixte:
   le maximum de:
@@ -90,67 +74,10 @@ Manque . dégradée :
     - Longueur à planter minimum . dégradée - Reliquat . de mixte en remplacement de dégradée - Reliquat . de arbustive en remplacement de dégradée - Reliquat . de buissonnante en remplacement de dégradée
 
 
-Répartition effective :
-
-Répartition effective . Mixte utilisée en remplacement de mixte:
-  le minimum de:
-    - Longueur à planter . mixte
-    - Longueur à planter minimum . mixte
-
-
-Répartition effective . variable mixte alignement:
-  le maximum de:
-    - 0
-    - Longueur à planter minimum . alignement - Longueur à planter . alignement
-
-
-Répartition effective . Mixte utilisée en remplacement d'alignement:
-  le minimum de:
-    - Reliquat . de mixte en remplacement de alignement
-    - variable mixte alignement
-
-
-
-Répartition effective . Alignement utilisé en remplacement d'alignement:
-  le minimum de:
-    - Longueur à planter . alignement
-    - Longueur à planter minimum . alignement
-
-
-
-Répartition effective . Arbustive utilisée en remplacement d'arbustive:
-  le minimum de:
-    - Longueur à planter . arbustive
-    - Longueur à planter minimum . arbustive
-
-
-
-Répartition effective . Buissonnante utilisée en remplacement de buissonnante:
-    le minimum de:
-      - Longueur à planter . buissonnante
-      - Longueur à planter minimum . buissonnante
-
-Répartition effective . variable arbustive buissonnante:
-    le maximum de:
-      - 0
-      - Longueur à planter minimum . buissonnante - Longueur à planter . buissonnante
-
-Répartition effective . Arbustive utilisée en remplacement de buissonnante:
-    le minimum de:
-      - Reliquat . de arbustive en remplacement de buissonnante
-      - variable arbustive buissonnante
-
-Répartition effective . Mixte utilisée en remplacement de dégradée:
-    le minimum de:
-      - Longueur à planter minimum . dégradée
-      - Reliquat . de mixte en remplacement de dégradée
-
-Répartition effective . Arbustive utilisée en remplacement de dégradée:
-    le minimum de:
-      - Longueur à planter minimum . dégradée
-      - Reliquat . de arbustive en remplacement de dégradée
-
-Répartition effective . Buissonnante utilisée en remplacement de dégradée:
-    le minimum de:
-      - Longueur à planter minimum . dégradée
-      - Reliquat . de buissonnante en remplacement de dégradée
+Qualité globalement suffisante:
+  toutes ces conditions:
+    - Manque . mixte = 0
+    - Manque . alignement = 0
+    - Manque . arbustive = 0
+    - Manque . buissonnante = 0
+    - Manque . dégradée = 0

@@ -2,26 +2,22 @@ import Engine from 'publicodes';
 import { parse } from 'yaml';
 import fs from 'fs';
 
-const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
-
-const parsedRules = parse(rules);
-
-// On initialise un moteur en lui donnant le publicodes sous forme d'objet javascript.
-// Ce publicodes va être parsé
-const engine = new Engine(parsedRules);
-
 
 export function evaluateQuality(data) {
+  const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
+  const parsedRules = parse(rules);
+  const engine = new Engine(parsedRules);
+
     engine.setSituation({
-        "Longueur à planter minimum . mixte": data["LPm_5"],
-        "Longueur à planter minimum . alignement": data["LPm_4"],
-        "Longueur à planter minimum . arbustive": data["LPm_3"],
-        "Longueur à planter minimum . buissonnante": data["LPm_2"],
-        "Longueur à planter minimum . dégradée": data["LPm_1"],
-        "Longueur à planter . mixte": data["LP_5"],
-        "Longueur à planter . alignement": data["LP_4"],
-        "Longueur à planter . arbustive": data["LP_3"],
-        "Longueur à planter . buissonnante": data["LP_2"],
+        "Longueur à planter minimum . mixte": data["minimum_lengths_to_plant"]["mixte"],
+        "Longueur à planter minimum . alignement": data["minimum_lengths_to_plant"]["alignement"],
+        "Longueur à planter minimum . arbustive": data["minimum_lengths_to_plant"]["arbustive"],
+        "Longueur à planter minimum . buissonnante": data["minimum_lengths_to_plant"]["buissonnante"],
+        "Longueur à planter minimum . dégradée": data["minimum_lengths_to_plant"]["degradee"],
+        "Longueur à planter . mixte": data["lengths_to_plant"]["mixte"],
+        "Longueur à planter . alignement": data["lengths_to_plant"]["alignement"],
+        "Longueur à planter . arbustive": data["lengths_to_plant"]["arbustive"],
+        "Longueur à planter . buissonnante": data["lengths_to_plant"]["buissonnante"],
     });
     return {
         isQualitySufficient: engine.evaluate('Qualité globalement suffisante').nodeValue,
