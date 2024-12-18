@@ -6,7 +6,7 @@ from envergo.hedges.tests.factories import HedgeDataFactory
 pytestmark = pytest.mark.django_db
 
 
-def test_is_planted_hedge_quality_sufficient():
+def test_minimum_lengths_to_plant():
     hedges = HedgeDataFactory(
         data=[
             {
@@ -62,7 +62,7 @@ def test_is_planted_hedge_quality_sufficient():
                 "type": "TO_REMOVE",
                 "latLngs": [
                     {"lat": 43.694328968092876, "lng": 3.615493029356003},
-                    {"lat": 43.69419515400783, "lng": 3.6153347790241246},
+                    {"lat": 43.69419215400783, "lng": 3.6153347790241246},
                 ],
                 "additionalData": {
                     "typeHaie": "mixte",
@@ -78,7 +78,7 @@ def test_is_planted_hedge_quality_sufficient():
                 "type": "TO_REMOVE",
                 "latLngs": [
                     {"lat": 43.69430763543265, "lng": 3.615543991327286},
-                    {"lat": 43.694238789068386, "lng": 3.6154729127883916},
+                    {"lat": 43.694235789068386, "lng": 3.6154729127883916},
                 ],
                 "additionalData": {
                     "typeHaie": "alignement",
@@ -91,9 +91,10 @@ def test_is_planted_hedge_quality_sufficient():
             },
         ]
     )
-    length_to_compensate = hedges._get_length_to_compensate()
+    minimum_lengths_to_plant = hedges._get_minimum_lengths_to_plant()
 
-    assert round(length_to_compensate["buissonnante"]) == R * (50 + 40)
-    assert round(length_to_compensate["arbustive"]) == R * 30
-    assert round(length_to_compensate["mixte"]) == R * 20
-    assert round(length_to_compensate["alignement"]) == R * 10
+    assert round(minimum_lengths_to_plant["degradee"]) == R * 50
+    assert round(minimum_lengths_to_plant["buissonnante"]) == R * 40
+    assert round(minimum_lengths_to_plant["arbustive"]) == R * 30
+    assert round(minimum_lengths_to_plant["mixte"]) == R * 20
+    assert round(minimum_lengths_to_plant["alignement"]) == R * 10

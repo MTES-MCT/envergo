@@ -3,10 +3,11 @@ import { parse } from 'yaml';
 import fs from 'fs';
 
 
+const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
+const parsedRules = parse(rules);
+const engine = new Engine(parsedRules);
+
 export function evaluateQuality(data) {
-  const rules = fs.readFileSync('./dist/hedges/quality.publicodes', 'utf8');
-  const parsedRules = parse(rules);
-  const engine = new Engine(parsedRules);
 
     engine.setSituation({
         "Longueur à planter minimum . mixte": data["minimum_lengths_to_plant"]["mixte"],
