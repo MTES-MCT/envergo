@@ -1,0 +1,22 @@
+{
+  "name": "publicodes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "gulp"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "publicodes": "^1.6.1"
+  },
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-nodemon": "^2.5.0",
+    "gulp-uglify": "^3.0.2",
+    "nodemon": "^3.1.9"
+  }
+}
