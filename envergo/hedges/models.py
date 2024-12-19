@@ -205,7 +205,7 @@ class HedgeData(models.Model):
 
         filters = [h.get_species_filter() for h in self.hedges_to_remove()]
         union = reduce(operator.or_, filters)
-        qs = Species.objects.filter(union)
+        qs = Species.objects.filter(union).order_by("group", "common_name")
         return qs
 
 
