@@ -13,6 +13,10 @@
   </p>
 {% endblock %}
 
+{% block liability_info %}
+  {% show_haie_plantation_liability_info moulinette.result plantation_evaluation %}
+{% endblock %}
+
 {% block extra_js %}
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
 {% endblock %}
