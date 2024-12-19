@@ -1,7 +1,8 @@
-import { src, dest, parallel, series, watch } from 'gulp';
+import { src, dest, parallel, series } from 'gulp';
 import uglify from 'gulp-uglify';
 import rename from 'gulp-rename';
 import nodemon from 'gulp-nodemon';
+import { spawn } from 'child_process';
 
 // Paths configuration
 const paths = {
@@ -26,6 +27,15 @@ function copyPublicodes() {
 
 // Serve Node.js application
 function serveNode(cb) {
+    const server = spawn('node', ['index.js'], { stdio: 'inherit' });
+    server.on('close', (code) => {
+        console.log(`Server process exited with code ${code}`);
+        cb();
+    });
+}
+
+// Watch Node.js application
+function watchNode(cb) {
     let started = false;
     return nodemon({
         script: 'index.js',
@@ -38,11 +48,7 @@ function serveNode(cb) {
     });
 }
 
-// Watch for changes
-function watchFiles() {
-    watch(paths.publicodes, copyPublicodes);
-    watch(paths.js, scripts);
-}
-
 // Default task
-export default series(parallel(scripts, copyPublicodes), serveNode, watchFiles);
+export default series(parallel(scripts, copyPublicodes), serveNode);
+
+export const watch = series(parallel(scripts, copyPublicodes), watchNode);

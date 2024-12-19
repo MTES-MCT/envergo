@@ -6,4 +6,4 @@ echo "Starting the Publicodes node app ($DJANGO_SETTINGS_MODULE) as user `whoami
 cd publicodes
 
 # Start the Node.js application
-npm run start
+npm run serve

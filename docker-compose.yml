@@ -54,7 +54,7 @@ services:
       - .:/app:z
       # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
       - envergo_publicodes_modules:/app/publicodes/node_modules
-    command: npm run start
+    command: npm run watch
     ports:
       - "4000:4000"
 
