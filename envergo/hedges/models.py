@@ -6,6 +6,7 @@ from functools import reduce
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
+from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString
 
@@ -216,10 +217,21 @@ HEDGE_TYPES = (
     ("mixte", "Haie mixte"),
 )
 
+SPECIES_GROUPS = Choices(
+    ("amphibiens", "Amphibiens"),
+    ("chauves-souris", "Chauves-souris"),
+    ("flore", "Flore"),
+    ("insectes", "Insectes"),
+    ("mammifères-terrestres", "Mammifères terrestres"),
+    ("oiseaux", "Oiseaux"),
+    ("reptile", "Reptile"),
+)
+
 
 class Species(models.Model):
     """Represent a single species."""
 
+    group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
     common_name = models.CharField("Nom commun", max_length=255)
     scientific_name = models.CharField("Nom scientifique", max_length=255)
     hedge_types = ArrayField(
