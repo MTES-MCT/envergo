@@ -91,6 +91,12 @@ class SpeciesAdminForm(forms.ModelForm):
 
 @admin.register(Species)
 class SpeciesAdmin(admin.ModelAdmin):
-    list_display = ["common_name", "scientific_name"]
+    list_display = [
+        "common_name",
+        "scientific_name",
+        "group",
+        "hedge_types",
+    ]
     ordering = ["-common_name"]
     form = SpeciesAdminForm
+    list_filter = ["group"]
