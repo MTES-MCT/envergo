@@ -582,8 +582,12 @@ class MoulinetteResultPlantation(MoulinetteResult):
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
         context["is_result_plantation"] = True
+        context["plantation_evaluation"] = moulinette.catalog["haies"].evaluate()
         context["is_ready_for_submission"] = (
-            moulinette.result == "soumis" if moulinette else None
+            context["plantation_evaluation"].result == "adequate"
+            and moulinette.result == "soumis"
+            if moulinette
+            else None
         )
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
