@@ -16,7 +16,6 @@ from envergo.moulinette.models import get_moulinette_class_from_site
 
 register = template.Library()
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -251,6 +250,29 @@ def show_haie_moulinette_liability_info(context, result):
         logger.error(
             "Template for GUH liability info is missing.",
             extra={"result": result, "template_name": template_name},
+        )
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_plantation_liability_info(
+    context, moulinette_result, plantation_evaluation
+):
+    """Render the liability_info content depending on the result and plantation evaluation for the result p page."""
+
+    template_name = f"haie/moulinette/plantation_liability_info/{moulinette_result}_{plantation_evaluation.result}.html"
+    try:
+        content = render_to_string((template_name,), context.flatten())
+    except TemplateDoesNotExist:
+        logger.error(
+            "Template for GUH liability info is missing.",
+            extra={
+                "moulinette_result": moulinette_result,
+                "plantation_evaluation": plantation_evaluation.result,
+                "template_name": template_name,
+            },
         )
         content = ""
 
