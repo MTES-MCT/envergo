@@ -886,6 +886,8 @@ class ConfigHaie(ConfigBase):
             ("url_moulinette", "Url de la simulation"),
             ("url_projet", "Url du projet de dossier"),
             ("ref_projet", "Référence du projet de dossier"),
+            ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
+            ("proximite_mare", "Proximité d'une mare (booléen)"),
         }
 
         available_sources = {
@@ -894,6 +896,7 @@ class ConfigHaie(ConfigBase):
         }
 
         regulation_results = set()
+        criteria_results = set()
 
         for regulation in regulations.all():
             regulation_sources = set()
@@ -904,6 +907,13 @@ class ConfigHaie(ConfigBase):
                 )
             )
             for criterion in regulation.criteria.all():
+                criteria_results.add(
+                    (
+                        f"{regulation.slug}.{criterion.slug}.result_code",
+                        f"Code de résultat du critère {criterion.backend_title} de la "
+                        f"réglementation {regulation.regulation}",
+                    )
+                )
                 form_class = criterion.evaluator.form_class
                 if form_class:
                     regulation_sources.update(
@@ -919,6 +929,7 @@ class ConfigHaie(ConfigBase):
                 )
 
         available_sources["Résultats réglementation"] = regulation_results
+        available_sources["Résultats des critères"] = criteria_results
         available_sources["Variables projet"] = identified_sources
 
         return available_sources
