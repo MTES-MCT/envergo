@@ -29,11 +29,23 @@ class Hedge:
 
     def __init__(self, id, latLngs, type, additionalData=None):
         self.id = id  # The edge reference, e.g A1, A2…
+        self.latLngs = latLngs
         self.geometry = LineString(
             [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
         self.additionalData = additionalData or {}
+
+    def toDict(self):
+        """Export hedge data back as a dict.
+
+        This is only useful for tests."""
+        return {
+            "id": self.id,
+            "type": self.type,
+            "additionalData": self.additionalData,
+            "latLngs": self.latLngs,
+        }
 
     @property
     def length(self):
