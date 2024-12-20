@@ -359,6 +359,7 @@ class PetitionProjectMixin(MoulinetteMixin):
         context["moulinette"] = self.moulinette
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
+        context["petition_project"] = self.petition_project
         return context
 
 
@@ -391,6 +392,98 @@ class PetitionProjectAutoRedirection(View):
 
 class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
     template_name = "haie/petitions/instructor_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        length_to_remove = self.petition_project.hedge_data.length_to_remove()
+        length_to_plant = self.petition_project.hedge_data.length_to_plant()
+        context["project_details"] = (("Référence", self.petition_project.reference),)
+
+        context["project_details_removal"] = (
+            (
+                "Nombre de tracés",
+                len(self.petition_project.hedge_data.hedges_to_remove()),
+            ),
+            ("Total linéaire détruit", length_to_remove),
+        )
+
+        context["project_details_plantation"] = (
+            (
+                "Nombre de tracés",
+                len(self.petition_project.hedge_data.hedges_to_plant()),
+            ),
+            ("Total linéaire planté", length_to_plant),
+            (
+                "Ratio en longueur",
+                (
+                    round(length_to_plant / length_to_remove, 2)
+                    if length_to_remove
+                    else ""
+                ),
+                "longueur plantée / longueur détruite",
+            ),
+        )
+        lineaire_total = self.moulinette.catalog.get("lineaire_total", "")
+        lineaire_detruit_pac = self.petition_project.hedge_data.lineaire_detruit_pac()
+        context["bcae8"] = (
+            (
+                "Nombre de tracés sur parcelle PAC",
+                len(self.petition_project.hedge_data.hedges_to_remove_pac()),
+            ),
+            ("Longueur sur parcelle PAC", lineaire_detruit_pac),
+            ("Total linéaire exploitation déclaré", lineaire_total),
+            ("Motif", self.moulinette.catalog.get("motif", "")),
+        )
+
+        context["bcae8_removal"] = (
+            (
+                "Nombre de tracés sur parcelle PAC",
+                len(self.petition_project.hedge_data.hedges_to_remove_pac()),
+            ),
+            (
+                "Total linéaire détruit",
+                self.petition_project.hedge_data.lineaire_detruit_pac_including_alignement(),
+            ),
+            (
+                "Total linéaire détruit hors alignement d’arbres",
+                self.petition_project.hedge_data.lineaire_detruit_pac(),
+            ),
+            (
+                "Pourcentage détruit / total linéaire",
+                (
+                    f"{lineaire_detruit_pac/lineaire_total*100} %"
+                    if lineaire_total
+                    else ""
+                ),
+            ),
+        )
+        lineaire_plante_pac = self.petition_project.hedge_data.lineaire_plante_pac()
+        context["bcae8_plantation"] = (
+            (
+                "Nombre de tracés plantés hors alignement d’arbres",
+                len(self.petition_project.hedge_data.hedges_to_plant_pac()),
+            ),
+            (
+                "Total linéaire planté hors alignement d’arbres",
+                self.petition_project.hedge_data.lineaire_plante_pac(),
+            ),
+            (
+                "Ratio en longueur",
+                (
+                    round(lineaire_plante_pac / lineaire_detruit_pac, 2)
+                    if lineaire_total
+                    else ""
+                ),
+                "longueur plantée (hors type 4) / longueur détruite (hors type 4)",
+            ),
+        )
+
+        context["ee"] = (
+            # TODO
+        )
+
+        return context
 
 
 class Alert:
