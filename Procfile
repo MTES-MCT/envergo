@@ -13,3 +13,6 @@ postdeploy: bash bin/post_deploy.sh
 
 # Run celery worker
 worker: bash bin/start_celery_worker.sh
+
+# Run publicodes node container
+publicodes: bash bin/start_publicodes.sh

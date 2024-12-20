@@ -1,0 +1,25 @@
+{% load moulinette %}
+
+<h6>Le projet doit être modifié pour être autorisé</h6>
+
+<p>Le projet de plantation proposé ne semble pas adapté au regard des haies détruites.</p>
+
+<p>
+  Nous vous invitons à modifier votre projet de plantation en suivant les indications ci-dessus pour que le projet
+  puisse être autorisé.
+</p>
+
+{% if not is_read_only %}
+  <p>
+    <a href="{{ edit_plantation_url }}"
+       class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+       data-event-category="Content"
+       data-event-action="Edit"
+       data-event-name="Main">Modifier le projet de plantation</a>
+  </p>
+  <p>
+    Vous pouvez tout de même choisir de
+    <a class="demarche-simplifiee-btn" href="#">déposer votre demande d’autorisation.</a>
+    Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+  </p>
+{% endif %}

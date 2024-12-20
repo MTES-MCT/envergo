@@ -422,3 +422,7 @@ BREVO = {
         "BREVO_NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID", default=None
     ),
 }
+
+PUBLICODES_SERVICE_URL = env(
+    "DJANGO_PUBLICODES_SERVICE_URL", default="http://publicodes:4000/"
+)
