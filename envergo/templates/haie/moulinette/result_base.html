@@ -52,9 +52,7 @@
     {% endfor %}
 
     {% if forloop.counter0 == 0 %}
-      {% block liability_info %}
-        {% show_haie_moulinette_liability_info moulinette.result %}
-      {% endblock %}
+      {% block liability_info %}{% endblock %}
     {% endif %}
   {% endfor %}
   {% include 'haie/moulinette/_demarches_simplifiees_form.html' %}

@@ -19,6 +19,7 @@ from envergo.analytics.utils import (
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
@@ -582,8 +583,9 @@ class MoulinetteResultPlantation(MoulinetteResult):
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
         context["is_result_plantation"] = True
-        context["is_ready_for_submission"] = (
-            moulinette.result == "soumis" if moulinette else None
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            moulinette, moulinette.catalog["haies"]
         )
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
