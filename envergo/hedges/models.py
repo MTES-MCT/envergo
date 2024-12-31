@@ -48,6 +48,26 @@ class Hedge:
     def hedge_type(self):
         return self.additionalData.get("typeHaie", None)
 
+    @property
+    def proximite_mare(self):
+        return self.additionalData.get("proximiteMare", None)
+
+    @property
+    def vieil_arbre(self):
+        return self.additionalData.get("vieilArbre", None)
+
+    @property
+    def proximite_point_eau(self):
+        return self.additionalData.get("proximitePointEau", None)
+
+    @property
+    def connexion_boisement(self):
+        return self.additionalData.get("connexionBoisement", None)
+
+    @property
+    def sous_ligne_electrique(self):
+        return self.additionalData.get("sousLigneElectrique", None)
+
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

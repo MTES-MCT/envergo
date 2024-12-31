@@ -1,0 +1,10 @@
+{% for label, value, comment in items %}
+  <div>
+    <span><b>{{ label }} :</b></span>
+    <span>{{ value }}</span>
+    {% if comment %}
+      <br />
+      <span class="fr-text--xs">{{ comment }}</span>
+    {% endif %}
+  </div>
+{% endfor %}
