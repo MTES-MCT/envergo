@@ -13,7 +13,7 @@ from django.views import View
 from django.views.generic import FormView
 
 from envergo.analytics.utils import get_matomo_tags, log_event
-from envergo.hedges.models import PlantationEvaluator
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteHaie,
