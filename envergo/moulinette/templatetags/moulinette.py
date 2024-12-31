@@ -214,25 +214,21 @@ def show_haie_moulinette_result(context, result, hedges_field):
 
 
 @register.simple_tag(takes_context=True)
-def show_plantation_result(context, result, plantation_evaluation):
+def show_plantation_result(context, plantation_evaluation):
     """Render the global plantation result content."""
     context_data = context.flatten()
-
-    result_matrix = {
-        ("interdit", "inadequate"): "interdit",
-        ("interdit", "adequate"): "interdit",
-        ("soumis", "inadequate"): "inadequate",
-        ("soumis", "adequate"): "soumis",
-    }
-
-    result_code = result_matrix.get((result, plantation_evaluation.result), "interdit")
-    template_name = f"haie/moulinette/plantation_result/{result_code}.html"
+    template_name = (
+        f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
+    )
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
             "Template for GUH global plantation result is missing.",
-            extra={"result": result, "template_name": template_name},
+            extra={
+                "result": plantation_evaluation.global_result,
+                "template_name": template_name,
+            },
         )
         content = ""
 
@@ -248,7 +244,7 @@ def show_haie_moulinette_liability_info(context, result):
         content = render_to_string((template_name,), context.flatten())
     except TemplateDoesNotExist:
         logger.error(
-            "Template for GUH liability info is missing.",
+            f"Template for GUH liability info is missing. {result}",
             extra={"result": result, "template_name": template_name},
         )
         content = ""
@@ -257,20 +253,17 @@ def show_haie_moulinette_liability_info(context, result):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_plantation_liability_info(
-    context, moulinette_result, plantation_evaluation
-):
+def show_haie_plantation_liability_info(context, plantation_evaluation):
     """Render the liability_info content depending on the result and plantation evaluation for the result p page."""
 
-    template_name = f"haie/moulinette/plantation_liability_info/{moulinette_result}_{plantation_evaluation.result}.html"
+    template_name = f"haie/moulinette/plantation_liability_info/{plantation_evaluation.result_code}.html"
     try:
         content = render_to_string((template_name,), context.flatten())
     except TemplateDoesNotExist:
         logger.error(
-            "Template for GUH liability info is missing.",
+            f"Template for GUH liability info is missing. {plantation_evaluation.result_code}",
             extra={
-                "moulinette_result": moulinette_result,
-                "plantation_evaluation": plantation_evaluation.result,
+                "plantation_evaluation": plantation_evaluation.result_code,
                 "template_name": template_name,
             },
         )
@@ -297,7 +290,7 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
-            "Template for GUH plantation evaluation is missing.",
+            f"Template for GUH plantation evaluation is missing. {plantation_evaluation.result}",
             extra={
                 "plantation_evaluation": plantation_evaluation.result,
                 "template_name": template_name,

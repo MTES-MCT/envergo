@@ -1,8 +1,6 @@
 import operator
 import uuid
-from dataclasses import dataclass
 from functools import reduce
-from typing import Literal
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -108,12 +106,6 @@ class Hedge:
         return qs
 
 
-@dataclass
-class EvaluationResult:
-    result: Literal["adequate", "inadequate"]
-    conditions: list[str]
-
-
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -165,45 +157,10 @@ class HedgeData(models.Model):
             )
         )
 
-    def is_not_planting_under_power_line(self):
-        """Returns True if there is NO hedges to plant, containing high-growing trees (type alignement or mixte),
-        that are under power line"""
-        return not any(
-            h.hedge_type in ["alignement", "mixte"]
-            and h.additionalData.get("sousLigneElectrique", False)
-            for h in self.hedges_to_plant()
-        )
-
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
         return round(R * self.length_to_remove())
-
-    def is_length_to_plant_sufficient(self):
-        """Returns True if the length of hedges to plant is sufficient
-
-        LP : longueur totale plantée
-        LD : longueur totale détruite
-        R : coefficient de replantation exigée
-
-        Condition à remplir :
-        LP ≥ R x LD
-        """
-        return self.length_to_plant() >= self.minimum_length_to_plant()
-
-    def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
-        conditions = {
-            "length_to_plant": self.is_length_to_plant_sufficient(),
-            "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
-        }
-        result = EvaluationResult(
-            result="adequate" if all(conditions.values()) else "inadequate",
-            conditions=[
-                condition for condition in conditions if not conditions[condition]
-            ],
-        )
-        return result
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""

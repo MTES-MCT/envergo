@@ -5,7 +5,7 @@
 {% block result_header %}
   {% show_haie_plantation_evaluation plantation_evaluation %}
 
-  <div class="alt fr-p-3w fr-mb-3w">{% show_plantation_result moulinette.result plantation_evaluation %}</div>
+  <div class="alt fr-p-3w fr-mb-3w">{% show_plantation_result plantation_evaluation %}</div>
 
   <p class="fr-hint-text fr-mb-3w">
     Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block liability_info %}
-  {% show_haie_plantation_liability_info moulinette.result plantation_evaluation %}
+  {% show_haie_plantation_liability_info plantation_evaluation %}
 {% endblock %}
 
 {% block extra_js %}
