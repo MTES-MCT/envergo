@@ -300,8 +300,8 @@ def fetch_project_details_from_demarches_simplifiees(
 ) -> ProjectDetails | None:
 
     if (
-        config.demarches_simplifiees_pacage_id is None
-        or config.demarches_simplifiees_city_id is None
+        not config.demarches_simplifiees_pacage_id
+        or not config.demarches_simplifiees_city_id
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",
@@ -408,7 +408,7 @@ Requête envoyée :
 
     data = response.json() or {}
 
-    dossier = (data.get("data") or {}).get("dossier") or {}
+    dossier = (data.get("data") or {}).get("dossier")
 
     if dossier is None:
         logger.error(
