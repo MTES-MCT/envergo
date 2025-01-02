@@ -329,28 +329,28 @@ def fetch_project_details_from_demarches_simplifiees(
     variables = f"""{{
               "dossierNumber":{dossier_number}
             }}"""
-    query = """query getDossier($dossierNumber: Int!) {{
-          dossier(number: $dossierNumber) {{
+    query = """query getDossier($dossierNumber: Int!) {
+          dossier(number: $dossierNumber) {
             id
             number
             state
-            usager {{
+            usager {
               email
-            }}
-            demandeur {{
-              ... on PersonnePhysique {{
+            }
+            demandeur {
+              ... on PersonnePhysique {
                 civilite
                 nom
                 prenom
                 email
-              }}
-            }}
-            champs {{
+              }
+            }
+            champs {
               id
               stringValue
-            }}
-          }}
-        }}"""
+            }
+          }
+        }"""
 
     body = {
         "query": query,
