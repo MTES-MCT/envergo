@@ -22,6 +22,7 @@ from envergo.moulinette.models import (
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
+from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details, generate_key
 from envergo.utils.urls import extract_param_from_url
@@ -346,21 +347,20 @@ class PetitionProjectCreate(FormView):
         )
 
 
-class PetitionProjectDetail(MoulinetteMixin, FormView):
-    template_name = "haie/moulinette/result_plantation.html"
-
+class PetitionProjectMixin(MoulinetteMixin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.moulinette = None
+        self.petition_project = None
 
     def get(self, request, *args, **kwargs):
 
         # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
-        petition_project = get_object_or_404(
+        self.petition_project = get_object_or_404(
             PetitionProject.objects.select_related("hedge_data"),
             reference=self.kwargs["reference"],
         )
-        parsed_url = urlparse(petition_project.moulinette_url)
+        parsed_url = urlparse(self.petition_project.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
         raw_data = QueryDict(query_string)
@@ -369,7 +369,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.request.moulinette_data = raw_data
 
         moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = petition_project.hedge_data
+        moulinette_data["haies"] = self.petition_project.hedge_data
 
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(
@@ -385,9 +385,26 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             logger.warning(
                 "A petition project has missing data. This should not happen unless regulations have changed."
                 "We should implement static simulation/project to avoid this case.",
-                extra={"reference": petition_project.reference},
+                extra={"reference": self.petition_project.reference},
             )
             raise NotImplementedError("We do not handle uncompleted project")
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["moulinette"] = self.moulinette
+        context["base_result"] = self.moulinette.get_result_template()
+        context["is_read_only"] = True
+        context["petition_project"] = self.petition_project
+        return context
+
+
+class PetitionProjectDetail(PetitionProjectMixin, FormView):
+    template_name = "haie/moulinette/result_plantation.html"
+
+    def get(self, request, *args, **kwargs):
+        result = super().get(request, *args, **kwargs)
 
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
         if not request.session.pop("auto_redirection", False):
@@ -395,11 +412,11 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
                 "projet",
                 "consultation",
                 self.request,
-                **petition_project.get_log_event_data(),
+                **self.petition_project.get_log_event_data(),
                 **get_matomo_tags(self.request),
             )
 
-        return super().get(request, *args, **kwargs)
+        return result
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -418,6 +435,19 @@ class PetitionProjectAutoRedirection(View):
         request.session["auto_redirection"] = True
         # Redirect to the petition_project view
         return redirect(reverse("petition_project", kwargs=kwargs))
+
+
+class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
+    template_name = "haie/petitions/instructor_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["instructor_information"] = compute_instructor_informations(
+            self.petition_project, self.moulinette
+        )
+
+        return context
 
 
 class Alert:

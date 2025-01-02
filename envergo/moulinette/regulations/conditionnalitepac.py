@@ -152,7 +152,6 @@ class Bcae8(CriterionEvaluator):
         "interdit_transfert_parcelles": RESULTS.interdit,
         "interdit_amelioration_culture": RESULTS.interdit,
         "interdit_amelioration_ecologique": RESULTS.interdit,
-        "interdit_meilleur_emplacement": RESULTS.interdit,
         "interdit_chemin_acces": RESULTS.interdit,
         "interdit_amenagement": RESULTS.interdit,
         "interdit_embellissement": RESULTS.interdit,

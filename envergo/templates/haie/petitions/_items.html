@@ -1,0 +1,41 @@
+{% load utils %}
+
+{% for item in items %}
+  <div>
+    <span><b>{{ item.label }} :</b></span>
+
+    {% if item.value|is_type:"ItemDetails" %}
+      <span>
+        {% if item.value.result %}
+          Oui
+        {% else %}
+          Non
+        {% endif %}
+      </span>
+      {% if item.value.result %}
+        {% for details in item.value.details %}
+          <br />
+          <span>{{ details.label }} : <span>
+            {{ details.value }}
+            {% if details.unit %}{{ details.unit }}{% endif %}
+          </span>
+        </span>
+      {% endfor %}
+    {% endif %}
+    {% if comment %}
+      <br />
+      <span class="fr-text--xs">{{ comment }}</span>
+    {% endif %}
+  {% else %}
+    <span>
+      {{ item.value }}
+      {% if item.unit %}{{ item.unit }}{% endif %}
+    </span>
+  {% endif %}
+
+  {% if item.comment %}
+    <br />
+    <span class="fr-text--xs">{{ item.comment }}</span>
+  {% endif %}
+</div>
+{% endfor %}
