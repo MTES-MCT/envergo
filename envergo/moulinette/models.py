@@ -809,6 +809,18 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
+    demarches_simplifiees_city_id = models.CharField(
+        'Identifiant de la "commune principale" dans Démarches Simplifiées',
+        blank=True,
+        max_length=64,
+    )
+
+    demarches_simplifiees_pacage_id = models.CharField(
+        'Identifiant du "numéro de PACAGE" dans Démarches Simplifiées',
+        blank=True,
+        max_length=64,
+    )
+
     def __str__(self):
         return self.department.get_department_display()
 

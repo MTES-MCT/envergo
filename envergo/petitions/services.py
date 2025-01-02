@@ -1,4 +1,16 @@
+import logging
 from dataclasses import dataclass
+from textwrap import dedent
+
+import requests
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.urls import reverse
+
+from envergo.moulinette.models import ConfigHaie
+from envergo.utils.mattermost import notify
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -39,6 +51,13 @@ class InstructorInformation:
 def compute_instructor_informations(
     petition_project, moulinette
 ) -> list[InstructorInformation]:
+
+    department = moulinette.catalog.get("department")  # department is mandatory
+    config = ConfigHaie.objects.get(department__department=department)
+    ds_details = fetch_project_details_from_demarches_simplifiees(
+        petition_project.demarches_simplifiees_dossier_number, config
+    )
+
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
     length_to_plant = hedge_data.length_to_plant()
@@ -85,6 +104,16 @@ def compute_instructor_informations(
             ),
         ],
     )
+
+    if ds_details:
+        if ds_details.city:
+            project_details.items.append(
+                Item("Commune principale", ds_details.city, None, None)
+            )
+        if ds_details.applicant_name:
+            project_details.items.append(
+                Item("Nom du demandeur", ds_details.applicant_name, None, None)
+            )
 
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
@@ -154,6 +183,10 @@ def compute_instructor_informations(
             ),
         ],
     )
+
+    if ds_details:
+        if ds_details.pacage:
+            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
 
     hedges_to_remove_near_pond = [
         h for h in hedge_data.hedges_to_remove() if h.proximite_mare
@@ -253,3 +286,191 @@ def compute_instructor_informations(
     )
 
     return [project_details, bcae8, ep]
+
+
+@dataclass
+class ProjectDetails:
+    applicant_name: str | None
+    city: str | None
+    pacage: str | None
+
+
+def fetch_project_details_from_demarches_simplifiees(
+    dossier_number, config
+) -> ProjectDetails | None:
+
+    if (
+        config.demarches_simplifiees_pacage_id is None
+        or config.demarches_simplifiees_city_id is None
+    ):
+        logger.error(
+            "Missing Demarches Simplifiees ids in Haie Config",
+            extra={
+                "config.id": config.id,
+            },
+        )
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:moulinette_confighaie_change",
+            args=[config.id],
+        )
+        message = f"""\
+        ### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
+
+        Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
+        dans la configuration du département {config.department.department}.
+
+        [Admin django](https://{current_site.domain}{admin_url})
+        """
+        notify(dedent(message), "haie")
+        return None
+
+    api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
+    variables = f"""{{
+              "dossierNumber":{dossier_number}
+            }}"""
+    query = """query getDossier($dossierNumber: Int!) {{
+          dossier(number: $dossierNumber) {{
+            id
+            number
+            state
+            usager {{
+              email
+            }}
+            demandeur {{
+              ... on PersonnePhysique {{
+                civilite
+                nom
+                prenom
+                email
+              }}
+            }}
+            champs {{
+              id
+              stringValue
+            }}
+          }}
+        }}"""
+
+    body = {
+        "query": query,
+        "variables": variables,
+    }
+    response = requests.post(
+        api_url,
+        json=body,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE['GRAPHQL_API_BEARER_TOKEN']}",
+        },
+    )
+
+    logger.info(
+        f"""
+            Demarches simplifiees API request status: {response.status_code}"
+            * response.text: {response.text},
+            * response.status_code: {response.status_code},
+            * request.url: {api_url},
+            * request.body: {body},
+            """,
+    )
+
+    if response.status_code >= 400:
+        logger.error(
+            "Demarches simplifiees API request failed",
+            extra={
+                "response.text": response.text,
+                "response.status_code": response.status_code,
+                "request.url": api_url,
+                "request.body": body,
+            },
+        )
+
+        message = f"""\
+### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
+
+L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier n°{dossier_number}.
+
+Réponse de Démarches Simplifiées : {response.status_code}
+```
+{response.text}
+```
+
+Requête envoyée :
+* Url: {api_url}
+* Body:
+```
+{body}
+```
+"""
+        notify(dedent(message), "haie")
+        return None
+
+    data = response.json() or {}
+
+    dossier = (data.get("data") or {}).get("dossier") or {}
+
+    if dossier is None:
+        logger.error(
+            "Demarches simplifiees API response is not well formated",
+            extra={
+                "response.json": data,
+                "response.status_code": response.status_code,
+                "request.url": api_url,
+                "request.body": body,
+            },
+        )
+
+        message = f"""\
+### Récupération des informations d'un dossier depuis Démarches-simplifiées : :warning: anomalie
+
+La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le dossier concerné n'a pas été récupéré.
+
+Réponse de Démarches Simplifiées : {response.status_code}
+```
+{response.text}
+```
+
+Requête envoyée :
+* Url: {api_url}
+* Body:
+```
+{body}
+```
+
+"""
+        notify(dedent(message), "haie")
+        return None
+    applicant = dossier.get("demandeur") or {}
+    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
+    applicant_name = (
+        None
+        if applicant_name is None or applicant_name.strip() == ""
+        else applicant_name
+    )
+    city = None
+    pacage = None
+    champs = dossier.get("champs", [])
+
+    city_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_city_id
+        ),
+        None,
+    )
+    if city_field:
+        city = city_field.get("stringValue", None)
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.get("stringValue", None)
+
+    return ProjectDetails(applicant_name, city, pacage)
