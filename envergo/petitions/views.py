@@ -21,6 +21,7 @@ from envergo.moulinette.models import (
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
+from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details, generate_key
 from envergo.utils.urls import extract_param_from_url
@@ -431,139 +432,9 @@ class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        hedge_data = self.petition_project.hedge_data
-        length_to_remove = hedge_data.length_to_remove()
-        length_to_plant = hedge_data.length_to_plant()
-        context["project_details"] = (
-            ("Référence", self.petition_project.reference, None),
-        )
 
-        context["project_details_removal"] = (
-            ("Nombre de tracés", len(hedge_data.hedges_to_remove()), None),
-            ("Total linéaire détruit", f"{length_to_remove} m", None),
-        )
-
-        context["project_details_plantation"] = (
-            ("Nombre de tracés", len(hedge_data.hedges_to_plant()), None),
-            ("Total linéaire planté", f"{length_to_plant} m", None),
-            (
-                "Ratio en longueur",
-                (
-                    round(length_to_plant / length_to_remove, 2)
-                    if length_to_remove
-                    else ""
-                ),
-                "longueur plantée / longueur détruite",
-            ),
-        )
-        lineaire_total = self.moulinette.catalog.get("lineaire_total", "")
-        lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-        context["bcae8"] = (
-            ("Total linéaire exploitation déclaré", f"{lineaire_total} m", None),
-            ("Motif", self.moulinette.catalog.get("motif", ""), None),
-        )
-
-        context["bcae8_removal"] = (
-            (
-                "Nombre de tracés sur parcelle PAC",
-                len(hedge_data.hedges_to_remove_pac()),
-                None,
-            ),
-            (
-                "Total linéaire détruit hors alignement d’arbres",
-                f"{hedge_data.lineaire_detruit_pac()} m",
-                "Sur parcelle PAC, hors alignement d’arbres",
-            ),
-            (
-                "Pourcentage détruit / total linéaire",
-                (
-                    f"{round(lineaire_detruit_pac/lineaire_total*100, 2)} %"
-                    if lineaire_total
-                    else ""
-                ),
-                None,
-            ),
-        )
-        lineaire_plante_pac = hedge_data.lineaire_plante_pac()
-        context["bcae8_plantation"] = (
-            (
-                "Nombre de tracés plantés hors alignement d’arbres",
-                len(hedge_data.hedges_to_plant_pac()),
-                None,
-            ),
-            (
-                "Total linéaire planté",
-                f"{hedge_data.lineaire_plante_pac()} m",
-                "Hors alignement d’arbres",
-            ),
-            (
-                "Ratio en longueur",
-                (
-                    round(lineaire_plante_pac / lineaire_detruit_pac, 2)
-                    if lineaire_total
-                    else ""
-                ),
-                "Longueur plantée / longueur détruite (prises hors alignements d’arbres)",
-            ),
-        )
-        hedges_to_remove_near_pond = [
-            h for h in hedge_data.hedges_to_remove() if h.proximite_mare
-        ]
-        hedges_to_plant_near_pond = [
-            h for h in hedge_data.hedges_to_plant() if h.proximite_mare
-        ]
-
-        hedges_to_remove_woodland_connection = [
-            h for h in hedge_data.hedges_to_remove() if h.connexion_boisement
-        ]
-        hedges_to_plant_woodland_connection = [
-            h for h in hedge_data.hedges_to_plant() if h.connexion_boisement
-        ]
-
-        hedges_to_remove_under_power_line = [
-            h for h in hedge_data.hedges_to_remove() if h.sous_ligne_electrique
-        ]
-        hedges_to_plant_under_power_line = [
-            h for h in hedge_data.hedges_to_plant() if h.sous_ligne_electrique
-        ]
-
-        context["ep"] = (
-            (
-                "Présence d'une mare à moins de 200 m",
-                {
-                    "result": len(hedges_to_remove_near_pond) > 0
-                    or len(hedges_to_plant_near_pond) > 0,
-                    "removal": f"{round(sum(h.length for h in hedges_to_remove_near_pond))} m "
-                    f"• {', '.join([h.id for h in hedges_to_remove_near_pond])}",
-                    "plantation": f"{round(sum(h.length for h in hedges_to_plant_near_pond))} m "
-                    f"• {', '.join([h.id for h in hedges_to_plant_near_pond])}",
-                },
-                None,
-            ),
-            (
-                "Connexion à un boisement ou une haie",
-                {
-                    "result": len(hedges_to_remove_woodland_connection) > 0
-                    or len(hedges_to_plant_woodland_connection) > 0,
-                    "removal": f"{round(sum(h.length for h in hedges_to_remove_woodland_connection))} m "
-                    f"• {', '.join([h.id for h in hedges_to_remove_woodland_connection])}",
-                    "plantation": f"{round(sum(h.length for h in hedges_to_plant_woodland_connection))} m "
-                    f"• {', '.join([h.id for h in hedges_to_plant_woodland_connection])}",
-                },
-                None,
-            ),
-            (
-                "Proximité ligne électrique",
-                {
-                    "result": len(hedges_to_remove_under_power_line) > 0
-                    or len(hedges_to_plant_under_power_line) > 0,
-                    "removal": f"{round(sum(h.length for h in hedges_to_remove_under_power_line))} m "
-                    f"• {', '.join([h.id for h in hedges_to_remove_under_power_line])}",
-                    "plantation": f"{round(sum(h.length for h in hedges_to_plant_under_power_line))} m "
-                    f"• {', '.join([h.id for h in hedges_to_plant_under_power_line])}",
-                },
-                None,
-            ),
+        context["instructor_information"] = compute_instructor_informations(
+            self.petition_project, self.moulinette
         )
 
         return context

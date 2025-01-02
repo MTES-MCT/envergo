@@ -21,74 +21,41 @@
                 <ul class="fr-sidemenu__list">
                   <li class="fr-sidemenu__item fr-sidemenu__item--active">
                     <a class="fr-sidemenu__link"
-                       href="#project-details"
+                       href="#project-specifications"
                        target="_self"
                        aria-current="page">Caractéristiques du projet</a>
                   </li>
-                  <li class="fr-sidemenu__item">
-                    <a class="fr-sidemenu__link" href="#bcae8" target="_self">BCAE 8</a>
-                  </li>
-                  <li class="fr-sidemenu__item">
-                    <a class="fr-sidemenu__link" href="#ep" target="_self">Espèces protégées</a>
-                  </li>
+                  {% for information in instructor_information %}
+                    {% if information.slug %}
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link"
+                           href="#{{ information.slug }}"
+                           target="_self">{{ information.label }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
                 </ul>
               </div>
             </div>
           </nav>
         </div>
-        <div class="fr-col">
-          <section id="project-details">
-            <h1>Caractéristiques du projet</h1>
+        <div id="project-specifications" class="fr-col">
+          <h1>Caractéristiques du projet</h1>
+          {% for information in instructor_information %}
+            <section class="fr-mt-6w"
+                     {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+              {% if information.label %}<h2>{{ information.label }}</h2>{% endif %}
+              {% include "haie/petitions/_items.html" with items=information.items %}
+              {% if information.details %}
+                {% for information_details in information.details %}
+                  <h3 class="fr-mt-4w">{{ information_details.label }}</h3>
 
-            {% include "haie/petitions/_items.html" with items=project_details %}
+                  {% include "haie/petitions/_items.html" with items=information_details.items %}
 
-            <h3 class="fr-mt-4w">Destruction</h3>
-
-            {% include "haie/petitions/_items.html" with items=project_details_removal %}
-
-            <h3 class="fr-mt-4w">Plantation</h3>
-
-            {% include "haie/petitions/_items.html" with items=project_details_plantation %}
-          </section>
-          <section id="bcae8">
-            <h2 class="fr-mt-6w">BCAE 8</h2>
-
-            {% include "haie/petitions/_items.html" with items=bcae8 %}
-
-            <h3 class="fr-mt-4w">Destruction</h3>
-
-            {% include "haie/petitions/_items.html" with items=bcae8_removal %}
-
-            <h3 class="fr-mt-4w">Plantation</h3>
-
-            {% include "haie/petitions/_items.html" with items=bcae8_plantation %}
-          </section>
-          <section id="ep">
-            <h2 class="fr-mt-6w">Espèces protégées</h2>
-
-            {% for label, details, comment in ep %}
-              <div>
-                <span><b>{{ label }} :</b></span>
-                <span>
-                  {% if details.result %}
-                    Oui
-                  {% else %}
-                    Non
-                  {% endif %}
-                </span>
-                {% if details.result %}
-                  <br />
-                  <span>détruit : {{ details.removal }}</span>
-                  <br />
-                  <span>planté : {{ details.plantation }}</span>
-                {% endif %}
-                {% if comment %}
-                  <br />
-                  <span class="fr-text--xs">{{ comment }}</span>
-                {% endif %}
-              </div>
-            {% endfor %}
-          </section>
+                {% endfor %}
+              {% endif %}
+            </section>
+          {% endfor %}
         </div>
       </div>
     </div>

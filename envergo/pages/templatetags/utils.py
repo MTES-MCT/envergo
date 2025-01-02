@@ -116,3 +116,8 @@ def to_list(item):
 def add_string(arg1, arg2):
     """concatenate arg1 & arg2"""
     return str(arg1) + str(arg2)
+
+
+@register.filter
+def is_type(value, type_name):
+    return type(value).__name__ == type_name
