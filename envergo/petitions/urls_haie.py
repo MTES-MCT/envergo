@@ -4,6 +4,7 @@ from envergo.petitions.views import (
     PetitionProjectAutoRedirection,
     PetitionProjectCreate,
     PetitionProjectDetail,
+    PetitionProjectInstructorView,
 )
 
 urlpatterns = [
@@ -18,5 +19,10 @@ urlpatterns = [
         "<slug:reference>/auto-redirection",
         PetitionProjectAutoRedirection.as_view(),
         name="petition_project_auto_redirection",
+    ),
+    path(
+        "<slug:reference>/instruction/",
+        PetitionProjectInstructorView.as_view(),
+        name="petition_project_instructor_view",
     ),
 ]

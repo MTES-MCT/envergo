@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block container %}
+  <section class="fr-py-8w alt">
+    <div class="fr-container">
+      <div class="fr-grid-row">
+        <div class="fr-col fr-col-offset-3">
+          <span class="fr-h1">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number }}</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+  <section class="fr-py-8w">
+    <div class="fr-container">
+      <div class="fr-grid-row">
+        <div class="fr-col fr-col-3">
+          <nav class="fr-sidemenu" aria-labelledby="fr-sidemenu-title">
+            <div class="fr-sidemenu__inner">
+              <div id="fr-sidemenu-wrapper">
+                <ul class="fr-sidemenu__list">
+                  <li class="fr-sidemenu__item fr-sidemenu__item--active">
+                    <a class="fr-sidemenu__link"
+                       href="#project-specifications"
+                       target="_self"
+                       aria-current="page">Caractéristiques du projet</a>
+                  </li>
+                  {% for information in instructor_information %}
+                    {% if information.slug %}
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link"
+                           href="#{{ information.slug }}"
+                           target="_self">{{ information.label }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <div id="project-specifications" class="fr-col">
+          <h1>Caractéristiques du projet</h1>
+          {% for information in instructor_information %}
+            <section class="fr-mt-6w"
+                     {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+              {% if information.label %}<h2>{{ information.label }}</h2>{% endif %}
+              {% include "haie/petitions/_items.html" with items=information.items %}
+              {% if information.details %}
+                {% for information_details in information.details %}
+                  <h3 class="fr-mt-4w">{{ information_details.label }}</h3>
+
+                  {% include "haie/petitions/_items.html" with items=information_details.items %}
+
+                {% endfor %}
+              {% endif %}
+            </section>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </section>
+{% endblock %}

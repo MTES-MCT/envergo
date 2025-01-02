@@ -1,5 +1,5 @@
+import datetime
 import logging
-from datetime import datetime, timedelta
 from textwrap import dedent
 
 import requests
@@ -23,9 +23,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # get all the dossier updated in the last hour
         api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
-        now_utc = datetime.utcnow()
+        now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
-        one_hour_ago_utc = now_utc - timedelta(hours=1)
+        one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
         iso8601_one_hour_ago = one_hour_ago_utc.isoformat() + "Z"
 
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)

@@ -48,6 +48,26 @@ class Hedge:
     def hedge_type(self):
         return self.additionalData.get("typeHaie", None)
 
+    @property
+    def proximite_mare(self):
+        return self.additionalData.get("proximiteMare", None)
+
+    @property
+    def vieil_arbre(self):
+        return self.additionalData.get("vieilArbre", None)
+
+    @property
+    def proximite_point_eau(self):
+        return self.additionalData.get("proximitePointEau", None)
+
+    @property
+    def connexion_boisement(self):
+        return self.additionalData.get("connexionBoisement", None)
+
+    @property
+    def sous_ligne_electrique(self):
+        return self.additionalData.get("sousLigneElectrique", None)
+
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -79,14 +99,25 @@ class HedgeData(models.Model):
     def length_to_remove(self):
         return round(sum(h.length for h in self.hedges_to_remove()))
 
+    def hedges_to_remove_pac(self):
+        return [
+            h
+            for h in self.hedges_to_remove()
+            if h.is_on_pac and h.hedge_type != "alignement"
+        ]
+
+    def hedges_to_plant_pac(self):
+        return [
+            h
+            for h in self.hedges_to_plant()
+            if h.is_on_pac and h.hedge_type != "alignement"
+        ]
+
     def lineaire_detruit_pac(self):
-        return round(
-            sum(
-                h.length
-                for h in self.hedges_to_remove()
-                if h.is_on_pac and h.hedge_type != "alignement"
-            )
-        )
+        return round(sum(h.length for h in self.hedges_to_remove_pac()))
+
+    def lineaire_plante_pac(self):
+        return round(sum(h.length for h in self.hedges_to_plant_pac()))
 
     def lineaire_detruit_pac_including_alignement(self):
         return round(sum(h.length for h in self.hedges_to_remove() if h.is_on_pac))
