@@ -1,0 +1,9 @@
+### Demande de création de compte instructeur
+
+E-mail de la demande : {{ anon_email}}
+
+Actions nécessaires :
+
+ - [examiner la demande et octroyer ou non la permission « Instructeur GUH »]({{ user_url }}) ;
+ - sélectionner les départements associés au compte ;
+ - envoyer manuellement un email de confirmation au demandeur.
