@@ -114,7 +114,7 @@ class PlantationEvaluator:
             "length_to_plant": self.is_length_to_plant_sufficient(),
             "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
         }
-        result = self.EvaluationResult(
+        result = EvaluationResult(
             result=(
                 PlantationResults.Adequate
                 if all(conditions.values())
