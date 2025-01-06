@@ -11,6 +11,10 @@
   </p>
 {% endblock %}
 
+{% block liability_info %}
+  {% show_haie_moulinette_liability_info moulinette.result %}
+{% endblock %}
+
 {% block extra_js %}
   <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='plantation' %}";</script>
   <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>

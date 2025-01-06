@@ -16,7 +16,6 @@ from envergo.moulinette.models import get_moulinette_class_from_site
 
 register = template.Library()
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -197,9 +196,9 @@ def field_summary(field):
 def show_haie_moulinette_result(context, result, hedges_field):
     """Render the global moulinette result content."""
     context_data = context.flatten()
-    context_data["length_to_remove"] = hedges_field.field.clean(
-        hedges_field.value()
-    ).length_to_remove()
+    hedges = hedges_field.field.clean(hedges_field.value())
+    context_data["length_to_remove"] = hedges.length_to_remove()
+    context_data["minimum_length_to_plant"] = hedges.minimum_length_to_plant()
 
     template_name = f"haie/moulinette/result/{result}.html"
     try:
@@ -215,17 +214,21 @@ def show_haie_moulinette_result(context, result, hedges_field):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_plantation_result(context, result):
+def show_plantation_result(context, plantation_evaluation):
     """Render the global plantation result content."""
     context_data = context.flatten()
-
-    template_name = f"haie/moulinette/result_plantation/{result}.html"
+    template_name = (
+        f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
+    )
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
             "Template for GUH global plantation result is missing.",
-            extra={"result": result, "template_name": template_name},
+            extra={
+                "result": plantation_evaluation.global_result,
+                "template_name": template_name,
+            },
         )
         content = ""
 
@@ -241,8 +244,57 @@ def show_haie_moulinette_liability_info(context, result):
         content = render_to_string((template_name,), context.flatten())
     except TemplateDoesNotExist:
         logger.error(
-            "Template for GUH liability info is missing.",
+            f"Template for GUH liability info is missing. {result}",
             extra={"result": result, "template_name": template_name},
+        )
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_plantation_liability_info(context, plantation_evaluation):
+    """Render the liability_info content depending on the result and plantation evaluation for the result p page."""
+
+    template_name = f"haie/moulinette/plantation_liability_info/{plantation_evaluation.result_code}.html"
+    try:
+        content = render_to_string((template_name,), context.flatten())
+    except TemplateDoesNotExist:
+        logger.error(
+            f"Template for GUH liability info is missing. {plantation_evaluation.result_code}",
+            extra={
+                "plantation_evaluation": plantation_evaluation.result_code,
+                "template_name": template_name,
+            },
+        )
+        content = ""
+
+    return content
+
+
+@register.simple_tag(takes_context=True)
+def show_haie_plantation_evaluation(context, plantation_evaluation):
+    """Render the evaluation of the plantation project"""
+
+    context_data = context.flatten()
+    context_data["plantation_evaluation"] = plantation_evaluation
+    template_name = (
+        f"haie/moulinette/plantation_evaluation/{plantation_evaluation.result}.html"
+    )
+
+    context_data["minimum_length_to_plant"] = (
+        context_data["moulinette"].catalog["haies"].minimum_length_to_plant()
+    )
+
+    try:
+        content = render_to_string((template_name,), context_data)
+    except TemplateDoesNotExist:
+        logger.error(
+            f"Template for GUH plantation evaluation is missing. {plantation_evaluation.result}",
+            extra={
+                "plantation_evaluation": plantation_evaluation.result,
+                "template_name": template_name,
+            },
         )
         content = ""
 
