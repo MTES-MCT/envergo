@@ -159,26 +159,3 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
-
-  jest:
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout Code Repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: |
-          cd publicodes
-          npm ci
-
-      - name: Run Jest tests
-        run: |
-          cd publicodes
-          npm test
-

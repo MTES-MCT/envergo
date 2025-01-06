@@ -8,10 +8,6 @@
     "worker": {
       "amount": 1,
       "size": "M"
-    },
-    "publicodes": {
-      "amount": 1,
-      "size": "S"
     }
   },
   "env": {

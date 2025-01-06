@@ -4,7 +4,6 @@ volumes:
   envergo_postgres_data: {}
   envergo_postgres_data_backups: {}
   envergo_node_modules: {}
-  envergo_publicodes_modules: {}
 
 services:
   django:
@@ -41,22 +40,6 @@ services:
     env_file:
       - .env
       - ./envs/postgres
-
-  publicodes:
-    build:
-      context: .
-      dockerfile: ./compose/publicodes/Dockerfile
-    image: envergo_publicodes
-    container_name: envergo_publicodes
-    depends_on:
-      - django
-    volumes:
-      - .:/app:z
-      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
-      - envergo_publicodes_modules:/app/publicodes/node_modules
-    command: npm run watch
-    ports:
-      - "4000:4000"
 
   node:
     build:

@@ -3,8 +3,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Literal
 
-import requests
-from django.conf import settings
 from django.db import models
 from pyproj import Geod
 from shapely import LineString
@@ -163,19 +161,8 @@ class HedgeData(models.Model):
         }
 
     def evaluate_hedge_plantation_quality(self):
-        url = f"{settings.PUBLICODES_SERVICE_URL}hedges/quality/"
-        headers = {"Content-Type": "application/json"}
-        data = {
-            "minimum_lengths_to_plant": self._get_minimum_lengths_to_plant(),
-            "lengths_to_plant": self._get_lengths_to_plant(),
-        }
-
-        response = requests.post(url, json=data, headers=headers)
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            response.raise_for_status()
+        # TODO
+        raise NotImplementedError
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
