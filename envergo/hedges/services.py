@@ -14,23 +14,28 @@ class PlantationResults(Enum):
     Inadequate = "inadequate"
 
 
+@dataclass
+class EvaluationResult:
+    result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
+    conditions: list[str]
+
+
 class PlantationEvaluator:
+    """Evaluate the adequacy of a plantation project.
+
+    The plantation evaluator is used to evaluate if a project is compliant with the regulation.
+    """
 
     def __init__(self, moulinette: "MoulinetteHaie", hedge_data: HedgeData):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
         self.evaluate()
 
-    @dataclass
-    class EvaluationResult:
-        result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
-        conditions: list[str]
-
     @property
     def result(self):
         """Return the evaluator result.
 
-        This value is used to rendered the plantation result templates.
+        This value is used to select the plantation result templates.
         """
         if not hasattr(self, "_evaluation_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
@@ -41,7 +46,7 @@ class PlantationEvaluator:
     def global_result(self):
         """Return the project result combining both removal and plantation.
 
-        This value is used to rendered the plantation result templates.
+        This value is used to select the plantation result templates.
         """
         if not hasattr(self, "_evaluation_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
