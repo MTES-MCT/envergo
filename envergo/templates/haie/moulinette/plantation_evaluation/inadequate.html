@@ -7,6 +7,8 @@
         {% if condition == "length_to_plant" %}
           La longueur de la haie à planter est insuffisante. Elle doit être supérieure à
           {{ minimum_length_to_plant }} m.
+        {% elif condition == "quality" %}
+          La qualité de la haie plantée est insuffisante.
         {% elif condition == "do_not_plant_under_power_line" %}
           Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte », se situe sous
           une ligne électrique. Ceci doit être évité pour des raisons de sécurité.
