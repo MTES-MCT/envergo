@@ -1,0 +1,9 @@
+{
+  "stack": "scalingo-20",
+  "formation": {
+    "publicodes": {
+      "amount": 1,
+      "size": "S"
+    }
+  }
+}
