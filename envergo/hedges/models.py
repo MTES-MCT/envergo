@@ -87,6 +87,12 @@ class Hedge:
         return self.additionalData.get("sousLigneElectrique", None)
 
     def get_species_filter(self):
+        """Build the filter to get possible protected species.
+
+        Species have requirements. For example, a "Pipistrelle commune" bat
+        MAY live in an "alignement arboré" or "haie multistrate" and
+        requires old trees (vieilArbre is checked).
+        """
         q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
 
         exclude = []
@@ -105,7 +111,7 @@ class Hedge:
         return filter
 
     def get_species(self):
-        """Return known specis in this hedge."""
+        """Return known species that may be related to this hedge."""
 
         qs = Species.objects.filter(self.get_species_filter())
         return qs
