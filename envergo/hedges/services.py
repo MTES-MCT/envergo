@@ -132,7 +132,7 @@ class PlantationEvaluator:
 
         conditions = {
             "length_to_plant": self.is_length_to_plant_sufficient(),
-            "quality": quality_evaluation["is_quality_sufficient"],
+            "quality": quality_evaluation["isQualitySufficient"],
             "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
         }
         result = EvaluationResult(
