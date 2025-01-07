@@ -246,7 +246,7 @@ class Species(models.Model):
     level_of_concern = models.CharField(
         "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
     )
-    highly_sentitive = models.BooleanField("Particulièrement sensible", default=False)
+    highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
 
     hedge_types = ArrayField(
         verbose_name="Types de haies considérés",
