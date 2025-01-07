@@ -1,4 +1,4 @@
 # This file contains hooks for the Scalingo deployment
 
 # Run publicodes node container
-publicodes: bash bin/start_publicodes.sh
+web: bash bin/start_publicodes.sh
