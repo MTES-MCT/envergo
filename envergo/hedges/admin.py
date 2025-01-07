@@ -96,6 +96,8 @@ class SpeciesAdmin(admin.ModelAdmin):
         "scientific_name",
         "group",
         "hedge_types",
+        "level_of_concern",
+        "highly_sensitive",
     ]
     ordering = ["-common_name"]
     form = SpeciesAdminForm
