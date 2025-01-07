@@ -1,8 +1,6 @@
 import http from 'http';
 import {evaluateQuality} from './src/hedges/quality.js';
 
-const port = 4000;
-
 const server = http.createServer((req, res) => {
 
   if (req.method === 'POST') {
@@ -36,6 +34,8 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`Server is running on port: ${port}`);
+server.listen(process.env.PORT || 4000, "0.0.0.0", () => {
+  const host = server.address().address
+  const port = server.address().port
+  console.log('App listening at https://%s:%s', host, port)
 });
