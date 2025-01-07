@@ -238,18 +238,31 @@ SPECIES_GROUPS = Choices(
     ("reptile", "Reptile"),
 )
 
+LEVELS_OF_CONCERN = Choices(
+    ("faible", "Faible"),
+    ("moyen", "Moyen"),
+    ("fort", "Fort"),
+    ("tres_fort", "Très fort"),
+    ("majeur", "Majeur"),
+)
+
 
 class Species(models.Model):
     """Represent a single species."""
 
+    # This "group" is an ad-hoc category, not related to the official biology taxonomy
     group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
     common_name = models.CharField("Nom commun", max_length=255)
     scientific_name = models.CharField("Nom scientifique", max_length=255)
+    level_of_concern = models.CharField(
+        "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
+    )
+    highly_sentitive = models.BooleanField("Particulièrement sensible", default=False)
+
     hedge_types = ArrayField(
         verbose_name="Types de haies considérés",
         base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
     )
-
     # Those fields are in french to match existing fields describing hedges
     proximite_mare = models.BooleanField("Mare à moins de 200 m")
     proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
