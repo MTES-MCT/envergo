@@ -13,6 +13,7 @@ from django.views import View
 from django.views.generic import FormView
 
 from envergo.analytics.utils import get_matomo_tags, log_event
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteHaie,
@@ -202,6 +203,14 @@ class PetitionProjectCreate(FormView):
             )
         elif source == "ref_projet":
             value = petition_project.reference
+        elif source == "vieil_arbre":
+            haies = moulinette.catalog.get("haies")
+            if haies:
+                value = haies.is_removing_old_tree()
+        elif source == "proximite_mare":
+            haies = moulinette.catalog.get("haies")
+            if haies:
+                value = haies.is_removing_near_pond()
         elif source.endswith(".result"):
             regulation_slug = source[:-7]
             regulation_result = getattr(moulinette, regulation_slug, None)
@@ -216,7 +225,7 @@ class PetitionProjectCreate(FormView):
                 )
                 self.request.alerts.append(
                     Alert(
-                        "missing_source_result",
+                        "missing_source_regulation",
                         {
                             "source": source,
                             "regulation_slug": regulation_slug,
@@ -227,6 +236,34 @@ class PetitionProjectCreate(FormView):
                 value = None
             else:
                 value = regulation_result.result
+        elif source.endswith(".result_code"):
+            criteria_path = source[:-12].split(".")
+            regulation_slug = criteria_path[0]
+            criteria_slug = criteria_path[1]
+            regulation = getattr(moulinette, regulation_slug, None)
+            criteria = getattr(regulation, criteria_slug, None)
+            if criteria is None:
+                logger.warning(
+                    "Unable to get the criteria result code to pre-fill a démarche simplifiée",
+                    extra={
+                        "source": source,
+                        "moulinette_url": petition_project.moulinette_url,
+                        "haie config": config.id,
+                    },
+                )
+                self.request.alerts.append(
+                    Alert(
+                        "missing_source_criterion",
+                        {
+                            "source": source,
+                            "criterion_slug": f"{regulation_slug} > {criteria_slug}",
+                        },
+                    )
+                )
+
+                value = None
+            else:
+                value = criteria.result_code
         else:
             if source in moulinette.catalog:
                 value = moulinette.catalog[source]
@@ -370,7 +407,9 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         context["moulinette"] = self.moulinette
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
-        context["plantation_evaluation"] = self.moulinette.catalog["haies"].evaluate()
+        context["plantation_evaluation"] = PlantationEvaluator(
+            self.moulinette, self.moulinette.catalog["haies"]
+        )
         return context
 
 
@@ -554,11 +593,18 @@ class AlertList(List[Alert]):
                     )
                 )
 
-            elif alert.key == "missing_source_result":
+            elif alert.key == "missing_source_regulation":
                 lines.append(
                     f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
                     f"mais la moulinette n'a pas de résultat pour la réglementation "
                     f"**{alert.extra['regulation_slug']}**."
+                )
+
+            elif alert.key == "missing_source_criterion":
+                lines.append(
+                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
+                    f"mais la moulinette n'a pas de résultat pour le critère "
+                    f"**{alert.extra['criterion_slug']}**."
                 )
 
             elif alert.key == "missing_source_moulinette":
