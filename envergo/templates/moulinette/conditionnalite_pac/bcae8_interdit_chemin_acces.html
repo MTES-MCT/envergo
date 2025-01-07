@@ -14,7 +14,10 @@
 </p>
 
 {% if reimplantation == 'replantation' %}
-  <p>
-    Bien que le projet prévoie la réimplantation d’une haie, l’aménagement d’un chemin d’accès ne fait pas partie des motifs autorisés au titre des règles de conditionnalité PAC, si le linéaire détruit excède 10 mètres.
-  </p>
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+    <p>
+      Bien que le projet prévoie la réimplantation d’une haie, l’aménagement d’un chemin d’accès ne fait pas partie des motifs autorisés au titre des règles de conditionnalité PAC, si le linéaire détruit excède 10 mètres.
+    </p>
+  </div>
 {% endif %}
