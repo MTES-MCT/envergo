@@ -91,17 +91,14 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
         if user:
             token = kwargs["token"]
             if default_token_generator.check_token(user, token):
-                is_first_login = user.last_login is None
-
-                if is_first_login:
-                    user.is_active = True
-                    site_literal = get_site_literal(self.request.site)
-                    if site_literal == "amenagement":
-                        user.access_amenagement = True
-                    elif site_literal == "haie":
-                        user.access_haie = True
-                        send_new_account_notification.delay(user.id)
-                    user.save()
+                user.is_active = True
+                site_literal = get_site_literal(self.request.site)
+                if site_literal == "amenagement":
+                    user.access_amenagement = True
+                elif site_literal == "haie":
+                    user.access_haie = True
+                    send_new_account_notification.delay(user.id)
+                user.save()
 
         return super().get(request, *args, **kwargs)
 
