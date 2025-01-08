@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from django.test import override_settings
 from django.urls import reverse
 
 from envergo.users.models import User
@@ -25,24 +26,7 @@ def test_password_reset_with_existing_email_does_send_an_email(
     assert mail.subject == "Réinitialisation du mot de passe sur EnvErgo"
 
 
-def test_login_email_token_works(client, user, mailoutbox):
-    login_url = reverse("password_reset")
-    res = client.post(login_url, {"email": user.email})
-    assert not res.wsgi_request.user.is_authenticated
-    assert len(mailoutbox) == 1
-
-    mail_body = mailoutbox[0].body
-    re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
-    url = re_match.group(1)
-    res = client.get(url, follow=True)
-    assert res.status_code == 200
-    assert res.wsgi_request.user.is_authenticated
-
-    user.refresh_from_db()
-    assert user.is_active
-
-
-def test_register_view_works(client, mailoutbox):
+def test_amenagement_register_view(client, mailoutbox):
     users = User.objects.all()
     assert users.count() == 0
 
@@ -68,10 +52,169 @@ def test_register_view_works(client, mailoutbox):
     url = re_match.group(1)
     res = client.get(url, follow=True)
     assert res.status_code == 200
-    assert res.wsgi_request.user.is_authenticated
 
     user.refresh_from_db()
     assert user.is_active
+    assert not user.is_confirmed_by_admin
+    assert user.access_amenagement
+    assert not user.access_haie
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_haie_register_view(client, mailoutbox):
+    users = User.objects.all()
+    assert users.count() == 0
+
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": "test@example.com",
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert users.count() == 1
+
+    user = users[0]
+    assert not user.is_active
+
+    mail_body = mailoutbox[0].body
+    re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
+    url = re_match.group(1)
+    res = client.get(url, follow=True)
+    assert res.status_code == 200
+
+    user.refresh_from_db()
+    assert user.is_active
+    assert not user.is_confirmed_by_admin
+    assert not user.access_amenagement
+    assert user.access_haie
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_haie_register_for_existing_amenagement_user(
+    amenagement_user, client, mailoutbox
+):
+    """A user registered on one site can register on the other."""
+    users = User.objects.all()
+    assert not amenagement_user.access_haie
+    assert users.count() == 1
+
+    # Account already exists, trying to register
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+
+    # Registration went well, account activation was sent
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert users.count() == 1
+
+    amenagement_user.refresh_from_db()
+    assert amenagement_user.is_active
+
+    mail_body = mailoutbox[0].body
+    re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
+    url = re_match.group(1)
+    res = client.get(url, follow=True)
+    assert res.status_code == 200
+
+    amenagement_user.refresh_from_db()
+    assert amenagement_user.is_active
+    assert amenagement_user.access_amenagement
+    assert amenagement_user.access_haie
+
+
+def test_amenagement_login_on_amenagement_site(amenagement_user, client):
+    assert amenagement_user.access_amenagement
+    assert not amenagement_user.is_confirmed_by_admin
+
+    res = client.get("/")
+    assert not res.wsgi_request.user.is_authenticated
+
+    login_url = reverse("login")
+    res = client.post(
+        login_url, {"username": amenagement_user.email, "password": "password"}
+    )
+    assert res.status_code == 302
+    assert res.wsgi_request.user.is_authenticated
+
+
+def test_haie_login_on_amenagement_site(haie_user, client):
+    assert not haie_user.access_amenagement
+    assert not haie_user.is_confirmed_by_admin
+
+    res = client.get("/")
+    assert not res.wsgi_request.user.is_authenticated
+
+    login_url = reverse("login")
+    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
+    assert res.status_code == 200
+    assert not res.wsgi_request.user.is_authenticated
+
+    haie_user.is_confirmed_by_admin = True
+    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
+    assert res.status_code == 200
+    assert not res.wsgi_request.user.is_authenticated
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_amenagement_login_on_haie_site(amenagement_user, client):
+    assert not amenagement_user.access_haie
+    assert not amenagement_user.is_confirmed_by_admin
+
+    res = client.get("/")
+    assert not res.wsgi_request.user.is_authenticated
+
+    login_url = reverse("login")
+    res = client.post(
+        login_url, {"username": amenagement_user.email, "password": "password"}
+    )
+    assert res.status_code == 200
+    assert not res.wsgi_request.user.is_authenticated
+
+    amenagement_user.is_confirmed_by_admin = True
+    amenagement_user.save()
+    res = client.post(
+        login_url, {"username": amenagement_user.email, "password": "password"}
+    )
+    assert res.status_code == 200
+    assert not res.wsgi_request.user.is_authenticated
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_haie_login_on_haie_site(haie_user, client):
+    assert haie_user.access_haie
+    assert not haie_user.is_confirmed_by_admin
+
+    res = client.get("/")
+    assert not res.wsgi_request.user.is_authenticated
+
+    login_url = reverse("login")
+    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
+    assert res.status_code == 200
+    assert not res.wsgi_request.user.is_authenticated
+
+    haie_user.is_confirmed_by_admin = True
+    haie_user.save()
+    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
+    assert res.status_code == 302
+    assert res.wsgi_request.user.is_authenticated
 
 
 def test_user_access_without_otp(settings, user, client):
