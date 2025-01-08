@@ -96,6 +96,48 @@ def test_haie_register_view(client, mailoutbox):
     assert user.access_haie
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_haie_register_for_existing_amenagement_user(
+    amenagement_user, client, mailoutbox
+):
+    """A user registered on one site can register on the other."""
+    users = User.objects.all()
+    assert not amenagement_user.access_haie
+    assert users.count() == 1
+
+    # Account already exists, trying to register
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+
+    # Registration went well, account activation was sent
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert users.count() == 1
+
+    amenagement_user.refresh_from_db()
+    assert amenagement_user.is_active
+
+    mail_body = mailoutbox[0].body
+    re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
+    url = re_match.group(1)
+    res = client.get(url, follow=True)
+    assert res.status_code == 200
+
+    amenagement_user.refresh_from_db()
+    assert amenagement_user.is_active
+    assert amenagement_user.access_amenagement
+    assert amenagement_user.access_haie
+
+
 def test_amenagement_login_on_amenagement_site(amenagement_user, client):
     assert amenagement_user.access_amenagement
     assert not amenagement_user.is_confirmed_by_admin
