@@ -57,8 +57,10 @@ class Register(AnonymousRequiredMixin, CreateView):
             and len(form["email"].errors) == 1
             and form["email"].errors.as_data()[0].code == "unique"
         ):
+
             user_email = form.data["email"]
-            activate_url = make_activate_account_url(self.object)
+            existing_user = User.objects.get(email__iexact=user_email)
+            activate_url = make_activate_account_url(existing_user)
             send_account_activation_email.delay(
                 user_email, self.request.site.id, activate_url
             )

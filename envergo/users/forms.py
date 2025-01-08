@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 
@@ -39,8 +40,23 @@ class RegisterForm(UserCreationForm):
         self.fields["name"].widget.attrs["placeholder"] = "Prénom Nom"
 
     def clean_email(self):
-        email = self.cleaned_data["email"]
+        """Prevent case related issues."""
+        email = self.cleaned_data.get("email")
         return email.lower()
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Prevent registrations with existing email addresses
+        email = cleaned_data.get("email")
+        if email and self._meta.model.objects.filter(email__iexact=email).exists():
+            error = ValidationError(
+                self.instance.unique_error_message(self._meta.model, ["email"]),
+                code="unique",
+            )
+            self.add_error("email", error)
+
+        return cleaned_data
 
 
 class AllowDisabledSelect(Select):
