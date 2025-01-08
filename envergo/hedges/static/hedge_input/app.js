@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, reactive, computed } = Vue
+const {createApp, ref, onMounted, reactive, computed, watch, toRaw} = Vue
 
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
@@ -16,6 +16,8 @@ const styles = {
 };
 const fitBoundsOptions = { padding: [10, 10] };
 
+
+const minimumLengthToPlant = document.getElementById('app').dataset.minimumLengthToPlant;
 
 
 /**
@@ -166,6 +168,31 @@ class HedgeList {
     this.type = type;
     this.hedges = reactive([]);
     this.nextId = ref(0);
+
+    // Reactive properties for quality conditions
+    this.isLengthToPlantSufficient = ref(false);
+    this.isNotPlantingUnderPowerLine = ref(true);
+
+    // Computed property to track changes in the hedges array
+    this.hedgesSnapshot = computed(() => JSON.stringify(this.hedges.map(hedge => ({
+      length: hedge.length,
+      additionalData: hedge.additionalData
+    }))));
+
+    // Watch the computed property for changes
+    watch(this.hedgesSnapshot, (newHedges, oldHedges) => {
+      this.onHedgeListChange();
+    });
+  }
+
+  onHedgeListChange() {
+    if (this.type === TO_REMOVE) {
+      return;
+    }
+
+    this.isLengthToPlantSufficient.value = this.totalLength > minimumLengthToPlant;
+    this.isNotPlantingUnderPowerLine.value = !this.hedges.some(h =>
+      ["alignement", "mixte"].includes(h.additionalData.typeHaie) && h.additionalData.sousLigneElectrique);
   }
 
   /**

@@ -13,7 +13,8 @@
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' mode=mode %}"
-       data-hedges-data='{{ hedge_data_json|safe }}'>
+       data-hedges-data='{{ hedge_data_json|safe }}'
+       data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
 
     <div id="saisie-ui">
       <div id="map">
@@ -150,6 +151,46 @@
             <template v-else>
               <p class="fr-text--light">Aucune haie tracée</p>
             </template>
+          </div>
+        </div>
+        <div id="hedge-quality" v-if="mode === 'plantation'">
+          <div class="alt fr-mt-2w" id="tile-16">
+            <h3 class="fr-p-1w">Plantation minimum attendue</h3>
+            <div id="conditions" class="fr-px-1w fr-pb-1w">
+              <div>
+                <div>
+                  <span :class="{ 'success': hedges.TO_PLANT.isLengthToPlantSufficient.value }"
+                        class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                </div>
+                <div>
+                  <h6>Longueur de la haie plantée</h6>
+                  <p v-if="hedges.TO_PLANT.isLengthToPlantSufficient.value">Le linéaire total planté est suffisant.</p>
+                  <p v-else>Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.</p>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <span class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                </div>
+                <div>
+                  <h6>Type de haie plantée</h6>
+                  <p>La qualité écologique du linéaire planté est suffisante.</p>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <span :class="{ 'success': hedges.TO_PLANT.isNotPlantingUnderPowerLine.value }"
+                        class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                </div>
+                <div>
+                  <h6>Sécurité</h6>
+                  <p v-if="hedges.TO_PLANT.isNotPlantingUnderPowerLine.value">Aucune haie haute sous une ligne électrique.</p>
+                  <p v-else>
+                    Aucune haie haute ne doit se situer sous une ligne électrique. Déplacez les haies ou ne plantez à cet endroit que des haies basses ou arbustives.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
