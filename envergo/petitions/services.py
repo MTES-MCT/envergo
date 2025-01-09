@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.urls import reverse
 
+from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.models import ConfigHaie
 from envergo.utils.mattermost import notify
 
@@ -46,11 +47,18 @@ class InstructorInformation:
     label: str | None
     items: list[Item]
     details: list[InstructorInformationDetails]
+    comment: str | None = None
 
 
-def compute_instructor_informations(
-    petition_project, moulinette
-) -> list[InstructorInformation]:
+@dataclass
+class ProjectDetails:
+    demarches_simplifiees_dossier_number: int
+    demarche_simplifiee_number: int
+    usager: str
+    details: list[InstructorInformation]
+
+
+def compute_instructor_informations(petition_project, moulinette) -> ProjectDetails:
 
     department = moulinette.catalog.get("department")  # department is mandatory
     config = ConfigHaie.objects.get(department__department=department)
@@ -98,7 +106,7 @@ def compute_instructor_informations(
                             else ""
                         ),
                         None,
-                        "longueur plantée / longueur détruite",
+                        "Longueur plantée / longueur détruite",
                     ),
                 ],
             ),
@@ -118,29 +126,35 @@ def compute_instructor_informations(
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
     lineaire_plante_pac = hedge_data.lineaire_plante_pac()
-
+    motif = moulinette.catalog.get("motif", "")
     bcae8 = InstructorInformation(
         slug="bcae8",
+        comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
         label="BCAE 8",
         items=[
             Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
-            Item("Motif", moulinette.catalog.get("motif", ""), None, None),
+            Item(
+                "Motif",
+                next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
+                None,
+                None,
+            ),
         ],
         details=[
             InstructorInformationDetails(
                 label="Destruction",
                 items=[
                     Item(
-                        "Nombre de tracés sur parcelle PAC",
+                        "Nombre de tracés",
                         len(hedge_data.hedges_to_remove_pac()),
                         None,
                         None,
                     ),
                     Item(
-                        "Total linéaire détruit hors alignement d’arbres",
+                        "Total linéaire détruit",
                         hedge_data.lineaire_detruit_pac(),
                         "m",
-                        "Sur parcelle PAC, hors alignement d’arbres",
+                        None,
                     ),
                     Item(
                         "Pourcentage détruit / total linéaire",
@@ -158,7 +172,7 @@ def compute_instructor_informations(
                 label="Plantation",
                 items=[
                     Item(
-                        "Nombre de tracés plantés hors alignement d’arbres",
+                        "Nombre de tracés plantés",
                         len(hedge_data.hedges_to_plant_pac()),
                         None,
                         None,
@@ -167,7 +181,7 @@ def compute_instructor_informations(
                         "Total linéaire planté",
                         hedge_data.lineaire_plante_pac(),
                         "m",
-                        "Hors alignement d’arbres",
+                        None,
                     ),
                     Item(
                         "Ratio en longueur",
@@ -177,7 +191,7 @@ def compute_instructor_informations(
                             else ""
                         ),
                         None,
-                        "Longueur plantée / longueur détruite (prises hors alignements d’arbres)",
+                        "Longueur plantée / longueur détruite",
                     ),
                 ],
             ),
@@ -285,19 +299,25 @@ def compute_instructor_informations(
         details=[],
     )
 
-    return [project_details, bcae8, ep]
+    return ProjectDetails(
+        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+        demarche_simplifiee_number=config.demarche_simplifiee_number,
+        usager=ds_details.usager,
+        details=[project_details, bcae8, ep],
+    )
 
 
 @dataclass
-class ProjectDetails:
+class DemarchesSimplifieesDetails:
     applicant_name: str | None
     city: str | None
     pacage: str | None
+    usager: str
 
 
 def fetch_project_details_from_demarches_simplifiees(
     dossier_number, config
-) -> ProjectDetails | None:
+) -> DemarchesSimplifieesDetails | None:
 
     if (
         not config.demarches_simplifiees_pacage_id
@@ -473,4 +493,6 @@ Requête envoyée :
     if pacage_field:
         pacage = pacage_field.get("stringValue", None)
 
-    return ProjectDetails(applicant_name, city, pacage)
+    usager = (dossier.get("usager") or {}).get("email", "")
+
+    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager)
