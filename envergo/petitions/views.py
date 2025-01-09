@@ -443,7 +443,7 @@ class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["instructor_information"] = compute_instructor_informations(
+        context["project_details"] = compute_instructor_informations(
             self.petition_project, self.moulinette
         )
 

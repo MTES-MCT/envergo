@@ -4,8 +4,26 @@
   <section class="fr-py-8w alt">
     <div class="fr-container">
       <div class="fr-grid-row">
-        <div class="fr-col fr-col-offset-3">
+        <div class="fr-col-6 fr-col-offset-3">
           <span class="fr-h1">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number }}</span>
+        </div>
+        <div class="fr-col-3">
+          <ul class="fr-btns-group fr-btns-group--icon-right">
+            <li>
+              <a class="fr-btn fr-btn--icon-right fr-icon-external-link-line"
+                 title="Dossier dans Démarches Simplifiées"
+                 href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}"
+                 target="_blank"
+                 rel="noopener external">Consulter le dossier</a>
+            </li>
+            <li>
+              <a class="fr-btn  fr-btn--secondary fr-btn--icon-right fr-icon-mail-line"
+                 title="Dossier dans Démarches Simplifiées"
+                 href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}/messagerie"
+                 target="_blank"
+                 rel="noopener external">Contacter le pétitionnaire</a>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -25,7 +43,7 @@
                        target="_self"
                        aria-current="page">Caractéristiques du projet</a>
                   </li>
-                  {% for information in instructor_information %}
+                  {% for information in project_details.details %}
                     {% if information.slug %}
                       <li class="fr-sidemenu__item">
                         <a class="fr-sidemenu__link"
@@ -41,10 +59,11 @@
         </div>
         <div id="project-specifications" class="fr-col">
           <h1>Caractéristiques du projet</h1>
-          {% for information in instructor_information %}
+          {% for information in project_details.details %}
             <section class="fr-mt-6w"
                      {% if information.slug %}id="{{ information.slug }}"{% endif %}>
               {% if information.label %}<h2>{{ information.label }}</h2>{% endif %}
+              {% if information.comment %}<p class="fr-text--xs">{{ information.comment }}</p>{% endif %}
               {% include "haie/petitions/_items.html" with items=information.items %}
               {% if information.details %}
                 {% for information_details in information.details %}
