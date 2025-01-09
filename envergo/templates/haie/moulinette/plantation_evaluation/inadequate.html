@@ -1,0 +1,20 @@
+<div class="fr-alert fr-alert--error fr-mb-3w">
+  <h3 class="fr-alert__title">La plantation envisagée est insuffisante</h3>
+  <p>Le projet de plantation décrit n'apparaît pas acceptable au regard des haies détruites :</p>
+  <ul>
+    {% if "length_to_plant" in plantation_evaluation.unfulfilled_conditions %}
+      <li>
+        La longueur de la haie à planter est insuffisante. Elle doit être supérieure à
+        {{ minimum_length_to_plant }} m.
+      </li>
+    {% endif %}
+    {% if "do_not_plant_under_power_line" in plantation_evaluation.unfulfilled_conditions %}
+      <li>
+        Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte », se situe sous
+        une ligne électrique. Ceci doit être évité pour des raisons de sécurité.
+        La haie doit être positionnée ailleurs, ou son type modifié pour ne contenir que des arbustes
+        (« haie basse » ou « haie arbustive »).
+      </li>
+    {% endif %}
+  </ul>
+</div>

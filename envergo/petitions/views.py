@@ -13,6 +13,7 @@ from django.views import View
 from django.views.generic import FormView
 
 from envergo.analytics.utils import get_matomo_tags, log_event
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteHaie,
@@ -417,6 +418,16 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
             )
 
         return result
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["moulinette"] = self.moulinette
+        context["base_result"] = self.moulinette.get_result_template()
+        context["is_read_only"] = True
+        context["plantation_evaluation"] = PlantationEvaluator(
+            self.moulinette, self.moulinette.catalog["haies"]
+        )
+        return context
 
 
 class PetitionProjectAutoRedirection(View):
