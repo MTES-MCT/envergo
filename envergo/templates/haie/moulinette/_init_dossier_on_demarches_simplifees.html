@@ -1,0 +1,43 @@
+{% load static %}
+
+<dialog id="demarches-simplifiees-modal"
+        class="fr-modal"
+        role="dialog"
+        aria-labelledby="demarches-simplifiees-modal-title">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-6">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    aria-controls="demarches-simplifiees-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h3 id="emarches-simplifiees-modal-title" class="fr-modal__title">
+              Confirmez le verrouillage de votre
+              simulation
+            </h3>
+            <p>Vous souhaitez déposer votre demande d’autorisation.</p>
+            <p>
+              <strong>Si vous continuez, votre simulation ne sera plus modifiable.</strong> Vous pourrez toujours la consulter.
+            </p>
+            <p>
+              Vous accéderez au formulaire de demande pour vous identifier, joindre des pièces justificatives et
+              répondre à des questions plus détaillées sur le projet.
+
+            </p>
+            <p>Souhaitez-vous continuer ?</p>
+            <div id="demarches-simplifiees-modal-btns">
+              <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
+                      aria-controls="demarches-simplifiees-modal">Revenir à ma simulation</button>
+              <button class=" fr-ml-2w fr-btn demarche-simplifiee-btn fr-btn--icon-right  fr-icon-external-link-line">
+                Poursuivre vers la demande
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
