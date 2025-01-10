@@ -1,24 +1,17 @@
 import operator
 import uuid
-<<<<<<< HEAD
 from collections import defaultdict
 from functools import reduce
-||||||| parent of 58df3585 (List species for hedges)
-=======
-from functools import reduce
->>>>>>> 58df3585 (List species for hedges)
 
+from django.contrib.gis.geos import Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-<<<<<<< HEAD
 from django.db.models import Q
 from model_utils import Choices
-||||||| parent of 58df3585 (List species for hedges)
-=======
-from django.db.models import Q
->>>>>>> 58df3585 (List species for hedges)
 from pyproj import Geod
 from shapely import LineString
+
+from envergo.geodata.models import Zone
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -96,7 +89,6 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sousLigneElectrique", None)
 
-<<<<<<< HEAD
     def get_species_filter(self):
         """Build the filter to get possible protected species.
 
@@ -127,33 +119,6 @@ class Hedge:
         qs = Species.objects.filter(self.get_species_filter())
         return qs
 
-||||||| parent of 58df3585 (List species for hedges)
-=======
-    def get_species_filter(self):
-        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
-
-        exclude = []
-
-        if not self.proximite_mare:
-            exclude.append(Q(proximite_mare=True))
-        if not self.vieil_arbre:
-            exclude.append(Q(vieil_arbre=True))
-        if not self.proximite_point_eau:
-            exclude.append(Q(proximite_point_eau=True))
-        if not self.connexion_boisement:
-            exclude.append(Q(connexion_boisement=True))
-
-        q_exclude = reduce(operator.or_, exclude)
-        filter = q_hedge_type & ~q_exclude
-        return filter
-
-    def get_species(self):
-        """Return known specis in this hedge."""
-
-        qs = Species.objects.filter(self.get_species_filter())
-        return qs
-
->>>>>>> 58df3585 (List species for hedges)
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -169,6 +134,20 @@ class HedgeData(models.Model):
 
     def __iter__(self):
         return iter(self.hedges())
+
+    def get_bounding_box(self):
+        """Return the bounding box of the whole hedge set."""
+
+        hedges = self.hedges()
+        min_x, min_y, max_x, max_y = hedges[0].geometry.bounds
+        for hedge in hedges[1:]:
+            x0, y0, x1, y1 = hedge.geometry.bounds
+            min_x = min(min_x, x0)
+            min_y = min(min_y, y0)
+            max_x = max(max_x, x1)
+            max_y = max(max_y, y1)
+        box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
+        return box
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
@@ -245,13 +224,28 @@ class HedgeData(models.Model):
             "alignement": lengths_by_type["alignement"],
         }
 
-    def get_all_species(self):
-        """Return all species in the set of hedges."""
+    def get_local_species_names(self):
+        """Return species names that reported to live here."""
 
-        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
-        union = reduce(operator.or_, filters)
-        qs = Species.objects.filter(union).order_by("group", "common_name")
-        return qs
+        bbox = self.get_bounding_box()
+        zones = Zone.objects.filter(geometry__intersects=bbox).filter(
+            map__map_type="species"
+        )
+        zone_species = set()
+        for zone in zones:
+            # XXX
+            # the map file will be updated
+            # the fild will be renamed "especes"
+            # the field value will be an array
+            zone_species.update(zone.attributes.get("espece", "").split(","))
+        return zone_species
+
+    def get_all_species(self):
+        """Return the local list of protected species."""
+
+        hedge_species_qs = self.get_hedge_species()
+        local_species_names = self.get_local_species_names()
+        return hedge_species_qs.filter(common_name__in=local_species_names)
 
 
 HEDGE_TYPES = (
