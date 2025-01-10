@@ -24,6 +24,7 @@ DEPARTMENT_CHOICES = tuple(
 MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
+    ("species", _("Espèces protégées")),
 )
 
 # Sometimes, there are map with different certainty values.
