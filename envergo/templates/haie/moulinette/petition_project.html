@@ -1,0 +1,31 @@
+{% extends 'haie/moulinette/result_plantation.html' %}
+
+{% block result_title %}
+  <div id="go-to-ds-btn">
+    <a class="fr-btn"
+       href="{{ ds_url }}"
+       target="_blank"
+       rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
+  </div>
+  <h1 class="fr-mt-4w">Dossier n° {{ demarches_simplifiees_dossier_number }}</h1>
+  <p class="fr-text--sm fr-hint-text">
+    <span class="fr-icon-calendar-line" aria-hidden="true"></span> Déposé le {{ created_at }}
+  </p>
+{% endblock %}
+
+{% block result_header %}
+  <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
+  <p>Cette simulation n’est plus modifiable car elle a été pris en compte dans votre dossier.</p>
+  <p>
+    <strong>Vous pouvez dupliquer cette version</strong>, la modifier comme vous le souhaitez puis recréer un dossier pour déposer votre demande.
+  </p>
+  <a class="fr-btn fr-btn--secondary" href="{{ moulinette_url }}">Dupliquer cette simulation</a>
+
+  <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
+
+  <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+     href="{% url 'contact_us' %}">Contacter le guichet unique</a>
+
+  <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
+  {{ block.super }}
+{% endblock %}

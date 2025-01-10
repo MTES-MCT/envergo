@@ -401,7 +401,7 @@ class PetitionProjectMixin(MoulinetteMixin):
 
 
 class PetitionProjectDetail(PetitionProjectMixin, FormView):
-    template_name = "haie/moulinette/result_plantation.html"
+    template_name = "haie/moulinette/petition_project.html"
 
     def get(self, request, *args, **kwargs):
         result = super().get(request, *args, **kwargs)
@@ -425,6 +425,15 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
             self.moulinette, self.moulinette.catalog["haies"]
+        )
+        context["demarches_simplifiees_dossier_number"] = (
+            self.petition_project.demarches_simplifiees_dossier_number
+        )
+        context["created_at"] = self.petition_project.created_at
+        context["moulinette_url"] = self.petition_project.moulinette_url
+        context["ds_url"] = (
+            f"https://www.demarches-simplifiees.fr/dossiers/"
+            f"{self.petition_project.demarches_simplifiees_dossier_number}"
         )
         return context
 

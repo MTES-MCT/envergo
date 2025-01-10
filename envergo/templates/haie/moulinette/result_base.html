@@ -31,7 +31,7 @@
       cette page grâce à votre statut d'admin.
     </div>
   {% endif %}
-  <h1 class="fr-mb-5w">Simulation réglementaire</h1>
+  {% block result_title %}<h1 class="fr-mb-5w">Simulation réglementaire</h1>{% endblock %}
 
   {% block result_header %}{% endblock %}
   {% group_regulations_for_display moulinette as grouped_regulations %}
