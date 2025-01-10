@@ -348,7 +348,7 @@ class PetitionProjectCreate(FormView):
 
 
 class PetitionProjectDetail(MoulinetteMixin, FormView):
-    template_name = "haie/moulinette/result_plantation.html"
+    template_name = "haie/moulinette/petition_project.html"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -357,11 +357,11 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
     def get(self, request, *args, **kwargs):
 
         # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
-        petition_project = get_object_or_404(
+        self.petition_project = get_object_or_404(
             PetitionProject.objects.select_related("hedge_data"),
             reference=self.kwargs["reference"],
         )
-        parsed_url = urlparse(petition_project.moulinette_url)
+        parsed_url = urlparse(self.petition_project.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
         raw_data = QueryDict(query_string)
@@ -370,7 +370,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         self.request.moulinette_data = raw_data
 
         moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = petition_project.hedge_data
+        moulinette_data["haies"] = self.petition_project.hedge_data
 
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(
@@ -386,7 +386,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             logger.warning(
                 "A petition project has missing data. This should not happen unless regulations have changed."
                 "We should implement static simulation/project to avoid this case.",
-                extra={"reference": petition_project.reference},
+                extra={"reference": self.petition_project.reference},
             )
             raise NotImplementedError("We do not handle uncompleted project")
 
@@ -396,7 +396,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
                 "projet",
                 "consultation",
                 self.request,
-                **petition_project.get_log_event_data(),
+                **self.petition_project.get_log_event_data(),
                 **get_matomo_tags(self.request),
             )
 
@@ -409,6 +409,15 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
             self.moulinette, self.moulinette.catalog["haies"]
+        )
+        context["demarches_simplifiees_dossier_number"] = (
+            self.petition_project.demarches_simplifiees_dossier_number
+        )
+        context["created_at"] = self.petition_project.created_at
+        context["moulinette_url"] = self.petition_project.moulinette_url
+        context["ds_url"] = (
+            f"https://www.demarches-simplifiees.fr/dossiers/"
+            f"{self.petition_project.demarches_simplifiees_dossier_number}"
         )
         return context
 
