@@ -20,3 +20,8 @@
 {% block extra_js %}
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
 {% endblock %}
+
+{% block extra_body %}
+  {{ block.super }}
+  {% include 'haie/moulinette/_init_dossier_on_demarches_simplifees.html' %}
+{% endblock %}

@@ -8,7 +8,9 @@
   {% if not is_read_only %}
     <p>
       Vous pouvez donc
-      <a class="demarche-simplifiee-btn" href="#">déposer une demande d’autorisation.</a>
+      <a aria-controls="demarches-simplifiees-modal"
+         data-fr-opened="false"
+         href="#">déposer une demande d’autorisation.</a>
       Elle sera examinée, mais il est probable qu’un refus soit prononcé.
     </p>
   {% endif %}
