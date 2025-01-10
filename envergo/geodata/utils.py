@@ -66,8 +66,8 @@ class CustomMapping(LayerMapping):
         kwargs.update(self.extra_kwargs)
 
         fields = feat.fields
-        entities = {f: feat.get(f) for f in fields}
-        kwargs["entities"] = entities
+        attributes = {f: feat.get(f) for f in fields}
+        kwargs["attributes"] = attributes
         return kwargs
 
 
