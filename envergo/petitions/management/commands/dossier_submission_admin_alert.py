@@ -26,7 +26,7 @@ class Command(BaseCommand):
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
         one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
-        iso8601_one_hour_ago = one_hour_ago_utc.isoformat() + "Z"
+        iso8601_one_hour_ago = one_hour_ago_utc.isoformat()
 
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
