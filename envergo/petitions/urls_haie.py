@@ -9,7 +9,7 @@ from envergo.petitions.views import (
 urlpatterns = [
     path("", PetitionProjectCreate.as_view(), name="petition_project_create"),
     path(
-        "<slug:reference>",
+        "<slug:reference>/consultation/",
         PetitionProjectDetail.as_view(),
         name="petition_project",
     ),
