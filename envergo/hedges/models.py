@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 
 from django.db import models
 from pyproj import Geod
@@ -132,3 +133,28 @@ class HedgeData(models.Model):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
         return round(R * self.length_to_remove())
+
+    def get_minimum_lengths_to_plant(self):
+        lengths_by_type = defaultdict(int)
+        for to_remove in self.hedges_to_remove():
+            lengths_by_type[to_remove.hedge_type] += to_remove.length
+
+        return {
+            "degradee": R * lengths_by_type["degradee"],
+            "buissonnante": R * lengths_by_type["buissonnante"],
+            "arbustive": R * lengths_by_type["arbustive"],
+            "mixte": R * lengths_by_type["mixte"],
+            "alignement": R * lengths_by_type["alignement"],
+        }
+
+    def get_lengths_to_plant(self):
+        lengths_by_type = defaultdict(int)
+        for to_plant in self.hedges_to_plant():
+            lengths_by_type[to_plant.hedge_type] += to_plant.length
+
+        return {
+            "buissonnante": lengths_by_type["buissonnante"],
+            "arbustive": lengths_by_type["arbustive"],
+            "mixte": lengths_by_type["mixte"],
+            "alignement": lengths_by_type["alignement"],
+        }

@@ -1965,3 +1965,27 @@ main.demonstrateur_2150 {
     }
   }
 }
+
+.inline-button {
+  cursor: pointer;
+  text-decoration: var(--text-decoration);
+  color: inherit;
+
+  --hover-tint: var(--idle);
+  --active-tint: var(--active);
+
+  background-image: var(--underline-img), var(--underline-img);
+  background-position:
+    var(--underline-x) 100%,
+    var(--underline-x) calc(100% - var(--underline-thickness));
+  background-repeat: no-repeat, no-repeat;
+  transition: background-size 0s;
+  background-size:
+    var(--underline-hover-width) calc(var(--underline-thickness) * 2),
+    var(--underline-idle-width) var(--underline-thickness);
+}
+
+.inline-button:hover,
+.inline-button:active {
+  --underline-hover-width: var(--underline-max-width);
+}
