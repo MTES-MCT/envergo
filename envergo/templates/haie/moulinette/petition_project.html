@@ -1,5 +1,7 @@
 {% extends 'haie/moulinette/result_plantation.html' %}
 
+{% load static %}
+
 {% block result_title %}
   <div id="go-to-ds-btn">
     <a class="fr-btn"
@@ -28,4 +30,18 @@
 
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
   {{ block.super }}
+{% endblock %}
+
+{% block project_summary %}
+  {{ block.super }}
+  <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+          type="button"
+          data-fr-opened="false"
+          aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
 {% endblock %}
