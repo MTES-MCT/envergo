@@ -49,6 +49,26 @@ class Hedge:
     def hedge_type(self):
         return self.additionalData.get("typeHaie", None)
 
+    @property
+    def proximite_mare(self):
+        return self.additionalData.get("proximiteMare", None)
+
+    @property
+    def vieil_arbre(self):
+        return self.additionalData.get("vieilArbre", None)
+
+    @property
+    def proximite_point_eau(self):
+        return self.additionalData.get("proximitePointEau", None)
+
+    @property
+    def connexion_boisement(self):
+        return self.additionalData.get("connexionBoisement", None)
+
+    @property
+    def sous_ligne_electrique(self):
+        return self.additionalData.get("sousLigneElectrique", None)
+
 
 class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -103,16 +123,11 @@ class HedgeData(models.Model):
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
-        return any(
-            h.additionalData.get("proximiteMare", False)
-            for h in self.hedges_to_remove()
-        )
+        return any(h.proximite_mare for h in self.hedges_to_remove())
 
     def is_removing_old_tree(self):
         """Return True if at least one hedge to remove is containing old tree."""
-        return any(
-            h.additionalData.get("vieilArbre", False) for h in self.hedges_to_remove()
-        )
+        return any(h.vieil_arbre for h in self.hedges_to_remove())
 
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
