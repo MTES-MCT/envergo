@@ -70,6 +70,7 @@ class Hedge {
     this.updateLength();
 
     this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
+    this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
     this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
     this.polyline.on('click', this.centerOnMap.bind(this));
     this.polyline.on('mouseover', this.handleMouseOver.bind(this));

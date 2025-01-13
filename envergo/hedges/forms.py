@@ -3,18 +3,12 @@ from collections import OrderedDict
 from django import forms
 from django.utils.safestring import mark_safe
 
-TYPES = (
-    ("degradee", "Haie dégradée ou résiduelle basse"),
-    ("buissonnante", "Haie buissonnante basse"),
-    ("arbustive", "Haie arbustive basse"),
-    ("mixte", "Haie mixte"),
-    ("alignement", "Alignement d'arbres"),
-)
+from envergo.hedges.models import HEDGE_TYPES
 
 
 class HedgeDataBaseForm(forms.Form):
     hedge_type = forms.ChoiceField(
-        choices=TYPES,
+        choices=HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
@@ -77,5 +71,5 @@ class HedgeToPlantDataForm(HedgeDataBaseForm):
         super().__init__(*args, **kwargs)
         # Remove the 'degradee' option from hedge_type choices
         self.fields["hedge_type"].choices = [
-            choice for choice in TYPES if choice[0] != "degradee"
+            choice for choice in HEDGE_TYPES if choice[0] != "degradee"
         ]
