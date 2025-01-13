@@ -1,8 +1,11 @@
 <p>Le projet est soumis à déclaration préalable au titre de la conditionnalité PAC.</p>
 
-<p>Les pièces justificatives suivantes seront demandées :</p>
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+  <p>Les pièces justificatives suivantes seront demandées :</p>
 
-<ul>
-  <li>l’attestation d’obtention de permis de construire ou permis d’aménager ;</li>
-  <li>la décision prononçant la déclaration d’utilité publique de l’aménagement concerné.</li>
-</ul>
+  <ul>
+    <li>l’attestation d’obtention de permis de construire ou permis d’aménager ;</li>
+    <li>la décision prononçant la déclaration d’utilité publique de l’aménagement concerné.</li>
+  </ul>
+</div>

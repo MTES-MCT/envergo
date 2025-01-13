@@ -1,7 +1,10 @@
 <p>Le projet est soumis à déclaration préalable au titre de la conditionnalité PAC.</p>
 
 {% if reimplantation == "replantation" %}
-  <p>
-    À noter : pour la création d’un accès de moins de 10 mètres de large, la réimplantation d’une haie n’est pas requise au titre de la conditionnalité PAC. Cela ne présume pas des autres réglementations environnementales qui s’appliquent.
-  </p>
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+    <p>
+      À noter : pour la création d’un accès de moins de 10 mètres de large, la réimplantation d’une haie n’est pas requise au titre de la conditionnalité PAC. Cela ne présume pas des autres réglementations environnementales qui s’appliquent.
+    </p>
+  </div>
 {% endif %}
