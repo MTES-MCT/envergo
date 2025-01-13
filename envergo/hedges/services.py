@@ -109,6 +109,25 @@ class PlantationEvaluator:
         )
 
     def evaluate_hedge_plantation_quality(self):
+        """Evaluate the quality of the plantation project.
+        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
+            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
+            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
+            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
+            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
+            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
+
+        return: {
+            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
+            missing_plantation: {
+                mixte: missing length of mixte hedges to plant,
+                alignement: missing length of alignement hedges to plant,
+                arbustive: missing length of arbustive hedges to plant,
+                buissonante: missing length of buissonante hedges to plant,
+                degradee: missing length of dégradée hedges to plant,
+            }
+        }
+        """
         minimum_lengths_to_plant = self.hedge_data.get_minimum_lengths_to_plant()
         lengths_to_plant = self.hedge_data.get_lengths_to_plant()
 
