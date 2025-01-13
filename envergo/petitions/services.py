@@ -8,7 +8,6 @@ from django.contrib.sites.models import Site
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.models import ConfigHaie
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
@@ -59,9 +58,7 @@ class ProjectDetails:
 
 
 def compute_instructor_informations(petition_project, moulinette) -> ProjectDetails:
-
-    department = moulinette.catalog.get("department")  # department is mandatory
-    config = ConfigHaie.objects.get(department__department=department)
+    config = moulinette.config
     ds_details = fetch_project_details_from_demarches_simplifiees(
         petition_project.demarches_simplifiees_dossier_number, config
     )
@@ -302,7 +299,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager,
+        usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
     )
 
