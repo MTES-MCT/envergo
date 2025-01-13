@@ -260,7 +260,7 @@ SPECIES_GROUPS = Choices(
     ("chauves-souris", "Chauves-souris"),
     ("flore", "Flore"),
     ("insectes", "Insectes"),
-    ("mammifères-terrestres", "Mammifères terrestres"),
+    ("mammiferes-terrestres", "Mammifères terrestres"),
     ("oiseaux", "Oiseaux"),
     ("reptile", "Reptile"),
 )
