@@ -244,7 +244,7 @@ class CriterionEvaluator(ABC):
     def result(self):
         """Return the criterion result.
 
-        This value is used to rendered the criterion result label (e.g "action requise")
+        This value is used to render the criterion result label (e.g "action requise")
         and to compute the whole regulation result.
         """
         if not hasattr(self, "_result"):

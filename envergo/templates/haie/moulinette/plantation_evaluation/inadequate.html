@@ -8,6 +8,9 @@
         {{ minimum_length_to_plant }} m.
       </li>
     {% endif %}
+    {% if "quality" in plantation_evaluation.unfulfilled_conditions %}
+      <li>La qualité de la haie plantée est insuffisante.</li>
+    {% endif %}
     {% if "do_not_plant_under_power_line" in plantation_evaluation.unfulfilled_conditions %}
       <li>
         Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte », se situe sous
