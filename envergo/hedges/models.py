@@ -109,8 +109,10 @@ class Hedge:
         if not self.connexion_boisement:
             exclude.append(Q(connexion_boisement=True))
 
-        q_exclude = reduce(operator.or_, exclude)
-        filter = q_hedge_type & ~q_exclude
+        filter = q_hedge_type
+        if exclude:
+            q_exclude = reduce(operator.or_, exclude)
+            filter &= ~q_exclude
         return filter
 
     def get_species(self):
