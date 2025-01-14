@@ -224,6 +224,14 @@ class HedgeData(models.Model):
             "alignement": lengths_by_type["alignement"],
         }
 
+    def get_hedge_species(self):
+        """Return species that may live in the hedges."""
+
+        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        union = reduce(operator.or_, filters)
+        species = Species.objects.filter(union).order_by("group", "common_name")
+        return species
+
     def get_local_species_names(self):
         """Return species names that reported to live here."""
 
