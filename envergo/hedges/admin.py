@@ -73,6 +73,8 @@ class HedgeDataAdmin(admin.ModelAdmin):
         return obj.length_to_remove()
 
     def all_species(self, obj):
+        """Display list of protected species related to this hedge set."""
+
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
             context={"species": obj.get_all_species()},

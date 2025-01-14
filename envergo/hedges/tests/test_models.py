@@ -169,7 +169,7 @@ def test_minimum_lengths_to_plant():
             },
         ]
     )
-    minimum_lengths_to_plant = hedges._get_minimum_lengths_to_plant()
+    minimum_lengths_to_plant = hedges.get_minimum_lengths_to_plant()
 
     assert round(minimum_lengths_to_plant["degradee"]) == R * 50
     assert round(minimum_lengths_to_plant["buissonnante"]) == R * 40
