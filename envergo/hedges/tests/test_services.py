@@ -29,7 +29,6 @@ def test_hedge_quality_should_be_sufficient():
     evaluator = HedgeEvaluator(hedge_data=hedge_data)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
-        "code": "quality",
         "result": True,
         "missing_plantation": {
             "mixte": 0,
@@ -63,7 +62,6 @@ def test_hedge_quality_should_not_be_sufficient():
     evaluator = HedgeEvaluator(hedge_data=hedge_data)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
-        "code": "quality",
         "result": False,
         "missing_plantation": {
             "mixte": 5,

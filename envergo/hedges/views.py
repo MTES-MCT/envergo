@@ -71,8 +71,6 @@ class HedgeInput(DetailView):
             return JsonResponse({"error": str(e)}, status=500)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
-@method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeQualityView(View):
     def post(self, request, *args, **kwargs):
         try:

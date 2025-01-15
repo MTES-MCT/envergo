@@ -92,10 +92,12 @@ class PlantationEvaluator:
         result = EvaluationResult(
             result=(
                 PlantationResults.Adequate
-                if all(item["result"] for item in evaluation)
+                if all(evaluation[item]["result"] for item in evaluation.keys())
                 else PlantationResults.Inadequate
             ),
-            conditions=[item["code"] for item in evaluation if not item["result"]],
+            conditions=[
+                item for item in evaluation.keys() if not evaluation[item]["result"]
+            ],
         )
 
         self._evaluation_result = result
@@ -224,7 +226,6 @@ class HedgeEvaluator:
         }
 
         return {
-            "code": "quality",
             "result": all(
                 [
                     missing_plantation["mixte"] == 0,
@@ -239,15 +240,13 @@ class HedgeEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
-        return [
-            {
-                "code": "length_to_plant",
+        return {
+            "length_to_plant": {
                 "result": self.is_length_to_plant_sufficient(),
                 "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
             },
-            self.evaluate_hedge_plantation_quality(),
-            {
-                "code": "do_not_plant_under_power_line",
+            "quality": self.evaluate_hedge_plantation_quality(),
+            "do_not_plant_under_power_line": {
                 "result": self.is_not_planting_under_power_line(),
             },
-        ]
+        }
