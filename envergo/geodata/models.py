@@ -24,6 +24,7 @@ DEPARTMENT_CHOICES = tuple(
 MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
+    ("species", _("Espèces protégées")),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -131,6 +132,7 @@ class Zone(gis_models.Model):
     area = models.BigIntegerField(_("Area"), null=True, blank=True)
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Zone")

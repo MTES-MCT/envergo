@@ -94,13 +94,14 @@ class SpeciesAdminForm(forms.ModelForm):
 @admin.register(Species)
 class SpeciesAdmin(admin.ModelAdmin):
     list_display = [
+        "group",
         "common_name",
         "scientific_name",
-        "group",
-        "hedge_types",
         "level_of_concern",
         "highly_sensitive",
+        "hedge_types",
     ]
+    search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     form = SpeciesAdminForm
-    list_filter = ["group"]
+    list_filter = ["group", "level_of_concern", "highly_sensitive"]
