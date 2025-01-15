@@ -84,6 +84,34 @@ class PlantationEvaluator:
 
         return self._evaluation_result.conditions
 
+    def evaluate(self):
+        """Returns if the plantation is compliant with the regulation"""
+
+        evaluator = HedgeEvaluator(self.hedge_data)
+        evaluation = evaluator.evaluate()
+        result = EvaluationResult(
+            result=(
+                PlantationResults.Adequate
+                if all(item["result"] for item in evaluation)
+                else PlantationResults.Inadequate
+            ),
+            conditions=[item["code"] for item in evaluation if not item["result"]],
+        )
+
+        self._evaluation_result = result
+        return result
+
+
+class HedgeEvaluator:
+    """Evaluate the adequacy of a plantation project.
+
+    The plantation evaluator is used to evaluate if a project is compliant with the regulation.
+    """
+
+    def __init__(self, hedge_data: HedgeData):
+        self.hedge_data = hedge_data
+        self.evaluate()
+
     def is_not_planting_under_power_line(self):
         """Returns True if there is NO hedges to plant, containing high-growing trees (type alignement or mixte),
         that are under power line"""
@@ -196,7 +224,8 @@ class PlantationEvaluator:
         }
 
         return {
-            "is_quality_sufficient": all(
+            "code": "quality",
+            "result": all(
                 [
                     missing_plantation["mixte"] == 0,
                     missing_plantation["alignement"] == 0,
@@ -210,23 +239,15 @@ class PlantationEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
-        quality_evaluation = self.evaluate_hedge_plantation_quality()
-
-        conditions = {
-            "length_to_plant": self.is_length_to_plant_sufficient(),
-            "quality": quality_evaluation["is_quality_sufficient"],
-            "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
-        }
-        result = EvaluationResult(
-            result=(
-                PlantationResults.Adequate
-                if all(conditions.values())
-                else PlantationResults.Inadequate
-            ),
-            conditions=[
-                condition for condition in conditions if not conditions[condition]
-            ],
-        )
-
-        self._evaluation_result = result
-        return result
+        return [
+            {
+                "code": "length_to_plant",
+                "result": self.is_length_to_plant_sufficient(),
+                "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
+            },
+            self.evaluate_hedge_plantation_quality(),
+            {
+                "code": "do_not_plant_under_power_line",
+                "result": self.is_not_planting_under_power_line(),
+            },
+        ]
