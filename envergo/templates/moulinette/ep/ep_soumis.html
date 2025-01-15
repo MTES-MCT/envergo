@@ -19,7 +19,7 @@
                     <th>Groupe</th>
                     <th>Nom commun</th>
                     <th>Nom latin</th>
-                    <th>Enjeu</th>
+                    <th>Niveau d'enjeu</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -27,7 +27,9 @@
                     <tr>
                       <td>{{ species.get_group_display }}</td>
                       <td>{{ species.common_name }}</td>
-                      <td>{{ species.scientific_name }}</td>
+                      <td>
+                        <i>{{ species.scientific_name }}</i>
+                      </td>
                       <td>{{ species.get_level_of_concern_display }}</td>
                     </tr>
                   {% endfor %}

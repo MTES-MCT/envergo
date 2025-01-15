@@ -10,7 +10,7 @@
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
       {% if criterion.should_be_displayed %}
-        <p>{% show_criterion_body regulation criterion %}</p>
+        {% show_criterion_body regulation criterion %}
       {% endif %}
     {% endfor %}
   {% endif %}

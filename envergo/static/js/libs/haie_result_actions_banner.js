@@ -13,6 +13,13 @@ function displayMessage(title, message, type) {
   projectResult.scrollIntoView({behavior: 'smooth'});
 }
 
+
+function openDemarchesSimplifeesModal(event) {
+  if (event.type === 'click' || event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.target.setAttribute('data-fr-opened', true);
+  }
+}
 // a script to add actions on the moulinette result banner
 window.addEventListener('load', function () {
   (function (exports) {
@@ -88,5 +95,11 @@ window.addEventListener('load', function () {
         });
       });
     }
+
+    const inlineButton = document.querySelector('.demarches-simplifiees-modal-btn');
+    if (inlineButton) {
+      inlineButton.addEventListener('keydown', openDemarchesSimplifeesModal);
+    }
+
   })(this);
 });

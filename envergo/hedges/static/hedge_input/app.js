@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, reactive, computed } = Vue
+const {createApp, ref, onMounted, reactive, computed, watch, toRaw} = Vue
 
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
@@ -16,6 +16,9 @@ const styles = {
 };
 const fitBoundsOptions = { padding: [10, 10] };
 
+
+const minimumLengthToPlant = document.getElementById('app').dataset.minimumLengthToPlant;
+const qualityUrl = document.getElementById('app').dataset.qualityUrl;
 
 
 /**
@@ -252,6 +255,24 @@ createApp({
     });
     const showHelpBubble = ref(false);
 
+     // Reactive properties for quality conditions
+    const quality = reactive({
+      "length_to_plant": {"result": false, "minimum_length_to_plant": minimumLengthToPlant},
+      "quality": {"result": false, "missing_plantation": {"mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee":0}},
+      "do_not_plant_under_power_line": {"result": true}
+    });
+
+    // Computed property to track changes in the hedges array
+    const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
+      length: hedge.length,
+      additionalData: hedge.additionalData
+    }))));
+
+    // Watch the computed property for changes
+    watch(hedgesToPlantSnapshot, (newHedges, oldHedges) => {
+      onHedgesToPlantChange();
+    });
+
     const addHedge = (type, latLngs = [], additionalData = {}) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
@@ -414,7 +435,13 @@ createApp({
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
     // Persist data to the server
-    // We first check if all hedges are valid
+    function serializeHedgesData() {
+      const hedgesToPlant = hedges[TO_PLANT].toJSON();
+      const hedgesToRemove = hedges[TO_REMOVE].toJSON();
+      return hedgesToPlant.concat(hedgesToRemove);
+    }
+
+// We first check if all hedges are valid
     const saveData = () => {
       const hedgesToValidate = mode === "removal" ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
       const isValid = hedgesToValidate.every((hedge) => hedge.isValid());
@@ -433,9 +460,7 @@ createApp({
         }, "once");
       }
       else {
-        const hedgesToPlant = hedges[TO_PLANT].toJSON();
-        const hedgesToRemove = hedges[TO_REMOVE].toJSON();
-        const hedgesData = hedgesToPlant.concat(hedgesToRemove);
+        const hedgesData = serializeHedgesData();
         fetch(saveUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -511,6 +536,25 @@ createApp({
       const invalidHedgeList = invalidHedgesIds.join(', ');
       return invalidHedgeList;
     });
+
+    const onHedgesToPlantChange = () => {
+   // Prepare the hedge data to be sent in the request body
+    const hedgeData = serializeHedgesData();
+
+      fetch(qualityUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify(hedgeData),
+      })
+        .then(response => response.json())
+        .then(data => {
+          Object.assign(quality, data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
@@ -599,6 +643,7 @@ createApp({
       cancel,
       showHedgeModal,
       invalidHedges,
+      quality,
     };
   }
 }).mount('#app');

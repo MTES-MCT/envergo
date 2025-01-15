@@ -84,6 +84,36 @@ class PlantationEvaluator:
 
         return self._evaluation_result.conditions
 
+    def evaluate(self):
+        """Returns if the plantation is compliant with the regulation"""
+
+        evaluator = HedgeEvaluator(self.hedge_data)
+        evaluation = evaluator.evaluate()
+        result = EvaluationResult(
+            result=(
+                PlantationResults.Adequate
+                if all(evaluation[item]["result"] for item in evaluation.keys())
+                else PlantationResults.Inadequate
+            ),
+            conditions=[
+                item for item in evaluation.keys() if not evaluation[item]["result"]
+            ],
+        )
+
+        self._evaluation_result = result
+        return result
+
+
+class HedgeEvaluator:
+    """Evaluate the adequacy of a plantation project.
+
+    The plantation evaluator is used to evaluate if a project is compliant with the regulation.
+    """
+
+    def __init__(self, hedge_data: HedgeData):
+        self.hedge_data = hedge_data
+        self.evaluate()
+
     def is_not_planting_under_power_line(self):
         """Returns True if there is NO hedges to plant, containing high-growing trees (type alignement or mixte),
         that are under power line"""
@@ -109,6 +139,25 @@ class PlantationEvaluator:
         )
 
     def evaluate_hedge_plantation_quality(self):
+        """Evaluate the quality of the plantation project.
+        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
+            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
+            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
+            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
+            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
+            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
+
+        return: {
+            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
+            missing_plantation: {
+                mixte: missing length of mixte hedges to plant,
+                alignement: missing length of alignement hedges to plant,
+                arbustive: missing length of arbustive hedges to plant,
+                buissonante: missing length of buissonante hedges to plant,
+                degradee: missing length of dégradée hedges to plant,
+            }
+        }
+        """
         minimum_lengths_to_plant = self.hedge_data.get_minimum_lengths_to_plant()
         lengths_to_plant = self.hedge_data.get_lengths_to_plant()
 
@@ -177,7 +226,7 @@ class PlantationEvaluator:
         }
 
         return {
-            "is_quality_sufficient": all(
+            "result": all(
                 [
                     missing_plantation["mixte"] == 0,
                     missing_plantation["alignement"] == 0,
@@ -191,23 +240,13 @@ class PlantationEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
-        quality_evaluation = self.evaluate_hedge_plantation_quality()
-
-        conditions = {
-            "length_to_plant": self.is_length_to_plant_sufficient(),
-            "quality": quality_evaluation["is_quality_sufficient"],
-            "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
+        return {
+            "length_to_plant": {
+                "result": self.is_length_to_plant_sufficient(),
+                "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
+            },
+            "quality": self.evaluate_hedge_plantation_quality(),
+            "do_not_plant_under_power_line": {
+                "result": self.is_not_planting_under_power_line(),
+            },
         }
-        result = EvaluationResult(
-            result=(
-                PlantationResults.Adequate
-                if all(conditions.values())
-                else PlantationResults.Inadequate
-            ),
-            conditions=[
-                condition for condition in conditions if not conditions[condition]
-            ],
-        )
-
-        self._evaluation_result = result
-        return result
