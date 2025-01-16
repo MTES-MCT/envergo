@@ -50,6 +50,10 @@ class HedgeInput(DetailView):
             context["matomo_custom_url"] = self.request.build_absolute_uri(
                 reverse("moulinette_saisie_p")
             )
+        elif mode == "read_only":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("petition_project_hedges")
+            )
 
         return context
 
