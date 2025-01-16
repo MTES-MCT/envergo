@@ -235,7 +235,7 @@ class HedgeData(models.Model):
         return species
 
     def get_local_species_names(self):
-        """Return species names that reported to live here."""
+        """Return species names that are known to live here."""
 
         bbox = self.get_bounding_box()
         zones = Zone.objects.filter(geometry__intersects=bbox).filter(
@@ -243,11 +243,7 @@ class HedgeData(models.Model):
         )
         zone_species = set()
         for zone in zones:
-            # XXX
-            # the map file will be updated
-            # the fild will be renamed "especes"
-            # the field value will be an array
-            zone_species.update(zone.attributes.get("espece", "").split(","))
+            zone_species.update(zone.attributes.get("especes", []))
         return zone_species
 
     def get_all_species(self):
