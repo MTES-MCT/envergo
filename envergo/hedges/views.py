@@ -40,7 +40,9 @@ class HedgeInput(DetailView):
         context["hedge_data_json"] = hedge_data
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
-        context["minimum_length_to_plant"] = self.object.minimum_length_to_plant()
+        context["minimum_length_to_plant"] = (
+            self.object.minimum_length_to_plant() if self.object else 0
+        )
 
         context["matomo_custom_url"] = self.request.build_absolute_uri(
             reverse("moulinette_saisie_d")
