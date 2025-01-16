@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-16 15:12+0100\n"
+"POT-Creation-Date: 2025-01-16 15:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,10 +83,8 @@ msgid "register-success/"
 msgstr "enregistrement-succès/"
 
 #: config/urls_haie.py:84 envergo/users/urls.py:20
-#, fuzzy
-#| msgid "reset/<uidb64>/<token>/"
 msgid "register/<uidb64>/<token>/"
-msgstr "raz/<uidb64>/<token>/"
+msgstr "enregistrement/<uidb64>/<token>/"
 
 #: envergo/analytics/models.py:12
 msgid "Category"
@@ -1125,7 +1123,7 @@ msgstr ""
 
 #: envergo/petitions/models.py:11
 msgid "Draft"
-msgstr ""
+msgstr "Brouillon"
 
 #: envergo/petitions/models.py:12
 msgid "Prefilled"
@@ -1209,6 +1207,8 @@ msgid ""
 "Please enter your new password twice so we can verify you typed it in "
 "correctly."
 msgstr ""
+"Merci de saisir votre mot de passe deux fois pour que nous puissions nous assurer "
+"qu'il a été saisi correctement."
 
 #: envergo/templates/amenagement/registration/password_reset_confirm.html:26
 #: envergo/templates/haie/registration/password_reset_confirm.html:28
@@ -1216,6 +1216,8 @@ msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a new password reset."
 msgstr ""
+"Le lien de réinitialisation est invalide, peut-être a-t-il été déjà utilisé. "
+"Merci de réitérer votre requête."
 
 #: envergo/users/admin.py:16 envergo/users/models.py:43
 msgid "Email address"
@@ -1226,14 +1228,18 @@ msgid "Personal info"
 msgstr "Infos personnelles"
 
 #: envergo/users/admin.py:29
+msgid "Domains"
+msgstr "Domaines"
+
+#: envergo/users/admin.py:33
 msgid "Permissions"
 msgstr "Permissions"
 
-#: envergo/users/admin.py:42
+#: envergo/users/admin.py:43
 msgid "Important dates"
 msgstr "Dates importantes"
 
-#: envergo/users/apps.py:7 envergo/users/models.py:63
+#: envergo/users/apps.py:7 envergo/users/models.py:65
 msgid "Users"
 msgstr "Utilisateurices"
 
@@ -1252,19 +1258,17 @@ msgstr "Nom de l'utilisateur"
 
 #: envergo/users/models.py:46
 msgid "Confirmed by an admin"
-msgstr ""
-
-#: envergo/users/models.py:49
-#, fuzzy
-#| msgid "Configs amenagement"
-msgid "Access amenagement site"
-msgstr "Configs amenagement"
+msgstr "Confirmé par un admin"
 
 #: envergo/users/models.py:51
-msgid "Access haie site"
-msgstr ""
+msgid "Access amenagement site"
+msgstr "Accès au site Aménagement"
 
-#: envergo/users/models.py:62
+#: envergo/users/models.py:53
+msgid "Access haie site"
+msgstr "Accès au site Haie"
+
+#: envergo/users/models.py:64
 msgid "User"
 msgstr "Utilisateur"
 
