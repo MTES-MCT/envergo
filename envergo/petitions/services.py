@@ -122,7 +122,6 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
 
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-    lineaire_plante_pac = hedge_data.lineaire_plante_pac()
     motif = moulinette.catalog.get("motif", "")
     bcae8 = InstructorInformation(
         slug="bcae8",
@@ -170,20 +169,22 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                 items=[
                     Item(
                         "Nombre de tracés plantés",
-                        len(hedge_data.hedges_to_plant_pac()),
+                        len(hedge_data.hedges_to_plant()),
                         None,
                         None,
                     ),
                     Item(
                         "Total linéaire planté",
-                        hedge_data.lineaire_plante_pac(),
+                        hedge_data.length_to_plant(),
                         "m",
                         None,
                     ),
                     Item(
                         "Ratio en longueur",
                         (
-                            round(lineaire_plante_pac / lineaire_detruit_pac, 2)
+                            round(
+                                hedge_data.length_to_plant() / lineaire_detruit_pac, 2
+                            )
                             if lineaire_detruit_pac > 0
                             else ""
                         ),
@@ -213,9 +214,6 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
         h for h in hedge_data.hedges_to_plant() if h.connexion_boisement
     ]
 
-    hedges_to_remove_under_power_line = [
-        h for h in hedge_data.hedges_to_remove() if h.sous_ligne_electrique
-    ]
     hedges_to_plant_under_power_line = [
         h for h in hedge_data.hedges_to_plant() if h.sous_ligne_electrique
     ]
@@ -232,13 +230,21 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                         AdditionalInfo(
                             label="Destruction",
                             value=f"{round(sum(h.length for h in hedges_to_remove_near_pond))} m "
-                            f"• {', '.join([h.id for h in hedges_to_remove_near_pond])}",
+                            + (
+                                f" • {', '.join([h.id for h in hedges_to_remove_near_pond])}"
+                                if hedges_to_remove_near_pond
+                                else ""
+                            ),
                             unit=None,
                         ),
                         AdditionalInfo(
                             label="Plantation",
                             value=f"{round(sum(h.length for h in hedges_to_plant_near_pond))} m "
-                            f"• {', '.join([h.id for h in hedges_to_plant_near_pond])}",
+                            + (
+                                f" • {', '.join([h.id for h in hedges_to_plant_near_pond])}"
+                                if hedges_to_plant_near_pond
+                                else ""
+                            ),
                             unit=None,
                         ),
                     ],
@@ -255,13 +261,21 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                         AdditionalInfo(
                             label="Destruction",
                             value=f"{round(sum(h.length for h in hedges_to_remove_woodland_connection))} m "
-                            f"• {', '.join([h.id for h in hedges_to_remove_woodland_connection])}",
+                            + (
+                                f" • {', '.join([h.id for h in hedges_to_remove_woodland_connection])}"
+                                if hedges_to_remove_woodland_connection
+                                else ""
+                            ),
                             unit=None,
                         ),
                         AdditionalInfo(
                             label="Plantation",
                             value=f"{round(sum(h.length for h in hedges_to_plant_woodland_connection))} m "
-                            f"• {', '.join([h.id for h in hedges_to_plant_woodland_connection])}",
+                            + (
+                                f" • {', '.join([h.id for h in hedges_to_plant_woodland_connection])}"
+                                if hedges_to_plant_woodland_connection
+                                else ""
+                            ),
                             unit=None,
                         ),
                     ],
@@ -272,19 +286,16 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
             Item(
                 "Proximité ligne électrique",
                 ItemDetails(
-                    result=len(hedges_to_remove_under_power_line) > 0
-                    or len(hedges_to_plant_under_power_line) > 0,
+                    result=len(hedges_to_plant_under_power_line) > 0,
                     details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_under_power_line))} m "
-                            f"• {', '.join([h.id for h in hedges_to_remove_under_power_line])}",
-                            unit=None,
-                        ),
                         AdditionalInfo(
                             label="Plantation",
                             value=f"{round(sum(h.length for h in hedges_to_plant_under_power_line))} m "
-                            f"• {', '.join([h.id for h in hedges_to_plant_under_power_line])}",
+                            + (
+                                f" • {', '.join([h.id for h in hedges_to_plant_under_power_line])}"
+                                if hedges_to_plant_under_power_line
+                                else ""
+                            ),
                             unit=None,
                         ),
                     ],
