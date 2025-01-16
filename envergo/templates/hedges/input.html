@@ -160,8 +160,8 @@
             <div id="conditions" class="fr-px-1w fr-pb-1w">
               <div>
                 <div>
-                  <span :class="{ 'success': quality.length_to_plant.result }"
-                        class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                  <span :class="{ 'success fr-icon-checkbox-fill': quality.length_to_plant.result, 'fr-icon-error-fill': !quality.length_to_plant.result  }"
+                        class="fr-icon fr-icon--sm"></span>
                 </div>
                 <div>
                   <h6>Longueur de la haie plantée</h6>
@@ -171,8 +171,8 @@
               </div>
               <div>
                 <div>
-                  <span :class="{ 'success': quality.quality.result }"
-                        class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                  <span :class="{ 'success fr-icon-checkbox-fill': quality.quality.result, 'fr-icon-error-fill': !quality.quality.result  }"
+                        class="fr-icon fr-icon--sm"></span>
                 </div>
                 <div>
                   <h6>Type de haie plantée</h6>
@@ -183,8 +183,8 @@
                     <p v-if="quality.quality.missing_plantation.alignement > 0">
                       Il manque au moins  [[ Math.round(quality.quality.missing_plantation.mixte + quality.quality.missing_plantation.alignement) ]] m de haie mixte ou alignement d'arbres.
                     </p>
-                    <p v-else-if="quality.quality.missing_plantation.mixte > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte) ]] m de haie mixte.
+                    <p v-else-if="quality.quality.missing_plantation.mixte > 0 || quality.quality.missing_plantation.degradee > 0">
+                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte + quality.quality.missing_plantation.degradee) ]] m de haie mixte.
                     </p>
 
                     <p v-if="quality.quality.missing_plantation.buissonante > 0">
@@ -199,8 +199,8 @@
               </div>
               <div>
                 <div>
-                  <span :class="{ 'success': quality.do_not_plant_under_power_line.result }"
-                        class="fr-icon fr-icon-checkbox-fill fr-icon--sm"></span>
+                  <span :class="{ 'success fr-icon-checkbox-fill': quality.do_not_plant_under_power_line.result, 'fr-icon-error-fill': !quality.do_not_plant_under_power_line.result  }"
+                        class="fr-icon fr-icon--sm"></span>
                 </div>
                 <div>
                   <h6>Sécurité</h6>
