@@ -34,9 +34,6 @@ class UserAdmin(auth_admin.UserAdmin):
             {
                 "fields": (
                     "is_active",
-                    "is_confirmed_by_admin",
-                    "access_amenagement",
-                    "access_haie",
                     "is_staff",
                     "is_superuser",
                     "groups",
