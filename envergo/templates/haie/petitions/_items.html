@@ -24,18 +24,18 @@
     {% endif %}
     {% if comment %}
       <br />
-      <span class="fr-text--xs">{{ comment }}</span>
+      <span class="fr-hint-text">{{ comment }}</span>
     {% endif %}
   {% else %}
     <span>
       {{ item.value }}
-      {% if item.unit %}{{ item.unit }}{% endif %}
+      {% if item.unit and item.value is not None and item.value != "" %}{{ item.unit }}{% endif %}
     </span>
   {% endif %}
 
   {% if item.comment %}
     <br />
-    <span class="fr-text--xs">{{ item.comment }}</span>
+    <span class="fr-hint-text">{{ item.comment }}</span>
   {% endif %}
 </div>
 {% endfor %}
