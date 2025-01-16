@@ -65,10 +65,27 @@ class CustomMapping(LayerMapping):
         kwargs = super().feature_kwargs(feat)
         kwargs.update(self.extra_kwargs)
 
+        # We extract shapefile attributes to the `attributes` json model field
         fields = feat.fields
-        attributes = {f: feat.get(f) for f in fields}
+        attributes = {f: self.get_attribute(feat, f) for f in fields}
         kwargs["attributes"] = attributes
         return kwargs
+
+    def get_attribute(self, feat, field):
+        """Extract shapefile attribute.
+
+        We can define custom methods for specific fields.
+        """
+        if f"get_attribute_{field}" in dir(self):
+            attr = getattr(self, f"get_attribute_{field}")(feat)
+        else:
+            attr = feat.get(field)
+        return attr
+
+    def get_attribute_especes(self, feat):
+        raw_especes = feat.get("especes")
+        especes = [e.strip('"') for e in raw_especes.split(",")]
+        return especes
 
 
 @contextmanager
