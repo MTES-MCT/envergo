@@ -7,7 +7,21 @@
 
   <form method="post" action="" novalidate class="fr-mb-3w">
     {% csrf_token %}
-    {% include '_form_snippet.html' with form=form %}
+
+    {% if form.errors %}
+      <div class="fr-alert fr-alert--error fr-mb-3w">
+        <p>
+          L'adresse e-mail ou le mot de passe n'ont pas été reconnus (attention, le mot de passe tient compte des majuscules et des minuscules.)
+        </p>
+        <p>
+          Si vous venez de créer un compte instructeur, il est possible qu'il n'ait pas encore été activé. <a href="{% url 'contact_us' %}">Contactez l'équipe</a> si vous avez créé votre compte depuis plus de 24 heures et ne parvenez pas à vous connecter.
+        </p>
+      </div>
+    {% endif %}
+
+    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    {% include '_field_snippet.html' with field=form.username %}
+    {% include '_field_snippet.html' with field=form.password %}
 
     <button type="submit" class="fr-btn">Se connecter</button>
   </form>

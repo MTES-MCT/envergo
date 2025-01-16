@@ -26,6 +26,10 @@ class UserAdmin(auth_admin.UserAdmin):
         (None, {"fields": ("email", "password")}),
         (_("Personal info"), {"fields": ("name",)}),
         (
+            _("Domains"),
+            {"fields": ("access_amenagement", "access_haie", "is_confirmed_by_admin")},
+        ),
+        (
             _("Permissions"),
             {
                 "fields": (
