@@ -59,6 +59,7 @@ div#app {
     align-items: stretch;
     min-width: 78em; // size xl
     position: relative;
+    overflow: hidden;
 
     #map {
       flex: 1;
@@ -166,8 +167,9 @@ div#app {
 
     #sidebar {
       bottom: 0;
-      overflow-y: scroll;
+      overflow-y: auto;
       width: 28em;
+      margin-bottom: 0;
 
       div#compensation {
         p.rate strong {
@@ -276,6 +278,19 @@ div#app {
         }
 
         div#conditions {
+          .fr-badge {
+            margin-top: 0.2em;
+
+            &::before {
+              margin: 0;
+            }
+          }
+
+          .fr-badge--error {
+            color: var(--grey-625-425);
+            background-color: var(--background-contrast-grey);
+          }
+
           span.fr-icon {
             line-height: 1.75rem;
             color: var(--grey-625-425);
