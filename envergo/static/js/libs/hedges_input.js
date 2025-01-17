@@ -2,13 +2,11 @@ window.addEventListener("load", function () {
   let buttons = document.querySelectorAll(".hedge-input-open-btn");
   let modal = document.getElementById("hedge-input-modal");
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const hedgeId = urlParams.get('haies');
-
   let hedgeIframe;
 
   const openModal = function () {
     let saveUrl = HEDGES_PLANTATION_URL;
+    const hedgeId = HEDGE_DATA_ID;
     if (hedgeId) {
       saveUrl += hedgeId + "/";
     }

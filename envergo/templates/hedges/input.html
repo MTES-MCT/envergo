@@ -88,17 +88,15 @@
                       [[ hedge.id ]]
                       <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
                     </th>
-                    <td v-if="mode === 'removal'">
+                    <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="editHedge(hedge)">Modifier</button>
+                              @click.stop="showHedgeModal(hedge, hedge.type)">
+                        [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
+                      </button>
                     </td>
                     <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
-                    </td>
-                    <td v-if="mode === 'plantation'">
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="displayHedge(hedge)">Voir la description</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -131,18 +129,15 @@
                       <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
                     </th>
                     <td>
-                      <button v-if="mode === 'plantation'"
-                              class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="editHedge(hedge)">Modifier</button>
+                      <button class="fr-btn fr-btn--tertiary-no-outline"
+                              @click.stop="showHedgeModal(hedge, hedge.type)">
+                        [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
+                      </button>
                     </td>
                     <td>
                       <button v-if="mode === 'plantation'"
                               class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()">Supprimer</button>
-                    </td>
-                    <td v-if="mode === 'removal'">
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="displayHedge(hedge)">Voir la description</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -266,7 +261,8 @@
     <footer>
       <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line "
               @click="cancel">Retour</button>
-      <button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
+      <button v-if="mode !== 'read_only'"
+              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
               @click="saveData">Enregistrer et poursuivre</button>
     </footer>
   </div>

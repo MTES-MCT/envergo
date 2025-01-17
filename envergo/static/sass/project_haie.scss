@@ -400,3 +400,12 @@ div#form-group-haies {
 div#demarches-simplifiees-modal-btns {
   display: flex;
 }
+
+div#go-to-ds-btn {
+  display: flex;
+  justify-content: flex-end;
+}
+
+button#project-summary-hedge-input-open-btn {
+  background-color: var(--grey-1000-50);
+}

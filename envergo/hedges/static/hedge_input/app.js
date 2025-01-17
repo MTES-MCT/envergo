@@ -287,14 +287,14 @@ createApp({
       // Cacher la bulle d'aide à la fin du tracé
       newHedge.polyline.on('editable:drawing:end', () => {
         showHelpBubble.value = false;
-        showHedgeModal(newHedge);
+        showHedgeModal(newHedge, mode === "plantation" ? TO_PLANT : TO_REMOVE);
       });
 
       return newHedge;
     };
 
     // Show the "description de la haie" form modal
-    const showHedgeModal = (hedge, isReadonly) => {
+    const showHedgeModal = (hedge, hedgeType) => {
 
       const fillBooleanField = (fieldElement, fieldName, data) => {
          if(fieldElement && data.hasOwnProperty(fieldName)) {
@@ -302,10 +302,8 @@ createApp({
         }
       }
 
-      // There is two edge data dialogs as edges to plant and to remove have differrent properties
-      // By default we take the dialog of the current mode.
-      // If the form is readonly, then we display the other mode dialog.
-      const dialogMode = isReadonly ? (mode === "removal" ? "plantation" : "removal") : mode;
+      const isReadonly = (hedgeType !== TO_PLANT || mode !== "plantation") && (hedgeType !== TO_REMOVE || mode !== "removal");
+      const dialogMode = hedgeType === TO_PLANT ? "plantation" : "removal";
 
       const dialogId= `${dialogMode}-hedge-data-dialog`
       const dialog = document.getElementById(dialogId);
@@ -416,16 +414,6 @@ createApp({
       dsfr(dialog).modal.disclose();
     };
 
-    // Open the form modal to edit an existing hedge
-    const editHedge = (hedge) => {
-      showHedgeModal(hedge, false);
-    };
-
-    // Open the form modal to display an existing hedge
-    const displayHedge = (hedge) => {
-      showHedgeModal(hedge, true);
-    };
-
     const startDrawingToPlant = () => {
       return addHedge(TO_PLANT);
     };
@@ -491,7 +479,7 @@ createApp({
     // We confirm with a modal if some hedges have been drawn
     const cancel = () => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
-      if (totalHedges > 0) {
+      if (totalHedges > 0 && mode !== "read_only") {
         const dialog = document.getElementById("cancel-modal");
         const confirmCancel = document.getElementById("btn-quit-without-saving");
         const dismissCancel = document.getElementById("btn-back-to-map");
@@ -653,8 +641,7 @@ createApp({
       showHelpBubble,
       saveData,
       cancel,
-      editHedge,
-      displayHedge,
+      showHedgeModal,
       invalidHedges,
       quality,
     };

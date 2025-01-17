@@ -44,11 +44,19 @@ class HedgeInput(DetailView):
             self.object.minimum_length_to_plant() if self.object else 0
         )
 
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            reverse("moulinette_saisie_d")
-            if mode == "removal"
-            else reverse("moulinette_saisie_p")
-        )
+        if mode == "removal":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_d")
+            )
+        elif mode == "plantation":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_p")
+            )
+        elif mode == "read_only":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("petition_project_hedges")
+            )
+
         return context
 
     def post(self, request, *args, **kwargs):
