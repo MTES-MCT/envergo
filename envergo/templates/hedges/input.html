@@ -155,8 +155,8 @@
             <div id="conditions" class="fr-px-1w fr-pb-1w">
               <div>
                 <div>
-                  <span :class="{ 'success fr-icon-checkbox-fill': quality.length_to_plant.result, 'fr-icon-error-fill': !quality.length_to_plant.result  }"
-                        class="fr-icon fr-icon--sm"></span>
+                  <p :class="{ 'fr-badge--success': quality.length_to_plant.result, 'fr-badge--error': !quality.length_to_plant.result} "
+                     class="fr-badge"></p>
                 </div>
                 <div>
                   <h6>Longueur de la haie plantée</h6>
@@ -166,8 +166,8 @@
               </div>
               <div>
                 <div>
-                  <span :class="{ 'success fr-icon-checkbox-fill': quality.quality.result, 'fr-icon-error-fill': !quality.quality.result  }"
-                        class="fr-icon fr-icon--sm"></span>
+                  <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "
+                     class="fr-badge"></p>
                 </div>
                 <div>
                   <h6>Type de haie plantée</h6>
@@ -194,8 +194,8 @@
               </div>
               <div>
                 <div>
-                  <span :class="{ 'success fr-icon-checkbox-fill': quality.do_not_plant_under_power_line.result, 'fr-icon-error-fill': !quality.do_not_plant_under_power_line.result  }"
-                        class="fr-icon fr-icon--sm"></span>
+                  <p :class="{ 'fr-badge--success': quality.do_not_plant_under_power_line.result, 'fr-badge--error': !quality.do_not_plant_under_power_line.result} "
+                     class="fr-badge"></p>
                 </div>
                 <div>
                   <h6>Sécurité</h6>

@@ -278,6 +278,19 @@ div#app {
         }
 
         div#conditions {
+          .fr-badge {
+            margin-top: 0.2em;
+
+            &::before {
+              margin: 0;
+            }
+          }
+
+          .fr-badge--error {
+            color: var(--grey-625-425);
+            background-color: var(--background-contrast-grey);
+          }
+
           span.fr-icon {
             line-height: 1.75rem;
             color: var(--grey-625-425);
