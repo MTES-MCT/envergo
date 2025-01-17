@@ -28,9 +28,9 @@
   <div class="banner-item">
     {% if plantation_evaluation.global_result == "soumis" %}
       <button id="demarche-simplifiee-banner-btn"
-              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line demarche-simplifiee-btn">
-        Déposer une demande d'autorisation
-      </button>
+              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
+              aria-controls="demarches-simplifiees-modal"
+              data-fr-opened="false">Déposer une demande d'autorisation</button>
     {% elif moulinette.result == "soumis" and not is_result_plantation %}
       <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
               type="button"

@@ -4,10 +4,13 @@
   <li>la destruction est compensée par la plantation d’un linéaire équivalent.</li>
 </ul>
 
-<p>Cette dispense de déclaration n’est valable qu’une seule fois par campagne PAC.</p>
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+  <p>Cette dispense de déclaration n’est valable qu’une seule fois par campagne PAC.</p>
 
-{% if lineaire_type_4_sur_parcelle_pac > 0 %}
-  <p>
-    À noter : Les alignements d’arbres ne sont pas concernés par les règles de conditionnalité PAC. La longueur de haie détruite prise en compte est de {{ lineaire_detruit_pac }} m.
-  </p>
-{% endif %}
+  {% if lineaire_type_4_sur_parcelle_pac > 0 %}
+    <p>
+      À noter : Les alignements d’arbres ne sont pas concernés par les règles de conditionnalité PAC. La longueur de haie détruite prise en compte est de {{ lineaire_detruit_pac }} m.
+    </p>
+  {% endif %}
+</div>

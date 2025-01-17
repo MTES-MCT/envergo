@@ -113,7 +113,7 @@ class Command(BaseCommand):
                     )
 
                     message = f"""\
-### Récupération des status des dossiers depuis Démarches-simplifiées : :x: erreur
+### Récupération des statuts des dossiers depuis Démarches-simplifiées : :x: erreur
 
 L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de
 la démarche n°{demarche_number}.
@@ -154,9 +154,9 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                     )
 
                     message = f"""\
-                    ### Récupération des status des dossiers depuis Démarches-simplifiées : :warning: anomalie
+                    ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
-                    La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le status des \
+                    La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le statut des \
                     dossiers concernés n'a pas pu être récupéré.
 
                     Réponse de Démarches Simplifiées : {response.status_code}
@@ -204,7 +204,7 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                         )
 
                         message = f"""\
-                        ### Récupération des status des dossiers depuis Démarches-simplifiées : :warning: anomalie
+                        ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
                         Un dossier Démarches Simplifiées concernant {demarche_label} n'a pas de projet associé.
                         Cela peut être dû à une création manuelle du dossier sans passer par la plateforme GUH.
