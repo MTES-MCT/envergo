@@ -39,11 +39,19 @@ class HedgeInput(DetailView):
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
 
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            reverse("moulinette_saisie_d")
-            if mode == "removal"
-            else reverse("moulinette_saisie_p")
-        )
+        if mode == "removal":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_d")
+            )
+        elif mode == "plantation":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_p")
+            )
+        elif mode == "read_only":
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("petition_project_hedges")
+            )
+
         return context
 
     def post(self, request, *args, **kwargs):

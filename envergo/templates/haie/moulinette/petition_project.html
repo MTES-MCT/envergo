@@ -1,0 +1,49 @@
+{% extends 'haie/moulinette/result_plantation.html' %}
+
+{% load static %}
+
+{% block result_title %}
+  <div id="go-to-ds-btn">
+    <a class="fr-btn"
+       href="{{ ds_url }}"
+       target="_blank"
+       rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
+  </div>
+  <h1 class="fr-mt-4w fr-mb-1w">Dossier n° {{ demarches_simplifiees_dossier_number }}</h1>
+  <p class="fr-text--sm fr-hint-text">
+    <span class="fr-icon-calendar-line" aria-hidden="true"></span> Déposé le {{ created_at }}
+  </p>
+{% endblock %}
+
+{% block result_header %}
+  <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
+  <p>
+    Cette simulation n’est plus modifiable car elle a été pris en compte dans votre dossier.
+    <br />
+    <strong>Vous pouvez dupliquer cette version</strong>, la modifier comme vous le souhaitez puis recréer un dossier pour déposer votre demande.
+  </p>
+  <a class="fr-btn fr-btn--secondary" href="{{ edit_url }}">Dupliquer cette simulation</a>
+
+  <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
+
+  <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+     href="{% url 'contact_us' %}">Contacter le guichet unique</a>
+
+  <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
+  {{ block.super }}
+{% endblock %}
+
+{% block project_summary %}
+  {{ block.super }}
+  <button id="project-summary-hedge-input-open-btn"
+          class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+          type="button"
+          data-fr-opened="false"
+          aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+{% endblock %}
