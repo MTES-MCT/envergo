@@ -59,6 +59,7 @@ div#app {
     align-items: stretch;
     min-width: 78em; // size xl
     position: relative;
+    overflow: hidden;
 
     #map {
       flex: 1;
@@ -166,8 +167,9 @@ div#app {
 
     #sidebar {
       bottom: 0;
-      overflow-y: scroll;
+      overflow-y: auto;
       width: 28em;
+      margin-bottom: 0;
 
       div#compensation {
         p.rate strong {
