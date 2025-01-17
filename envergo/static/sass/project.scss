@@ -969,6 +969,15 @@ div.hero-alt {
 
 // moulinette result page styles
 .moulinette-result-body {
+  #content {
+    display: flex;
+    flex-flow: column;
+  }
+
+  #after_result_content {
+    order: 2;
+  }
+
   #action-banner {
     @media (height > 20rem) {
       position: fixed;
@@ -1023,7 +1032,8 @@ div.hero-alt {
     }
   }
 
-  #project-result {
+  #project-result,
+  #after_result_content {
     & > section {
       max-width: 42rem;
       margin: 0 auto;
