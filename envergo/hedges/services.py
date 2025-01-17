@@ -108,10 +108,113 @@ class PlantationEvaluator:
             >= self.hedge_data.minimum_length_to_plant()
         )
 
+    def evaluate_hedge_plantation_quality(self):
+        """Evaluate the quality of the plantation project.
+        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
+            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
+            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
+            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
+            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
+            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
+
+        return: {
+            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
+            missing_plantation: {
+                mixte: missing length of mixte hedges to plant,
+                alignement: missing length of alignement hedges to plant,
+                arbustive: missing length of arbustive hedges to plant,
+                buissonante: missing length of buissonante hedges to plant,
+                degradee: missing length of dégradée hedges to plant,
+            }
+        }
+        """
+        minimum_lengths_to_plant = self.hedge_data.get_minimum_lengths_to_plant()
+        lengths_to_plant = self.hedge_data.get_lengths_to_plant()
+
+        reliquat = {
+            "mixte_remplacement_alignement": max(
+                0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"]
+            ),
+            "mixte_remplacement_dégradée": max(
+                0,
+                max(0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"])
+                - max(
+                    0,
+                    minimum_lengths_to_plant["alignement"]
+                    - lengths_to_plant["alignement"],
+                ),
+            ),
+            "arbustive_remplacement_buissonnante": max(
+                0, lengths_to_plant["arbustive"] - minimum_lengths_to_plant["arbustive"]
+            ),
+            "arbustive_remplacement_dégradée": max(
+                0,
+                max(
+                    0,
+                    lengths_to_plant["arbustive"]
+                    - minimum_lengths_to_plant["arbustive"],
+                )
+                - max(
+                    0,
+                    minimum_lengths_to_plant["buissonnante"]
+                    - lengths_to_plant["buissonnante"],
+                ),
+            ),
+            "buissonnante_remplacement_dégradée": max(
+                0,
+                lengths_to_plant["buissonnante"]
+                - minimum_lengths_to_plant["buissonnante"],
+            ),
+        }
+
+        missing_plantation = {
+            "mixte": max(
+                0, minimum_lengths_to_plant["mixte"] - lengths_to_plant["mixte"]
+            ),
+            "alignement": max(
+                0,
+                minimum_lengths_to_plant["alignement"]
+                - lengths_to_plant["alignement"]
+                - reliquat["mixte_remplacement_alignement"],
+            ),
+            "arbustive": max(
+                0, minimum_lengths_to_plant["arbustive"] - lengths_to_plant["arbustive"]
+            ),
+            "buissonante": max(
+                0,
+                minimum_lengths_to_plant["buissonnante"]
+                - lengths_to_plant["buissonnante"]
+                - reliquat["arbustive_remplacement_buissonnante"],
+            ),
+            "degradee": max(
+                0,
+                minimum_lengths_to_plant["degradee"]
+                - reliquat["mixte_remplacement_dégradée"]
+                - reliquat["arbustive_remplacement_dégradée"]
+                - reliquat["buissonnante_remplacement_dégradée"],
+            ),
+        }
+
+        return {
+            "is_quality_sufficient": all(
+                [
+                    missing_plantation["mixte"] == 0,
+                    missing_plantation["alignement"] == 0,
+                    missing_plantation["arbustive"] == 0,
+                    missing_plantation["buissonante"] == 0,
+                    missing_plantation["degradee"] == 0,
+                ]
+            ),
+            "missing_plantation": missing_plantation,
+        }
+
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
+        quality_evaluation = self.evaluate_hedge_plantation_quality()
+
         conditions = {
             "length_to_plant": self.is_length_to_plant_sufficient(),
+            "quality": quality_evaluation["is_quality_sufficient"],
             "do_not_plant_under_power_line": self.is_not_planting_under_power_line(),
         }
         result = EvaluationResult(

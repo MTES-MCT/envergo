@@ -1,1 +1,46 @@
 <p>Le projet est soumis à demande de dérogation espèces protégées</p>
+
+{% if protected_species %}
+  <section class="fr-accordion">
+    <h3 class="fr-accordion__title">
+      <button class="fr-accordion__btn"
+              aria-expanded="false"
+              aria-controls="species-accordion">Voir les espèces</button>
+    </h3>
+    <div class="fr-collapse fr-m-0 fr-p-0" id="species-accordion">
+      <div class="fr-table fr-table--no-caption">
+        <div class="fr-table__wrapper">
+          <div class="fr-table__container">
+            <div class="fr-table__content">
+              <table>
+                <caption>Liste des espèces protégées potentiellement présentes</caption>
+                <thead>
+                  <tr>
+                    <th>Groupe</th>
+                    <th>Nom commun</th>
+                    <th>Nom latin</th>
+                    <th>Niveau d'enjeu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for species in protected_species %}
+                    <tr>
+                      <td>{{ species.get_group_display }}</td>
+                      <td>{{ species.common_name }}</td>
+                      <td>
+                        <i>{{ species.scientific_name }}</i>
+                      </td>
+                      <td>{{ species.get_level_of_concern_display }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% else %}
+  <p>Aucune espèce protégée trouvée.</p>
+{% endif %}
