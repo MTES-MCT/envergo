@@ -22,6 +22,7 @@ from envergo.moulinette.models import (
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.petitions.forms import PetitionProjectForm
 from envergo.petitions.models import PetitionProject
+from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details, generate_key
 from envergo.utils.urls import extract_param_from_url, update_qs
@@ -347,12 +348,11 @@ class PetitionProjectCreate(FormView):
         )
 
 
-class PetitionProjectDetail(MoulinetteMixin, FormView):
-    template_name = "haie/moulinette/petition_project.html"
-
+class PetitionProjectMixin(MoulinetteMixin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.moulinette = None
+        self.petition_project = None
 
     def get(self, request, *args, **kwargs):
 
@@ -390,6 +390,23 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
             )
             raise NotImplementedError("We do not handle uncompleted project")
 
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["moulinette"] = self.moulinette
+        context["base_result"] = self.moulinette.get_result_template()
+        context["is_read_only"] = True
+        context["petition_project"] = self.petition_project
+        return context
+
+
+class PetitionProjectDetail(PetitionProjectMixin, FormView):
+    template_name = "haie/moulinette/petition_project.html"
+
+    def get(self, request, *args, **kwargs):
+        result = super().get(request, *args, **kwargs)
+
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
         if not request.session.pop("auto_redirection", False):
             log_event(
@@ -400,7 +417,7 @@ class PetitionProjectDetail(MoulinetteMixin, FormView):
                 **get_matomo_tags(self.request),
             )
 
-        return super().get(request, *args, **kwargs)
+        return result
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -435,6 +452,19 @@ class PetitionProjectAutoRedirection(View):
         request.session["auto_redirection"] = True
         # Redirect to the petition_project view
         return redirect(reverse("petition_project", kwargs=kwargs))
+
+
+class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
+    template_name = "haie/petitions/instructor_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["project_details"] = compute_instructor_informations(
+            self.petition_project, self.moulinette
+        )
+
+        return context
 
 
 class Alert:
