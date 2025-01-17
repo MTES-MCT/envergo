@@ -34,7 +34,8 @@ class HedgeDataFactory(DjangoModelFactory):
 
     @factory.post_generation
     def hedges(obj, create, extracted, **kwargs):
-        obj.data = [hedge.toDict() for hedge in extracted]
+        if extracted:
+            obj.data = [hedge.toDict() for hedge in extracted]
 
 
 class SpeciesFactory(DjangoModelFactory):
