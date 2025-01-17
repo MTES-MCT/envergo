@@ -25,7 +25,7 @@ from envergo.petitions.models import PetitionProject
 from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details, generate_key
-from envergo.utils.urls import extract_param_from_url
+from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -402,7 +402,7 @@ class PetitionProjectMixin(MoulinetteMixin):
 
 
 class PetitionProjectDetail(PetitionProjectMixin, FormView):
-    template_name = "haie/moulinette/result_plantation.html"
+    template_name = "haie/moulinette/petition_project.html"
 
     def get(self, request, *args, **kwargs):
         result = super().get(request, *args, **kwargs)
@@ -426,6 +426,22 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
             self.moulinette, self.moulinette.catalog["haies"]
+        )
+        context["demarches_simplifiees_dossier_number"] = (
+            self.petition_project.demarches_simplifiees_dossier_number
+        )
+        context["created_at"] = self.petition_project.created_at
+
+        parsed_moulinette_url = urlparse(self.petition_project.moulinette_url)
+        moulinette_params = parse_qs(parsed_moulinette_url.query)
+        moulinette_params["edit"] = ["true"]
+        result_url = reverse("moulinette_result")
+        edit_url = update_qs(result_url, moulinette_params)
+
+        context["edit_url"] = edit_url
+        context["ds_url"] = (
+            f"https://www.demarches-simplifiees.fr/dossiers/"
+            f"{self.petition_project.demarches_simplifiees_dossier_number}"
         )
         return context
 
