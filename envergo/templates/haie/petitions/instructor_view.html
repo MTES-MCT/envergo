@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block container %}
   <section class="fr-py-8w alt">
     <div class="fr-container">
@@ -75,6 +77,12 @@
 
                 {% endfor %}
               {% endif %}
+              {% if forloop.first %}
+                <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
+                        type="button"
+                        data-fr-opened="false"
+                        aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+              {% endif %}
             </section>
           {% endfor %}
         </div>
@@ -82,4 +90,13 @@
     </div>
 
   </section>
+
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var SOURCE_PAGE = "instruction";</script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
 {% endblock %}

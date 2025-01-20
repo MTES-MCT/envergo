@@ -10,6 +10,9 @@ window.addEventListener("load", function () {
     if (hedgeId) {
       saveUrl += hedgeId + "/";
     }
+    if (typeof SOURCE_PAGE !== 'undefined') {
+        saveUrl += "?source_page=" + SOURCE_PAGE;
+    }
 
     hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
     modal.showModal();
