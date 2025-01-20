@@ -21,6 +21,12 @@ urlpatterns = [
         RedirectView.as_view(pattern_name="home"),
         name="petition_project_hedges",
     ),
+    # This is another "fake" url, only for matomo tracking
+    path(
+        "+ref_proj+/instruction/haies/",
+        RedirectView.as_view(pattern_name="home"),
+        name="instructor_view_hedges",
+    ),
     # a path that redirects to the petition project detail page without logging the event
     path(
         "<slug:reference>/auto-redirection/",
