@@ -1119,6 +1119,10 @@ footer {
   flex-wrap: wrap;
   width: 100vw;
 
+  @media print {
+    display: none;
+  }
+
   .banner-item {
     flex: 0 1 auto;
   }
