@@ -16,19 +16,25 @@ def settings_context(_request):
     except NoReverseMatch:
         catchment_area_page_url = None
 
-    # We disable the chatbox on the Haie website
-    if (
-        _request.path == catchment_area_page_url
-        or _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
-    ):
+    if _request.path == catchment_area_page_url:
         chatbox_enabled = False
     else:
-        chatbox_enabled = settings.CRISP_CHATBOX_ENABLED
+        chatbox_enabled = (
+            settings.CRISP["HAIE"]["CHATBOX_ENABLED"]
+            if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+            else settings.CRISP["AMENAGEMENT"]["CHATBOX_ENABLED"]
+        )
 
     analytics = (
         settings.ANALYTICS["HAIE"]
         if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
         else settings.ANALYTICS["AMENAGEMENT"]
+    )
+
+    crisp_website_id = (
+        settings.CRISP["HAIE"]["WEBSITE_ID"]
+        if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+        else settings.CRISP["AMENAGEMENT"]["WEBSITE_ID"]
     )
 
     return {
@@ -37,7 +43,7 @@ def settings_context(_request):
         "SENTRY_DSN": settings.SENTRY_DSN,
         "ENV_NAME": settings.ENV_NAME,
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
-        "CRISP_WEBSITE_ID": settings.CRISP_WEBSITE_ID,
+        "CRISP_WEBSITE_ID": crisp_website_id,
     }
 
 
