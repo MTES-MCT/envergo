@@ -456,6 +456,18 @@ class PetitionProjectAutoRedirection(View):
 class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
     template_name = "haie/petitions/instructor_view.html"
 
+    def get(self, request, *args, **kwargs):
+        result = super().get(request, *args, **kwargs)
+
+        log_event(
+            "projet",
+            "consultation_i",
+            self.request,
+            **self.petition_project.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+        return result
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
