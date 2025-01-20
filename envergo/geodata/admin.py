@@ -13,13 +13,15 @@ from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Map, Zone
-from envergo.geodata.tasks import generate_map_preview, process_shapefile_map
-from envergo.geodata.utils import count_features, extract_shapefile
+from envergo.geodata.tasks import generate_map_preview, process_map
+from envergo.geodata.utils import count_features, extract_map
 
 
 class MapForm(forms.ModelForm):
     def clean_file(self):
-        """Check that the given file is a valid shapefile archive.
+        """Check that the given file is a valid map.
+
+        We handle two formats : shapefile and geopackage.
 
         The official shapefile format is just a bunch of files with
         the same name and different extensions.
@@ -29,7 +31,7 @@ class MapForm(forms.ModelForm):
         """
         file = self.cleaned_data["file"]
         try:
-            with extract_shapefile(file):
+            with extract_map(file):
                 pass  # This file is valid, yeah \o/
         except Exception as e:
             raise ValidationError(_(f"This file does not seem valid ({e})"))
@@ -96,7 +98,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return queryset, may_have_duplicates
 
     def save_model(self, request, obj, form, change):
-        obj.expected_zones = count_features(obj.file)
+        obj.expected_zones = count_features(obj.file.file)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
@@ -195,7 +197,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
 
         return f'{imported} / {obj.expected_zones or ""}'
 
-    @admin.action(description=_("Extract and import a shapefile"))
+    @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
         if queryset.count() > 1:
             error = _("Please only select one map for this action.")
@@ -203,10 +205,8 @@ class MapAdmin(gis_admin.GISModelAdmin):
             return
 
         map = queryset[0]
-        process_shapefile_map.delay(map.id)
-        msg = _(
-            "Your shapefile will be processed soon. It might take up to a few minutes."
-        )
+        process_map.delay(map.id)
+        msg = _("Your map will be processed soon. It might take up to a few minutes.")
         self.message_user(request, msg, level=messages.INFO)
 
     @admin.action(description=_("Generate the simplified preview geometry"))
