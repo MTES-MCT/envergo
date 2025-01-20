@@ -272,7 +272,7 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
         "area",
         "npoints",
     ]
-    readonly_fields = ["map", "created_at", "area", "npoints"]
+    readonly_fields = ["map", "created_at", "area", "npoints", "attributes"]
     list_filter = ["map__map_type", "map__data_type"]
 
     # Prevent an expensive count query
