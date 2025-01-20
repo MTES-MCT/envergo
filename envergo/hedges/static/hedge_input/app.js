@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, reactive, computed } = Vue
+const {createApp, ref, onMounted, reactive, computed, watch, toRaw} = Vue
 
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
@@ -17,6 +17,130 @@ const styles = {
 const fitBoundsOptions = { padding: [10, 10] };
 
 
+const minimumLengthToPlant = document.getElementById('app').dataset.minimumLengthToPlant;
+const qualityUrl = document.getElementById('app').dataset.qualityUrl;
+const mode = document.getElementById('app').dataset.mode;
+
+// Show the "description de la haie" form modal
+const showHedgeModal = (hedge, hedgeType) => {
+
+  const fillBooleanField = (fieldElement, fieldName, data) => {
+     if(fieldElement && data.hasOwnProperty(fieldName)) {
+      fieldElement.checked = data[fieldName];
+    }
+  }
+
+  const isReadonly = (hedgeType !== TO_PLANT || mode !== "plantation") && (hedgeType !== TO_REMOVE || mode !== "removal");
+  const dialogMode = hedgeType === TO_PLANT ? "plantation" : "removal";
+
+  const dialogId= `${dialogMode}-hedge-data-dialog`
+  const dialog = document.getElementById(dialogId);
+  const form = dialog.querySelector("form");
+  const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
+  const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
+  const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
+  const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
+  const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
+  const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
+  const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
+  const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
+  const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
+  const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
+  const resetForm = () => {
+    form.reset();
+    const inputs = form.querySelectorAll("input");
+    const selects = form.querySelectorAll("select");
+
+    inputs.forEach(input => input.disabled = false);
+    selects.forEach(select => select.disabled = false);
+    const submitButton = form.querySelector("button[type='submit']");
+    submitButton.innerText = "Enregistrer";
+  }
+
+  resetForm();
+
+  // Pre-fill the form with hedge data if it's an edition
+  if (hedge.additionalData) {
+    hedgeTypeField.value = hedge.additionalData.typeHaie;
+    fillBooleanField(pacField, "surParcellePac", hedge.additionalData);
+    fillBooleanField(nearPondField, "proximiteMare", hedge.additionalData);
+    fillBooleanField(oldTreeField, "vieilArbre", hedge.additionalData);
+    fillBooleanField(nearWaterField, "proximitePointEau", hedge.additionalData);
+    fillBooleanField(woodlandConnectionField, "connexionBoisement", hedge.additionalData);
+    fillBooleanField(underPowerLineField, "sousLigneElectrique", hedge.additionalData);
+    fillBooleanField(nearbyRoadField, "proximiteVoirie", hedge.additionalData);
+  } else {
+    form.reset();
+  }
+  hedgeName.textContent = hedge.id;
+  hedgeLength.textContent = hedge.length.toFixed(0);
+
+  // Save form data to the hedge object
+  // This is the form submit event handler
+  const saveModalData = (event) => {
+    event.preventDefault();
+
+    const hedgeType = hedgeTypeField.value;
+    hedge.additionalData = {
+      typeHaie: hedgeType,
+    };
+    if (pacField) {
+      hedge.additionalData.surParcellePac = pacField.checked;
+    }
+    if (nearPondField) {
+      hedge.additionalData.proximiteMare = nearPondField.checked;
+    }
+    if (oldTreeField) {
+      hedge.additionalData.vieilArbre = oldTreeField.checked;
+    }
+    if (nearWaterField) {
+      hedge.additionalData.proximitePointEau = nearWaterField.checked;
+    }
+    if (woodlandConnectionField) {
+      hedge.additionalData.connexionBoisement = woodlandConnectionField.checked;
+    }
+    if (underPowerLineField) {
+      hedge.additionalData.sousLigneElectrique = underPowerLineField.checked;
+    }
+    if (nearbyRoadField) {
+      hedge.additionalData.proximiteVoirie = nearbyRoadField.checked;
+    }
+
+    // Reset the form and hide the modal
+    form.reset();
+    dsfr(dialog).modal.conceal();
+  };
+
+  const closeModal = (event) => {
+    event.preventDefault();
+    // Hide the modal
+    dsfr(dialog).modal.conceal();
+  };
+
+  if(isReadonly) {
+    const inputs = form.querySelectorAll("input");
+    const selects = form.querySelectorAll("select");
+
+    inputs.forEach(input => input.disabled = true);
+    selects.forEach(select => select.disabled = true);
+    const submitButton = form.querySelector("button[type='submit']");
+    submitButton.innerText = "Retour";
+
+    form.addEventListener("submit", closeModal, {once: true});
+  }
+  else {
+    // Save data upon form submission
+    form.addEventListener("submit", saveModalData, {once: true});
+  }
+
+  // If the modal is closed without saving, let's make sure to remove the
+  // event listener.
+  dialog.addEventListener("dsfr.conceal", () => {
+    form.removeEventListener("submit", saveModalData);
+  });
+
+  dsfr(dialog).modal.disclose();
+};
 
 /**
  * Represent a single hedge object.
@@ -70,7 +194,7 @@ class Hedge {
     this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
     this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
     this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
-    this.polyline.on('click', this.centerOnMap.bind(this));
+    this.polyline.on('click', () => showHedgeModal(this, this.type));
     this.polyline.on('mouseover', this.handleMouseOver.bind(this));
     this.polyline.on('mouseout', this.handleMouseOut.bind(this));
   }
@@ -239,8 +363,6 @@ createApp({
   setup() {
     let map = null;
 
-    const mode = document.getElementById('app').dataset.mode;
-
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
@@ -251,6 +373,24 @@ createApp({
       return toRemove > 0 ? toPlant / toRemove * 100 : 0;
     });
     const showHelpBubble = ref(false);
+
+     // Reactive properties for quality conditions
+    const quality = reactive({
+      "length_to_plant": {"result": false, "minimum_length_to_plant": minimumLengthToPlant},
+      "quality": {"result": false, "missing_plantation": {"mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee":0}},
+      "do_not_plant_under_power_line": {"result": true}
+    });
+
+    // Computed property to track changes in the hedges array
+    const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
+      length: hedge.length,
+      additionalData: hedge.additionalData
+    }))));
+
+    // Watch the computed property for changes
+    watch(hedgesToPlantSnapshot, (newHedges, oldHedges) => {
+      onHedgesToPlantChange();
+    });
 
     const addHedge = (type, latLngs = [], additionalData = {}) => {
       let hedgeList = hedges[type];
@@ -270,127 +410,6 @@ createApp({
       });
 
       return newHedge;
-    };
-
-    // Show the "description de la haie" form modal
-    const showHedgeModal = (hedge, hedgeType) => {
-
-      const fillBooleanField = (fieldElement, fieldName, data) => {
-         if(fieldElement && data.hasOwnProperty(fieldName)) {
-          fieldElement.checked = data[fieldName];
-        }
-      }
-
-      const isReadonly = (hedgeType !== TO_PLANT || mode !== "plantation") && (hedgeType !== TO_REMOVE || mode !== "removal");
-      const dialogMode = hedgeType === TO_PLANT ? "plantation" : "removal";
-
-      const dialogId= `${dialogMode}-hedge-data-dialog`
-      const dialog = document.getElementById(dialogId);
-      const form = dialog.querySelector("form");
-      const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
-      const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
-      const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
-      const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
-      const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
-      const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
-      const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
-      const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
-      const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
-      const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
-      const resetForm = () => {
-        form.reset();
-        const inputs = form.querySelectorAll("input");
-        const selects = form.querySelectorAll("select");
-
-        inputs.forEach(input => input.disabled = false);
-        selects.forEach(select => select.disabled = false);
-        const submitButton = form.querySelector("button[type='submit']");
-        submitButton.innerText = "Enregistrer";
-      }
-
-      resetForm();
-
-      // Pre-fill the form with hedge data if it's an edition
-      if (hedge.additionalData) {
-        hedgeTypeField.value = hedge.additionalData.typeHaie;
-        fillBooleanField(pacField, "surParcellePac", hedge.additionalData);
-        fillBooleanField(nearPondField, "proximiteMare", hedge.additionalData);
-        fillBooleanField(oldTreeField, "vieilArbre", hedge.additionalData);
-        fillBooleanField(nearWaterField, "proximitePointEau", hedge.additionalData);
-        fillBooleanField(woodlandConnectionField, "connexionBoisement", hedge.additionalData);
-        fillBooleanField(underPowerLineField, "sousLigneElectrique", hedge.additionalData);
-        fillBooleanField(nearbyRoadField, "proximiteVoirie", hedge.additionalData);
-      } else {
-        form.reset();
-      }
-      hedgeName.textContent = hedge.id;
-      hedgeLength.textContent = hedge.length.toFixed(0);
-
-      // Save form data to the hedge object
-      // This is the form submit event handler
-      const saveModalData = (event) => {
-        event.preventDefault();
-
-        const hedgeType = hedgeTypeField.value;
-        hedge.additionalData = {
-          typeHaie: hedgeType,
-        };
-        if (pacField) {
-          hedge.additionalData.surParcellePac = pacField.checked;
-        }
-        if (nearPondField) {
-          hedge.additionalData.proximiteMare = nearPondField.checked;
-        }
-        if (oldTreeField) {
-          hedge.additionalData.vieilArbre = oldTreeField.checked;
-        }
-        if (nearWaterField) {
-          hedge.additionalData.proximitePointEau = nearWaterField.checked;
-        }
-        if (woodlandConnectionField) {
-          hedge.additionalData.connexionBoisement = woodlandConnectionField.checked;
-        }
-        if (underPowerLineField) {
-          hedge.additionalData.sousLigneElectrique = underPowerLineField.checked;
-        }
-        if (nearbyRoadField) {
-          hedge.additionalData.proximiteVoirie = nearbyRoadField.checked;
-        }
-
-        // Reset the form and hide the modal
-        form.reset();
-        dsfr(dialog).modal.conceal();
-      };
-
-      const closeModal = (event) => {
-        event.preventDefault();
-        // Hide the modal
-        dsfr(dialog).modal.conceal();
-      };
-
-      if(isReadonly) {
-        const inputs = form.querySelectorAll("input");
-        const selects = form.querySelectorAll("select");
-
-        inputs.forEach(input => input.disabled = true);
-        selects.forEach(select => select.disabled = true);
-        const submitButton = form.querySelector("button[type='submit']");
-        submitButton.innerText = "Retour";
-
-        form.addEventListener("submit", closeModal, {once: true});
-      }
-      else {
-        // Save data upon form submission
-        form.addEventListener("submit", saveModalData, {once: true});
-      }
-
-      // If the modal is closed without saving, let's make sure to remove the
-      // event listener.
-      dialog.addEventListener("dsfr.conceal", () => {
-        form.removeEventListener("submit", saveModalData);
-      });
-
-      dsfr(dialog).modal.disclose();
     };
 
     const startDrawingToPlant = () => {
@@ -414,7 +433,13 @@ createApp({
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
     // Persist data to the server
-    // We first check if all hedges are valid
+    function serializeHedgesData() {
+      const hedgesToPlant = hedges[TO_PLANT].toJSON();
+      const hedgesToRemove = hedges[TO_REMOVE].toJSON();
+      return hedgesToPlant.concat(hedgesToRemove);
+    }
+
+// We first check if all hedges are valid
     const saveData = () => {
       const hedgesToValidate = mode === "removal" ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
       const isValid = hedgesToValidate.every((hedge) => hedge.isValid());
@@ -433,9 +458,7 @@ createApp({
         }, "once");
       }
       else {
-        const hedgesToPlant = hedges[TO_PLANT].toJSON();
-        const hedgesToRemove = hedges[TO_REMOVE].toJSON();
-        const hedgesData = hedgesToPlant.concat(hedgesToRemove);
+        const hedgesData = serializeHedgesData();
         fetch(saveUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -511,6 +534,25 @@ createApp({
       const invalidHedgeList = invalidHedgesIds.join(', ');
       return invalidHedgeList;
     });
+
+    const onHedgesToPlantChange = () => {
+   // Prepare the hedge data to be sent in the request body
+    const hedgeData = serializeHedgesData();
+
+      fetch(qualityUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify(hedgeData),
+      })
+        .then(response => response.json())
+        .then(data => {
+          Object.assign(quality, data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
@@ -599,6 +641,7 @@ createApp({
       cancel,
       showHedgeModal,
       invalidHedges,
+      quality,
     };
   }
 }).mount('#app');

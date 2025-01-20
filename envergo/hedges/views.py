@@ -3,12 +3,14 @@ import json
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 
 from envergo.hedges.forms import HedgeToPlantDataForm, HedgeToRemoveDataForm
 from envergo.hedges.models import HedgeData
+from envergo.hedges.services import HedgeEvaluator
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -38,6 +40,9 @@ class HedgeInput(DetailView):
         context["hedge_data_json"] = hedge_data
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
+        context["minimum_length_to_plant"] = (
+            self.object.minimum_length_to_plant() if self.object else 0
+        )
 
         if mode == "removal":
             context["matomo_custom_url"] = self.request.build_absolute_uri(
@@ -70,6 +75,20 @@ class HedgeInput(DetailView):
             }
             status_code = 201 if created else 200
             return JsonResponse(response_data, status=status_code)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+class HedgeQualityView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            hedge_data = HedgeData(data=data)
+            evaluator = HedgeEvaluator(hedge_data=hedge_data)
+            evaluation = evaluator.evaluate()
+            return JsonResponse(evaluation, status=200, safe=False)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
