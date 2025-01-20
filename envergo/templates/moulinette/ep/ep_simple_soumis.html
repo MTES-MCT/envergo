@@ -1,0 +1,7 @@
+<p>Le projet est soumis à demande de dérogation espèces protégées</p>
+
+{% if protected_species %}
+  {% include 'hedges/_species_table.html' with species=protected_species %}
+{% else %}
+  <p>Aucune espèce protégée trouvée.</p>
+{% endif %}

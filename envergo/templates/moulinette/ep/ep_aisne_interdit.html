@@ -1,0 +1,52 @@
+<p>
+  Le projet est interdit au titre de la réglementation sur les espèces protégées car il ne prévoit pas de plantation d’une haie en compensation des impacts engendrés.
+</p>
+
+<p>Options pour rendre le projet autorisable :</p>
+
+<ul>
+  <li>prévoir de planter une autre haie</li>
+</ul>
+
+{% if not is_read_only %}
+  <p>
+    Vous pouvez <a href="{{ edit_url }}">modifier votre projet dans le simulateur</a>.
+  </p>
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+
+  <p>
+    Tout projet de destruction de haie est soumis à la réglementation sur les espèces protégées. Pour être autorisé, il doit obtenir une dérogation des services de l’État.
+  </p>
+
+  <p>Pour qu’une dérogation puisse être délivrée, le porteur de projet doit prouver :</p>
+
+  <ul>
+    <li>que le projet est réalisé pour des motifs impérieux ;</li>
+    <li>
+      que toutes les mesures ont été prises pour éviter les impacts du projet sur les espèces protégées (réduire le linéaire détruit ou détruire les haies les moins riches en biodiversité) ;
+    </li>
+    <li>et en dernier lieu, que les impacts inévitables sont compensés.</li>
+  </ul>
+
+  <p>
+    La plantation d’une haie en remplacement de la haie détruite est donc nécessaire en guise de compensation des impacts résiduels du projet.
+  </p>
+
+  <p>
+    En modifiant votre projet et en répondant « oui, en plantant une haie à un autre endroit », ce simulateur vous indiquera les caractéristiques de la haie à planter nécessaires pour que le projet soit susceptible d’être autorisé par l’administration.
+  </p>
+
+  <p>
+    D’autres mesures de compensation incluent la plantation d’arbres ou de bosquets, ou la restauration de haies existantes et leur gestion vertueuse pour les espèces : maintien de bandes enherbées, réduction de la fréquence de taille…
+  </p>
+
+  <p>
+    Vous pouvez consulter <a href="https://www.aisne.gouv.fr/contenu/telechargement/35346/226601/file/Guide%20Haies_VF_HD.pdf"
+    target="_blank"
+    rel="noopener">la procédure simplifiée mise en place dans l’Aisne pour l’application de la réglementation sur les espèces protégées</a> (à partir de la page 33, et page 52 pour les mesures de compensation).
+  </p>
+</div>
