@@ -3,6 +3,10 @@ const { createApp, ref, onMounted, reactive, computed } = Vue
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
 
+const PLANTATION_MODE = 'plantation';
+const REMOVAL_MODE = 'removal';
+const READ_ONLY_MODE = 'read_only';
+
 // Those styles are overidden by the CSS file
 const styles = {
   TO_PLANT: {
@@ -16,6 +20,7 @@ const styles = {
 };
 const fitBoundsOptions = { padding: [10, 10] };
 
+const mode = document.getElementById('app').dataset.mode;
 
 
 /**
@@ -66,7 +71,13 @@ class Hedge {
     this.additionalData = additionalData;
 
     this.updateLength();
-
+    if (mode !== READ_ONLY_MODE) {
+      this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
+      this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
+      this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
+    } else {
+      this.polyline.disableEdit();
+    }
     this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
     this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
     this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
@@ -238,9 +249,6 @@ createApp({
 
   setup() {
     let map = null;
-
-    const mode = document.getElementById('app').dataset.mode;
-
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
@@ -266,7 +274,7 @@ createApp({
       // Cacher la bulle d'aide à la fin du tracé
       newHedge.polyline.on('editable:drawing:end', () => {
         showHelpBubble.value = false;
-        showHedgeModal(newHedge, mode === "plantation" ? TO_PLANT : TO_REMOVE);
+        showHedgeModal(newHedge, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
       });
 
       return newHedge;
@@ -281,8 +289,8 @@ createApp({
         }
       }
 
-      const isReadonly = (hedgeType !== TO_PLANT || mode !== "plantation") && (hedgeType !== TO_REMOVE || mode !== "removal");
-      const dialogMode = hedgeType === TO_PLANT ? "plantation" : "removal";
+      const isReadonly = (hedgeType !== TO_PLANT || mode !== PLANTATION_MODE) && (hedgeType !== TO_REMOVE || mode !== REMOVAL_MODE);
+      const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
 
       const dialogId= `${dialogMode}-hedge-data-dialog`
       const dialog = document.getElementById(dialogId);
@@ -416,7 +424,7 @@ createApp({
     // Persist data to the server
     // We first check if all hedges are valid
     const saveData = () => {
-      const hedgesToValidate = mode === "removal" ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
+      const hedgesToValidate = mode === REMOVAL_MODE ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
       const isValid = hedgesToValidate.every((hedge) => hedge.isValid());
       if (!isValid) {
         const dialog = document.getElementById("save-modal");
@@ -454,7 +462,7 @@ createApp({
     // We confirm with a modal if some hedges have been drawn
     const cancel = () => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
-      if (totalHedges > 0 && mode !== "read_only") {
+      if (totalHedges > 0 && mode !== READ_ONLY_MODE) {
         const dialog = document.getElementById("cancel-modal");
         const confirmCancel = document.getElementById("btn-quit-without-saving");
         const dismissCancel = document.getElementById("btn-back-to-map");
@@ -497,16 +505,16 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData);
-        if(type === TO_PLANT && mode === "removal") {
+        if(type === TO_PLANT && mode === REMOVAL_MODE) {
           hedge.polyline.disableEdit();
-        }else if(type === TO_REMOVE && mode === "plantation") {
+        }else if(type === TO_REMOVE && mode === PLANTATION_MODE) {
           hedge.polyline.disableEdit();
         }
       });
     };
 
     const invalidHedges = computed(() => {
-      const invalidHedges = hedges[mode === "removal" ? TO_REMOVE : TO_PLANT].hedges.filter((hedge) => !hedge.isValid());
+      const invalidHedges = hedges[mode === REMOVAL_MODE ? TO_REMOVE : TO_PLANT].hedges.filter((hedge) => !hedge.isValid());
       const invalidHedgesIds = invalidHedges.map((hedge) => hedge.id);
       const invalidHedgeList = invalidHedgesIds.join(', ');
       return invalidHedgeList;
