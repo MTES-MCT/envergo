@@ -2,14 +2,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from envergo.hedges.services import PlantationEvaluator
+from envergo.hedges.services import HedgeEvaluator
 
 pytestmark = pytest.mark.django_db
 
 
 def test_hedge_quality_should_be_sufficient():
-    moulinette = Mock()
-    moulinette.result = "soumis"
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
@@ -28,10 +26,10 @@ def test_hedge_quality_should_be_sufficient():
         "alignement": 20,
     }
 
-    evaluator = PlantationEvaluator(moulinette=moulinette, hedge_data=hedge_data)
+    evaluator = HedgeEvaluator(hedge_data=hedge_data)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
-        "is_quality_sufficient": True,
+        "result": True,
         "missing_plantation": {
             "mixte": 0,
             "alignement": 0,
@@ -43,8 +41,6 @@ def test_hedge_quality_should_be_sufficient():
 
 
 def test_hedge_quality_should_not_be_sufficient():
-    moulinette = Mock()
-    moulinette.result = "soumis"
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
@@ -63,10 +59,10 @@ def test_hedge_quality_should_not_be_sufficient():
         "alignement": 5,
     }
 
-    evaluator = PlantationEvaluator(moulinette=moulinette, hedge_data=hedge_data)
+    evaluator = HedgeEvaluator(hedge_data=hedge_data)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
-        "is_quality_sufficient": False,
+        "result": False,
         "missing_plantation": {
             "mixte": 5,
             "alignement": 5,

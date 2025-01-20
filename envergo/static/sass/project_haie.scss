@@ -59,6 +59,7 @@ div#app {
     align-items: stretch;
     min-width: 78em; // size xl
     position: relative;
+    overflow: hidden;
 
     #map {
       flex: 1;
@@ -166,8 +167,9 @@ div#app {
 
     #sidebar {
       bottom: 0;
-      overflow-y: scroll;
+      overflow-y: auto;
       width: 28em;
+      margin-bottom: 0;
 
       div#compensation {
         p.rate strong {
@@ -261,6 +263,61 @@ div#app {
 
             &:active {
               background-color: #ebebeb;
+            }
+          }
+        }
+      }
+
+      div#hedge-quality {
+        h3 {
+          margin: 0;
+          font-weight: 500 !important;
+          font-size: 16px !important;
+          background-color: var(--blue-france-925-125);
+          color: var(--blue-france-sun-113-625);
+        }
+
+        div#conditions {
+          .fr-badge {
+            margin-top: 0.2em;
+
+            &::before {
+              margin: 0;
+            }
+          }
+
+          .fr-badge--error {
+            color: var(--grey-625-425);
+            background-color: var(--background-contrast-grey);
+          }
+
+          span.fr-icon {
+            line-height: 1.75rem;
+            color: var(--grey-625-425);
+          }
+
+          span.fr-icon.success {
+            color: var(--success-425-625);
+          }
+
+          p {
+            line-height: 1rem;
+            font-size: 14px;
+            margin: 0;
+          }
+
+          h6 {
+            margin: 0;
+            font-weight: 500 !important;
+            font-size: 16px !important;
+          }
+
+          > div {
+            display: flex;
+            margin-top: 1rem;
+
+            div {
+              margin-right: 0.8rem;
             }
           }
         }
