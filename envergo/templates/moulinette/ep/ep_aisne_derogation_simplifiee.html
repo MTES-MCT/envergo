@@ -1,0 +1,31 @@
+<p>
+  Le projet est soumis à la réglementation sur les espèces protégées. Pour être autorisé, il doit obtenir une dérogation des services de l’État.
+</p>
+
+<p>
+  Au vu des caractéristiques des haies détruites, une procédure simplifiée peut être suivie : l’inventaire de terrain pour recenser les espèces présentes dans les haies détruites n’est pas nécessaire.
+</p>
+
+<p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
+
+<ul>
+  <li>de la raison pour laquelle la haie est détruite ;</li>
+  <li>de l’absence de solution alternative qui permettrait d’éviter la destruction ;</li>
+  <li>
+    des mesures mises en œuvre pour réduire, et à défaut pour compenser, les impacts du projet sur les espèces et les habitats abrités par les haies détruites.
+  </li>
+</ul>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    Vous pouvez consulter <a href="https://www.aisne.gouv.fr/contenu/telechargement/35346/226601/file/Guide%20Haies_VF_HD.pdf"
+    target="_blank"
+    rel="noopener">la procédure simplifiée mise en place dans l’Aisne pour l’application de la réglementation sur les espèces protégées (voir page 33)</a>.
+  </p>
+
+  {% if protected_species %}
+    {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% endif %}
+</div>
