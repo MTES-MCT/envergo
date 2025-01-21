@@ -1,8 +1,4 @@
-import glob
 import logging
-import zipfile
-from contextlib import contextmanager
-from tempfile import TemporaryDirectory
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
@@ -43,7 +39,7 @@ STATUSES = Choices(
 
 
 class Map(models.Model):
-    """Holds a shapefile map."""
+    """Holds a map file (shapefile / gpkg)."""
 
     name = models.CharField(_("Name"), max_length=256)
     display_name = models.CharField(_("Display name"), max_length=256, blank=True)
@@ -103,18 +99,6 @@ class Map(models.Model):
 
     def __str__(self):
         return self.name
-
-    @contextmanager
-    def extract_shapefile(self):
-        with TemporaryDirectory() as tmpdir:
-            logger.info("Extracting map zip file")
-            zf = zipfile.ZipFile(self.file)
-            zf.extractall(tmpdir)
-
-            logger.info("Find .shp file path")
-            paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
-            shapefile = paths[0]
-            yield shapefile
 
 
 class Zone(gis_models.Model):
