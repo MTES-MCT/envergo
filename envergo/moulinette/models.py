@@ -772,6 +772,10 @@ class ConfigAmenagement(ConfigBase):
         "Valeurs des critères", default=dict, null=False, blank=True
     )
 
+    ep_free_mention = models.TextField(
+        "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
+    )
+
     class Meta:
         verbose_name = _("Config amenagement")
         verbose_name_plural = _("Configs amenagement")

@@ -200,9 +200,6 @@ class Hedge {
     } else {
       this.polyline.disableEdit();
     }
-    this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
-    this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
-    this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
     this.polyline.on('click', () => showHedgeModal(this, this.type));
     this.polyline.on('mouseover', this.handleMouseOver.bind(this));
     this.polyline.on('mouseout', this.handleMouseOut.bind(this));
