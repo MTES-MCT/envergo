@@ -94,9 +94,9 @@ class SpeciesAdminForm(forms.ModelForm):
 @admin.register(Species)
 class SpeciesAdmin(admin.ModelAdmin):
     list_display = [
-        "group",
         "common_name",
         "scientific_name",
+        "group",
         "level_of_concern",
         "highly_sensitive",
         "hedge_types",
