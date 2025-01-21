@@ -64,7 +64,7 @@ class RegisterForm(UserCreationForm):
             email = cleaned_data.get("email")
             if email and self._meta.model.objects.filter(email__iexact=email).exists():
                 error = ValidationError(
-                    self.instance.unique_error_message(self._meta.model, ["email"]),
+                    "Un utilisateur avec cette adresse e-mail existe déjà.",
                     code="unique",
                 )
                 self.add_error("email", error)
