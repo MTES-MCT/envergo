@@ -138,6 +138,39 @@ def test_haie_register_for_existing_amenagement_user(
     assert amenagement_user.access_haie
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_register_duplicate_email_with_other_errors(
+    amenagement_user, client, mailoutbox
+):
+    """The "email already exists" error is not displayed"""
+    users = User.objects.all()
+    assert not amenagement_user.access_haie
+    assert users.count() == 1
+
+    # Account already exists, trying to register
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+
+    # Registration went well, account activation was sent
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert users.count() == 1
+
+    assert (
+        "Un utilisateur avec cette adresse e-mail existe déjà"
+        not in res.content.decode()
+    )
+
+
 def test_amenagement_login_on_amenagement_site(amenagement_user, client):
     assert amenagement_user.access_amenagement
     assert not amenagement_user.is_confirmed_by_admin

@@ -27,13 +27,14 @@ class UserAdmin(auth_admin.UserAdmin):
         (_("Personal info"), {"fields": ("name",)}),
         (
             _("Domains"),
-            {"fields": ("access_amenagement", "access_haie", "is_confirmed_by_admin")},
+            {"fields": ("access_amenagement", "access_haie")},
         ),
         (
             _("Permissions"),
             {
                 "fields": (
                     "is_active",
+                    "is_confirmed_by_admin",
                     "is_staff",
                     "is_superuser",
                     "groups",
