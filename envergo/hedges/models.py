@@ -283,6 +283,16 @@ LEVELS_OF_CONCERN = Choices(
 class Species(models.Model):
     """Represent a single species."""
 
+    # This is the unique species identifier (cd_nom) in the INPN TaxRef database
+    # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
+    # The reason why this is an array is because sometimes, there are duplicates
+    # (e.g) a species has been describe by several naturalists over the years before
+    # they realized it was a duplicate.
+    # Hence, for a given scientific name, there can be several TaxRef ids.
+    taxref_ids = ArrayField(
+        null=True, verbose_name="Ids TaxRef (cd_nom)", base_field=models.IntegerField()
+    )
+
     # This "group" is an ad-hoc category, not related to the official biology taxonomy
     group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
     common_name = models.CharField("Nom commun", max_length=255)
