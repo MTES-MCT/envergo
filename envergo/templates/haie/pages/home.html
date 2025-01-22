@@ -91,7 +91,7 @@
       </div>
       <hr id="department-search" class="separator fr-mt-4w" />
       <div class="fr-grid-row fr-grid-row--center">
-        <span id="department-search-title" class="fr-text--lead">Le projet est situé dans un autre département ?</span>
+        <span id="department-search-title" class="fr-text--lead">Le projet est-il situé dans un autre département ?</span>
         <div class="fr-col-12 fr-grid-row fr-grid-row--center">
           <form action="#department-search" method="post">
             {% csrf_token %}
@@ -124,17 +124,27 @@
             <div class="fr-notice__body">
               <p>
                 <span class="fr-notice__title"></span>
-                <span class="fr-notice__desc">Le guichet unique haie n'existe pas encore dans le département {{ department }}.</span>
+                <span class="fr-notice__desc">{{ department }} : nous ne disposons pas encore d'information sur les contacts de l'administration en rapport avec la haie.</span>
               </p>
             </div>
           </div>
         </div>
-        {% if config and config.contacts_and_links %}
-          <div id="contacts_and_links" class="fr-mt-4w fr-p-2w">
+        <div id="contacts_and_links" class="fr-mt-4w fr-p-2w">
+          {% if config and config.contacts_and_links %}
+          
             <h6>Liste des contacts et liens utiles</h6>
             {{ config.contacts_and_links|safe }}
-          </div>
-        {% endif %}
+          
+          {% else %}
+          <div id="contacts_and_links" class="fr-mt-4w fr-p-2w">
+          <p>Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture,
+            des ressources à présenter aux usagers ?
+            <a href="https://tally.so/r/w4Agpb" target="_blank" rel="noopener">Cliquez ici</a>.
+          </p>
+        </div>
+          {% endif %}
+        </div>
+        
       {% endif %}
     </div>
   </section>
