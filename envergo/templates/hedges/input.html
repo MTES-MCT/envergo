@@ -35,9 +35,10 @@
           </button>
         </div>
 
-        <div v-if="showHelpBubble" class="help-bubble">
+        <div v-if="helpBubble" class="help-bubble">
           <span class="fr-icon-info-fill" aria-hidden="true"></span>
-          Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
+          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
         </div>
       </div>
 
