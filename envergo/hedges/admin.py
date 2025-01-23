@@ -100,8 +100,10 @@ class SpeciesAdmin(admin.ModelAdmin):
         "level_of_concern",
         "highly_sensitive",
         "hedge_types",
+        "taxref_ids",
     ]
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     form = SpeciesAdminForm
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
+    readonly_fields = ["taxref_ids"]
