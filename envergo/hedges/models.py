@@ -233,24 +233,24 @@ class HedgeData(models.Model):
         species = Species.objects.filter(union).order_by("group", "common_name")
         return species
 
-    def get_local_species_names(self):
+    def get_local_species_codes(self):
         """Return species names that are known to live here."""
 
         bbox = self.get_bounding_box()
         zones = Zone.objects.filter(geometry__intersects=bbox).filter(
             map__map_type="species"
         )
-        zone_species = set()
+        codes = set()
         for zone in zones:
-            zone_species.update(zone.attributes.get("especes", []))
-        return zone_species
+            codes.update(zone.attributes.get("especes", []))
+        return list(codes)
 
     def get_all_species(self):
         """Return the local list of protected species."""
 
         hedge_species_qs = self.get_hedge_species()
-        local_species_names = self.get_local_species_names()
-        return hedge_species_qs.filter(common_name__in=local_species_names)
+        local_species_codes = self.get_local_species_codes()
+        return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
 
 
 HEDGE_TYPES = (
