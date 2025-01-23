@@ -113,6 +113,8 @@ def extract_map(archive):
     elif archive.name.endswith(".gpkg"):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
+        elif hasattr(archive, "url"):
+            yield archive.url
         else:
             yield archive.path
 
