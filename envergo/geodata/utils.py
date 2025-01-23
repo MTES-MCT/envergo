@@ -84,7 +84,7 @@ class CustomMapping(LayerMapping):
 
     def get_attribute_especes(self, feat):
         raw_especes = feat.get("especes")
-        especes = [e.strip('"') for e in raw_especes.split(",")]
+        especes = list(map(int, raw_especes.split(",")))
         return especes
 
 
