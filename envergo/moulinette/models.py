@@ -768,9 +768,6 @@ class ConfigAmenagement(ConfigBase):
         blank=True,
     )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
-    criteria_values = models.JSONField(
-        "Valeurs des critères", default=dict, null=False, blank=True
-    )
 
     ep_free_mention = models.TextField(
         "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
