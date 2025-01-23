@@ -269,7 +269,9 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
         creation_event = (
             Event.objects.order_by("-date_created")
             .filter(
-                metadata__reference=project.reference, category="dossier", event="depot"
+                metadata__reference=project.reference,
+                category="dossier",
+                event="creation",
             )
             .first()
         )
