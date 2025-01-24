@@ -2,31 +2,30 @@ name: CI
 
 # Enable Buildkit and let compose use it to speed up image building
 env:
-  DATABASE_URL: 'postgis://envergo:envergo@localhost:5432/envergo'
+  DATABASE_URL: "postgis://envergo:envergo@localhost:5432/envergo"
   USE_DOCKER: False
-  LANG: 'fr_FR.UTF-8'
-  LC_ALL: 'fr_FR.UTF-8'
-  DJANGO_SETTINGS_MODULE: 'config.settings.ci'
+  LANG: "fr_FR.UTF-8"
+  LC_ALL: "fr_FR.UTF-8"
+  DJANGO_SETTINGS_MODULE: "config.settings.ci"
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   linter:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout Code Repository
         uses: actions/checkout@v3
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: 3.12.3
+          python-version: 3.12.8
 
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
@@ -86,20 +85,19 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: 3.12.3
+          python-version: 3.12.8
 
       - name: Install python dependencies
-        run:  pip install -r requirements/local.txt
+        run: pip install -r requirements/local.txt
 
       - name: Install js dependencies
-        run:  npm ci
+        run: npm ci
 
       - name: Build assets
-        run:  bash bin/build_assets.sh
+        run: bash bin/build_assets.sh
 
       - name: Run Django Tests
-        run:  pytest
-
+        run: pytest
 
   e2e:
     timeout-minutes: 60
@@ -123,39 +121,39 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: npm ci
-    - name: Install French locale
-      run: |
-        sudo apt update
-        sudo apt install -y language-pack-fr
-        sudo locale-gen fr_FR.UTF-8
-        sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Create empty .env file if it does not exist
-      run: touch .env
-    - name: Launch services
-      run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
-    - name: Migrate database
-      run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
-    - name: Seed database
-      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
-    - name: Build assets
-      run:  docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django bash bin/build_assets.sh
-    - name: Wait for services to be ready
-      run:  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Install French locale
+        run: |
+          sudo apt update
+          sudo apt install -y language-pack-fr
+          sudo locale-gen fr_FR.UTF-8
+          sudo update-locale LANG=fr_FR.UTF-8 LC_ALL=fr_FR.UTF-8
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Create empty .env file if it does not exist
+        run: touch .env
+      - name: Launch services
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+      - name: Migrate database
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
+      - name: Seed database
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py loaddata e2e/fixtures/db_seed.json
+      - name: Build assets
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django bash bin/build_assets.sh
+      - name: Wait for services to be ready
+        run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
+      - name: Run Playwright tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
