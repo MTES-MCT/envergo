@@ -785,13 +785,7 @@ class ConfigHaie(ConfigBase):
 
     regulations_available = HAIE_REGULATIONS
 
-    department_guichet_unique_url = models.URLField(
-        "Url du guichet unique de la haie du département (si existant)", blank=True
-    )
-
-    contacts_and_links = models.TextField(
-        "Liste des contacts et liens utiles", blank=True
-    )
+    contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
