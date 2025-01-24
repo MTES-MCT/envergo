@@ -36,7 +36,7 @@ class Command(BaseCommand):
             zf = zipfile.ZipFile(file_content)
             zf.extractall(tmpdir)
 
-            paths = glob.glob(f"{tmpdir}/TAXREF*.txt")
+            paths = glob.glob(f"{tmpdir}/TAXREFv*.txt")
             try:
                 path = paths[0]
             except IndexError:
