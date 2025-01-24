@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Succès{% endblock %}
+
+{% block article %}
+  <h1>Nous vous avons envoyé un email d'activation de compte</h1>
+
+  <p class="fr-text fr-text--lead">
+    <span class="fr-fi-mail-fill" aria-hidden="true"></span>
+    Consultez votre messagerie et cliquez sur le lien contenu dans l'email pour activer votre compte instructeur « guichet unique de la haie ».
+  </p>
+
+  <p>Si au bout de quelques secondes, vous ne recevez pas d'e-mail d'activation, vous pouvez :</p>
+
+  <ul>
+    <li>vérifier dans vos spams ;</li>
+    <li>retenter de créer un espace en vérifiant bien la validité de l'adresse saisie ;</li>
+    <li>
+      <a href="{% url 'contact_us' %}">nous contacter</a>.
+    </li>
+  </ul>
+
+  <p>
+    Merci de votre intérêt,
+    <br />
+    l'équipe du guichet unique de la haie.
+  </p>
+
+{% endblock %}
