@@ -45,8 +45,8 @@ class EspecesProtegeesAisne(CriterionEvaluator):
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
-        "derogation_inventaire": RESULTS.soumis,
-        "derogation_simplifiee": RESULTS.soumis,
+        "derogation_inventaire": RESULTS.derogation_inventaire,
+        "derogation_simplifiee": RESULTS.derogation_simplifiee,
     }
 
     def get_catalog_data(self):

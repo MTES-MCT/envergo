@@ -75,6 +75,8 @@ RESULT_CASCADE = [
     RESULTS.systematique,
     RESULTS.cas_par_cas,
     RESULTS.soumis,
+    RESULTS.derogation_inventaire,
+    RESULTS.derogation_simplifiee,
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
