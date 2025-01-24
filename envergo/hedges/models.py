@@ -272,6 +272,16 @@ SPECIES_GROUPS = Choices(
     ("reptile", "Reptile"),
 )
 
+KINGDOMS = Choices(
+    ("animalia", "Animalia"),
+    ("archaea", "Archaea"),
+    ("bacteria", "Bacteria"),
+    ("chromista", "Chromista"),
+    ("fungi", "Fungi"),
+    ("plantae", "Plantae"),
+    ("protozoa", "Protozoa"),
+)
+
 LEVELS_OF_CONCERN = Choices(
     ("faible", "Faible"),
     ("moyen", "Moyen"),
@@ -296,6 +306,8 @@ class Species(models.Model):
 
     # This "group" is an ad-hoc category, not related to the official biology taxonomy
     group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
+
+    kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
     common_name = models.CharField("Nom commun", max_length=255)
     scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(

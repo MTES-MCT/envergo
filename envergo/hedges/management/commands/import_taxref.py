@@ -54,10 +54,12 @@ class Command(BaseCommand):
                 for row in reader:
                     scientific_name = row["LB_NOM"]
                     vernacular_name_id = row["CD_NOM"]
+                    kingdom = row["REGNE"].lower()
                     if scientific_name in species_names:
                         # AFAIK, there is still no way to update an array field in a
                         # sigle query. Issue open since 9 years
                         # https://code.djangoproject.com/ticket/26355
                         species = Species.objects.get(scientific_name=scientific_name)
                         species.taxref_ids.append(vernacular_name_id)
+                        species.kingdom = kingdom
                         species.save()
