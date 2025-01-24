@@ -106,4 +106,4 @@ class SpeciesAdmin(admin.ModelAdmin):
     ordering = ["-common_name"]
     form = SpeciesAdminForm
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
-    readonly_fields = ["taxref_ids"]
+    readonly_fields = ["kingdom", "taxref_ids"]

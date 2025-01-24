@@ -56,10 +56,10 @@ class EspecesProtegeesAisne(CriterionEvaluator):
             species = haies.get_all_species()
             catalog["protected_species"] = species
             catalog["fauna_sensitive_species"] = [
-                s for s in species if s.highly_sensitive
+                s for s in species if s.highly_sensitive and s.kingdom == "animalia"
             ]
             catalog["flora_sensitive_species"] = [
-                s for s in species if s.highly_sensitive
+                s for s in species if s.highly_sensitive and s.kingdom == "plantae"
             ]
         return catalog
 
