@@ -61,7 +61,7 @@ DEBUG_TOOLBAR_CONFIG = {
         "debug_toolbar.panels.redirects.RedirectsPanel",
         # Disable profiling panel due to an issue with Python 3.12:
         # https://github.com/jazzband/django-debug-toolbar/issues/1875
-        "debug_toolbar.panels.profiling.ProfilingPanels",
+        "debug_toolbar.panels.profiling.ProfilingPanel",
     ],
     "SHOW_TEMPLATE_CONTEXT": True,
 }

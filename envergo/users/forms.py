@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 
@@ -39,8 +40,36 @@ class RegisterForm(UserCreationForm):
         self.fields["name"].widget.attrs["placeholder"] = "Prénom Nom"
 
     def clean_email(self):
-        email = self.cleaned_data["email"]
+        """Prevent case related issues."""
+        email = self.cleaned_data.get("email")
         return email.lower()
+
+    def clean(self):
+        """Check that the email is unique.
+
+        We NEVER want to display the "A user with that email already exists" message.
+        So in the view, there is a custom check. If the "unique" error is the ONLY form
+        error, we don't display the error and send an activation email instead.
+
+        Thus, we want to check for email unicity IF AND ONLY IF there are no other
+        errors in the form.
+        """
+
+        # By not calling super().clean(), we prevent the unique constraint to be
+        # checked.
+        cleaned_data = self.cleaned_data
+
+        if not self.errors:
+            # Prevent registrations with existing email addresses
+            email = cleaned_data.get("email")
+            if email and self._meta.model.objects.filter(email__iexact=email).exists():
+                error = ValidationError(
+                    "Un utilisateur avec cette adresse e-mail existe déjà.",
+                    code="unique",
+                )
+                self.add_error("email", error)
+
+        return cleaned_data
 
 
 class AllowDisabledSelect(Select):
