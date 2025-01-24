@@ -305,6 +305,8 @@ def get_display_result(regulation):
         RESULTS.non_soumis,
         RESULTS.non_concerne,
         RESULTS.non_disponible,
+        RESULTS.derogation_inventaire,
+        RESULTS.derogation_simplifiee,
     ]
 
     return regulation.result if regulation.result not in other_results else "autre"
