@@ -297,7 +297,7 @@ class Species(models.Model):
     # This "group" is an ad-hoc category, not related to the official biology taxonomy
     group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
     common_name = models.CharField("Nom commun", max_length=255)
-    scientific_name = models.CharField("Nom scientifique", max_length=255)
+    scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
         "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
     )
