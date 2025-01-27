@@ -272,12 +272,6 @@ class ConfigAmenagementForm(forms.ModelForm):
                 "department"
             ].queryset.defer("geometry")
 
-    def clean_criteria_values(self):
-        """Ensure an empty value can be converted to an empty json dict."""
-        value = self.cleaned_data["criteria_values"]
-        value = value or dict()
-        return value
-
 
 class MoulinetteConfigTemplateForm(forms.ModelForm):
     """Form to edit a MoulinetteTemplate in a ConfigAmenagement.
@@ -372,7 +366,7 @@ class ConfigHaieAdminForm(forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated", "department_guichet_unique_url"]
+    list_display = ["department", "is_activated"]
     list_filter = ["is_activated"]
 
     def get_queryset(self, request):

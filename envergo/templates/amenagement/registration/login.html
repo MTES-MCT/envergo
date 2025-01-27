@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Se connecter{% endblock %}
+
+{% block article %}
+  <h1>Connectez-vous pour accéder à votre espace EnvErgo</h1>
+
+  <form method="post" action="" novalidate class="fr-mb-3w">
+    {% csrf_token %}
+
+    {% if form.errors %}
+      <div class="fr-alert fr-alert--error fr-mb-3w">
+        <p>
+          L'adresse e-mail ou le mot de passe n'ont pas été reconnus (attention, le mot de passe tient compte des majuscules et des minuscules).
+        </p>
+        <p>
+          Si vous venez de créer votre compte, assurez-vous de l’avoir activé en cliquant sur le lien inclus dans l’email qui vous a été envoyé. <a href="{% url 'contact_us' %}">Contactez l'équipe</a> si vous avez créé votre compte mais n’avez pas reçu d’email d’activation.
+        </p>
+      </div>
+    {% endif %}
+
+    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    {% include '_field_snippet.html' with field=form.username %}
+    {% include '_field_snippet.html' with field=form.password %}
+
+    <button type="submit" class="fr-btn">Se connecter</button>
+  </form>
+
+  <div class="fr-alert fr-alert--info fr-mb-3w">
+    <ul>
+      <li>
+        Vous n'avez pas encore de compte ?
+        <a href="{% url 'register' %}">Vous pouvez vous inscrire.</a>
+      </li>
+
+      <li>
+        Vous avez perdu votre mot de passe ?
+        <a href="{% url 'password_reset' %}">Vous pouvez en demander un nouveau.</a>
+      </li>
+    </ul>
+  </div>
+
+{% endblock %}

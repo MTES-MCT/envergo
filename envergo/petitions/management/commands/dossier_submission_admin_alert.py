@@ -6,8 +6,11 @@ import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
+from django.test import RequestFactory
 from django.urls import reverse
 
+from envergo.analytics.models import Event
+from envergo.analytics.utils import log_event
 from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.models import PetitionProject
@@ -15,6 +18,9 @@ from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
 
 logger = logging.getLogger(__name__)
+
+# This session key is used when we are not able to find the real user session key.
+SESSION_KEY = "untracked_dossier_submission"
 
 
 class Command(BaseCommand):
@@ -250,7 +256,45 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
 
                         notify(dedent(message), "haie")
 
+                        self.log_submission(project)
+
                     project.demarches_simplifiees_state = dossier["state"]
                     project.save()
 
             handled_demarches.append(demarche_number)
+
+    def log_submission(self, project):
+        # create a fake request for the log_event
+
+        creation_event = (
+            Event.objects.order_by("-date_created")
+            .filter(
+                metadata__reference=project.reference,
+                category="dossier",
+                event="creation",
+            )
+            .first()
+        )
+        if not creation_event:
+            logger.warning(
+                f"Unable to find creation event for project {project.reference}. "
+                f"The submission event will be logged with a mocked session key.",
+                extra={
+                    "project": project,
+                    "session_key": SESSION_KEY,
+                },
+            )
+
+        factory = RequestFactory()
+        request = factory.get("/")
+        request.COOKIES[settings.VISITOR_COOKIE_NAME] = (
+            creation_event.session_key if creation_event else SESSION_KEY
+        )
+        request.user = type("User", (object,), {"is_staff": False})()
+        request.site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        log_event(
+            "dossier",
+            "depot",
+            request,
+            **project.get_log_event_data(),
+        )

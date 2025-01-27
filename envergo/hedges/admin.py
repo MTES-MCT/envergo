@@ -97,10 +97,13 @@ class SpeciesAdmin(admin.ModelAdmin):
         "common_name",
         "scientific_name",
         "group",
-        "hedge_types",
         "level_of_concern",
         "highly_sensitive",
+        "hedge_types",
+        "taxref_ids",
     ]
+    search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     form = SpeciesAdminForm
-    list_filter = ["group"]
+    list_filter = ["group", "level_of_concern", "highly_sensitive"]
+    readonly_fields = ["kingdom", "taxref_ids"]

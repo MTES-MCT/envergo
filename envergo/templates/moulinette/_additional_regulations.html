@@ -9,11 +9,5 @@
     Cette réglementation s'applique en toutes circonstances, même si le projet n'est soumis à aucune autre réglementation environnementale ou procédure, telle qu’étude d'impact ou évaluation des incidences Natura 2000.
   </p>
 
-  {% if moulinette.department.department == "35" %}
-    <p>
-      La DDTM d'Ille-et-Vilaine met à disposition un <a href="https://www.ille-et-vilaine.gouv.fr/contenu/telechargement/56441/383553/file/Réglementation espèces protégées_Inventaires projets.pdf"
-    target="_blank"
-    ref="noopener">guide sur la réglementation espèces protégées</a>.
-    </p>
-  {% endif %}
+  {{ config.ep_free_mention|safe }}
 </section>
