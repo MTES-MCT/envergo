@@ -5,14 +5,14 @@ from django.utils import timezone
 
 from config.celery_app import app
 from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.utils import make_polygons_valid, process_shapefile, simplify_map
+from envergo.geodata.utils import make_polygons_valid, process_map_file, simplify_map
 
 logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
 @transaction.atomic
-def process_shapefile_map(task, map_id):
+def process_map(task, map_id):
     logger.info(f"Starting import on map {map_id}")
 
     map = Map.objects.get(pk=map_id)
@@ -28,7 +28,7 @@ def process_shapefile_map(task, map_id):
     try:
         with transaction.atomic():
             map.zones.all().delete()
-            process_shapefile(map, map.file, task)
+            process_map_file(map, map.file, task)
             make_polygons_valid(map)
             map.geometry = simplify_map(map)
     except Exception as e:

@@ -64,33 +64,68 @@ class CustomMapping(LayerMapping):
     def feature_kwargs(self, feat):
         kwargs = super().feature_kwargs(feat)
         kwargs.update(self.extra_kwargs)
+
+        # We extract map attributes to the `attributes` json model field
+        fields = feat.fields
+        attributes = {f: self.get_attribute(feat, f) for f in fields}
+        kwargs["attributes"] = attributes
         return kwargs
+
+    def get_attribute(self, feat, field):
+        """Extract map attribute.
+
+        We can define custom methods for specific fields.
+        """
+        if f"get_attribute_{field}" in dir(self):
+            attr = getattr(self, f"get_attribute_{field}")(feat)
+        else:
+            attr = feat.get(field)
+        return attr
+
+    def get_attribute_especes(self, feat):
+        raw_especes = feat.get("especes")
+        especes = list(map(int, raw_especes.split(",")))
+        return especes
 
 
 @contextmanager
-def extract_shapefile(archive):
-    """Extract a shapefile from a zip archive."""
+def extract_map(archive):
+    """Returns the path to the map file.
 
-    with TemporaryDirectory() as tmpdir:
-        logger.info("Extracting map zip file")
-        zf = zipfile.ZipFile(archive)
-        zf.extractall(tmpdir)
+    If this is a zipped shapefile, extract it to a temporary directory.
+    """
+    if archive.name.endswith(".zip"):
+        with TemporaryDirectory() as tmpdir:
+            logger.info("Extracting map zip file")
+            zf = zipfile.ZipFile(archive)
+            zf.extractall(tmpdir)
 
-        logger.info("Find .shp file path")
-        paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
+            logger.info("Find .shp file path")
+            paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
 
-        try:
-            shapefile = paths[0]
-        except IndexError:
-            raise ValueError(_("No .shp file found in archive"))
+            try:
+                shapefile = paths[0]
+            except IndexError:
+                raise ValueError(_("No .shp file found in archive"))
 
-        yield shapefile
+            yield shapefile
+
+    elif archive.name.endswith(".gpkg"):
+        if hasattr(archive, "temporary_file_path"):
+            yield archive.temporary_file_path()
+        elif hasattr(archive, "url"):
+            yield archive.url
+        else:
+            yield archive.path
+
+    else:
+        raise ValueError(_("Unsupported file format"))
 
 
-def count_features(shapefile):
+def count_features(map_file):
     """Count the number of features from a shapefile."""
 
-    with extract_shapefile(shapefile) as file:
+    with extract_map(map_file) as file:
         ds = DataSource(file)
         layer = ds[0]
         nb_zones = len(layer)
@@ -98,9 +133,9 @@ def count_features(shapefile):
     return nb_zones
 
 
-def process_shapefile(map, file, task=None):
+def process_map_file(map, file, task=None):
     logger.info("Creating temporary directory")
-    with extract_shapefile(file) as shapefile:
+    with extract_map(file) as map_file:
         if task:
             debug_stream = CeleryDebugStream(task, map.expected_zones)
         else:
@@ -111,7 +146,7 @@ def process_shapefile(map, file, task=None):
         extra = {"map": map}
         lm = CustomMapping(
             Zone,
-            shapefile,
+            map_file,
             mapping,
             transaction_mode="autocommit",
             extra_kwargs=extra,

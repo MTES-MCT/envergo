@@ -1,6 +1,6 @@
 import pytest
 
-from envergo.hedges.models import R
+from envergo.hedges.models import R, Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
@@ -8,6 +8,12 @@ from envergo.hedges.tests.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    # Remove demo species
+    Species.objects.all().delete()
 
 
 def test_minimum_lengths_to_plant():
@@ -111,14 +117,14 @@ def test_species_are_filtered_by_hedge_type():
     hedge = HedgeFactory(additionalData__typeHaie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species()
+    hedges_species = hedges.get_hedge_species()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
 
     hedge = HedgeFactory(additionalData__typeHaie="arbustive")
     hedges = HedgeDataFactory(hedges=[hedge])
-    hedges_species = hedges.get_all_species()
+    hedges_species = hedges.get_hedge_species()
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
@@ -174,5 +180,5 @@ def test_multiple_hedges_combine_their_species():
     assert set(hedge_species) == set([s3, s4])
 
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
-    all_species = hedges.get_all_species()
+    all_species = hedges.get_hedge_species()
     assert set(all_species) == set([s2, s3, s4])

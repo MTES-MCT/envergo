@@ -1,8 +1,4 @@
-import glob
 import logging
-import zipfile
-from contextlib import contextmanager
-from tempfile import TemporaryDirectory
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
@@ -24,6 +20,7 @@ DEPARTMENT_CHOICES = tuple(
 MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
+    ("species", _("Espèces protégées")),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -42,7 +39,7 @@ STATUSES = Choices(
 
 
 class Map(models.Model):
-    """Holds a shapefile map."""
+    """Holds a map file (shapefile / gpkg)."""
 
     name = models.CharField(_("Name"), max_length=256)
     display_name = models.CharField(_("Display name"), max_length=256, blank=True)
@@ -103,18 +100,6 @@ class Map(models.Model):
     def __str__(self):
         return self.name
 
-    @contextmanager
-    def extract_shapefile(self):
-        with TemporaryDirectory() as tmpdir:
-            logger.info("Extracting map zip file")
-            zf = zipfile.ZipFile(self.file)
-            zf.extractall(tmpdir)
-
-            logger.info("Find .shp file path")
-            paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
-            shapefile = paths[0]
-            yield shapefile
-
 
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
@@ -131,6 +116,7 @@ class Zone(gis_models.Model):
     area = models.BigIntegerField(_("Area"), null=True, blank=True)
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Zone")

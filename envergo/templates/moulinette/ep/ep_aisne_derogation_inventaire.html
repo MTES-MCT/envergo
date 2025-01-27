@@ -1,0 +1,77 @@
+<p>
+  Le projet est soumis à la réglementation sur les espèces protégées. Pour être autorisé, il doit obtenir une dérogation des services de l’État.
+</p>
+
+<p>
+  ⚠️ Un inventaire de terrain est peut-être nécessaire pour recenser certaines espèces présentes dans les haies détruites. En effet, au vu des caractéristiques du projet, des espèces particulièrement sensibles sont susceptibles de s’y trouver.
+</p>
+
+<p>
+  Avant de déposer sa demande, le porteur de projet doit contacter la ou les structures listées ci-dessous. Leur rôle est de déterminer, au vu du projet, si un inventaire de terrain ciblé sur certaines espèces est nécessaire ou non.
+</p>
+
+{% if fauna_sensitive_species %}
+  <p>Concernant les espèces animales suivantes :</p>
+
+  <ul>
+    {% for species in fauna_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
+  </ul>
+
+  <address class="fr-mb-3w">
+    <strong>Picardie Nature</strong>
+    <br />
+    <a href="mailto:contact@picardie-nature.org">contact@picardie-nature.org</a>
+    <br />
+    <a href="tel:+33362722250">03 62 72 22 50</a>
+  </address>
+{% endif %}
+
+{% if flora_sensitive_species %}
+  <p>Concernant les espèces florales suivantes :</p>
+
+  <ul>
+    {% for species in flora_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
+  </ul>
+
+  <address class="fr-mb-3w">
+    <strong>Conservatoire botanique national de Bailleul</strong>
+    <br />
+    <a href="mailto:jc.hauguel@cbnbl.org">jc.hauguel@cbnbl.org</a>
+    <br />
+    <a href="tel:+33785851596">07 85 85 15 96</a>
+  </address>
+{% endif %}
+
+<p>
+  Si l’inventaire n’est pas nécessaire, la structure fournira une attestation en ce sens, qui devra être jointe au dossier de demande d’autorisation déposé au guichet unique de la haie.
+</p>
+
+<p>
+  Si un inventaire ciblé est nécessaire, un bureau d’études naturaliste devra être missionné pour le réaliser. Les conclusions de l’étude devront être jointes au dossier de demande d’autorisation.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+
+  <p>
+    Vous pouvez consulter <a href="https://www.aisne.gouv.fr/contenu/telechargement/35346/226601/file/Guide%20Haies_VF_HD.pdf"
+    target="_blank"
+    rel="noopener">la procédure simplifiée mise en place dans l’Aisne pour l’application de la réglementation sur les espèces protégées (voir page 33)</a>.
+  </p>
+
+  <p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
+
+  <ul>
+    <li>de la raison pour laquelle la haie est détruite ;</li>
+    <li>de l’absence de solution alternative qui permettrait d’éviter la destruction ;</li>
+    <li>
+      des mesures mises en œuvre pour réduire, et à défaut pour compenser, les impacts du projet sur les espèces et les habitats abrités par les haies détruites.
+    </li>
+  </ul>
+
+  {% if protected_species %}
+    {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% endif %}
+
+</div>
