@@ -366,7 +366,7 @@ class ConfigHaieAdminForm(forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated", "contacts_and_links"]
+    list_display = ["department", "is_activated"]
     list_filter = ["is_activated"]
 
     def get_queryset(self, request):
