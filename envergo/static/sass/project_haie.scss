@@ -70,6 +70,18 @@ div#app {
       }
     }
 
+    #drawing-controls {
+      display: flex;
+      flex-direction: column;
+
+      button {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        width: auto;
+      }
+    }
+
     div.controls {
       &.inline-controls {
         .leaflet-control {

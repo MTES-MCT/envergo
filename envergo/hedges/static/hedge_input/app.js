@@ -154,7 +154,7 @@ const showHedgeModal = (hedge, hedgeType) => {
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, id, type, onRemove) {
+  constructor(map, type, onRemove, id = null) {
     this.id = id;
     this.map = map;
     this.type = type;
@@ -327,20 +327,19 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(map, onRemove, latLngs = [], additionalData = {}) {
-    const hedgeId = this.getIdentifier(this.nextId.value++);
-    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
-    hedge.init(latLngs, additionalData);
+  addHedge(hedge) {
+    hedge.id = this.getIdentifier(this.nextId.value++);
     this.hedges.push(hedge);
-
     return hedge;
   }
 
   removeHedge(hedge) {
-    let index = this.hedges.indexOf(hedge);
-    this.hedges.splice(index, 1);
-    this.updateHedgeIds();
-    this.nextId.value = this.hedges.length;
+    let index = this.hedges.findIndex(h => h.id === hedge.id);
+    if (index >= 0) {
+      this.hedges.splice(index, 1);
+      this.updateHedgeIds();
+      this.nextId.value = this.hedges.length;
+    }
   }
 
   getIdentifier(index) {
@@ -372,12 +371,8 @@ createApp({
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
     };
-    const compensationRate = computed(() => {
-      let toPlant = hedges[TO_PLANT].totalLength;
-      let toRemove = hedges[TO_REMOVE].totalLength;
-      return toRemove > 0 ? toPlant / toRemove * 100 : 0;
-    });
-    const showHelpBubble = ref(false);
+    const helpBubble = ref("initialHelp");
+    const hedgeInDrawing = ref(null);
 
      // Reactive properties for quality conditions
     const quality = reactive({
@@ -397,41 +392,78 @@ createApp({
       onHedgesToPlantChange();
     });
 
-    const addHedge = (type, latLngs = [], additionalData = {}) => {
+    const addHedge = (type, hedge) => {
+      let hedgeList = hedges[type];
+      return hedgeList.addHedge(hedge);
+    };
+
+    const createHedge = (type, latLngs = [], additionalData = {}) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
+      const hedge = reactive(new Hedge(map, type, onRemove));
+      hedge.init(latLngs, additionalData);
+      return hedge;
+    };
 
+    const startDrawing = (type) => {
+      helpBubble.value = "initHedgeHelp";
+      const newHedge = createHedge(type);
+      hedgeInDrawing.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
-          showHelpBubble.value = true;
+          helpBubble.value = "drawingHelp";
         }
       });
 
-      // Cacher la bulle d'aide à la fin du tracé
-      newHedge.polyline.on('editable:drawing:end', () => {
-        showHelpBubble.value = false;
-        showHedgeModal(newHedge, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
-      });
+      newHedge.polyline.on('editable:drawing:end', onDrawingEnd);
 
-      return newHedge;
-    };
+      window.addEventListener('keyup', cancelDrawingFromEscape);
+
+      return newHedge
+    }
 
     const startDrawingToPlant = () => {
-      return addHedge(TO_PLANT);
+      return startDrawing(TO_PLANT);
     };
 
     const startDrawingToRemove = () => {
-      return addHedge(TO_REMOVE);
+      return startDrawing(TO_REMOVE);
     };
 
+    const stopDrawing= () => {
+      hedgeInDrawing.value = null;
+      helpBubble.value = null;
+      window.removeEventListener('keyup', cancelDrawingFromEscape);
+    };
+
+    const onDrawingEnd = () => {
+      showHedgeModal(hedgeInDrawing.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
+      addHedge(hedgeInDrawing.value.type, hedgeInDrawing.value);
+      stopDrawing();
+    };
+
+    const cancelDrawing= () => {
+       if (hedgeInDrawing.value) {
+         hedgeInDrawing.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
+         hedgeInDrawing.value.remove();
+         stopDrawing();
+       }
+    };
+
+    const cancelDrawingFromEscape = (event) => {
+      if (event.key === 'Escape'){
+          cancelDrawing();
+      }
+    };
+
+
     // Center the map around all existing hedges
-    const zoomOut = () => {
+    const zoomOut = (animate = true) => {
       // The concat method does not modify the original arrays
       let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
-        map.fitBounds(group.getBounds(), fitBoundsOptions);
+        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate});
       }
     };
 
@@ -524,7 +556,8 @@ createApp({
 
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
-        const hedge = addHedge(type, latLngs, additionalData);
+        const hedge = createHedge(type, latLngs, additionalData);
+        addHedge(type, hedge);
         if(type === TO_PLANT && mode === REMOVAL_MODE) {
           hedge.polyline.disableEdit();
         }else if(type === TO_REMOVE && mode === PLANTATION_MODE) {
@@ -610,12 +643,23 @@ createApp({
         position: 'bottomright'
       }).addTo(map);
 
+      // Remove helpBubbleMessage on zoom
+      let isSetupDone = false;
+      map.on('zoomend', () => {
+        if (isSetupDone && helpBubble.value === "initialHelp") {
+          helpBubble.value = null;
+        }
+      });
+
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {
         const coordinates = event.detail.coordinates;
         const latLng = [coordinates[1], coordinates[0]];
         let zoomLevel = 16;
         map.setView(latLng, zoomLevel);
+        if (helpBubble.value === "initialHelp") {
+          helpBubble.value = null;
+        }
       });
 
       // Here, we want to restore existing hedges
@@ -631,22 +675,24 @@ createApp({
       map.setView([43.6861, 3.5911], 22);
       restoreHedges();
       map.setZoom(14);
-      zoomOut();
+      zoomOut(false); // remove animation, it is smoother at the beginning, and it eases the helpBubbleMessage display
+      isSetupDone = true;
     });
 
     return {
       mode,
       hedges,
-      compensationRate,
       startDrawingToPlant,
       startDrawingToRemove,
       zoomOut,
-      showHelpBubble,
+      helpBubble,
       saveData,
       cancel,
       showHedgeModal,
       invalidHedges,
       quality,
+      hedgeInDrawing,
+      cancelDrawing,
     };
   }
 }).mount('#app');

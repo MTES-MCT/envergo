@@ -20,24 +20,31 @@
     <div id="saisie-ui">
       <div id="map">
 
-        <div class="controls leaflet-top leaflet-right">
+        <div id="drawing-controls" class="controls leaflet-top leaflet-right ">
           <button v-if="mode === 'removal'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
-                  @click="startDrawingToRemove">
+                  @click="startDrawingToRemove"
+                  :disabled="hedgeInDrawing">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
           <button v-if="mode === 'plantation'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
-                  @click="startDrawingToPlant">
+                  @click="startDrawingToPlant"
+                  :disabled="hedgeInDrawing">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
           </button>
+          <button v-if="hedgeInDrawing"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
+                  @click="cancelDrawing">Annuler le tracé en cours</button>
         </div>
 
-        <div v-if="showHelpBubble" class="help-bubble">
+        <div v-if="helpBubble" class="help-bubble">
           <span class="fr-icon-info-fill" aria-hidden="true"></span>
-          Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
+          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
+          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
         </div>
       </div>
 
@@ -52,13 +59,18 @@
                  placeholder="Rechercher une commune ou une adresse"
                  type="search"
                  id="id_address"
-                 name="address">
-          <button class="fr-btn fr-btn--sm" title="Rechercher">Rechercher</button>
+                 name="address"
+                 :disabled="hedgeInDrawing">
+          <button class="fr-btn fr-btn--sm"
+                  title="Rechercher"
+                  :disabled="hedgeInDrawing">Rechercher</button>
         </div>
 
         <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
           <div class="leaflet-control">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                    @click="zoomOut"
+                    :disabled="hedgeInDrawing">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
             </button>
