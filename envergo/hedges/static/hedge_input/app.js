@@ -154,12 +154,13 @@ const showHedgeModal = (hedge, hedgeType) => {
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, type, onRemove, id = null) {
+  constructor(map, id, type, onRemove, isDrawingCompleted) {
     this.id = id;
     this.map = map;
     this.type = type;
     this.onRemove = onRemove;
     this.isHovered = false;
+    this.isDrawingCompleted = isDrawingCompleted;
 
     this.latLngs = [];
     this.length = 0;
@@ -313,6 +314,14 @@ class HedgeList {
     }
   }
 
+  *completelyDrawn() {
+    for (let hedge of this.hedges) {
+      if (hedge.isDrawingCompleted) {
+        yield hedge;
+      }
+    }
+  }
+
   /**
    * Return the total length of all hedges (in meters) in the list.
    */
@@ -327,19 +336,20 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(hedge) {
-    hedge.id = this.getIdentifier(this.nextId.value++);
+  addHedge(map, onRemove, latLngs = [], additionalData = {}, isDrawingCompleted = false) {
+    const hedgeId = this.getIdentifier(this.nextId.value++);
+    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, isDrawingCompleted));
+    hedge.init(latLngs, additionalData);
     this.hedges.push(hedge);
+
     return hedge;
   }
 
   removeHedge(hedge) {
-    let index = this.hedges.findIndex(h => h.id === hedge.id);
-    if (index >= 0) {
-      this.hedges.splice(index, 1);
-      this.updateHedgeIds();
-      this.nextId.value = this.hedges.length;
-    }
+    let index = this.hedges.indexOf(hedge);
+    this.hedges.splice(index, 1);
+    this.updateHedgeIds();
+    this.nextId.value = this.hedges.length;
   }
 
   getIdentifier(index) {
@@ -392,22 +402,15 @@ createApp({
       onHedgesToPlantChange();
     });
 
-    const addHedge = (type, hedge) => {
-      let hedgeList = hedges[type];
-      return hedgeList.addHedge(hedge);
-    };
-
-    const createHedge = (type, latLngs = [], additionalData = {}) => {
+    const addHedge = (type, latLngs = [], additionalData = {}, isDrawingCompleted = false) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      const hedge = reactive(new Hedge(map, type, onRemove));
-      hedge.init(latLngs, additionalData);
-      return hedge;
+      return hedgeList.addHedge(map, onRemove, latLngs, additionalData, isDrawingCompleted);
     };
 
     const startDrawing = (type) => {
       helpBubble.value = "initHedgeHelp";
-      const newHedge = createHedge(type);
+      const newHedge = addHedge(type);
       hedgeInDrawing.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
@@ -437,8 +440,11 @@ createApp({
     };
 
     const onDrawingEnd = () => {
+      console.log(hedges);
+      hedgeInDrawing.value.isDrawingCompleted = true;
+      console.log(hedges);
+
       showHedgeModal(hedgeInDrawing.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
-      addHedge(hedgeInDrawing.value.type, hedgeInDrawing.value);
       stopDrawing();
     };
 
@@ -556,8 +562,7 @@ createApp({
 
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
-        const hedge = createHedge(type, latLngs, additionalData);
-        addHedge(type, hedge);
+        const hedge = addHedge(type, latLngs, additionalData, true);
         if(type === TO_PLANT && mode === REMOVAL_MODE) {
           hedge.polyline.disableEdit();
         }else if(type === TO_REMOVE && mode === PLANTATION_MODE) {
