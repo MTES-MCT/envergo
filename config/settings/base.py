@@ -98,7 +98,7 @@ MIGRATION_MODULES = {"sites": "envergo.contrib.sites.migrations"}
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#authentication-backends
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
+    "envergo.users.backends.AuthBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
@@ -429,4 +429,9 @@ BREVO = {
     "NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID": env(
         "BREVO_NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID", default=None
     ),
+}
+
+SITE_FROM_EMAIL = {
+    "amenagement": "contact@amenagement.local",
+    "haie": "contact@haie.local",
 }

@@ -272,12 +272,6 @@ class ConfigAmenagementForm(forms.ModelForm):
                 "department"
             ].queryset.defer("geometry")
 
-    def clean_criteria_values(self):
-        """Ensure an empty value can be converted to an empty json dict."""
-        value = self.cleaned_data["criteria_values"]
-        value = value or dict()
-        return value
-
 
 class MoulinetteConfigTemplateForm(forms.ModelForm):
     """Form to edit a MoulinetteTemplate in a ConfigAmenagement.

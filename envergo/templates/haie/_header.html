@@ -20,6 +20,22 @@
           </a>
         </div>
       </div>
+
+      <div id="menu" class="fr-header__tools">
+        <div class="fr-header__tools-links">
+          <ul class="fr-btns-group">
+            {% if user.is_authenticated %}
+              <li>
+                <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+              </li>
+            {% else %}
+              <li>
+                <a class="fr-btn fr-fi-lock-line" href="{% url 'login' %}">Administration</a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
