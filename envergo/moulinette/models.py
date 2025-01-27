@@ -1353,7 +1353,13 @@ class Moulinette(ABC):
         rules = [
             ((RESULTS.interdit,), RESULTS.interdit),
             (
-                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
+                (
+                    RESULTS.soumis,
+                    RESULTS.systematique,
+                    RESULTS.cas_par_cas,
+                    RESULTS.derogation_inventaire,
+                    RESULTS.derogation_simplifiee,
+                ),
                 RESULTS.soumis,
             ),
             ((RESULTS.action_requise,), RESULTS.action_requise),
