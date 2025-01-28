@@ -97,8 +97,8 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
                     user.access_amenagement = True
                 elif site_literal == "haie":
                     user.access_haie = True
-                    send_new_account_notification.delay(user.id)
                 user.save()
+                send_new_account_notification.delay(user.id)
 
         return super().get(request, *args, **kwargs)
 
