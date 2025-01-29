@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
@@ -44,6 +45,7 @@ auth_patterns = [
             subject_template_name="haie/emails/password_reset_subject.txt",
             email_template_name="haie/emails/password_reset.txt",
             html_email_template_name="haie/emails/password_reset.html",
+            from_email=settings.SITE_FROM_EMAIL["haie"],
         ),
         name="password_reset",
     ),

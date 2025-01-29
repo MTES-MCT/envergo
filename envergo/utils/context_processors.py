@@ -44,6 +44,7 @@ def settings_context(_request):
         "ENV_NAME": settings.ENV_NAME,
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
         "CRISP_WEBSITE_ID": crisp_website_id,
+        "HAIE_FAQ_URL": settings.HAIE_FAQ_URL,
     }
 
 
