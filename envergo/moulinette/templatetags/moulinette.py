@@ -82,16 +82,10 @@ def show_criterion_body(context, regulation, criterion):
 
 
 @register.simple_tag
-def criterion_value(config, criterion, field):
-    """Display a criterion static value.
-
-    If this value is overriden in the ConfigAmenagement or ConfigHaie instance,
-    display the config value instead.
-    """
-    values = config.criteria_values
-    key = f"{criterion.unique_slug}__{field}"
-    default = getattr(criterion, field, "")
-    return mark_safe(values.get(key, default))
+def criterion_value(criterion, field):
+    """Display a criterion static value."""
+    value = getattr(criterion, field, "")
+    return mark_safe(value)
 
 
 @register.simple_tag(takes_context=True)
@@ -311,6 +305,8 @@ def get_display_result(regulation):
         RESULTS.non_soumis,
         RESULTS.non_concerne,
         RESULTS.non_disponible,
+        RESULTS.derogation_inventaire,
+        RESULTS.derogation_simplifiee,
     ]
 
     return regulation.result if regulation.result not in other_results else "autre"

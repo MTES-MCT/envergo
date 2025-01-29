@@ -3,12 +3,15 @@ import uuid
 from collections import defaultdict
 from functools import reduce
 
+from django.contrib.gis.geos import Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
 from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString
+
+from envergo.geodata.models import Zone
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -106,8 +109,10 @@ class Hedge:
         if not self.connexion_boisement:
             exclude.append(Q(connexion_boisement=True))
 
-        q_exclude = reduce(operator.or_, exclude)
-        filter = q_hedge_type & ~q_exclude
+        filter = q_hedge_type
+        if exclude:
+            q_exclude = reduce(operator.or_, exclude)
+            filter &= ~q_exclude
         return filter
 
     def get_species(self):
@@ -131,6 +136,20 @@ class HedgeData(models.Model):
 
     def __iter__(self):
         return iter(self.hedges())
+
+    def get_bounding_box(self):
+        """Return the bounding box of the whole hedge set."""
+
+        hedges = self.hedges()
+        min_x, min_y, max_x, max_y = hedges[0].geometry.bounds
+        for hedge in hedges[1:]:
+            x0, y0, x1, y1 = hedge.geometry.bounds
+            min_x = min(min_x, x0)
+            min_y = min(min_y, y0)
+            max_x = max(max_x, x1)
+            max_y = max(max_y, y1)
+        box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
+        return box
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
@@ -207,13 +226,32 @@ class HedgeData(models.Model):
             "alignement": lengths_by_type["alignement"],
         }
 
-    def get_all_species(self):
-        """Return all species in the set of hedges."""
+    def get_hedge_species(self):
+        """Return species that may live in the hedges."""
 
         filters = [h.get_species_filter() for h in self.hedges_to_remove()]
         union = reduce(operator.or_, filters)
-        qs = Species.objects.filter(union).order_by("group", "common_name")
-        return qs
+        species = Species.objects.filter(union).order_by("group", "common_name")
+        return species
+
+    def get_local_species_codes(self):
+        """Return species names that are known to live here."""
+
+        bbox = self.get_bounding_box()
+        zones = Zone.objects.filter(geometry__intersects=bbox).filter(
+            map__map_type="species"
+        )
+        codes = set()
+        for zone in zones:
+            codes.update(zone.attributes.get("especes", []))
+        return list(codes)
+
+    def get_all_species(self):
+        """Return the local list of protected species."""
+
+        hedge_species_qs = self.get_hedge_species()
+        local_species_codes = self.get_local_species_codes()
+        return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
 
 
 HEDGE_TYPES = (
@@ -229,9 +267,19 @@ SPECIES_GROUPS = Choices(
     ("chauves-souris", "Chauves-souris"),
     ("flore", "Flore"),
     ("insectes", "Insectes"),
-    ("mammifères-terrestres", "Mammifères terrestres"),
+    ("mammiferes-terrestres", "Mammifères terrestres"),
     ("oiseaux", "Oiseaux"),
     ("reptile", "Reptile"),
+)
+
+KINGDOMS = Choices(
+    ("animalia", "Animalia"),
+    ("archaea", "Archaea"),
+    ("bacteria", "Bacteria"),
+    ("chromista", "Chromista"),
+    ("fungi", "Fungi"),
+    ("plantae", "Plantae"),
+    ("protozoa", "Protozoa"),
 )
 
 LEVELS_OF_CONCERN = Choices(
@@ -246,10 +294,22 @@ LEVELS_OF_CONCERN = Choices(
 class Species(models.Model):
     """Represent a single species."""
 
+    # This is the unique species identifier (cd_nom) in the INPN TaxRef database
+    # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
+    # The reason why this is an array is because sometimes, there are duplicates
+    # (e.g) a species has been describe by several naturalists over the years before
+    # they realized it was a duplicate.
+    # Hence, for a given scientific name, there can be several TaxRef ids.
+    taxref_ids = ArrayField(
+        null=True, verbose_name="Ids TaxRef (cd_nom)", base_field=models.IntegerField()
+    )
+
     # This "group" is an ad-hoc category, not related to the official biology taxonomy
     group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
+
+    kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
     common_name = models.CharField("Nom commun", max_length=255)
-    scientific_name = models.CharField("Nom scientifique", max_length=255)
+    scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
         "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
     )

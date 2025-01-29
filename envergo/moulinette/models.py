@@ -75,6 +75,8 @@ RESULT_CASCADE = [
     RESULTS.systematique,
     RESULTS.cas_par_cas,
     RESULTS.soumis,
+    RESULTS.derogation_inventaire,
+    RESULTS.derogation_simplifiee,
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
@@ -768,8 +770,9 @@ class ConfigAmenagement(ConfigBase):
         blank=True,
     )
     evalenv_procedure_casparcas = models.TextField("EvalEnv > Procédure cas par cas")
-    criteria_values = models.JSONField(
-        "Valeurs des critères", default=dict, null=False, blank=True
+
+    ep_free_mention = models.TextField(
+        "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
     )
 
     class Meta:
@@ -785,13 +788,7 @@ class ConfigHaie(ConfigBase):
 
     regulations_available = HAIE_REGULATIONS
 
-    department_guichet_unique_url = models.URLField(
-        "Url du guichet unique de la haie du département (si existant)", blank=True
-    )
-
-    contacts_and_links = models.TextField(
-        "Liste des contacts et liens utiles", blank=True
-    )
+    contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
@@ -1356,7 +1353,13 @@ class Moulinette(ABC):
         rules = [
             ((RESULTS.interdit,), RESULTS.interdit),
             (
-                (RESULTS.soumis, RESULTS.systematique, RESULTS.cas_par_cas),
+                (
+                    RESULTS.soumis,
+                    RESULTS.systematique,
+                    RESULTS.cas_par_cas,
+                    RESULTS.derogation_inventaire,
+                    RESULTS.derogation_simplifiee,
+                ),
                 RESULTS.soumis,
             ),
             ((RESULTS.action_requise,), RESULTS.action_requise),
