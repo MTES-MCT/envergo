@@ -41,7 +41,7 @@
       <h3>Réglementations interdisant le projet</h3>
     {% elif result == "soumis" and moulinette.result != "soumis" %}
       <h3>Autres réglementations concernant le projet</h3>
-    {% elif result == "soumis" %}
+    {% elif result != "autre" %}
       <h3>Réglementations concernant le projet</h3>
     {% else %}
       <h3>Autres réglementations</h3>

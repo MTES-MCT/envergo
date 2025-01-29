@@ -137,10 +137,9 @@ class HedgeData(models.Model):
     def __iter__(self):
         return iter(self.hedges())
 
-    def get_bounding_box(self):
-        """Return the bounding box of the whole hedge set."""
+    def get_bounding_box(self, hedges):
+        """Return the bounding box of the given hedge set."""
 
-        hedges = self.hedges()
         min_x, min_y, max_x, max_y = hedges[0].geometry.bounds
         for hedge in hedges[1:]:
             x0, y0, x1, y1 = hedge.geometry.bounds
@@ -237,7 +236,7 @@ class HedgeData(models.Model):
     def get_local_species_codes(self):
         """Return species names that are known to live here."""
 
-        bbox = self.get_bounding_box()
+        bbox = self.get_bounding_box(self.hedges_to_remove())
         zones = Zone.objects.filter(geometry__intersects=bbox).filter(
             map__map_type="species"
         )
