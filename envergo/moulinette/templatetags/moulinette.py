@@ -305,8 +305,6 @@ def get_display_result(regulation):
         RESULTS.non_soumis,
         RESULTS.non_concerne,
         RESULTS.non_disponible,
-        RESULTS.derogation_inventaire,
-        RESULTS.derogation_simplifiee,
     ]
 
     return regulation.result if regulation.result not in other_results else "autre"
@@ -320,13 +318,16 @@ def group_regulations_for_display(moulinette):
     result_cascade = [
         RESULTS.interdit,
         RESULTS.soumis,
+        RESULTS.derogation_simplifiee,
+        RESULTS.derogation_inventaire,
         "autre",
     ]
 
     regulations_list.sort(key=lambda reg: result_cascade.index(get_display_result(reg)))
 
     # Group the regulations by their result
-    return {
+    grouped = {
         key: list(group)
         for key, group in groupby(regulations_list, key=get_display_result)
     }
+    return grouped
