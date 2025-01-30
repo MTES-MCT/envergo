@@ -296,7 +296,7 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
 
 
 def get_display_result(regulation):
-    other_results = [
+    other_results = {
         RESULTS.systematique,
         RESULTS.cas_par_cas,
         RESULTS.action_requise,
@@ -305,11 +305,20 @@ def get_display_result(regulation):
         RESULTS.non_soumis,
         RESULTS.non_concerne,
         RESULTS.non_disponible,
+    }
+
+    soumis_results = {
+        RESULTS.soumis,
         RESULTS.derogation_inventaire,
         RESULTS.derogation_simplifiee,
-    ]
+    }
 
-    return regulation.result if regulation.result not in other_results else "autre"
+    if regulation.result in soumis_results:
+        return RESULTS.soumis
+    elif regulation.result in other_results:
+        return "autre"
+    else:
+        return regulation.result
 
 
 @register.simple_tag
