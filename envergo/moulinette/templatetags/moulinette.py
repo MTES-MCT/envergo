@@ -295,30 +295,16 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
     return content
 
 
-def get_display_result(regulation):
-    other_results = {
-        RESULTS.systematique,
-        RESULTS.cas_par_cas,
-        RESULTS.action_requise,
-        RESULTS.a_verifier,
-        RESULTS.iota_a_verifier,
-        RESULTS.non_soumis,
-        RESULTS.non_concerne,
-        RESULTS.non_disponible,
-    }
+def get_result_group_key(regulation):
+    """Get the grouping key for the regulation result."""
 
-    soumis_results = {
-        RESULTS.soumis,
-        RESULTS.derogation_inventaire,
-        RESULTS.derogation_simplifiee,
+    group_keys = {
+        RESULTS.interdit: RESULTS.interdit,
+        RESULTS.soumis: RESULTS.soumis,
+        RESULTS.derogation_inventaire: RESULTS.soumis,
+        RESULTS.derogation_simplifiee: RESULTS.soumis,
     }
-
-    if regulation.result in soumis_results:
-        return RESULTS.soumis
-    elif regulation.result in other_results:
-        return "autre"
-    else:
-        return regulation.result
+    return group_keys.get(regulation.result, "autre")
 
 
 @register.simple_tag
@@ -332,11 +318,13 @@ def group_regulations_for_display(moulinette):
         "autre",
     ]
 
-    regulations_list.sort(key=lambda reg: result_cascade.index(get_display_result(reg)))
+    regulations_list.sort(
+        key=lambda reg: result_cascade.index(get_result_group_key(reg))
+    )
 
     # Group the regulations by their result
     grouped = {
         key: list(group)
-        for key, group in groupby(regulations_list, key=get_display_result)
+        for key, group in groupby(regulations_list, key=get_result_group_key)
     }
     return grouped
