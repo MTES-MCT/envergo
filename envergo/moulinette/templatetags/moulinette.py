@@ -315,8 +315,6 @@ def group_regulations_for_display(moulinette):
     result_cascade = [
         RESULTS.interdit,
         RESULTS.soumis,
-        RESULTS.derogation_simplifiee,
-        RESULTS.derogation_inventaire,
         "autre",
     ]
 
