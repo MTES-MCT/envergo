@@ -335,7 +335,8 @@ def group_regulations_for_display(moulinette):
     regulations_list.sort(key=lambda reg: result_cascade.index(get_display_result(reg)))
 
     # Group the regulations by their result
-    return {
+    grouped = {
         key: list(group)
         for key, group in groupby(regulations_list, key=get_display_result)
     }
+    return grouped
