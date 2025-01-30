@@ -126,6 +126,21 @@
           .catch((error) => console.log(error));
       }
     });
+
+    const observer = new MutationObserver(() => {
+      const autocompleteInput = this.autocompleteContainer.querySelector('input');
+      if (this.inputElement.disabled) {
+        if (autocompleteInput) {
+          autocompleteInput.setAttribute('disabled', 'true');
+        }
+      } else {
+        if (autocompleteInput) {
+          autocompleteInput.removeAttribute('disabled');
+        }
+      }
+    });
+
+    observer.observe(this.inputElement, {attributes: true, attributeFilter: ['disabled']});
   };
 
 })(this, accessibleAutocomplete);
