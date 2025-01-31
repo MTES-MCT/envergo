@@ -24,6 +24,7 @@ django-ratelimit
 django-braces
 shapely
 pyproj
+fiona
 django-localflavor
 django-anymail[sendinblue]
 scipy  # Just for interpolation, remove later
