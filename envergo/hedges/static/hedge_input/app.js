@@ -140,6 +140,7 @@ const showHedgeModal = (hedge, hedgeType) => {
   // event listener.
   dialog.addEventListener("dsfr.conceal", () => {
     form.removeEventListener("submit", saveModalData);
+    hedge.isDrawingCompleted = true;
   });
 
   dsfr(dialog).modal.disclose();
@@ -440,10 +441,6 @@ createApp({
     };
 
     const onDrawingEnd = () => {
-      console.log(hedges);
-      hedgeInDrawing.value.isDrawingCompleted = true;
-      console.log(hedges);
-
       showHedgeModal(hedgeInDrawing.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
       stopDrawing();
     };

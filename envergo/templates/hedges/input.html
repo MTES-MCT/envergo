@@ -90,7 +90,7 @@
             <template v-if="hedges.TO_REMOVE.count > 0">
               <table>
                 <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_REMOVE"
+                  <tr v-for="(hedge, index) in hedges.TO_REMOVE.completelyDrawn()"
                       :key="index"
                       :class="{ hovered: hedge.isHovered }"
                       @mouseover="hedge.handleMouseOver()"
