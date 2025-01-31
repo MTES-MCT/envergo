@@ -337,6 +337,10 @@ class HedgeList {
     return this.hedges.length;
   }
 
+  get hasCompletedHedge() {
+    return this.hedges.some(hedge => hedge.isDrawingCompleted);
+  }
+
   addHedge(map, onRemove, latLngs = [], additionalData = {}, isDrawingCompleted = false) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
     const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, isDrawingCompleted));
