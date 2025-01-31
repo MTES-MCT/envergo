@@ -140,6 +140,7 @@ const showHedgeModal = (hedge, hedgeType) => {
   // event listener.
   dialog.addEventListener("dsfr.conceal", () => {
     form.removeEventListener("submit", saveModalData);
+    hedge.isDrawingCompleted = true;
   });
 
   dsfr(dialog).modal.disclose();
@@ -336,6 +337,10 @@ class HedgeList {
     return this.hedges.length;
   }
 
+  get hasCompletedHedge() {
+    return this.hedges.some(hedge => hedge.isDrawingCompleted);
+  }
+
   addHedge(map, onRemove, latLngs = [], additionalData = {}, isDrawingCompleted = false) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
     const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, isDrawingCompleted));
@@ -440,10 +445,6 @@ createApp({
     };
 
     const onDrawingEnd = () => {
-      console.log(hedges);
-      hedgeInDrawing.value.isDrawingCompleted = true;
-      console.log(hedges);
-
       showHedgeModal(hedgeInDrawing.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
       stopDrawing();
     };
@@ -469,13 +470,12 @@ createApp({
       let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
-        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate});
+        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate, padding: [50,50]});
       }
     };
 
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
-    // Persist data to the server
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
       const hedgesToRemove = hedges[TO_REMOVE].toJSON();
@@ -518,7 +518,7 @@ createApp({
 
     // Cancel the input and return to the main form
     // We confirm with a modal if some hedges have been drawn
-    const cancel = () => {
+    const cancel = (event) => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
       if (totalHedges > 0 && mode !== READ_ONLY_MODE) {
         const dialog = document.getElementById("cancel-modal");
@@ -532,6 +532,9 @@ createApp({
 
         const dismissHandler = () => {
           dsfr(dialog).modal.conceal();
+          if(event && event.type === 'popstate') {
+            history.pushState({modalOpen: true}, "", "#modal");
+          }
         };
 
         const concealHandler = () => {
@@ -666,6 +669,9 @@ createApp({
           helpBubble.value = null;
         }
       });
+
+      history.pushState({ modalOpen: true }, "", "#modal");
+      window.addEventListener("popstate", cancel);
 
       // Here, we want to restore existing hedges
       // If there are any, set view to see them all

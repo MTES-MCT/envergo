@@ -41,7 +41,7 @@
         </div>
 
         <div v-if="helpBubble" class="help-bubble">
-          <span class="fr-icon-info-fill" aria-hidden="true"></span>
+          <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
           <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
@@ -54,7 +54,7 @@
       <div class="controls leaflet-top leaflet-left inline-controls">
         <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
              role="search">
-          <label class="fr-label" for="address">Rechercher une commune ou une adresse</label>
+          <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
           <input class="fr-input"
                  placeholder="Rechercher une commune ou une adresse"
                  type="search"
@@ -66,7 +66,7 @@
                   :disabled="hedgeInDrawing">Rechercher</button>
         </div>
 
-        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+        <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
           <div class="leaflet-control">
             <button class="fr-btn fr-btn--sm fr-btn--secondary"
                     @click="zoomOut"
@@ -87,10 +87,10 @@
               Haies à détruire
               <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
             </h3>
-            <template v-if="hedges.TO_REMOVE.count > 0">
+            <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
               <table>
                 <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_REMOVE"
+                  <tr v-for="(hedge, index) in hedges.TO_REMOVE.completelyDrawn()"
                       :key="index"
                       :class="{ hovered: hedge.isHovered }"
                       @mouseover="hedge.handleMouseOver()"
@@ -98,7 +98,8 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
@@ -127,7 +128,7 @@
               Haies à planter
               <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
             </h3>
-            <template v-if="hedges.TO_PLANT.count > 0">
+            <template v-if="hedges.TO_PLANT.hasCompletedHedge">
               <table>
                 <tbody>
                   <tr v-for="(hedge, index) in hedges.TO_PLANT.completelyDrawn()"
@@ -138,7 +139,8 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
