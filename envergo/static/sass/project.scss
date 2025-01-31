@@ -1304,10 +1304,35 @@ footer {
     }
   }
 
+  img.fr-header__brand-top {
+    width: 100%;
+    max-width: 6rem;
+    flex: 1;
+    padding: 0.25rem;
+    margin-right: 1rem;
+    min-width: 3.5rem;
+  }
+
+  .fr-header__service {
+    margin-left: 0;
+
+    &::after {
+      display: none;
+    }
+
+    &::before {
+      display: none;
+    }
+  }
+
   .fr-nav__link,
   .fr-nav__btn {
     padding: 0.75rem 1rem;
     min-height: 2rem;
+  }
+
+  .fr-header__brand-top {
+    width: auto;
   }
 
   &.header-slim {
@@ -1339,10 +1364,6 @@ footer {
       &:active {
         background-color: var(--active-tint);
       }
-    }
-
-    .fr-header__service {
-      padding: 0.75rem 1rem;
     }
   }
 

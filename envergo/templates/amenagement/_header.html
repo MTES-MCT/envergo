@@ -6,20 +6,16 @@
   <div class="fr-container">
     <div class="fr-header__body-row">
       <div class="fr-header__brand fr-enlarge-link">
-        <div class="fr-header__brand-top">
+        <img class="fr-header__brand-top fr-hidden-md"
+             src="{% static 'images/marianne.svg' %}"
+             alt="République française">
+        <div class="fr-header__brand-top fr-hidden fr-unhidden-md">
           <div class="fr-header__logo">
             <p class="fr-logo">
               République
               <br>
               Française
             </p>
-          </div>
-          <div class="fr-header__navbar">
-            <button class="fr-btn--menu fr-btn"
-                    data-fr-opened="false"
-                    aria-controls="modal-menu"
-                    aria-haspopup="menu"
-                    title="Menu">Menu</button>
           </div>
         </div>
         <div class="fr-header__service">
@@ -31,6 +27,13 @@
               pour les projets de construction et d'aménagement
             </span>
           </a>
+        </div>
+        <div class="fr-header__navbar">
+          <button class="fr-btn--menu fr-btn"
+                  data-fr-opened="false"
+                  aria-controls="modal-menu"
+                  aria-haspopup="menu"
+                  title="Menu">Menu</button>
         </div>
       </div>
 
