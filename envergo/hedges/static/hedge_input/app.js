@@ -476,7 +476,6 @@ createApp({
 
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
-    // Persist data to the server
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
       const hedgesToRemove = hedges[TO_REMOVE].toJSON();
@@ -519,7 +518,7 @@ createApp({
 
     // Cancel the input and return to the main form
     // We confirm with a modal if some hedges have been drawn
-    const cancel = () => {
+    const cancel = (event) => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
       if (totalHedges > 0 && mode !== READ_ONLY_MODE) {
         const dialog = document.getElementById("cancel-modal");
@@ -533,6 +532,9 @@ createApp({
 
         const dismissHandler = () => {
           dsfr(dialog).modal.conceal();
+          if(event && event.type === 'popstate') {
+            history.pushState({modalOpen: true}, "", "#modal");
+          }
         };
 
         const concealHandler = () => {
@@ -667,6 +669,9 @@ createApp({
           helpBubble.value = null;
         }
       });
+
+      history.pushState({ modalOpen: true }, "", "#modal");
+      window.addEventListener("popstate", cancel);
 
       // Here, we want to restore existing hedges
       // If there are any, set view to see them all
