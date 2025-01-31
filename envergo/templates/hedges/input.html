@@ -98,7 +98,8 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
@@ -138,7 +139,8 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"

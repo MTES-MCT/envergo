@@ -466,7 +466,7 @@ createApp({
       let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
-        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate});
+        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate, padding: [50,50]});
       }
     };
 
