@@ -103,13 +103,15 @@
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)">
+                              @click.stop="showHedgeModal(hedge, hedge.type)"
+                              :disabled="hedgeInDrawing">
                         [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="hedge.remove()"
+                              :disabled="hedgeInDrawing">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -144,14 +146,16 @@
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)">
+                              @click.stop="showHedgeModal(hedge, hedge.type)"
+                              :disabled="hedgeInDrawing">
                         [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td>
                       <button v-if="mode === 'plantation'"
                               class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="hedge.remove()"
+                              :disabled="hedgeInDrawing">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
