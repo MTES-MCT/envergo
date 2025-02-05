@@ -1,4 +1,7 @@
 import logging
+import os
+import shutil
+import tempfile
 from textwrap import dedent
 from typing import Any, List
 from urllib.parse import parse_qs, urlparse
@@ -13,7 +16,6 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView
 from fiona import Feature, Geometry, Properties
-from fiona.crs import from_epsg
 
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import TO_PLANT
@@ -713,66 +715,52 @@ class PetitionProjectHedgeDataExport(DetailView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
         data = self.object.hedge_data
-        schema = {
-            "geometry": "MultiLineString",
-            "properties": {
-                "id": "str",
-                "type": "str",
-                "typeHaie": "str",
-                "vieilArbre": "str",
-                "proximiteMare200m": "str",
-                "surParcellePac": "str",
-                "proximitePointEau10m": "str",
-                "connexionBoisement": "str",
-                "sousLigneElectrique": "str",
-            },
-        }
-        with fiona.open(
-            "./empty.gpkg",
-            "w",
-            crs=from_epsg("4326"),
-            driver="GPKG",
-            schema=schema,
-            layer="haie_envergo",
-        ) as dst:
 
-            for hedge in data.hedges():
-                geometry = Geometry.from_dict(hedge.geometry)
-                properties = Properties.from_dict(
-                    {
-                        "id": hedge.id,
-                        "type": "A_PLANTER" if hedge.type == TO_PLANT else "A_ARRACHER",
-                        "typeHaie": hedge.hedge_type,
-                        "vieilArbre": "oui" if hedge.vieil_arbre else "non",
-                        "proximiteMare200m": "oui" if hedge.proximite_mare else "non",
-                        "surParcellePac": "oui" if hedge.is_on_pac else "non",
-                        "proximitePointEau10m": (
-                            "oui" if hedge.proximite_point_eau else "non"
-                        ),
-                        "connexionBoisement": (
-                            "oui" if hedge.connexion_boisement else "non"
-                        ),
-                        "sousLigneElectrique": (
-                            "oui" if hedge.sous_ligne_electrique else "non"
-                        ),
-                    }
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            template_file = settings.GUH_DATA_EXPORT_TEMPLATE
+            export_file = os.path.join(tmpdirname, "output.gpkg")
+            shutil.copy(template_file, export_file)
+
+            # Fiona cannot append to an existing file
+            # By opening a layer in write mode, it will squash the layer data
+            # Luckily for us, that's the behaviour we want
+            with fiona.open(template_file) as src, fiona.open(
+                export_file, "w", layer="haie_envergo", **src.meta
+            ) as dst:
+                for hedge in data.hedges():
+                    geometry = Geometry.from_dict(hedge.geometry)
+                    properties = Properties.from_dict(
+                        {
+                            "id": hedge.id,
+                            "type": (
+                                "A_PLANTER" if hedge.type == TO_PLANT else "A_ARRACHER"
+                            ),
+                            "typeHaie": hedge.hedge_type,
+                            "vieilArbre": "oui" if hedge.vieil_arbre else "non",
+                            "proximiteMare200m": (
+                                "oui" if hedge.proximite_mare else "non"
+                            ),
+                            "surParcellePac": "oui" if hedge.is_on_pac else "non",
+                            "proximitePointEau10m": (
+                                "oui" if hedge.proximite_point_eau else "non"
+                            ),
+                            "connexionBoisement": (
+                                "oui" if hedge.connexion_boisement else "non"
+                            ),
+                            "sousLigneElectrique": (
+                                "oui" if hedge.sous_ligne_electrique else "non"
+                            ),
+                            "proximiteVoirie": "???",
+                        }
+                    )
+                    feat = Feature(geometry=geometry, properties=properties)
+                    dst.write(feat)
+
+            # Create a response with the GeoPackage file
+            with open(export_file, "rb") as f:
+                response = HttpResponse(f.read(), content_type="application/geopackage")
+                response["Content-Disposition"] = (
+                    'attachment; filename="guh_export.gpkg"'
                 )
-                feat = Feature(geometry=geometry, properties=properties)
-                dst.write(feat)
-
-        with fiona.open(
-            "./empty.gpkg",
-            "w",
-            crs=from_epsg("4326"),
-            driver="GPKG",
-            schema=schema,
-            layer="layer_styles",
-        ) as dst:
-            pass
-
-        # Create a response with the GeoPackage file
-        with open("./empty.gpkg", "rb") as f:
-            response = HttpResponse(f.read(), content_type="application/geopackage")
-            response["Content-Disposition"] = 'attachment; filename="output.gpkg"'
 
         return response
