@@ -750,7 +750,9 @@ class PetitionProjectHedgeDataExport(DetailView):
                             "sousLigneElectrique": (
                                 "oui" if hedge.sous_ligne_electrique else "non"
                             ),
-                            "proximiteVoirie": "???",
+                            "proximiteVoirie": (
+                                "oui" if hedge.proximite_voirie else "non"
+                            ),
                         }
                     )
                     feat = Feature(geometry=geometry, properties=properties)
