@@ -39,7 +39,10 @@
       </div>
     </div>
   </section>
-  {% include 'amenagement/_newsletter_opt_in.html' %}
+  {% if newsletter_opt_in_form %}
+    {# If an exception is raised, the newsletter_opt_in_form is not populated into the context#}
+    {% include 'amenagement/_newsletter_opt_in.html' %}
+  {% endif %}
 {% endblock %}
 
 {% block footer %}

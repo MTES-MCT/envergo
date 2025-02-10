@@ -140,6 +140,7 @@ const showHedgeModal = (hedge, hedgeType) => {
   // event listener.
   dialog.addEventListener("dsfr.conceal", () => {
     form.removeEventListener("submit", saveModalData);
+    hedge.isDrawingCompleted = true;
   });
 
   dsfr(dialog).modal.disclose();
@@ -154,12 +155,13 @@ const showHedgeModal = (hedge, hedgeType) => {
  * @param {function} onRemove - The callback function to call when the hedge is removed.
  */
 class Hedge {
-  constructor(map, id, type, onRemove) {
+  constructor(map, id, type, onRemove, isDrawingCompleted) {
     this.id = id;
     this.map = map;
     this.type = type;
     this.onRemove = onRemove;
     this.isHovered = false;
+    this.isDrawingCompleted = isDrawingCompleted;
 
     this.latLngs = [];
     this.length = 0;
@@ -313,6 +315,14 @@ class HedgeList {
     }
   }
 
+  *completelyDrawn() {
+    for (let hedge of this.hedges) {
+      if (hedge.isDrawingCompleted) {
+        yield hedge;
+      }
+    }
+  }
+
   /**
    * Return the total length of all hedges (in meters) in the list.
    */
@@ -327,9 +337,13 @@ class HedgeList {
     return this.hedges.length;
   }
 
-  addHedge(map, onRemove, latLngs = [], additionalData = {}) {
+  get hasCompletedHedge() {
+    return this.hedges.some(hedge => hedge.isDrawingCompleted);
+  }
+
+  addHedge(map, onRemove, latLngs = [], additionalData = {}, isDrawingCompleted = false) {
     const hedgeId = this.getIdentifier(this.nextId.value++);
-    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove));
+    const hedge = reactive(new Hedge(map, hedgeId, this.type, onRemove, isDrawingCompleted));
     hedge.init(latLngs, additionalData);
     this.hedges.push(hedge);
 
@@ -372,12 +386,8 @@ createApp({
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
     };
-    const compensationRate = computed(() => {
-      let toPlant = hedges[TO_PLANT].totalLength;
-      let toRemove = hedges[TO_REMOVE].totalLength;
-      return toRemove > 0 ? toPlant / toRemove * 100 : 0;
-    });
-    const showHelpBubble = ref(false);
+    const helpBubble = ref("initialHelp");
+    const hedgeBeingDrawn = ref(null);
 
      // Reactive properties for quality conditions
     const quality = reactive({
@@ -397,47 +407,75 @@ createApp({
       onHedgesToPlantChange();
     });
 
-    const addHedge = (type, latLngs = [], additionalData = {}) => {
+    const addHedge = (type, latLngs = [], additionalData = {}, isDrawingCompleted = false) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
-      const newHedge = hedgeList.addHedge(map, onRemove, latLngs, additionalData);
+      return hedgeList.addHedge(map, onRemove, latLngs, additionalData, isDrawingCompleted);
+    };
 
+    const startDrawing = (type) => {
+      helpBubble.value = "initHedgeHelp";
+      const newHedge = addHedge(type);
+      hedgeBeingDrawn.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
-          showHelpBubble.value = true;
+          helpBubble.value = "drawingHelp";
         }
       });
 
-      // Cacher la bulle d'aide à la fin du tracé
-      newHedge.polyline.on('editable:drawing:end', () => {
-        showHelpBubble.value = false;
-        showHedgeModal(newHedge, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
-      });
+      newHedge.polyline.on('editable:drawing:end', onDrawingEnd);
 
-      return newHedge;
-    };
+      window.addEventListener('keyup', cancelDrawingFromEscape);
+
+      return newHedge
+    }
 
     const startDrawingToPlant = () => {
-      return addHedge(TO_PLANT);
+      return startDrawing(TO_PLANT);
     };
 
     const startDrawingToRemove = () => {
-      return addHedge(TO_REMOVE);
+      return startDrawing(TO_REMOVE);
     };
 
+    const stopDrawing= () => {
+      hedgeBeingDrawn.value = null;
+      helpBubble.value = null;
+      window.removeEventListener('keyup', cancelDrawingFromEscape);
+    };
+
+    const onDrawingEnd = () => {
+      showHedgeModal(hedgeBeingDrawn.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
+      stopDrawing();
+    };
+
+    const cancelDrawing= () => {
+       if (hedgeBeingDrawn.value) {
+         hedgeBeingDrawn.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
+         hedgeBeingDrawn.value.remove();
+         stopDrawing();
+       }
+    };
+
+    const cancelDrawingFromEscape = (event) => {
+      if (event.key === 'Escape'){
+          cancelDrawing();
+      }
+    };
+
+
     // Center the map around all existing hedges
-    const zoomOut = () => {
+    const zoomOut = (animate = true) => {
       // The concat method does not modify the original arrays
       let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
-        map.fitBounds(group.getBounds(), fitBoundsOptions);
+        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate, padding: [50,50]});
       }
     };
 
     const saveUrl = document.getElementById('app').dataset.saveUrl;
 
-    // Persist data to the server
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
       const hedgesToRemove = hedges[TO_REMOVE].toJSON();
@@ -480,7 +518,7 @@ createApp({
 
     // Cancel the input and return to the main form
     // We confirm with a modal if some hedges have been drawn
-    const cancel = () => {
+    const cancel = (event) => {
       const totalHedges = hedges[TO_PLANT].count + hedges[TO_REMOVE].count;
       if (totalHedges > 0 && mode !== READ_ONLY_MODE) {
         const dialog = document.getElementById("cancel-modal");
@@ -494,6 +532,9 @@ createApp({
 
         const dismissHandler = () => {
           dsfr(dialog).modal.conceal();
+          if(event && event.type === 'popstate') {
+            history.pushState({modalOpen: true}, "", "#modal");
+          }
         };
 
         const concealHandler = () => {
@@ -524,7 +565,7 @@ createApp({
 
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
-        const hedge = addHedge(type, latLngs, additionalData);
+        const hedge = addHedge(type, latLngs, additionalData, true);
         if(type === TO_PLANT && mode === REMOVAL_MODE) {
           hedge.polyline.disableEdit();
         }else if(type === TO_REMOVE && mode === PLANTATION_MODE) {
@@ -610,13 +651,27 @@ createApp({
         position: 'bottomright'
       }).addTo(map);
 
+      // Remove helpBubbleMessage on zoom
+      let isSetupDone = false;
+      map.on('zoomend', () => {
+        if (isSetupDone && helpBubble.value === "initialHelp") {
+          helpBubble.value = null;
+        }
+      });
+
       // Zoom on the selected address
       window.addEventListener('EnvErgo:citycode_selected', function (event) {
         const coordinates = event.detail.coordinates;
         const latLng = [coordinates[1], coordinates[0]];
         let zoomLevel = 16;
         map.setView(latLng, zoomLevel);
+        if (helpBubble.value === "initialHelp") {
+          helpBubble.value = null;
+        }
       });
+
+      history.pushState({ modalOpen: true }, "", "#modal");
+      window.addEventListener("popstate", cancel);
 
       // Here, we want to restore existing hedges
       // If there are any, set view to see them all
@@ -631,22 +686,24 @@ createApp({
       map.setView([43.6861, 3.5911], 22);
       restoreHedges();
       map.setZoom(14);
-      zoomOut();
+      zoomOut(false); // remove animation, it is smoother at the beginning, and it eases the helpBubbleMessage display
+      isSetupDone = true;
     });
 
     return {
       mode,
       hedges,
-      compensationRate,
       startDrawingToPlant,
       startDrawingToRemove,
       zoomOut,
-      showHelpBubble,
+      helpBubble,
       saveData,
       cancel,
       showHedgeModal,
       invalidHedges,
       quality,
+      hedgeBeingDrawn,
+      cancelDrawing,
     };
   }
 }).mount('#app');

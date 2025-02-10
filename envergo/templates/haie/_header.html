@@ -4,7 +4,10 @@
   <div class="fr-container">
     <div class="fr-header__body-row">
       <div class="fr-header__brand fr-enlarge-link">
-        <div class="fr-header__brand-top">
+        <img class="fr-header__brand-top fr-hidden-md"
+             src="{% static 'images/marianne.svg' %}"
+             alt="République française">
+        <div class="fr-header__brand-top fr-hidden fr-unhidden-md">
           <div class="fr-header__logo">
             <p class="fr-logo">
               République
@@ -47,6 +50,12 @@
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
         <li class="fr-nav__item">{% pilote_departments_menu %}</li>
+        <li class="fr-nav__item">
+          <a class="fr-nav__link"
+             href="{{ HAIE_FAQ_URL }}"
+             target="_blank"
+             rel="noopener external">Questions fréquentes</a>
+        </li>
       </ul>
     </nav>
   </div>

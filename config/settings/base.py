@@ -435,3 +435,5 @@ SITE_FROM_EMAIL = {
     "amenagement": "contact@amenagement.local",
     "haie": "contact@haie.local",
 }
+
+HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"

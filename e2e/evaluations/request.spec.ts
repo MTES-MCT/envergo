@@ -5,8 +5,7 @@ test('User can request an evaluation', async ({ page }) => {
   await page.getByLabel('Menu principal').getByRole('link', { name: 'Demander un avis réglementaire' }).click();
   await page.locator('p').filter({ hasText: 'Commencer la demande Durée : 1 min' }).getByRole('link').click();
   await page.getByLabel('Address of the project Type').click();
-  await page.getByLabel('Address of the project Type').fill('Vue');
-  await page.getByRole('option', { name: 'Vue 44, Loire-Atlantique,' }).click();
+  await page.getByLabel('Address of the project Type').fill('44640 Vue');
   await page.getByPlaceholder('15 caractères commençant par').click();
   await page.getByPlaceholder('15 caractères commençant par').fill('PA1234567981011');
   await page.getByLabel('Project description, comments').click();
