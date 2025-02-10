@@ -62,6 +62,8 @@ DEBUG_TOOLBAR_CONFIG = {
         # Disable profiling panel due to an issue with Python 3.12:
         # https://github.com/jazzband/django-debug-toolbar/issues/1875
         "debug_toolbar.panels.profiling.ProfilingPanel",
+        # We have too many static files, which makes this panel really slow
+        "debug_toolbar.panels.staticfiles.StaticFilesPanel",
     ],
     "SHOW_TEMPLATE_CONTEXT": True,
 }
