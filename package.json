@@ -15,22 +15,22 @@
     "vue": "^3.5.13"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.2",
-    "@types/node": "^22.1.0",
-    "autoprefixer": "^10.4.19",
-    "cssnano": "^7.0.3",
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.1",
+    "autoprefixer": "^10.4.20",
+    "cssnano": "^7.0.6",
     "gulp": "^5.0.0",
-    "gulp-imagemin": "^4.1.0",
+    "gulp-imagemin": "^9.1.0",
     "gulp-plumber": "^1.2.1",
     "gulp-postcss": "^10.0.0",
     "gulp-rename": "^2.0.0",
-    "gulp-sass": "^5.1.0",
+    "gulp-sass": "^6.0.0",
     "gulp-uglify-es": "^3.0.0",
     "pixrem": "^5.0.0",
-    "prettier": "3.3.3",
-    "sass": "^1.77.6",
-    "stylelint": "^16.8.1",
-    "stylelint-config-standard-scss": "^13.1.0"
+    "prettier": "3.5.0",
+    "sass": "^1.84.0",
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard-scss": "^14.0.0"
   },
   "browserslist": [
     "last 2 versions"
