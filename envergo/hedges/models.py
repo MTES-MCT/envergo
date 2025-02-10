@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models import Q
 from model_utils import Choices
 from pyproj import Geod
-from shapely import LineString
+from shapely import MultiLineString
 
 from envergo.geodata.models import Zone
 
@@ -36,8 +36,8 @@ class Hedge:
     def __init__(self, id, latLngs, type, additionalData=None):
         self.id = id  # The edge reference, e.g A1, A2…
         self.latLngs = latLngs
-        self.geometry = LineString(
-            [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
+        self.geometry = MultiLineString(
+            [[(latLng["lng"], latLng["lat"]) for latLng in latLngs]]
         )
         self.type = type
         self.additionalData = additionalData or {}
@@ -88,6 +88,10 @@ class Hedge:
     @property
     def sous_ligne_electrique(self):
         return self.additionalData.get("sousLigneElectrique", None)
+
+    @property
+    def proximite_voirie(self):
+        return self.additionalData.get("proximiteVoirie", None)
 
     def get_species_filter(self):
         """Build the filter to get possible protected species.

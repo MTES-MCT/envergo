@@ -437,3 +437,7 @@ SITE_FROM_EMAIL = {
 }
 
 HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
+
+GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
+    "static/gpkg/hedge_data_export_template.gpkg"
+)
