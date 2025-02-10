@@ -225,6 +225,8 @@ numpy==2.2.1
     #   -r base.txt
     #   scipy
     #   shapely
+objgraph==3.6.2
+    # via -r local.in
 packaging==24.2
     # via
     #   -r base.txt
