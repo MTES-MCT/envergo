@@ -20,6 +20,7 @@
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.6",
     "gulp": "^5.0.0",
+    "gulp-cli": "^3.0.0",
     "gulp-imagemin": "^9.1.0",
     "gulp-plumber": "^1.2.1",
     "gulp-postcss": "^10.0.0",
