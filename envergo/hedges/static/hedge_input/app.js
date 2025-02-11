@@ -387,7 +387,7 @@ createApp({
       TO_REMOVE: new HedgeList(TO_REMOVE),
     };
     const helpBubble = ref("initialHelp");
-    const hedgeInDrawing = ref(null);
+    const hedgeBeingDrawn = ref(null);
 
      // Reactive properties for quality conditions
     const quality = reactive({
@@ -416,7 +416,7 @@ createApp({
     const startDrawing = (type) => {
       helpBubble.value = "initHedgeHelp";
       const newHedge = addHedge(type);
-      hedgeInDrawing.value = newHedge;
+      hedgeBeingDrawn.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           helpBubble.value = "drawingHelp";
@@ -439,20 +439,20 @@ createApp({
     };
 
     const stopDrawing= () => {
-      hedgeInDrawing.value = null;
+      hedgeBeingDrawn.value = null;
       helpBubble.value = null;
       window.removeEventListener('keyup', cancelDrawingFromEscape);
     };
 
     const onDrawingEnd = () => {
-      showHedgeModal(hedgeInDrawing.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
+      showHedgeModal(hedgeBeingDrawn.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
       stopDrawing();
     };
 
     const cancelDrawing= () => {
-       if (hedgeInDrawing.value) {
-         hedgeInDrawing.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
-         hedgeInDrawing.value.remove();
+       if (hedgeBeingDrawn.value) {
+         hedgeBeingDrawn.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
+         hedgeBeingDrawn.value.remove();
          stopDrawing();
        }
     };
@@ -702,7 +702,7 @@ createApp({
       showHedgeModal,
       invalidHedges,
       quality,
-      hedgeInDrawing,
+      hedgeBeingDrawn,
       cancelDrawing,
     };
   }

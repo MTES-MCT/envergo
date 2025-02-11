@@ -15,7 +15,9 @@ class AuthBackend(ModelBackend):
 
     def user_can_authenticate(self, user):
 
-        if hasattr(self, "site_literal"):
+        if getattr(user, "is_superuser", False):
+            can_auth = getattr(user, "is_active", True)
+        elif hasattr(self, "site_literal"):
             if self.site_literal == "amenagement":
                 can_auth = all(
                     (

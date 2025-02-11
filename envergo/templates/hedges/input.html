@@ -24,18 +24,18 @@
           <button v-if="mode === 'removal'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
                   @click="startDrawingToRemove"
-                  :disabled="hedgeInDrawing">
+                  :disabled="hedgeBeingDrawn">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
           <button v-if="mode === 'plantation'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
                   @click="startDrawingToPlant"
-                  :disabled="hedgeInDrawing">
+                  :disabled="hedgeBeingDrawn">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
           </button>
-          <button v-if="hedgeInDrawing"
+          <button v-if="hedgeBeingDrawn"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
                   @click="cancelDrawing">Annuler le tracé en cours</button>
         </div>
@@ -60,17 +60,17 @@
                  type="search"
                  id="id_address"
                  name="address"
-                 :disabled="hedgeInDrawing">
+                 :disabled="hedgeBeingDrawn">
           <button class="fr-btn fr-btn--sm"
                   title="Rechercher"
-                  :disabled="hedgeInDrawing">Rechercher</button>
+                  :disabled="hedgeBeingDrawn">Rechercher</button>
         </div>
 
         <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
           <div class="leaflet-control">
             <button class="fr-btn fr-btn--sm fr-btn--secondary"
                     @click="zoomOut"
-                    :disabled="hedgeInDrawing">
+                    :disabled="hedgeBeingDrawn">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
             </button>
@@ -104,14 +104,14 @@
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
-                              :disabled="hedgeInDrawing">
+                              :disabled="hedgeBeingDrawn">
                         [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()"
-                              :disabled="hedgeInDrawing">Supprimer</button>
+                              :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -147,7 +147,7 @@
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
-                              :disabled="hedgeInDrawing">
+                              :disabled="hedgeBeingDrawn">
                         [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
                       </button>
                     </td>
@@ -155,7 +155,7 @@
                       <button v-if="mode === 'plantation'"
                               class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="hedge.remove()"
-                              :disabled="hedgeInDrawing">Supprimer</button>
+                              :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
