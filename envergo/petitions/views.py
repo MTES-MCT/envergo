@@ -737,11 +737,9 @@ class PetitionProjectHedgeDataExport(DetailView):
                             ),
                             "typeHaie": hedge.hedge_type,
                             "vieilArbre": "oui" if hedge.vieil_arbre else "non",
-                            "proximiteMare200m": (
-                                "oui" if hedge.proximite_mare else "non"
-                            ),
+                            "proximiteMare": ("oui" if hedge.proximite_mare else "non"),
                             "surParcellePac": "oui" if hedge.is_on_pac else "non",
-                            "proximitePointEau10m": (
+                            "proximitePointEau": (
                                 "oui" if hedge.proximite_point_eau else "non"
                             ),
                             "connexionBoisement": (
