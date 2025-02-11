@@ -60,7 +60,7 @@ function styles() {
     cssnano({ preset: 'default' }), // minify result
   ];
 
-  return src(`${paths.sass}/project.scss`)
+  return src(`${paths.sass}/*.scss`)
     .pipe(
       sass({
         importer: tildeImporter,
