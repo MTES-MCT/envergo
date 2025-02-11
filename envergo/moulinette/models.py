@@ -81,6 +81,7 @@ RESULT_CASCADE = [
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
     RESULTS.non_soumis,
+    RESULTS.dispense,
     RESULTS.non_concerne,
     RESULTS.non_disponible,
 ]
@@ -1363,7 +1364,7 @@ class Moulinette(ABC):
                 RESULTS.soumis,
             ),
             ((RESULTS.action_requise,), RESULTS.action_requise),
-            ((RESULTS.non_soumis,), RESULTS.non_soumis),
+            ((RESULTS.non_soumis, RESULTS.dispense), RESULTS.non_soumis),
             ((RESULTS.non_disponible,), RESULTS.non_disponible),
         ]
 

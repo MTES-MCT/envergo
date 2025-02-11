@@ -140,7 +140,7 @@ class Bcae8(CriterionEvaluator):
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
-        "dispense_petit": RESULTS.non_soumis,
+        "dispense_petit": RESULTS.dispense,
         "soumis_remplacement": RESULTS.soumis,
         "soumis_transfert_parcelles": RESULTS.soumis,
         "soumis_meilleur_emplacement": RESULTS.soumis,
