@@ -20,7 +20,7 @@ build==1.2.2.post1
     # via pip-tools
 celery==5.4.0
     # via -r base.in
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   pyproj
     #   requests
@@ -41,7 +41,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-django==4.2.17
+django==4.2.19
     # via
     #   -r base.in
     #   django-allauth
@@ -56,7 +56,7 @@ django==4.2.17
     #   django-otp
     #   django-phonenumber-field
     #   django-redis
-django-allauth==65.3.1
+django-allauth==65.4.1
     # via -r base.in
 django-anymail[sendinblue]==12.0
     # via -r base.in
@@ -68,7 +68,7 @@ django-compressor==4.5.1
     # via -r base.in
 django-crispy-forms==2.3
     # via -r base.in
-django-environ==0.11.2
+django-environ==0.12.0
     # via -r base.in
 django-leaflet==0.31.0
     # via -r base.in
@@ -84,7 +84,7 @@ django-ratelimit==4.1.0
     # via -r base.in
 django-redis==5.4.0
     # via -r base.in
-faker==33.3.1
+faker==35.2.0
     # via -r base.in
 hiredis==3.1.0
     # via -r base.in
@@ -94,23 +94,23 @@ kombu==5.4.2
     # via celery
 markdown==3.7
     # via -r base.in
-numpy==2.2.1
+numpy==2.2.2
     # via
     #   scipy
     #   shapely
 packaging==24.2
     # via build
-phonenumbers==8.13.52
+phonenumbers==8.13.54
     # via django-phonenumber-field
 pillow==11.1.0
     # via -r base.in
 pip-tools==7.4.1
     # via -r base.in
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via click-repl
-psycopg[binary]==3.2.3
+psycopg[binary]==3.2.4
     # via -r base.in
-psycopg-binary==3.2.3
+psycopg-binary==3.2.4
     # via psycopg
 pycparser==2.22
     # via cffi
@@ -128,7 +128,7 @@ python-slugify==8.0.4
     # via -r base.in
 python-stdnum==1.20
     # via django-localflavor
-pytz==2024.2
+pytz==2025.1
     # via -r base.in
 qrcode==8.0
     # via django-otp
@@ -146,7 +146,7 @@ rjsmin==1.2.2
     # via django-compressor
 scipy==1.15.1
     # via -r base.in
-shapely==2.0.6
+shapely==2.0.7
     # via -r base.in
 six==1.17.0
     # via python-dateutil
@@ -160,7 +160,7 @@ typing-extensions==4.12.2
     # via
     #   faker
     #   psycopg
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   celery
     #   kombu
@@ -178,7 +178,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 wheel==0.45.1
     # via pip-tools
-whitenoise==6.8.2
+whitenoise==6.9.0
     # via -r base.in
 
 # The following packages are considered to be unsafe in a requirements file:

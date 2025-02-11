@@ -1,5 +1,3 @@
-version: '3'
-
 volumes:
   envergo_postgres_data: {}
   envergo_postgres_data_backups: {}
