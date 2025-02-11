@@ -43,6 +43,36 @@ PROCESS_ORDER = [
     "72",
     "86",
     "23",
+
+    "38",
+    "29",
+    "85",
+    "53",
+    "47",
+    "82",
+    "88",
+    "51",
+    "55",
+    "90",
+
+    "42",
+    "54",
+    "05",
+    "31",
+
+    "75", "92", "93", "94",
+
+    "66",
+
+    "26", "73", "52", "15", "74",
+    "06",
+    "39", "83", "11", "89",
+    "57", "68", "84",
+
+    "03", "04", "08", "07", "09", "12", "13", "16", "18", "20", "21", "25", "27", "30",
+    "32", "34", "41", "43", "46", "48", "58", "63", "64", "65", "69", "70", "71",
+    "81", "87",
+
 ]
 
 
@@ -84,7 +114,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"Dept {dept} already processed, skipping")
                 continue
 
-            alti_file_pattern = f"RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D0{dept}_*.7z"
+            alti_file_pattern = f"RGEALTI_2-0_5M_ASC_LAMB93-IGN69_D{int(dept):03}_*.7z"
+            print(alti_file_pattern)
             try:
                 alti_file = list(alti_files_dir.glob(alti_file_pattern))[0]
                 self.stdout.write(f"Found alti file {alti_file} for dept {dept}")
