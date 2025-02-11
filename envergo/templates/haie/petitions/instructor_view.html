@@ -83,6 +83,14 @@
                         data-fr-opened="false"
                         aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
               {% endif %}
+
+              {% if information.fields %}
+                <section class="fr-mt-2w">
+                  {% for field in information.fields %}
+                    {% include '_field_snippet.html' with field=field %}
+                  {% endfor %}
+                </section>
+              {% endif %}
             </section>
           {% endfor %}
         </div>

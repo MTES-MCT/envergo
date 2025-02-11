@@ -52,7 +52,7 @@ class PetitionProject(models.Model):
     )
 
     onagre_number = models.CharField(
-        "Référence Onagre du dossier", max_length=64, blank=True
+        "Référence ONAGRE du dossier", max_length=64, blank=True
     )
 
     instructor_free_mention = models.TextField(

@@ -1,10 +1,13 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from textwrap import dedent
 
 import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.forms import BoundField, Form
+from django.forms.fields import CharField
+from django.forms.widgets import Textarea, TextInput
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
@@ -46,6 +49,7 @@ class InstructorInformation:
     label: str | None
     items: list[Item]
     details: list[InstructorInformationDetails]
+    fields: list[BoundField] = field(default_factory=list)
     comment: str | None = None
 
 
@@ -107,6 +111,20 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                     ),
                 ],
             ),
+        ],
+        fields=[
+            BoundField(
+                form=Form(
+                    data={
+                        "instructor_free_mention": petition_project.instructor_free_mention
+                    }
+                ),
+                field=CharField(
+                    label="Champ libre de notes",
+                    widget=Textarea(attrs={"rows": 3}),
+                ),
+                name="instructor_free_mention",
+            )
         ],
     )
 
@@ -305,6 +323,16 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
             ),
         ],
         details=[],
+        fields=[
+            BoundField(
+                form=Form(data={"onagre_number": petition_project.onagre_number}),
+                field=CharField(
+                    label="Référence ONAGRE du dossier",
+                    widget=TextInput(attrs={"placeholder": "2022-12-015-00001"}),
+                ),
+                name="onagre_number",
+            )
+        ],
     )
 
     return ProjectDetails(
