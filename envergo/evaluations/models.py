@@ -99,6 +99,7 @@ RESULTS = Choices(
     ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
     ("derogation_inventaire", "Dérogation"),
     ("derogation_simplifiee", "Dérogation simplifiée"),
+    ("dispense", "Dispense"),
 )
 
 
