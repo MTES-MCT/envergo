@@ -51,6 +51,14 @@ class PetitionProject(models.Model):
         default=DOSSIER_STATES.draft,
     )
 
+    onagre_number = models.CharField(
+        "Référence ONAGRE du dossier", max_length=64, blank=True
+    )
+
+    instructor_free_mention = models.TextField(
+        "Mention libre de l'instructeur", blank=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
