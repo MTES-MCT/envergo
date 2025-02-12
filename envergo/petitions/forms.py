@@ -15,3 +15,26 @@ class PetitionProjectForm(forms.ModelForm):
         fields = [
             "moulinette_url",
         ]
+
+
+class OnagreForm(forms.ModelForm):
+    """Form for adding an ONAGRE number to a petition project."""
+
+    class Meta:
+        model = PetitionProject
+        fields = [
+            "onagre_number",
+        ]
+
+
+class InstructorFreeMentionForm(forms.ModelForm):
+    """Form for adding an instructor_free_mention to a petition project."""
+
+    class Meta:
+        model = PetitionProject
+        fields = [
+            "instructor_free_mention",
+        ]
+        widgets = {
+            "instructor_free_mention": forms.Textarea(attrs={"rows": 3}),
+        }

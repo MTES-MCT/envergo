@@ -20,7 +20,11 @@ from envergo.moulinette.models import (
     get_moulinette_class_from_site,
 )
 from envergo.moulinette.views import MoulinetteMixin
-from envergo.petitions.forms import PetitionProjectForm
+from envergo.petitions.forms import (
+    InstructorFreeMentionForm,
+    OnagreForm,
+    PetitionProjectForm,
+)
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
@@ -469,6 +473,14 @@ class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
         )
         return result
 
+    def post(self, request, *args, **kwargs):
+        self.petition_project = get_object_or_404(
+            PetitionProject,
+            reference=self.kwargs["reference"],
+        )
+
+        return super().post(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -477,6 +489,23 @@ class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
         )
 
         return context
+
+    def get_form_class(self):
+        if "instructor_free_mention" in self.request.POST:
+            return InstructorFreeMentionForm
+        return OnagreForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = self.petition_project  # Pass the instance to the form
+        return kwargs
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
 
 
 class Alert:
