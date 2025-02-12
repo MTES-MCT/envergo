@@ -89,6 +89,10 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sousLigneElectrique", None)
 
+    @property
+    def proximite_voirie(self):
+        return self.additionalData.get("proximiteVoirie", None)
+
     def get_species_filter(self):
         """Build the filter to get possible protected species.
 
