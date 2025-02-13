@@ -27,9 +27,9 @@ billiard==4.2.1
     # via
     #   -r base.txt
     #   celery
-boto3==1.35.97
+boto3==1.36.16
     # via django-storages
-botocore==1.35.97
+botocore==1.36.16
     # via
     #   boto3
     #   s3transfer
@@ -39,7 +39,7 @@ build==1.2.2.post1
     #   pip-tools
 celery==5.4.0
     # via -r base.txt
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   -r base.txt
     #   fiona
@@ -81,7 +81,7 @@ cligj==0.7.2
     # via
     #   -r base.txt
     #   fiona
-django==4.2.17
+django==4.2.19
     # via
     #   -r base.txt
     #   django-allauth
@@ -97,7 +97,7 @@ django==4.2.17
     #   django-phonenumber-field
     #   django-redis
     #   django-storages
-django-allauth==65.3.1
+django-allauth==65.4.1
     # via -r base.txt
 django-anymail[sendinblue]==12.0
     # via -r base.txt
@@ -111,7 +111,7 @@ django-compressor==4.5.1
     # via -r base.txt
 django-crispy-forms==2.3
     # via -r base.txt
-django-environ==0.11.2
+django-environ==0.12.0
     # via -r base.txt
 django-leaflet==0.31.0
     # via -r base.txt
@@ -129,7 +129,7 @@ django-redis==5.4.0
     # via -r base.txt
 django-storages[boto3]==1.14.4
     # via -r production.in
-faker==33.3.1
+faker==35.2.0
     # via -r base.txt
 fiona==1.10.1
     # via -r base.txt
@@ -151,7 +151,7 @@ kombu==5.4.2
     #   celery
 markdown==3.7
     # via -r base.txt
-numpy==2.2.1
+numpy==2.2.2
     # via
     #   -r base.txt
     #   scipy
@@ -161,7 +161,7 @@ packaging==24.2
     #   -r base.txt
     #   build
     #   gunicorn
-phonenumbers==8.13.52
+phonenumbers==8.13.54
     # via
     #   -r base.txt
     #   django-phonenumber-field
@@ -169,13 +169,13 @@ pillow==11.1.0
     # via -r base.txt
 pip-tools==7.4.1
     # via -r base.txt
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via
     #   -r base.txt
     #   click-repl
-psycopg[binary]==3.2.3
+psycopg[binary]==3.2.4
     # via -r base.txt
-psycopg-binary==3.2.3
+psycopg-binary==3.2.4
     # via
     #   -r base.txt
     #   psycopg
@@ -202,7 +202,7 @@ python-stdnum==1.20
     # via
     #   -r base.txt
     #   django-localflavor
-pytz==2024.2
+pytz==2025.1
     # via -r base.txt
 qrcode==8.0
     # via
@@ -224,13 +224,13 @@ rjsmin==1.2.2
     # via
     #   -r base.txt
     #   django-compressor
-s3transfer==0.10.4
+s3transfer==0.11.2
     # via boto3
 scipy==1.15.1
     # via -r base.txt
-sentry-sdk==2.19.2
+sentry-sdk==2.20.0
     # via -r production.in
-shapely==2.0.6
+shapely==2.0.7
     # via -r base.txt
 six==1.17.0
     # via
@@ -251,7 +251,7 @@ typing-extensions==4.12.2
     #   -r base.txt
     #   faker
     #   psycopg
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   -r base.txt
     #   celery
@@ -277,7 +277,7 @@ wheel==0.45.1
     # via
     #   -r base.txt
     #   pip-tools
-whitenoise==6.8.2
+whitenoise==6.9.0
     # via -r base.txt
 
 # The following packages are considered to be unsafe in a requirements file:
