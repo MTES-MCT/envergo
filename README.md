@@ -117,6 +117,13 @@ $ docker compose run --rm postgres create_raster
 Puis interrompre et relancer le `docker compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
 
 
+#### Créer un utilisateur en local
+
+Utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
+
+Pour créer un compte super utilisateur, utiliser la commande django shell pour lui donner les droits de super utilisateur.
+
+
 ### Qualité du code
 
 De nombreux outils sont mis en place pour garantir la qualité et l'homogénéité du code.
