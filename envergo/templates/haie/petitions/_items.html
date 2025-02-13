@@ -8,7 +8,7 @@
             class="fr-my-2w">
         {% csrf_token %}
         {% include '_form_snippet.html' with form=item %}
-        <button type="submit" class="fr-btn fr-btn--secondary">Ajouter</button>
+        <button type="submit" class="fr-btn fr-btn--secondary">Mettre à jour</button>
       </form>
     {% else %}
       <span><b>{{ item.label }} :</b></span>

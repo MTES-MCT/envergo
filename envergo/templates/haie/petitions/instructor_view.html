@@ -99,4 +99,30 @@
   <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
   <script>var SOURCE_PAGE = "instruction";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var forms = document.querySelectorAll('form');
+      var formChanged = false;
+      var formSubmitted = false;
+
+       forms.forEach(function (form) {
+        form.addEventListener('change', function () {
+          formChanged = true;
+        });
+
+        form.addEventListener('submit', function () {
+          formSubmitted = true;
+        });
+      });
+
+      window.addEventListener('beforeunload', function (e) {
+        if (formChanged && !formSubmitted) {
+          e.preventDefault();
+          var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
+          e.returnValue = confirmationMessage; // Standard for most browsers
+          return confirmationMessage; // For some older browsers
+        }
+      });
+    });
+  </script>
 {% endblock %}
