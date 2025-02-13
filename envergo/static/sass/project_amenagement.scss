@@ -1,7 +1,0 @@
-section.regulation {
-  h2 {
-    &::before {
-      content: "• "; /* stylelint-disable-line */
-    }
-  }
-}
