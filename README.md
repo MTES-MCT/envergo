@@ -39,13 +39,25 @@ Il est recommandé de se baser sur la version docker.
 
 > NB : pour les commandes `docker compose`, cette documentation utilise la syntaxe de la version 2 en remplacant le tiret (`-`) par un espace et utlisant donc `docker compose` à la place de `docker-compose`.
 > Si vous avez une version plus ancienne, vous pouvez utiliser la syntaxe `docker-compose`.
-> [Plus d'infos...](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
+> [Plus d'infos…](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
 
 Pour lancer l'environnement rapidement :
 
 ```bash
 $ git clone … && cd envergo
 $ touch .env
+```
+
+Remplir le fichier `.env` avec les variables d'environnement pour travailler en local
+
+```
+DJANGO_SETTINGS_MODULE=config.settings.local
+ENV_NAME=development
+```
+
+Créez les conteneurs et démarrez-les
+
+```bash
 $ docker compose build
 $ docker compose up
 ```
@@ -64,6 +76,13 @@ $ npm  run build
 $ docker compose run --rm django python manage.py collectstatic
 
 ```
+
+Ajoutez dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
+
+```
+<url du conteneur envergo_django> envergo.local haie.local
+```
+
 
 #### En local
 
