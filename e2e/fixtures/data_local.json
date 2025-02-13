@@ -1,0 +1,16 @@
+[
+  {
+    "model": "sites.site",
+    "fields": {
+      "domain": "envergo.local",
+      "name": "EnvErgo"
+    }
+  },
+  {
+    "model": "sites.site",
+    "fields": {
+      "domain": "haie.local",
+      "name": "Haie"
+    }
+  }
+]
