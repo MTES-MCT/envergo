@@ -6,8 +6,6 @@ $dark-pink: #eed3d7;
 $red: #b94a48;
 
 :root {
-  // Bump default font size from 16 to 18px.
-  font-size: 112.5%;
   scroll-behavior: smooth;
 }
 
@@ -308,11 +306,12 @@ nav#evaluation-summary {
 section.regulation {
   h2 {
     display: flex;
-    align-items: center;
-    line-height: 2rem;
+    align-items: start;
+    flex-wrap: wrap;
 
     span.content {
       margin-right: 0.5em;
+      margin-bottom: 0.5em;
       white-space: nowrap;
 
       .undertitle {
@@ -323,6 +322,7 @@ section.regulation {
 
     span.fr-tag {
       white-space: nowrap;
+      line-height: 1.75rem;
     }
   }
 
