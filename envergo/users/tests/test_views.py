@@ -60,6 +60,54 @@ def test_amenagement_register_view(client, mailoutbox):
     assert not user.access_haie
 
 
+def test_register_with_existing_email(amenagement_user, client, mailoutbox):
+    """When existing user tries to register, no new user is created.
+
+    We just send the activation email again."""
+    users = User.objects.all()
+    assert users.count() == 1
+
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert users.count() == 1
+
+
+def test_register_with_existing_email_and_other_errors(
+    amenagement_user, client, mailoutbox
+):
+    """We never display the "this user already exists" error message."""
+
+    users = User.objects.all()
+    assert users.count() == 1
+
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "A",
+            "password2": "B",
+        },
+    )
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert (
+        "Un objet Utilisateur avec ce champ Adresse e-mail existe déjà."
+        not in res.content.decode()
+    )
+
+
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_haie_register_view(client, mailoutbox):

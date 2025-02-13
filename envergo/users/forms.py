@@ -45,6 +45,11 @@ class RegisterForm(UserCreationForm):
         return email.lower()
 
     def clean(self):
+        # Disable unique validation. We will do it manually
+        self._validate_unique = False
+        return self.cleaned_data
+
+    def full_clean(self):
         """Check that the email is unique.
 
         We NEVER want to display the "A user with that email already exists" message.
@@ -53,23 +58,21 @@ class RegisterForm(UserCreationForm):
 
         Thus, we want to check for email unicity IF AND ONLY IF there are no other
         errors in the form.
-        """
 
-        # By not calling super().clean(), we prevent the unique constraint to be
-        # checked.
-        cleaned_data = self.cleaned_data
+        We have to do this check in the `post_clean` method because the password
+        validation happens in the `_post_clean` method in the parent form.
+        """
+        super().full_clean()
 
         if not self.errors:
             # Prevent registrations with existing email addresses
-            email = cleaned_data.get("email")
+            email = self.cleaned_data.get("email")
             if email and self._meta.model.objects.filter(email__iexact=email).exists():
                 error = ValidationError(
                     "Un utilisateur avec cette adresse e-mail existe déjà.",
                     code="unique",
                 )
                 self.add_error("email", error)
-
-        return cleaned_data
 
 
 class AllowDisabledSelect(Select):
