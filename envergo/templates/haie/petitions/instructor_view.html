@@ -109,26 +109,22 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var forms = document.querySelectorAll('form');
-      var formChanged = false;
-      var formSubmitted = false;
 
-       forms.forEach(function (form) {
+      function preventLeaving(e) {
+        e.preventDefault();
+        var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
+        e.returnValue = confirmationMessage; // Standard for most browsers
+        return confirmationMessage; // For some older browsers
+      }
+
+      forms.forEach(function (form) {
         form.addEventListener('change', function () {
-          formChanged = true;
+          window.addEventListener('beforeunload', preventLeaving);
         });
 
         form.addEventListener('submit', function () {
-          formSubmitted = true;
+          window.removeEventListener('beforeunload', preventLeaving);
         });
-      });
-
-      window.addEventListener('beforeunload', function (e) {
-        if (formChanged && !formSubmitted) {
-          e.preventDefault();
-          var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
-          e.returnValue = confirmationMessage; // Standard for most browsers
-          return confirmationMessage; // For some older browsers
-        }
       });
     });
   </script>
