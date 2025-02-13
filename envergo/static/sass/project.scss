@@ -183,31 +183,47 @@ article {
 }
 
 nav#evaluation-summary {
-  li a {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    background-image: none;
-    padding: 0.25rem 0;
-    color: var(--text-action-high-grey);
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
 
-    &:hover {
-      background-color: var(--hover);
+  li {
+    span.regulation-result,
+    a {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
 
-    .action-link {
-      margin-left: 1.5rem;
-      white-space: nowrap;
+    span.regulation-result {
+      width: 100%;
+      flex-wrap: wrap;
     }
 
-    .fr-link {
-      text-decoration: underline;
-      font-weight: 500;
-    }
+    a {
+      background-image: none;
+      padding: 0.25rem 0;
+      color: var(--text-action-high-grey);
 
-    .undertitle {
-      font-size: 0.875rem;
-      line-height: 1.5rem;
+      &:hover {
+        background-color: var(--hover);
+      }
+
+      .action-link {
+        margin-left: 1.5rem;
+        white-space: nowrap;
+      }
+
+      .fr-link {
+        text-decoration: underline;
+        font-weight: 500;
+      }
+
+      .undertitle {
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+      }
     }
   }
 }
