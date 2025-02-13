@@ -55,7 +55,7 @@ DJANGO_SETTINGS_MODULE=config.settings.local
 ENV_NAME=development
 ```
 
-Créez les conteneurs et démarrez-les
+Créer et démarrer les conteneurs
 
 ```bash
 $ docker compose build
@@ -77,7 +77,7 @@ $ docker compose run --rm django python manage.py collectstatic
 
 ```
 
-Ajoutez dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
+Ajouter dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
 
 ```
 <url du conteneur envergo_django> envergo.local haie.local
