@@ -340,3 +340,19 @@ def test_otp_can_be_deactivated(settings, admin_client):
 
     res = admin_client.get(admin_url, follow=False)
     assert res.status_code == 200
+
+
+def test_admin_staff_read_access(settings, user, admin_client):
+    """Staff user has read access to several views in admin"""
+
+    admin_url = reverse("admin:index")
+    user.is_staff = True
+    user.save()
+
+    # staff_group = Group.objects.get(name="Staff base")
+    # user.group.add(staff_group)
+    admin_client.force_login(user)
+    res = admin_client.get(admin_url, follow=False)
+
+    assert res.status_code == 200
+    assert "Hosted Files" in res.content.decode()
