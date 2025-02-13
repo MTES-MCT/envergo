@@ -102,6 +102,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var forms = document.querySelectorAll('form');
+      var beforeUnloadListenerAdded = false;
 
       function preventLeaving(e) {
         e.preventDefault();
@@ -112,11 +113,17 @@
 
       forms.forEach(function (form) {
         form.addEventListener('change', function () {
-          window.addEventListener('beforeunload', preventLeaving);
+          if (!beforeUnloadListenerAdded) {
+            window.addEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = true;
+          }
         });
 
         form.addEventListener('submit', function () {
-          window.removeEventListener('beforeunload', preventLeaving);
+          if(beforeUnloadListenerAdded){
+            window.removeEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = false;
+          }
         });
       });
     });
