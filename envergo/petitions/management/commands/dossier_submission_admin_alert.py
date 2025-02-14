@@ -80,6 +80,10 @@ class Command(BaseCommand):
                                     usager {
                                         email
                                         }
+                                    champs{
+                                        id
+                                        stringValue
+                                    }
                                 }
                             }
                     }
@@ -200,23 +204,65 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                         demarches_simplifiees_dossier_number=dossier_number
                     ).first()
                     if project is None:
+                        # check if it comes from another environment e.g. staging
+                        project_url = next(
+                            (
+                                champ["stringValue"]
+                                for champ in dossier["champs"]
+                                if champ["id"]
+                                == activated_department.demarches_simplifiees_project_url_id
+                            ),
+                            "",
+                        )
+
+                        if current_site.domain not in project_url:
+                            logger.warning(
+                                "A demarches simplifiees dossier has no corresponding project, it was probably "
+                                "created on another environment",
+                                extra={
+                                    "dossier_number": dossier_number,
+                                    "demarche_number": demarche_number,
+                                    "project_url": project_url,
+                                },
+                            )
+
+                            continue
+
+                        # this dossier is linked to a project created on this environment
+                        # but the project is not in the database
                         logger.warning(
                             "A demarches simplifiees dossier has no corresponding project, it may have been "
                             "created without the guh",
                             extra={
                                 "dossier_number": dossier_number,
                                 "demarche_number": demarche_number,
+                                "project_url": project_url,
                             },
                         )
+
+                        dossier_summary = {
+                            key: value
+                            for key, value in dossier.items()
+                            if key != "champs"
+                        }
 
                         message = f"""\
                         ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
-                        Un dossier Démarches Simplifiées concernant {demarche_label} n'a pas de projet associé.
-                        Cela peut être dû à une création manuelle du dossier sans passer par la plateforme GUH.
-                        Dossier concerné:
+                        Un dossier contenant des données en provenance du GUH n'a pas été trouvé dans le GUH.
+
+                        Il peut s'agir :
+                         * d'un dossier dupliqué côté Démarches Simplifiées
+                         * d'un dossier créé manuellement dans lequel l'usager a renseigné une URL de projet GUH
+
+                        Veuillez vérifier quel dossier DS doit être lié à ce projet GUH et le cas échéant, le modifier.
+
+                        Détails du dossier :
+                        * Démarche : {demarche_label}
+                        * [Lien du projet GUH]({project_url}) (ce projet est actuellement lié à un autre dossier)
+                        * Dossier :
                         ```
-                        {dossier}
+                        {dossier_summary}
                         ```
 
 

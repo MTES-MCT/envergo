@@ -818,6 +818,12 @@ class ConfigHaie(ConfigBase):
         max_length=64,
     )
 
+    demarches_simplifiees_project_url_id = models.CharField(
+        'Identifiant du "Lien internet de la simulation réglementaire de votre projet" dans Démarches Simplifiées',
+        blank=True,
+        max_length=64,
+    )
+
     def __str__(self):
         return self.department.get_department_display()
 
@@ -951,7 +957,12 @@ class ConfigHaie(ConfigBase):
                 check=Q(is_activated=False)
                 | Q(demarche_simplifiee_number__isnull=False),
                 name="demarche_simplifiee_number_required_if_activated",
-            )
+            ),
+            CheckConstraint(
+                check=Q(demarche_simplifiee_number__isnull=True)
+                | Q(demarches_simplifiees_project_url_id__isnull=False),
+                name="project_url_id_required_if_demarche_number",
+            ),
         ]
 
 
