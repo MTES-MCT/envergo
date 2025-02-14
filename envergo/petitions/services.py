@@ -444,7 +444,7 @@ Requête envoyée :
         if (
             any(
                 error["extensions"]["code"] == "not_found"
-                for error in data.get("data") or []
+                for error in data.get("errors") or []
             )
             and not petition_project.is_dossier_submitted
         ):
