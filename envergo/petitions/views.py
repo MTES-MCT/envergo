@@ -17,9 +17,11 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView
 from fiona import Feature, Geometry, Properties
+from pyproj import Transformer
+from shapely.ops import transform
 
 from envergo.analytics.utils import get_matomo_tags, log_event
-from envergo.hedges.models import TO_PLANT
+from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import (
     ConfigHaie,
@@ -757,7 +759,12 @@ class PetitionProjectHedgeDataExport(DetailView):
                 export_file, "w", layer="haie_envergo", **src.meta
             ) as dst:
                 for hedge in data.hedges():
-                    geometry = Geometry.from_dict(hedge.geometry)
+                    transformer = Transformer.from_crs(
+                        EPSG_WGS84, EPSG_LAMB93, always_xy=True
+                    )
+                    geometry = Geometry.from_dict(
+                        transform(transformer.transform, hedge.geometry)
+                    )
                     properties = Properties.from_dict(
                         {
                             "id": hedge.id,
@@ -766,11 +773,9 @@ class PetitionProjectHedgeDataExport(DetailView):
                             ),
                             "typeHaie": hedge.hedge_type,
                             "vieilArbre": "oui" if hedge.vieil_arbre else "non",
-                            "proximiteMare200m": (
-                                "oui" if hedge.proximite_mare else "non"
-                            ),
+                            "proximiteMare": ("oui" if hedge.proximite_mare else "non"),
                             "surParcellePac": "oui" if hedge.is_on_pac else "non",
-                            "proximitePointEau10m": (
+                            "proximitePointEau": (
                                 "oui" if hedge.proximite_point_eau else "non"
                             ),
                             "connexionBoisement": (

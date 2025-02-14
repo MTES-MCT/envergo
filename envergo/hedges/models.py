@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models import Q
 from model_utils import Choices
 from pyproj import Geod
-from shapely import MultiLineString
+from shapely import LineString
 
 from envergo.geodata.models import Zone
 
@@ -36,8 +36,8 @@ class Hedge:
     def __init__(self, id, latLngs, type, additionalData=None):
         self.id = id  # The edge reference, e.g A1, A2…
         self.latLngs = latLngs
-        self.geometry = MultiLineString(
-            [[(latLng["lng"], latLng["lat"]) for latLng in latLngs]]
+        self.geometry = LineString(
+            [(latLng["lng"], latLng["lat"]) for latLng in latLngs]
         )
         self.type = type
         self.additionalData = additionalData or {}
