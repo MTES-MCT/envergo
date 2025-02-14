@@ -62,7 +62,7 @@ class ProjectDetails:
 def compute_instructor_informations(petition_project, moulinette) -> ProjectDetails:
     config = moulinette.config
     ds_details = fetch_project_details_from_demarches_simplifiees(
-        petition_project.demarches_simplifiees_dossier_number, config
+        petition_project, config
     )
 
     hedge_data = petition_project.hedge_data
@@ -328,8 +328,9 @@ class DemarchesSimplifieesDetails:
 
 
 def fetch_project_details_from_demarches_simplifiees(
-    dossier_number, config
+    petition_project, config
 ) -> DemarchesSimplifieesDetails | None:
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     if (
         not config.demarches_simplifiees_pacage_id
@@ -443,6 +444,26 @@ Requête envoyée :
     dossier = (data.get("data") or {}).get("dossier")
 
     if dossier is None:
+
+        if (
+            any(
+                error["extensions"]["code"] == "not_found"
+                for error in data.get("errors") or []
+            )
+            and not petition_project.is_dossier_submitted
+        ):
+            # the dossier is not found, but it's normal if the project is not submitted
+            logger.info(
+                "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
+                extra={
+                    "response.json": data,
+                    "response.status_code": response.status_code,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
+            )
+            return None
+
         logger.error(
             "Demarches simplifiees API response is not well formated",
             extra={
