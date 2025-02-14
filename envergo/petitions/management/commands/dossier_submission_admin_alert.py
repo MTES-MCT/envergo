@@ -228,6 +228,8 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
 
                             continue
 
+                        # this dossier is linked to a project created on this environment
+                        # but the project is not in the database
                         logger.warning(
                             "A demarches simplifiees dossier has no corresponding project, it may have been "
                             "created without the guh",
@@ -243,48 +245,31 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                             for key, value in dossier.items()
                             if key != "champs"
                         }
-                        if project_url:
-                            # this dossier is linked to a project created on this environment
-                            # but the project is not in the database
-                            message = f"""\
-                            ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
-                            Un dossier contenant des données en provenance du GUH n'a pas été trouvé dans le GUH.
+                        message = f"""\
+                        ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
 
-                            Il peut s'agir :
-                             * d'un dossier dupliqué côté Démarches Simplifiées
-                             * d'un dossier créé manuellement dans lequel l'usager a renseigné une URL de projet GUH
+                        Un dossier contenant des données en provenance du GUH n'a pas été trouvé dans le GUH.
 
-                            Détails du dossier :
-                            * Démarche : {demarche_label}
-                            * [Lien du projet GUH]({project_url}) (ce projet est actuellement lié à un autre dossier)
-                            * Dossier :
-                            ```
-                            {dossier_summary}
-                            ```
+                        Il peut s'agir :
+                         * d'un dossier dupliqué côté Démarches Simplifiées
+                         * d'un dossier créé manuellement dans lequel l'usager a renseigné une URL de projet GUH
 
+                        Veuillez vérifier quel dossier DS doit être lié à ce projet GUH et le cas échéant, le modifier.
 
-                            Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-                            """
-                            notify(dedent(message), "haie")
-                            continue
-                        else:
-                            # this dossier is not linked to a project, it has probably been created from scratch on DS
-                            message = f"""\
-                            ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
-
-                            Un dossier Démarches Simplifiées concernant {demarche_label} n'a pas de projet associé.
-                            Cela peut être dû à une création manuelle du dossier sans passer par la plateforme GUH.
-                            Dossier concerné:
-                            ```
-                            {dossier_summary}
-                            ```
+                        Détails du dossier :
+                        * Démarche : {demarche_label}
+                        * [Lien du projet GUH]({project_url}) (ce projet est actuellement lié à un autre dossier)
+                        * Dossier :
+                        ```
+                        {dossier_summary}
+                        ```
 
 
-                            Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-                            """
-                            notify(dedent(message), "haie")
-                            continue
+                        Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+                        """
+                        notify(dedent(message), "haie")
+                        continue
 
                     if not project.is_dossier_submitted:
                         # first time we have some data about this dossier
