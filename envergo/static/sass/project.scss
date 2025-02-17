@@ -442,6 +442,10 @@ section.regulation {
     .fr-tag.probability-non_disponible {
       visibility: hidden;
     }
+
+    button.fr-accordion__btn {
+      flex-flow: row wrap;
+    }
   }
 }
 
