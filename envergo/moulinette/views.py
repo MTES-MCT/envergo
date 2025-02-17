@@ -288,7 +288,7 @@ class MoulinetteMixin:
     def should_activate_optional_criteria(self):
         return self.request.user.is_staff
 
-    def log_moulinette_event(self, moulinette, **kwargs):
+    def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
@@ -400,7 +400,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
-                self.log_moulinette_event(moulinette)
+                self.log_moulinette_event(moulinette, context)
 
             return res
         elif triage_form is not None:
