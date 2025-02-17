@@ -117,16 +117,23 @@ $ docker compose run --rm postgres create_raster
 Puis interrompre et relancer le `docker compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
 
 
+#### Ajouter les domaines pour l'accès en local
+
+Pour que le navigateur puisse accéder à l'application en local, les domaines `envergo.local` et `haie.local` doivent être ajoutés au modèle Sites > Sites, par exemple via le shell de django.
+
+```python
+from django.contrib.sites.models import Site
+
+Site.objects.get_or_create(domain="envergo.local", name="Envergo local")
+Site.objects.get_or_create(domain="haie.local", name="Haie local")
+```
+
+
 #### Créer un utilisateur en local
 
 Pour créer un nouveau compte, utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
 
-Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur.
-
-
-#### Ajouter les domaines pour l'accès en local
-
-Pour que le navigateur puisse accéder à l'application en local, les domaines `envergo.local` et `haie.local` doivent être ajoutés au modèle Sites > Sites, via l'administration django ou le shell.
+Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur. Envergo utiliser un modèle custom pour la gestion des utilisateurs : `envergo.users.models.User`.
 
 
 ### Qualité du code
@@ -384,7 +391,7 @@ pg_dump --dbname postgresql://<user>:<pass>@localhost:10000/<db> > /tmp/envergo.
 
 Alternative : récupérer le backup nocture depuis Scalingo.
 
-## Comment charger une BD de dev depuis un dump
+## Charger une BD de dev depuis un dump
 
 ```bash
 $ . envs/postgres
