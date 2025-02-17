@@ -1680,6 +1680,11 @@ class MoulinetteHaie(Moulinette):
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
 
+        if "haies" in self.catalog:
+            haies = self.catalog["haies"]
+            summary["longueur_detruite"] = haies.length_to_remove()
+            summary["longueur_plantee"] = haies.length_to_plant()
+
         return summary
 
     def get_debug_context(self):
