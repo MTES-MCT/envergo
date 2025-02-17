@@ -2,14 +2,11 @@
 
 {% for item in items %}
   <div>
-    {% if item|is_form_instance %}
-      <form method="post"
-            action="{% url 'petition_project_instructor_view' petition_project.reference %}"
-            class="fr-my-2w">
-        {% csrf_token %}
-        {% include '_form_snippet.html' with form=item %}
+    {% if item == "instructor_free_mention" or item == "onagre_number" %}
+      <div class="fr-my-2w">
+        {% include '_field_snippet.html' with field=form|get_item:item %}
         <button type="submit" class="fr-btn fr-btn--secondary">Mettre à jour</button>
-      </form>
+      </div>
     {% else %}
       <span><b>{{ item.label }} :</b></span>
 

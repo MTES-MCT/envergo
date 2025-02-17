@@ -1,5 +1,4 @@
 from django import template
-from django.forms import BaseForm
 from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
@@ -125,5 +124,5 @@ def is_type(value, type_name):
 
 
 @register.filter
-def is_form_instance(value):
-    return isinstance(value, BaseForm)
+def get_item(dictionary, key):
+    return dictionary[key]

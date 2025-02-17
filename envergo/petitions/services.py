@@ -1,15 +1,14 @@
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
+from typing import Literal
 
 import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.forms import Form
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.petitions.forms import InstructorFreeMentionForm, OnagreForm
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class InstructorInformationDetails:
 class InstructorInformation:
     slug: str | None
     label: str | None
-    items: list[Item | Form]
+    items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
     details: list[InstructorInformationDetails]
     comment: str | None = None
 
@@ -73,7 +72,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
         label=None,
         items=[
             Item("Référence", petition_project.reference, None, None),
-            InstructorFreeMentionForm(instance=petition_project),
+            "instructor_free_mention",
         ],
         details=[
             InstructorInformationDetails(
@@ -224,7 +223,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
         slug="ep",
         label="Espèces protégées",
         items=[
-            OnagreForm(instance=petition_project),
+            "onagre_number",
             Item(
                 "Présence d'une mare à moins de 200 m",
                 ItemDetails(

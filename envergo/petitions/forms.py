@@ -17,32 +17,21 @@ class PetitionProjectForm(forms.ModelForm):
         ]
 
 
-class OnagreForm(forms.ModelForm):
-    """Form for adding an ONAGRE number to a petition project."""
+class PetitionProjectInstructorForm(forms.ModelForm):
+    """Form for adding instructor fields to a petition project."""
 
     class Meta:
         model = PetitionProject
         fields = [
             "onagre_number",
+            "instructor_free_mention",
         ]
         widgets = {
             "onagre_number": forms.TextInput(
                 attrs={"placeholder": "AAAA-MM-XXX-NNNNN"}
             ),
-        }
-
-
-class InstructorFreeMentionForm(forms.ModelForm):
-    """Form for adding an instructor_free_mention to a petition project."""
-
-    class Meta:
-        model = PetitionProject
-        fields = [
-            "instructor_free_mention",
-        ]
-        widgets = {
             "instructor_free_mention": forms.Textarea(
-                attrs={"rows": 3, "placeholder": "Ajoutez vos notes ici..."},
+                attrs={"rows": 3, "placeholder": "Ajoutez vos notes ici…"},
             ),
         }
         labels = {"instructor_free_mention": "Notes libres"}

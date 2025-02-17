@@ -10,7 +10,7 @@ from django.http import JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import FormView
+from django.views.generic import FormView, UpdateView
 
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.services import PlantationEvaluator
@@ -20,11 +20,7 @@ from envergo.moulinette.models import (
     get_moulinette_class_from_site,
 )
 from envergo.moulinette.views import MoulinetteMixin
-from envergo.petitions.forms import (
-    InstructorFreeMentionForm,
-    OnagreForm,
-    PetitionProjectForm,
-)
+from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.services import compute_instructor_informations
 from envergo.utils.mattermost import notify
@@ -356,16 +352,10 @@ class PetitionProjectMixin(MoulinetteMixin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.moulinette = None
-        self.petition_project = None
+        self.object = None
 
     def get(self, request, *args, **kwargs):
-
-        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
-        self.petition_project = get_object_or_404(
-            PetitionProject.objects.select_related("hedge_data"),
-            reference=self.kwargs["reference"],
-        )
-        parsed_url = urlparse(self.petition_project.moulinette_url)
+        parsed_url = urlparse(self.object.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
         raw_data = QueryDict(query_string)
@@ -374,7 +364,7 @@ class PetitionProjectMixin(MoulinetteMixin):
         self.request.moulinette_data = raw_data
 
         moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = self.petition_project.hedge_data
+        moulinette_data["haies"] = self.object.hedge_data
 
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         self.moulinette = MoulinetteClass(
@@ -390,7 +380,7 @@ class PetitionProjectMixin(MoulinetteMixin):
             logger.warning(
                 "A petition project has missing data. This should not happen unless regulations have changed."
                 "We should implement static simulation/project to avoid this case.",
-                extra={"reference": self.petition_project.reference},
+                extra={"reference": self.object.reference},
             )
             raise NotImplementedError("We do not handle uncompleted project")
 
@@ -401,7 +391,7 @@ class PetitionProjectMixin(MoulinetteMixin):
         context["moulinette"] = self.moulinette
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
-        context["petition_project"] = self.petition_project
+        context["petition_project"] = self.object
         return context
 
 
@@ -409,6 +399,11 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
     template_name = "haie/moulinette/petition_project.html"
 
     def get(self, request, *args, **kwargs):
+        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
+        self.object = get_object_or_404(
+            PetitionProject.objects.select_related("hedge_data"),
+            reference=self.kwargs["reference"],
+        )
         result = super().get(request, *args, **kwargs)
 
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
@@ -417,7 +412,7 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
                 "projet",
                 "consultation",
                 self.request,
-                **self.petition_project.get_log_event_data(),
+                **self.object.get_log_event_data(),
                 **get_matomo_tags(self.request),
             )
 
@@ -432,11 +427,11 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
             self.moulinette, self.moulinette.catalog["haies"]
         )
         context["demarches_simplifiees_dossier_number"] = (
-            self.petition_project.demarches_simplifiees_dossier_number
+            self.object.demarches_simplifiees_dossier_number
         )
-        context["created_at"] = self.petition_project.created_at
+        context["created_at"] = self.object.created_at
 
-        parsed_moulinette_url = urlparse(self.petition_project.moulinette_url)
+        parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         moulinette_params["edit"] = ["true"]
         result_url = reverse("moulinette_result")
@@ -445,7 +440,7 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
         context["edit_url"] = edit_url
         context["ds_url"] = (
             f"https://www.demarches-simplifiees.fr/dossiers/"
-            f"{self.petition_project.demarches_simplifiees_dossier_number}"
+            f"{self.object.demarches_simplifiees_dossier_number}"
         )
         return context
 
@@ -458,54 +453,44 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
+class PetitionProjectInstructorView(PetitionProjectMixin, UpdateView):
     template_name = "haie/petitions/instructor_view.html"
+    queryset = PetitionProject.objects.all()
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
 
     def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         result = super().get(request, *args, **kwargs)
 
         log_event(
             "projet",
             "consultation_i",
             self.request,
-            **self.petition_project.get_log_event_data(),
+            **self.object.get_log_event_data(),
             **get_matomo_tags(self.request),
         )
         return result
-
-    def post(self, request, *args, **kwargs):
-        self.petition_project = get_object_or_404(
-            PetitionProject,
-            reference=self.kwargs["reference"],
-        )
-
-        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context["project_details"] = compute_instructor_informations(
-            self.petition_project, self.moulinette
+            self.object, self.moulinette
         )
 
         return context
 
     def get_form_class(self):
-        if "instructor_free_mention" in self.request.POST:
-            return InstructorFreeMentionForm
-        return OnagreForm
+        return PetitionProjectInstructorForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["instance"] = self.petition_project  # Pass the instance to the form
+        kwargs["instance"] = self.object  # Pass the instance to the form
         return kwargs
 
     def get_success_url(self):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
-
-    def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)
 
 
 class Alert:
@@ -570,11 +555,11 @@ class AlertList(List[Alert]):
             )
             config_url = self.request.build_absolute_uri(config_relative_url)
 
-        if self.petition_project:
+        if self.object:
             lines.append("#### Mapping avec Démarches-simplifiées : :warning: anomalie")
             projet_relative_url = reverse(
                 "admin:petitions_petitionproject_change",
-                args=[self.petition_project.id],
+                args=[self.object.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
 
@@ -585,10 +570,10 @@ class AlertList(List[Alert]):
                 dossier_url = (
                     f"https://www.demarches-simplifiees.fr/procedures/"
                     f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self.petition_project.demarches_simplifiees_dossier_number}"
+                    f"{self.object.demarches_simplifiees_dossier_number}"
                 )
                 lines.append(
-                    f"* [dossier DS n°{self.petition_project.demarches_simplifiees_dossier_number}]"
+                    f"* [dossier DS n°{self.object.demarches_simplifiees_dossier_number}]"
                     f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
                     f" par le pétitionnaire)"
                 )
