@@ -588,6 +588,10 @@ class MoulinetteResultPlantation(MoulinetteResult):
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        kwargs["plantation_acceptable"] = context["plantation_evaluation"].result
+        super().log_moulinette_event(moulinette, context, **kwargs)
+
 
 class Triage(FormView):
     form_class = TriageFormHaie
