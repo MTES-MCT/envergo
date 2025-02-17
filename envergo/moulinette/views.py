@@ -296,11 +296,6 @@ class MoulinetteMixin:
         action = self.event_action_amenagement
         if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
             action = self.event_action_haie
-            export["longueur_detruite"] = (
-                moulinette.catalog["haies"].length_to_remove()
-                if "haies" in moulinette.catalog
-                else None
-            )
 
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
