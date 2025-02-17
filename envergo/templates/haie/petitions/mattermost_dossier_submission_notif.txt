@@ -1,0 +1,10 @@
+### Nouveau dossier GUH {{ department }}
+
+Un dossier a été soumis sur Démarches Simplifiées pour {{ demarche_label }}.
+
+[Démarches simplifiées]({{ ds_url }})
+[Admin django]({{ admin_url }})
+—
+Email de l'usager : {{ usager_email }}
+Linéaire détruit : {{{ length_to_remove }} m
+—

@@ -1,11 +1,11 @@
 import datetime
 import logging
-from textwrap import dedent
 
 import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
+from django.template.loader import render_to_string
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
+
+PRODUCTION_DOMAIN_BLACK_LIST = ["haie.incubateur.net", "haie.local"]
+NON_PRODUCTION_DOMAIN_BLACK_LIST = ["haie.beta.gouv.fr"]
 
 
 class Command(BaseCommand):
@@ -122,27 +125,17 @@ class Command(BaseCommand):
                         },
                     )
 
-                    message = f"""\
-### Récupération des statuts des dossiers depuis Démarches-simplifiées : :x: erreur
-
-L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de
-la démarche n°{demarche_number}.
-
-Réponse de Démarches Simplifiées : {response.status_code}
-```
-{response.text}
-```
-
-Requête envoyée :
-* Url: {api_url}
-* Body:
-```
-{body}
-```
-
-Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-"""
-                    notify(dedent(message), "haie")
+                    message_body = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
+                        context={
+                            "demarche_number": demarche_number,
+                            "status_code": response.status_code,
+                            "response": response.text,
+                            "api_url": api_url,
+                            "body": body,
+                        },
+                    )
+                    notify(message_body, "haie")
                     break
 
                 data = response.json() or {}
@@ -162,28 +155,16 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                             "request.body": body,
                         },
                     )
-
-                    message = f"""\
-                    ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
-
-                    La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le statut des \
-                    dossiers concernés n'a pas pu être récupéré.
-
-                    Réponse de Démarches Simplifiées : {response.status_code}
-                    ```
-                    {response.text}
-                    ```
-
-                    Requête envoyée :
-                    * Url: {api_url}
-                    * Body:
-                    ```
-                    {body}
-                    ```
-
-                    Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-                    """
-                    notify(dedent(message), "haie")
+                    message_body = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+                        context={
+                            "status_code": response.status_code,
+                            "response": response.text,
+                            "api_url": api_url,
+                            "body": body,
+                        },
+                    )
+                    notify(message_body, "haie")
                     break
 
                 has_next_page = (
@@ -203,72 +184,19 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                     project = PetitionProject.objects.filter(
                         demarches_simplifiees_dossier_number=dossier_number
                     ).first()
+
+                    ds_url = (
+                        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+                        f"{dossier_number}"
+                    )
                     if project is None:
-                        # check if it comes from another environment e.g. staging
-                        project_url = next(
-                            (
-                                champ["stringValue"]
-                                for champ in dossier["champs"]
-                                if champ["id"]
-                                == activated_department.demarches_simplifiees_project_url_id
-                            ),
-                            "",
+                        self.handle_unlinked_dossier(
+                            dossier,
+                            demarche_number,
+                            demarche_label,
+                            ds_url,
+                            activated_department.demarches_simplifiees_project_url_id,
                         )
-
-                        if current_site.domain not in project_url:
-                            logger.warning(
-                                "A demarches simplifiees dossier has no corresponding project, it was probably "
-                                "created on another environment",
-                                extra={
-                                    "dossier_number": dossier_number,
-                                    "demarche_number": demarche_number,
-                                    "project_url": project_url,
-                                },
-                            )
-
-                            continue
-
-                        # this dossier is linked to a project created on this environment
-                        # but the project is not in the database
-                        logger.warning(
-                            "A demarches simplifiees dossier has no corresponding project, it may have been "
-                            "created without the guh",
-                            extra={
-                                "dossier_number": dossier_number,
-                                "demarche_number": demarche_number,
-                                "project_url": project_url,
-                            },
-                        )
-
-                        dossier_summary = {
-                            key: value
-                            for key, value in dossier.items()
-                            if key != "champs"
-                        }
-
-                        message = f"""\
-                        ### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
-
-                        Un dossier contenant des données en provenance du GUH n'a pas été trouvé dans le GUH.
-
-                        Il peut s'agir :
-                         * d'un dossier dupliqué côté Démarches Simplifiées
-                         * d'un dossier créé manuellement dans lequel l'usager a renseigné une URL de projet GUH
-
-                        Veuillez vérifier quel dossier DS doit être lié à ce projet GUH et le cas échéant, le modifier.
-
-                        Détails du dossier :
-                        * Démarche : {demarche_label}
-                        * [Lien du projet GUH]({project_url}) (ce projet est actuellement lié à un autre dossier)
-                        * Dossier :
-                        ```
-                        {dossier_summary}
-                        ```
-
-
-                        Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
-                        """
-                        notify(dedent(message), "haie")
                         continue
 
                     if not project.is_dossier_submitted:
@@ -276,31 +204,28 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                         department = extract_param_from_url(
                             project.moulinette_url, "department"
                         )
-
-                        ds_url = (
-                            f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-                            f"{dossier_number}"
-                        )
                         admin_url = reverse(
                             "admin:petitions_petitionproject_change",
                             args=[project.pk],
                         )
 
-                        usager_email = (dossier.get("usager") or {}).get("email", None)
-                        message = f"""\
-                            ### Nouveau dossier GUH {dict(DEPARTMENT_CHOICES).get(department, department)}
-
-                            Un dossier a été soumis sur Démarches Simplifiées pour {demarche_label}.
-
-                            [Démarches simplifiées]({ds_url})
-                            [Admin django](https://{current_site.domain}{admin_url})
-                            —
-                            Email de l'usager : {usager_email or "non renseigné"}
-                            Linéaire détruit : {project.hedge_data.length_to_remove()} m
-                            —
-                            """
-
-                        notify(dedent(message), "haie")
+                        usager_email = (dossier.get("usager") or {}).get(
+                            "email", "non renseigné"
+                        )
+                        message_body = render_to_string(
+                            "haie/petitions/mattermost_dossier_submission_notif.txt",
+                            context={
+                                "department": dict(DEPARTMENT_CHOICES).get(
+                                    department, department
+                                ),
+                                "demarche_label": demarche_label,
+                                "ds_url": ds_url,
+                                "admin_url": f"https://{current_site.domain}{admin_url}",
+                                "usager_email": usager_email,
+                                "length_to_remove": project.hedge_data.length_to_remove(),
+                            },
+                        )
+                        notify(message_body, "haie")
 
                         self.log_submission(project)
 
@@ -310,8 +235,6 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
             handled_demarches.append(demarche_number)
 
     def log_submission(self, project):
-        # create a fake request for the log_event
-
         creation_event = (
             Event.objects.order_by("-date_created")
             .filter(
@@ -331,6 +254,7 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                 },
             )
 
+        # create a fake request for the log_event
         factory = RequestFactory()
         request = factory.get("/")
         request.COOKIES[settings.VISITOR_COOKIE_NAME] = (
@@ -344,3 +268,61 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
             request,
             **project.get_log_event_data(),
         )
+
+    def handle_unlinked_dossier(
+        self, dossier, demarche_number, demarche_label, ds_url, project_url_id
+    ):
+        """Handle a dossier that is not linked to any project in the database
+
+        This dossier is not linked to any project on this environment
+        it may have been created on another environment
+        or it may have been created from scratch without the guh
+        or it may be a duplicate of a GUH created dossier
+        we will try to find out and apply a notification strategy
+        """
+        project_url = next(
+            (
+                champ["stringValue"]
+                for champ in dossier["champs"]
+                if champ["id"] == project_url_id
+            ),
+            "",
+        )
+
+        black_list = (
+            PRODUCTION_DOMAIN_BLACK_LIST
+            if settings.ENV_NAME == "production"
+            else NON_PRODUCTION_DOMAIN_BLACK_LIST
+        )
+        if any(domain in project_url for domain in black_list):
+            # project url is from a blacklisted domain, it should have been created in another environment
+            logger.warning(
+                "A demarches simplifiees dossier has no corresponding project, it was probably "
+                "created on another environment",
+                extra={
+                    "dossier_number": dossier["number"],
+                    "demarche_number": demarche_number,
+                    "project_url": project_url,
+                },
+            )
+        else:
+            # Either this dossier has been created in this environment but do not match an existing project,
+            # or it has been created in a heterodox way.
+            logger.warning(
+                "A demarches simplifiees dossier has no corresponding project, it may have been "
+                "created without the guh",
+                extra={
+                    "dossier_number": dossier["number"],
+                    "demarche_number": demarche_number,
+                    "project_url": project_url,
+                },
+            )
+            message_body = render_to_string(
+                "haie/petitions/mattermost_unlinked_dossier_notif.txt",
+                context={
+                    "demarche_label": demarche_label,
+                    "ds_url": ds_url,
+                    "dossier_number": dossier["number"],
+                },
+            )
+            notify(message_body, "haie")
