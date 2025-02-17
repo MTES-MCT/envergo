@@ -48,7 +48,7 @@
                 <ul class="fr-sidemenu__list">
                   <li class="fr-sidemenu__item fr-sidemenu__item--active">
                     <a class="fr-sidemenu__link"
-                       href="#project-specifications"
+                       href="#project-specifications-instructor"
                        target="_self"
                        aria-current="page">Caractéristiques du projet</a>
                   </li>
@@ -66,32 +66,36 @@
             </div>
           </nav>
         </div>
-        <div id="project-specifications" class="fr-col">
+        <div id="project-specifications-instructor" class="fr-col">
           <h1>Caractéristiques du projet</h1>
-          {% for information in project_details.details %}
-            <section class="fr-mt-6w"
-                     {% if information.slug %}id="{{ information.slug }}"{% endif %}>
-              {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
-              <p class="fr-hint-text">
-                {% if information.comment %}{{ information.comment }}{% endif %}
-              </p>
-              {% include "haie/petitions/_items.html" with items=information.items %}
-              {% if information.details %}
-                {% for information_details in information.details %}
-                  <h3 class="fr-mt-4w">{{ information_details.label }}</h3>
+          <form method="post"
+                action="{% url 'petition_project_instructor_view' petition_project.reference %}">
+            {% csrf_token %}
+            {% for information in project_details.details %}
+              <section class="fr-mt-6w"
+                       {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+                {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
+                <p class="fr-hint-text">
+                  {% if information.comment %}{{ information.comment }}{% endif %}
+                </p>
+                {% include "haie/petitions/_items.html" with items=information.items %}
+                {% if information.details %}
+                  {% for information_details in information.details %}
+                    <h3 class="fr-mt-4w">{{ information_details.label }}</h3>
 
-                  {% include "haie/petitions/_items.html" with items=information_details.items %}
+                    {% include "haie/petitions/_items.html" with items=information_details.items %}
 
-                {% endfor %}
-              {% endif %}
-              {% if forloop.first %}
-                <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
-                        type="button"
-                        data-fr-opened="false"
-                        aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
-              {% endif %}
-            </section>
-          {% endfor %}
+                  {% endfor %}
+                {% endif %}
+                {% if forloop.first %}
+                  <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
+                          type="button"
+                          data-fr-opened="false"
+                          aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+                {% endif %}
+              </section>
+            {% endfor %}
+          </form>
         </div>
       </div>
     </div>
