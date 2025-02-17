@@ -133,7 +133,7 @@ Site.objects.get_or_create(domain="haie.local", name="Haie local")
 
 Pour créer un nouveau compte, utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
 
-Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur. Envergo utiliser un modèle custom pour la gestion des utilisateurs : `envergo.users.models.User`.
+Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur. Envergo utilise un modèle custom pour la gestion des utilisateurs : `envergo.users.models.User`.
 
 
 ### Qualité du code
@@ -418,6 +418,7 @@ Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans 
 Ajouter les `Repository secrets` :
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
+
 
 ## Glossaire
 
