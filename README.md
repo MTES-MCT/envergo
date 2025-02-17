@@ -119,9 +119,14 @@ Puis interrompre et relancer le `docker compose up`. Les migrations Django devra
 
 #### Créer un utilisateur en local
 
-Utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
+Pour créer un nouveau compte, utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
 
-Pour créer un compte super utilisateur, utiliser la commande django shell pour lui donner les droits de super utilisateur.
+Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur.
+
+
+#### Ajouter les domaines pour l'accès en local
+
+Pour que le navigateur puisse accéder à l'application en local, les domaines `envergo.local` et `haie.local` doivent être ajoutés au modèle Sites > Sites, via l'administration django ou le shell.
 
 
 ### Qualité du code
