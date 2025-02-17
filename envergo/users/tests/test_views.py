@@ -103,7 +103,12 @@ def test_register_with_existing_email_and_other_errors(
     assert res.status_code == 200
     assert len(mailoutbox) == 0
     assert (
-        "Un objet Utilisateur avec ce champ Adresse e-mail existe déjà."
+        'class="fr-input fr-input--error" required id="id_password2"'
+        in res.content.decode()
+    )
+
+    assert (
+        'class="fr-input fr-input--error" required id="id_email"'
         not in res.content.decode()
     )
 
