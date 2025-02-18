@@ -328,7 +328,6 @@ section.regulation {
     span.content {
       margin-right: 0.5em;
       margin-bottom: 0.5em;
-      white-space: nowrap;
 
       .undertitle {
         font-weight: normal;
@@ -372,6 +371,7 @@ section.regulation {
 
   .fr-accordion {
     .fr-accordion__btn {
+      flex-flow: row wrap;
       color: inherit;
 
       span.title .perimeter {
@@ -441,10 +441,6 @@ section.regulation {
 
     .fr-tag.probability-non_disponible {
       visibility: hidden;
-    }
-
-    button.fr-accordion__btn {
-      flex-flow: row wrap;
     }
   }
 }
