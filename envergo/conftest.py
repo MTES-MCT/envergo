@@ -25,9 +25,7 @@ def amenagement_user() -> User:
 
 @pytest.fixture
 def haie_user() -> User:
-    return UserFactory(
-        access_amenagement=False, access_haie=True, is_confirmed_by_admin=True
-    )
+    return UserFactory(access_amenagement=False, access_haie=True)
 
 
 @pytest.fixture

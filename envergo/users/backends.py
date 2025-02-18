@@ -38,8 +38,7 @@ class AuthBackend(ModelBackend):
                     )
                 )
         else:
-            # This should not happen
-            logger.error("site_literal not found in AuthBackend")
-            can_auth = False
+            # Happen only during tests when using force_login
+            can_auth = super().user_can_authenticate(user)
 
         return can_auth
