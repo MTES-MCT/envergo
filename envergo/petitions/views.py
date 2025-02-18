@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 import fiona
 import requests
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect
@@ -462,7 +463,7 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(PetitionProjectMixin, FormView):
+class PetitionProjectInstructorView(LoginRequiredMixin, PetitionProjectMixin, FormView):
     template_name = "haie/petitions/instructor_view.html"
 
     def get(self, request, *args, **kwargs):
