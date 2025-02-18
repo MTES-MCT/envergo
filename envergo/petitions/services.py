@@ -590,11 +590,11 @@ class AlertList(List[Alert]):
             )
             config_url = self.request.build_absolute_uri(config_relative_url)
 
-        if self.object:
+        if self._petition_project:
             lines.append("#### Mapping avec Démarches-simplifiées : :warning: anomalie")
             projet_relative_url = reverse(
                 "admin:petitions_petitionproject_change",
-                args=[self.object.id],
+                args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
 
@@ -605,10 +605,10 @@ class AlertList(List[Alert]):
                 dossier_url = (
                     f"https://www.demarches-simplifiees.fr/procedures/"
                     f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self.object.demarches_simplifiees_dossier_number}"
+                    f"{self._petition_project.demarches_simplifiees_dossier_number}"
                 )
                 lines.append(
-                    f"* [dossier DS n°{self.object.demarches_simplifiees_dossier_number}]"
+                    f"* [dossier DS n°{self._petition_project.demarches_simplifiees_dossier_number}]"
                     f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
                     f" par le pétitionnaire)"
                 )

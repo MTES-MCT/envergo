@@ -4,20 +4,15 @@ from urllib.parse import parse_qs, urlparse
 import requests
 from django.conf import settings
 from django.db import transaction
-from django.http import JsonResponse, QueryDict
-from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import FormView, UpdateView
+from django.views.generic import DetailView, FormView, UpdateView
 
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.services import PlantationEvaluator
-from envergo.moulinette.models import (
-    ConfigHaie,
-    MoulinetteHaie,
-    get_moulinette_class_from_site,
-)
-from envergo.moulinette.views import MoulinetteMixin
+from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.services import (
@@ -351,62 +346,13 @@ class PetitionProjectCreate(FormView):
         )
 
 
-class PetitionProjectMixin(MoulinetteMixin):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.moulinette = None
-        self.object = None
-
-    def get(self, request, *args, **kwargs):
-        parsed_url = urlparse(self.object.moulinette_url)
-        query_string = parsed_url.query
-        # We need to convert the query string to a flat dict
-        raw_data = QueryDict(query_string)
-        # Save the moulinette data in the request object
-        # we will need it for things like triage form or params validation
-        self.request.moulinette_data = raw_data
-
-        moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = self.object.hedge_data
-
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        self.moulinette = MoulinetteClass(
-            moulinette_data,
-            moulinette_data,
-            self.should_activate_optional_criteria(),
-        )
-
-        if self.moulinette.has_missing_data():
-            # this should not happen, unless we have stored an incomplete project
-            # If we add some new regulations, or adding evaluators on existing ones, we could have obsolete moulinette
-            # we should implement static simulation/project to avoid this case.
-            logger.warning(
-                "A petition project has missing data. This should not happen unless regulations have changed."
-                "We should implement static simulation/project to avoid this case.",
-                extra={"reference": self.object.reference},
-            )
-            raise NotImplementedError("We do not handle uncompleted project")
-
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["moulinette"] = self.moulinette
-        context["base_result"] = self.moulinette.get_result_template()
-        context["is_read_only"] = True
-        context["petition_project"] = self.object
-        return context
-
-
-class PetitionProjectDetail(PetitionProjectMixin, FormView):
+class PetitionProjectDetail(DetailView):
     template_name = "haie/moulinette/petition_project.html"
+    queryset = PetitionProject.objects.all()
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
 
     def get(self, request, *args, **kwargs):
-        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
-        self.object = get_object_or_404(
-            PetitionProject.objects.select_related("hedge_data"),
-            reference=self.kwargs["reference"],
-        )
         result = super().get(request, *args, **kwargs)
 
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
@@ -423,11 +369,26 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["moulinette"] = self.moulinette
-        context["base_result"] = self.moulinette.get_result_template()
+
+        moulinette = get_moulinette_from_project(self.object)
+
+        if moulinette.has_missing_data():
+            # this should not happen, unless we have stored an incomplete project
+            # If we add some new regulations, or adding evaluators on existing ones, we could have obsolete moulinette
+            # we should implement static simulation/project to avoid this case.
+            logger.warning(
+                "A petition project has missing data. This should not happen unless regulations have changed."
+                "We should implement static simulation/project to avoid this case.",
+                extra={"reference": self.object.reference},
+            )
+            raise NotImplementedError("We do not handle uncompleted project")
+
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
-            self.moulinette, self.moulinette.catalog["haies"]
+            moulinette, moulinette.catalog["haies"]
         )
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
@@ -485,3 +446,6 @@ class PetitionProjectInstructorView(UpdateView):
         )
 
         return context
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
