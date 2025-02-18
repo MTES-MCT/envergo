@@ -440,3 +440,9 @@ div#go-to-ds-btn {
 button#project-summary-hedge-input-open-btn {
   background-color: var(--grey-1000-50);
 }
+
+div#project-specifications-instructor {
+  i.optional-tag {
+    display: none;
+  }
+}

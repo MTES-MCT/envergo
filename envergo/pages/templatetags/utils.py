@@ -123,3 +123,8 @@ def add_string(arg1, arg2):
 @register.filter
 def is_type(value, type_name):
     return type(value).__name__ == type_name
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary[key]
