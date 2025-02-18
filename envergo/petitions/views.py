@@ -1,16 +1,24 @@
 import logging
+import os
+import shutil
+import tempfile
 from urllib.parse import parse_qs, urlparse
 
+import fiona
 import requests
 from django.conf import settings
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, UpdateView
+from fiona import Feature, Geometry, Properties
+from pyproj import Transformer
+from shapely.ops import transform
 
 from envergo.analytics.utils import get_matomo_tags, log_event
+from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
@@ -449,3 +457,67 @@ class PetitionProjectInstructorView(UpdateView):
 
     def get_success_url(self):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+
+
+class PetitionProjectHedgeDataExport(DetailView):
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        data = self.object.hedge_data
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            template_file = settings.GUH_DATA_EXPORT_TEMPLATE
+            export_file = os.path.join(tmpdirname, "output.gpkg")
+            shutil.copy(template_file, export_file)
+
+            # Fiona cannot append to an existing file
+            # By opening a layer in write mode, it will squash the layer data
+            # Luckily for us, that's the behaviour we want
+            with fiona.open(template_file) as src, fiona.open(
+                export_file, "w", layer="haie_envergo", **src.meta
+            ) as dst:
+                for hedge in data.hedges():
+                    transformer = Transformer.from_crs(
+                        EPSG_WGS84, EPSG_LAMB93, always_xy=True
+                    )
+                    geometry = Geometry.from_dict(
+                        transform(transformer.transform, hedge.geometry)
+                    )
+                    properties = Properties.from_dict(
+                        {
+                            "id": hedge.id,
+                            "type": (
+                                "A_PLANTER" if hedge.type == TO_PLANT else "A_ARRACHER"
+                            ),
+                            "typeHaie": hedge.hedge_type,
+                            "vieilArbre": "oui" if hedge.vieil_arbre else "non",
+                            "proximiteMare": ("oui" if hedge.proximite_mare else "non"),
+                            "surParcellePac": "oui" if hedge.is_on_pac else "non",
+                            "proximitePointEau": (
+                                "oui" if hedge.proximite_point_eau else "non"
+                            ),
+                            "connexionBoisement": (
+                                "oui" if hedge.connexion_boisement else "non"
+                            ),
+                            "sousLigneElectrique": (
+                                "oui" if hedge.sous_ligne_electrique else "non"
+                            ),
+                            "proximiteVoirie": (
+                                "oui" if hedge.proximite_voirie else "non"
+                            ),
+                        }
+                    )
+                    feat = Feature(geometry=geometry, properties=properties)
+                    dst.write(feat)
+
+            # Create a response with the GeoPackage file
+            with open(export_file, "rb") as f:
+                response = HttpResponse(f.read(), content_type="application/geopackage")
+                response["Content-Disposition"] = (
+                    'attachment; filename="guh_export.gpkg"'
+                )
+
+        return response
