@@ -2,8 +2,6 @@ import logging
 import os
 import shutil
 import tempfile
-from textwrap import dedent
-from typing import Any, List
 from urllib.parse import parse_qs, urlparse
 
 import fiona
@@ -11,8 +9,8 @@ import requests
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, UpdateView
@@ -23,17 +21,17 @@ from shapely.ops import transform
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator
-from envergo.moulinette.models import (
-    ConfigHaie,
-    MoulinetteHaie,
-    get_moulinette_class_from_site,
-)
-from envergo.moulinette.views import MoulinetteMixin
+from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import PetitionProject
-from envergo.petitions.services import compute_instructor_informations
+from envergo.petitions.services import (
+    Alert,
+    AlertList,
+    compute_instructor_informations,
+    get_moulinette_from_project,
+)
 from envergo.utils.mattermost import notify
-from envergo.utils.tools import display_form_details, generate_key
+from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -356,62 +354,13 @@ class PetitionProjectCreate(FormView):
         )
 
 
-class PetitionProjectMixin(MoulinetteMixin):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.moulinette = None
-        self.object = None
-
-    def get(self, request, *args, **kwargs):
-        parsed_url = urlparse(self.object.moulinette_url)
-        query_string = parsed_url.query
-        # We need to convert the query string to a flat dict
-        raw_data = QueryDict(query_string)
-        # Save the moulinette data in the request object
-        # we will need it for things like triage form or params validation
-        self.request.moulinette_data = raw_data
-
-        moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = self.object.hedge_data
-
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        self.moulinette = MoulinetteClass(
-            moulinette_data,
-            moulinette_data,
-            self.should_activate_optional_criteria(),
-        )
-
-        if self.moulinette.has_missing_data():
-            # this should not happen, unless we have stored an incomplete project
-            # If we add some new regulations, or adding evaluators on existing ones, we could have obsolete moulinette
-            # we should implement static simulation/project to avoid this case.
-            logger.warning(
-                "A petition project has missing data. This should not happen unless regulations have changed."
-                "We should implement static simulation/project to avoid this case.",
-                extra={"reference": self.object.reference},
-            )
-            raise NotImplementedError("We do not handle uncompleted project")
-
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["moulinette"] = self.moulinette
-        context["base_result"] = self.moulinette.get_result_template()
-        context["is_read_only"] = True
-        context["petition_project"] = self.object
-        return context
-
-
-class PetitionProjectDetail(PetitionProjectMixin, FormView):
+class PetitionProjectDetail(DetailView):
     template_name = "haie/moulinette/petition_project.html"
+    queryset = PetitionProject.objects.all()
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
 
     def get(self, request, *args, **kwargs):
-        # Instanciate the moulinette object from the petition project in order to use the MoulinetteMixin
-        self.object = get_object_or_404(
-            PetitionProject.objects.select_related("hedge_data"),
-            reference=self.kwargs["reference"],
-        )
         result = super().get(request, *args, **kwargs)
 
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
@@ -428,11 +377,26 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["moulinette"] = self.moulinette
-        context["base_result"] = self.moulinette.get_result_template()
+
+        moulinette = get_moulinette_from_project(self.object)
+
+        if moulinette.has_missing_data():
+            # this should not happen, unless we have stored an incomplete project
+            # If we add some new regulations, or adding evaluators on existing ones, we could have obsolete moulinette
+            # we should implement static simulation/project to avoid this case.
+            logger.warning(
+                "A petition project has missing data. This should not happen unless regulations have changed."
+                "We should implement static simulation/project to avoid this case.",
+                extra={"reference": self.object.reference},
+            )
+            raise NotImplementedError("We do not handle uncompleted project")
+
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
-            self.moulinette, self.moulinette.catalog["haies"]
+            moulinette, moulinette.catalog["haies"]
         )
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
@@ -461,13 +425,12 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(
-    LoginRequiredMixin, PetitionProjectMixin, UpdateView
-):
+class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
     template_name = "haie/petitions/instructor_view.html"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    form_class = PetitionProjectInstructorForm
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -484,245 +447,17 @@ class PetitionProjectInstructorView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        moulinette = get_moulinette_from_project(self.object)
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
         context["project_details"] = compute_instructor_informations(
-            self.object, self.moulinette
+            self.object, moulinette
         )
 
         return context
 
-    def get_form_class(self):
-        return PetitionProjectInstructorForm
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["instance"] = self.object  # Pass the instance to the form
-        return kwargs
-
     def get_success_url(self):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
-
-
-class Alert:
-    def __init__(self, key, extra: dict[str, Any] = dict, is_fatal=False):
-        self.key = key
-        self.extra = extra
-        self.is_fatal = is_fatal
-
-
-class AlertList(List[Alert]):
-    def __init__(self, request):
-        super().__init__()
-        self.request = request
-        self._config = None
-        self._petition_project = None
-        self._form = None
-        self._user_error_reference = None
-
-    @property
-    def petition_project(self):
-        return self._petition_project
-
-    @petition_project.setter
-    def petition_project(self, value):
-        self._petition_project = value
-
-    @property
-    def config(self):
-        return self._config
-
-    @config.setter
-    def config(self, value):
-        self._config = value
-
-    @property
-    def form(self):
-        return self._form
-
-    @form.setter
-    def form(self, value):
-        self._form = value
-
-    @property
-    def user_error_reference(self):
-        return self._user_error_reference
-
-    @user_error_reference.setter
-    def user_error_reference(self, value):
-        self._user_error_reference = value
-
-    def append(self, item: Alert) -> None:
-        if not isinstance(item, Alert):
-            raise TypeError("Only Alert instances can be added to AlertList")
-        super().append(item)
-
-    def compute_message(self):
-        lines = []
-        config_url = None
-        if self.config:
-            config_relative_url = reverse(
-                "admin:moulinette_confighaie_change", args=[self.config.id]
-            )
-            config_url = self.request.build_absolute_uri(config_relative_url)
-
-        if self.object:
-            lines.append("#### Mapping avec Démarches-simplifiées : :warning: anomalie")
-            projet_relative_url = reverse(
-                "admin:petitions_petitionproject_change",
-                args=[self.object.id],
-            )
-            projet_url = self.request.build_absolute_uri(projet_relative_url)
-
-            lines.append("Un dossier a été créé sur démarches-simplifiées : ")
-            lines.append(f"* [projet dans l’admin]({projet_url})")
-
-            if self.config:
-                dossier_url = (
-                    f"https://www.demarches-simplifiees.fr/procedures/"
-                    f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self.object.demarches_simplifiees_dossier_number}"
-                )
-                lines.append(
-                    f"* [dossier DS n°{self.object.demarches_simplifiees_dossier_number}]"
-                    f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
-                    f" par le pétitionnaire)"
-                )
-            if config_url:
-                lines.append("")
-                lines.append(
-                    f"Une ou plusieurs anomalies ont été détectées dans la [configuration du département "
-                    f"{self.config.department}]({config_url})"
-                )
-
-            lines.append("")
-            lines.append(
-                "Le dossier a été créé sans encombres, mais il contient peut-être des réponses sans pré-remplissage "
-                "ou avec une valeur erronnée."
-            )
-
-        else:
-            lines.append("### Mapping avec Démarches-simplifiées : :x: erreur")
-
-            lines.append(
-                "La création d’un dossier démarches-simplifiées n’a pas pu aboutir."
-            )
-
-            if config_url:
-                lines.append(
-                    f"Cette erreur révèle une possible anomalie de la [configuration du département "
-                    f"{self.config.department}]({config_url})"
-                )
-
-            lines.append(
-                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference.upper()}` "
-                f"l’invitant à nous contacter."
-            )
-
-            if self.form:
-                lines.append(
-                    f"""
-* form :
-```
-{display_form_details(self.form)}
-```
-"""
-                )
-
-        index = 0
-
-        for alert in self:
-            index = index + 1
-            if alert.is_fatal:
-                lines.append("")
-                lines.append(f"#### :x: Description de l’erreur #{index}")
-            else:
-                lines.append("")
-                lines.append(f"#### :warning: Description de l’anomalie #{index}")
-
-            if alert.key == "missing_demarche_simplifiee_number":
-                lines.append(
-                    "Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées"
-                )
-
-            elif alert.key == "invalid_prefill_field":
-                lines.append(
-                    "Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une "
-                    "valeur. Le mapping est optionnel."
-                )
-                lines.append(f"* Champ : {alert.extra['field']}")
-
-            elif alert.key == "ds_api_http_error":
-                lines.append(
-                    "L'API de Démarches Simplifiées a retourné une erreur lors de la création du dossier."
-                )
-                lines.append(
-                    dedent(
-                        f"""
-                **Requête:**
-                * url : {alert.extra['api_url']}
-                * body :
-                ```
-                {alert.extra['request_body']}
-                ```
-
-                **Réponse:**
-                * status : {alert.extra['response'].status_code}
-                * content:
-                ```
-                {alert.extra['response'].text}
-                ```
-                """
-                    )
-                )
-
-            elif alert.key == "missing_source_regulation":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la moulinette n'a pas de résultat pour la réglementation "
-                    f"**{alert.extra['regulation_slug']}**."
-                )
-
-            elif alert.key == "missing_source_criterion":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la moulinette n'a pas de résultat pour le critère "
-                    f"**{alert.extra['criterion_slug']}**."
-                )
-
-            elif alert.key == "missing_source_moulinette":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la simulation ne possède pas cette valeur."
-                )
-
-            elif alert.key == "mapping_missing_value":
-                lines.append(
-                    dedent(
-                        f"""\
-               Une valeur prise en entrée n’a pas été reconnue dans le mapping
-               * Champ : {alert.extra['source']}
-               * Valeur : {alert.extra['value']}
-               * mapping :
-               ```
-               {alert.extra['mapping']}
-               ```
-               """
-                    )
-                )
-
-            elif alert.key == "invalid_form":
-                lines.append("Le formulaire contient des erreurs")
-
-            elif alert.key == "unknown_error":
-                lines.append("Nous ne savons pas d'où provient ce problème...")
-
-            else:
-                logger.error(
-                    "Unknown alert key during petition project creation",
-                    extra={"alert": alert},
-                )
-
-        return "\n".join(lines)
 
 
 class PetitionProjectHedgeDataExport(DetailView):

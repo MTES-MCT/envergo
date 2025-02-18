@@ -39,13 +39,25 @@ Il est recommandé de se baser sur la version docker.
 
 > NB : pour les commandes `docker compose`, cette documentation utilise la syntaxe de la version 2 en remplacant le tiret (`-`) par un espace et utlisant donc `docker compose` à la place de `docker-compose`.
 > Si vous avez une version plus ancienne, vous pouvez utiliser la syntaxe `docker-compose`.
-> [Plus d'infos...](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
+> [Plus d'infos…](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
 
 Pour lancer l'environnement rapidement :
 
 ```bash
 $ git clone … && cd envergo
 $ touch .env
+```
+
+Remplir le fichier `.env` avec les variables d'environnement pour travailler en local
+
+```
+DJANGO_SETTINGS_MODULE=config.settings.local
+ENV_NAME=development
+```
+
+Créer et démarrer les conteneurs
+
+```bash
 $ docker compose build
 $ docker compose up
 ```
@@ -64,6 +76,13 @@ $ npm  run build
 $ docker compose run --rm django python manage.py collectstatic
 
 ```
+
+Ajouter dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
+
+```
+<url du conteneur envergo_django> envergo.local haie.local
+```
+
 
 #### En local
 
@@ -96,6 +115,25 @@ $ docker compose run --rm postgres create_raster
 ```
 
 Puis interrompre et relancer le `docker compose up`. Les migrations Django devraient alors s'exécuter sans erreur.
+
+
+#### Ajouter les domaines pour l'accès en local
+
+Pour que le navigateur puisse accéder à l'application en local, les domaines `envergo.local` et `haie.local` doivent être ajoutés au modèle Sites > Sites, par exemple via le shell de django.
+
+```python
+from django.contrib.sites.models import Site
+
+Site.objects.get_or_create(domain="envergo.local", name="Envergo local")
+Site.objects.get_or_create(domain="haie.local", name="Haie local")
+```
+
+
+#### Créer un utilisateur en local
+
+Pour créer un nouveau compte, utiliser la page de création de compte de l'application. Récupérer le lien pour valider l'email dans les logs.
+
+Pour créer un compte super utilisateur, utiliser la commande django `django shell` pour modifier un compte existant et lui donner les droits de super utilisateur. Envergo utilise un modèle custom pour la gestion des utilisateurs : `envergo.users.models.User`.
 
 
 ### Qualité du code
@@ -353,7 +391,7 @@ pg_dump --dbname postgresql://<user>:<pass>@localhost:10000/<db> > /tmp/envergo.
 
 Alternative : récupérer le backup nocture depuis Scalingo.
 
-## Comment charger une BD de dev depuis un dump
+## Charger une BD de dev depuis un dump
 
 ```bash
 $ . envs/postgres
@@ -361,6 +399,7 @@ $ docker compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
 $ docker compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 $ docker compose run --rm django python manage.py migrate
+$ docker compose run --rm django python manage.py anonymize_database
 ```
 
 
@@ -379,6 +418,7 @@ Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans 
 Ajouter les `Repository secrets` :
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
+
 
 ## Glossaire
 
