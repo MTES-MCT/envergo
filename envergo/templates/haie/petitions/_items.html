@@ -3,9 +3,13 @@
 {% for item in items %}
   <div>
     {% if item == "instructor_free_mention" or item == "onagre_number" %}
-      <div class="fr-my-2w">
+      <div id="field-{{ item }}" class="fr-my-2w">
         {% include '_field_snippet.html' with field=form|get_item:item %}
-        <button type="submit" class="fr-btn fr-btn--secondary">Mettre à jour</button>
+        <button type="submit"
+                class="fr-btn fr-btn--secondary"
+                formaction="{% url 'petition_project_instructor_view' petition_project.reference %}#field-{{ item }}">
+          Mettre à jour
+        </button>
       </div>
     {% else %}
       <span><b>{{ item.label }} :</b></span>
