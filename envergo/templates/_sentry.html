@@ -1,6 +1,6 @@
 {% load static %}
 
-{% if SENTRY_DSN %}
-  <script src="https://sentry.incubateur.net/js-sdk-loader/{{ SECRET_KEY }}.min.js"
+{% if SENTRY_KEY %}
+  <script src="https://sentry.incubateur.net/js-sdk-loader/{{ SENTRY_KEY }}.min.js"
           crossorigin="anonymous"></script>
 {% endif %}
