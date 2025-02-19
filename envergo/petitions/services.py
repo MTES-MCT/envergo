@@ -2,16 +2,14 @@ import logging
 from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, List, Literal
-from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.http import QueryDict
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.models import MoulinetteHaie
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -513,29 +511,28 @@ Requête envoyée :
     return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager)
 
 
-def get_moulinette_from_project(petition_project):
-    parsed_url = urlparse(petition_project.moulinette_url)
-    query_string = parsed_url.query
-    # We need to convert the query string to a flat dict
-    raw_data = QueryDict(query_string)
-    moulinette_data = raw_data.dict()
-    moulinette_data["haies"] = petition_project.hedge_data
-    moulinette = MoulinetteHaie(
-        moulinette_data,
-        moulinette_data,
-        False,
-    )
-    return moulinette
+class PetitionProjectCreationProblem:
+    """An object to store a problem during the creation of a petition project"""
 
-
-class Alert:
     def __init__(self, key, extra: dict[str, Any] = dict, is_fatal=False):
         self.key = key
         self.extra = extra
         self.is_fatal = is_fatal
 
+    def compute_message(self, index):
+        return render_to_string(
+            "haie/petitions/mattermost_project_creation_problem.txt",
+            context={
+                "index": index,
+                "problem": self,
+            },
+        )
 
-class AlertList(List[Alert]):
+
+class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
+    """This class list all the problems that occured during the creation of a petition project.
+    It can then be used to generate a notification to send to the admin."""
+
     def __init__(self, request):
         super().__init__()
         self.request = request
@@ -576,13 +573,12 @@ class AlertList(List[Alert]):
     def user_error_reference(self, value):
         self._user_error_reference = value
 
-    def append(self, item: Alert) -> None:
-        if not isinstance(item, Alert):
+    def append(self, item: PetitionProjectCreationProblem) -> None:
+        if not isinstance(item, PetitionProjectCreationProblem):
             raise TypeError("Only Alert instances can be added to AlertList")
         super().append(item)
 
     def compute_message(self):
-        lines = []
         config_url = None
         if self.config:
             config_relative_url = reverse(
@@ -591,160 +587,43 @@ class AlertList(List[Alert]):
             config_url = self.request.build_absolute_uri(config_relative_url)
 
         if self._petition_project:
-            lines.append("#### Mapping avec Démarches-simplifiées : :warning: anomalie")
             projet_relative_url = reverse(
                 "admin:petitions_petitionproject_change",
                 args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
-
-            lines.append("Un dossier a été créé sur démarches-simplifiées : ")
-            lines.append(f"* [projet dans l’admin]({projet_url})")
-
+            dossier_url = None
             if self.config:
                 dossier_url = (
                     f"https://www.demarches-simplifiees.fr/procedures/"
                     f"{self.config.demarche_simplifiee_number}/dossiers/"
                     f"{self._petition_project.demarches_simplifiees_dossier_number}"
                 )
-                lines.append(
-                    f"* [dossier DS n°{self._petition_project.demarches_simplifiees_dossier_number}]"
-                    f"({dossier_url}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier"
-                    f" par le pétitionnaire)"
-                )
-            if config_url:
-                lines.append("")
-                lines.append(
-                    f"Une ou plusieurs anomalies ont été détectées dans la [configuration du département "
-                    f"{self.config.department}]({config_url})"
-                )
 
-            lines.append("")
-            lines.append(
-                "Le dossier a été créé sans encombres, mais il contient peut-être des réponses sans pré-remplissage "
-                "ou avec une valeur erronnée."
+            message = render_to_string(
+                "haie/petitions/mattermost_project_creation_anomalie.txt",
+                context={
+                    "projet_url": projet_url,
+                    "config": self.config,
+                    "config_url": config_url,
+                    "dossier_url": dossier_url,
+                    "demarches_simplifiees_dossier_number": self._petition_project.demarches_simplifiees_dossier_number,
+                },
             )
-
         else:
-            lines.append("### Mapping avec Démarches-simplifiées : :x: erreur")
-
-            lines.append(
-                "La création d’un dossier démarches-simplifiées n’a pas pu aboutir."
+            message = render_to_string(
+                "haie/petitions/mattermost_project_creation_erreur.txt",
+                context={
+                    "config_url": config_url,
+                    "department": self.config.department,
+                    "user_error_reference": self.user_error_reference.upper(),
+                    "form": display_form_details(self.form),
+                },
             )
-
-            if config_url:
-                lines.append(
-                    f"Cette erreur révèle une possible anomalie de la [configuration du département "
-                    f"{self.config.department}]({config_url})"
-                )
-
-            lines.append(
-                f"L’utilisateur a reçu un message d’erreur avec l’identifiant `{self.user_error_reference.upper()}` "
-                f"l’invitant à nous contacter."
-            )
-
-            if self.form:
-                lines.append(
-                    f"""
-* form :
-```
-{display_form_details(self.form)}
-```
-"""
-                )
 
         index = 0
-
         for alert in self:
             index = index + 1
-            if alert.is_fatal:
-                lines.append("")
-                lines.append(f"#### :x: Description de l’erreur #{index}")
-            else:
-                lines.append("")
-                lines.append(f"#### :warning: Description de l’anomalie #{index}")
+            message = message + "\n" + alert.compute_message(index)
 
-            if alert.key == "missing_demarche_simplifiee_number":
-                lines.append(
-                    "Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées"
-                )
-
-            elif alert.key == "invalid_prefill_field":
-                lines.append(
-                    "Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une "
-                    "valeur. Le mapping est optionnel."
-                )
-                lines.append(f"* Champ : {alert.extra['field']}")
-
-            elif alert.key == "ds_api_http_error":
-                lines.append(
-                    "L'API de Démarches Simplifiées a retourné une erreur lors de la création du dossier."
-                )
-                lines.append(
-                    dedent(
-                        f"""
-                **Requête:**
-                * url : {alert.extra['api_url']}
-                * body :
-                ```
-                {alert.extra['request_body']}
-                ```
-
-                **Réponse:**
-                * status : {alert.extra['response'].status_code}
-                * content:
-                ```
-                {alert.extra['response'].text}
-                ```
-                """
-                    )
-                )
-
-            elif alert.key == "missing_source_regulation":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la moulinette n'a pas de résultat pour la réglementation "
-                    f"**{alert.extra['regulation_slug']}**."
-                )
-
-            elif alert.key == "missing_source_criterion":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la moulinette n'a pas de résultat pour le critère "
-                    f"**{alert.extra['criterion_slug']}**."
-                )
-
-            elif alert.key == "missing_source_moulinette":
-                lines.append(
-                    f"La configuration demande de pré-remplir un champ avec la valeur de **{alert.extra['source']}** "
-                    f"mais la simulation ne possède pas cette valeur."
-                )
-
-            elif alert.key == "mapping_missing_value":
-                lines.append(
-                    dedent(
-                        f"""\
-               Une valeur prise en entrée n’a pas été reconnue dans le mapping
-               * Champ : {alert.extra['source']}
-               * Valeur : {alert.extra['value']}
-               * mapping :
-               ```
-               {alert.extra['mapping']}
-               ```
-               """
-                    )
-                )
-
-            elif alert.key == "invalid_form":
-                lines.append("Le formulaire contient des erreurs")
-
-            elif alert.key == "unknown_error":
-                lines.append("Nous ne savons pas d'où provient ce problème...")
-
-            else:
-                logger.error(
-                    "Unknown alert key during petition project creation",
-                    extra={"alert": alert},
-                )
-
-        return "\n".join(lines)
+        return message

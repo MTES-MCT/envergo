@@ -24,10 +24,9 @@ from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.services import (
-    Alert,
-    AlertList,
+    PetitionProjectCreationAlert,
+    PetitionProjectCreationProblem,
     compute_instructor_informations,
-    get_moulinette_from_project,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -41,7 +40,7 @@ class PetitionProjectCreate(FormView):
 
     def dispatch(self, request, *args, **kwargs):
         # store alerts in the request object to notify admins if needed
-        request.alerts = AlertList(request)
+        request.alerts = PetitionProjectCreationAlert(request)
         res = super().dispatch(request, *args, **kwargs)
 
         if len(request.alerts) > 0:
@@ -127,7 +126,9 @@ class PetitionProjectCreate(FormView):
             )
 
             self.request.alerts.append(
-                Alert("missing_demarche_simplifiee_number", is_fatal=True)
+                PetitionProjectCreationProblem(
+                    "missing_demarche_simplifiee_number", is_fatal=True
+                )
             )
             return None
 
@@ -142,7 +143,7 @@ class PetitionProjectCreate(FormView):
                 )
 
                 self.request.alerts.append(
-                    Alert(
+                    PetitionProjectCreationProblem(
                         "invalid_prefill_field",
                         {
                             "field": field,
@@ -178,7 +179,7 @@ class PetitionProjectCreate(FormView):
                 },
             )
             self.request.alerts.append(
-                Alert(
+                PetitionProjectCreationProblem(
                     "ds_api_http_error",
                     {
                         "response": response,
@@ -231,7 +232,7 @@ class PetitionProjectCreate(FormView):
                     },
                 )
                 self.request.alerts.append(
-                    Alert(
+                    PetitionProjectCreationProblem(
                         "missing_source_regulation",
                         {
                             "source": source,
@@ -259,7 +260,7 @@ class PetitionProjectCreate(FormView):
                     },
                 )
                 self.request.alerts.append(
-                    Alert(
+                    PetitionProjectCreationProblem(
                         "missing_source_criterion",
                         {
                             "source": source,
@@ -285,7 +286,7 @@ class PetitionProjectCreate(FormView):
                 )
 
                 self.request.alerts.append(
-                    Alert(
+                    PetitionProjectCreationProblem(
                         "missing_source_moulinette",
                         {
                             "source": source,
@@ -307,7 +308,7 @@ class PetitionProjectCreate(FormView):
                     },
                 )
                 self.request.alerts.append(
-                    Alert(
+                    PetitionProjectCreationProblem(
                         "mapping_missing_value",
                         {
                             "source": source,
@@ -332,10 +333,14 @@ class PetitionProjectCreate(FormView):
         self.request.alerts.user_error_reference = generate_key()
 
         if form.errors:
-            self.request.alerts.append(Alert("invalid_form", is_fatal=True))
+            self.request.alerts.append(
+                PetitionProjectCreationProblem("invalid_form", is_fatal=True)
+            )
 
         if len(self.request.alerts) == 0:
-            self.request.alerts.append(Alert("unknown_error", is_fatal=True))
+            self.request.alerts.append(
+                PetitionProjectCreationProblem("unknown_error", is_fatal=True)
+            )
 
         return JsonResponse(
             {
@@ -378,7 +383,7 @@ class PetitionProjectDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = get_moulinette_from_project(self.object)
+        moulinette = self.object.get_moulinette()
 
         if moulinette.has_missing_data():
             # this should not happen, unless we have stored an incomplete project
@@ -446,7 +451,7 @@ class PetitionProjectInstructorView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        moulinette = get_moulinette_from_project(self.object)
+        moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
         context["project_details"] = compute_instructor_informations(
