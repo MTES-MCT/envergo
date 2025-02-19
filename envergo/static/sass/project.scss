@@ -426,6 +426,15 @@ section.regulation {
     }
   }
 
+  // Cadre lila en pleine largeur sur simu et AR pour petits écrans
+  @media (width < 42em) {
+    div.alt {
+      padding: 1rem !important;
+      margin-left: -1rem;
+      margin-right: -1rem;
+    }
+  }
+
   figcaption {
     text-align: left;
   }
@@ -2009,7 +2018,8 @@ main.demonstrateur_2150 {
   }
 
   .fr-follow__newsletter form {
-    min-width: 350px;
+    width: 350px;
+    max-width: 100%;
 
     button {
       margin-left: auto;
