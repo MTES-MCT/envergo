@@ -218,7 +218,7 @@ LOGGING = {
 # Sentry
 # ------------------------------------------------------------------------------
 SENTRY_DSN = env("SENTRY_DSN")
-SENTRY_KEY = env("SENTRY_KEY")
+SENTRY_KEY = env("SENTRY_KEY", default="")
 SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
 sentry_logging = LoggingIntegration(
