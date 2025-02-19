@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import fiona
 import requests
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
@@ -430,7 +431,7 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(UpdateView):
+class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
     template_name = "haie/petitions/instructor_view.html"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"

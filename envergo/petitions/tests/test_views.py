@@ -1,11 +1,17 @@
 from unittest.mock import patch
 
 import pytest
-from django.test import RequestFactory
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory, override_settings
+from django.urls import reverse
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import PetitionProjectFactory
-from envergo.petitions.views import PetitionProjectCreate, PetitionProjectCreationAlert
+from envergo.petitions.views import (
+    PetitionProjectCreate,
+    PetitionProjectCreationAlert,
+    PetitionProjectInstructorView,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -51,3 +57,40 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_view_requires_authentication(haie_user, site):
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    factory = RequestFactory()
+    request = factory.get(
+        reverse(
+            "petition_project_instructor_view", kwargs={"reference": project.reference}
+        )
+    )
+
+    # Simulate an unauthenticated user
+    request.user = AnonymousUser()
+    request.site = site
+    request.session = {}
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response is a redirect to the login page
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    # Simulate an authenticated user
+    request.user = haie_user
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
