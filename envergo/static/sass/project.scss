@@ -632,6 +632,7 @@ form#request-evaluation-form {
 .ratio-1x1,
 .ratio-4x3,
 .ratio-2x3,
+.ratio-sm-2x3,
 .ratio-2x1,
 .ratio-16x9 {
   width: 100%;
@@ -678,6 +679,14 @@ form#request-evaluation-form {
 .ratio-2x1 {
   &::before {
     padding-bottom: 50%;
+  }
+}
+
+@media (width < 767px) and (orientation: portrait) {
+  .ratio-sm-2x3 {
+    &::before {
+      padding-bottom: 150%;
+    }
   }
 }
 
