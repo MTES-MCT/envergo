@@ -6,8 +6,6 @@ $dark-pink: #eed3d7;
 $red: #b94a48;
 
 :root {
-  // Bump default font size from 16 to 18px.
-  font-size: 112.5%;
   scroll-behavior: smooth;
 }
 
@@ -186,31 +184,47 @@ article {
 }
 
 nav#evaluation-summary {
-  li a {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    background-image: none;
-    padding: 0.25rem 0;
-    color: var(--text-action-high-grey);
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
 
-    &:hover {
-      background-color: var(--hover);
+  li {
+    span.regulation-result,
+    a {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
 
-    .action-link {
-      margin-left: 1.5rem;
-      white-space: nowrap;
+    span.regulation-result {
+      width: 100%;
+      flex-wrap: wrap;
     }
 
-    .fr-link {
-      text-decoration: underline;
-      font-weight: 500;
-    }
+    a {
+      background-image: none;
+      padding: 0.25rem 0;
+      color: var(--text-action-high-grey);
 
-    .undertitle {
-      font-size: 0.875rem;
-      line-height: 1.5rem;
+      &:hover {
+        background-color: var(--hover);
+      }
+
+      .action-link {
+        margin-left: 1.5rem;
+        white-space: nowrap;
+      }
+
+      .fr-link {
+        text-decoration: underline;
+        font-weight: 500;
+      }
+
+      .undertitle {
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+      }
     }
   }
 }
@@ -309,12 +323,12 @@ nav#evaluation-summary {
 section.regulation {
   h2 {
     display: flex;
-    align-items: center;
-    line-height: 2rem;
+    align-items: start;
+    flex-wrap: wrap;
 
     span.content {
       margin-right: 0.5em;
-      white-space: nowrap;
+      margin-bottom: 0.5em;
 
       .undertitle {
         font-weight: normal;
@@ -323,8 +337,8 @@ section.regulation {
     }
 
     span.fr-tag {
-      margin-top: 0.75em;
       white-space: nowrap;
+      line-height: 1.75rem;
     }
   }
 
@@ -358,6 +372,7 @@ section.regulation {
 
   .fr-accordion {
     .fr-accordion__btn {
+      flex-flow: row wrap;
       color: inherit;
 
       span.title .perimeter {
@@ -409,6 +424,15 @@ section.regulation {
     h4 {
       font-size: 1.375rem;
       line-height: 1.75rem;
+    }
+  }
+
+  // Cadre lila en pleine largeur sur simu et AR pour petits écrans
+  @media (width < 42em) {
+    div.alt {
+      padding: 1rem !important;
+      margin-left: -1rem;
+      margin-right: -1rem;
     }
   }
 
@@ -1995,7 +2019,8 @@ main.demonstrateur_2150 {
   }
 
   .fr-follow__newsletter form {
-    min-width: 350px;
+    width: 350px;
+    max-width: 100%;
 
     button {
       margin-left: auto;
