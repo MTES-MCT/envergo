@@ -1,10 +1,14 @@
+from urllib.parse import urlparse
+
 from django.db import models
+from django.http import QueryDict
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
 from envergo.evaluations.models import generate_reference
 from envergo.hedges.models import HedgeData
+from envergo.moulinette.models import MoulinetteHaie
 from envergo.utils.urls import extract_param_from_url
 
 DOSSIER_STATES = Choices(
@@ -51,6 +55,14 @@ class PetitionProject(models.Model):
         default=DOSSIER_STATES.draft,
     )
 
+    onagre_number = models.CharField(
+        "Référence ONAGRE du dossier", max_length=64, blank=True
+    )
+
+    instructor_free_mention = models.TextField(
+        "Mention libre de l'instructeur", blank=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -80,3 +92,17 @@ class PetitionProject(models.Model):
             self.demarches_simplifiees_state != DOSSIER_STATES.draft
             and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
         )
+
+    def get_moulinette(self):
+        parsed_url = urlparse(self.moulinette_url)
+        query_string = parsed_url.query
+        # We need to convert the query string to a flat dict
+        raw_data = QueryDict(query_string)
+        moulinette_data = raw_data.dict()
+        moulinette_data["haies"] = self.hedge_data
+        moulinette = MoulinetteHaie(
+            moulinette_data,
+            moulinette_data,
+            False,
+        )
+        return moulinette

@@ -1,0 +1,10 @@
+#### Mapping avec Démarches-simplifiées : :warning: anomalie
+Un dossier a été créé sur démarches-simplifiées :
+* [projet dans l’admin]({{ projet_url }})
+
+{% if config %}
+Dossier DS n°{{ demarches_simplifiees_dossier_number }} : ({{ dossier_url }}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier par le pétitionnaire)
+Une ou plusieurs anomalies ont été détectées dans la [configuration du département {{ config.department }}]({{ config_url }})
+{% endif %}
+
+Le dossier a été créé sans encombres, mais il contient peut-être des réponses sans pré-remplissage ou avec une valeur erronnée.
