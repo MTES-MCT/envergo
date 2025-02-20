@@ -40,7 +40,7 @@
         <a href="{% url 'admin:geodata_map_change' map.grouper.id %}">{{ map.grouper.name }} (id={{ map.grouper.id }})</a>
       </h3>
 
-      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+      <div class="ratio-1x1 ratio-sm-2x3 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
           <div class="leaflet-container">
             <div id="perimeter-map-{{ forloop.counter0 }}"></div>
@@ -79,7 +79,7 @@
         <a href="{% url 'admin:geodata_map_change' map.grouper.id %}">{{ map.grouper.name }} (id={{ map.grouper.id }})</a>
       </h3>
 
-      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+      <div class="ratio-1x1 ratio-sm-2x3 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
           <div class="leaflet-container">
             <div id="criterion-map-{{ forloop.counter0 }}"></div>
@@ -120,7 +120,7 @@
     {% for map_type in map_list %}
       <h3>{{ map_type.list.0.map.get_map_type_display }} ({{ map_type.list.0.map.get_data_type_display }})</h3>
 
-      <div class="ratio-1x1 fr-mt-1w fr-mb-3w">
+      <div class="ratio-1x1 ratio-sm-2x3 fr-mt-1w fr-mb-3w">
         <div class="ratio-content">
           <div class="leaflet-container">
             <div id="zone-map-{{ forloop.counter0 }}"></div>
