@@ -35,12 +35,7 @@
 
 {% block after-title-content %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
-    <li>
-      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-              data-fr-opened="false"
-              aria-controls="share-modal"
-              data-btn="bottom">Partager cette page par email</button>
-    </li>
+    <li>{% include '_share_url_btn.html' %}</li>
     <li>
       <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill print-btn">
         Imprimer cette simulation
