@@ -89,12 +89,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post):
     }
 
     mock_post.return_value = mock_response
-    PetitionProjectFactory()
+    petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(21683739, config)
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details.applicant_name == "Mme dez dez"
     assert details.city == "Ladaux (33760)"
@@ -105,10 +105,10 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post):
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
     mock_notify,
 ):
-    PetitionProjectFactory()
+    petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
 
-    details = fetch_project_details_from_demarches_simplifiees(21683739, config)
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 
@@ -132,12 +132,12 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     mock_response.json.return_value = {"an error": "occurred"}
 
     mock_post.return_value = mock_response
-    PetitionProjectFactory()
+    petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(21683739, config)
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 
@@ -161,12 +161,12 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     mock_response.json.return_value = {"data": {"weirdely_formatted": "response"}}
 
     mock_post.return_value = mock_response
-    PetitionProjectFactory()
+    petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(21683739, config)
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 
