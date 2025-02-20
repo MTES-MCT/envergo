@@ -1,6 +1,10 @@
+import logging
+
 from django.contrib.auth.backends import ModelBackend
 
 from envergo.utils.tools import get_site_literal
+
+logger = logging.getLogger(__name__)
 
 
 class AuthBackend(ModelBackend):
@@ -16,7 +20,7 @@ class AuthBackend(ModelBackend):
     def user_can_authenticate(self, user):
 
         if getattr(user, "is_superuser", False):
-            can_auth = getattr(user, "is_active", True)
+            can_auth = super().user_can_authenticate(user)
         elif hasattr(self, "site_literal"):
             if self.site_literal == "amenagement":
                 can_auth = all(
@@ -34,6 +38,7 @@ class AuthBackend(ModelBackend):
                     )
                 )
         else:
+            # Happen only during tests when using force_login
             can_auth = super().user_can_authenticate(user)
 
         return can_auth
