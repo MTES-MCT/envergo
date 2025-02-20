@@ -317,7 +317,7 @@ PUISSANCE_CHOICES = (
 LOCALISATION_CHOICES = (
     ("sol", "Au sol, y compris agrivoltaïsme"),
     ("aire_arti", "Sur aire de stationnement artificialisée"),
-    ("aire_non_arti", "Sur aire de stationnement non artificialisée"),
+    ("aire_non_arti", "Sur aire de stationnement non artificialisée ou autre ombrière"),
     ("batiment_clos", "Sur bâtiment 4 murs clos ou serre ou hangar"),
     ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
     ("aucun", "Aucun panneau"),
@@ -367,13 +367,13 @@ class Photovoltaique(CriterionEvaluator):
         ("lt_300kWc", "aucun"): "non_soumis",
         ("300_1000kWc", "sol"): "cas_par_cas_sol",
         ("300_1000kWc", "aire_arti"): "non_soumis_ombriere",
-        ("300_1000kWc", "aire_non_arti"): "cas_par_cas_sol",
+        ("300_1000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
         ("300_1000kWc", "batiment_clos"): "non_soumis_toiture",
         ("300_1000kWc", "batiment_ouvert"): "cas_par_cas_toiture",
         ("300_1000kWc", "aucun"): "non_soumis",
         ("gte_1000kWc", "sol"): "systematique_sol",
         ("gte_1000kWc", "aire_arti"): "non_soumis_ombriere",
-        ("gte_1000kWc", "aire_non_arti"): "systematique_sol",
+        ("gte_1000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
         ("gte_1000kWc", "batiment_clos"): "non_soumis_toiture",
         ("gte_1000kWc", "batiment_ouvert"): "systematique_toiture",
         ("gte_1000kWc", "aucun"): "non_soumis",
@@ -383,9 +383,17 @@ class Photovoltaique(CriterionEvaluator):
         "non_soumis_toiture": "non_soumis",
         "cas_par_cas_sol": "cas_par_cas",
         "cas_par_cas_toiture": "cas_par_cas",
+        "cas_par_cas_ombriere": "cas_par_cas",
         "systematique_sol": "systematique",
         "systematique_toiture": "systematique",
     }
+
+    def get_catalog_data(self, **kwargs):
+        catalog = super().get_catalog_data(**kwargs)
+        catalog["photovoltaic_power_over_1000kw"] = (
+            catalog["evalenv_rubrique_30-puissance"] == "gte_1000kWc"
+        )
+        return catalog
 
     def get_result_data(self):
         form = self.get_form()
