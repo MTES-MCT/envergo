@@ -9,26 +9,27 @@
            data-regulation="{{ regulation }}"
            title="Voir le détail de la réglementation « {{ regulation }} »">
 
-          <span class="regulation-result">
-            <span>
-              {{ regulation }}
-              {% if regulation.subtitle %}
-                <br />
-                <span class="undertitle">{{ regulation.subtitle }}</span>
-              {% endif %}
-            </span>
-            {% result_tag regulation.result %}
+          <span>{{ regulation }}
+            {% if regulation.subtitle %}
+              <br />
+              <span class="undertitle">{{ regulation.subtitle }}</span>
+            {% endif %}
           </span>
-          <span class="action-link hide-print">
 
-            {% spaceless %}
-              <span class="fr-link">
-                <span class="fr-hidden-xl">Détail</span>
-                <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
-              </span>
-            {% endspaceless %}
+          <span>
+            {% result_tag regulation.result %}
 
-            <span class="fr-link"><span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span></span>
+            <span class="action-link hide-print">
+
+              {% spaceless %}
+                <span class="fr-link">
+                  <span class="fr-hidden-md fr-unhidden-lg fr-hidden-xl">Détail</span>
+                  <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
+                </span>
+              {% endspaceless %}
+
+              <span class="fr-link"><span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span></span>
+            </span>
           </span>
         </a>
       </li>

@@ -64,7 +64,6 @@ class FeedbackForm(forms.Form):
         required=False,
         label="Email ou téléphone",
         help_text="Pour vous recontacter si vous souhaitez une réponse",
-        widget=forms.EmailInput(attrs={"type": "email", "inputmode": "email"}),
     )
     moulinette_data = forms.JSONField(required=False, widget=forms.HiddenInput)
 
