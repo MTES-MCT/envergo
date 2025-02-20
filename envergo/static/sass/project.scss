@@ -373,6 +373,7 @@ section.regulation {
     .fr-accordion__btn {
       flex-flow: row wrap;
       color: inherit;
+      justify-content: space-between;
 
       span.title .perimeter {
         font-weight: 300;
@@ -832,7 +833,6 @@ button .img-icon {
 
     .fr-accordion__btn span.fr-tag {
       white-space: nowrap;
-      margin-left: auto;
     }
 
     .fr-accordion__title span.title {
@@ -1061,7 +1061,7 @@ div.hero-alt {
   #project-result,
   #after_result_content {
     & > section {
-      max-width: 42rem;
+      max-width: 47rem;
       margin: 0 auto;
     }
 
