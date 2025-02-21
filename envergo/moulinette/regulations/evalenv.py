@@ -390,9 +390,12 @@ class Photovoltaique(CriterionEvaluator):
 
     def get_catalog_data(self, **kwargs):
         catalog = super().get_catalog_data(**kwargs)
-        catalog["photovoltaic_power_over_1000kw"] = (
-            catalog["evalenv_rubrique_30-puissance"] == "gte_1000kWc"
-        )
+        # We have to add a custom key to the template, because
+        # django cannot access template values with a dash in the key
+        if "evalenv_rubrique_30-puissance" in catalog:
+            catalog["photovoltaic_power_over_1000kw"] = (
+                catalog["evalenv_rubrique_30-puissance"] == "gte_1000kWc"
+            )
         return catalog
 
     def get_result_data(self):
