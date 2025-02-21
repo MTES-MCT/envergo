@@ -246,3 +246,15 @@ SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
 TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
+
+EMAIL_FROM = {
+    "amenagement": {
+        "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
+        "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",
+        "evaluations": "Avis EnvErgo <avis@envergo.beta.gouv.fr>",
+    },
+    "haie": {
+        "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
+        "account": "Compte GUH <comptes@haie.beta.gouv.fr>",
+    },
+}

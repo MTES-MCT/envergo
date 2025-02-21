@@ -436,6 +436,18 @@ SITE_FROM_EMAIL = {
     "haie": "contact@haie.local",
 }
 
+EMAIL_FROM = {
+    "amenagement": {
+        "default": "contact@amenagement.local",
+        "accounts": "comptes@amenagement.local",
+        "evaluations": "avis@amenagement.local",
+    },
+    "haie": {
+        "default": "contact@haie.local",
+        "accounts": "comptes@amenagement.local",
+    },
+}
+
 HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
 
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
