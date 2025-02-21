@@ -433,6 +433,7 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
         context["moulinette"] = self.moulinette
         context["base_result"] = self.moulinette.get_result_template()
         context["is_read_only"] = True
+
         context["plantation_evaluation"] = PlantationEvaluator(
             self.moulinette, self.moulinette.catalog["haies"]
         )
@@ -441,12 +442,16 @@ class PetitionProjectDetail(PetitionProjectMixin, FormView):
         )
         context["created_at"] = self.petition_project.created_at
 
+        current_url = self.request.build_absolute_uri()
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
         parsed_moulinette_url = urlparse(self.petition_project.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         moulinette_params["edit"] = ["true"]
         result_url = reverse("moulinette_result")
         edit_url = update_qs(result_url, moulinette_params)
 
+        context["current_url"] = current_url
+        context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
         context["ds_url"] = (
             f"https://www.demarches-simplifiees.fr/dossiers/"
