@@ -18,9 +18,11 @@
   </p>
 {% else %}
   <p>La surface totale du projet est de {{ final_surface }} m².</p>
+  {% if catchment_surface > 0 %}
   <p>
     Au vu de la topographie du terrain environnant le projet, l’aire du bassin versant intercepté est susceptible d’atteindre {{ catchment_surface }} m².
   </p>
+  {% endif %}
 {% endif %}
 
 <p>
