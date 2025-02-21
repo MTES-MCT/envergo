@@ -272,7 +272,7 @@ SPECIES_GROUPS = Choices(
     ("insectes", "Insectes"),
     ("mammiferes-terrestres", "Mammifères terrestres"),
     ("oiseaux", "Oiseaux"),
-    ("reptile", "Reptile"),
+    ("reptiles", "Reptiles"),
 )
 
 KINGDOMS = Choices(
