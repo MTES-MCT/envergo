@@ -149,7 +149,7 @@ def warn_admin_of_email_error(recipient_status_id):
         f"⚠️ [{evalreq.id}] Erreur d'envoi email AR",
         body,
         recipient_list=[settings.FROM_EMAIL["amenagement"]["default"]],
-        from_email=settings.FROM_EMAIL["amenagement"]["default"],
+        from_email=settings.FROM_EMAIL["amenagement"]["admin"],
         fail_silently=False,
     )
 
