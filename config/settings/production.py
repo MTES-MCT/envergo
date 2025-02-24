@@ -247,7 +247,7 @@ TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
-EMAIL_FROM = {
+FROM_EMAIL = {
     "amenagement": {
         "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
         "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",

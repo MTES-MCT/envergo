@@ -49,7 +49,7 @@ auth_patterns = [
             subject_template_name="amenagement/emails/password_reset_subject.txt",
             email_template_name="amenagement/emails/password_reset.txt",
             html_email_template_name="amenagement/emails/password_reset.html",
-            from_email=settings.EMAIL_FROM["amenagement"]["accounts"],
+            from_email=settings.FROM_EMAIL["amenagement"]["accounts"],
         ),
         name="password_reset",
     ),

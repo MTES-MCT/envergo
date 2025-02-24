@@ -66,7 +66,7 @@ def confirm_request_to_requester(request_id, host):
     email = EmailMultiAlternatives(
         subject="[EnvErgo] Votre demande d'avis réglementaire",
         body=txt_body,
-        from_email=settings.EMAIL_FROM["amenagement"]["evaluations"],
+        from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
         to=user_emails,
     )
     email.attach_alternative(html_body, "text/html")
@@ -148,8 +148,8 @@ def warn_admin_of_email_error(recipient_status_id):
     send_mail(
         f"⚠️ [{evalreq.id}] Erreur d'envoi email AR",
         body,
-        recipient_list=[settings.EMAIL_FROM["amenagement"]["default"]],
-        from_email=settings.EMAIL_FROM["amenagement"]["default"],
+        recipient_list=[settings.FROM_EMAIL["amenagement"]["default"]],
+        from_email=settings.FROM_EMAIL["amenagement"]["default"],
         fail_silently=False,
     )
 

@@ -436,7 +436,7 @@ SITE_FROM_EMAIL = {
     "haie": "contact@haie.local",
 }
 
-EMAIL_FROM = {
+FROM_EMAIL = {
     "amenagement": {
         "default": "contact@amenagement.local",
         "accounts": "comptes@amenagement.local",
@@ -444,7 +444,7 @@ EMAIL_FROM = {
     },
     "haie": {
         "default": "contact@haie.local",
-        "accounts": "comptes@amenagement.local",
+        "accounts": "comptes@haie.local",
     },
 }
 
