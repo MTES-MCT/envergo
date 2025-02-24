@@ -483,6 +483,7 @@ class EvaluationEmail:
             subject += f" / {evaluation.address}"
 
         email = EmailMultiAlternatives(
+            from_email=settings.EMAIL_FROM["amenagement"]["evaluations"],
             subject=subject,
             body=txt_body,
             to=recipients,

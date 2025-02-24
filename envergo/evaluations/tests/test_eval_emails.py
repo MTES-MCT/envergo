@@ -20,7 +20,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def override_settings(settings):
-    settings.DEFAULT_FROM_EMAIL = "envergo-test@example.org"
+    settings.FROM_EMAIL["amenagement"]["default"] = "envergo-test@example.org"
 
 
 @pytest.fixture(autouse=True)
