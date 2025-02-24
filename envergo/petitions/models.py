@@ -1,11 +1,20 @@
+import logging
+
 from django.db import models
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
+from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.hedges.models import HedgeData
+from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
+
+logger = logging.getLogger(__name__)
 
 DOSSIER_STATES = Choices(
     ("draft", _("Draft")),
@@ -16,6 +25,9 @@ DOSSIER_STATES = Choices(
     ("refuse", _("Refused")),
     ("sans_suite", _("No follow-up")),
 )
+
+# This session key is used when we are not able to find the real user session key.
+SESSION_KEY = "untracked_dossier_submission"
 
 
 class PetitionProject(models.Model):
@@ -80,3 +92,44 @@ class PetitionProject(models.Model):
             self.demarches_simplifiees_state != DOSSIER_STATES.draft
             and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
         )
+
+    def synchronize_with_demarches_simplifiees(
+        self, dossier, site, demarche_label, ds_url, visitor_id, user
+    ):
+        """update the petition project with the latest data from demarches-simplifiees.fr
+
+        a notification is sent to the mattermost channel when the dossier is submitted for the first time
+        """
+        if not self.is_dossier_submitted:
+            # first time we have some data about this dossier
+            department = extract_param_from_url(self.moulinette_url, "department")
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.pk],
+            )
+
+            usager_email = (dossier.get("usager") or {}).get("email", "non renseigné")
+            message_body = render_to_string(
+                "haie/petitions/mattermost_dossier_submission_notif.txt",
+                context={
+                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
+                    "demarche_label": demarche_label,
+                    "ds_url": ds_url,
+                    "admin_url": f"https://{site.domain}{admin_url}",
+                    "usager_email": usager_email,
+                    "length_to_remove": self.hedge_data.length_to_remove(),
+                },
+            )
+            notify(message_body, "haie")
+
+            log_event_raw(
+                "dossier",
+                "depot",
+                visitor_id,
+                user,
+                site,
+                **self.get_log_event_data(),
+            )
+
+        self.demarches_simplifiees_state = dossier["state"]
+        self.save()

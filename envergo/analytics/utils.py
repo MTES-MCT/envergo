@@ -49,16 +49,18 @@ def is_request_from_a_bot(request):
 
 
 def log_event(category, event, request, **kwargs):
-
     visitor_id = request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
+    log_event_raw(category, event, visitor_id, request.user, request.site, **kwargs)
 
-    if visitor_id and not request.user.is_staff:
+
+def log_event_raw(category, event, visitor_id, user, site, **kwargs):
+    if visitor_id and not user.is_staff:
         Event.objects.create(
             category=category,
             event=event,
             session_key=visitor_id,
             metadata=kwargs,
-            site=request.site,
+            site=site,
         )
 
 
