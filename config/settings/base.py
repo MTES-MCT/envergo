@@ -432,13 +432,21 @@ BREVO = {
     ),
 }
 
-SITE_FROM_EMAIL = {
-    "amenagement": "contact@amenagement.local",
-    "haie": "contact@haie.local",
-}
-
 HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
 
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"
 )
+
+FROM_EMAIL = {
+    "amenagement": {
+        "default": "contact@amenagement.local",
+        "admin": "admin@amenagement.local",
+        "accounts": "comptes@amenagement.local",
+        "evaluations": "avis@amenagement.local",
+    },
+    "haie": {
+        "default": "contact@haie.local",
+        "accounts": "comptes@haie.local",
+    },
+}

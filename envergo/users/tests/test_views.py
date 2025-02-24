@@ -24,6 +24,7 @@ def test_password_reset_with_existing_email_does_send_an_email(
 
     mail = mailoutbox[0]
     assert mail.subject == "Réinitialisation du mot de passe sur EnvErgo"
+    assert mail.from_email == "comptes@amenagement.local"
 
 
 def test_amenagement_register_view(client, mailoutbox):
@@ -42,12 +43,14 @@ def test_amenagement_register_view(client, mailoutbox):
     )
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@amenagement.local"
     assert users.count() == 1
 
     user = users[0]
     assert not user.is_active
 
     mail_body = mailoutbox[0].body
+
     re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
     url = re_match.group(1)
     res = client.get(url, follow=True)
@@ -79,6 +82,7 @@ def test_register_with_existing_email(amenagement_user, client, mailoutbox):
     )
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@amenagement.local"
     assert users.count() == 1
 
 
@@ -131,6 +135,7 @@ def test_haie_register_view(client, mailoutbox):
     )
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@haie.local"
     assert users.count() == 1
 
     user = users[0]
@@ -174,6 +179,7 @@ def test_haie_register_for_existing_amenagement_user(
     # Registration went well, account activation was sent
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@haie.local"
     assert users.count() == 1
 
     amenagement_user.refresh_from_db()
