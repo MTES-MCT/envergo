@@ -105,7 +105,6 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
@@ -236,7 +235,6 @@ DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
 )
 
-
 FROM_EMAIL = {
     "amenagement": {
         "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
@@ -249,3 +247,5 @@ FROM_EMAIL = {
         "accounts": "Compte GUH <comptes@haie.beta.gouv.fr>",
     },
 }
+
+SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=FROM_EMAIL["amenagement"]["admin"])
