@@ -419,7 +419,6 @@ class PetitionProjectDetail(DetailView):
         result_url = reverse("moulinette_result")
         edit_url = update_qs(result_url, moulinette_params)
 
-        context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
         context["ds_url"] = (
