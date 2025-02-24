@@ -199,7 +199,13 @@ nav#evaluation-summary {
 
     span.regulation-result {
       width: 100%;
-      flex-wrap: wrap;
+    }
+
+    @media (width < 36em) {
+      span.regulation-result,
+      span.regulation-result span.fr-tag {
+        flex-direction: column;
+      }
     }
 
     a {
@@ -379,6 +385,12 @@ section.regulation {
       span.title .perimeter {
         font-weight: 300;
         color: var(--grey-925-100);
+      }
+    }
+
+    @media (width < 36em) {
+      .fr-accordion__btn {
+        flex-direction: column;
       }
     }
 
