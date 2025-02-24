@@ -104,22 +104,6 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
     )
 ]
 
-# EMAIL
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
-)
-SITE_FROM_EMAIL = {
-    "amenagement": env(
-        "DJANGO_AMENAGEMENT_FROM_EMAIL",
-        default="EnvErgo <contact@envergo.beta.gouv.fr>",
-    ),
-    "haie": env(
-        "DJANGO_HAIE_FROM_EMAIL",
-        default="Guichet unique de la haie <contact@haie.beta.gouv.fr>",
-    ),
-}
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
@@ -247,14 +231,21 @@ TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
+# This should not be used
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
+)
+
+
 FROM_EMAIL = {
     "amenagement": {
         "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
+        "admin": "Admin EnvErgo <admin@envergo.beta.gouv.fr>",
         "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",
         "evaluations": "Avis EnvErgo <avis@envergo.beta.gouv.fr>",
     },
     "haie": {
         "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
-        "account": "Compte GUH <comptes@haie.beta.gouv.fr>",
+        "accounts": "Compte GUH <comptes@haie.beta.gouv.fr>",
     },
 }
