@@ -6,24 +6,18 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
-from django.test import RequestFactory
-from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.analytics.utils import log_event
-from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
-from envergo.utils.urls import extract_param_from_url
 
 logger = logging.getLogger(__name__)
 
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
 
-PRODUCTION_DOMAIN_BLACK_LIST = ["haie.incubateur.net", "haie.local"]
-NON_PRODUCTION_DOMAIN_BLACK_LIST = ["haie.beta.gouv.fr"]
+DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
@@ -31,11 +25,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # get all the dossier updated in the last hour
-        api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
+        api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
-        one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
-        iso8601_one_hour_ago = one_hour_ago_utc.isoformat()
+        # The cron job is run every hour.
+        # We fetch the updates from the last 2 hours to be sure as we may have some delay in the cron job execution
+        two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
+        iso8601_two_hours_ago = two_hours_ago_utc.isoformat()
 
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
@@ -53,7 +49,7 @@ class Command(BaseCommand):
 
                 variables = f"""{{
                       "demarcheNumber":{demarche_number},
-                      "updatedSince": "{iso8601_one_hour_ago}",
+                      "updatedSince": "{iso8601_two_hours_ago}",
                       "after":{f'"{cursor}"' if cursor else "null"}
                     }}"""
 
@@ -100,7 +96,7 @@ class Command(BaseCommand):
                     json=body,
                     headers={
                         "Content-Type": "application/json",
-                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE['GRAPHQL_API_BEARER_TOKEN']}",
+                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
                     },
                 )
 
@@ -199,75 +195,34 @@ class Command(BaseCommand):
                         )
                         continue
 
-                    if not project.is_dossier_submitted:
-                        # first time we have some data about this dossier
-                        department = extract_param_from_url(
-                            project.moulinette_url, "department"
+                    creation_event = (
+                        Event.objects.order_by("-date_created")
+                        .filter(
+                            metadata__reference=project.reference,
+                            category="dossier",
+                            event="creation",
                         )
-                        admin_url = reverse(
-                            "admin:petitions_petitionproject_change",
-                            args=[project.pk],
-                        )
-
-                        usager_email = (dossier.get("usager") or {}).get(
-                            "email", "non renseigné"
-                        )
-                        message_body = render_to_string(
-                            "haie/petitions/mattermost_dossier_submission_notif.txt",
-                            context={
-                                "department": dict(DEPARTMENT_CHOICES).get(
-                                    department, department
-                                ),
-                                "demarche_label": demarche_label,
-                                "ds_url": ds_url,
-                                "admin_url": f"https://{current_site.domain}{admin_url}",
-                                "usager_email": usager_email,
-                                "length_to_remove": project.hedge_data.length_to_remove(),
+                        .first()
+                    )
+                    if not creation_event:
+                        logger.warning(
+                            f"Unable to find creation event for project {project.reference}. "
+                            f"The submission event will be logged with a mocked session key.",
+                            extra={
+                                "project": self,
+                                "session_key": SESSION_KEY,
                             },
                         )
-                        notify(message_body, "haie")
 
-                        self.log_submission(project)
-
-                    project.demarches_simplifiees_state = dossier["state"]
-                    project.save()
+                    visitor_id = (
+                        creation_event.session_key if creation_event else SESSION_KEY
+                    )
+                    user = type("User", (object,), {"is_staff": False})()
+                    project.synchronize_with_demarches_simplifiees(
+                        dossier, current_site, demarche_label, ds_url, visitor_id, user
+                    )
 
             handled_demarches.append(demarche_number)
-
-    def log_submission(self, project):
-        creation_event = (
-            Event.objects.order_by("-date_created")
-            .filter(
-                metadata__reference=project.reference,
-                category="dossier",
-                event="creation",
-            )
-            .first()
-        )
-        if not creation_event:
-            logger.warning(
-                f"Unable to find creation event for project {project.reference}. "
-                f"The submission event will be logged with a mocked session key.",
-                extra={
-                    "project": project,
-                    "session_key": SESSION_KEY,
-                },
-            )
-
-        # create a fake request for the log_event
-        factory = RequestFactory()
-        request = factory.get("/")
-        request.COOKIES[settings.VISITOR_COOKIE_NAME] = (
-            creation_event.session_key if creation_event else SESSION_KEY
-        )
-        request.user = type("User", (object,), {"is_staff": False})()
-        request.site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-        log_event(
-            "dossier",
-            "depot",
-            request,
-            **project.get_log_event_data(),
-        )
 
     def handle_unlinked_dossier(
         self, dossier, demarche_number, demarche_label, ds_url, project_url_id
@@ -289,12 +244,7 @@ class Command(BaseCommand):
             "",
         )
 
-        black_list = (
-            PRODUCTION_DOMAIN_BLACK_LIST
-            if settings.ENV_NAME == "production"
-            else NON_PRODUCTION_DOMAIN_BLACK_LIST
-        )
-        if any(domain in project_url for domain in black_list):
+        if any(domain in project_url for domain in DOMAIN_BLACK_LIST):
             # project url is from a blacklisted domain, it should have been created in another environment
             logger.warning(
                 "A demarches simplifiees dossier has no corresponding project, it was probably "
