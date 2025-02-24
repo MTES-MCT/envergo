@@ -45,7 +45,7 @@ auth_patterns = [
             subject_template_name="haie/emails/password_reset_subject.txt",
             email_template_name="haie/emails/password_reset.txt",
             html_email_template_name="haie/emails/password_reset.html",
-            from_email=settings.SITE_FROM_EMAIL["haie"],
+            from_email=settings.EMAIL_FROM["haie"]["accounts"],
         ),
         name="password_reset",
     ),
