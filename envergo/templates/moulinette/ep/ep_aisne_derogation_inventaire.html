@@ -3,11 +3,11 @@
 </p>
 
 <p>
-  ⚠️ Un inventaire de terrain est peut-être nécessaire pour recenser certaines espèces présentes dans les haies détruites. En effet, au vu des caractéristiques du projet, des espèces particulièrement sensibles sont susceptibles de s’y trouver.
+  <strong>⚠️ Un inventaire de terrain est peut-être nécessaire</strong> pour recenser certaines espèces présentes dans les haies détruites. En effet, au vu des caractéristiques du projet, des espèces particulièrement sensibles sont susceptibles de s’y trouver.
 </p>
 
 <p>
-  Avant de déposer sa demande, le porteur de projet doit contacter la ou les structures listées ci-dessous. Leur rôle est de déterminer, au vu du projet, si un inventaire de terrain ciblé sur certaines espèces est nécessaire ou non.
+  <strong>Avant de déposer sa demande, le porteur de projet doit contacter</strong> la ou les structures listées ci-dessous. Leur rôle est de déterminer, au vu du projet, si un inventaire de terrain ciblé sur certaines espèces est nécessaire ou non.
 </p>
 
 {% if fauna_sensitive_species %}
@@ -17,13 +17,15 @@
     {% for species in fauna_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
   </ul>
 
-  <address class="fr-mb-3w">
-    <strong>Picardie Nature</strong>
-    <br />
-    <a href="mailto:contact@picardie-nature.org">contact@picardie-nature.org</a>
-    <br />
-    <a href="tel:+33362722250">03 62 72 22 50</a>
-  </address>
+  <div class="fr-highlight fr-mb-3w">
+    <address>
+      <strong>Picardie Nature</strong>
+      <br />
+      <a href="mailto:contact@picardie-nature.org">contact@picardie-nature.org</a>
+      <br />
+      <a href="tel:+33362722250">03 62 72 22 50</a>
+    </address>
+  </div>
 {% endif %}
 
 {% if flora_sensitive_species %}
@@ -33,13 +35,15 @@
     {% for species in flora_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
   </ul>
 
-  <address class="fr-mb-3w">
-    <strong>Conservatoire botanique national de Bailleul</strong>
-    <br />
-    <a href="mailto:jc.hauguel@cbnbl.org">jc.hauguel@cbnbl.org</a>
-    <br />
-    <a href="tel:+33785851596">07 85 85 15 96</a>
-  </address>
+  <div class="fr-highlight fr-mb-3w">
+    <address>
+      <strong>Conservatoire botanique national de Bailleul</strong>
+      <br />
+      <a href="mailto:jc.hauguel@cbnbl.org">jc.hauguel@cbnbl.org</a>
+      <br />
+      <a href="tel:+33785851596">07 85 85 15 96</a>
+    </address>
+  </div>
 {% endif %}
 
 <p>
@@ -55,9 +59,9 @@
 <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
 
   <p>
-    Vous pouvez consulter <a href="https://www.aisne.gouv.fr/contenu/telechargement/35346/226601/file/Guide%20Haies_VF_HD.pdf"
+    La procédure mise en place dans l’Aisne pour l’application de la réglementation sur les espèces protégées est décrite <a href="https://www.aisne.gouv.fr/contenu/telechargement/35346/226601/file/Guide%20Haies_VF_HD.pdf"
     target="_blank"
-    rel="noopener">la procédure simplifiée mise en place dans l’Aisne pour l’application de la réglementation sur les espèces protégées (voir page 33)</a>.
+    rel="noopener">dans ce document</a> en plus de détails (voir page 33).
   </p>
 
   <p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>

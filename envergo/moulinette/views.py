@@ -288,7 +288,7 @@ class MoulinetteMixin:
     def should_activate_optional_criteria(self):
         return self.request.user.is_staff
 
-    def log_moulinette_event(self, moulinette, **kwargs):
+    def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
@@ -296,11 +296,6 @@ class MoulinetteMixin:
         action = self.event_action_amenagement
         if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
             action = self.event_action_haie
-            export["longueur_detruite"] = (
-                moulinette.catalog["haies"].length_to_remove()
-                if "haies" in moulinette.catalog
-                else None
-            )
 
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
@@ -405,7 +400,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
-                self.log_moulinette_event(moulinette)
+                self.log_moulinette_event(moulinette, context)
 
             return res
         elif triage_form is not None:
@@ -592,6 +587,10 @@ class MoulinetteResultPlantation(MoulinetteResult):
         context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
+
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        kwargs["plantation_acceptable"] = context["plantation_evaluation"].result
+        super().log_moulinette_event(moulinette, context, **kwargs)
 
 
 class Triage(FormView):
