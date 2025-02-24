@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.http import QueryDict
 from django.urls import reverse
 
@@ -62,10 +61,12 @@ class ProjectDetails:
     details: list[InstructorInformation]
 
 
-def compute_instructor_informations(petition_project, moulinette) -> ProjectDetails:
+def compute_instructor_informations(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
     config = moulinette.config
     ds_details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config
+        petition_project, config, site, visitor_id, user
     )
 
     hedge_data = petition_project.hedge_data
@@ -331,7 +332,7 @@ class DemarchesSimplifieesDetails:
 
 
 def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config
+    petition_project, config, site, visitor_id, user
 ) -> DemarchesSimplifieesDetails | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
@@ -345,7 +346,6 @@ def fetch_project_details_from_demarches_simplifiees(
                 "config.id": config.id,
             },
         )
-        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         admin_url = reverse(
             "admin:moulinette_confighaie_change",
             args=[config.id],
@@ -356,12 +356,12 @@ def fetch_project_details_from_demarches_simplifiees(
         Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
         dans la configuration du département {config.department.department}.
 
-        [Admin django](https://{current_site.domain}{admin_url})
+        [Admin django](https://{site.domain}{admin_url})
         """
         notify(dedent(message), "haie")
         return None
 
-    api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
+    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
     variables = f"""{{
               "dossierNumber":{dossier_number}
             }}"""
@@ -385,6 +385,10 @@ def fetch_project_details_from_demarches_simplifiees(
               id
               stringValue
             }
+            demarche{
+                title
+                number
+            }
           }
         }"""
 
@@ -397,7 +401,7 @@ def fetch_project_details_from_demarches_simplifiees(
         json=body,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE['GRAPHQL_API_BEARER_TOKEN']}",
+            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
         },
     )
 
@@ -497,6 +501,19 @@ Requête envoyée :
 """
         notify(dedent(message), "haie")
         return None
+    # we have got a dossier from DS for this petition project
+
+    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
+    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
+    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+    ds_url = (
+        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+        f"{dossier_number}"
+    )
+    petition_project.synchronize_with_demarches_simplifiees(
+        dossier, site, demarche_label, ds_url, visitor_id, user
+    )
+
     applicant = dossier.get("demandeur") or {}
     applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
     applicant_name = (
