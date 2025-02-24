@@ -1597,6 +1597,7 @@ class MoulinetteAmenagement(Moulinette):
             "final_surface": self.catalog["final_surface"],
             "department": department_code,
             "is_eval_available": self.is_evaluation_available(),
+            "is_planning_operation": self.catalog["is_planning_operation"],
         }
         summary.update(self.cleaned_additional_data())
 
