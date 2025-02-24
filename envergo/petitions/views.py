@@ -457,7 +457,7 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         context["moulinette"] = moulinette
         context["project_details"] = compute_instructor_informations(
             self.object,
-            self.moulinette,
+            moulinette,
             self.request.site,
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
