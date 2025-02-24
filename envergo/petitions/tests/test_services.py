@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 
 
 @patch("requests.post")
-def test_fetch_project_details_from_demarches_simplifiees(mock_post):
+def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
@@ -94,7 +94,9 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post):
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
 
     assert details.applicant_name == "Mme dez dez"
     assert details.city == "Ladaux (33760)"
@@ -103,12 +105,14 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post):
 
 @patch("envergo.petitions.services.notify")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
-    mock_notify,
+    mock_notify, haie_user, site
 ):
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
 
     assert details is None
 
@@ -125,7 +129,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
-    mock_post, mock_notify
+    mock_post, mock_notify, haie_user, site
 ):
     mock_response = Mock()
     mock_response.status_code = 400
@@ -137,7 +141,9 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
 
     assert details is None
 
@@ -154,7 +160,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
-    mock_post, mock_notify
+    mock_post, mock_notify, haie_user, site
 ):
     mock_response = Mock()
     mock_response.status_code = 200
@@ -166,7 +172,9 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
 
     assert details is None
 
