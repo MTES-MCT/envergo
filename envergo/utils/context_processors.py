@@ -41,6 +41,7 @@ def settings_context(_request):
         "DEBUG": settings.DEBUG,
         "ANALYTICS": analytics,
         "SENTRY_DSN": settings.SENTRY_DSN,
+        "SENTRY_KEY": settings.SENTRY_KEY,
         "ENV_NAME": settings.ENV_NAME,
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
         "CRISP_WEBSITE_ID": crisp_website_id,

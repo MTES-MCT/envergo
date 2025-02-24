@@ -11,6 +11,12 @@
   </p>
 {% endblock %}
 
+{% block before-title-content %}
+  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right hide-print">
+    <li>{% include '_share_url_btn.html' %}</li>
+  </ul>
+{% endblock %}
+
 {% block liability_info %}
   {% show_haie_moulinette_liability_info moulinette.result %}
 {% endblock %}
