@@ -230,7 +230,10 @@ TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
-# This should not be used
+# This should never be used, it's better to use the more specific `FROM_EMAIL` setting below
+# However, in we were to forget to manually set the `from` header in an outgoing email,
+# this would be the default value used by Django.
+# So it's best to make sure this value stays valid.
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
 )
