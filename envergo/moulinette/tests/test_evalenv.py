@@ -207,8 +207,19 @@ def test_evalenv_terrain_assiette_non_soumis(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [10000])
+def test_evalenv_terrain_assiette_not_operation(moulinette_data):
+    moulinette_data["terrain_assiette"] = 150000
+    moulinette_data["operation_amenagement"] = False
+
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.eval_env.terrain_assiette.result == "non_concerne"
+
+
+@pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_non_soumis_2(moulinette_data):
     moulinette_data["terrain_assiette"] = 45000
+    moulinette_data["operation_amenagement"] = True
 
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
@@ -218,6 +229,7 @@ def test_evalenv_terrain_assiette_non_soumis_2(moulinette_data):
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_cas_par_cas(moulinette_data):
     moulinette_data["terrain_assiette"] = 95000
+    moulinette_data["operation_amenagement"] = True
 
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
@@ -227,6 +239,7 @@ def test_evalenv_terrain_assiette_cas_par_cas(moulinette_data):
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_systematique(moulinette_data):
     moulinette_data["terrain_assiette"] = 150000
+    moulinette_data["operation_amenagement"] = True
 
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
