@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block before-title-content %}
-  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right hide-print">
+  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
   </ul>
 {% endblock %}
@@ -25,6 +25,8 @@
 
 {% block extra_js %}
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
+  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 {% endblock %}
 
 {% block extra_body %}
