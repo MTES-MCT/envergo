@@ -230,7 +230,8 @@ class MoulinetteMixin:
         for additional_form in additional_forms:
             for field in additional_form:
                 get.setlist(
-                    field.html_name, additional_form.data.getlist(field.html_name)
+                    field.html_name,
+                    [QueryDict(additional_form.data).getlist(field.html_name)],
                 )
 
         if self.should_activate_optional_criteria():
@@ -238,7 +239,8 @@ class MoulinetteMixin:
             for optional_form in optional_forms:
                 for field in optional_form:
                     get.setlist(
-                        field.html_name, optional_form.data.getlist(field.html_name)
+                        field.html_name,
+                        [QueryDict(optional_form.data.get(field.html_name))],
                     )
 
         triage_params = moulinette.get_triage_params()
