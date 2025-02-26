@@ -179,7 +179,11 @@
                 <div>
                   <h6>Longueur de la haie plantée</h6>
                   <p v-if="quality.length_to_plant.result">Le linéaire total planté est suffisant.</p>
-                  <p v-else>Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.</p>
+                  <p v-else>
+                    Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.
+                    <br />
+                    Il manque au moins [[ quality.length_to_plant.left_to_plant ]] m.
+                  </p>
                 </div>
               </div>
               <div>
