@@ -99,21 +99,20 @@ class MoulinetteMixin:
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
-            if moulinette.is_evaluation_available() or self.request.user.is_staff:
-                context["additional_forms"] = self.get_additional_forms(moulinette)
-                context["additional_fields"] = self.get_additional_fields(moulinette)
+            context["additional_forms"] = moulinette.additional_forms()
+            context["additional_fields"] = moulinette.additional_fields()
 
-                # We need to display a different form style when the "additional forms"
-                # first appears, but the way this feature is designed, said forms
-                # are always "bound" when they appear. So we have to check for the
-                # presence of field keys in the GET parameters.
-                additional_forms_bound = False
-                field_keys = context["additional_fields"].keys()
-                for key in field_keys:
-                    if key in self.request.GET:
-                        additional_forms_bound = True
-                        break
-                context["additional_forms_bound"] = additional_forms_bound
+            # We need to display a different form style when the "additional forms"
+            # first appears, but the way this feature is designed, said forms
+            # are always "bound" when they appear. So we have to check for the
+            # presence of field keys in the GET parameters.
+            additional_forms_bound = False
+            field_keys = context["additional_fields"].keys()
+            for key in field_keys:
+                if key in self.request.GET:
+                    additional_forms_bound = True
+                    break
+            context["additional_forms_bound"] = additional_forms_bound
 
             moulinette_data = moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
@@ -159,34 +158,6 @@ class MoulinetteMixin:
         self.moulinette = context.get("moulinette", None)
         self.triage_form = context.get("triage_form", None)
         return super().render_to_response(context, **response_kwargs)
-
-    def get_additional_forms(self, moulinette):
-        form_classes = moulinette.additional_form_classes()
-        forms = []
-        for Form in form_classes:
-            form = Form(**self.get_form_kwargs())
-            if form.fields:
-                form.is_valid()
-                forms.append(form)
-
-        return forms
-
-    def get_additional_fields(self, moulinette):
-        """Return the list of additional criterion fields.
-
-        Sometimes two criterions can ask the same question
-        E.g the "Is this a lotissement project?"
-        We need to make sure we don't display the same field twice though
-        """
-
-        forms = self.get_additional_forms(moulinette)
-        fields = OrderedDict()
-        for form in forms:
-            for field in form:
-                if field.name not in fields:
-                    fields[field.name] = field
-
-        return fields
 
     def get_optional_forms(self, moulinette=None):
         """Get the form list for optional criteria.
@@ -255,7 +226,7 @@ class MoulinetteMixin:
                 form_data, form.data, self.should_activate_optional_criteria()
             )
 
-        additional_forms = self.get_additional_forms(moulinette)
+        additional_forms = moulinette.additional_forms()
         for additional_form in additional_forms:
             for field in additional_form:
                 get.setlist(
