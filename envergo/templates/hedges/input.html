@@ -105,7 +105,7 @@
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
                               :disabled="hedgeBeingDrawn">
-                        [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
+                        [[ mode === 'removal' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td v-if="mode === 'removal'">
@@ -148,7 +148,7 @@
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
                               :disabled="hedgeBeingDrawn">
-                        [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
+                        [[ mode === 'plantation' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td>
