@@ -30,14 +30,13 @@ npm prune --production
 
 if compress_enabled
 then
-  echo "Run the compress command"
   python manage.py compress --force
 fi
 
 # not using collectstatic --clear because it takes ages
-#rm staticfiles -Rf
+rm staticfiles -Rf
 #python manage.py collectstatic --noinput
 
-#python manage.py compilemessages -l fr -i .scalingo -i .venv
+python manage.py compilemessages -l fr -i .scalingo -i .venv
 
 echo "Leaving the post_compile hook"
