@@ -35,7 +35,7 @@ fi
 
 # not using collectstatic --clear because it takes ages
 rm staticfiles -Rf
-#python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput
 
 python manage.py compilemessages -l fr -i .scalingo -i .venv
 
