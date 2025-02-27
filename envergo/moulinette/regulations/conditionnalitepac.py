@@ -45,8 +45,13 @@ class Bcae8Form(forms.Form):
 
     meilleur_emplacement = forms.ChoiceField(
         label="""
-        Le projet est-il accompagné par un organisme agréé, en mesure de délivrer une
-        attestation de meilleur emplacement environnemental ?""",
+        Le projet dispose-t-il d’une attestation de meilleur emplacement environnemental,
+        délivrée par un organisme agréé ?""",
+        help_text="""
+        La liste des organismes habilités à délivrer un conseil environnemental est
+        <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre" target="_blank" rel="noopener external"
+        href="https://www.notion.so/Liste-des-organismes-habilit-s-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-198fe5fe4766808996e5fb5b33a849b4">
+        disponible ici</a>.""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -84,7 +89,8 @@ class Bcae8Form(forms.Form):
         motif = self.data.get("motif")
         if motif == "amelioration_culture":
             self.fields = keep_fields(
-                self.fields, ("lineaire_total", "transfert_parcelles")
+                self.fields,
+                ("lineaire_total", "meilleur_emplacement", "transfert_parcelles"),
             )
         elif motif == "amenagement":
             self.fields = keep_fields(
@@ -276,6 +282,8 @@ class Bcae8(CriterionEvaluator):
                     if motif == "amelioration_culture":
                         if transfert_parcelles == "oui":
                             result_code = "soumis_transfert_parcelles"
+                        elif meilleur_emplacement == "oui":
+                            result_code = "soumis_meilleur_emplacement"
                         else:
                             result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":
