@@ -579,9 +579,10 @@ class MoulinetteResultPlantation(MoulinetteResult):
         moulinette = context.get("moulinette", None)
         context["is_result_plantation"] = True
 
-        context["plantation_evaluation"] = PlantationEvaluator(
-            moulinette, moulinette.catalog["haies"]
-        )
+        if moulinette:
+            context["plantation_evaluation"] = PlantationEvaluator(
+                moulinette, moulinette.catalog["haies"]
+            )
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
         context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
