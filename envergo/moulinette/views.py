@@ -1,5 +1,4 @@
 import json
-from collections import OrderedDict
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
