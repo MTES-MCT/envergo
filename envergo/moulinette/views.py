@@ -105,7 +105,9 @@ class MoulinetteMixin:
             # first appears, but the way this feature is designed, said forms
             # are always "bound" when they appear. So we have to check for the
             # presence of field keys in the GET parameters.
-            additional_forms_bound = any(key in self.request.GET for key in context["additional_fields"].keys())
+            additional_forms_bound = any(
+                key in self.request.GET for key in context["additional_fields"].keys()
+            )
             context["additional_forms_bound"] = additional_forms_bound
 
             moulinette_data = moulinette.summary()
