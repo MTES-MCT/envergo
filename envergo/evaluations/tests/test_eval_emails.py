@@ -20,7 +20,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def override_settings(settings):
-    settings.DEFAULT_FROM_EMAIL = "envergo-test@example.org"
+    settings.FROM_EMAIL["amenagement"]["evaluations"] = "envergo-test@example.org"
 
 
 @pytest.fixture(autouse=True)
@@ -151,6 +151,7 @@ def test_instructor_dont_transmit_soumis(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
     assert email.bcc == []
@@ -186,6 +187,7 @@ def test_instructor_self_transmit_soumis(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
     assert email.bcc == []
@@ -219,6 +221,7 @@ def test_instructor_transmit_soumis(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
     assert email.bcc == ["ddtm_email_test@example.org"]
@@ -251,6 +254,7 @@ def test_instructor_transmit_n2000_evalenv_soumis(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
 
@@ -289,6 +293,7 @@ def test_instructor_transmit_action_requise(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == ["instructor@example.org"]
     assert email.bcc == []
@@ -321,6 +326,7 @@ def test_instructor_transmit_non_soumis(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["instructor@example.org"]
     assert email.cc == []
     assert email.bcc == []
@@ -348,7 +354,7 @@ def test_petitioner(rf, moulinette_url):
     req = rf.get("/")
     eval_email = eval.get_evaluation_email()
     email = eval_email.get_email(req)
-
+    assert email.from_email == "envergo-test@example.org"
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]
     assert email.cc == []
     assert email.bcc == []
