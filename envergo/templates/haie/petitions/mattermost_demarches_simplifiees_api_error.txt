@@ -14,4 +14,4 @@ Requête envoyée :
 {{ body }}
 ```
 
-Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*

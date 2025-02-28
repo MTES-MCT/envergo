@@ -6,11 +6,13 @@ Il peut s'agir :
  * d'un dossier dupliqué sur DS par l’utilisateur, à partir du dossier pré-rempli
  * d'un dossier créé manuellement dans DS
 
-Démarche : {{ demarche_label }}
-[Dossier DS n°({{ dossier_number }})]({{ ds_url }})
-Action nécessaire :
+Démarche : {{ demarche_name }}
+
+[Dossier DS n°{{ dossier_number }}]({{ ds_url }})
+
+Actions nécessaires :
 * aller voir le dossier dans DS et identifier le projet auquel ce dossier pourrait être rattaché (ou s’il n’y a aucun projet)
 * contacter l’utilisateur et/ou les instructeurs
 
 
-Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*

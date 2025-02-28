@@ -189,7 +189,7 @@ class Command(BaseCommand):
                         self.handle_unlinked_dossier(
                             dossier,
                             demarche_number,
-                            demarche_label,
+                            demarche_name,
                             ds_url,
                             activated_department.demarches_simplifiees_project_url_id,
                         )
@@ -225,7 +225,7 @@ class Command(BaseCommand):
             handled_demarches.append(demarche_number)
 
     def handle_unlinked_dossier(
-        self, dossier, demarche_number, demarche_label, ds_url, project_url_id
+        self, dossier, demarche_number, demarche_name, ds_url, project_url_id
     ):
         """Handle a dossier that is not linked to any project in the database
 
@@ -270,7 +270,7 @@ class Command(BaseCommand):
             message_body = render_to_string(
                 "haie/petitions/mattermost_unlinked_dossier_notif.txt",
                 context={
-                    "demarche_label": demarche_label,
+                    "demarche_name": demarche_name,
                     "ds_url": ds_url,
                     "dossier_number": dossier["number"],
                 },
