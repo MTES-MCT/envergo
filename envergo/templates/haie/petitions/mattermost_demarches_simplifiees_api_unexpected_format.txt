@@ -4,14 +4,14 @@ La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu
 
 Réponse de Démarches Simplifiées : {{ status_code }}
 ```
-{{ response }}
+{{ response|safe }}
 ```
 
 Requête envoyée :
 * Url: {{ api_url }}
 * Body:
 ```
-{{ body }}
+{{ body|safe }}
 ```
 
-Cette requête est lancée automatiquement par la commande dossier_submission_admin_alert.
+*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*
