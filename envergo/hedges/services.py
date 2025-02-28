@@ -251,10 +251,26 @@ class HedgeEvaluator:
             "left_to_plant": left_to_plant,
         }
 
+    def evaluate_length_to_plant_pac(self):
+        """Evaluate if there is enough hedges to plant in PAC parcel in the project"""
+        minimum_length_to_plant = (
+            self.hedge_data.lineaire_detruit_pac()
+        )  # no R coefficient for PAC
+        left_to_plant = max(
+            0,
+            minimum_length_to_plant - self.hedge_data.length_to_plant_pac(),
+        )
+        return {
+            "result": left_to_plant == 0,
+            "minimum_length_to_plant": minimum_length_to_plant,
+            "left_to_plant": left_to_plant,
+        }
+
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
         return {
             "length_to_plant": self.evaluate_length_to_plant(),
+            "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
             "quality": self.evaluate_hedge_plantation_quality(),
             "do_not_plant_under_power_line": {
                 "result": self.is_not_planting_under_power_line(),
