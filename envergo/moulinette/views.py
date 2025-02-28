@@ -21,7 +21,7 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.models import MoulinetteHaie, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import (
     extract_mtm_params,
@@ -362,7 +362,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             MoulinetteClass = get_moulinette_class_from_site(self.request.site)
             template_name = MoulinetteClass.get_home_template()
         elif moulinette is None:
-            template_name = "haie/moulinette/triage_result.html"
+            template_name = MoulinetteHaie.get_triage_template(triage_form)
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
