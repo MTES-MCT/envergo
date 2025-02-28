@@ -399,6 +399,7 @@ class PetitionProjectDetail(DetailView):
 
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
         context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
         context["plantation_evaluation"] = PlantationEvaluator(
