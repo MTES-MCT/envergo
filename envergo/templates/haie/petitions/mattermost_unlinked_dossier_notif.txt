@@ -6,7 +6,7 @@ Il peut s'agir :
  * d'un dossier dupliqué sur DS par l’utilisateur, à partir du dossier pré-rempli
  * d'un dossier créé manuellement dans DS
 
-Démarche : {{ demarche_name }}
+Démarche : {{ demarche_name|safe }}
 
 [Dossier DS n°{{ dossier_number }}]({{ ds_url }})
 
