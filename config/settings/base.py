@@ -442,3 +442,9 @@ HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe4
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"
 )
+
+HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
+    "https://equatorial-red-4c6.notion.site/Liste-des-organismes-"
+    "agr-s-pour-d-livrer-une-attestation-de-meilleur-emplacement-"
+    "environnemental-1a7fe5fe476680f8afb2c648119f8e23"
+)

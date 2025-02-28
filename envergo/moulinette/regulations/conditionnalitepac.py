@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import DisplayIntegerField
@@ -47,10 +48,10 @@ class Bcae8Form(forms.Form):
         label="""
         Le projet dispose-t-il d’une attestation de meilleur emplacement environnemental,
         délivrée par un organisme agréé ?""",
-        help_text="""
+        help_text=f"""
         La liste des organismes habilités à délivrer un conseil environnemental est
         <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre" target="_blank" rel="noopener external"
-        href="https://www.notion.so/Liste-des-organismes-habilit-s-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-198fe5fe4766808996e5fb5b33a849b4">
+        href="{settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST}">
         disponible ici</a>.""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
@@ -167,6 +168,9 @@ class Bcae8(CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
+        catalog["authorized_organizations_list_url"] = (
+            settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST
+        )
         haies = self.catalog.get("haies")
         if haies:
             catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
