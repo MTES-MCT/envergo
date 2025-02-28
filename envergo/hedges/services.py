@@ -240,13 +240,10 @@ class HedgeEvaluator:
 
     def evaluate_length_to_plant(self):
         """Evaluate if there is enough hedges to plant in the project"""
-
-        left_to_plant = (
+        left_to_plant = max(
+            0,
             self.hedge_data.minimum_length_to_plant()
-            - self.hedge_data.length_to_plant()
-            if self.hedge_data.minimum_length_to_plant()
-            > self.hedge_data.length_to_plant()
-            else 0
+            - self.hedge_data.length_to_plant(),
         )
         return {
             "result": self.is_length_to_plant_sufficient(),
