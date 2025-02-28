@@ -456,6 +456,9 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
         context["project_details"] = compute_instructor_informations(
             self.object, moulinette
         )
