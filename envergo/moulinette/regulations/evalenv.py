@@ -141,6 +141,8 @@ class TerrainAssietteForm(forms.Form):
 
     operation_ammenagement = DisplayChoiceField(
         label=mark_safe("Le projet est-il une opération d'aménagement ?"),
+        help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
+            de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -153,6 +155,7 @@ class TerrainAssietteForm(forms.Form):
         final_surface = int(self.data["final_surface"])
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
+            del self.fields["operation_ammenagement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
@@ -163,17 +166,17 @@ class TerrainAssiette(CriterionEvaluator):
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        "non_concerne": "non_concerne",
-        "10000": "non_soumis",
-        "50000": "cas_par_cas",
-        "100000": "systematique",
+        ("N/A", "non"): "non_concerne",
+        ("10000", "oui"): "non_soumis",
+        ("50000", "oui"): "cas_par_cas",
+        ("100000", "oui"): "systematique",
     }
 
     def get_result_data(self):
         operation_ammenagement = self.catalog.get("operation_ammenagement", "non")
 
         if not operation_ammenagement == "oui":
-            return "non_concerne"
+            return ("N/A", operation_ammenagement)
 
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
 
@@ -183,7 +186,7 @@ class TerrainAssiette(CriterionEvaluator):
             assiette_thld = "50000"
         else:
             assiette_thld = "10000"
-        return assiette_thld
+        return assiette_thld, operation_ammenagement
 
 
 class OptionalFormMixin:
