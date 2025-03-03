@@ -139,6 +139,13 @@ class TerrainAssietteForm(forms.Form):
         display_label="Surface du terrain d'assiette du projet :",
     )
 
+    is_planning_operation = forms.ChoiceField(
+        label="Le projet est une opération d'aménagement",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
