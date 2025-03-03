@@ -61,7 +61,7 @@ class Map:
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
     zoom: int = 17  # the map zoom to pass to leaflet
-    ratio: str = (
+    ratio_classes: str = (
         "ratio-4x3 ratio-sm-4x5"  # Check for "project.scss" for available ratios
     )
     fixed: bool = True  # Is the map fixed or can it be zoomed and dragged?
