@@ -228,7 +228,9 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
 
     def get_display_value(self, value):
         data = self.clean(value)
-        display_value = f"{data.length_to_remove()} m / {data.length_to_plant()} m"
+        display_value = (
+            f"{round(data.length_to_remove())} m / {round(data.length_to_plant())} m"
+        )
         return display_value
 
 
