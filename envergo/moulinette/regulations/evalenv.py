@@ -150,9 +150,9 @@ class TerrainAssietteForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         final_surface = int(self.data["final_surface"])
-        is_planning_operation = bool(self.data["is_planning_operation"])
+        is_planning_operation = str(self.data["is_planning_operation"])
         if (
-            not is_planning_operation
+            not is_planning_operation == "oui"
             and final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD
         ):
             del self.fields["terrain_assiette"]
@@ -175,7 +175,7 @@ class TerrainAssiette(CriterionEvaluator):
     def get_result_data(self):
         is_planning_operation = self.catalog.get("is_planning_operation", "non")
 
-        if not is_planning_operation:
+        if not is_planning_operation == "oui":
             return "non_concerne"
 
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
