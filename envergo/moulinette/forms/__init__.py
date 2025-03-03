@@ -82,12 +82,6 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
             "max_value": "La valeur saisie est trop élevée. Veuillez saisir un nombre inférieur à 10 000 000.",
         },
     )
-    is_planning_operation = forms.ChoiceField(
-        label="Le projet est une opération d'aménagement",
-        widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
-        required=True,
-    )
     address = forms.CharField(
         label=_("Search for the address to center the map"),
         help_text=_("Type in a few characters to see suggestions"),
