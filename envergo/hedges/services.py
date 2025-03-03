@@ -18,6 +18,7 @@ class PlantationResults(Enum):
 class EvaluationResult:
     result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
     conditions: list[str]
+    evaluation: dict
 
 
 class PlantationEvaluator:
@@ -84,11 +85,19 @@ class PlantationEvaluator:
 
         return self._evaluation_result.conditions
 
+    @property
+    def evaluation(self):
+        """Return the list of conditions that are not met to make the plantation project adequate."""
+        if not hasattr(self, "_evaluation_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._evaluation_result.evaluation
+
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
         evaluator = HedgeEvaluator(self.hedge_data)
-        evaluation = evaluator.evaluate()
+        evaluation = evaluator.result
         result = EvaluationResult(
             result=(
                 PlantationResults.Adequate
@@ -98,6 +107,7 @@ class PlantationEvaluator:
             conditions=[
                 item for item in evaluation.keys() if not evaluation[item]["result"]
             ],
+            evaluation=evaluation,
         )
 
         self._evaluation_result = result

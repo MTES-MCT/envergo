@@ -188,6 +188,21 @@
               </div>
               <div>
                 <div>
+                  <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
+                     class="fr-badge"></p>
+                </div>
+                <div>
+                  <h6>Maintien des haies PAC</h6>
+                  <p v-if="quality.length_to_plant_pac.result">Le linéaire de haie planté sur parcelle PAC est suffisant.</p>
+                  <p v-else>
+                    Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ quality.length_to_plant_pac.minimum_length_to_plant ]] m.
+                    <br />
+                    Il manque au moins [[ quality.length_to_plant_pac.left_to_plant ]] m sur parcelle PAC, hors alignements d’arbres.
+                  </p>
+                </div>
+              </div>
+              <div>
+                <div>
                   <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "
                      class="fr-badge"></p>
                 </div>
