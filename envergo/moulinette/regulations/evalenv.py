@@ -139,7 +139,7 @@ class TerrainAssietteForm(forms.Form):
         display_label="Surface du terrain d'assiette du projet :",
     )
 
-    is_planning_operation = DisplayChoiceField(
+    operation_ammenagement = DisplayChoiceField(
         label=mark_safe("Le projet est-il une opération d'aménagement ?"),
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
@@ -151,11 +151,7 @@ class TerrainAssietteForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         final_surface = int(self.data["final_surface"])
-        is_planning_operation = str(self.data["is_planning_operation"])
-        if (
-            not is_planning_operation == "oui"
-            and final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD
-        ):
+        if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
 
 
@@ -174,9 +170,9 @@ class TerrainAssiette(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        is_planning_operation = self.catalog.get("is_planning_operation", "non")
+        operation_ammenagement = self.catalog.get("operation_ammenagement", "non")
 
-        if not is_planning_operation == "oui":
+        if not operation_ammenagement == "oui":
             return "non_concerne"
 
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
