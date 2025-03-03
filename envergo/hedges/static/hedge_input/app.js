@@ -1,4 +1,4 @@
-const {createApp, ref, onMounted, reactive, computed, watch, toRaw} = Vue
+const { createApp, ref, onMounted, reactive, computed, watch, toRaw } = Vue
 
 const TO_PLANT = 'TO_PLANT';
 const TO_REMOVE = 'TO_REMOVE';
@@ -28,7 +28,7 @@ const qualityUrl = document.getElementById('app').dataset.qualityUrl;
 const showHedgeModal = (hedge, hedgeType) => {
 
   const fillBooleanField = (fieldElement, fieldName, data) => {
-     if(fieldElement && data.hasOwnProperty(fieldName)) {
+    if (fieldElement && data.hasOwnProperty(fieldName)) {
       fieldElement.checked = data[fieldName];
     }
   }
@@ -36,7 +36,7 @@ const showHedgeModal = (hedge, hedgeType) => {
   const isReadonly = (hedgeType !== TO_PLANT || mode !== PLANTATION_MODE) && (hedgeType !== TO_REMOVE || mode !== REMOVAL_MODE);
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
 
-  const dialogId= `${dialogMode}-hedge-data-dialog`
+  const dialogId = `${dialogMode}-hedge-data-dialog`
   const dialog = document.getElementById(dialogId);
   const form = dialog.querySelector("form");
   const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
@@ -120,7 +120,7 @@ const showHedgeModal = (hedge, hedgeType) => {
     dsfr(dialog).modal.conceal();
   };
 
-  if(isReadonly) {
+  if (isReadonly) {
     const inputs = form.querySelectorAll("input");
     const selects = form.querySelectorAll("select");
 
@@ -129,11 +129,11 @@ const showHedgeModal = (hedge, hedgeType) => {
     const submitButton = form.querySelector("button[type='submit']");
     submitButton.innerText = "Retour";
 
-    form.addEventListener("submit", closeModal, {once: true});
+    form.addEventListener("submit", closeModal, { once: true });
   }
   else {
     // Save data upon form submission
-    form.addEventListener("submit", saveModalData, {once: true});
+    form.addEventListener("submit", saveModalData, { once: true });
   }
 
   // If the modal is closed without saving, let's make sure to remove the
@@ -253,7 +253,7 @@ class Hedge {
       proximitePointEau,
       connexionBoisement,
       sousLigneElectrique,
-      proximiteVoirie  } = this.additionalData;
+      proximiteVoirie } = this.additionalData;
 
     const valid =
       typeHaie !== undefined
@@ -261,13 +261,13 @@ class Hedge {
       && proximitePointEau !== undefined
       && connexionBoisement !== undefined
       && proximiteMare !== undefined
-      &&(
+      && (
         (this.type === TO_REMOVE
-        && surParcellePac !== undefined
-        && vieilArbre !== undefined)
+          && surParcellePac !== undefined
+          && vieilArbre !== undefined)
         || (this.type === TO_PLANT
-        && sousLigneElectrique !== undefined
-        && proximiteVoirie !== undefined)
+          && sousLigneElectrique !== undefined
+          && proximiteVoirie !== undefined)
       );
 
     return valid;
@@ -389,11 +389,11 @@ createApp({
     const helpBubble = ref("initialHelp");
     const hedgeBeingDrawn = ref(null);
 
-     // Reactive properties for quality conditions
+    // Reactive properties for quality conditions
     const quality = reactive({
-      "length_to_plant": {"result": false, "minimum_length_to_plant": minimumLengthToPlant, "left_to_plant": minimumLengthToPlant},
-      "quality": {"result": false, "missing_plantation": {"mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee":0}},
-      "do_not_plant_under_power_line": {"result": true}
+      "length_to_plant": { "result": false, "minimum_length_to_plant": minimumLengthToPlant, "left_to_plant": minimumLengthToPlant },
+      "quality": { "result": false, "missing_plantation": { "mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee": 0 } },
+      "do_not_plant_under_power_line": { "result": true }
     });
 
     // Computed property to track changes in the hedges array
@@ -438,7 +438,7 @@ createApp({
       return startDrawing(TO_REMOVE);
     };
 
-    const stopDrawing= () => {
+    const stopDrawing = () => {
       hedgeBeingDrawn.value = null;
       helpBubble.value = null;
       window.removeEventListener('keyup', cancelDrawingFromEscape);
@@ -449,17 +449,17 @@ createApp({
       stopDrawing();
     };
 
-    const cancelDrawing= () => {
-       if (hedgeBeingDrawn.value) {
-         hedgeBeingDrawn.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
-         hedgeBeingDrawn.value.remove();
-         stopDrawing();
-       }
+    const cancelDrawing = () => {
+      if (hedgeBeingDrawn.value) {
+        hedgeBeingDrawn.value.polyline.off('editable:drawing:end', onDrawingEnd); // Remove the event listener
+        hedgeBeingDrawn.value.remove();
+        stopDrawing();
+      }
     };
 
     const cancelDrawingFromEscape = (event) => {
-      if (event.key === 'Escape'){
-          cancelDrawing();
+      if (event.key === 'Escape') {
+        cancelDrawing();
       }
     };
 
@@ -470,7 +470,7 @@ createApp({
       let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
-        map.fitBounds(group.getBounds(), {...fitBoundsOptions, animate: animate, padding: [50,50]});
+        map.fitBounds(group.getBounds(), { ...fitBoundsOptions, animate: animate, padding: [50, 50] });
       }
     };
 
@@ -482,7 +482,7 @@ createApp({
       return hedgesToPlant.concat(hedgesToRemove);
     }
 
-// We first check if all hedges are valid
+    // We first check if all hedges are valid
     const saveData = () => {
       const hedgesToValidate = mode === REMOVAL_MODE ? hedges[TO_REMOVE].hedges : hedges[TO_PLANT].hedges;
       const isValid = hedgesToValidate.every((hedge) => hedge.isValid());
@@ -532,8 +532,8 @@ createApp({
 
         const dismissHandler = () => {
           dsfr(dialog).modal.conceal();
-          if(event && event.type === 'popstate') {
-            history.pushState({modalOpen: true}, "", "#modal");
+          if (event && event.type === 'popstate') {
+            history.pushState({ modalOpen: true }, "", "#modal");
           }
         };
 
@@ -566,9 +566,9 @@ createApp({
         // We don't restore ids, but since we restore hedges in the same order
         // they were created, they should get the correct ids anyway.
         const hedge = addHedge(type, latLngs, additionalData, true);
-        if(type === TO_PLANT && mode === REMOVAL_MODE) {
+        if (type === TO_PLANT && mode === REMOVAL_MODE) {
           hedge.polyline.disableEdit();
-        }else if(type === TO_REMOVE && mode === PLANTATION_MODE) {
+        } else if (type === TO_REMOVE && mode === PLANTATION_MODE) {
           hedge.polyline.disableEdit();
         }
       });
@@ -582,8 +582,8 @@ createApp({
     });
 
     const onHedgesToPlantChange = () => {
-   // Prepare the hedge data to be sent in the request body
-    const hedgeData = serializeHedgesData();
+      // Prepare the hedge data to be sent in the request body
+      const hedgeData = serializeHedgesData();
 
       fetch(qualityUrl, {
         method: 'POST',
