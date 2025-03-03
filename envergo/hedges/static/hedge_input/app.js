@@ -21,7 +21,7 @@ const styles = {
 const fitBoundsOptions = { padding: [10, 10] };
 
 const mode = document.getElementById('app').dataset.mode;
-const minimumLengthToPlant = document.getElementById('app').dataset.minimumLengthToPlant;
+const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const qualityUrl = document.getElementById('app').dataset.qualityUrl;
 
 // Show the "description de la haie" form modal
