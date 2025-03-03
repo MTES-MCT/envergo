@@ -8,6 +8,11 @@
         {{ minimum_length_to_plant }} m.
       </li>
     {% endif %}
+    {% if "length_to_plant_pac" in plantation_evaluation.unfulfilled_conditions %}
+      <li>
+        La longueur de la haie à planter sur parcelle PAC est insuffisante. Elle doit être supérieure à {{ plantation_evaluation.evaluation.length_to_plant_pac.minimum_length_to_plant }} m, hors alignements d’arbres.
+      </li>
+    {% endif %}
     {% if "quality" in plantation_evaluation.unfulfilled_conditions %}
       <li>Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.</li>
     {% endif %}
