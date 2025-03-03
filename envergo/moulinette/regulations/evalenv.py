@@ -143,11 +143,7 @@ class TerrainAssietteForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         final_surface = int(self.data["final_surface"])
-        is_planning_operation = bool(self.data["is_planning_operation"])
-        if (
-            not is_planning_operation
-            and final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD
-        ):
+        if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
 
 
@@ -159,18 +155,12 @@ class TerrainAssiette(CriterionEvaluator):
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        "non_concerne": "non_concerne",
         "10000": "non_soumis",
         "50000": "cas_par_cas",
         "100000": "systematique",
     }
 
     def get_result_data(self):
-        is_planning_operation = self.catalog.get("is_planning_operation", "non")
-
-        if not is_planning_operation:
-            return "non_concerne"
-
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
 
         if terrain_assiette >= TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD:
