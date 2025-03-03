@@ -242,7 +242,7 @@ def get_data_from_coords(lng, lat, timeout=0.5, index="address", limit=1):
         KeyError,
         IndexError,
     ) as e:
-        logger.error(
+        logger.warning(
             "An error occured during the request to ign geocodage api",
             extra={"exception": e},
         )

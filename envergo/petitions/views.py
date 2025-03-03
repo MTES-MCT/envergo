@@ -398,6 +398,7 @@ class PetitionProjectDetail(DetailView):
 
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
         context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
 
@@ -459,6 +460,9 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
         context["project_details"] = compute_instructor_informations(
             self.object,
             moulinette,

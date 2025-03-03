@@ -68,11 +68,16 @@
         </div>
         <div id="project-specifications-instructor" class="fr-col">
           <h1>Caractéristiques du projet</h1>
+
+          <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
+             href="{{ project_url }}"
+             target="_blank"
+             rel="noopener external">Consulter les résultats de la simulation</a>
           <form method="post"
                 action="{% url 'petition_project_instructor_view' petition_project.reference %}">
             {% csrf_token %}
             {% for information in project_details.details %}
-              <section class="fr-mt-6w"
+              <section class="fr-py-3w"
                        {% if information.slug %}id="{{ information.slug }}"{% endif %}>
                 {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
                 <p class="fr-hint-text">
