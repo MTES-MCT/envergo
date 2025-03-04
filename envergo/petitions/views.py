@@ -133,7 +133,7 @@ class PetitionProjectCreate(FormView):
             )
             return None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
         for field in config.demarche_simplifiee_pre_fill_config:
@@ -399,8 +399,10 @@ class PetitionProjectDetail(DetailView):
 
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
         context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
+
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
@@ -409,12 +411,15 @@ class PetitionProjectDetail(DetailView):
         )
         context["created_at"] = self.object.created_at
 
+        current_url = self.request.build_absolute_uri()
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         moulinette_params["edit"] = ["true"]
         result_url = reverse("moulinette_result")
         edit_url = update_qs(result_url, moulinette_params)
 
+        context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
         context["ds_url"] = (
             f"https://www.demarches-simplifiees.fr/dossiers/"
@@ -455,8 +460,15 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
         context["project_details"] = compute_instructor_informations(
-            self.object, moulinette
+            self.object,
+            moulinette,
+            self.request.site,
+            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
+            self.request.user,
         )
 
         return context

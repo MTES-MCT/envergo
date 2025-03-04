@@ -445,7 +445,7 @@ class Regulation(models.Model):
                 entries=polygons,
                 truncate=False,
                 zoom=None,
-                ratio="2x1",
+                ratio_classes="ratio-2x1 ratio-sm-4x5",
                 fixed=False,
             )
             return map
@@ -819,6 +819,12 @@ class ConfigHaie(ConfigBase):
         max_length=64,
     )
 
+    demarches_simplifiees_project_url_id = models.CharField(
+        'Identifiant du "Lien internet de la simulation réglementaire de votre projet" dans Démarches Simplifiées',
+        blank=True,
+        max_length=64,
+    )
+
     def __str__(self):
         return self.department.get_department_display()
 
@@ -952,7 +958,12 @@ class ConfigHaie(ConfigBase):
                 check=Q(is_activated=False)
                 | Q(demarche_simplifiee_number__isnull=False),
                 name="demarche_simplifiee_number_required_if_activated",
-            )
+            ),
+            CheckConstraint(
+                check=Q(demarche_simplifiee_number__isnull=True)
+                | Q(demarches_simplifiees_project_url_id__isnull=False),
+                name="project_url_id_required_if_demarche_number",
+            ),
         ]
 
 
@@ -1682,6 +1693,14 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_params(cls):
         return set(TriageFormHaie.base_fields.keys())
+
+    @classmethod
+    def get_triage_template(cls, triage_form):
+        """Return the template to display the triage out of scope result."""
+        if triage_form["element"].value() == "haie":
+            return "haie/moulinette/entretien_haies_result.html"
+
+        return "haie/moulinette/triage_result.html"
 
     @classmethod
     def get_extra_context(cls, request):
