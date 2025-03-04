@@ -227,7 +227,7 @@ class MoulinetteMixin:
             for field in additional_form:
                 get.setlist(
                     field.html_name,
-                    [QueryDict(additional_form.data).getlist(field.html_name)],
+                    QueryDict(additional_form.data).getlist(field.html_name),
                 )
 
         if self.should_activate_optional_criteria():
@@ -236,7 +236,7 @@ class MoulinetteMixin:
                 for field in optional_form:
                     get.setlist(
                         field.html_name,
-                        [QueryDict(optional_form.data.get(field.html_name))],
+                        QueryDict(optional_form.data.get(field.html_name)),
                     )
 
         triage_params = moulinette.get_triage_params()
@@ -400,7 +400,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         # We don't want to take analytics params into account, so they stay in the url
         current_params = set([p for p in current_params if not p.startswith("mtm_")])
-
         return expected_params == current_params
 
     def get_moulinette_data(self):
