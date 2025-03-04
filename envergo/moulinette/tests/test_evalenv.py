@@ -205,7 +205,7 @@ def test_evalenv_terrain_assiette_non_soumis(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert not moulinette.has_missing_data()
-    assert moulinette.eval_env.terrain_assiette.result == "non_soumis"
+    assert moulinette.eval_env.terrain_assiette.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [10000])

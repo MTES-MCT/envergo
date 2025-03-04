@@ -139,7 +139,7 @@ class TerrainAssietteForm(forms.Form):
         display_label="Surface du terrain d'assiette du projet :",
     )
 
-    operation_ammenagement = DisplayChoiceField(
+    operation_amenagement = DisplayChoiceField(
         label=mark_safe("Le projet est-il une opération d'aménagement ?"),
         help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
             de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
@@ -155,7 +155,7 @@ class TerrainAssietteForm(forms.Form):
         final_surface = int(self.data["final_surface"])
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
-            del self.fields["operation_ammenagement"]
+            del self.fields["operation_amenagement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
@@ -173,10 +173,10 @@ class TerrainAssiette(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        operation_ammenagement = self.catalog.get("operation_ammenagement", "non")
+        operation_amenagement = self.catalog.get("operation_amenagement", "non")
 
-        if not operation_ammenagement == "oui":
-            return ("N/A", operation_ammenagement)
+        if not operation_amenagement == "oui":
+            return ("N/A", operation_amenagement)
 
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
 
@@ -186,7 +186,7 @@ class TerrainAssiette(CriterionEvaluator):
             assiette_thld = "50000"
         else:
             assiette_thld = "10000"
-        return assiette_thld, operation_ammenagement
+        return assiette_thld, operation_amenagement
 
 
 class OptionalFormMixin:
