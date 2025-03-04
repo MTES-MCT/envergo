@@ -195,9 +195,9 @@
                   <h6>Maintien des haies PAC</h6>
                   <p v-if="quality.length_to_plant_pac.result">Le linéaire de haie planté sur parcelle PAC est suffisant.</p>
                   <p v-else>
-                    Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ quality.length_to_plant_pac.minimum_length_to_plant ]] m.
+                    Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
                     <br />
-                    Il manque au moins [[ quality.length_to_plant_pac.left_to_plant ]] m sur parcelle PAC, hors alignements d’arbres.
+                    Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC, hors alignements d’arbres.
                   </p>
                 </div>
               </div>
