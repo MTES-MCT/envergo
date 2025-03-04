@@ -140,7 +140,7 @@ class TerrainAssietteForm(forms.Form):
     )
 
     operation_amenagement = DisplayChoiceField(
-        label=mark_safe("Le projet est-il une opération d'aménagement ?"),
+        label="Le projet est-il une opération d'aménagement ?",
         help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
             de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
         widget=forms.RadioSelect,
