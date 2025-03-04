@@ -391,7 +391,7 @@ createApp({
 
      // Reactive properties for quality conditions
     const quality = reactive({
-      "length_to_plant": {"result": false, "minimum_length_to_plant": minimumLengthToPlant},
+      "length_to_plant": {"result": false, "minimum_length_to_plant": minimumLengthToPlant, "left_to_plant": minimumLengthToPlant},
       "quality": {"result": false, "missing_plantation": {"mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee":0}},
       "do_not_plant_under_power_line": {"result": true}
     });
