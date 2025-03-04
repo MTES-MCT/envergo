@@ -105,7 +105,7 @@
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
                               :disabled="hedgeBeingDrawn">
-                        [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
+                        [[ mode === 'removal' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td v-if="mode === 'removal'">
@@ -148,7 +148,7 @@
                       <button class="fr-btn fr-btn--tertiary-no-outline"
                               @click.stop="showHedgeModal(hedge, hedge.type)"
                               :disabled="hedgeBeingDrawn">
-                        [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
+                        [[ mode === 'plantation' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td>
@@ -179,7 +179,11 @@
                 <div>
                   <h6>Longueur de la haie plantée</h6>
                   <p v-if="quality.length_to_plant.result">Le linéaire total planté est suffisant.</p>
-                  <p v-else>Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.</p>
+                  <p v-else>
+                    Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.
+                    <br />
+                    Il manque au moins [[ quality.length_to_plant.left_to_plant ]] m.
+                  </p>
                 </div>
               </div>
               <div>
@@ -277,10 +281,10 @@
     </div>
 
     <footer>
-      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line "
+      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line fr-ml-13w"
               @click="cancel">Retour</button>
       <button v-if="mode !== 'read_only'"
-              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
+              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line fr-mr-13w"
               @click="saveData">Enregistrer et poursuivre</button>
     </footer>
   </div>

@@ -1,0 +1,12 @@
+### Mapping avec Démarches-simplifiées : :x: erreur
+La création d’un dossier démarches-simplifiées n’a pas pu aboutir.
+{% if config_url %}
+Cette erreur révèle une possible anomalie de la [configuration du département {{ department }}]({{ config_url }})
+{% endif %}
+L’utilisateur a reçu un message d’erreur avec l’identifiant `{{ user_error_reference }}` l’invitant à nous contacter.
+{% if form %}
+* form :
+```
+{{ form|safe }}
+```
+{% endif %}

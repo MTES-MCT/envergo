@@ -222,7 +222,7 @@ class EvaluationDetail(
 
             if not is_request_from_a_bot(request):
                 self.log_moulinette_event(
-                    self.moulinette, request_reference=self.object.reference
+                    self.moulinette, context, request_reference=self.object.reference
                 )
 
         return res

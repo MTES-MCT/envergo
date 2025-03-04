@@ -91,14 +91,19 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
         if user:
             token = kwargs["token"]
             if default_token_generator.check_token(user, token):
+                send_notification = False
                 user.is_active = True
                 site_literal = get_site_literal(self.request.site)
                 if site_literal == "amenagement":
                     user.access_amenagement = True
                 elif site_literal == "haie":
+                    # send notification only if it is a new account on GUH
+                    send_notification = not user.access_haie
                     user.access_haie = True
                 user.save()
-                send_new_account_notification.delay(user.id)
+
+                if send_notification:
+                    send_new_account_notification.delay(user.id)
 
         return super().get(request, *args, **kwargs)
 

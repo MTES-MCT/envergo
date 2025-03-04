@@ -113,6 +113,7 @@ def test_new_files_user_alert_with_new_file_gt_15min_ago(
     call_command("new_files_user_alert")
 
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "avis@amenagement.local"
 
 
 def test_new_files_user_alert_with_new_file_gt_30min_ago(
@@ -136,6 +137,7 @@ def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ag
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
+    assert email.from_email == "avis@amenagement.local"
     assert email.to == ["instructor@example.org"]
 
     request.user_type = "petitioner"
@@ -143,4 +145,5 @@ def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ag
     call_command("new_files_user_alert")
     assert len(mailoutbox) == 2
     email = mailoutbox[1]
+    assert email.from_email == "avis@amenagement.local"
     assert email.to == ["sponsor1@example.org", "sponsor2@example.org"]

@@ -112,7 +112,7 @@ class HedgeEvaluator:
 
     def __init__(self, hedge_data: HedgeData):
         self.hedge_data = hedge_data
-        self.evaluate()
+        self.result = self.evaluate()
 
     def is_not_planting_under_power_line(self):
         """Returns True if there is NO hedges to plant, containing high-growing trees (type alignement or mixte),
@@ -238,13 +238,23 @@ class HedgeEvaluator:
             "missing_plantation": missing_plantation,
         }
 
+    def evaluate_length_to_plant(self):
+        """Evaluate if there is enough hedges to plant in the project"""
+        left_to_plant = max(
+            0,
+            self.hedge_data.minimum_length_to_plant()
+            - self.hedge_data.length_to_plant(),
+        )
+        return {
+            "result": self.is_length_to_plant_sufficient(),
+            "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
+            "left_to_plant": left_to_plant,
+        }
+
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
         return {
-            "length_to_plant": {
-                "result": self.is_length_to_plant_sufficient(),
-                "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
-            },
+            "length_to_plant": self.evaluate_length_to_plant(),
             "quality": self.evaluate_hedge_plantation_quality(),
             "do_not_plant_under_power_line": {
                 "result": self.is_not_planting_under_power_line(),
