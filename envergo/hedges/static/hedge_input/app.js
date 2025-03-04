@@ -391,10 +391,7 @@ createApp({
 
     // Reactive properties for quality conditions
     const quality = reactive({
-      "length_to_plant": { "result": false, "minimum_length_to_plant": minimumLengthToPlant, "left_to_plant": minimumLengthToPlant },
-      "length_to_plant_pac": { "result": false, "left_to_plant": 0, "minimum_length_to_plant": 0 },
-      "quality": { "result": false, "missing_plantation": { "mixte": 0, "alignement": 0, "arbustive": 0, "buissonante": 0, "degradee": 0 } },
-      "do_not_plant_under_power_line": { "result": true }
+      status: 'loading',
     });
 
     // Computed property to track changes in the hedges array
@@ -596,6 +593,7 @@ createApp({
       })
         .then(response => response.json())
         .then(data => {
+          data = {status: 'loaded', ...data};
           Object.assign(quality, data);
         })
         .catch(error => console.error('Error:', error));
@@ -686,6 +684,11 @@ createApp({
       // then zoom out.
       map.setView([43.6861, 3.5911], 22);
       restoreHedges();
+
+      if(mode === PLANTATION_MODE) {
+        // We need to call this function once to initialize the quality object
+        onHedgesToPlantChange();
+      }
       map.setZoom(14);
       zoomOut(false); // remove animation, it is smoother at the beginning, and it eases the helpBubbleMessage display
       isSetupDone = true;

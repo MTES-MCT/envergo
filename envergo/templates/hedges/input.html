@@ -167,7 +167,8 @@
             </template>
           </div>
         </div>
-        <div id="hedge-quality" v-if="mode === 'plantation'">
+        <div id="hedge-quality"
+             v-if="quality.status === 'loaded' && mode === 'plantation'">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Plantation minimum attendue</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
@@ -186,21 +187,23 @@
                   </p>
                 </div>
               </div>
-              <div>
+              {% if is_removing_pac %}
                 <div>
-                  <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
-                     class="fr-badge"></p>
+                  <div>
+                    <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
+                       class="fr-badge"></p>
+                  </div>
+                  <div>
+                    <h6>Maintien des haies PAC</h6>
+                    <p v-if="quality.length_to_plant_pac.result">Le linéaire de haie planté sur parcelle PAC est suffisant.</p>
+                    <p v-else>
+                      Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
+                      <br />
+                      Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC, hors alignements d’arbres.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h6>Maintien des haies PAC</h6>
-                  <p v-if="quality.length_to_plant_pac.result">Le linéaire de haie planté sur parcelle PAC est suffisant.</p>
-                  <p v-else>
-                    Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
-                    <br />
-                    Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC, hors alignements d’arbres.
-                  </p>
-                </div>
-              </div>
+              {% endif %}
               <div>
                 <div>
                   <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "

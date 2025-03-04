@@ -99,7 +99,7 @@ def compute_instructor_informations(
                         None,
                         None,
                     ),
-                    Item("Total linéaire planté", length_to_plant, "m", None),
+                    Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
                         (
