@@ -133,7 +133,7 @@ class PetitionProjectCreate(FormView):
             )
             return None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
         for field in config.demarche_simplifiee_pre_fill_config:
@@ -464,7 +464,11 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
             "petition_project", kwargs={"reference": self.object.reference}
         )
         context["project_details"] = compute_instructor_informations(
-            self.object, moulinette
+            self.object,
+            moulinette,
+            self.request.site,
+            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
+            self.request.user,
         )
 
         return context
