@@ -445,7 +445,7 @@ class Regulation(models.Model):
                 entries=polygons,
                 truncate=False,
                 zoom=None,
-                ratio="2x1",
+                ratio_classes="ratio-2x1 ratio-sm-4x5",
                 fixed=False,
             )
             return map
