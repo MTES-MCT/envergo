@@ -87,7 +87,7 @@ def compute_instructor_informations(
                         None,
                         None,
                     ),
-                    Item("Total linéaire détruit", length_to_remove, "m", None),
+                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
                 ],
             ),
             InstructorInformationDetails(
@@ -153,7 +153,7 @@ def compute_instructor_informations(
                     ),
                     Item(
                         "Total linéaire détruit",
-                        hedge_data.lineaire_detruit_pac(),
+                        round(hedge_data.lineaire_detruit_pac()),
                         "m",
                         None,
                     ),
@@ -180,7 +180,7 @@ def compute_instructor_informations(
                     ),
                     Item(
                         "Total linéaire planté",
-                        hedge_data.length_to_plant_pac(),
+                        round(hedge_data.length_to_plant_pac()),
                         "m",
                         None,
                     ),

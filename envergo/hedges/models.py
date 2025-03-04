@@ -184,7 +184,7 @@ class HedgeData(models.Model):
         ]
 
     def length_to_plant_pac(self):
-        return round(sum(h.length for h in self.hedges_to_plant_pac()))
+        return sum(h.length for h in self.hedges_to_plant_pac())
 
     def lineaire_detruit_pac(self):
         return sum(h.length for h in self.hedges_to_remove_pac())
