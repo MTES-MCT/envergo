@@ -104,20 +104,6 @@ class PetitionProject(models.Model):
             and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
         )
 
-    def get_moulinette(self):
-        parsed_url = urlparse(self.moulinette_url)
-        query_string = parsed_url.query
-        # We need to convert the query string to a flat dict
-        raw_data = QueryDict(query_string)
-        moulinette_data = raw_data.dict()
-        moulinette_data["haies"] = self.hedge_data
-        moulinette = MoulinetteHaie(
-            moulinette_data,
-            moulinette_data,
-            False,
-        )
-        return moulinette
-
     def synchronize_with_demarches_simplifiees(
         self, dossier, site, demarche_label, ds_url, visitor_id, user
     ):
@@ -158,3 +144,17 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_state = dossier["state"]
         self.save()
+
+    def get_moulinette(self):
+        parsed_url = urlparse(self.moulinette_url)
+        query_string = parsed_url.query
+        # We need to convert the query string to a flat dict
+        raw_data = QueryDict(query_string)
+        moulinette_data = raw_data.dict()
+        moulinette_data["haies"] = self.hedge_data
+        moulinette = MoulinetteHaie(
+            moulinette_data,
+            moulinette_data,
+            False,
+        )
+        return moulinette
