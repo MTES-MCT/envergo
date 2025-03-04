@@ -210,7 +210,7 @@ correctement VSCode :
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
-    "**/node_modules/*/**": true,
+    "**/node_modules/**": true,
     "**/.hg/store/**": true,
     "**/staticfiles/**": true,
     "**/.venv/**": true,
