@@ -1695,6 +1695,14 @@ class MoulinetteHaie(Moulinette):
         return set(TriageFormHaie.base_fields.keys())
 
     @classmethod
+    def get_triage_template(cls, triage_form):
+        """Return the template to display the triage out of scope result."""
+        if triage_form["element"].value() == "haie":
+            return "haie/moulinette/entretien_haies_result.html"
+
+        return "haie/moulinette/triage_result.html"
+
+    @classmethod
     def get_extra_context(cls, request):
         """return extra context data for the moulinette views.
         You can use this method to add some context specific to your site : Haie or Amenagement
