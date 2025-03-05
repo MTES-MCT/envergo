@@ -376,6 +376,9 @@ class HedgeList {
 }
 
 createApp({
+  /**
+   * Create show and draw hedges app
+   */
 
   // Prevent conflict with django template delimiters
   delimiters: ["[[", "]]"],
@@ -386,7 +389,8 @@ createApp({
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
     };
-    const helpBubble = ref("initialHelp");
+
+    const helpBubble = mode !== READ_ONLY_MODE ? ref("initialHelp") : ref(null);
     const hedgeBeingDrawn = ref(null);
 
      // Reactive properties for quality conditions
