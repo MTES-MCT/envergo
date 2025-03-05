@@ -86,12 +86,6 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     def get_map(self):
         map_polygons = []
 
-        wetlands_qs = [
-            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
-        ]
-        if wetlands_qs:
-            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
-
         potential_qs = [
             zone
             for zone in self.catalog["potential_wetlands"]
@@ -101,6 +95,12 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
             map_polygons.append(
                 MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
             )
+
+        wetlands_qs = [
+            zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
+        ]
+        if wetlands_qs:
+            map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
 
         if self.catalog["wetlands_within_25m"]:
             caption = "Le projet se situe dans une zone humide référencée."
