@@ -1,5 +1,4 @@
 import json
-from collections import OrderedDict
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
@@ -21,7 +20,7 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.models import MoulinetteHaie, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import (
     extract_mtm_params,
@@ -99,21 +98,17 @@ class MoulinetteMixin:
             context["moulinette"] = moulinette
             context.update(moulinette.catalog)
 
-            if moulinette.is_evaluation_available() or self.request.user.is_staff:
-                context["additional_forms"] = self.get_additional_forms(moulinette)
-                context["additional_fields"] = self.get_additional_fields(moulinette)
+            context["additional_forms"] = moulinette.additional_forms()
+            context["additional_fields"] = moulinette.additional_fields()
 
-                # We need to display a different form style when the "additional forms"
-                # first appears, but the way this feature is designed, said forms
-                # are always "bound" when they appear. So we have to check for the
-                # presence of field keys in the GET parameters.
-                additional_forms_bound = False
-                field_keys = context["additional_fields"].keys()
-                for key in field_keys:
-                    if key in self.request.GET:
-                        additional_forms_bound = True
-                        break
-                context["additional_forms_bound"] = additional_forms_bound
+            # We need to display a different form style when the "additional forms"
+            # first appears, but the way this feature is designed, said forms
+            # are always "bound" when they appear. So we have to check for the
+            # presence of field keys in the GET parameters.
+            additional_forms_bound = any(
+                key in self.request.GET for key in context["additional_fields"].keys()
+            )
+            context["additional_forms_bound"] = additional_forms_bound
 
             moulinette_data = moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
@@ -159,34 +154,6 @@ class MoulinetteMixin:
         self.moulinette = context.get("moulinette", None)
         self.triage_form = context.get("triage_form", None)
         return super().render_to_response(context, **response_kwargs)
-
-    def get_additional_forms(self, moulinette):
-        form_classes = moulinette.additional_form_classes()
-        forms = []
-        for Form in form_classes:
-            form = Form(**self.get_form_kwargs())
-            if form.fields:
-                form.is_valid()
-                forms.append(form)
-
-        return forms
-
-    def get_additional_fields(self, moulinette):
-        """Return the list of additional criterion fields.
-
-        Sometimes two criterions can ask the same question
-        E.g the "Is this a lotissement project?"
-        We need to make sure we don't display the same field twice though
-        """
-
-        forms = self.get_additional_forms(moulinette)
-        fields = OrderedDict()
-        for form in forms:
-            for field in form:
-                if field.name not in fields:
-                    fields[field.name] = field
-
-        return fields
 
     def get_optional_forms(self, moulinette=None):
         """Get the form list for optional criteria.
@@ -255,11 +222,12 @@ class MoulinetteMixin:
                 form_data, form.data, self.should_activate_optional_criteria()
             )
 
-        additional_forms = self.get_additional_forms(moulinette)
+        additional_forms = moulinette.additional_forms()
         for additional_form in additional_forms:
             for field in additional_form:
                 get.setlist(
-                    field.html_name, additional_form.data.getlist(field.html_name)
+                    field.html_name,
+                    self.request.GET.getlist(field.html_name),
                 )
 
         if self.should_activate_optional_criteria():
@@ -267,7 +235,8 @@ class MoulinetteMixin:
             for optional_form in optional_forms:
                 for field in optional_form:
                     get.setlist(
-                        field.html_name, optional_form.data.getlist(field.html_name)
+                        field.html_name,
+                        self.request.GET.getlist(field.html_name),
                     )
 
         triage_params = moulinette.get_triage_params()
@@ -288,7 +257,7 @@ class MoulinetteMixin:
     def should_activate_optional_criteria(self):
         return self.request.user.is_staff
 
-    def log_moulinette_event(self, moulinette, **kwargs):
+    def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
@@ -296,11 +265,6 @@ class MoulinetteMixin:
         action = self.event_action_amenagement
         if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
             action = self.event_action_haie
-            export["longueur_detruite"] = (
-                moulinette.catalog["haies"].length_to_remove()
-                if "haies" in moulinette.catalog
-                else None
-            )
 
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
@@ -363,21 +327,24 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         is_edit = bool(self.request.GET.get("edit", False))
         is_admin = self.request.user.is_staff
 
+        # We want to display the moulinette result template, but must check all
+        # previous cases where we cannot do it
+
         if moulinette is None and triage_form is None:
             MoulinetteClass = get_moulinette_class_from_site(self.request.site)
             template_name = MoulinetteClass.get_home_template()
         elif moulinette is None:
-            template_name = "haie/moulinette/triage_result.html"
+            template_name = MoulinetteHaie.get_triage_template(triage_form)
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif is_edit:
-            template_name = moulinette.get_home_template()
-        elif moulinette.has_missing_data():
             template_name = moulinette.get_home_template()
         elif not moulinette.has_config():
             template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = moulinette.get_result_available_soon_template()
+        elif moulinette.has_missing_data():
+            template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
 
@@ -405,7 +372,7 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
-                self.log_moulinette_event(moulinette)
+                self.log_moulinette_event(moulinette, context)
 
             return res
         elif triage_form is not None:
@@ -433,7 +400,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         # We don't want to take analytics params into account, so they stay in the url
         current_params = set([p for p in current_params if not p.startswith("mtm_")])
-
         return expected_params == current_params
 
     def get_moulinette_data(self):
@@ -584,14 +550,19 @@ class MoulinetteResultPlantation(MoulinetteResult):
         moulinette = context.get("moulinette", None)
         context["is_result_plantation"] = True
 
-        context["plantation_evaluation"] = PlantationEvaluator(
-            moulinette, moulinette.catalog["haies"]
-        )
+        if moulinette:
+            context["plantation_evaluation"] = PlantationEvaluator(
+                moulinette, moulinette.catalog["haies"]
+            )
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
         context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
+
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        kwargs["plantation_acceptable"] = context["plantation_evaluation"].result
+        super().log_moulinette_event(moulinette, context, **kwargs)
 
 
 class Triage(FormView):

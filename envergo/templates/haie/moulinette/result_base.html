@@ -31,6 +31,8 @@
       cette page grâce à votre statut d'admin.
     </div>
   {% endif %}
+
+  {% block before-title-content %}{% endblock %}
   {% block result_title %}<h1 class="fr-mb-5w">Simulation réglementaire</h1>{% endblock %}
 
   {% block result_header %}{% endblock %}
@@ -64,4 +66,8 @@
   {% if not is_read_only %}
     {% include 'haie/moulinette/_actions_banner.html' %}
   {% endif %}
+{% endblock %}
+
+{% block extra_body %}
+  {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (réponses au formulaire et dessins de haies) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
 {% endblock %}

@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import DisplayIntegerField
@@ -45,8 +46,13 @@ class Bcae8Form(forms.Form):
 
     meilleur_emplacement = forms.ChoiceField(
         label="""
-        Le projet est-il accompagné par un organisme agréé, en mesure de délivrer une
-        attestation de meilleur emplacement environnemental ?""",
+        Le projet dispose-t-il d’une attestation de meilleur emplacement environnemental,
+        délivrée par un organisme agréé ?""",
+        help_text=f"""
+        La liste des organismes habilités à délivrer un conseil environnemental est
+        <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre" target="_blank" rel="noopener external"
+        href="{settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST}">
+        disponible ici</a>.""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -84,7 +90,8 @@ class Bcae8Form(forms.Form):
         motif = self.data.get("motif")
         if motif == "amelioration_culture":
             self.fields = keep_fields(
-                self.fields, ("lineaire_total", "transfert_parcelles")
+                self.fields,
+                ("lineaire_total", "meilleur_emplacement", "transfert_parcelles"),
             )
         elif motif == "amenagement":
             self.fields = keep_fields(
@@ -140,7 +147,7 @@ class Bcae8(CriterionEvaluator):
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
-        "dispense_petit": RESULTS.non_soumis,
+        "dispense_petit": RESULTS.dispense,
         "soumis_remplacement": RESULTS.soumis,
         "soumis_transfert_parcelles": RESULTS.soumis,
         "soumis_meilleur_emplacement": RESULTS.soumis,
@@ -161,6 +168,9 @@ class Bcae8(CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
+        catalog["authorized_organizations_list_url"] = (
+            settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST
+        )
         haies = self.catalog.get("haies")
         if haies:
             catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
@@ -276,6 +286,8 @@ class Bcae8(CriterionEvaluator):
                     if motif == "amelioration_culture":
                         if transfert_parcelles == "oui":
                             result_code = "soumis_transfert_parcelles"
+                        elif meilleur_emplacement == "oui":
+                            result_code = "soumis_meilleur_emplacement"
                         else:
                             result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":

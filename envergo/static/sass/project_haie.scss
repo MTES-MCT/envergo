@@ -70,6 +70,18 @@ div#app {
       }
     }
 
+    #drawing-controls {
+      display: flex;
+      flex-direction: column;
+
+      button {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        width: auto;
+      }
+    }
+
     div.controls {
       &.inline-controls {
         .leaflet-control {
@@ -323,6 +335,10 @@ div#app {
         }
       }
     }
+
+    #id_address {
+      background-color: var(--grey-1000-50);
+    }
   }
 }
 
@@ -423,4 +439,10 @@ div#go-to-ds-btn {
 
 button#project-summary-hedge-input-open-btn {
   background-color: var(--grey-1000-50);
+}
+
+div#project-specifications-instructor {
+  i.optional-tag {
+    display: none;
+  }
 }

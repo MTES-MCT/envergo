@@ -50,7 +50,7 @@ def send_account_activation_email(user_email, side_id, activate_url):
         "full_activate_url": full_activate_url,
     }
     subject = REGISTER_SUBJECT[site_literal]
-    frm = settings.SITE_FROM_EMAIL[site_literal]
+    frm = settings.FROM_EMAIL[site_literal]["accounts"]
 
     txt_body = render_to_string(txt_template, context)
     html_body = render_to_string(html_template, context)

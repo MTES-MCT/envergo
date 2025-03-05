@@ -99,6 +99,7 @@ RESULTS = Choices(
     ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
     ("derogation_inventaire", "Dérogation"),
     ("derogation_simplifiee", "Dérogation simplifiée"),
+    ("dispense", "Dispense"),
 )
 
 
@@ -482,6 +483,7 @@ class EvaluationEmail:
             subject += f" / {evaluation.address}"
 
         email = EmailMultiAlternatives(
+            from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
             subject=subject,
             body=txt_body,
             to=recipients,

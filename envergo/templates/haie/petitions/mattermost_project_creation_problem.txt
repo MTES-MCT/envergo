@@ -1,0 +1,45 @@
+
+{% if problem.is_fatal %}
+#### :x: Description de l’erreur #{{ index }}
+{% else %}
+#### :warning: Description de l’anomalie #{{ index }}
+{% endif %}
+
+{% if problem.key == "missing_demarche_simplifiee_number" %}
+Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées
+{% elif problem.key == "invalid_prefill_field" %}
+Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une valeur. Le mapping est optionnel.
+* Champ : {{ problem.extra.field }}
+{% elif problem.key == "ds_api_http_error" %}
+L'API de Démarches Simplifiées a retourné une erreur lors de la création du dossier.
+** Requête:**
+* url : {{ problem.extra.api_url }}
+* body :
+```
+{{ problem.extra.request_body|safe }}
+```
+** Réponse:**
+* status : {{ problem.extra.response.status_code }}
+* content:
+```
+{{ problem.extra.response.text|safe }}
+```
+{% elif problem.key == "missing_source_regulation" %}
+La configuration demande de pré-remplir un champ avec la valeur de **{{ problem.extra.source }}** mais la moulinette n'a pas de résultat pour la réglementation **{{ problem.extra.regulation_slug }}**.
+{% elif problem.key == "missing_source_criterion" %}
+La configuration demande de pré-remplir un champ avec la valeur de **{{ problem.extra.source }}** mais la moulinette n'a pas de résultat pour le critère **{{ problem.extra.criterion_slug }}**.
+{% elif problem.key == "missing_source_moulinette" %}
+La configuration demande de pré-remplir un champ avec la valeur de **{{ problem.extra.source }}** mais la simulation ne possède pas cette valeur.
+{% elif problem.key == "mapping_missing_value" %}
+Une valeur prise en entrée n’a pas été reconnue dans le mapping
+* Champ : {{ problem.extra.source }}
+* Valeur : {{ problem.extra.value }}
+* mapping :
+```
+{{ problem.extra.mapping|safe }}
+```
+{% elif problem.key == "invalid_form" %}
+Le formulaire contient des erreurs
+{% elif problem.key == "unknown_error" %}
+Nous ne savons pas d'où provient ce problème...
+{% endif %}

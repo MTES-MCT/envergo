@@ -1,0 +1,17 @@
+### Récupération des statuts des dossiers depuis Démarches-simplifiées : :x: erreur
+
+L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de la démarche n°{{demarche_number}}.
+
+Réponse de Démarches Simplifiées : {{ status_code }}
+```
+{{ response|safe }}
+```
+
+Requête envoyée :
+* Url: {{ api_url }}
+* Body:
+```
+{{ body|safe }}
+```
+
+*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*

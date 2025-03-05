@@ -19,7 +19,7 @@
             l'emplacement du projet.
           </label>
 
-          <div class="ratio-4x3 fr-my-3w">
+          <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
             <div class="ratio-content">
               <div id="map"></div>
             </div>
@@ -119,12 +119,7 @@
         Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
       </p>
 
-      <div class="share-btn hide-print fr-my-8w">
-        <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill"
-                data-fr-opened="false"
-                aria-controls="share-modal"
-                data-btn="bottom">Partager cette page par email</button>
-      </div>
+      <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
     </div>
   </div>
 </article>

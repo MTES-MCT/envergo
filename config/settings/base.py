@@ -304,6 +304,7 @@ CELERY_TASK_TRACK_STARTED = True
 
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
+SENTRY_KEY = env("SENTRY_KEY", default="")
 
 
 # Your stuff...
@@ -398,7 +399,7 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
 )
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
 
-DEMARCHES_SIMPLIFIEE = {
+DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
     "PRE_FILL_API_URL": env(
@@ -410,6 +411,9 @@ DEMARCHES_SIMPLIFIEE = {
         default="https://www.demarches-simplifiees.fr/api/v2/graphql",
     ),
     "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
+    "DOSSIER_DOMAIN_BLACK_LIST": env.list(
+        "DJANGO_DOSSIER_DOMAIN_BLACK_LIST", default=[]
+    ),
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
@@ -432,9 +436,26 @@ BREVO = {
     ),
 }
 
-SITE_FROM_EMAIL = {
-    "amenagement": "contact@amenagement.local",
-    "haie": "contact@haie.local",
+HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
+
+GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
+    "static/gpkg/hedge_data_export_template.gpkg"
+)
+
+FROM_EMAIL = {
+    "amenagement": {
+        "default": "contact@amenagement.local",
+        "admin": "admin@amenagement.local",
+        "accounts": "comptes@amenagement.local",
+        "evaluations": "avis@amenagement.local",
+    },
+    "haie": {
+        "default": "contact@haie.local",
+        "accounts": "comptes@haie.local",
+    },
 }
 
-HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
+HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
+    "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-"
+    "emplacement-environnemental-1a7fe5fe476680f8afb2c648119f8e23"
+)

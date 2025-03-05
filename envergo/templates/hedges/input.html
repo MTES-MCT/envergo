@@ -20,24 +20,31 @@
     <div id="saisie-ui">
       <div id="map">
 
-        <div class="controls leaflet-top leaflet-right">
+        <div id="drawing-controls" class="controls leaflet-top leaflet-right ">
           <button v-if="mode === 'removal'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
-                  @click="startDrawingToRemove">
+                  @click="startDrawingToRemove"
+                  :disabled="hedgeBeingDrawn">
             <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
             Tracer une haie à détruire
           </button>
           <button v-if="mode === 'plantation'"
                   class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
-                  @click="startDrawingToPlant">
+                  @click="startDrawingToPlant"
+                  :disabled="hedgeBeingDrawn">
             <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
             Tracer une haie à planter
           </button>
+          <button v-if="hedgeBeingDrawn"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
+                  @click="cancelDrawing">Annuler le tracé en cours</button>
         </div>
 
-        <div v-if="showHelpBubble" class="help-bubble">
-          <span class="fr-icon-info-fill" aria-hidden="true"></span>
-          Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.
+        <div v-if="helpBubble" class="help-bubble">
+          <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
+          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
+          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
         </div>
       </div>
 
@@ -47,18 +54,23 @@
       <div class="controls leaflet-top leaflet-left inline-controls">
         <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
              role="search">
-          <label class="fr-label" for="address">Rechercher une commune ou une adresse</label>
+          <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
           <input class="fr-input"
                  placeholder="Rechercher une commune ou une adresse"
                  type="search"
                  id="id_address"
-                 name="address">
-          <button class="fr-btn fr-btn--sm" title="Rechercher">Rechercher</button>
+                 name="address"
+                 :disabled="hedgeBeingDrawn">
+          <button class="fr-btn fr-btn--sm"
+                  title="Rechercher"
+                  :disabled="hedgeBeingDrawn">Rechercher</button>
         </div>
 
-        <template v-if="hedges.TO_REMOVE.count > 0 || hedges.TO_PLANT.count > 0">
+        <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
           <div class="leaflet-control">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary" @click="zoomOut">
+            <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                    @click="zoomOut"
+                    :disabled="hedgeBeingDrawn">
               <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
               Vue d'ensemble
             </button>
@@ -75,10 +87,10 @@
               Haies à détruire
               <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
             </h3>
-            <template v-if="hedges.TO_REMOVE.count > 0">
+            <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
               <table>
                 <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_REMOVE"
+                  <tr v-for="(hedge, index) in hedges.TO_REMOVE.completelyDrawn()"
                       :key="index"
                       :class="{ hovered: hedge.isHovered }"
                       @mouseover="hedge.handleMouseOver()"
@@ -86,17 +98,20 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)">
-                        [[ mode === 'removal' ? 'Modifier' : 'Voir la description' ]]
+                              @click.stop="showHedgeModal(hedge, hedge.type)"
+                              :disabled="hedgeBeingDrawn">
+                        [[ mode === 'removal' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td v-if="mode === 'removal'">
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="hedge.remove()"
+                              :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -115,10 +130,10 @@
               Haies à planter
               <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
             </h3>
-            <template v-if="hedges.TO_PLANT.count > 0">
+            <template v-if="hedges.TO_PLANT.hasCompletedHedge">
               <table>
                 <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_PLANT"
+                  <tr v-for="(hedge, index) in hedges.TO_PLANT.completelyDrawn()"
                       :key="index"
                       :class="{ hovered: hedge.isHovered }"
                       @mouseover="hedge.handleMouseOver()"
@@ -126,18 +141,21 @@
                       @click="hedge.centerOnMap()">
                     <th>
                       [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()" class="fr-badge fr-badge--error fr-badge--sm">À compléter</span>
+                      <span v-if="!hedge.isValid()"
+                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                     </th>
                     <td>
                       <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)">
-                        [[ mode === 'plantation' ? 'Modifier' : 'Voir la description' ]]
+                              @click.stop="showHedgeModal(hedge, hedge.type)"
+                              :disabled="hedgeBeingDrawn">
+                        [[ mode === 'plantation' ? 'Description' : 'Voir la description' ]]
                       </button>
                     </td>
                     <td>
                       <button v-if="mode === 'plantation'"
                               class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()">Supprimer</button>
+                              @click.stop="hedge.remove()"
+                              :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
                     <td>[[ hedge.length.toFixed(0) ]] m</td>
                   </tr>
@@ -161,7 +179,11 @@
                 <div>
                   <h6>Longueur de la haie plantée</h6>
                   <p v-if="quality.length_to_plant.result">Le linéaire total planté est suffisant.</p>
-                  <p v-else>Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.</p>
+                  <p v-else>
+                    Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant }} m.
+                    <br />
+                    Il manque au moins [[ quality.length_to_plant.left_to_plant ]] m.
+                  </p>
                 </div>
               </div>
               <div>
@@ -259,10 +281,10 @@
     </div>
 
     <footer>
-      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line "
+      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line fr-ml-13w"
               @click="cancel">Retour</button>
       <button v-if="mode !== 'read_only'"
-              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line"
+              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line fr-mr-13w"
               @click="saveData">Enregistrer et poursuivre</button>
     </footer>
   </div>

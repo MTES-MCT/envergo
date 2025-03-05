@@ -13,7 +13,8 @@
   {{ form.lng.as_hidden }}
   {{ form.lat.as_hidden }}
   <figure class="fr-content-media">
-    <div id="map-container" class="ratio-4x3 fr-mt-1w fr-mb-2w fr-raw-link">
+    <div id="map-container"
+         class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
       <div class="ratio-content">
         <div class="leaflet-container">
           <div id="map">
@@ -35,12 +36,7 @@
 
 {% block after-title-content %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
-    <li>
-      <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-mail-fill share-btn"
-              data-fr-opened="false"
-              aria-controls="share-modal"
-              data-btn="bottom">Partager cette page par email</button>
-    </li>
+    <li>{% include '_share_url_btn.html' %}</li>
     <li>
       <button class="js fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-file-download-fill print-btn">
         Imprimer cette simulation
@@ -83,7 +79,19 @@
       <span class="content">Défrichement</span> {% result_tag 'non_disponible' %}
     </h2>
     <p>
-      Cette réglementation sera prochainement prise en compte dans EnvErgo.
+      Cette réglementation n'est pas encore prise en compte dans EnvErgo.
+      Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
+      priorité</a>.
+    </p>
+  </section>
+
+  <section class="regulation regulation-disabled fr-mb-5w"
+           id="regulation_sites_classes_inscrits">
+    <h2>
+      <span class="content">Sites classés / sites inscrits</span> {% result_tag 'non_disponible' %}
+    </h2>
+    <p>
+      Cette réglementation n'est pas encore prise en compte dans EnvErgo.
       Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
       priorité</a>.
     </p>

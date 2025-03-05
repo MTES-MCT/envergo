@@ -50,7 +50,9 @@ def add_classes(field, classes):
     """Add some classes to the field widget html."""
     css_classes = field.field.widget.attrs.get("class", "").split(" ")
     all_classes = sorted(list(set(classes.split(" ")) | set(css_classes)))
-    return field.as_widget(attrs={"class": " ".join(all_classes)})
+    all_classes.remove("")  # Prevent unwanted space in class list
+    ret = field.as_widget(attrs={"class": " ".join(all_classes)})
+    return ret
 
 
 @register.filter
@@ -121,3 +123,8 @@ def add_string(arg1, arg2):
 @register.filter
 def is_type(value, type_name):
     return type(value).__name__ == type_name
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary[key]

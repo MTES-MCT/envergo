@@ -104,24 +104,7 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
     )
 ]
 
-# EMAIL
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
-)
-SITE_FROM_EMAIL = {
-    "amenagement": env(
-        "DJANGO_AMENAGEMENT_FROM_EMAIL",
-        default="EnvErgo <contact@envergo.beta.gouv.fr>",
-    ),
-    "haie": env(
-        "DJANGO_HAIE_FROM_EMAIL",
-        default="Guichet unique de la haie <contact@haie.beta.gouv.fr>",
-    ),
-}
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
@@ -218,6 +201,7 @@ LOGGING = {
 # Sentry
 # ------------------------------------------------------------------------------
 SENTRY_DSN = env("SENTRY_DSN")
+SENTRY_KEY = env("SENTRY_KEY")
 SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
 sentry_logging = LoggingIntegration(
@@ -246,3 +230,26 @@ SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
 TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
+
+# This should never be used, it's better to use the more specific `FROM_EMAIL` setting below
+# However, in we were to forget to manually set the `from` header in an outgoing email,
+# this would be the default value used by Django.
+# So it's best to make sure this value stays valid.
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
+)
+
+FROM_EMAIL = {
+    "amenagement": {
+        "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
+        "admin": "Admin EnvErgo <admin@envergo.beta.gouv.fr>",
+        "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",
+        "evaluations": "Avis EnvErgo <avis@envergo.beta.gouv.fr>",
+    },
+    "haie": {
+        "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
+        "accounts": "Compte GUH <comptes@haie.beta.gouv.fr>",
+    },
+}
+
+SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=FROM_EMAIL["amenagement"]["admin"])

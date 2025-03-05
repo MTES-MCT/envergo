@@ -24,6 +24,7 @@ def test_password_reset_with_existing_email_does_send_an_email(
 
     mail = mailoutbox[0]
     assert mail.subject == "Réinitialisation du mot de passe sur EnvErgo"
+    assert mail.from_email == "comptes@amenagement.local"
 
 
 def test_amenagement_register_view(client, mailoutbox):
@@ -42,12 +43,14 @@ def test_amenagement_register_view(client, mailoutbox):
     )
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@amenagement.local"
     assert users.count() == 1
 
     user = users[0]
     assert not user.is_active
 
     mail_body = mailoutbox[0].body
+
     re_match = re.search(r"^https://[\w.-]*(.*)$", mail_body, re.MULTILINE)
     url = re_match.group(1)
     res = client.get(url, follow=True)
@@ -58,6 +61,60 @@ def test_amenagement_register_view(client, mailoutbox):
     assert not user.is_confirmed_by_admin
     assert user.access_amenagement
     assert not user.access_haie
+
+
+def test_register_with_existing_email(amenagement_user, client, mailoutbox):
+    """When existing user tries to register, no new user is created.
+
+    We just send the activation email again."""
+    users = User.objects.all()
+    assert users.count() == 1
+
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+        },
+    )
+    assert res.status_code == 302
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@amenagement.local"
+    assert users.count() == 1
+
+
+def test_register_with_existing_email_and_other_errors(
+    amenagement_user, client, mailoutbox
+):
+    """We never display the "this user already exists" error message."""
+
+    users = User.objects.all()
+    assert users.count() == 1
+
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "A",
+            "password2": "B",
+        },
+    )
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert (
+        'class="fr-input fr-input--error" required id="id_password2"'
+        in res.content.decode()
+    )
+
+    assert (
+        'class="fr-input fr-input--error" required id="id_email"'
+        not in res.content.decode()
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -78,6 +135,7 @@ def test_haie_register_view(client, mailoutbox):
     )
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@haie.local"
     assert users.count() == 1
 
     user = users[0]
@@ -121,6 +179,7 @@ def test_haie_register_for_existing_amenagement_user(
     # Registration went well, account activation was sent
     assert res.status_code == 302
     assert len(mailoutbox) == 1
+    assert mailoutbox[0].from_email == "comptes@haie.local"
     assert users.count() == 1
 
     amenagement_user.refresh_from_db()
