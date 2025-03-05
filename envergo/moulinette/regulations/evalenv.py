@@ -130,6 +130,17 @@ TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD = 100000
 
 
 class TerrainAssietteForm(forms.Form):
+
+    operation_amenagement = DisplayChoiceField(
+        label="Le projet constitue-t-il une opération d'aménagement ?",
+        help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
+            de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+        display_label="Le projet constitue-t-il une opération d'aménagement ?",
+    )
+
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
         help_text="Ensemble des parcelles cadastrales concernées par le projet",
@@ -137,16 +148,6 @@ class TerrainAssietteForm(forms.Form):
         required=True,
         display_unit="m²",
         display_label="Surface du terrain d'assiette du projet :",
-    )
-
-    operation_amenagement = DisplayChoiceField(
-        label="Le projet est-il une opération d'aménagement ?",
-        help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
-            de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
-        widget=forms.RadioSelect,
-        choices=(("oui", "Oui"), ("non", "Non")),
-        required=True,
-        display_label="Opération d'aménagement :",
     )
 
     def __init__(self, *args, **kwargs):
