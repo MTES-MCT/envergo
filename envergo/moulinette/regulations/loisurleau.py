@@ -189,12 +189,6 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     def get_map(self):
         map_polygons = []
 
-        zone_qs = [
-            zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
-        ]
-        if zone_qs:
-            map_polygons.append(MapPolygon(zone_qs, "red", "Zone inondable"))
-
         potential_qs = [
             zone
             for zone in self.catalog["potential_flood_zones"]
@@ -204,6 +198,12 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
             map_polygons.append(
                 MapPolygon(potential_qs, PINK, "Zone inondable potentielle")
             )
+
+        zone_qs = [
+            zone for zone in self.catalog["flood_zones"] if zone.map.display_for_user
+        ]
+        if zone_qs:
+            map_polygons.append(MapPolygon(zone_qs, "red", "Zone inondable"))
 
         if self.catalog["flood_zones_within_12m"]:
             caption = "Le projet se situe dans une zone inondable."
