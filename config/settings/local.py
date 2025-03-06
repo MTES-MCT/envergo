@@ -94,3 +94,4 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "local"
+TEST = "Entrée inutile"
