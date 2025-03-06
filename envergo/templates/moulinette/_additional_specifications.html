@@ -1,6 +1,6 @@
 {% load moulinette %}
 
-{% for key, field in moulinette.additional_fields.items %}
+{% for key, field in moulinette.summary_fields.items %}
   <li>{% field_summary field %}</li>
 {% endfor %}
 
