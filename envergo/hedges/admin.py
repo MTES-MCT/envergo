@@ -64,13 +64,13 @@ class HedgeDataAdmin(admin.ModelAdmin):
         return len(obj.hedges_to_plant())
 
     def length_to_plant(self, obj):
-        return obj.length_to_plant()
+        return round(obj.length_to_plant())
 
     def hedges_to_remove(self, obj):
         return len(obj.hedges_to_remove())
 
     def length_to_remove(self, obj):
-        return obj.length_to_remove()
+        return round(obj.length_to_remove())
 
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
