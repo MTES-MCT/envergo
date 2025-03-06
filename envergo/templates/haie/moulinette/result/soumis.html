@@ -10,11 +10,11 @@
 </p>
 
 <h6>
-  🌳 <strong>Plantation requise : {{ minimum_length_to_plant }} m</strong>
+  🌳 <strong>Plantation requise : {{ minimum_length_to_plant|floatformat:0 }} m</strong>
 </h6>
 <p>
   Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
-  {{ minimum_length_to_plant }} m sera exigée pour que le projet puisse être autorisé.
+  {{ minimum_length_to_plant|floatformat:0 }} m sera exigée pour que le projet puisse être autorisé.
 </p>
 <p>
   Prochaine étape :

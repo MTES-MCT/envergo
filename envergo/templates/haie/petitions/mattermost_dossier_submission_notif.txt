@@ -6,5 +6,5 @@ Un dossier a été soumis sur Démarches Simplifiées pour {{ demarche_label|saf
 [Admin django]({{ admin_url }})
 —
 Email de l'usager : {{ usager_email }}
-Linéaire détruit : {{ length_to_remove }} m
+Linéaire détruit : {{ length_to_remove|floatformat:0 }} m
 —
