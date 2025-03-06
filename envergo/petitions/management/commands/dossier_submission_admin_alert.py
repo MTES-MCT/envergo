@@ -250,7 +250,7 @@ Cette requête est lancée automatiquement par la commande dossier_submission_ad
                             [Admin django](https://{current_site.domain}{admin_url})
                             —
                             Email de l'usager : {usager_email or "non renseigné"}
-                            Linéaire détruit : {project.hedge_data.length_to_remove()} m
+                            Linéaire détruit : {round(project.hedge_data.length_to_remove())} m
                             —
                             """
 
