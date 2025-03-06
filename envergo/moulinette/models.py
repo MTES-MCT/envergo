@@ -1509,7 +1509,6 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("id")
             .distinct("id")
             .select_related("activation_map")
             .defer("activation_map__geometry")
