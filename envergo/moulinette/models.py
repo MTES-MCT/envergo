@@ -1461,9 +1461,11 @@ class MoulinetteAmenagement(Moulinette):
 
     def get_perimeters(self):
         coords = self.catalog["coords"]
+        zones = self.catalog["all_zones"]
 
         perimeters = (
-            Perimeter.objects.filter(
+            Perimeter.objects.filter(activation_map__zones__in=zones)
+            .filter(
                 activation_map__zones__geometry__dwithin=(
                     coords,
                     F("activation_distance"),
@@ -1489,17 +1491,19 @@ class MoulinetteAmenagement(Moulinette):
 
     def get_criteria(self):
         coords = self.catalog["coords"]
+        zones = self.catalog["all_zones"]
 
         criteria = (
             super()
             .get_criteria()
+            .filter(activation_map__zones__in=zones)
             .filter(
                 activation_map__zones__geometry__dwithin=(
                     coords,
                     F("activation_distance"),
                 )
             )
-            .annotate(
+            .alias(
                 geometry=Case(
                     When(
                         activation_map__geometry__isnull=False,
