@@ -225,19 +225,17 @@ class MoulinetteMixin:
         additional_forms = moulinette.additional_forms()
         for additional_form in additional_forms:
             for field in additional_form:
-                get.setlist(
-                    field.html_name,
-                    self.request.GET.getlist(field.html_name),
-                )
+                value = additional_form.data.get(field.html_name, None)
+                if value:
+                    get[field.html_name] = value
 
         if self.should_activate_optional_criteria():
             optional_forms = self.get_optional_forms(moulinette)
             for optional_form in optional_forms:
                 for field in optional_form:
-                    get.setlist(
-                        field.html_name,
-                        self.request.GET.getlist(field.html_name),
-                    )
+                    value = optional_form.data.get(field.html_name, None)
+                    if value:
+                        get[field.html_name] = value
 
         triage_params = moulinette.get_triage_params()
         if triage_params:
