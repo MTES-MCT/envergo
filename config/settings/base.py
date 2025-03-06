@@ -142,7 +142,6 @@ MIDDLEWARE = [
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
-    "envergo.contrib.middleware.MemoryUsageMiddleware",
     "envergo.analytics.middleware.SetVisitorIdCookie",
     "envergo.analytics.middleware.StoreMtmValues",
 ]
