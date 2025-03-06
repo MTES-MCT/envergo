@@ -1328,6 +1328,11 @@ class Moulinette(ABC):
                     fields[field.name] = field
         return fields
 
+    def summary_fields(self):
+        """Return the fields displayed in "Caractéristiques du projet" sidebar section."""
+        fields = self.additional_fields()
+        return fields
+
     def optional_form_classes(self):
         """Return the list of forms for optional questions."""
         forms = []
@@ -1758,9 +1763,9 @@ class MoulinetteHaie(Moulinette):
         regulations = super().get_regulations().prefetch_related("perimeters")
         return regulations
 
-    def additional_fields(self):
-        """Get a {field_name: field} dict of all additional questions fields."""
-        fields = super().additional_fields()
+    def summary_fields(self):
+        """Add fake fields to display pac related data."""
+        fields = super().summary_fields()
 
         # add an entry in the project summary
         lineaire_detruit_pac = self.catalog.get("lineaire_detruit_pac", 0)
