@@ -43,6 +43,9 @@ class HedgeInput(DetailView):
         context["minimum_length_to_plant"] = (
             self.object.minimum_length_to_plant() if self.object else 0
         )
+        context["is_removing_pac"] = (
+            len(self.object.hedges_to_remove_pac()) > 0 if self.object else False
+        )
 
         if mode == "removal":
             context["matomo_custom_url"] = self.request.build_absolute_uri(

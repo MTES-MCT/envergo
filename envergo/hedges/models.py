@@ -176,8 +176,18 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type != "alignement"
         ]
 
+    def hedges_to_plant_pac(self):
+        return [
+            h
+            for h in self.hedges_to_plant()
+            if h.is_on_pac and h.hedge_type != "alignement"
+        ]
+
+    def length_to_plant_pac(self):
+        return sum(h.length for h in self.hedges_to_plant_pac())
+
     def lineaire_detruit_pac(self):
-        return round(sum(h.length for h in self.hedges_to_remove_pac()))
+        return sum(h.length for h in self.hedges_to_remove_pac())
 
     def lineaire_detruit_pac_including_alignement(self):
         return round(sum(h.length for h in self.hedges_to_remove() if h.is_on_pac))

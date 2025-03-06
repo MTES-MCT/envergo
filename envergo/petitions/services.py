@@ -87,7 +87,7 @@ def compute_instructor_informations(
                         None,
                         None,
                     ),
-                    Item("Total linéaire détruit", length_to_remove, "m", None),
+                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
                 ],
             ),
             InstructorInformationDetails(
@@ -99,7 +99,7 @@ def compute_instructor_informations(
                         None,
                         None,
                     ),
-                    Item("Total linéaire planté", length_to_plant, "m", None),
+                    Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
                         (
@@ -153,7 +153,7 @@ def compute_instructor_informations(
                     ),
                     Item(
                         "Total linéaire détruit",
-                        hedge_data.lineaire_detruit_pac(),
+                        round(hedge_data.lineaire_detruit_pac()),
                         "m",
                         None,
                     ),
@@ -174,13 +174,13 @@ def compute_instructor_informations(
                 items=[
                     Item(
                         "Nombre de tracés plantés",
-                        len(hedge_data.hedges_to_plant()),
+                        len(hedge_data.hedges_to_plant_pac()),
                         None,
                         None,
                     ),
                     Item(
                         "Total linéaire planté",
-                        hedge_data.length_to_plant(),
+                        round(hedge_data.length_to_plant_pac()),
                         "m",
                         None,
                     ),
@@ -188,7 +188,8 @@ def compute_instructor_informations(
                         "Ratio en longueur",
                         (
                             round(
-                                hedge_data.length_to_plant() / lineaire_detruit_pac, 2
+                                hedge_data.length_to_plant_pac() / lineaire_detruit_pac,
+                                2,
                             )
                             if lineaire_detruit_pac > 0
                             else ""
