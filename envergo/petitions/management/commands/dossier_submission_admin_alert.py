@@ -25,6 +25,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # get all the dossier updated in the last hour
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning("Demarches Simplifiees is not enabled")
+            return None
+
         api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
