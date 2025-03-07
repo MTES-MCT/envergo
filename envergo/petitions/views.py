@@ -161,6 +161,10 @@ class PetitionProjectCreate(FormView):
                 config,
             )
 
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning("Demarches Simplifiees is not enabled")
+            return None
+
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
         )

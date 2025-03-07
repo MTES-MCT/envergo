@@ -360,6 +360,10 @@ def fetch_project_details_from_demarches_simplifiees(
         notify(dedent(message), "haie")
         return None
 
+    elif not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        logger.info("Demarches Simplifiees is not enabled")
+        return None
+
     api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
     variables = f"""{{
               "dossierNumber":{dossier_number}
