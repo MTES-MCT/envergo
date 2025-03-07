@@ -90,6 +90,13 @@ INSTALLED_APPS += ["django_extensions"]  # noqa F405
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 
+RUNSERVER_PLUS_EXCLUDE_PATTERNS = [
+    "node_modules",
+    ".git",
+    "staticfiles",
+    ".venv",
+]
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
