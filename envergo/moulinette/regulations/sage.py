@@ -108,6 +108,16 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     def get_map(self):
         map_polygons = []
 
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if potential_qs:
+            map_polygons.append(
+                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
+            )
+
         wetlands_qs = [
             zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
         ]
@@ -121,16 +131,6 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         ]
         if forbidden_wetlands_qs:
             map_polygons.append(MapPolygon(forbidden_wetlands_qs, BLUE, "Zone humide"))
-
-        potential_qs = [
-            zone
-            for zone in self.catalog["potential_wetlands"]
-            if zone.map.display_for_user
-        ]
-        if potential_qs:
-            map_polygons.append(
-                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
-            )
 
         if (
             self.catalog["wetlands_within_25m"]
@@ -354,6 +354,16 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
     def get_map(self):
         map_polygons = []
 
+        potential_qs = [
+            zone
+            for zone in self.catalog["potential_wetlands"]
+            if zone.map.display_for_user
+        ]
+        if potential_qs:
+            map_polygons.append(
+                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
+            )
+
         wetlands_qs = [
             zone for zone in self.catalog["wetlands"] if zone.map.display_for_user
         ]
@@ -367,16 +377,6 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
         ]
         if forbidden_wetlands_qs:
             map_polygons.append(MapPolygon(forbidden_wetlands_qs, BLUE, "Zone humide"))
-
-        potential_qs = [
-            zone
-            for zone in self.catalog["potential_wetlands"]
-            if zone.map.display_for_user
-        ]
-        if potential_qs:
-            map_polygons.append(
-                MapPolygon(potential_qs, LIGHTBLUE, "Zone humide potentielle")
-            )
 
         if (
             self.catalog["wetlands_within_25m"]
