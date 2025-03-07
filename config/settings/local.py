@@ -101,3 +101,4 @@ RUNSERVER_PLUS_EXCLUDE_PATTERNS = [
 # ------------------------------------------------------------------------------
 
 ENV_NAME = "local"
+TEST = "Entrée inutile"
