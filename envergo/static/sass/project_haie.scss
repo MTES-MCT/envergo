@@ -446,3 +446,12 @@ div#project-specifications-instructor {
     display: none;
   }
 }
+
+/**
+ * Page instructor
+ */
+@media (width >= 48em) {
+  .fr-sidemenu--sticky {
+    top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+  }
+}
