@@ -93,10 +93,15 @@
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
     });
 
+    var layers = [planLayer];
+    if (this.options.showPciLayer) {
+      layers.push(pciLayer);
+    }
+
     const map = L.map('map', {
       maxZoom: 21,
       scrollWheelZoom: this.options.isStatic ? 'center' : true,
-      layers: [planLayer, pciLayer],
+      layers: layers,
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
@@ -250,6 +255,7 @@
       lngFieldId: LNG_FIELD_ID,
       isStatic: IS_MAP_STATIC,
       mapType: MAP_TYPE,
+      showPciLayer: SHOW_PCI_LAYER || false,
     }
     moulinetteMap = new MoulinetteMap(options);
   });
