@@ -2,13 +2,18 @@ from unittest.mock import Mock, patch
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    PetitionProjectFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("requests.post")

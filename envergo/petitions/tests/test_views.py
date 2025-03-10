@@ -6,7 +6,10 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    PetitionProjectFactory,
+)
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
@@ -16,6 +19,7 @@ from envergo.petitions.views import (
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):

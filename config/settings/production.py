@@ -253,5 +253,3 @@ FROM_EMAIL = {
 }
 
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=FROM_EMAIL["amenagement"]["admin"])
-
-DEMARCHES_SIMPLIFIEES["ENABLED"] = True  # noqa F405

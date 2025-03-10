@@ -1,14 +1,19 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import fetch_project_details_from_demarches_simplifiees
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    PetitionProjectFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     mock_response = Mock()
@@ -126,6 +131,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
     mock_notify.assert_called_once()
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
@@ -157,6 +163,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     mock_notify.assert_called_once()
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
