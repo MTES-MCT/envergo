@@ -180,43 +180,45 @@ correctement VSCode :
 ```json
 {
   "[python]": {
+    "editor.autoIndent": "keep",
+    "editor.wrappingIndent": "same",
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
     },
-    "editor.rulers": [
-      88
-    ],
+    "editor.rulers": [88]
   },
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
   "[django-html]": {
-    "editor.rulers": [
-      120,
-    ],
+    "editor.rulers": [120],
     "editor.defaultFormatter": "monosans.djlint",
     "editor.wordWrap": "wordWrapColumn"
   },
   "[css][scss][less]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
-  "black-formatter.args": [
-    "--line-length=88"
-  ],
+  "isort.args": ["--profile", "black"],
+  "black-formatter.args": ["--line-length=88"],
   "files.associations": {
     "**/templates/*.html": "django-html",
     "**/templates/*": "django-txt",
     "**/requirements{/**,*}.{txt,in}": "pip-requirements"
   },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.hg/store/**": true,
+    "**/staticfiles/**": true,
+    "**/.venv/**": true,
+    "**/*.pyc": true
+  },
   "emmet.includeLanguages": {
     "django-html": "html"
-  },
+  }
 }
 ```
 

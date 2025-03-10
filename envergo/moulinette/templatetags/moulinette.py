@@ -276,7 +276,7 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
         f"haie/moulinette/plantation_evaluation/{plantation_evaluation.result}.html"
     )
 
-    context_data["minimum_length_to_plant"] = (
+    context_data["minimum_length_to_plant"] = round(
         context_data["moulinette"].catalog["haies"].minimum_length_to_plant()
     )
 
