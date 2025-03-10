@@ -153,17 +153,34 @@
 
     // Track some events to Matomo
     map.on('baselayerchange', function (e) {
-      let mapType = mapData["type"];  // criterion or regulation
-      let action;
-      if (mapType === "criterion") {
-        action = "MilieuMapSwitchLayer";
-      } else {
-        action = "PerimeterMapSwitchLayer";
-      }
+      let action = this.getEventAction(mapData["type"]);
       _paq.push(['trackEvent', 'Content', action, e.name]);
-    });
+    }.bind(this));
+
+    // Enable cadastre overlay
+    map.on('overlayadd', function (e) {
+      let action = this.getEventAction(mapData["type"]);
+      _paq.push(['trackEvent', 'Content', action, "CadastreOn"]);
+    }.bind(this));
+
+    // Disable cadastre overlay
+    map.on('overlayremove', function (e) {
+      let action = this.getEventAction(mapData["type"]);
+      _paq.push(['trackEvent', 'Content', action, "CadastreOff"]);
+    }.bind(this));
 
     return map;
+  };
+
+  // Return the expected "action" field for matomo event
+  MapConfigurator.prototype.getEventAction = function (mapType) {
+    let action;
+    if (mapType === "criterion") {
+      action = "MilieuMapSwitchLayer";
+    } else {
+      action = "PerimeterMapSwitchLayer";
+    }
+    return action;
   };
 
 })(this, L, window._paq);
