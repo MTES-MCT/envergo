@@ -1768,7 +1768,7 @@ class MoulinetteHaie(Moulinette):
         fields = super().summary_fields()
 
         # add an entry in the project summary
-        lineaire_detruit_pac = self.catalog.get("lineaire_detruit_pac", 0)
+        lineaire_detruit_pac = round(self.catalog.get("lineaire_detruit_pac", 0))
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:
