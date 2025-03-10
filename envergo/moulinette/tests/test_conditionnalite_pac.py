@@ -88,6 +88,7 @@ def test_bcae8_small_dispense_petit():
         "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -107,6 +108,7 @@ def test_bcae8_small_interdit_transfert_parcelles():
         "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "oui",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -129,6 +131,7 @@ def test_bcae8_small_interdit_amelioration_culture():
         "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -275,6 +278,7 @@ def test_bcae8_big_soumis_remplacement():
         "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
 
@@ -296,6 +300,7 @@ def test_bcae8_big_soumis_transfer_parcelles():
         "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "oui",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
 
@@ -304,6 +309,29 @@ def test_bcae8_big_soumis_transfer_parcelles():
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
+    ), data
+
+
+def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "oui",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "soumis_meilleur_emplacement"
     ), data
 
 
@@ -317,6 +345,7 @@ def test_bcae8_big_interdit_amelioration_culture():
         "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
 

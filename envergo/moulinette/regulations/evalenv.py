@@ -130,6 +130,17 @@ TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD = 100000
 
 
 class TerrainAssietteForm(forms.Form):
+
+    operation_amenagement = DisplayChoiceField(
+        label="Le projet constitue-t-il une opération d'aménagement ?",
+        help_text="Tout ensemble de constructions et travaux soumis à plusieurs permis \
+            de construire ou d’aménager, par exemple création d’une ZAC ou d’un lotissement",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+        display_label="Le projet constitue-t-il une opération d'aménagement ?",
+    )
+
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
         help_text="Ensemble des parcelles cadastrales concernées par le projet",
@@ -145,6 +156,7 @@ class TerrainAssietteForm(forms.Form):
         final_surface = int(self.data["final_surface"])
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
+            del self.fields["operation_amenagement"]
 
 
 class TerrainAssiette(CriterionEvaluator):
@@ -155,12 +167,18 @@ class TerrainAssiette(CriterionEvaluator):
     CODES = ["systematique", "cas_par_cas", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        "10000": "non_soumis",
-        "50000": "cas_par_cas",
-        "100000": "systematique",
+        ("N/A", "non"): "non_concerne",
+        ("10000", "oui"): "non_soumis",
+        ("50000", "oui"): "cas_par_cas",
+        ("100000", "oui"): "systematique",
     }
 
     def get_result_data(self):
+        operation_amenagement = self.catalog.get("operation_amenagement", "non")
+
+        if not operation_amenagement == "oui":
+            return ("N/A", operation_amenagement)
+
         terrain_assiette = self.catalog.get("terrain_assiette", 0)
 
         if terrain_assiette >= TERRAIN_ASSIETTE_SYSTEMATIQUE_THRESHOLD:
@@ -169,7 +187,7 @@ class TerrainAssiette(CriterionEvaluator):
             assiette_thld = "50000"
         else:
             assiette_thld = "10000"
-        return assiette_thld
+        return assiette_thld, operation_amenagement
 
 
 class OptionalFormMixin:

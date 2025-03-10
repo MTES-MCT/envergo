@@ -9,9 +9,12 @@ from envergo.petitions.tests.factories import PetitionProjectFactory
 pytestmark = pytest.mark.django_db
 
 
+@patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("requests.post")
-def test_dossier_submission_admin_alert(mock_post, mock_notify):
+def test_dossier_submission_admin_alert(
+    mock_post, mock_notify_command, mock_notify_model
+):
     # Define the first mock response
     mock_response_1 = Mock()
     mock_response_1.status_code = 200
@@ -29,7 +32,18 @@ def test_dossier_submission_admin_alert(mock_post, mock_notify):
                         {
                             "number": 21059675,
                             "state": "en_construction",
-                        }
+                        },
+                        {
+                            "number": 123,
+                            "state": "en_construction",
+                            "champs": [
+                                {
+                                    "id": "ABC123",
+                                    "label": "Url du simulateur",
+                                    "stringValue": "",
+                                },
+                            ],
+                        },
                     ],
                 },
             }
@@ -57,8 +71,16 @@ def test_dossier_submission_admin_alert(mock_post, mock_notify):
     ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
 
-    args, kwargs = mock_notify.call_args
+    args, kwargs = mock_notify_model.call_args_list[0]
     assert "Un dossier a été soumis sur Démarches Simplifiées" in args[0]
     assert "haie" in args[1]
 
-    mock_notify.assert_called_once()
+    args, kwargs = mock_notify_command.call_args_list[0]
+    assert (
+        "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
+        in args[0]
+    )
+    assert "haie" in args[1]
+
+    assert mock_notify_command.call_count == 1
+    assert mock_notify_model.call_count == 1
