@@ -49,6 +49,21 @@
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
     });
 
+    const pciLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/png" +
+      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    });
+
     // Damn this constant lat and lng order mixing
     const centerCoords = [center.coordinates[1], center.coordinates[0]];
     let settings = {
@@ -74,7 +89,11 @@
       "Satellite": satelliteLayer
     };
 
-    const layerControl = L.control.layers(baseMaps);
+    const overlayMaps = {
+      "Cadastre": pciLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
 
     // Display the project's coordinates as a maker
