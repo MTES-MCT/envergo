@@ -1,3 +1,4 @@
+import gc
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -1090,6 +1091,23 @@ class Moulinette(ABC):
 
         self.evaluate()
 
+    def __del__(self):
+        if hasattr(self, "catalog"):
+            if "all_zones" in self.catalog:
+                del self.catalog["all_zones"]
+            if "wetlands" in self.catalog:
+                del self.catalog["wetlands"]
+            if "forbidden_wetlands" in self.catalog:
+                del self.catalog["forbidden_wetlands"]
+            if "potential_wetlands" in self.catalog:
+                del self.catalog["potential_wetlands"]
+            if "flood_zones" in self.catalog:
+                del self.catalog["flood_zones"]
+            if "potential_flood_zones" in self.catalog:
+                del self.catalog["potential_flood_zones"]
+            del self.catalog
+            gc.collect()
+
     @property
     def regulations(self):
         if not hasattr(self, "_regulations"):
@@ -1511,6 +1529,7 @@ class MoulinetteAmenagement(Moulinette):
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .select_related("activation_map")
             .defer("activation_map__geometry")
+            .iterator()
         )
 
         return criteria
@@ -1596,6 +1615,7 @@ class MoulinetteAmenagement(Moulinette):
             .select_related("map")
             .defer("map__geometry")
             .order_by("distance", "map__name")
+            .iterator()
         )
         return zones
 
