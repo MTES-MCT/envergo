@@ -817,8 +817,10 @@ button .img-icon {
   --icon-size: 1rem;
 }
 
-.fr-sidemenu--sticky-full-height {
-  top: calc(1rem + 2 * 0.75rem);
+@media (width >= 48em) {
+  .fr-sidemenu--sticky-full-height {
+    top: calc(1rem + 2 * 0.75rem);
+  }
 }
 
 /**
