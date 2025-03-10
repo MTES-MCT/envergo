@@ -665,7 +665,7 @@ createApp({
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
-        layers: [satelliteLayer]
+        layers: [satelliteLayer, pciLayer]
       });
 
       L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);

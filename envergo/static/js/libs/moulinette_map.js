@@ -96,7 +96,7 @@
     const map = L.map('map', {
       maxZoom: 21,
       scrollWheelZoom: this.options.isStatic ? 'center' : true,
-      layers: [planLayer],
+      layers: [planLayer, pciLayer],
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
@@ -202,7 +202,32 @@
         case "Form":
           _paq.push(['trackEvent', "Form", 'MapSwitchLayer', e.name]);
           break;
-      }
+      };
+    }.bind(this));
+
+    // Enable cadastre overlay
+    this.map.on("overlayadd", function (e) {
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', "CadastreOn"]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', "CadastreOn"]);
+          break;
+      };
+    }.bind(this));
+
+
+    // Disable cadastre overlay
+    this.map.on("overlayremove", function (e) {
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', "CadastreOff"]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', "CadastreOff"]);
+          break;
+      };
     }.bind(this));
   };
 
