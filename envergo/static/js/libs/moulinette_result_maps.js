@@ -175,10 +175,18 @@
   // Return the expected "action" field for matomo event
   MapConfigurator.prototype.getEventAction = function (mapType) {
     let action;
-    if (mapType === "criterion") {
-      action = "MilieuMapSwitchLayer";
-    } else {
-      action = "PerimeterMapSwitchLayer";
+    switch (mapType) {
+      case "criterion":
+        action = "MilieuMapSwitchLayer";
+        break;
+      case "regulation":
+        action = "PerimeterMapSwitchLayer";
+        break;
+      case "location":
+        action = "LocationMapSwitchLayer";
+        break;
+      default:
+        action = "UnknownMapType";
     }
     return action;
   };
