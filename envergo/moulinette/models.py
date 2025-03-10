@@ -1500,33 +1500,33 @@ class MoulinetteAmenagement(Moulinette):
 
         return perimeters
 
-    # def get_criteria(self):
-    #     coords = self.catalog["coords"]
-    #
-    #     criteria = (
-    #         super()
-    #         .get_criteria()
-    #         .filter(
-    #             activation_map__zones__geometry__dwithin=(
-    #                 coords,
-    #                 F("activation_distance"),
-    #             )
-    #         )
-    #         .annotate(
-    #             geometry=Case(
-    #                 When(
-    #                     activation_map__geometry__isnull=False,
-    #                     then=F("activation_map__geometry"),
-    #                 ),
-    #                 default=F("activation_map__zones__geometry"),
-    #             )
-    #         )
-    #         .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-    #         .select_related("activation_map")
-    #         .defer("activation_map__geometry")
-    #     )
-    #
-    #     return criteria
+    def get_criteria(self):
+        coords = self.catalog["coords"]
+
+        criteria = (
+            super()
+            .get_criteria()
+            .filter(
+                activation_map__zones__geometry__dwithin=(
+                    coords,
+                    F("activation_distance"),
+                )
+            )
+            .annotate(
+                geometry=Case(
+                    When(
+                        activation_map__geometry__isnull=False,
+                        then=F("activation_map__geometry"),
+                    ),
+                    default=F("activation_map__zones__geometry"),
+                )
+            )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+        )
+
+        return criteria
 
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
