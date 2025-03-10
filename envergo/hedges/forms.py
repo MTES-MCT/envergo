@@ -17,6 +17,10 @@ class HedgeDataBaseForm(forms.Form):
         """
         ),
     )
+    sur_parcelle_pac = forms.BooleanField(
+        label="Située sur une parcelle PAC",
+        required=False,
+    )
     proximite_mare = forms.BooleanField(
         label="Mare à moins de 200 m",
         required=False,
@@ -32,10 +36,6 @@ class HedgeDataBaseForm(forms.Form):
 
 
 class HedgeToRemoveDataForm(HedgeDataBaseForm):
-    sur_parcelle_pac = forms.BooleanField(
-        label="Située sur une parcelle PAC",
-        required=False,
-    )
     vieil_arbre = forms.BooleanField(
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
         required=False,
