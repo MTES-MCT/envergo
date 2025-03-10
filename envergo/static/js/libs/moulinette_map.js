@@ -96,7 +96,7 @@
     const map = L.map('map', {
       maxZoom: 21,
       scrollWheelZoom: this.options.isStatic ? 'center' : true,
-      layers: [planLayer],
+      layers: [planLayer, pciLayer],
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
