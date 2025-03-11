@@ -1532,7 +1532,7 @@ class MoulinetteAmenagement(Moulinette):
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
-        zones = self.get_zones(catalog["coords"], fetching_radius)
+        zones = self.get_zones(catalog["lng_lat"], fetching_radius)
         catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
