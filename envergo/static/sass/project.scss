@@ -1439,6 +1439,11 @@ footer {
       &.displayed {
         top: 0;
         visibility: visible;
+
+        &.hidden-downscroll {
+          // only displayed when up scroll
+          top: -200px;
+        }
       }
     }
   }
