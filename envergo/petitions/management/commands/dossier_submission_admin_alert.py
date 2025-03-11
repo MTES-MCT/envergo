@@ -163,6 +163,7 @@ class Command(BaseCommand):
                             "response": response.text,
                             "api_url": api_url,
                             "body": body,
+                            "command": "dossier_submission_admin_alert",
                         },
                     )
                     notify(message_body, "haie")

@@ -477,24 +477,16 @@ def fetch_project_details_from_demarches_simplifiees(
             },
         )
 
-        message = f"""\
-### Récupération des informations d'un dossier depuis Démarches-simplifiées : :warning: anomalie
-
-La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le dossier concerné n'a pas été récupéré.
-
-Réponse de Démarches Simplifiées : {response.status_code}
-```
-{response.text}
-```
-
-Requête envoyée :
-* Url: {api_url}
-* Body:
-```
-{body}
-```
-
-"""
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+            context={
+                "status_code": response.status_code,
+                "response": response.text,
+                "api_url": api_url,
+                "body": body,
+                "command": "fetch_project_details_from_demarches_simplifiees",
+            },
+        )
         notify(dedent(message), "haie")
         return None
     # we have got a dossier from DS for this petition project
