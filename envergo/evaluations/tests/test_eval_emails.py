@@ -81,6 +81,7 @@ def fake_moulinette(
 
     # We create mocks based on a real regulation, so it's easier to fake results
     regulation = RegulationFactory()
+    regulation.criteria_list = []
     sage_perimeter = Mock(contact_email="sage@example.com")
     moulinette.regulations = [
         Mock(
