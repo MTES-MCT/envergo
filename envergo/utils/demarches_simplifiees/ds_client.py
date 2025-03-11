@@ -1,14 +1,18 @@
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
 import requests
 from django.conf import settings
 
+logger = logging.getLogger(__name__)
+
 
 class DsClient:
     def __init__(self):
-        self.token = settings.DS_API_TOKEN
-        self.url = settings.DS_API_URL
+        self.pre_fill_api_url = settings.DEMARCHES_SIMPLIFIEES["PRE_FILL_API_URL"]
+        self.token = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_BEARER_TOKEN"]
+        self.api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         with open(
             Path(__file__).resolve().parent / "graphql" / "ds_queries.gql"
         ) as query_file:
@@ -23,14 +27,42 @@ class DsClient:
         if variables:
             data["variables"] = variables
 
-        response = requests.post(self.url, json=data, headers=headers)
+        response = requests.post(self.api_url, json=data, headers=headers)
+
+        logger.info(
+            f"""
+                Demarches simplifiees API request status: {response.status_code}"
+                * response.text: {response.text},
+                * response.status_code: {response.status_code},
+                * request.url: {self.api_url},
+                * request.body: {data},
+                """,
+        )
+
         if response.status_code == 200:
             results = response.json()
             if "errors" in results.keys() and results.get("data", None) is None:
-                print(results["errors"])  # @todo loguer ça bien
+                logger.error(
+                    results["errors"],
+                    extra={
+                        "response.text": response.text,
+                        "response.status_code": response.status_code,
+                        "request.url": self.api_url,
+                        "request.body": data,
+                    },
+                )
                 raise Exception(f"Query failed to run: {results['errors']}")
             return results
         else:
+            logger.error(
+                "Demarches simplifiees API request failed",
+                extra={
+                    "response.text": response.text,
+                    "response.status_code": response.status_code,
+                    "request.url": self.api_url,
+                    "request.body": data,
+                },
+            )
             raise Exception(
                 f"HTTP Error while running query. Status code: {response.status_code}. "
                 f"Error: {response.text}"
