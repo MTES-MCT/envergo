@@ -1,4 +1,4 @@
-### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
+### Récupération des statuts d'un ou plusieurs dossiers depuis Démarches-simplifiées : :warning: anomalie
 
 La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le statut des dossiers concernés n'a pas pu être récupéré.
 
@@ -14,4 +14,4 @@ Requête envoyée :
 {{ body|safe }}
 ```
 
-*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*
+*Cette requête est lancée automatiquement par la commande `{{ command }}`.*
