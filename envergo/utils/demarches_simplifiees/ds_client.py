@@ -1,9 +1,13 @@
 import logging
 from collections.abc import Iterator
 from pathlib import Path
+from textwrap import dedent
 
 import requests
 from django.conf import settings
+from django.template.loader import render_to_string
+
+from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
 
@@ -111,20 +115,47 @@ class DsClient:
         variables = {
             "dossierNumber": dossier_number,
         }
+        results = {}
 
         try:
-            result = self.launch_graphql_query("getDossier", variables)
+            results = self.launch_graphql_query("getDossier", variables)
         except Exception as e:
             logger.error(e)
-            return None
-
-        if not hasattr(result, "dossier"):
-            logger.error(
-                "Demarches simplifiees API response is not well formated",
-                extra={
-                    "response.json": result["data"],
+            message = render_to_string(
+                "mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                context={
+                    "status_code": "?",
+                    "response": results,
+                    "api_url": self.api_url,
+                    "body": "body",
+                    "command": "get_one_dossier",
                 },
             )
+            notify(dedent(message), "haie")
             return None
 
-        return result["data"]["dossier"]
+        dossier = results["data"].get("dossier")
+
+        if not dossier:
+            logger.error(
+                "Demarches simplifiees API response is not well formated.",
+                extra={
+                    "response.json": results,
+                },
+            )
+
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+                context={
+                    "status_code": 200,
+                    "response": results,
+                    "api_url": self.api_url,
+                    "body": "body",
+                    "command": "get_one_dossier",
+                },
+            )
+            notify(dedent(message), "haie")
+
+            return None
+
+        return dossier
