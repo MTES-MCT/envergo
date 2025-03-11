@@ -161,13 +161,13 @@ class HedgeData(models.Model):
         return [Hedge(**h) for h in self.data if h["type"] == TO_PLANT]
 
     def length_to_plant(self):
-        return round(sum(h.length for h in self.hedges_to_plant()))
+        return sum(h.length for h in self.hedges_to_plant())
 
     def hedges_to_remove(self):
         return [Hedge(**h) for h in self.data if h["type"] == TO_REMOVE]
 
     def length_to_remove(self):
-        return round(sum(h.length for h in self.hedges_to_remove()))
+        return sum(h.length for h in self.hedges_to_remove())
 
     def hedges_to_remove_pac(self):
         return [
@@ -176,19 +176,27 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type != "alignement"
         ]
 
+    def hedges_to_plant_pac(self):
+        return [
+            h
+            for h in self.hedges_to_plant()
+            if h.is_on_pac and h.hedge_type != "alignement"
+        ]
+
+    def length_to_plant_pac(self):
+        return sum(h.length for h in self.hedges_to_plant_pac())
+
     def lineaire_detruit_pac(self):
-        return round(sum(h.length for h in self.hedges_to_remove_pac()))
+        return sum(h.length for h in self.hedges_to_remove_pac())
 
     def lineaire_detruit_pac_including_alignement(self):
-        return round(sum(h.length for h in self.hedges_to_remove() if h.is_on_pac))
+        return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)
 
     def lineaire_type_4_sur_parcelle_pac(self):
-        return round(
-            sum(
-                h.length
-                for h in self.hedges_to_remove()
-                if h.is_on_pac and h.hedge_type == "alignement"
-            )
+        return sum(
+            h.length
+            for h in self.hedges_to_remove()
+            if h.is_on_pac and h.hedge_type == "alignement"
         )
 
     def is_removing_near_pond(self):
@@ -202,7 +210,7 @@ class HedgeData(models.Model):
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
-        return round(R * self.length_to_remove())
+        return R * self.length_to_remove()
 
     def get_minimum_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)

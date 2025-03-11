@@ -44,7 +44,7 @@
                       {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                     </p>
                     <p>
-                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|intcomma }}</span> m
+                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
                     </p>
                     {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
                       <p>
@@ -147,8 +147,8 @@
           let lengthToRemove = statsContent.getElementById("length-to-remove");
           let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
           let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
-          lengthToRemove.textContent = event.data.length_to_remove.toLocaleString('fr-FR');
-          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur des parcelles PAC" : `dont ${event.data.lineaire_detruit_pac.toLocaleString('fr-FR')} m situés sur des parcelles PAC`;
+          lengthToRemove.textContent = Math.round(event.data.length_to_remove).toLocaleString('fr-FR');
+          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur des parcelles PAC" : `dont ${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur des parcelles PAC`;
           hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove.toLocaleString('fr-FR')} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
           statisticsContainer.innerHTML = "";
           statisticsContainer.appendChild(statsContent);

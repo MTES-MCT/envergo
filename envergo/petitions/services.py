@@ -1,14 +1,16 @@
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
+from typing import Any, List, Literal
 
 import requests
 from django.conf import settings
-from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.utils.mattermost import notify
+from envergo.utils.tools import display_form_details
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ class InstructorInformationDetails:
 class InstructorInformation:
     slug: str | None
     label: str | None
-    items: list[Item]
+    items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
     details: list[InstructorInformationDetails]
     comment: str | None = None
 
@@ -57,10 +59,12 @@ class ProjectDetails:
     details: list[InstructorInformation]
 
 
-def compute_instructor_informations(petition_project, moulinette) -> ProjectDetails:
+def compute_instructor_informations(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
     config = moulinette.config
     ds_details = fetch_project_details_from_demarches_simplifiees(
-        petition_project.demarches_simplifiees_dossier_number, config
+        petition_project, config, site, visitor_id, user
     )
 
     hedge_data = petition_project.hedge_data
@@ -71,6 +75,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
         label=None,
         items=[
             Item("Référence", petition_project.reference, None, None),
+            "instructor_free_mention",
         ],
         details=[
             InstructorInformationDetails(
@@ -82,7 +87,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                         None,
                         None,
                     ),
-                    Item("Total linéaire détruit", length_to_remove, "m", None),
+                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
                 ],
             ),
             InstructorInformationDetails(
@@ -94,7 +99,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                         None,
                         None,
                     ),
-                    Item("Total linéaire planté", length_to_plant, "m", None),
+                    Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
                         (
@@ -148,7 +153,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                     ),
                     Item(
                         "Total linéaire détruit",
-                        hedge_data.lineaire_detruit_pac(),
+                        round(hedge_data.lineaire_detruit_pac()),
                         "m",
                         None,
                     ),
@@ -169,13 +174,13 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                 items=[
                     Item(
                         "Nombre de tracés plantés",
-                        len(hedge_data.hedges_to_plant()),
+                        len(hedge_data.hedges_to_plant_pac()),
                         None,
                         None,
                     ),
                     Item(
                         "Total linéaire planté",
-                        hedge_data.length_to_plant(),
+                        round(hedge_data.length_to_plant_pac()),
                         "m",
                         None,
                     ),
@@ -183,7 +188,8 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
                         "Ratio en longueur",
                         (
                             round(
-                                hedge_data.length_to_plant() / lineaire_detruit_pac, 2
+                                hedge_data.length_to_plant_pac() / lineaire_detruit_pac,
+                                2,
                             )
                             if lineaire_detruit_pac > 0
                             else ""
@@ -221,6 +227,7 @@ def compute_instructor_informations(petition_project, moulinette) -> ProjectDeta
         slug="ep",
         label="Espèces protégées",
         items=[
+            "onagre_number",
             Item(
                 "Présence d'une mare à moins de 200 m",
                 ItemDetails(
@@ -324,8 +331,9 @@ class DemarchesSimplifieesDetails:
 
 
 def fetch_project_details_from_demarches_simplifiees(
-    dossier_number, config
+    petition_project, config, site, visitor_id, user
 ) -> DemarchesSimplifieesDetails | None:
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     if (
         not config.demarches_simplifiees_pacage_id
@@ -337,7 +345,6 @@ def fetch_project_details_from_demarches_simplifiees(
                 "config.id": config.id,
             },
         )
-        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         admin_url = reverse(
             "admin:moulinette_confighaie_change",
             args=[config.id],
@@ -348,12 +355,12 @@ def fetch_project_details_from_demarches_simplifiees(
         Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
         dans la configuration du département {config.department.department}.
 
-        [Admin django](https://{current_site.domain}{admin_url})
+        [Admin django](https://{site.domain}{admin_url})
         """
         notify(dedent(message), "haie")
         return None
 
-    api_url = settings.DEMARCHES_SIMPLIFIEE["GRAPHQL_API_URL"]
+    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
     variables = f"""{{
               "dossierNumber":{dossier_number}
             }}"""
@@ -377,6 +384,10 @@ def fetch_project_details_from_demarches_simplifiees(
               id
               stringValue
             }
+            demarche{
+                title
+                number
+            }
           }
         }"""
 
@@ -389,7 +400,7 @@ def fetch_project_details_from_demarches_simplifiees(
         json=body,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEE['GRAPHQL_API_BEARER_TOKEN']}",
+            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
         },
     )
 
@@ -439,6 +450,26 @@ Requête envoyée :
     dossier = (data.get("data") or {}).get("dossier")
 
     if dossier is None:
+
+        if (
+            any(
+                error["extensions"]["code"] == "not_found"
+                for error in data.get("errors") or []
+            )
+            and not petition_project.is_dossier_submitted
+        ):
+            # the dossier is not found, but it's normal if the project is not submitted
+            logger.info(
+                "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
+                extra={
+                    "response.json": data,
+                    "response.status_code": response.status_code,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
+            )
+            return None
+
         logger.error(
             "Demarches simplifiees API response is not well formated",
             extra={
@@ -469,6 +500,19 @@ Requête envoyée :
 """
         notify(dedent(message), "haie")
         return None
+    # we have got a dossier from DS for this petition project
+
+    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
+    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
+    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+    ds_url = (
+        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+        f"{dossier_number}"
+    )
+    petition_project.synchronize_with_demarches_simplifiees(
+        dossier, site, demarche_label, ds_url, visitor_id, user
+    )
+
     applicant = dossier.get("demandeur") or {}
     applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
     applicant_name = (
@@ -504,3 +548,121 @@ Requête envoyée :
     usager = (dossier.get("usager") or {}).get("email", "")
 
     return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager)
+
+
+class PetitionProjectCreationProblem:
+    """An object to store a problem during the creation of a petition project"""
+
+    def __init__(self, key, extra: dict[str, Any] = dict, is_fatal=False):
+        self.key = key
+        self.extra = extra
+        self.is_fatal = is_fatal
+
+    def compute_message(self, index):
+        return render_to_string(
+            "haie/petitions/mattermost_project_creation_problem.txt",
+            context={
+                "index": index,
+                "problem": self,
+            },
+        )
+
+
+class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
+    """This class list all the problems that occured during the creation of a petition project.
+    It can then be used to generate a notification to send to the admin."""
+
+    def __init__(self, request):
+        super().__init__()
+        self.request = request
+        self._config = None
+        self._petition_project = None
+        self._form = None
+        self._user_error_reference = None
+
+    @property
+    def petition_project(self):
+        return self._petition_project
+
+    @petition_project.setter
+    def petition_project(self, value):
+        self._petition_project = value
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, value):
+        self._config = value
+
+    @property
+    def form(self):
+        return self._form
+
+    @form.setter
+    def form(self, value):
+        self._form = value
+
+    @property
+    def user_error_reference(self):
+        return self._user_error_reference
+
+    @user_error_reference.setter
+    def user_error_reference(self, value):
+        self._user_error_reference = value
+
+    def append(self, item: PetitionProjectCreationProblem) -> None:
+        if not isinstance(item, PetitionProjectCreationProblem):
+            raise TypeError("Only Alert instances can be added to AlertList")
+        super().append(item)
+
+    def compute_message(self):
+        config_url = None
+        if self.config:
+            config_relative_url = reverse(
+                "admin:moulinette_confighaie_change", args=[self.config.id]
+            )
+            config_url = self.request.build_absolute_uri(config_relative_url)
+
+        if self._petition_project:
+            projet_relative_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self._petition_project.id],
+            )
+            projet_url = self.request.build_absolute_uri(projet_relative_url)
+            dossier_url = None
+            if self.config:
+                dossier_url = (
+                    f"https://www.demarches-simplifiees.fr/procedures/"
+                    f"{self.config.demarche_simplifiee_number}/dossiers/"
+                    f"{self._petition_project.demarches_simplifiees_dossier_number}"
+                )
+
+            message = render_to_string(
+                "haie/petitions/mattermost_project_creation_anomalie.txt",
+                context={
+                    "projet_url": projet_url,
+                    "config": self.config,
+                    "config_url": config_url,
+                    "dossier_url": dossier_url,
+                    "demarches_simplifiees_dossier_number": self._petition_project.demarches_simplifiees_dossier_number,
+                },
+            )
+        else:
+            message = render_to_string(
+                "haie/petitions/mattermost_project_creation_erreur.txt",
+                context={
+                    "config_url": config_url,
+                    "department": self.config.department,
+                    "user_error_reference": self.user_error_reference.upper(),
+                    "form": display_form_details(self.form),
+                },
+            )
+
+        index = 0
+        for alert in self:
+            index = index + 1
+            message = message + "\n" + alert.compute_message(index)
+
+        return message
