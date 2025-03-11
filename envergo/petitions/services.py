@@ -349,14 +349,14 @@ def fetch_project_details_from_demarches_simplifiees(
             "admin:moulinette_confighaie_change",
             args=[config.id],
         )
-        message = f"""\
-        ### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
-
-        Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
-        dans la configuration du département {config.department.department}.
-
-        [Admin django](https://{site.domain}{admin_url})
-        """
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
+            context={
+                "department": config.department.department,
+                "domain": site.domain,
+                "admin_url": admin_url,
+            },
+        )
         notify(dedent(message), "haie")
         return None
 
@@ -429,23 +429,16 @@ def fetch_project_details_from_demarches_simplifiees(
             },
         )
 
-        message = f"""\
-### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
-
-L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier n°{dossier_number}.
-
-Réponse de Démarches Simplifiées : {response.status_code}
-```
-{response.text}
-```
-
-Requête envoyée :
-* Url: {api_url}
-* Body:
-```
-{body}
-```
-"""
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+            context={
+                "dossier_number": dossier_number,
+                "status_code": response.status_code,
+                "response": response.text,
+                "api_url": api_url,
+                "body": body,
+            },
+        )
         notify(dedent(message), "haie")
         return None
 
