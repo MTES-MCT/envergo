@@ -139,6 +139,11 @@ class Regulation(models.Model):
                 criterion = next(filter(select_criterion, criteria), None)
                 if criterion:
                     return criterion
+
+        if attr != "criteria_list" and hasattr(self, "criteria_list"):
+            criterion = next(filter(select_criterion, self.criteria_list), None)
+            if criterion:
+                return criterion
         val = getattr(super(), attr)
         return val
 
@@ -1762,10 +1767,15 @@ class MoulinetteHaie(Moulinette):
 
         return department
 
-    def get_regulations_qs(self):
+    def get_regulations(self):
         """Find the activated regulations and their criteria."""
 
-        regulations = super().get_regulations().prefetch_related("perimeters")
+        regulations = super().get_regulations()
+
+        # Les reglementations de Haie ne sont pas liées à des perimetres pour le moment.
+        for reg in regulations:
+            reg.perimeters_list = list()
+
         return regulations
 
     def additional_fields(self):
