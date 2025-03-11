@@ -224,3 +224,15 @@ Requête envoyée :
             notify(dedent(message), "haie")
 
         return response
+
+    def get_dossier_from_project(self, dossier_number):
+
+        response = self.fetch_project_details(dossier_number)
+        data = response.json() or {}
+
+        dossier = (data.get("data") or {}).get("dossier")
+
+        if dossier is None:
+            return None
+
+        return dossier
