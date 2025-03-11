@@ -29,7 +29,7 @@ class DsClient:
 
         response = requests.post(self.api_url, json=data, headers=headers)
 
-        logger.info(
+        logger.debug(
             f"""
                 Demarches simplifiees API request status: {response.status_code}"
                 * response.text: {response.text},
@@ -111,5 +111,20 @@ class DsClient:
         variables = {
             "dossierNumber": dossier_number,
         }
-        result = self.launch_graphql_query("getDossier", variables)
+
+        try:
+            result = self.launch_graphql_query("getDossier", variables)
+        except Exception as e:
+            logger.error(e)
+            return None
+
+        if not hasattr(result, "dossier"):
+            logger.error(
+                "Demarches simplifiees API response is not well formated",
+                extra={
+                    "response.json": result["data"],
+                },
+            )
+            return None
+
         return result["data"]["dossier"]
