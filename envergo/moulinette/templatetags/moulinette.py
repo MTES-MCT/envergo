@@ -114,7 +114,7 @@ def debug(stuff):
 def perimeter_detail(regulation):
     """Display the perimeter short description with links."""
 
-    perimeters = regulation.perimeters.all()
+    perimeters = regulation.perimeters_list
     if len(perimeters) == 1:
         templates = [
             f"moulinette/{regulation.slug}/_one_perimeter_detail.html",

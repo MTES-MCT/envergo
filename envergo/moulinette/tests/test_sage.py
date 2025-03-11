@@ -96,7 +96,7 @@ def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
 
-    perimeter = moulinette.sage.perimeters.all()[0]
+    perimeter = moulinette.sage.perimeters_list[0]
     perimeter.is_activated = False
     perimeter.save()
     moulinette.evaluate()

@@ -7,8 +7,8 @@
 {% endblock %}
 
 {% block regulation_body %}
-  {% if regulation.show_criteria and regulation.criteria.all %}
-    {% for criterion in regulation.criteria.all %}
+  {% if regulation.show_criteria and regulation.criteria_list %}
+    {% for criterion in regulation.criteria_list %}
       {% if criterion.should_be_displayed %}
         {% show_criterion_body regulation criterion %}
       {% endif %}

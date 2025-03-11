@@ -1,4 +1,3 @@
-import gc
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -13,7 +12,7 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Case, CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import Case, CheckConstraint, F, IntegerField, Q
 from django.db.models import Value as V
 from django.db.models import When
 from django.db.models.functions import Cast, Concat
@@ -149,7 +148,7 @@ class Regulation(models.Model):
         def select_criterion(criterion):
             return criterion.slug == criterion_slug
 
-        criterion = next(filter(select_criterion, self.criteria.all()), None)
+        criterion = next(filter(select_criterion, self.criteria_list), None)
         if criterion is None:
             logger.warning(f"Criterion {criterion_slug} not found.")
         return criterion
@@ -157,7 +156,7 @@ class Regulation(models.Model):
     def get_optional_criteria(self):
         optional_criteria = [
             c
-            for c in self.criteria.all()
+            for c in self.criteria_list
             if c.is_optional and c.result != "non_disponible"
         ]
         return optional_criteria
@@ -169,7 +168,7 @@ class Regulation(models.Model):
         it is added with an annotation in the `get_regulations` method.
         """
         self.moulinette = moulinette
-        for criterion in self.criteria.all():
+        for criterion in self.criteria_list:
             criterion.evaluate(moulinette, criterion.distance)
 
     @property
@@ -198,7 +197,7 @@ class Regulation(models.Model):
 
         optional_criteria = [
             c
-            for c in self.criteria.all()
+            for c in self.criteria_list
             if c.is_optional and c.result != "non_disponible"
         ]
         subtitle = "(rubrique 39)" if not optional_criteria else None
@@ -222,7 +221,7 @@ class Regulation(models.Model):
         not activated yet.
         """
 
-        activated_perimeters = [p for p in self.perimeters.all() if p.is_activated]
+        activated_perimeters = [p for p in self.perimeters_list if p.is_activated]
         return self.is_activated() and (
             (not self.has_perimeters)
             or (self.has_perimeters and any(activated_perimeters))
@@ -256,7 +255,7 @@ class Regulation(models.Model):
             return RESULTS.non_active
 
         if self.has_perimeters:
-            all_perimeters = self.perimeters.all()
+            all_perimeters = self.perimeters_list
             activated_perimeters = [p for p in all_perimeters if p.is_activated]
             if all_perimeters and not any(activated_perimeters):
                 return RESULTS.non_disponible
@@ -266,7 +265,7 @@ class Regulation(models.Model):
         # From this point, we made sure every data (regulation, perimeter) is existing
         # and activated
 
-        results = [criterion.result for criterion in self.criteria.all()]
+        results = [criterion.result for criterion in self.criteria_list]
         result = None
         for status in RESULT_CASCADE:
             if status in results:
@@ -302,13 +301,13 @@ class Regulation(models.Model):
         results_by_perimeter = {}
 
         # Fetch already evaluated criteria
-        criteria_list = list(self.criteria.all())
+        criteria_list = list(self.criteria_list)
         criteria_list.sort(key=attrgetter("perimeter_id"))
         grouped_criteria = {
             k: list(v) for k, v in groupby(criteria_list, key=attrgetter("perimeter"))
         }
 
-        for perimeter in self.perimeters.all():
+        for perimeter in self.perimeters_list:
             criteria = grouped_criteria.get(perimeter, [])
             results = [criterion.result for criterion in criteria]
             result = None
@@ -338,7 +337,7 @@ class Regulation(models.Model):
         if stake:
             actions = [
                 c.required_action
-                for c in self.criteria.all()
+                for c in self.criteria_list
                 if c.required_action
                 and c.result == "action_requise"
                 and c.required_action_stake == stake
@@ -346,7 +345,7 @@ class Regulation(models.Model):
         else:
             actions = [
                 c.required_action
-                for c in self.criteria.all()
+                for c in self.criteria_list
                 if c.required_action and c.result == "action_requise"
             ]
         return list(set(actions))
@@ -360,12 +359,12 @@ class Regulation(models.Model):
     # FIXME: all the impacts of the matched criteria will be displayed, even
     # when said criteria have a "non soumis" result.
     def project_impacts(self):
-        impacts = [c.project_impact for c in self.criteria.all() if c.project_impact]
+        impacts = [c.project_impact for c in self.criteria_list if c.project_impact]
         return impacts
 
     def discussion_contacts(self):
         contacts = [
-            c.discussion_contact for c in self.criteria.all() if c.discussion_contact
+            c.discussion_contact for c in self.criteria_list if c.discussion_contact
         ]
         return contacts
 
@@ -377,7 +376,7 @@ class Regulation(models.Model):
         because they are subject to IOTA or Evaluation Environnemental, even though they are outside
         Natura 2000 zones.
         """
-        criteria_slugs = [c.slug for c in self.criteria.all()]
+        criteria_slugs = [c.slug for c in self.criteria_list]
         return criteria_slugs and all(
             item in ["iota", "eval_env"] for item in criteria_slugs
         )
@@ -407,7 +406,7 @@ class Regulation(models.Model):
 
     def display_perimeter(self):
         """Should / can a perimeter be displayed?"""
-        return self.is_activated() and bool(self.perimeters.all())
+        return self.is_activated() and bool(self.perimeters_list)
 
     @property
     def map(self):
@@ -432,7 +431,7 @@ class Regulation(models.Model):
             "#9c755f",
             "#bab0ab",
         ]
-        perimeters = self.perimeters.all()
+        perimeters = self.perimeters_list
         if perimeters:
             polygons = [
                 MapPolygon(
@@ -458,7 +457,7 @@ class Regulation(models.Model):
         return all((self.is_activated(), self.show_map, self.map))
 
     def has_several_perimeters(self):
-        return len(self.perimeters.all()) > 1
+        return len(self.perimeters_list) > 1
 
 
 class Criterion(models.Model):
@@ -887,7 +886,7 @@ class ConfigHaie(ConfigBase):
             * the forms of the criteria of involved regulations
          * the results of the regulations
         """
-
+        # WARNING : this may lead to memory issues due to Django ORM Cache
         regulations = Regulation.objects.filter(
             regulation__in=MoulinetteHaie.REGULATIONS
         ).prefetch_related("criteria")
@@ -1091,23 +1090,6 @@ class Moulinette(ABC):
 
         self.evaluate()
 
-    def __del__(self):
-        if hasattr(self, "catalog"):
-            if "all_zones" in self.catalog:
-                del self.catalog["all_zones"]
-            if "wetlands" in self.catalog:
-                del self.catalog["wetlands"]
-            if "forbidden_wetlands" in self.catalog:
-                del self.catalog["forbidden_wetlands"]
-            if "potential_wetlands" in self.catalog:
-                del self.catalog["potential_wetlands"]
-            if "flood_zones" in self.catalog:
-                del self.catalog["flood_zones"]
-            if "potential_flood_zones" in self.catalog:
-                del self.catalog["potential_flood_zones"]
-            del self.catalog
-            gc.collect()
-
     @property
     def regulations(self):
         if not hasattr(self, "_regulations"):
@@ -1208,14 +1190,22 @@ class Moulinette(ABC):
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+        iterator = self.get_regulations_qs().iterator()
+        regulations = list(iterator)
 
-        criteria = self.get_criteria()
-        regulations = (
-            Regulation.objects.filter(regulation__in=self.REGULATIONS)
-            .order_by("weight")
-            .prefetch_related(Prefetch("criteria", queryset=criteria))
-        )
+        # Manually attach criteria instead of using prefetch_related to avoid keeping everything in memory
+        for reg in regulations:
+            reg.criteria_list = list(
+                self.get_criteria().filter(regulation=reg).iterator()
+            )
+
         return regulations
+
+    def get_regulations_qs(self):
+        """Find the activated regulations and their criteria."""
+        return Regulation.objects.filter(regulation__in=self.REGULATIONS).order_by(
+            "weight"
+        )
 
     def get_catalog_data(self):
         return {}
@@ -1226,7 +1216,7 @@ class Moulinette(ABC):
     def form_errors(self):
         form_errors = {}
         for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
+            for criterion in regulation.criteria_list:
                 form = criterion.get_form()
                 # We check for each form for errors
                 if form:
@@ -1254,7 +1244,7 @@ class Moulinette(ABC):
 
         data = {}
         for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
+            for criterion in regulation.criteria_list:
                 form = criterion.get_form()
                 if form and form.is_valid():
                     data.update(form.cleaned_data)
@@ -1292,7 +1282,7 @@ class Moulinette(ABC):
                 "result": regulation.result,
                 "criterions": {},
             }
-            for criterion in regulation.criteria.all():
+            for criterion in regulation.criteria_list:
                 result[regulation.slug]["criterions"][criterion.slug] = criterion.result
 
         return result
@@ -1307,7 +1297,7 @@ class Moulinette(ABC):
         forms = []
 
         for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
+            for criterion in regulation.criteria_list:
                 if not criterion.is_optional:
                     form_class = criterion.get_form_class()
                     if form_class and form_class not in forms:
@@ -1351,7 +1341,7 @@ class Moulinette(ABC):
         forms = []
 
         for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
+            for criterion in regulation.criteria_list:
                 if criterion.is_optional:
                     form_class = criterion.get_form_class()
                     if form_class and form_class not in forms:
@@ -1463,13 +1453,14 @@ class MoulinetteAmenagement(Moulinette):
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
 
-        perimeters = self.get_perimeters()
+        regulations = super().get_regulations()
 
-        regulations = (
-            super()
-            .get_regulations()
-            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
-        )
+        # Manually attach perimeter instead of using prefetch_related to avoid keeping everything in memory
+        for reg in regulations:
+            reg.perimeters_list = list(
+                self.get_perimeters().filter(regulation=reg).iterator()
+            )
+
         return regulations
 
     def get_perimeters(self):
@@ -1524,7 +1515,6 @@ class MoulinetteAmenagement(Moulinette):
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .select_related("activation_map")
             .defer("activation_map__geometry")
-            .iterator()
         )
 
         return criteria
@@ -1772,7 +1762,7 @@ class MoulinetteHaie(Moulinette):
 
         return department
 
-    def get_regulations(self):
+    def get_regulations_qs(self):
         """Find the activated regulations and their criteria."""
 
         regulations = super().get_regulations().prefetch_related("perimeters")

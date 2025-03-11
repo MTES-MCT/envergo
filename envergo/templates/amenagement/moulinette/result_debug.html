@@ -155,7 +155,7 @@
       </h3>
 
       <ul>
-        {% for criterion in regulation.criteria.all %}
+        {% for criterion in regulation.criteria_list %}
           <li>
             {{ criterion.title }} : {% result_tag criterion.result %} <small>({{ criterion.result_code }})</small>
           </li>
