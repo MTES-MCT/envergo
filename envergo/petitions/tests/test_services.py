@@ -7,6 +7,7 @@ from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import fetch_project_details_from_demarches_simplifiees
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHES_SIMPLIFIEES_FAKE_FALSE,
     PetitionProjectFactory,
 )
 
@@ -106,6 +107,26 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert details.applicant_name == "Mme dez dez"
     assert details.city == "Ladaux (33760)"
     assert details.pacage == "123456789"
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_FALSE)
+@patch("requests.post")
+def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
+    mock_post, caplog, haie_user, site
+):
+    petition_project = PetitionProjectFactory()
+    config = ConfigHaieFactory()
+    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
+    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
+
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
+
+    assert ["Demarches Simplifiees is not enabled"] == [
+        rec.message for rec in caplog.records
+    ]
+    assert details is None
 
 
 @patch("envergo.petitions.services.notify")

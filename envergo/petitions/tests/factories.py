@@ -1,3 +1,5 @@
+from copy import copy
+
 import factory
 from factory.django import DjangoModelFactory
 
@@ -11,6 +13,9 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
     "GRAPHQL_API_BEARER_TOKEN": None,
     "DOSSIER_DOMAIN_BLACK_LIST": [],
 }
+
+DEMARCHES_SIMPLIFIEES_FAKE_FALSE = copy(DEMARCHES_SIMPLIFIEES_FAKE)
+DEMARCHES_SIMPLIFIEES_FAKE_FALSE["ENABLED"] = False
 
 
 class PetitionProjectFactory(DjangoModelFactory):

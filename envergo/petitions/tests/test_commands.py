@@ -7,10 +7,22 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHES_SIMPLIFIEES_FAKE_FALSE,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_FALSE)
+@patch("requests.post")
+def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
+
+    mock_post.side_effect = []
+    call_command("dossier_submission_admin_alert")
+    assert ["Demarches Simplifiees is not enabled"] == [
+        rec.message for rec in caplog.records
+    ]
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
