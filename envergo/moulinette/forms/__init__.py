@@ -358,9 +358,9 @@ class TriageFormHaie(forms.Form):
                 mark_safe(
                     """Destruction<br />
                     <span class="fr-hint-text">
-                        Intervention qui supprime définitivement la végétation : arrachage,
-                        coupe à blanc sur une espèce qui ne recèpe pas (ex : chêne,
-                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…), etc.
+                        Toute intervention qui supprime définitivement la végétation : arrachage,
+                        coupe à blanc sur essences qui ne recèpent pas (ex : chêne,
+                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…), entretien sévère et récurrent, etc.
                     </span>
                     """
                 ),
@@ -371,7 +371,7 @@ class TriageFormHaie(forms.Form):
                     """Entretien<br />
                     <span class="fr-hint-text">
                         Intervention qui permet la repousse durable de la végétation : élagage, taille,
-                        coupe à blanc sur une espèce capable de recéper, etc.
+                        coupe à blanc sur une essence capable de recéper, etc.
                     </span>
                     """
                 ),
