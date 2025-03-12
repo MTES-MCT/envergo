@@ -358,10 +358,10 @@
       // Get the current URL
       const currentUrl = window.location.href;
 
-      if (currentUrl.includes(".beta.gouv.fr")) {
+      if (currentUrl.includes("://envergo.beta.gouv.fr") || currentUrl.includes("://haie.beta.gouv.fr")) {
         containerID = containerID;
       }
-      else if (currentUrl.includes(".incubateur.net")) {
+      else if (currentUrl.includes("://envergo.incubateur.net") || currentUrl.includes("://haie.incubateur.net")) {
         containerID += "__staging_44d8deccdf5b6705f423daf3";
       }
       else {
