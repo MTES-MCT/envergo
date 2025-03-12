@@ -133,7 +133,7 @@
     <script>
       // Setup the sticky slim header
       window.addEventListener("load", function() {
-        const header = document.querySelector('.fr-header.header-legacy')
+        const header = document.querySelector('.fr-header.header-legacy');
         const slimHeader = document.querySelector('.fr-header.header-popup');
         const options = {
           threshold: 0
@@ -146,15 +146,14 @@
 
         if (header && slimHeader) {
           const observer = new IntersectionObserver(callback, options);
-          observer.observe(header)
+          observer.observe(header);
         }
 
         let lastScrollTop = 0;
 
         // Hide slimHeader on scroll down
         window.addEventListener("scroll", function() {
-          const slimHeader = document.querySelector('.fr-header.header-popup');
-          let st = window.pageYOffset || window.scrollY
+          let st = window.pageYOffset || window.scrollY;
           slimHeader.classList.toggle('hidden-downscroll', st > lastScrollTop);
           lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
         }, false);
