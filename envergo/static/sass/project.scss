@@ -189,6 +189,10 @@ nav#evaluation-summary {
     padding: 0;
   }
 
+  li:not(:last-child) > .summary-link {
+    border-bottom: 1px solid var(--border-default-grey);
+  }
+
   li {
     span.regulation-result,
     a {
@@ -201,11 +205,14 @@ nav#evaluation-summary {
       width: 100%;
     }
 
-    @media (width < 36em) {
-      span.regulation-result,
-      span.regulation-result span.fr-tag {
-        flex-direction: column;
-      }
+    span.regulation-result,
+    span.regulation-result span.fr-tag {
+      flex-direction: column;
+    }
+
+    span.regulation-result span.fr-tag {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
     }
 
     a {
@@ -230,6 +237,23 @@ nav#evaluation-summary {
       .undertitle {
         font-size: 0.875rem;
         line-height: 1.5rem;
+      }
+    }
+  }
+
+  @media (width >= 36em) {
+    li:not(:last-child) > .summary-link {
+      border-bottom: none;
+    }
+
+    li {
+      span.regulation-result,
+      span.regulation-result span.fr-tag {
+        flex-direction: row;
+      }
+
+      span.regulation-result span.fr-tag {
+        margin-top: unset;
       }
     }
   }
@@ -329,12 +353,11 @@ nav#evaluation-summary {
 section.regulation {
   h2 {
     display: flex;
-    align-items: start;
+    align-items: end;
     flex-wrap: wrap;
 
     span.content {
       margin-right: 0.5em;
-      margin-bottom: 0.5em;
 
       .undertitle {
         font-weight: normal;
@@ -344,7 +367,7 @@ section.regulation {
 
     span.fr-tag {
       white-space: nowrap;
-      line-height: 1.75rem;
+      margin-bottom: -0.125rem;
     }
   }
 
