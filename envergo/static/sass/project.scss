@@ -1104,7 +1104,7 @@ div.hero-alt {
   #project-result,
   #after_result_content {
     & > section {
-      max-width: 47rem;
+      max-width: 40rem;
       margin: 0 auto;
     }
 
@@ -2093,4 +2093,8 @@ main.demonstrateur_2150 {
 .inline-button:hover,
 .inline-button:active {
   --underline-hover-width: var(--underline-max-width);
+}
+
+article#evaluation {
+  max-width: 42em;
 }
