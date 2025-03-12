@@ -353,13 +353,31 @@
     <!-- Matomo Tag Manager -->
     <script>
       var _mtm = window._mtm = window._mtm || [];
-      _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+      var containerID = "CVs7R9N4";
+
+      // Get the current URL
+      const currentUrl = window.location.href;
+
+      if (currentUrl.includes(".beta.gouv.fr")) {
+        containerID = containerID;
+      }
+      else if (currentUrl.includes(".incubateur.net")) {
+        containerID += "__staging_44d8deccdf5b6705f423daf3";
+      }
+      else {
+        containerID += "_dev_a68e9a226bd8d207724f8975";
+      }
+
+      _mtm.push({
+        'mtm.startTime': (new Date().getTime()),
+        'event': 'mtm.Start'
+      });
       (function() {
         var d=document,
         g=d.createElement('script'),
         s=d.getElementsByTagName('script')[0];
         g.async=true;
-        g.src='https://stats.beta.gouv.fr/js/container_CVs7R9N4.js';
+        g.src="https://stats.beta.gouv.fr/js/container_{containerID}.js".format(containerID);
         s.parentNode.insertBefore(g,s);
       })();
     </script>
