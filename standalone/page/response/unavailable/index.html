@@ -356,12 +356,12 @@
       var containerID = "CVs7R9N4";
 
       // Get the current URL
-      const currentUrl = window.location.href;
+      const currentHost = new URL(window.location.href).host;
 
-      if (currentUrl.includes("://envergo.beta.gouv.fr") || currentUrl.includes("://haie.beta.gouv.fr")) {
+      if (currentHost.includes(".beta.gouv.fr")) {
         containerID = containerID;
       }
-      else if (currentUrl.includes("://envergo.incubateur.net") || currentUrl.includes("://haie.incubateur.net")) {
+      else if (currentHost.includes(".incubateur.net")) {
         containerID += "__staging_44d8deccdf5b6705f423daf3";
       }
       else {
@@ -377,7 +377,7 @@
         g=d.createElement('script'),
         s=d.getElementsByTagName('script')[0];
         g.async=true;
-        g.src="https://stats.beta.gouv.fr/js/container_{containerID}.js".format(containerID);
+        g.src="https://stats.beta.gouv.fr/js/container_" + containerID + ".js";
         s.parentNode.insertBefore(g,s);
       })();
     </script>
