@@ -358,10 +358,16 @@
       // Get the current URL
       const currentHost = new URL(window.location.href).host;
 
-      if (currentHost.includes(".beta.gouv.fr")) {
+      // Define a whitelist of allowed hosts
+      const allowedHosts = [
+        'beta.gouv.fr',
+        'incubateur.net'
+      ];
+
+      if (allowedHosts.includes(currentHost)) {
         containerID = containerID;
       }
-      else if (currentHost.includes(".incubateur.net")) {
+      else if (currentHost.endsWith('.incubateur.net')) {
         containerID += "__staging_44d8deccdf5b6705f423daf3";
       }
       else {
