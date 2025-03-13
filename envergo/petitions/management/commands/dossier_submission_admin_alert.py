@@ -95,8 +95,8 @@ class Command(BaseCommand):
                 if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
                     logger.warning(
                         f"Demarches Simplifiees is not enabled. Doing nothing."
-                        f"request.url: {api_url}"
-                        f"request.body: {body}"
+                        f"\nrequest.url: {api_url}"
+                        f"\nrequest.body: {body}"
                     )
                     break
 
