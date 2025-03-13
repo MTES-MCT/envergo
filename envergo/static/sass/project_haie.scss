@@ -450,8 +450,30 @@ div#project-specifications-instructor {
 /**
  * Page instructor
  */
+
+div#project-dossier-no {
+  border-bottom: solid 1px var(--border-default-grey);
+}
+
 @media (width >= 48em) {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+  }
+
+  .fr-sidemenu__inner {
+    padding: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    box-shadow: none;
+  }
+
+  div#project-specifications-instructor {
+    padding-left: 1.5rem;
+    border-left: solid 1px var(--border-default-grey);
+  }
+
+  div#project-dossier-no {
+    border-bottom: solid 1px var(--border-default-grey);
   }
 }
