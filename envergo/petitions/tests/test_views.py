@@ -81,10 +81,16 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
         petition_project
     )
-
-    assert ["Demarches Simplifiees is not enabled"] == [
-        rec.message for rec in caplog.records
-    ]
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
     assert demarche_simplifiee_url is None
     assert dossier_number is None
 

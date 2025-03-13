@@ -123,9 +123,16 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         petition_project, config, site, "", haie_user
     )
 
-    assert ["Demarches Simplifiees is not enabled"] == [
-        rec.message for rec in caplog.records
-    ]
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
     assert details is None
 
 

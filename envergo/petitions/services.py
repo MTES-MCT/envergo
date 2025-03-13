@@ -360,10 +360,6 @@ def fetch_project_details_from_demarches_simplifiees(
         notify(dedent(message), "haie")
         return None
 
-    elif not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-        logger.info("Demarches Simplifiees is not enabled")
-        return None
-
     api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
     variables = f"""{{
               "dossierNumber":{dossier_number}
@@ -399,6 +395,15 @@ def fetch_project_details_from_demarches_simplifiees(
         "query": query,
         "variables": variables,
     }
+
+    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        logger.warning(
+            f"Demarches Simplifiees is not enabled. Doing nothing."
+            f"request.url: {api_url}"
+            f"request.body: {body}"
+        )
+        return None
+
     response = requests.post(
         api_url,
         json=body,

@@ -19,10 +19,19 @@ pytestmark = pytest.mark.django_db
 def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
 
     mock_post.side_effect = []
+    PetitionProjectFactory()
+    ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
-    assert ["Demarches Simplifiees is not enabled"] == [
-        rec.message for rec in caplog.records
-    ]
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
