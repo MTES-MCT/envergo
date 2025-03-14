@@ -1156,9 +1156,44 @@ div.hero-alt {
       position: relative;
     }
 
-    & > main,
-    & > footer {
-      padding-left: calc(400% / 12);
+    #project-result {
+      margin-left: max(
+        calc(((100vw - 78rem) / 2) + 26rem + (52rem - 40rem) / 2),
+        26rem
+      );
+
+      & > section {
+        margin: 0;
+      }
+    }
+
+    #project-summary {
+      margin-left: max(calc((100vw - 78rem) / 2), 0rem);
+      max-width: 26rem;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      padding-top: 5rem;
+    }
+
+    #after_result_content {
+      margin-left: max(calc(((100vw - 78rem) / 2) + 26rem), 26rem);
+
+      & > section {
+        margin-left: 6rem;
+      }
+
+      div.fr-follow {
+        max-width: 52rem;
+      }
+    }
+
+    footer#footer {
+      margin-left: max(calc(((100vw - 78rem) / 2) + 26rem), 26rem);
+      max-width: min(calc(100vw - 26rem), 52rem);
+      padding-bottom: 5rem;
     }
 
     #project-summary,
@@ -1167,15 +1202,6 @@ div.hero-alt {
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
-    }
-
-    #project-summary {
-      width: calc(400% / 12); // because 33.333333…% is not a valid css value
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      padding-top: 5rem;
     }
   }
 }
