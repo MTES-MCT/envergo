@@ -6,7 +6,11 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    PetitionProjectFactory,
+)
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
@@ -16,6 +20,7 @@ from envergo.petitions.views import (
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
@@ -57,6 +62,37 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@patch("requests.post")
+@patch("envergo.petitions.views.reverse")
+def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
+    mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
+    ConfigHaieFactory()
+
+    view = PetitionProjectCreate()
+    factory = RequestFactory()
+    request = factory.get("")
+    view.request = request
+    request.alerts = PetitionProjectCreationAlert(request)
+
+    petition_project = PetitionProjectFactory()
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+        petition_project
+    )
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
+    assert demarche_simplifiee_url is None
+    assert dossier_number is None
 
 
 @pytest.mark.urls("config.urls_haie")
