@@ -353,8 +353,7 @@
     <!-- Matomo -->
     <script>
       var _mtm = window._mtm = window._mtm || [];
-      const IDSITE = "0";
-      const MATOMO_URL = "https://stats.beta.gouv.fr/";
+      var IDSITE = "0";
 
       // Get the current URL
       const currentHost = new URL(window.location.href).host;
@@ -370,25 +369,25 @@
       // Only initiate for allowedHosts
       if (allowedHosts.includes(currentHost)) {
         if (currentHost == ('envergo.incubateur.net')) {
-          IDSITE += "12";
+          IDSITE = "12";
         }
         else if (currentHost == ('envergo.beta.gouv.fr')) {
-          IDSITE += "186";
+          IDSITE = "186";
         }
         else if (currentHost == ('haie.incubateur.net')) {
-          IDSITE += "141";
+          IDSITE = "141";
         }
         else if (currentHost == ('haie.beta.gouv.fr')) {
-          IDSITE += "140";
+          IDSITE = "140";
         }
 
         var _paq = window._paq = window._paq || [];
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
-          var u="//{$MATOMO_URL}/";
+          var u="//stats.beta.gouv.fr/";
           _paq.push(['setTrackerUrl', u+'matomo.php']);
-          _paq.push(['setSiteId', {$IDSITE}]);
+          _paq.push(['setSiteId', IDSITE]);
           var d=document,
           g=d.createElement('script'),
           s=d.getElementsByTagName('script')[0];
