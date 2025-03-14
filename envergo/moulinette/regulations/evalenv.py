@@ -22,7 +22,9 @@ class EmpriseForm(forms.Form):
     emprise = DisplayIntegerField(
         label="Emprise au sol totale",
         help_text="Projection verticale du volume de la construction, en comptant l'existant",
-        widget=forms.NumberInput(attrs={"placeholder": _("In square meters")}),
+        widget=forms.TextInput(
+            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        ),
         required=True,
         display_unit="m²",
         display_label="Emprise totale au sol, y compris l'existant :",
@@ -144,7 +146,9 @@ class TerrainAssietteForm(forms.Form):
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
         help_text="Ensemble des parcelles cadastrales concernées par le projet",
-        widget=forms.NumberInput(attrs={"placeholder": _("In square meters")}),
+        widget=forms.TextInput(
+            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        ),
         required=True,
         display_unit="m²",
         display_label="Surface du terrain d'assiette du projet :",
