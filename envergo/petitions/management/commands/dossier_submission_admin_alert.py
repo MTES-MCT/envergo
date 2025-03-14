@@ -24,7 +24,12 @@ class Command(BaseCommand):
     help = "Fetch freshly submitted dossier on Démarches Simplifiées and notify admins."
 
     def handle(self, *args, **options):
-        # get all the dossier updated in the last hour
+        """get all the dossier updated in the last hour"""
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
+            return None
+
         api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
@@ -91,14 +96,6 @@ class Command(BaseCommand):
                     "query": query,
                     "variables": variables,
                 }
-
-                if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-                    logger.warning(
-                        f"Demarches Simplifiees is not enabled. Doing nothing."
-                        f"\nrequest.url: {api_url}"
-                        f"\nrequest.body: {body}"
-                    )
-                    break
 
                 response = requests.post(
                     api_url,
