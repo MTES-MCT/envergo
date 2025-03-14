@@ -3,12 +3,11 @@ from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, List, Literal
 
-import requests
-from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.utils.demarches_simplifiees.ds_client import DsClient
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -349,108 +348,24 @@ def fetch_project_details_from_demarches_simplifiees(
             "admin:moulinette_confighaie_change",
             args=[config.id],
         )
-        message = f"""\
-        ### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
-
-        Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
-        dans la configuration du département {config.department.department}.
-
-        [Admin django](https://{site.domain}{admin_url})
-        """
-        notify(dedent(message), "haie")
-        return None
-
-    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
-    variables = f"""{{
-              "dossierNumber":{dossier_number}
-            }}"""
-    query = """query getDossier($dossierNumber: Int!) {
-          dossier(number: $dossierNumber) {
-            id
-            number
-            state
-            usager {
-              email
-            }
-            demandeur {
-              ... on PersonnePhysique {
-                civilite
-                nom
-                prenom
-                email
-              }
-            }
-            champs {
-              id
-              stringValue
-            }
-            demarche{
-                title
-                number
-            }
-          }
-        }"""
-
-    body = {
-        "query": query,
-        "variables": variables,
-    }
-    response = requests.post(
-        api_url,
-        json=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-        },
-    )
-
-    logger.info(
-        f"""
-            Demarches simplifiees API request status: {response.status_code}"
-            * response.text: {response.text},
-            * response.status_code: {response.status_code},
-            * request.url: {api_url},
-            * request.body: {body},
-            """,
-    )
-
-    if response.status_code >= 400:
-        logger.error(
-            "Demarches simplifiees API request failed",
-            extra={
-                "response.text": response.text,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
+            context={
+                "department": config.department.department,
+                "domain": site.domain,
+                "admin_url": admin_url,
             },
         )
-
-        message = f"""\
-### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
-
-L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier n°{dossier_number}.
-
-Réponse de Démarches Simplifiées : {response.status_code}
-```
-{response.text}
-```
-
-Requête envoyée :
-* Url: {api_url}
-* Body:
-```
-{body}
-```
-"""
         notify(dedent(message), "haie")
         return None
 
-    data = response.json() or {}
-
-    dossier = (data.get("data") or {}).get("dossier")
+    ds_client = DsClient()
+    dossier = ds_client.get_one_dossier(dossier_number)
 
     if dossier is None:
 
+        # Tous ces cas à prendre en compte
+        """
         if (
             any(
                 error["extensions"]["code"] == "not_found"
@@ -480,26 +395,20 @@ Requête envoyée :
             },
         )
 
-        message = f"""\
-### Récupération des informations d'un dossier depuis Démarches-simplifiées : :warning: anomalie
-
-La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le dossier concerné n'a pas été récupéré.
-
-Réponse de Démarches Simplifiées : {response.status_code}
-```
-{response.text}
-```
-
-Requête envoyée :
-* Url: {api_url}
-* Body:
-```
-{body}
-```
-
-"""
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+            context={
+                "status_code": response.status_code,
+                "response": response.text,
+                "api_url": api_url,
+                "body": body,
+                "command": "fetch_project_details_from_demarches_simplifiees",
+            },
+        )
         notify(dedent(message), "haie")
+        """
         return None
+
     # we have got a dossier from DS for this petition project
 
     demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
