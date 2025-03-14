@@ -2,13 +2,39 @@ from unittest.mock import Mock, patch
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    PetitionProjectFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@patch("requests.post")
+def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
+
+    mock_post.side_effect = []
+    PetitionProjectFactory()
+    ConfigHaieFactory()
+    call_command("dossier_submission_admin_alert")
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("requests.post")
