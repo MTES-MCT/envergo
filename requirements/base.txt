@@ -50,7 +50,7 @@ click-repl==0.3.0
     # via celery
 cligj==0.7.2
     # via fiona
-django==4.2.19
+django==4.2.20
     # via
     #   -r base.in
     #   django-allauth
