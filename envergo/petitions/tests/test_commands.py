@@ -7,14 +7,14 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_FALSE,
+    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_FALSE)
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 @patch("requests.post")
 def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
 

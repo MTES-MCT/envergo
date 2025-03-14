@@ -7,7 +7,7 @@ from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import fetch_project_details_from_demarches_simplifiees
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_FALSE,
+    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     PetitionProjectFactory,
 )
 
@@ -109,7 +109,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert details.pacage == "123456789"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_FALSE)
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     mock_post, caplog, haie_user, site
