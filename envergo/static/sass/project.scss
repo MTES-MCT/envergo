@@ -1060,6 +1060,8 @@ div.hero-alt {
 }
 
 // moulinette result page styles
+$content-max-width: 40rem;
+
 .moulinette-result-body {
   #content {
     display: flex;
@@ -1127,7 +1129,7 @@ div.hero-alt {
   #project-result,
   #after_result_content {
     & > section {
-      max-width: 40rem;
+      max-width: $content-max-width;
       margin: 0 auto;
     }
 
@@ -1147,6 +1149,20 @@ div.hero-alt {
 }
 
 @media only screen and (width > 991px) {
+  // compute some variables for big screen layout
+  $fr-container-max-width: 78rem;
+  $sidebar-width: min(calc(400% / 12), calc($fr-container-max-width / 3));
+  $main-column-width: min(
+    calc(800% / 12),
+    calc(2 * $fr-container-max-width / 3)
+  );
+  $result-width: min($main-column-width, $content-max-width);
+  $container-margin-x: max(calc((100vw - $fr-container-max-width) / 2), 0rem);
+  $main-column-margin-left: calc($container-margin-x + $sidebar-width);
+  $result-margin-left: calc(
+    $main-column-margin-left + ($main-column-width - $result-width) / 2
+  );
+
   .moulinette-result-body {
     height: 100%;
     padding-bottom: 5rem;
@@ -1157,10 +1173,7 @@ div.hero-alt {
     }
 
     #project-result {
-      margin-left: max(
-        calc(((100vw - 78rem) / 2) + 26rem + (52rem - 40rem) / 2),
-        26rem
-      );
+      margin-left: $result-margin-left;
 
       & > section {
         margin: 0;
@@ -1168,9 +1181,8 @@ div.hero-alt {
     }
 
     #project-summary {
-      margin-left: max(calc((100vw - 78rem) / 2), 0rem);
-      max-width: 26rem;
-      width: 100%;
+      margin-left: $container-margin-x;
+      width: $sidebar-width;
       position: fixed;
       top: 0;
       left: 0;
@@ -1179,7 +1191,7 @@ div.hero-alt {
     }
 
     #after_result_content {
-      margin-left: max(calc(((100vw - 78rem) / 2) + 26rem), 26rem);
+      margin-left: $main-column-margin-left;
 
       & > section {
         margin-left: 6rem;
@@ -1191,8 +1203,8 @@ div.hero-alt {
     }
 
     footer#footer {
-      margin-left: max(calc(((100vw - 78rem) / 2) + 26rem), 26rem);
-      max-width: min(calc(100vw - 26rem), 52rem);
+      margin-left: $main-column-margin-left;
+      max-width: $main-column-width;
       padding-bottom: 5rem;
     }
 
