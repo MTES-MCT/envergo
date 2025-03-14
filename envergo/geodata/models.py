@@ -163,3 +163,15 @@ class CatchmentAreaTile(models.Model):
     class Meta:
         verbose_name = _("Catchment area tile")
         verbose_name_plural = _("Catchment area tiles")
+
+
+class MapZoneSQLView(models.Model):
+    """Unmanaged model to create a SQL View
+    join between Zone and Map
+    """
+
+    id = models.BigIntegerField(primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = "v_geodata_map_zone"
