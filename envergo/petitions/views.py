@@ -97,6 +97,7 @@ class PetitionProjectCreate(FormView):
 
         Return the url of the created dossier if successful, None otherwise
         """
+
         moulinette_url = project.moulinette_url
         parsed_url = urlparse(moulinette_url)
         moulinette_data = parse_qs(parsed_url.query)
@@ -160,6 +161,14 @@ class PetitionProjectCreate(FormView):
                 field.get("mapping", {}),
                 config,
             )
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"\nrequest.url: {api_url}"
+                f"\nrequest.body: {body}"
+            )
+            return None, None
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
