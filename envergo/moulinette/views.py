@@ -15,7 +15,6 @@ from envergo.analytics.utils import (
     is_request_from_a_bot,
     log_event,
 )
-from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
@@ -28,12 +27,6 @@ from envergo.utils.urls import (
     update_fragment,
     update_qs,
 )
-
-BODY_TPL = {
-    RESULTS.soumis: "moulinette/eval_body_soumis.html",
-    RESULTS.action_requise: "moulinette/eval_body_action_requise.html",
-    RESULTS.non_soumis: "moulinette/eval_body_non_soumis.html",
-}
 
 
 class MoulinetteMixin:
