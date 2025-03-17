@@ -1432,17 +1432,20 @@ footer {
     // `position: fixed` instead of `position: sticky` to avoir content jumping
     // effects and smooth-scrolling issues
     position: fixed;
-    top: -5000px;
+    top: 0;
+    transform: translate3d(0, -200%, 0);
     visibility: hidden;
+    transition: all 0.6s ease-in-out;
 
     @media (width >= 62em) {
       &.displayed {
         top: 0;
+        transform: translate3d(0, 0, 0);
         visibility: visible;
 
         &.hidden-downscroll {
           // only displayed when up scroll
-          top: -200px;
+          transform: translate3d(0, -100%, 0);
         }
       }
     }
