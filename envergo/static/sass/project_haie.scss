@@ -446,3 +446,36 @@ div#project-specifications-instructor {
     display: none;
   }
 }
+
+/**
+ * Page instructor
+ */
+
+div#project-dossier-no {
+  border-bottom: solid 1px var(--border-default-grey);
+}
+
+@media (width >= 48em) {
+  .fr-sidemenu--sticky {
+    top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+  }
+
+  // Apply border grey on main instead of sidemenu to have it full height
+  // Don't use sticky-full-height because side menu scroll up at the end of the page but too early
+  .fr-sidemenu__inner {
+    padding: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    box-shadow: none;
+  }
+
+  div#project-specifications-instructor {
+    padding-left: 1.5rem;
+    border-left: solid 1px var(--border-default-grey);
+  }
+
+  div#project-dossier-no {
+    border-bottom: solid 1px var(--border-default-grey);
+  }
+}
