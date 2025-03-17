@@ -1,4 +1,5 @@
 import logging
+import timeit
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
@@ -86,6 +87,8 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
     def get_map(self):
         map_polygons = []
 
+        start = timeit.default_timer()
+
         potential_qs = [
             zone
             for zone in self.catalog["potential_wetlands"]
@@ -101,6 +104,9 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         ]
         if wetlands_qs:
             map_polygons.append(MapPolygon(wetlands_qs, BLUE, "Zone humide"))
+
+        stop = timeit.default_timer() - start
+        logger.info(f"Temps pour trouver les zones : {stop}")
 
         if self.catalog["wetlands_within_25m"]:
             caption = "Le projet se situe dans une zone humide référencée."

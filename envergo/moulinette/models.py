@@ -1,4 +1,5 @@
 import logging
+import timeit
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from itertools import groupby
@@ -1526,7 +1527,12 @@ class MoulinetteAmenagement(Moulinette):
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
+        start = timeit.default_timer()
+
         catalog = super().get_catalog_data()
+
+        step_super_catalog = timeit.default_timer() - start
+        logger.info(f"Temps super() catalog_data : {step_super_catalog}")
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
@@ -1536,9 +1542,15 @@ class MoulinetteAmenagement(Moulinette):
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
+        step_data = timeit.default_timer() - step_super_catalog
+        logger.info(f"Temps data : {step_data}")
+
         fetching_radius = int(self.raw_data.get("radius", "200"))
         zones = self.get_zones(catalog["lng_lat"], fetching_radius)
         catalog["all_zones"] = zones
+
+        step_zones_qs = timeit.default_timer() - step_data
+        logger.info(f"Temps zones qs : {step_zones_qs}")
 
         def wetlands_filter(zone):
             return all(
@@ -1549,6 +1561,9 @@ class MoulinetteAmenagement(Moulinette):
             )
 
         catalog["wetlands"] = list(filter(wetlands_filter, zones))
+
+        step_zones = timeit.default_timer() - step_zones_qs
+        logger.info(f"Temps zones zones humides certain : {step_zones}")
 
         def potential_wetlands_filter(zone):
             return all(
