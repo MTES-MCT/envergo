@@ -1516,6 +1516,7 @@ class MoulinetteAmenagement(Moulinette):
                     Distance("activation_map__zones__geometry", coords), IntegerField()
                 )
             )
+            .filter(distance__lte=F("activation_distance"))
             .select_related("activation_map")
             .defer("activation_map__geometry")
         )
