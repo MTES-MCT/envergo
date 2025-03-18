@@ -12,9 +12,8 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Case, CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
 from django.db.models import Value as V
-from django.db.models import When
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
@@ -1494,13 +1493,7 @@ class MoulinetteAmenagement(Moulinette):
         perimeters = (
             Perimeter.objects.filter(activation_map__zones__in=zones)
             .annotate(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
-                )
+                geometry=F("activation_map__zones__geometry"),
             )
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .distinct("id")
@@ -1518,16 +1511,11 @@ class MoulinetteAmenagement(Moulinette):
             super()
             .get_criteria()
             .filter(activation_map__zones__in=zones)
-            .alias(
-                geometry=Case(
-                    When(
-                        activation_map__geometry__isnull=False,
-                        then=F("activation_map__geometry"),
-                    ),
-                    default=F("activation_map__zones__geometry"),
+            .annotate(
+                distance=Cast(
+                    Distance("activation_map__zones__geometry", coords), IntegerField()
                 )
             )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .select_related("activation_map")
             .defer("activation_map__geometry")
         )
