@@ -81,7 +81,6 @@ class Map:
         start = timeit.default_timer()
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
         logger.info(self.entries)
-        polygons = to_polygons(self.entries)
 
         data = json.dumps(
             {
@@ -89,7 +88,7 @@ class Map:
                 "center": to_geojson(self.center),
                 "zoom": self.zoom,
                 "polygons": [
-                    polygons(self.entries, truncate=self.truncate, buffer=buffer)
+                    to_polygons(self.entries, truncate=self.truncate, buffer=buffer)
                 ],
                 "caption": self.caption,
                 "sources": [
