@@ -266,7 +266,7 @@ class EcoulementSansBV(CriterionEvaluator):
     CODE_MATRIX = {
         ("gte_1ha_new", "non_pv_sol"): "soumis",
         ("gte_1ha", "non_pv_sol"): "soumis_ou_pac",
-        ("gte_9000", "non_pv_sol"): "soumis",
+        ("gte_9000", "non_pv_sol"): "action_requise",
         ("gte_8000", "non_pv_sol"): "action_requise",
         ("lt_8000", "non_pv_sol"): "non_soumis",
         ("gte_1ha_new", "pv_sol"): "action_requise_pv_sol",
