@@ -200,6 +200,27 @@ def make_polygons_valid(map):
     logger.info("Invalid polygons have been fixed")
 
 
+def to_polygons(objects, geometry_field="geometry", truncate=False, buffer=0):
+    """Return serialized geojson, using SQL query"""
+    start = timeit.default_timer()
+    objects_tuples = [(obj.geometry, obj.color, obj.label) for obj in objects]
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT json_agg(ST_AsGeoJSON()(t.*)::json),
+            FROM ( VALUES {objects_tuples})
+            AS t(geometry, color, label);
+            """,
+        )
+        row = cursor.fetchone()
+
+    geojson = row[0]
+
+    stop = timeit.default_timer() - start
+    logger.info(f"Temps to_geojson : {stop}")
+    return json.loads(geojson)
+
+
 def to_geojson(obj, geometry_field="geometry"):
     """Return serialized geojson.
 
@@ -214,7 +235,6 @@ def to_geojson(obj, geometry_field="geometry"):
     """
 
     logger.info(f"obj type : {type(obj)}")
-    logger.info(f"obj srid : {obj.srid}")
     start = timeit.default_timer()
     if isinstance(obj, (QuerySet, list)):
         geojson = serialize("geojson", obj, geometry_field=geometry_field)

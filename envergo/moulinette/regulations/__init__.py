@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.utils import merge_geometries, to_geojson
+from envergo.geodata.utils import merge_geometries, to_geojson, to_polygons
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,8 @@ class Map:
         EPSG_WGS84 = 4326
         start = timeit.default_timer()
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
+        logger.info(self.entries)
+        polygons = to_polygons(self.entries)
 
         data = json.dumps(
             {
@@ -87,16 +89,7 @@ class Map:
                 "center": to_geojson(self.center),
                 "zoom": self.zoom,
                 "polygons": [
-                    {
-                        "polygon": (
-                            to_geojson(entry.geometry.intersection(buffer))
-                            if self.truncate
-                            else to_geojson(entry.geometry)
-                        ),
-                        "color": entry.color,
-                        "label": entry.label,
-                    }
-                    for entry in self.entries
+                    polygons(self.entries, truncate=self.truncate, buffer=buffer)
                 ],
                 "caption": self.caption,
                 "sources": [
