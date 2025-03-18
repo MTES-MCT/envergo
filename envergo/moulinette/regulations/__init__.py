@@ -1,10 +1,14 @@
 import json
+import logging
+import timeit
 from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.utils import merge_geometries, to_geojson
+from envergo.geodata.utils import merge_geometries, to_geojson, to_polygons
+
+logger = logging.getLogger(__name__)
 
 
 class Stake(Enum):
@@ -36,7 +40,11 @@ class MapPolygon:
     @property
     def geometry(self):
         geometries = [p.geometry for p in self.perimeters]
+
+        start = timeit.default_timer()
         merged_geometry = merge_geometries(geometries)
+        step_merged = timeit.default_timer() - start
+        logger.info(f"Temps pour merger les geom : {step_merged}")
         return merged_geometry
 
     @property
@@ -70,7 +78,9 @@ class Map:
     def to_json(self):
         # Don't display full polygons
         EPSG_WGS84 = 4326
+        start = timeit.default_timer()
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
+        logger.info(self.entries)
 
         data = json.dumps(
             {
@@ -78,16 +88,7 @@ class Map:
                 "center": to_geojson(self.center),
                 "zoom": self.zoom,
                 "polygons": [
-                    {
-                        "polygon": (
-                            to_geojson(entry.geometry.intersection(buffer))
-                            if self.truncate
-                            else to_geojson(entry.geometry)
-                        ),
-                        "color": entry.color,
-                        "label": entry.label,
-                    }
-                    for entry in self.entries
+                    to_polygons(self.entries, truncate=self.truncate, buffer=buffer)
                 ],
                 "caption": self.caption,
                 "sources": [
@@ -96,6 +97,8 @@ class Map:
                 "fixed": self.fixed,
             }
         )
+        stop = timeit.default_timer() - start
+        logger.info(f"Temps pour générer le json : {stop}")
         return data
 
     @property

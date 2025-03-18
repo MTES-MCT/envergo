@@ -1,4 +1,5 @@
 import logging
+import timeit
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from itertools import groupby
@@ -441,7 +442,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["coords"],
+                center=self.moulinette.catalog["lng_lat"],
                 entries=polygons,
                 truncate=False,
                 zoom=None,
@@ -1460,15 +1461,11 @@ class MoulinetteAmenagement(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        coords = self.catalog["coords"]
+        coords = self.catalog["lng_lat"]
+        zones = self.catalog["all_zones"]
 
         perimeters = (
-            Perimeter.objects.filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
+            Perimeter.objects.filter(activation_map__zones__in=zones)
             .annotate(
                 geometry=Case(
                     When(
@@ -1479,7 +1476,6 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
             .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
-            .order_by("id")
             .distinct("id")
             .select_related("activation_map")
             .defer("activation_map__geometry")
@@ -1488,18 +1484,14 @@ class MoulinetteAmenagement(Moulinette):
         return perimeters
 
     def get_criteria(self):
-        coords = self.catalog["coords"]
+        coords = self.catalog["lng_lat"]
+        zones = self.catalog["all_zones"]
 
         criteria = (
             super()
             .get_criteria()
-            .filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
-            .annotate(
+            .filter(activation_map__zones__in=zones)
+            .alias(
                 geometry=Case(
                     When(
                         activation_map__geometry__isnull=False,
@@ -1522,14 +1514,19 @@ class MoulinetteAmenagement(Moulinette):
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
+
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+
+        start = timeit.default_timer()
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
+        step_data_buffer3 = timeit.default_timer() - start
+        logger.info(f"Temps data buffers : {step_data_buffer3}")
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
-        zones = self.get_zones(catalog["coords"], fetching_radius)
+        zones = self.get_zones(catalog["lng_lat"], fetching_radius)
         catalog["all_zones"] = zones
 
         def wetlands_filter(zone):
@@ -1540,7 +1537,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["wetlands"] = list(filter(wetlands_filter, zones))
+        step_zones = timeit.default_timer() - start
+        logger.info(f"Temps zones humides certain : {step_zones}")
 
         def potential_wetlands_filter(zone):
             return all(

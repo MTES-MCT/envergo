@@ -163,7 +163,7 @@ class ImpactZoneHumide(ZoneHumideMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
@@ -259,7 +259,7 @@ class ImpactZoneHumideStrict(ZoneHumideMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
@@ -409,7 +409,7 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
@@ -494,7 +494,7 @@ class ImpactZoneHumideIOTAStrict(ZoneHumideMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
