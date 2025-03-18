@@ -295,16 +295,57 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
     return content
 
 
+RESULTS_GROUP_KEYS = {
+    RESULTS.interdit: RESULTS.interdit,
+    RESULTS.systematique: RESULTS.soumis,
+    RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.soumis: RESULTS.soumis,
+    RESULTS.derogation_inventaire: RESULTS.soumis,
+    RESULTS.derogation_simplifiee: RESULTS.soumis,
+    RESULTS.action_requise: RESULTS.soumis,
+    RESULTS.a_verifier: RESULTS.soumis,
+    RESULTS.iota_a_verifier: RESULTS.soumis,
+    RESULTS.non_soumis: "autre",
+    RESULTS.dispense: "autre",
+    RESULTS.non_concerne: "autre",
+    RESULTS.non_disponible: "autre",
+    RESULTS.non_applicable: "autre",
+    RESULTS.non_active: "autre",
+}
+
+RESULTS_GROUP_CASCADE = [
+    RESULTS.interdit,
+    RESULTS.soumis,
+    "autre",
+]
+
+
+def _check_results_groups_matrices():
+    _missing_results = set()
+    _missing_groups = set()
+
+    for key, value in RESULTS:
+        if key not in RESULTS_GROUP_KEYS:
+            _missing_results.add(key)
+            continue
+        if RESULTS_GROUP_KEYS[key] not in RESULTS_GROUP_CASCADE:
+            _missing_groups.add(RESULTS_GROUP_KEYS[key])
+    if _missing_results:
+        raise ValueError(
+            f"The following RESULTS are missing in RESULTS_GROUP_KEYS: {_missing_results}"
+        )
+    if _missing_groups:
+        raise ValueError(
+            f"The following value are missing in RESULTS_GROUP_CASCADE: {_missing_groups}"
+        )
+
+
+_check_results_groups_matrices()
+
+
 def get_result_group_key(regulation):
     """Get the grouping key for the regulation result."""
-
-    group_keys = {
-        RESULTS.interdit: RESULTS.interdit,
-        RESULTS.soumis: RESULTS.soumis,
-        RESULTS.derogation_inventaire: RESULTS.soumis,
-        RESULTS.derogation_simplifiee: RESULTS.soumis,
-    }
-    return group_keys.get(regulation.result, "autre")
+    return RESULTS_GROUP_KEYS.get(regulation.result, "autre")
 
 
 @register.simple_tag
