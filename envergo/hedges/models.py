@@ -16,7 +16,7 @@ from envergo.geodata.models import Zone
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
 
-R = 2  # Coefficient de replantation exigée
+R = 1.5  # Coefficient de replantation exigée
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
