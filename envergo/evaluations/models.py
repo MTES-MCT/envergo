@@ -100,6 +100,7 @@ RESULTS = Choices(
     ("derogation_inventaire", "Dérogation"),
     ("derogation_simplifiee", "Dérogation simplifiée"),
     ("dispense", "Dispense"),
+    ("soumis_ou_pac", "Soumis"),
 )
 
 
@@ -110,6 +111,34 @@ EVAL_RESULTS = Choices(
     ("non_soumis", "Non soumis"),
     ("action_requise", "Action requise"),
 )
+
+SELF_DECLARATION_ELIGIBILITY_MATRIX = {
+    RESULTS.soumis: True,
+    RESULTS.soumis_ou_pac: True,
+    RESULTS.non_soumis: False,
+    RESULTS.action_requise: True,
+    RESULTS.non_disponible: False,
+    RESULTS.cas_par_cas: True,
+    RESULTS.systematique: True,
+    RESULTS.non_applicable: False,
+    RESULTS.non_concerne: False,
+    RESULTS.a_verifier: True,
+    RESULTS.iota_a_verifier: True,
+    RESULTS.interdit: True,
+    RESULTS.non_active: False,
+    RESULTS.derogation_inventaire: False,
+    RESULTS.derogation_simplifiee: False,
+    RESULTS.dispense: False,
+}
+
+
+_missing_results = [
+    key for (key, label) in RESULTS if key not in SELF_DECLARATION_ELIGIBILITY_MATRIX
+]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in SELF_DECLARATION_ELIGIBILITY_MATRIX: {_missing_results}"
+    )
 
 
 class EvaluationQuerySet(QuerySet):
@@ -307,15 +336,7 @@ class Evaluation(models.Model):
         eligible = False
         moulinette = self.get_moulinette()
         for regulation in moulinette.regulations:
-            if regulation.result in (
-                RESULTS.interdit,
-                RESULTS.systematique,
-                RESULTS.cas_par_cas,
-                RESULTS.soumis,
-                RESULTS.action_requise,
-                RESULTS.a_verifier,
-                RESULTS.iota_a_verifier,
-            ):
+            if SELF_DECLARATION_ELIGIBILITY_MATRIX[regulation.result]:
                 eligible = True
                 break
         return eligible
