@@ -1493,12 +1493,6 @@ class MoulinetteAmenagement(Moulinette):
 
         perimeters = (
             Perimeter.objects.filter(activation_map__zones__in=zones)
-            .filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
             .annotate(
                 geometry=Case(
                     When(
@@ -1524,12 +1518,6 @@ class MoulinetteAmenagement(Moulinette):
             super()
             .get_criteria()
             .filter(activation_map__zones__in=zones)
-            .filter(
-                activation_map__zones__geometry__dwithin=(
-                    coords,
-                    F("activation_distance"),
-                )
-            )
             .alias(
                 geometry=Case(
                     When(
