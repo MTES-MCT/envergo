@@ -9,6 +9,7 @@ register = template.Library()
 # 1: green, 2: grey, 3: yellow, 4: light red, 5: orange, 6 strong red
 PROBA_CSS = {
     RESULTS.soumis: 4,
+    RESULTS.soumis_ou_pac: 4,
     RESULTS.action_requise: 3,
     RESULTS.non_soumis: 1,
     RESULTS.non_disponible: 2,

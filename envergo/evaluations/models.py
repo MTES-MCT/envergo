@@ -100,6 +100,7 @@ RESULTS = Choices(
     ("derogation_inventaire", "Dérogation"),
     ("derogation_simplifiee", "Dérogation simplifiée"),
     ("dispense", "Dispense"),
+    ("soumis_ou_pac", "Soumis"),
 )
 
 
@@ -113,6 +114,7 @@ EVAL_RESULTS = Choices(
 
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.soumis: True,
+    RESULTS.soumis_ou_pac: True,
     RESULTS.non_soumis: False,
     RESULTS.action_requise: True,
     RESULTS.non_disponible: False,

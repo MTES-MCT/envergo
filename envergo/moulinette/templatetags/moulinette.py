@@ -300,6 +300,7 @@ RESULTS_GROUP_KEYS = {
     RESULTS.systematique: RESULTS.soumis,
     RESULTS.cas_par_cas: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
+    RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.derogation_inventaire: RESULTS.soumis,
     RESULTS.derogation_simplifiee: RESULTS.soumis,
     RESULTS.action_requise: RESULTS.soumis,
