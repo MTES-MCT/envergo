@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import sys
+import timeit
 import zipfile
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
@@ -212,6 +213,9 @@ def to_geojson(obj, geometry_field="geometry"):
     srid.
     """
 
+    logger.info(f"obj type : {type(obj)}")
+    logger.info(f"obj srid : {obj.srid}")
+    start = timeit.default_timer()
     if isinstance(obj, (QuerySet, list)):
         geojson = serialize("geojson", obj, geometry_field=geometry_field)
     elif hasattr(obj, "geojson"):
@@ -221,6 +225,8 @@ def to_geojson(obj, geometry_field="geometry"):
     else:
         raise ValueError(f"Cannot geojson serialize the given object {obj}")
 
+    stop = timeit.default_timer() - start
+    logger.info(f"Temps to_geojson : {stop}")
     return json.loads(geojson)
 
 

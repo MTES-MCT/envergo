@@ -78,9 +78,9 @@ class Map:
     def to_json(self):
         # Don't display full polygons
         EPSG_WGS84 = 4326
+        start = timeit.default_timer()
         buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
 
-        start = timeit.default_timer()
         data = json.dumps(
             {
                 "type": self.type,
