@@ -439,7 +439,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["coords"],
+                center=self.moulinette.catalog["lng_lat"],
                 entries=polygons,
                 truncate=False,
                 zoom=None,
