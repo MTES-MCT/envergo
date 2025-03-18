@@ -1460,7 +1460,7 @@ class MoulinetteAmenagement(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        coords = self.catalog["coords"]
+        coords = self.catalog["lng_lat"]
         zones = self.catalog["all_zones"]
 
         perimeters = (
@@ -1489,7 +1489,7 @@ class MoulinetteAmenagement(Moulinette):
         return perimeters
 
     def get_criteria(self):
-        coords = self.catalog["coords"]
+        coords = self.catalog["lng_lat"]
         zones = self.catalog["all_zones"]
 
         criteria = (
