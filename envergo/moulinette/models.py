@@ -72,10 +72,10 @@ REGULATIONS = Choices(
 
 RESULT_CASCADE = [
     RESULTS.interdit,
+    RESULTS.soumis_ou_pac,
     RESULTS.systematique,
     RESULTS.cas_par_cas,
     RESULTS.soumis,
-    RESULTS.soumis_ou_pac,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
     RESULTS.action_requise,
