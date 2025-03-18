@@ -1532,10 +1532,7 @@ class MoulinetteAmenagement(Moulinette):
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
 
-        start = timeit.default_timer()
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        step_data_lng_lat = timeit.default_timer() - start
-        logger.info(f"Temps data lng_lat : {step_data_lng_lat}")
 
         start = timeit.default_timer()
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
@@ -1570,10 +1567,7 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
-        start = timeit.default_timer()
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
-        step_zones_potential = timeit.default_timer() - start
-        logger.info(f"Temps zones humides potentielles : {step_zones_potential}")
 
         def forbidden_wetlands_filter(zone):
             return all(
@@ -1583,10 +1577,7 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
-        start = timeit.default_timer()
         catalog["forbidden_wetlands"] = list(filter(forbidden_wetlands_filter, zones))
-        step_zones_forbidden = timeit.default_timer() - start
-        logger.info(f"Temps zones humides interdites : {step_zones_forbidden}")
 
         def flood_zones_filter(zone):
             return all(
@@ -1596,10 +1587,7 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
-        start = timeit.default_timer()
         catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
-        step_zones_inondables = timeit.default_timer() - start
-        logger.info(f"Temps zones inondables : {step_zones_inondables}")
 
         def potential_flood_zones_filter(zone):
             return all(
@@ -1609,13 +1597,8 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
-        start = timeit.default_timer()
         catalog["potential_flood_zones"] = list(
             filter(potential_flood_zones_filter, zones)
-        )
-        step_zones_inondables_potential = timeit.default_timer() - start
-        logger.info(
-            f"Temps zones inondables potentielles : {step_zones_inondables_potential}"
         )
 
         return catalog
