@@ -418,6 +418,9 @@ class PetitionProjectDetail(DetailView):
             self.object.demarches_simplifiees_dossier_number
         )
         context["created_at"] = self.object.created_at
+        context["demarches_simplifiees_date_depot"] = (
+            self.object.demarches_simplifiees_date_depot
+        )
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})

@@ -66,6 +66,10 @@ class PetitionProject(models.Model):
         default=DOSSIER_STATES.draft,
     )
 
+    demarches_simplifiees_date_depot = models.DateTimeField(
+        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True
+    )
+
     onagre_number = models.CharField(
         "Référence ONAGRE du dossier", max_length=64, blank=True
     )
@@ -143,6 +147,8 @@ class PetitionProject(models.Model):
             )
 
         self.demarches_simplifiees_state = dossier["state"]
+        if "dateDepot" in dossier:
+            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
         self.save()
 
     def get_moulinette(self):
