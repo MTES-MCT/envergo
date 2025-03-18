@@ -1527,30 +1527,27 @@ class MoulinetteAmenagement(Moulinette):
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        start = timeit.default_timer()
-
         catalog = super().get_catalog_data()
-
-        step_super_catalog = timeit.default_timer() - start
-        logger.info(f"Temps super() catalog_data : {step_super_catalog}")
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
+
+        start = timeit.default_timer()
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        step_data_lng_lat = timeit.default_timer() - start
+        logger.info(f"Temps data lng_lat : {step_data_lng_lat}")
+
+        start = timeit.default_timer()
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
-
-        step_data = timeit.default_timer() - step_super_catalog
-        logger.info(f"Temps data : {step_data}")
+        step_data_buffer3 = timeit.default_timer() - start
+        logger.info(f"Temps data buffers : {step_data_buffer3}")
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
         zones = self.get_zones(catalog["lng_lat"], fetching_radius)
         catalog["all_zones"] = zones
-
-        step_zones_qs = timeit.default_timer() - step_data
-        logger.info(f"Temps zones qs : {step_zones_qs}")
 
         def wetlands_filter(zone):
             return all(
@@ -1560,10 +1557,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["wetlands"] = list(filter(wetlands_filter, zones))
-
-        step_zones = timeit.default_timer() - step_zones_qs
-        logger.info(f"Temps zones zones humides certain : {step_zones}")
+        step_zones = timeit.default_timer() - start
+        logger.info(f"Temps zones humides certain : {step_zones}")
 
         def potential_wetlands_filter(zone):
             return all(
@@ -1573,7 +1570,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
+        step_zones_potential = timeit.default_timer() - start
+        logger.info(f"Temps zones humides potentielles : {step_zones_potential}")
 
         def forbidden_wetlands_filter(zone):
             return all(
@@ -1583,7 +1583,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["forbidden_wetlands"] = list(filter(forbidden_wetlands_filter, zones))
+        step_zones_forbidden = timeit.default_timer() - start
+        logger.info(f"Temps zones humides interdites : {step_zones_forbidden}")
 
         def flood_zones_filter(zone):
             return all(
@@ -1593,7 +1596,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
+        step_zones_inondables = timeit.default_timer() - start
+        logger.info(f"Temps zones inondables : {step_zones_inondables}")
 
         def potential_flood_zones_filter(zone):
             return all(
@@ -1603,8 +1609,13 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["potential_flood_zones"] = list(
             filter(potential_flood_zones_filter, zones)
+        )
+        step_zones_inondables_potential = timeit.default_timer() - start
+        logger.info(
+            f"Temps zones inondables potentielles : {step_zones_inondables_potential}"
         )
 
         return catalog
