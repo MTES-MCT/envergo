@@ -489,6 +489,26 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
+class PetitionProjectInstructorDossierDSView(PetitionProjectInstructorView):
+    template_name = "haie/petitions/instructor_dossier_ds_view.html"
+    queryset = PetitionProject.objects.all()
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+    form_class = PetitionProjectInstructorForm
+
+    def get(self, request, *args, **kwargs):
+        result = super().get(request, *args, **kwargs)
+
+        log_event(
+            "projet",
+            "consultation_i_ds",
+            self.request,
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+        return result
+
+
 class PetitionProjectHedgeDataExport(DetailView):
     model = PetitionProject
     slug_field = "reference"
