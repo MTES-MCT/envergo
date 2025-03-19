@@ -787,7 +787,11 @@ class ConfigHaie(ConfigBase):
     This object is dedicated to the Haie moulinette. For Amenagement, see ConfigAmenagement.
     """
 
-    regulations_available = HAIE_REGULATIONS
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
