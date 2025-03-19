@@ -375,6 +375,16 @@ class HedgeList {
   }
 }
 
+function styleDrawGuide() {
+  setTimeout(() => {
+    const paths = document.querySelectorAll(".leaflet-zoom-animated g path:not(.hedge)");
+    let drawGuide = paths.length ? paths[paths.length - 1] : null;
+    if (drawGuide) {
+      drawGuide.classList.add('leaflet-draw-guide')
+    }
+  }, 100); // Wait 100ms to let the element be created
+}
+
 createApp({
   /**
    * Create show and draw hedges app
@@ -420,6 +430,8 @@ createApp({
       const newHedge = addHedge(type);
       hedgeBeingDrawn.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
+        styleDrawGuide();
+
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           helpBubble.value = "drawingHelp";
         }
