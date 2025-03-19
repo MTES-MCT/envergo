@@ -1774,8 +1774,6 @@ class MoulinetteHaie(Moulinette):
             super()
             .get_criteria()
             .filter(activation_map__zones__geometry__intersects=dept_centroid)
-            .select_related("activation_map")
-            .defer("activation_map__geometry")
         )
 
         return criteria
