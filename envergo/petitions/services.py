@@ -65,6 +65,7 @@ class ProjectDetails:
     demarche_simplifiee_number: int
     usager: str
     details: list[InstructorInformation]
+    ds_data: dict
 
 
 def compute_instructor_informations(
@@ -124,10 +125,8 @@ def compute_instructor_informations(
             ),
         ],
     )
-    project_ds_data = None
 
     if ds_details:
-        project_ds_data = ds_details.champs
         if ds_details.city:
             project_details.items.append(
                 Item("Commune principale", ds_details.city, None, None)
@@ -331,7 +330,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=project_ds_data,
+        ds_data=ds_details,
     )
 
 
