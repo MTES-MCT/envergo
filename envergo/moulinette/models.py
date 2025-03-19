@@ -6,7 +6,7 @@ from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
-from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
@@ -1753,6 +1753,7 @@ class MoulinetteHaie(Moulinette):
                 Department.objects.defer("geometry")
                 .select_related("confighaie")
                 .filter(department=department_code)
+                .annotate(centroid=Centroid("geometry"))
                 .first()
             )
             if department_code
@@ -1766,6 +1767,18 @@ class MoulinetteHaie(Moulinette):
 
         regulations = super().get_regulations().prefetch_related("perimeters")
         return regulations
+
+    def get_criteria(self):
+        dept_centroid = self.department.centroid
+        criteria = (
+            super()
+            .get_criteria()
+            .filter(activation_map__zones__geometry__intersects=dept_centroid)
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+        )
+
+        return criteria
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
