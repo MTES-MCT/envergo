@@ -40,12 +40,16 @@ class Item:
 
 @dataclass
 class InstructorInformationDetails:
+    """Instructor information details class formatted to be displayed in templates"""
+
     label: str
     items: list[Item]
 
 
 @dataclass
 class InstructorInformation:
+    """Instructor information class formatted to be displayed in templates"""
+
     slug: str | None
     label: str | None
     items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
@@ -55,6 +59,8 @@ class InstructorInformation:
 
 @dataclass
 class ProjectDetails:
+    """Project details class formatted to be displayed in templates"""
+
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
@@ -64,6 +70,8 @@ class ProjectDetails:
 def compute_instructor_informations(
     petition_project, moulinette, site, visitor_id, user
 ) -> ProjectDetails:
+    """Build ProjectDetails with instructor informations"""
+
     config = moulinette.config
     ds_details = fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, visitor_id, user
@@ -116,8 +124,10 @@ def compute_instructor_informations(
             ),
         ],
     )
+    project_ds_data = None
 
     if ds_details:
+        project_ds_data = ds_details.champs
         if ds_details.city:
             project_details.items.append(
                 Item("Commune principale", ds_details.city, None, None)
@@ -321,6 +331,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
+        ds_data=project_ds_data,
     )
 
 
@@ -330,6 +341,7 @@ class DemarchesSimplifieesDetails:
     city: str | None
     pacage: str | None
     usager: str
+    champs: dict
 
 
 def fetch_project_details_from_demarches_simplifiees(
@@ -547,7 +559,7 @@ def fetch_project_details_from_demarches_simplifiees(
 
     usager = (dossier.get("usager") or {}).get("email", "")
 
-    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager)
+    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager, champs)
 
 
 class PetitionProjectCreationProblem:
