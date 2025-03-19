@@ -38,6 +38,7 @@ services:
     env_file:
       - .env
       - ./envs/postgres
+    shm_size: 1g
 
   node:
     build:
