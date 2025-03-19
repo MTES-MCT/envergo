@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.petitions.tests.factories import DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -74,7 +75,7 @@ def compute_instructor_informations(
     """Build ProjectDetails with instructor informations"""
 
     config = moulinette.config
-    ds_details = fetch_project_details_from_demarches_simplifiees(
+    ds_details = compute_instructor_ds_informations(
         petition_project, config, site, visitor_id, user
     )
 
@@ -343,9 +344,68 @@ class DemarchesSimplifieesDetails:
     champs: dict
 
 
+def compute_instructor_ds_informations(
+    petition_project, config, site, visitor_id, user
+) -> DemarchesSimplifieesDetails:
+    dossier = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, visitor_id, user
+    )
+    if not dossier:
+        return None
+
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+
+    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
+    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
+    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+
+    ds_url = (
+        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+        f"{dossier_number}"
+    )
+    petition_project.synchronize_with_demarches_simplifiees(
+        dossier, site, demarche_label, ds_url, visitor_id, user
+    )
+    applicant = dossier.get("demandeur") or {}
+    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
+    applicant_name = (
+        None
+        if applicant_name is None or applicant_name.strip() == ""
+        else applicant_name
+    )
+    city = None
+    pacage = None
+    champs = dossier.get("champs", [])
+
+    city_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_city_id
+        ),
+        None,
+    )
+    if city_field:
+        city = city_field.get("stringValue", None)
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.get("stringValue", None)
+
+    usager = (dossier.get("usager") or {}).get("email", "")
+
+    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager, champs)
+
+
 def fetch_project_details_from_demarches_simplifiees(
     petition_project, config, site, visitor_id, user
-) -> DemarchesSimplifieesDetails | None:
+) -> dict | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     if (
@@ -397,7 +457,7 @@ def fetch_project_details_from_demarches_simplifiees(
         "variables": variables,
     }
 
-    dossier = {}
+    dossier = None
 
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
@@ -512,53 +572,7 @@ def fetch_project_details_from_demarches_simplifiees(
         return None
     # we have got a dossier from DS for this petition project
 
-    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
-    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
-    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
-
-    ds_url = (
-        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-        f"{dossier_number}"
-    )
-    petition_project.synchronize_with_demarches_simplifiees(
-        dossier, site, demarche_label, ds_url, visitor_id, user
-    )
-
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    city = None
-    pacage = None
-    champs = dossier.get("champs", [])
-
-    city_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_city_id
-        ),
-        None,
-    )
-    if city_field:
-        city = city_field.get("stringValue", None)
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.get("stringValue", None)
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager, champs)
+    return dossier
 
 
 class PetitionProjectCreationProblem:
