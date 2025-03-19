@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Instruction du dossier{% endblock %}
+
+{% block container %}
+
+  <section class="fr-py-8w">
+    <div class="fr-container">
+      <div class="fr-grid-row">
+        <div class="fr-col fr-col-sm-3">
+          <nav class="fr-sidemenu fr-sidemenu--sticky"
+               aria-labelledby="fr-sidemenu-title">
+            <div class="fr-sidemenu__inner">
+              <div id="fr-sidemenu-wrapper">
+                <ul class="fr-sidemenu__list">
+                  <li class="fr-sidemenu__item fr-sidemenu__item--active">
+                    <a class="fr-sidemenu__link"
+                       href="#project-specifications-instructor"
+                       target="_self"
+                       aria-current="page">Caractéristiques du projet</a>
+                  </li>
+                  {% for information in project_details.details %}
+                    {% if information.slug %}
+                      <li class="fr-sidemenu__item">
+                        <a class="fr-sidemenu__link"
+                           href="#{{ information.slug }}"
+                           target="_self">{{ information.label }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <div id="project-specifications-instructor" class="fr-col">
+
+          <div id="project-dossier-no" class="fr-py-4w fr-mb-4w">
+            <div class="fr-container--fluid">
+              <div class="fr-grid-row fr-grid-row--gutters">
+                <div class="fr-col-md-8">
+                  <h1>Dossier n° {{ petition_project.demarches_simplifiees_dossier_number }}</h1>
+                </div>
+                <div class="fr-col-md-4">
+                  <ul class="fr-btns-group fr-btns-group--icon-right">
+                    <li>
+                      <a class="fr-btn fr-btn--icon-right fr-icon-external-link-line"
+                         title="Dossier dans Démarches Simplifiées"
+                         href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}"
+                         target="_blank"
+                         rel="noopener external">Consulter le dossier</a>
+                    </li>
+                    <li>
+                      <a class="fr-btn  fr-btn--secondary fr-btn--icon-right fr-icon-mail-line"
+                         title="Dossier dans Démarches Simplifiées"
+                         href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}/messagerie"
+                         target="_blank"
+                         rel="noopener external">Contacter le pétitionnaire</a>
+                    </li>
+                    <li>
+                      <a class="fr-btn  fr-btn--secondary fr-btn--icon-right fr-icon-download-line"
+                         title="Dossier dans Démarches Simplifiées"
+                         href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger le tracé des haies</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h2>Formulaire rempli sur Démarches simplifiées</h2>
+
+          {{ petition_project }}
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var SOURCE_PAGE = "instruction";</script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var forms = document.querySelectorAll('form');
+      var beforeUnloadListenerAdded = false;
+
+      function preventLeaving(e) {
+        e.preventDefault();
+        var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
+        e.returnValue = confirmationMessage; // Standard for most browsers
+        return confirmationMessage; // For some older browsers
+      }
+
+      forms.forEach(function (form) {
+        form.addEventListener('change', function () {
+          if (!beforeUnloadListenerAdded) {
+            window.addEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = true;
+          }
+        });
+
+        form.addEventListener('submit', function () {
+          if(beforeUnloadListenerAdded){
+            window.removeEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = false;
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}
