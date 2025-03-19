@@ -1,0 +1,27 @@
+query getDossier($dossierNumber: Int!) {
+  dossier(number: $dossierNumber) {
+    id
+    number
+    state
+    dateDepot
+    usager {
+      email
+    }
+    demandeur {
+      ... on PersonnePhysique {
+        civilite
+        nom
+        prenom
+        email
+      }
+    }
+    champs {
+      id
+      stringValue
+    }
+    demarche {
+      title
+      number
+    }
+  }
+}
