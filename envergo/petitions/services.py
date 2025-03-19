@@ -1,3 +1,4 @@
+import json
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
@@ -123,10 +124,8 @@ def compute_instructor_informations(
             ),
         ],
     )
-    project_ds_data = None
 
     if ds_details:
-        project_ds_data = ds_details.champs
         if ds_details.city:
             project_details.items.append(
                 Item("Commune principale", ds_details.city, None, None)
@@ -330,7 +329,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=project_ds_data,
+        ds_data=ds_details,
     )
 
 
@@ -410,60 +409,237 @@ def fetch_project_details_from_demarches_simplifiees(
         "variables": variables,
     }
 
+    dossier = {}
+
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing."
+            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
             f"\nrequest.url: {api_url}"
             f"\nrequest.body: {body}"
         )
-        return None
 
-    response = requests.post(
-        api_url,
-        json=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-        },
-    )
+        dossier = json.loads(
+            """{
+            "annotations": [
+            {
+                "champDescriptorId": "champDescriptorId",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                "label": "label",
+                "prefilled": true,
+                "stringValue": "stringValue",
+                "updatedAt": "2025-03-18T14:31:05.359Z"
+            }
+            ],
+            "archived": true,
+            "attestation": {
+            "byteSize": 42,
+            "byteSizeBigInt": "9007199254740991",
+            "checksum": "checksum",
+            "contentType": "contentType",
+            "createdAt": "2025-03-18T14:31:05.359Z",
+            "filename": "filename",
+            "url": "https://website.com"
+            },
+            "avis": [
+            {
+                "dateQuestion": "2025-03-18T14:31:05.359Z",
+                "dateReponse": "2025-03-18T14:31:05.359Z",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                "question": "question",
+                "questionAnswer": true,
+                "questionLabel": "questionLabel",
+                "reponse": "reponse"
+            }
+            ],
+            "champs": [
+            {
+                "champDescriptorId": "champDescriptorId",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                "label": "label",
+                "prefilled": true,
+                "stringValue": "stringValue",
+                "updatedAt": "2025-03-18T14:31:05.359Z"
+            }
+            ],
+            "connectionUsager": "deleted",
+            "dateDepot": "2025-03-18T14:31:05.359Z",
+            "dateDerniereCorrectionEnAttente": "2025-03-18T14:31:05.359Z",
+            "dateDerniereModification": "2025-03-18T14:31:05.359Z",
+            "dateDerniereModificationAnnotations": "2025-03-18T14:31:05.359Z",
+            "dateDerniereModificationChamps": "2025-03-18T14:31:05.359Z",
+            "dateExpiration": "2025-03-18T14:31:05.359Z",
+            "datePassageEnConstruction": "2025-03-18T14:31:05.359Z",
+            "datePassageEnInstruction": "2025-03-18T14:31:05.359Z",
+            "datePrevisionnelleDecisionSVASVR": "2025-03-18T14:31:05.359Z",
+            "dateSuppressionParAdministration": "2025-03-18T14:31:05.359Z",
+            "dateSuppressionParUsager": "2025-03-18T14:31:05.359Z",
+            "dateTraitement": "2025-03-18T14:31:05.359Z",
+            "dateTraitementSVASVR": "2025-03-18T14:31:05.359Z",
+            "demandeur": {
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
+            },
+            "demarche": {
+            "cadreJuridiqueURL": "cadreJuridiqueURL",
+            "cadreJuridiqueUrl": "cadreJuridiqueUrl",
+            "dateCreation": "2025-03-18T14:31:05.359Z",
+            "dateDepublication": "2025-03-18T14:31:05.359Z",
+            "dateDerniereModification": "2025-03-18T14:31:05.359Z",
+            "dateFermeture": "2025-03-18T14:31:05.359Z",
+            "datePublication": "2025-03-18T14:31:05.359Z",
+            "declarative": "accepte",
+            "demarcheURL": "https://website.com",
+            "demarcheUrl": "https://website.com",
+            "description": "A description",
+            "dpoURL": "dpoURL",
+            "dpoUrl": "dpoUrl",
+            "dureeConservationDossiers": 42,
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+            "noticeURL": "https://website.com",
+            "noticeUrl": "https://website.com",
+            "number": 42,
+            "opendata": true,
+            "siteWebURL": "siteWebURL",
+            "siteWebUrl": "siteWebUrl",
+            "state": "brouillon",
+            "tags": [
+                "tags"
+            ],
+            "title": "title",
+            "zones": [
+                "zones"
+            ]
+            },
+            "deposeParUnTiers": true,
+            "geojson": {
+            "byteSize": 42,
+            "byteSizeBigInt": "9007199254740991",
+            "checksum": "checksum",
+            "contentType": "contentType",
+            "createdAt": "2025-03-18T14:31:05.359Z",
+            "filename": "filename",
+            "url": "https://website.com"
+            },
+            "groupeInstructeur": {
+            "closed": true,
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+            "label": "label",
+            "number": 42
+            },
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+            "instructeurs": [
+            {
+                "email": "test-email@yourcompany.com",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
+            }
+            ],
+            "labels": [
+            {
+                "color": "beige_gris_galet",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                "name": "A name"
+            }
+            ],
+            "messages": [
+            {
+                "body": "body",
+                "createdAt": "2025-03-18T14:31:05.359Z",
+                "discardedAt": "2025-03-18T14:31:05.359Z",
+                "email": "test-email@yourcompany.com",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
+            }
+            ],
+            "motivation": "motivation",
+            "motivationAttachment": {
+            "byteSize": 42,
+            "byteSizeBigInt": "9007199254740991",
+            "checksum": "checksum",
+            "contentType": "contentType",
+            "createdAt": "2025-03-18T14:31:05.359Z",
+            "filename": "filename",
+            "url": "https://website.com"
+            },
+            "nomMandataire": "nomMandataire",
+            "number": 42,
+            "pdf": {
+            "byteSize": 42,
+            "byteSizeBigInt": "9007199254740991",
+            "checksum": "checksum",
+            "contentType": "contentType",
+            "createdAt": "2025-03-18T14:31:05.359Z",
+            "filename": "filename",
+            "url": "https://website.com"
+            },
+            "prefilled": true,
+            "prenomMandataire": "prenomMandataire",
+            "revision": {
+            "dateCreation": "2025-03-18T14:31:05.359Z",
+            "datePublication": "2025-03-18T14:31:05.359Z",
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
+            },
+            "state": "accepte",
+            "traitements": [
+            {
+                "dateTraitement": "2025-03-18T14:31:05.359Z",
+                "emailAgentTraitant": "emailAgentTraitant",
+                "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                "motivation": "motivation",
+                "state": "accepte"
+            }
+            ],
+            "usager": {
+            "email": "test-email@yourcompany.com",
+            "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
+            }
+        }"""
+        )
 
-    logger.info(
-        f"""
-            Demarches simplifiees API request status: {response.status_code}"
-            * response.text: {response.text},
-            * response.status_code: {response.status_code},
-            * request.url: {api_url},
-            * request.body: {body},
-            """,
-    )
-
-    if response.status_code >= 400:
-        logger.error(
-            "Demarches simplifiees API request failed",
-            extra={
-                "response.text": response.text,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
+    else:
+        response = requests.post(
+            api_url,
+            json=body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
             },
         )
 
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
-            context={
-                "dossier_number": dossier_number,
-                "status_code": response.status_code,
-                "response": response.text,
-                "api_url": api_url,
-                "body": body,
-            },
+        logger.info(
+            f"""
+                Demarches simplifiees API request status: {response.status_code}"
+                * response.text: {response.text},
+                * response.status_code: {response.status_code},
+                * request.url: {api_url},
+                * request.body: {body},
+                """,
         )
-        notify(dedent(message), "haie")
-        return None
 
-    data = response.json() or {}
+        if response.status_code >= 400:
+            logger.error(
+                "Demarches simplifiees API request failed",
+                extra={
+                    "response.text": response.text,
+                    "response.status_code": response.status_code,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
+            )
 
-    dossier = (data.get("data") or {}).get("dossier")
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                context={
+                    "dossier_number": dossier_number,
+                    "status_code": response.status_code,
+                    "response": response.text,
+                    "api_url": api_url,
+                    "body": body,
+                },
+            )
+            notify(dedent(message), "haie")
+            return None
+
+        data = response.json() or {}
+
+        dossier = (data.get("data") or {}).get("dossier")
 
     if dossier is None:
 
@@ -513,6 +689,7 @@ def fetch_project_details_from_demarches_simplifiees(
     demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
     demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
     demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+
     ds_url = (
         f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
         f"{dossier_number}"
