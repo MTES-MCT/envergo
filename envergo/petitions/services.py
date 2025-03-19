@@ -63,6 +63,7 @@ class ProjectDetails:
     demarche_simplifiee_number: int
     usager: str
     details: list[InstructorInformation]
+    ds_data: dict
 
 
 def compute_instructor_informations(
