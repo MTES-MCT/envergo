@@ -1,13 +1,18 @@
+import json
 from unittest.mock import Mock, patch
 
 import pytest
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.services import fetch_project_details_from_demarches_simplifiees
+from envergo.petitions.services import (
+    compute_instructor_ds_informations,
+    fetch_project_details_from_demarches_simplifiees,
+)
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER,
     PetitionProjectFactory,
 )
 
@@ -100,7 +105,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
+    dossier = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
+    assert dossier is not None
+
+    details = compute_instructor_ds_informations(
         petition_project, config, site, "", haie_user
     )
 
@@ -133,7 +143,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
-    assert details is None
+    assert details == json.loads(DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER)
 
 
 @patch("envergo.petitions.services.notify")
