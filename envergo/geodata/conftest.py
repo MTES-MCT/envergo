@@ -37,7 +37,6 @@ def france_zh():
 def bizous_town_center():
     """A map with only Bizous's town center."""
 
-    map = MapFactory(name="Bizou town center", map_type="")
     polygon = Polygon(
         [
             (0.4421436860179369, 43.06930871579473),
@@ -47,6 +46,49 @@ def bizous_town_center():
             (0.4421436860179369, 43.06930871579473),
         ]
     )
+    map = MapFactory(name="Bizou town center", map_type="")
+    map.zones.all().delete()
+    ZoneFactory(map=map, geometry=MultiPolygon([polygon]))
+    return map
+
+
+@pytest.fixture
+def loire_atlantique_map():
+    # A very rough polygon of Loire-Atlantique department.
+    polygon = Polygon(
+        [
+            (-2.318813217788111, 47.11172939002415),
+            (-1.8093222509912361, 46.85878309487171),
+            (-1.0224264990381111, 47.06497777827326),
+            (-1.336910141616236, 47.267582403961455),
+            (-0.8782309423974862, 47.364409358656644),
+            (-1.272365463881861, 47.826525823757436),
+            (-2.679988754897486, 47.46013043348137),
+            (-2.550899399428736, 47.13508980827845),
+            (-2.215816391616236, 47.213505682461204),
+            (-2.318813217788111, 47.11172939002415),
+        ]
+    )
+    map = MapFactory(name="Loire Atlantique", map_type="")
+    map.zones.all().delete()
+    ZoneFactory(map=map, geometry=MultiPolygon([polygon]))
+    return map
+
+
+@pytest.fixture
+def herault_map():
+    polygon = Polygon(
+        [
+            (3.215640301549349, 43.22794194612112),
+            (2.5426723773152715, 43.395887014114464),
+            (3.2656957338328425, 43.913967044500254),
+            (3.841333590843401, 43.96202635483297),
+            (4.262633800688122, 43.58351502379401),
+            (3.215640301549349, 43.22794194612112),
+        ]
+    )
+    map = MapFactory(name="Hérault", map_type="")
+    map.zones.all().delete()
     ZoneFactory(map=map, geometry=MultiPolygon([polygon]))
     return map
 

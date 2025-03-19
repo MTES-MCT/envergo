@@ -54,7 +54,7 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
-    regulations_available = ["conditionalite_pac", "ep"]
+    regulations_available = ["conditionnalite_pac", "ep"]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
         {
