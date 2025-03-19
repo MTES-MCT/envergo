@@ -50,8 +50,6 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
-HAIE_REGULATIONS = ["conditionnalite_pac", "ep"]
-
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
 # project is subject to the Water Law. Or if the project is forbidden.
@@ -1669,7 +1667,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = HAIE_REGULATIONS
+    REGULATIONS = ["conditionnalite_pac", "ep"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
