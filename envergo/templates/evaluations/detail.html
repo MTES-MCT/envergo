@@ -50,6 +50,8 @@
     var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
     var DEPARTMENT = "{{ department.department }}";
     var MAP_TYPE = "Content";  // This is only for analytics purpose
+    var SHOW_PCI_LAYER = false;
+
   </script>
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
