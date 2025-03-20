@@ -1366,6 +1366,11 @@ class Moulinette(ABC):
     def result(self):
         """Compute global result from individual regulation results."""
 
+        # return the cached result if it was overriden
+        # Otherwise, we don't cache the result because it can change between invocations
+        if hasattr(self, "_result"):
+            return self._result
+
         results = [regulation.result for regulation in self.regulations]
 
         # TODO Handle other statuses non_concerne, non_disponible, a_verifier
@@ -1392,9 +1397,12 @@ class Moulinette(ABC):
                 result = rule_result
                 break
 
-        result = result or RESULTS.non_soumis
+        return result or RESULTS.non_soumis
 
-        return result
+    @result.setter
+    def result(self, value):
+        """Allow monkeypatching moulinette result for tests."""
+        self._result = value
 
     def all_required_actions(self):
         for regulation in self.regulations:
