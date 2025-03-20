@@ -6,7 +6,7 @@ from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
-from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
@@ -48,8 +48,6 @@ EPSG_MERCATOR = 3857
 
 
 logger = logging.getLogger(__name__)
-
-HAIE_REGULATIONS = ["conditionnalite_pac", "ep"]
 
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
@@ -822,7 +820,11 @@ class ConfigHaie(ConfigBase):
     This object is dedicated to the Haie moulinette. For Amenagement, see ConfigAmenagement.
     """
 
-    regulations_available = HAIE_REGULATIONS
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
@@ -1399,6 +1401,11 @@ class Moulinette(ABC):
     def result(self):
         """Compute global result from individual regulation results."""
 
+        # return the cached result if it was overriden
+        # Otherwise, we don't cache the result because it can change between invocations
+        if hasattr(self, "_result"):
+            return self._result
+
         results = [regulation.result for regulation in self.regulations]
 
         result = None
@@ -1407,9 +1414,12 @@ class Moulinette(ABC):
                 result = GLOBAL_RESULT_MATRIX[cascading_result]
                 break
 
-        result = result or RESULTS.non_soumis
+        return result or RESULTS.non_soumis
 
-        return result
+    @result.setter
+    def result(self, value):
+        """Allow monkeypatching moulinette result for tests."""
+        self._result = value
 
     def all_required_actions(self):
         for regulation in self.regulations:
@@ -1663,7 +1673,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = HAIE_REGULATIONS
+    REGULATIONS = ["conditionnalite_pac", "ep"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1747,6 +1757,7 @@ class MoulinetteHaie(Moulinette):
                 Department.objects.defer("geometry")
                 .select_related("confighaie")
                 .filter(department=department_code)
+                .annotate(centroid=Centroid("geometry"))
                 .first()
             )
             if department_code
@@ -1760,6 +1771,16 @@ class MoulinetteHaie(Moulinette):
 
         regulations = super().get_regulations().prefetch_related("perimeters")
         return regulations
+
+    def get_criteria(self):
+        dept_centroid = self.department.centroid
+        criteria = (
+            super()
+            .get_criteria()
+            .filter(activation_map__zones__geometry__intersects=dept_centroid)
+        )
+
+        return criteria
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
