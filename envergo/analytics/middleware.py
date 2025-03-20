@@ -1,9 +1,10 @@
 from uuid import uuid4
 
-from django.conf import settings
-
 from config.settings.base import VISITOR_COOKIE_NAME
-from envergo.analytics.utils import set_visitor_id_cookie
+from envergo.analytics.utils import (
+    set_unsecure_visitor_id_cookie,
+    set_visitor_id_cookie,
+)
 
 
 class SetVisitorIdCookie:
@@ -24,16 +25,28 @@ class SetVisitorIdCookie:
         self.get_response = get_response
 
     def __call__(self, request):
-        is_first_visit = settings.VISITOR_COOKIE_NAME not in request.COOKIES
-        visitor_id = None
+        is_first_visit = VISITOR_COOKIE_NAME not in request.COOKIES
         if is_first_visit:
             visitor_id = uuid4()
             request.COOKIES[VISITOR_COOKIE_NAME] = visitor_id
+        else:
+            visitor_id = request.COOKIES[VISITOR_COOKIE_NAME]
 
         response = self.get_response(request)
 
         if is_first_visit:
             set_visitor_id_cookie(response, visitor_id)
+
+        unsecure_visitor_id_cookie_name = f"unsecure-{VISITOR_COOKIE_NAME}"
+        is_unsecure_cookie_set = unsecure_visitor_id_cookie_name in request.COOKIES
+
+        if (
+            not is_unsecure_cookie_set
+            or visitor_id != request.COOKIES[unsecure_visitor_id_cookie_name]
+        ):
+            set_unsecure_visitor_id_cookie(
+                response, visitor_id, unsecure_visitor_id_cookie_name
+            )
 
         return response
 
