@@ -7,6 +7,9 @@
 {% endblock %}
 
 {% block regulation_body %}
+  {% show_regulation_body regulation as body_content %}
+  {% if body_content %}<div class="alt fr-p-3w fr-mb-3w">{{ body_content }}</div>{% endif %}
+
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
       {% if criterion.should_be_displayed %}
