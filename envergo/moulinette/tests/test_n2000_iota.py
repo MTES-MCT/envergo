@@ -44,9 +44,9 @@ def loisurleau_criteria(france_map):  # noqa
 @pytest.fixture
 def moulinette_data(footprint):
     return {
-        # Bizou coordinates
-        "lat": 48.4961953,
-        "lng": 0.7504093,
+        # Mouais coordinates
+        "lat": 47.696706,
+        "lng": -1.646947,
         "existing_surface": 0,
         "created_surface": footprint,
     }

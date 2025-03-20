@@ -96,7 +96,7 @@ class MapFactory(DjangoModelFactory):
         skip_postgeneration_save = True
 
     name = factory_Faker("name")
-    map_type = "zone_humide"
+    map_type = ""
     description = "Lorem ipsum"
 
     @factory.post_generation
@@ -114,7 +114,7 @@ class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
 
-    map = factory.SubFactory(MapFactory)
+    map = factory.SubFactory(MapFactory, zones=[])
     geometry = france_multipolygon
 
 
