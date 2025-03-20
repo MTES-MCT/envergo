@@ -404,7 +404,7 @@ def compute_instructor_ds_informations(
 
 def fetch_project_details_from_demarches_simplifiees(
     petition_project, config, site, visitor_id, user
-) -> dict() | None:
+) -> dict | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     if (
