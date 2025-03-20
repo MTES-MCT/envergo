@@ -397,6 +397,7 @@
         var _paq = window._paq = window._paq || [];
         _paq.push(['setCustomUrl', customUrl]);
         _paq.push(['trackEvent', 'Error', '500', getCookieValue('unsecure-visitorid')]);
+        _paq.push(['disableErrorTracking']); // avoid sending a duplicated error event with less data
 
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
