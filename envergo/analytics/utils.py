@@ -65,7 +65,12 @@ def log_event_raw(category, event, visitor_id, user, site, **kwargs):
 
 
 def set_visitor_id_cookie(response, value):
-    """Set the unique visitor id cookie with correct lifetime."""
+    """Set the unique visitor id cookie with correct lifetime.
+
+    The visitor id is set 2 times: one secure (HttpOnly) and one unsecure.
+    The unsecure one can be read by the frontend, e.g. for tracking when backend is down
+    But the value in backend is always read and set from the secure one.
+    """
 
     # CNIL's recommendation for tracking cookie lifetime = 13 months
     lifetime = timedelta(days=30 * 13)
@@ -77,6 +82,17 @@ def set_visitor_id_cookie(response, value):
         path=settings.SESSION_COOKIE_PATH,
         secure=settings.SESSION_COOKIE_SECURE or None,
         httponly=settings.SESSION_COOKIE_HTTPONLY or None,
+        samesite=settings.SESSION_COOKIE_SAMESITE,
+    )
+
+    response.set_cookie(
+        f"unsecure-{settings.VISITOR_COOKIE_NAME}",
+        value,
+        max_age=lifetime.total_seconds(),
+        domain=settings.SESSION_COOKIE_DOMAIN,
+        path=settings.SESSION_COOKIE_PATH,
+        secure=settings.SESSION_COOKIE_SECURE or None,
+        httponly=False,
         samesite=settings.SESSION_COOKIE_SAMESITE,
     )
 

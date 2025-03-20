@@ -352,6 +352,13 @@
 
     <!-- Matomo -->
     <script>
+      function getCookieValue(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
       var IDSITE = "0";
 
       // Get the current URL
@@ -384,6 +391,8 @@
 
         var _paq = window._paq = window._paq || [];
         _paq.push(['setCustomUrl', customUrl]);
+        _paq.push(['trackEvent', 'Error', '500', getCookieValue('unsecure-visitorid')]);
+
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
