@@ -352,10 +352,18 @@
 
     <!-- Matomo -->
     <script>
+      function getCookieValue(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
       var IDSITE = "0";
 
       // Get the current URL
-      const currentHost = new URL(window.location.href).host;
+      const currentURL = new URL(window.location.href);
+      const currentHost = currentURL.host;
 
       // Define a whitelist of allowed hosts
       const allowedHosts = [
@@ -379,8 +387,12 @@
         else if (currentHost == ('haie.beta.gouv.fr')) {
           IDSITE = "140";
         }
+        const customUrl = `${currentURL.origin}/erreur/500/?url=${currentURL.pathname}`;
 
         var _paq = window._paq = window._paq || [];
+        _paq.push(['setCustomUrl', customUrl]);
+        _paq.push(['trackEvent', 'Error', '500', getCookieValue('unsecure-visitorid')]);
+
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
