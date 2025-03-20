@@ -387,7 +387,7 @@
         else if (currentHost == ('haie.beta.gouv.fr')) {
           IDSITE = "140";
         }
-        const customUrl = `${currentURL.origin}/erreur/500/?url=${currentURL.pathname}`;
+        const customUrl = `${currentURL.origin}/erreur/500/?url=${currentURL.pathname + currentURL.search + currentURL.hash}`;
 
         var _paq = window._paq = window._paq || [];
         _paq.push(['setCustomUrl', customUrl]);
