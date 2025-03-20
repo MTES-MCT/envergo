@@ -1,4 +1,4 @@
-{% if regulation.perimeters.all.count > 0 %}
+{% if regulation.perimeters_list|length > 0 %}
   {% include 'moulinette/sage/_result_multiple_perimeters.html' %}
 {% else %}
   {% include 'moulinette/sage/result_non_active.html' %}
