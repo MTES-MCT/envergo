@@ -65,7 +65,11 @@ def log_event_raw(category, event, visitor_id, user, site, **kwargs):
 
 
 def set_visitor_id_cookie(response, value):
-    """Set the unique visitor id cookie with correct lifetime."""
+    """Set the unique visitor id cookie with correct lifetime.
+
+    This visitor id is used for analytics purposes only and therefore does not require httponly.
+    This way it can be read by the JS in frontend, e.g. for tracking when backend is down.
+    """
 
     # CNIL's recommendation for tracking cookie lifetime = 13 months
     lifetime = timedelta(days=30 * 13)
@@ -76,7 +80,7 @@ def set_visitor_id_cookie(response, value):
         domain=settings.SESSION_COOKIE_DOMAIN,
         path=settings.SESSION_COOKIE_PATH,
         secure=settings.SESSION_COOKIE_SECURE or None,
-        httponly=settings.SESSION_COOKIE_HTTPONLY or None,
+        httponly=False,
         samesite=settings.SESSION_COOKIE_SAMESITE,
     )
 
