@@ -9,195 +9,236 @@
         "email": "hedy.lamarr@exemple.com"
       },
       "demandeur": {
-        "civilite": "Mme",
-        "nom": "Hedy",
-        "prenom": "Lamarr",
-        "email": null
+          "civilite": "M",
+          "nom": "Doe",
+          "prenom": "Jane",
+          "email": null
       },
       "champs": [
         {
           "id": "Q2hhbXAtNDUzNDEzNQ==",
-          "stringValue": ""
-        },
-        {
-          "id": "Q2hhbXAtNTA5MzU0NA==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Identité"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3MA==",
-          "stringValue": "Agriculteur, agricultrice"
+          "stringValue": "Agriculteur, agricultrice",
+          "label": "Vous déposez cette demande en tant que :"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3MQ==",
-          "stringValue": "GAEC Choupi"
+          "stringValue": "GAEC Choupi",
+          "label": "Nom de votre structure"
         },
         {
           "id": "Q2hhbXAtNDUzNDE0NA==",
-          "stringValue": "Laon (02000)"
+          "stringValue": "Laon (02000)",
+          "label": "Votre adresse postale"
         },
         {
           "id": "Q2hhbXAtNDUzNDE0NQ==",
-          "stringValue": "hedy.lamarr@exemple.com"
+          "stringValue": "hedy.lamarr@example.com",
+          "label": "Votre email"
         },
         {
           "id": "Q2hhbXAtNDU0MzkzMg==",
-          "stringValue": "01 23 45 67 89"
+          "stringValue": "01 23 45 67 89",
+          "label": "Votre numéro de téléphone"
         },
         {
           "id": "Q2hhbXAtNDU0MzkzOA==",
-          "stringValue": "123456789"
+          "stringValue": "012345678",
+          "label": "Numéro PACAGE"
         },
         {
           "id": "Q2hhbXAtNDUzNDE1Ng==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Description du projet"
         },
         {
           "id": "Q2hhbXAtNDc0NDcyMQ==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Ce formulaire est pré-rempli à partir de la simulation que vous avez réalisée"
         },
         {
           "id": "Q2hhbXAtNDU0Mzk0Mw==",
-          "stringValue": "http://haie.local:8000/projet/AT9ZK7/consultation/"
+          "stringValue": "http://haie.local:8000/projet/AT9ZK7/consultation/",
+          "label": "Lien internet de la simulation réglementaire de votre projet"
         },
         {
           "id": "Q2hhbXAtNDcyOTE4Nw==",
-          "stringValue": "Laon (02000)"
+          "stringValue": "Laon (02000)",
+          "label": "Commune principale où se trouvent les haies à détruire"
         },
         {
           "id": "Q2hhbXAtNDUzNDE0Ng==",
-          "stringValue": "La motivation"
-        },
-        {
-          "id": "Q2hhbXAtNDcyOTE3Ng==",
-          "stringValue": "Ouiiii j'ai cherché"
+          "stringValue": "La motivation",
+          "label": "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3NQ==",
-          "stringValue": "TINA"
+          "stringValue": "TINA",
+          "label": "Justifiez pourquoi aucune alternative à la destruction n’est possible"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3Ng==",
+          "stringValue": "Ouiiii j'ai cherché",
+          "label": "Avez-vous cherché à prendre en compte les enjeux environnementaux dans le choix des haies à détruire ? Si oui, comment ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3Nw==",
-          "stringValue": "Au max"
+          "stringValue": "Au max",
+          "label": "Avez-vous limité le linéaire de haie à détruire par rapport à votre projet initial ? Si oui, comment ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTE4OA==",
-          "stringValue": null
+          "stringValue": null,
+          "label": "Photos des haies et alignements d'arbres à détruire"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3OA==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Autorisation du propriétaire"
         },
         {
           "id": "Q2hhbXAtNDcyOTE3OQ==",
-          "stringValue": "true"
+          "stringValue": "true",
+          "label": "Êtes-vous propriétaire de tous les terrains sur lesquels se situent les haies à détruire ?"
         },
         {
           "id": "Q2hhbXAtNDU5NjU1Mw==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Conditionnalité PAC – BCAE8"
         },
         {
           "id": "Q2hhbXAtNDcyOTI4NA==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "Projet soumis à déclaration préalable PAC"
         },
         {
           "id": "Q2hhbXAtNDcyOTI4Ng==",
-          "stringValue": "Aucune haie sur parcelle déclarée à la PAC"
+          "stringValue": "Aucune haie sur parcelle déclarée à la PAC",
+          "label": "Motif de dispense de déclaration préalable au titre de la conditionnalité PAC (BCAE 8)"
         },
         {
           "id": "Q2hhbXAtNDcyOTI4NQ==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Vous n'avez pas de renseignements à saisir concernant la conditionnalité PAC"
         },
         {
           "id": "Q2hhbXAtNDU5NjU2NA==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Réglementation « Espèces protégées »"
         },
         {
           "id": "Q2hhbXAtNDg3NjQ5Nw==",
-          "stringValue": "Dérogation"
+          "stringValue": "Dérogation",
+          "label": "Niveau de procédure « espèces protégées » selon le simulateur"
         },
         {
           "id": "Q2hhbXAtNDg3NjUxNQ==",
-          "stringValue": "Je n'ai pas consulté les structures"
+          "stringValue": "Je n'ai pas consulté les structures",
+          "label": "Inventaire ciblé : quelle est la préconisation des structures consultées ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIwMQ==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Description des haies à détruire"
         },
         {
           "id": "Q2hhbXAtNDU5Nzc0Mw==",
-          "stringValue": "Hêtre et chêne"
+          "stringValue": "Hêtre et chêne",
+          "label": "Quelles sont les essences des arbustes ou arbres composant les haies à détruire ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIwMg==",
-          "stringValue": "Moins de 25 ans"
+          "stringValue": "Moins de 25 ans",
+          "label": "Quel est l'âge des haies à détruire les plus anciennes ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIwMw==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "Présence de vieux arbres fissurés ou à cavité"
         },
         {
           "id": "Q2hhbXAtNDcyOTI4Mg==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "Présence d'arbres têtards ou d'arbres de diamètre supérieur à 18 cm"
         },
         {
           "id": "Q2hhbXAtNDcyOTIwNg==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "Proximité d'une mare"
         },
         {
           "id": "Q2hhbXAtNDcyOTIwOQ==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "L'une des haies à détruire a-t-elle fait l’objet d’une coupe récente ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxMQ==",
-          "stringValue": "Plus rarement"
+          "stringValue": "Plus rarement",
+          "label": "Quelle est la fréquence d’entretien de la haie à détruire ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxMg==",
-          "stringValue": "élagage"
+          "stringValue": "élagage",
+          "label": "Quel type d'entretien est réalisé habituellement ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxMw==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Description de la plantation"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxNA==",
-          "stringValue": "hêtre chêne fresne peuplier"
+          "stringValue": "hêtre chêne fresne peuplier",
+          "label": "Quelles sont les essences des arbustes ou arbres des haies à planter ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxNQ==",
-          "stringValue": "oui"
+          "stringValue": "oui",
+          "label": "D’où proviennent les plants ? Avez-vous étudié la possibilité de transplanter certains individus issus de la haie à détruire ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxNg==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "La plantation bénéficie-t-elle d’un financement public ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxOA==",
-          "stringValue": "oui"
+          "stringValue": "oui",
+          "label": "Une bande enherbée sera-t-elle maintenue au pied de la haie replantée ? Si oui, sur quelle largeur, et cette bande sera-t-elle située sur un seul côté de la haie ou bien répartie des deux côtés ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIxOQ==",
-          "stringValue": "oui"
+          "stringValue": "oui",
+          "label": "Prévoyez-vous de mettre en place des refuges pour la petite faune (hibernaculum fait de branches et/ou de pierres) au sein des haies replantées ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIyMA==",
-          "stringValue": "élagage tous les ans"
+          "stringValue": "élagage tous les ans",
+          "label": "De quelle manière la haie replantée sera-t-elle entretenue (type d’intervention, fréquence…) ?"
         },
         {
           "id": "Q2hhbXAtNDcyOTIyMQ==",
-          "stringValue": "false"
+          "stringValue": "false",
+          "label": "Avez-vous prévu des mesures compensatoires supplémentaires à la plantation de linéaire : plantation d’arbres isolés, de bosquet, mise en place d’une gestion différenciée sur des haies existantes, pose de gîtes artificiels… ?"
         },
         {
           "id": "Q2hhbXAtNDU1OTU0Nw==",
-          "stringValue": ""
+          "stringValue": "",
+          "label": "Pour déposer votre demande, cochez les cases ci-dessous et cliquez sur le bouton \"Déposer le dossier\""
         },
         {
           "id": "Q2hhbXAtNDcyOTIyNA==",
-          "stringValue": "true"
+          "stringValue": "true",
+          "label": "Je m'engage à ne démarrer mes travaux qu'en cas d'acceptation de ma demande"
         },
         {
           "id": "Q2hhbXAtNDcyOTI4Mw==",
-          "stringValue": "true"
+          "stringValue": "true",
+          "label": "En cas d'accord de l'administration, je m'engage à suivre les prescriptions qui me seront indiquées"
         }
       ],
       "demarche": {
