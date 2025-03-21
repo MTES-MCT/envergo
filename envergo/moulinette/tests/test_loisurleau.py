@@ -277,10 +277,17 @@ def test_3220_medium_footprint_within_potential_flood_zones(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [9000])
+def test_2150_not_so_big(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "action_requise"
+
+
+@pytest.mark.parametrize("footprint", [10000])
 def test_2150_big(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis_ou_pac"
 
 
 @pytest.mark.parametrize("footprint", [8000])
