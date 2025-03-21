@@ -376,6 +376,19 @@ def compute_instructor_ds_informations(
     pacage = None
     champs = dossier.get("champs", [])
 
+    champs_display = InstructorInformationDetails(
+        label="Plantation",
+        items=[
+            Item(
+                c.get("label"),
+                c.get("stringValue"),
+                None,
+                None,
+            )
+            for c in champs
+        ],
+    )
+
     city_field = next(
         (
             champ
@@ -399,7 +412,9 @@ def compute_instructor_ds_informations(
 
     usager = (dossier.get("usager") or {}).get("email", "")
 
-    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager, champs)
+    return DemarchesSimplifieesDetails(
+        applicant_name, city, pacage, usager, champs_display
+    )
 
 
 def fetch_project_details_from_demarches_simplifiees(
@@ -456,6 +471,7 @@ def fetch_project_details_from_demarches_simplifiees(
             champs {
               id
               stringValue
+              label
             }
             demarche{
                 title
