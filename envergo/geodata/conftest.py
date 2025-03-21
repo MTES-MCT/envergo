@@ -59,7 +59,7 @@ def france_map():
 @pytest.fixture
 def france_zh():
     map = MapFactory(
-        name="France map",
+        name="France map ZH",
         map_type="zone_humide",
         zones=[ZoneFactory(geometry=MultiPolygon([france_polygon]))],
     )
