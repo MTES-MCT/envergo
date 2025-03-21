@@ -81,6 +81,7 @@ class Command(BaseCommand):
                                 nodes {
                                     number
                                     state
+                                    dateDepot
                                     usager {
                                         email
                                         }

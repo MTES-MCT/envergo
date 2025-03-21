@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from urllib.parse import urlparse
 
 from django.db import models
@@ -64,6 +65,16 @@ class PetitionProject(models.Model):
         max_length=20,
         choices=DOSSIER_STATES,
         default=DOSSIER_STATES.draft,
+    )
+
+    demarches_simplifiees_date_depot = models.DateTimeField(
+        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True
+    )
+
+    demarches_simplifiees_last_sync = models.DateTimeField(
+        "Date de la dernière synchronisation avec Démarches Simplifiées",
+        null=True,
+        blank=True,
     )
 
     onagre_number = models.CharField(
@@ -143,6 +154,10 @@ class PetitionProject(models.Model):
             )
 
         self.demarches_simplifiees_state = dossier["state"]
+        if "dateDepot" in dossier:
+            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
+
+        self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
 
     def get_moulinette(self):

@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,6 +26,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
                 "id": "RG9zc2llci0yMTY4MzczOQ==",
                 "number": 21683739,
                 "state": "en_construction",
+                "dateDepot": "2025-01-29T16:25:03+01:00",
                 "usager": {"email": "pierre-yves.dezaunay@beta.gouv.fr"},
                 "demandeur": {
                     "civilite": "Mme",
@@ -107,6 +109,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert details.applicant_name == "Mme dez dez"
     assert details.city == "Ladaux (33760)"
     assert details.pacage == "123456789"
+
+    petition_project.refresh_from_db()
+    assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
+        2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
+    )
+    assert petition_project.demarches_simplifiees_last_sync is not None
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)

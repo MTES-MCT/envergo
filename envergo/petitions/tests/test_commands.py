@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -58,10 +59,12 @@ def test_dossier_submission_admin_alert(
                         {
                             "number": 21059675,
                             "state": "en_construction",
+                            "dateDepot": "2025-01-29T16:25:03+01:00",
                         },
                         {
                             "number": 123,
                             "state": "en_construction",
+                            "dateDepot": "2025-01-29T16:25:03+01:00",
                             "champs": [
                                 {
                                     "id": "ABC123",
@@ -93,7 +96,7 @@ def test_dossier_submission_admin_alert(
     }
 
     mock_post.side_effect = [mock_response_1, mock_response_2]
-    PetitionProjectFactory()
+    project = PetitionProjectFactory()
     ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
 
@@ -110,3 +113,8 @@ def test_dossier_submission_admin_alert(
 
     assert mock_notify_command.call_count == 1
     assert mock_notify_model.call_count == 1
+    project.refresh_from_db()
+    assert project.demarches_simplifiees_date_depot == datetime.datetime(
+        2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
+    )
+    assert project.demarches_simplifiees_last_sync is not None
