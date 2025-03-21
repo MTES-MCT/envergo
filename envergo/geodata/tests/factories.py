@@ -33,6 +33,22 @@ france_polygon = Polygon(
 )
 france_multipolygon = MultiPolygon([france_polygon])
 
+loire_atlantique_polygon = Polygon(
+    [
+        (-2.318813217788111, 47.11172939002415),
+        (-1.8093222509912361, 46.85878309487171),
+        (-1.0224264990381111, 47.06497777827326),
+        (-1.336910141616236, 47.267582403961455),
+        (-0.8782309423974862, 47.364409358656644),
+        (-1.272365463881861, 47.826525823757436),
+        (-2.679988754897486, 47.46013043348137),
+        (-2.550899399428736, 47.13508980827845),
+        (-2.215816391616236, 47.213505682461204),
+        (-2.318813217788111, 47.11172939002415),
+    ]
+)
+loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
+
 
 class FuzzyPolygon(fuzzy.BaseFuzzyAttribute):
     """Yields random polygon"""
@@ -80,7 +96,7 @@ class MapFactory(DjangoModelFactory):
         skip_postgeneration_save = True
 
     name = factory_Faker("name")
-    map_type = "zone_humide"
+    map_type = ""
     description = "Lorem ipsum"
 
     @factory.post_generation
@@ -98,7 +114,7 @@ class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
 
-    map = factory.SubFactory(MapFactory)
+    map = factory.SubFactory(MapFactory, zones=[])
     geometry = france_multipolygon
 
 
@@ -107,4 +123,4 @@ class DepartmentFactory(DjangoModelFactory):
         model = Department
 
     department = 44
-    geometry = france_multipolygon
+    geometry = loire_atlantique_multipolygon

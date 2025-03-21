@@ -45,19 +45,19 @@ def moulinette_config(france_map):  # noqa
 @pytest.fixture
 def moulinette_data(footprint):
     return {
-        # Bizou coordinates
-        "lat": 48.4961953,
-        "lng": 0.7504093,
+        # Mouais coordinates
+        "lat": 47.6967066,
+        "lng": -1.6469477,
         "created_surface": 0,
         "final_surface": footprint,
     }
 
 
 @pytest.fixture
-def bizous_church_data(footprint):
+def mouais_church_data(footprint):
     return {
-        "lat": 43.068835,
-        "lng": 0.442846,
+        "lat": 47.6967066,
+        "lng": -1.6469477,
         "existing_surface": 0,
         "created_surface": footprint,
         "final_surface": footprint,

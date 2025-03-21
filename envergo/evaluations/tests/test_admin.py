@@ -7,9 +7,11 @@ from envergo.evaluations.models import (
     generate_reference,
 )
 from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
+    RegulationFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -18,7 +20,7 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture
 def form_data():
     return {
-        "moulinette_url": "http://envergo.local?created_surface=200&final_surface=800&lng=-1.30933&lat=47.11971",  # noqa
+        "moulinette_url": "http://envergo.local?created_surface=200&final_surface=800&lng=-1.646947&lat=47.696706",  # noqa
         "reference": generate_reference(),
         "user_type": "instructor",
         "address": "Sunny side of the street",
@@ -30,6 +32,20 @@ def form_data():
 @pytest.fixture(autouse=True)
 def autouse_site(site):
     pass
+
+
+@pytest.fixture(autouse=True)
+def loisurleau_criteria(france_map):  # noqa
+    regulation = RegulationFactory(regulation="loi_sur_leau")
+    criteria = [
+        CriterionFactory(
+            title="Zone humide",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
+            activation_map=france_map,
+        ),
+    ]
+    return criteria
 
 
 @pytest.fixture()
@@ -94,8 +110,11 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
 
 def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
-    CriterionFactory()
     ConfigAmenagementFactory()
+
+    # Force the moulinette result
+    evaluation.get_moulinette()
+    evaluation._moulinette.result = "soumis"
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     res = admin_client.get(url)

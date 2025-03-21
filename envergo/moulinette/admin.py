@@ -331,6 +331,10 @@ class JSONWidget(forms.Textarea):
 
 
 class ConfigHaieAdminForm(forms.ModelForm):
+    regulations_available = forms.MultipleChoiceField(
+        label=_("Regulations available"), required=False, choices=REGULATIONS
+    )
+
     class Meta:
         model = ConfigHaie
         fields = "__all__"
