@@ -81,7 +81,7 @@ cligj==0.7.2
     # via
     #   -r base.txt
     #   fiona
-django==4.2.19
+django==4.2.20
     # via
     #   -r base.txt
     #   django-allauth
