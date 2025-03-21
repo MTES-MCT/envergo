@@ -18,176 +18,232 @@ DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
 
 DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER = """{
-    "annotations": [
-    {
-        "champDescriptorId": "champDescriptorId",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-        "label": "label",
-        "prefilled": true,
-        "stringValue": "stringValue",
-        "updatedAt": "2025-03-18T14:31:05.359Z"
-    }
-    ],
-    "archived": true,
-    "attestation": {
-    "byteSize": 42,
-    "byteSizeBigInt": "9007199254740991",
-    "checksum": "checksum",
-    "contentType": "contentType",
-    "createdAt": "2025-03-18T14:31:05.359Z",
-    "filename": "filename",
-    "url": "https://website.com"
-    },
-    "avis": [
-    {
-        "dateQuestion": "2025-03-18T14:31:05.359Z",
-        "dateReponse": "2025-03-18T14:31:05.359Z",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-        "question": "question",
-        "questionAnswer": true,
-        "questionLabel": "questionLabel",
-        "reponse": "reponse"
-    }
-    ],
-    "champs": [
-    {
-        "champDescriptorId": "champDescriptorId",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-        "label": "label",
-        "prefilled": true,
-        "stringValue": "stringValue",
-        "updatedAt": "2025-03-18T14:31:05.359Z"
-    }
-    ],
-    "connectionUsager": "deleted",
-    "dateDepot": "2025-03-18T14:31:05.359Z",
-    "dateDerniereCorrectionEnAttente": "2025-03-18T14:31:05.359Z",
-    "dateDerniereModification": "2025-03-18T14:31:05.359Z",
-    "dateDerniereModificationAnnotations": "2025-03-18T14:31:05.359Z",
-    "dateDerniereModificationChamps": "2025-03-18T14:31:05.359Z",
-    "dateExpiration": "2025-03-18T14:31:05.359Z",
-    "datePassageEnConstruction": "2025-03-18T14:31:05.359Z",
-    "datePassageEnInstruction": "2025-03-18T14:31:05.359Z",
-    "datePrevisionnelleDecisionSVASVR": "2025-03-18T14:31:05.359Z",
-    "dateSuppressionParAdministration": "2025-03-18T14:31:05.359Z",
-    "dateSuppressionParUsager": "2025-03-18T14:31:05.359Z",
-    "dateTraitement": "2025-03-18T14:31:05.359Z",
-    "dateTraitementSVASVR": "2025-03-18T14:31:05.359Z",
-    "demandeur": {
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
-    },
-    "demarche": {
-    "cadreJuridiqueURL": "cadreJuridiqueURL",
-    "cadreJuridiqueUrl": "cadreJuridiqueUrl",
-    "dateCreation": "2025-03-18T14:31:05.359Z",
-    "dateDepublication": "2025-03-18T14:31:05.359Z",
-    "dateDerniereModification": "2025-03-18T14:31:05.359Z",
-    "dateFermeture": "2025-03-18T14:31:05.359Z",
-    "datePublication": "2025-03-18T14:31:05.359Z",
-    "declarative": "accepte",
-    "demarcheURL": "https://website.com",
-    "demarcheUrl": "https://website.com",
-    "description": "A description",
-    "dpoURL": "dpoURL",
-    "dpoUrl": "dpoUrl",
-    "dureeConservationDossiers": 42,
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-    "noticeURL": "https://website.com",
-    "noticeUrl": "https://website.com",
-    "number": 42,
-    "opendata": true,
-    "siteWebURL": "siteWebURL",
-    "siteWebUrl": "siteWebUrl",
-    "state": "brouillon",
-    "tags": [
-        "tags"
-    ],
-    "title": "title",
-    "zones": [
-        "zones"
-    ]
-    },
-    "deposeParUnTiers": true,
-    "geojson": {
-    "byteSize": 42,
-    "byteSizeBigInt": "9007199254740991",
-    "checksum": "checksum",
-    "contentType": "contentType",
-    "createdAt": "2025-03-18T14:31:05.359Z",
-    "filename": "filename",
-    "url": "https://website.com"
-    },
-    "groupeInstructeur": {
-    "closed": true,
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-    "label": "label",
-    "number": 42
-    },
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-    "instructeurs": [
-    {
-        "email": "test-email@yourcompany.com",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
-    }
-    ],
-    "labels": [
-    {
-        "color": "beige_gris_galet",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-        "name": "A name"
-    }
-    ],
-    "messages": [
-    {
-        "body": "body",
-        "createdAt": "2025-03-18T14:31:05.359Z",
-        "discardedAt": "2025-03-18T14:31:05.359Z",
-        "email": "test-email@yourcompany.com",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
-    }
-    ],
-    "motivation": "motivation",
-    "motivationAttachment": {
-    "byteSize": 42,
-    "byteSizeBigInt": "9007199254740991",
-    "checksum": "checksum",
-    "contentType": "contentType",
-    "createdAt": "2025-03-18T14:31:05.359Z",
-    "filename": "filename",
-    "url": "https://website.com"
-    },
-    "nomMandataire": "nomMandataire",
-    "number": 42,
-    "pdf": {
-    "byteSize": 42,
-    "byteSizeBigInt": "9007199254740991",
-    "checksum": "checksum",
-    "contentType": "contentType",
-    "createdAt": "2025-03-18T14:31:05.359Z",
-    "filename": "filename",
-    "url": "https://website.com"
-    },
-    "prefilled": true,
-    "prenomMandataire": "prenomMandataire",
-    "revision": {
-    "dateCreation": "2025-03-18T14:31:05.359Z",
-    "datePublication": "2025-03-18T14:31:05.359Z",
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
-    },
-    "state": "accepte",
-    "traitements": [
-    {
-        "dateTraitement": "2025-03-18T14:31:05.359Z",
-        "emailAgentTraitant": "emailAgentTraitant",
-        "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
-        "motivation": "motivation",
-        "state": "accepte"
-    }
-    ],
+    "id": "RG9zc2llci0yMjE5ODcwNg==",
+    "number": 22198706,
+    "state": "en_instruction",
     "usager": {
-    "email": "test-email@yourcompany.com",
-    "id": "08a16b83-9094-4e89-8c05-2ccadd5c1c7e"
-    }
+        "email": "jane.doe@beta.gouv.fr"
+    },
+    "demandeur": {
+        "civilite": "M",
+        "nom": "Doe",
+        "prenom": "Jane",
+        "email": null
+    },
+    "champs": [
+        {
+            "id": "Q2hhbXAtNDUzNDEzNQ==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3MA==",
+            "stringValue": "Agriculteur, agricultrice"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3MQ==",
+            "stringValue": "Jane Avena"
+        },
+        {
+            "id": "Q2hhbXAtNDUzNDE0NA==",
+            "stringValue": "Saint-Nicolas-aux-Bois (02410)"
+        },
+        {
+            "id": "Q2hhbXAtNDUzNDE0NQ==",
+            "stringValue": "jane.doe@beta.gouv.fr"
+        },
+        {
+            "id": "Q2hhbXAtNDU0MzkzMg==",
+            "stringValue": "06 12 34 56 78"
+        },
+        {
+            "id": "Q2hhbXAtNDU0MzkzOA==",
+            "stringValue": "123456789"
+        },
+        {
+            "id": "Q2hhbXAtNDUzNDE1Ng==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDc0NDcyMQ==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDU0Mzk0Mw==",
+            "stringValue": "https://haie.beta.gouv.fr/projet/26KRPM/consultation/"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4Nw==",
+            "stringValue": "Saint-Nicolas-aux-Bois (02410)"
+        },
+        {
+            "id": "Q2hhbXAtNDUzNDE0Ng==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3NQ==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3Ng==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3Nw==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4OA==",
+            "stringValue": null
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3OA==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE3OQ==",
+            "stringValue": "false"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4MA==",
+            "stringValue": null
+        },
+        {
+            "id": "Q2hhbXAtNDU5NjU1Mw==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTI4NA==",
+            "stringValue": "true"
+        },
+        {
+            "id": "Q2hhbXAtNDU1OTU2Mw==",
+            "stringValue": "Transfert de parcelles"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4NQ==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4Ng==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTE4OQ==",
+            "stringValue": null
+        },
+        {
+            "id": "Q2hhbXAtNTAwNzQ1Mw==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDU5NjU2NA==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDg3NjQ5Nw==",
+            "stringValue": "Dérogation"
+        },
+        {
+            "id": "Q2hhbXAtNDg3NjUxNQ==",
+            "stringValue": "L'inventaire ciblé n'est pas nécessaire"
+        },
+        {
+            "id": "Q2hhbXAtNDg3NjUyNQ==",
+            "stringValue": null
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwMQ==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDU5Nzc0Mw==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwMg==",
+            "stringValue": "Entre 25 et 50 ans"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwMw==",
+            "stringValue": "true"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTI4Mg==",
+            "stringValue": "false"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwNA==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwNQ==",
+            "stringValue": null
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwNg==",
+            "stringValue": "false"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIwOQ==",
+            "stringValue": "true"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxMA==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxMQ==",
+            "stringValue": "Une fois par an"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxMg==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxMw==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxNA==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxNQ==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxNg==",
+            "stringValue": "false"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxOA==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIxOQ==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIyMA==",
+            "stringValue": "test"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIyMQ==",
+            "stringValue": "false"
+        },
+        {
+            "id": "Q2hhbXAtNDU1OTU0Nw==",
+            "stringValue": ""
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTIyNA==",
+            "stringValue": "true"
+        },
+        {
+            "id": "Q2hhbXAtNDcyOTI4Mw==",
+            "stringValue": "true"
+        }
+    ]
 }"""
 
 
