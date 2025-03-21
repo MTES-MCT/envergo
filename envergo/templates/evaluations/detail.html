@@ -4,7 +4,11 @@
 
 {% block title %}Avis réglementaire{% endblock %}
 
-{% block article %}{{ evaluation_content|safe }}{% endblock %}
+{% block content %}
+  <div class="fr-grid-row fr-grid-row--center">
+    <article id="evaluation">{{ evaluation_content|safe }}</article>
+  </div>
+{% endblock %}
 
 {% block after-content %}
   <section class="fr-py-8w alt hide-print">
