@@ -1,0 +1,577 @@
+{
+  "id": "UHJvY2VkdXJlLTExNTkxMA==",
+  "number": 103363,
+  "title": "Guichet unique de la haie – Aisne (02) / TEST",
+  "state": "brouillon",
+  "declarative": null,
+  "dateCreation": "2025-03-21T09:16:39+01:00",
+  "dateFermeture": null,
+  "chorusConfiguration": {
+  "centreDeCout": "",
+  "domaineFonctionnel": "",
+  "referentielDeProgrammation": ""
+  },
+  "dossiers": {
+  "pageInfo": {
+      "hasPreviousPage": false,
+      "hasNextPage": false,
+      "startCursor": "MjAyNS0wMy0yMVQxMDowODozNC41MDc1NzgwMDBaOzIzMTc4NDQz",
+      "endCursor": "MjAyNS0wMy0yMVQxMDowODozNC41MDc1NzgwMDBaOzIzMTc4NDQz"
+  },
+  "nodes": [
+      {
+      "__typename": "Dossier",
+      "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+      "number": 23178443,
+      "archived": false,
+      "prefilled": true,
+      "state": "en_construction",
+      "dateDerniereModification": "2025-03-21T11:08:34+01:00",
+      "dateDepot": "2025-03-21T11:08:34+01:00",
+      "datePassageEnConstruction": "2025-03-21T11:08:34+01:00",
+      "datePassageEnInstruction": null,
+      "dateTraitement": null,
+      "dateExpiration": "2026-03-21T11:08:34+01:00",
+      "dateSuppressionParUsager": null,
+      "dateDerniereModificationChamps": "2025-03-21T11:07:03+01:00",
+      "dateDerniereModificationAnnotations": "2025-03-21T11:01:52+01:00",
+      "motivation": null,
+      "motivationAttachment": null,
+      "attestation": null,
+      "pdf": {
+          "__typename": "File",
+          "filename": "dossier-23178443.pdf",
+          "contentType": "application/pdf",
+          "checksum": "",
+          "byteSize": "0",
+          "url": "https://www.demarches-simplifiees.fr/api/v2/dossiers/pdf/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaTluYVdRNkx5OTBjSE12Ukc5emMybGxjaTh5TXpFM09EUTBNejlsZUhCcGNtVnpYMmx1UFRNMk1EQUdPZ1pGVkE9PSIsImV4cCI6IjIwMjUtMDMtMjFUMTE6MjQ6NTkuNzI4WiIsInB1ciI6ImFwaV92MiJ9fQ==--af229b332f08a9486069d2cb25371aae18ba9326",
+          "createdAt": "2025-03-21T11:24:59+01:00"
+      },
+      "usager": {
+          "email": "georges.sand@beta.gouv.fr"
+      },
+      "prenomMandataire": null,
+      "nomMandataire": null,
+      "deposeParUnTiers": false,
+      "connectionUsager": "password",
+      "groupeInstructeur": {
+          "id": "R3JvdXBlSW5zdHJ1Y3RldXItMjgyOTcx",
+          "number": 282971,
+          "label": "défaut",
+          "instructeurs": [
+          {
+              "id": "SW5zdHJ1Y3RldXItMTQxNTU3",
+              "email": "georges.sand@beta.gouv.fr"
+          }
+          ]
+      },
+      "demandeur": {
+          "__typename": "PersonnePhysique",
+          "civilite": "Mme",
+          "nom": "Sand",
+          "prenom": "Georges",
+          "email": null
+      },
+      "demarche": {
+          "revision": {
+          "id": "UHJvY2VkdXJlUmV2aXNpb24tMTg4NTYx"
+          }
+      },
+      "instructeurs": [],
+      "traitements": [
+          {
+          "state": "en_construction",
+          "emailAgentTraitant": null,
+          "dateTraitement": "2025-03-21T11:08:34+01:00",
+          "motivation": null,
+          "revision": {
+              "id": "UHJvY2VkdXJlUmV2aXNpb24tMTg4NTYx",
+              "datePublication": null
+          }
+          }
+      ],
+      "champs": [
+          {
+          "id": "Q2hhbXAtNDUzNDEzNQ==",
+          "champDescriptorId": "Q2hhbXAtNDUzNDEzNQ==",
+          "__typename": "TextChamp",
+          "label": "Identité",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3MA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3MA==",
+          "__typename": "TextChamp",
+          "label": "Vous déposez cette demande en tant que :",
+          "stringValue": "Agriculteur, agricultrice",
+          "updatedAt": "2025-03-21T11:02:24+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3MQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3MQ==",
+          "__typename": "TextChamp",
+          "label": "Nom de votre structure",
+          "stringValue": "GAEC Choupi",
+          "updatedAt": "2025-03-21T11:02:47+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDUzNDE0NA==",
+          "champDescriptorId": "Q2hhbXAtNDUzNDE0NA==",
+          "__typename": "AddressChamp",
+          "label": "Votre adresse postale",
+          "stringValue": "Laon (02000)",
+          "updatedAt": "2025-03-21T11:02:54+01:00",
+          "prefilled": false,
+          "address": {
+              "label": "Laon (02000)",
+              "type": "municipality",
+              "streetAddress": "Laon",
+              "streetNumber": null,
+              "streetName": null,
+              "postalCode": "02000",
+              "cityName": "Laon",
+              "cityCode": "02408",
+              "departmentName": "Aisne",
+              "departmentCode": "02",
+              "regionName": "Hauts-de-France",
+              "regionCode": "32"
+          },
+          "commune": {
+              "name": "Laon",
+              "code": "02408",
+              "postalCode": "02000"
+          },
+          "departement": {
+              "name": "Aisne",
+              "code": "02"
+          }
+          },
+          {
+          "id": "Q2hhbXAtNDUzNDE0NQ==",
+          "champDescriptorId": "Q2hhbXAtNDUzNDE0NQ==",
+          "__typename": "TextChamp",
+          "label": "Votre email",
+          "stringValue": "georges.sand@beta.gouv.fr",
+          "updatedAt": "2025-03-21T11:03:22+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDU0MzkzMg==",
+          "champDescriptorId": "Q2hhbXAtNDU0MzkzMg==",
+          "__typename": "TextChamp",
+          "label": "Votre numéro de téléphone",
+          "stringValue": "01 23 45 67 89",
+          "updatedAt": "2025-03-21T11:03:27+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDU0MzkzOA==",
+          "champDescriptorId": "Q2hhbXAtNDU0MzkzOA==",
+          "__typename": "IntegerNumberChamp",
+          "label": "Numéro PACAGE",
+          "stringValue": "012345678",
+          "updatedAt": "2025-03-21T11:03:32+01:00",
+          "prefilled": false,
+          "integerNumber": "12345678"
+          },
+          {
+          "id": "Q2hhbXAtNDUzNDE1Ng==",
+          "champDescriptorId": "Q2hhbXAtNDUzNDE1Ng==",
+          "__typename": "TextChamp",
+          "label": "Description du projet",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDc0NDcyMQ==",
+          "champDescriptorId": "Q2hhbXAtNDc0NDcyMQ==",
+          "__typename": "TextChamp",
+          "label": "Ce formulaire est pré-rempli à partir de la simulation que vous avez réalisée",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDU0Mzk0Mw==",
+          "champDescriptorId": "Q2hhbXAtNDU0Mzk0Mw==",
+          "__typename": "TextChamp",
+          "label": "Lien internet de la simulation réglementaire de votre projet",
+          "stringValue": "http://haie.local:8000/projet/AT9ZK7/consultation/",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE4Nw==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE4Nw==",
+          "__typename": "CommuneChamp",
+          "label": "Commune principale où se trouvent les haies à détruire",
+          "stringValue": "Laon (02000)",
+          "updatedAt": "2025-03-21T11:03:40+01:00",
+          "prefilled": false,
+          "commune": {
+              "name": "Laon",
+              "code": "02408",
+              "postalCode": "02000"
+          },
+          "departement": {
+              "name": "Aisne",
+              "code": "02"
+          }
+          },
+          {
+          "id": "Q2hhbXAtNDUzNDE0Ng==",
+          "champDescriptorId": "Q2hhbXAtNDUzNDE0Ng==",
+          "__typename": "TextChamp",
+          "label": "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?",
+          "stringValue": "La motivation",
+          "updatedAt": "2025-03-21T11:03:51+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3NQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3NQ==",
+          "__typename": "TextChamp",
+          "label": "Justifiez pourquoi aucune alternative à la destruction n’est possible",
+          "stringValue": "TINA",
+          "updatedAt": "2025-03-21T11:03:59+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3Ng==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3Ng==",
+          "__typename": "TextChamp",
+          "label": "Avez-vous cherché à prendre en compte les enjeux environnementaux dans le choix des haies à détruire ? Si oui, comment ?",
+          "stringValue": "Ouiiii j'ai cherché",
+          "updatedAt": "2025-03-21T11:04:08+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3Nw==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3Nw==",
+          "__typename": "TextChamp",
+          "label": "Avez-vous limité le linéaire de haie à détruire par rapport à votre projet initial ? Si oui, comment ?",
+          "stringValue": "Au max",
+          "updatedAt": "2025-03-21T11:04:16+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE4OA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE4OA==",
+          "__typename": "PieceJustificativeChamp",
+          "label": "Photos des haies et alignements d'arbres à détruire",
+          "stringValue": null,
+          "updatedAt": "2025-03-21T11:05:14+01:00",
+          "prefilled": false,
+          "files": [
+              {
+              "__typename": "File",
+              "filename": "North_York_Moors.jpeg",
+              "contentType": "image/jpeg",
+              "checksum": "dtlH1MSoc9ATYEW7GY/6nQ==",
+              "byteSize": "200167",
+              "url": "https://static.demarches-simplifiees.fr:443/v1/AUTH_db3cbfc79c914f87b192ff7c6bb176f0/ds_activestorage_backup/2025/03/21/s3/s3RaFK2bad4e9XPMFhHGiZNaaukF?temp_url_sig=5848da7486655407c6705aadeb62bb9ebaf7ff51&temp_url_expires=1742556299&filename=North_York_Moors.jpeg&inline",
+              "createdAt": "2025-03-21T11:05:14+01:00"
+              }
+          ]
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3OA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3OA==",
+          "__typename": "TextChamp",
+          "label": "Autorisation du propriétaire",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTE3OQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTE3OQ==",
+          "__typename": "YesNoChamp",
+          "label": "Êtes-vous propriétaire de tous les terrains sur lesquels se situent les haies à détruire ?",
+          "stringValue": "true",
+          "updatedAt": "2025-03-21T11:05:16+01:00",
+          "prefilled": false,
+          "selected": true
+          },
+          {
+          "id": "Q2hhbXAtNDU5NjU1Mw==",
+          "champDescriptorId": "Q2hhbXAtNDU5NjU1Mw==",
+          "__typename": "TextChamp",
+          "label": "Conditionnalité PAC – BCAE8",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTI4NA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTI4NA==",
+          "__typename": "YesNoChamp",
+          "label": "Projet soumis à déclaration préalable PAC",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTI4Ng==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTI4Ng==",
+          "__typename": "TextChamp",
+          "label": "Motif de dispense de déclaration préalable au titre de la conditionnalité PAC (BCAE 8)",
+          "stringValue": "Aucune haie sur parcelle déclarée à la PAC",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTI4NQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTI4NQ==",
+          "__typename": "TextChamp",
+          "label": "Vous n'avez pas de renseignements à saisir concernant la conditionnalité PAC",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDU5NjU2NA==",
+          "champDescriptorId": "Q2hhbXAtNDU5NjU2NA==",
+          "__typename": "TextChamp",
+          "label": "Réglementation « Espèces protégées »",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDg3NjQ5Nw==",
+          "champDescriptorId": "Q2hhbXAtNDg3NjQ5Nw==",
+          "__typename": "TextChamp",
+          "label": "Niveau de procédure « espèces protégées » selon le simulateur",
+          "stringValue": "Dérogation",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true
+          },
+          {
+          "id": "Q2hhbXAtNDg3NjUxNQ==",
+          "champDescriptorId": "Q2hhbXAtNDg3NjUxNQ==",
+          "__typename": "TextChamp",
+          "label": "Inventaire ciblé : quelle est la préconisation des structures consultées ?",
+          "stringValue": "Je n'ai pas consulté les structures",
+          "updatedAt": "2025-03-21T11:05:32+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIwMQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIwMQ==",
+          "__typename": "TextChamp",
+          "label": "Description des haies à détruire",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDU5Nzc0Mw==",
+          "champDescriptorId": "Q2hhbXAtNDU5Nzc0Mw==",
+          "__typename": "TextChamp",
+          "label": "Quelles sont les essences des arbustes ou arbres composant les haies à détruire ?",
+          "stringValue": "Hêtre et chêne",
+          "updatedAt": "2025-03-21T11:05:48+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIwMg==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIwMg==",
+          "__typename": "TextChamp",
+          "label": "Quel est l'âge des haies à détruire les plus anciennes ?",
+          "stringValue": "Moins de 25 ans",
+          "updatedAt": "2025-03-21T11:05:38+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIwMw==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIwMw==",
+          "__typename": "YesNoChamp",
+          "label": "Présence de vieux arbres fissurés ou à cavité",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTI4Mg==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTI4Mg==",
+          "__typename": "YesNoChamp",
+          "label": "Présence d'arbres têtards ou d'arbres de diamètre supérieur à 18 cm",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:05:55+01:00",
+          "prefilled": false,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIwNg==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIwNg==",
+          "__typename": "YesNoChamp",
+          "label": "Proximité d'une mare",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": true,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIwOQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIwOQ==",
+          "__typename": "YesNoChamp",
+          "label": "L'une des haies à détruire a-t-elle fait l’objet d’une coupe récente ?",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:05:58+01:00",
+          "prefilled": false,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxMQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxMQ==",
+          "__typename": "TextChamp",
+          "label": "Quelle est la fréquence d’entretien de la haie à détruire ?",
+          "stringValue": "Plus rarement",
+          "updatedAt": "2025-03-21T11:06:05+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxMg==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxMg==",
+          "__typename": "TextChamp",
+          "label": "Quel type d'entretien est réalisé habituellement ?",
+          "stringValue": "élagage",
+          "updatedAt": "2025-03-21T11:06:12+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxMw==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxMw==",
+          "__typename": "TextChamp",
+          "label": "Description de la plantation",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxNA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxNA==",
+          "__typename": "TextChamp",
+          "label": "Quelles sont les essences des arbustes ou arbres des haies à planter ?",
+          "stringValue": "hêtre chêne fresne peuplier",
+          "updatedAt": "2025-03-21T11:06:23+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxNQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxNQ==",
+          "__typename": "TextChamp",
+          "label": "D’où proviennent les plants ? Avez-vous étudié la possibilité de transplanter certains individus issus de la haie à détruire ?",
+          "stringValue": "oui",
+          "updatedAt": "2025-03-21T11:06:26+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxNg==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxNg==",
+          "__typename": "YesNoChamp",
+          "label": "La plantation bénéficie-t-elle d’un financement public ?",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:06:29+01:00",
+          "prefilled": false,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxOA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxOA==",
+          "__typename": "TextChamp",
+          "label": "Une bande enherbée sera-t-elle maintenue au pied de la haie replantée ? Si oui, sur quelle largeur, et cette bande sera-t-elle située sur un seul côté de la haie ou bien répartie des deux côtés ?",
+          "stringValue": "oui",
+          "updatedAt": "2025-03-21T11:06:40+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIxOQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIxOQ==",
+          "__typename": "TextChamp",
+          "label": "Prévoyez-vous de mettre en place des refuges pour la petite faune (hibernaculum fait de branches et/ou de pierres) au sein des haies replantées ?",
+          "stringValue": "oui",
+          "updatedAt": "2025-03-21T11:06:43+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIyMA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIyMA==",
+          "__typename": "TextChamp",
+          "label": "De quelle manière la haie replantée sera-t-elle entretenue (type d’intervention, fréquence…) ?",
+          "stringValue": "élagage tous les ans",
+          "updatedAt": "2025-03-21T11:06:56+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIyMQ==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIyMQ==",
+          "__typename": "YesNoChamp",
+          "label": "Avez-vous prévu des mesures compensatoires supplémentaires à la plantation de linéaire : plantation d’arbres isolés, de bosquet, mise en place d’une gestion différenciée sur des haies existantes, pose de gîtes artificiels… ?",
+          "stringValue": "false",
+          "updatedAt": "2025-03-21T11:06:58+01:00",
+          "prefilled": false,
+          "selected": false
+          },
+          {
+          "id": "Q2hhbXAtNDU1OTU0Nw==",
+          "champDescriptorId": "Q2hhbXAtNDU1OTU0Nw==",
+          "__typename": "TextChamp",
+          "label": "Pour déposer votre demande, cochez les cases ci-dessous et cliquez sur le bouton \"Déposer le dossier\"",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:08:34+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTIyNA==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTIyNA==",
+          "__typename": "CheckboxChamp",
+          "label": "Je m'engage à ne démarrer mes travaux qu'en cas d'acceptation de ma demande",
+          "stringValue": "true",
+          "updatedAt": "2025-03-21T11:07:01+01:00",
+          "prefilled": false,
+          "checked": true
+          },
+          {
+          "id": "Q2hhbXAtNDcyOTI4Mw==",
+          "champDescriptorId": "Q2hhbXAtNDcyOTI4Mw==",
+          "__typename": "CheckboxChamp",
+          "label": "En cas d'accord de l'administration, je m'engage à suivre les prescriptions qui me seront indiquées",
+          "stringValue": "true",
+          "updatedAt": "2025-03-21T11:07:03+01:00",
+          "prefilled": false,
+          "checked": true
+          }
+      ],
+      "annotations": [
+          {
+          "id": "Q2hhbXAtNDg4MTI4MQ==",
+          "champDescriptorId": "Q2hhbXAtNDg4MTI4MQ==",
+          "__typename": "TextChamp",
+          "label": "Lien vers l'espace instructeur du Guichet unique de la haie",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": false
+          },
+          {
+          "id": "Q2hhbXAtNDg4MTI4Mw==",
+          "champDescriptorId": "Q2hhbXAtNDg4MTI4Mw==",
+          "__typename": "TextChamp",
+          "label": "Lien vers la simulation vue par le pétitionnaire avant de déposer sa demande",
+          "stringValue": "",
+          "updatedAt": "2025-03-21T11:01:52+01:00",
+          "prefilled": false
+          }
+      ]
+      }
+  ]
+  }
+}
