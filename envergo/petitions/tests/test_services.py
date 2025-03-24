@@ -1,14 +1,21 @@
+import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import fetch_project_details_from_demarches_simplifiees
-from envergo.petitions.tests.factories import PetitionProjectFactory
+from envergo.petitions.tests.factories import (
+    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    PetitionProjectFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     mock_response = Mock()
@@ -19,6 +26,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
                 "id": "RG9zc2llci0yMTY4MzczOQ==",
                 "number": 21683739,
                 "state": "en_construction",
+                "dateDepot": "2025-01-29T16:25:03+01:00",
                 "usager": {"email": "pierre-yves.dezaunay@beta.gouv.fr"},
                 "demandeur": {
                     "civilite": "Mme",
@@ -102,6 +110,39 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert details.city == "Ladaux (33760)"
     assert details.pacage == "123456789"
 
+    petition_project.refresh_from_db()
+    assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
+        2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
+    )
+    assert petition_project.demarches_simplifiees_last_sync is not None
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@patch("requests.post")
+def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
+    mock_post, caplog, haie_user, site
+):
+    petition_project = PetitionProjectFactory()
+    config = ConfigHaieFactory()
+    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
+    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
+
+    details = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "", haie_user
+    )
+
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "Demarches Simplifiees is not enabled" in rec.message
+            ]
+        )
+        > 0
+    )
+    assert details is None
+
 
 @patch("envergo.petitions.services.notify")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
@@ -126,6 +167,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
     mock_notify.assert_called_once()
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
@@ -157,6 +199,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     mock_notify.assert_called_once()
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.services.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(

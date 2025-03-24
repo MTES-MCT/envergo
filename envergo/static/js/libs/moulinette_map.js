@@ -78,10 +78,30 @@
       attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
     });
 
+    const pciLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal" +
+      "&TILEMATRIXSET=PM" +
+      "&FORMAT=image/png" +
+      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
+      "&TILEMATRIX={z}" +
+      "&TILEROW={y}" +
+      "&TILECOL={x}", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      tileSize: 256,
+      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+    });
+
+    var layers = [planLayer];
+    if (this.options.showPciLayer) {
+      layers.push(pciLayer);
+    }
+
     const map = L.map('map', {
       maxZoom: 21,
       scrollWheelZoom: this.options.isStatic ? 'center' : true,
-      layers: [planLayer],
+      layers: layers,
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
@@ -90,7 +110,11 @@
       "Satellite": satelliteLayer
     };
 
-    const layerControl = L.control.layers(baseMaps);
+    const overlayMaps = {
+      "Cadastre": pciLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
 
     return map;
@@ -183,7 +207,32 @@
         case "Form":
           _paq.push(['trackEvent', "Form", 'MapSwitchLayer', e.name]);
           break;
-      }
+      };
+    }.bind(this));
+
+    // Enable cadastre overlay
+    this.map.on("overlayadd", function (e) {
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', "CadastreOn"]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', "CadastreOn"]);
+          break;
+      };
+    }.bind(this));
+
+
+    // Disable cadastre overlay
+    this.map.on("overlayremove", function (e) {
+      switch (this.options.mapType) {
+        case "Content":
+          _paq.push(['trackEvent', "Content", 'LocationMapSwitchLayer', "CadastreOff"]);
+          break;
+        case "Form":
+          _paq.push(['trackEvent', "Form", 'MapSwitchLayer', "CadastreOff"]);
+          break;
+      };
     }.bind(this));
   };
 
@@ -206,6 +255,7 @@
       lngFieldId: LNG_FIELD_ID,
       isStatic: IS_MAP_STATIC,
       mapType: MAP_TYPE,
+      showPciLayer: SHOW_PCI_LAYER || false,
     }
     moulinetteMap = new MoulinetteMap(options);
   });

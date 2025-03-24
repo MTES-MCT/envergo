@@ -24,7 +24,12 @@ class Command(BaseCommand):
     help = "Fetch freshly submitted dossier on Démarches Simplifiées and notify admins."
 
     def handle(self, *args, **options):
-        # get all the dossier updated in the last hour
+        """get all the dossier updated in the last hour"""
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
+            return None
+
         api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
@@ -76,6 +81,7 @@ class Command(BaseCommand):
                                 nodes {
                                     number
                                     state
+                                    dateDepot
                                     usager {
                                         email
                                         }
@@ -91,6 +97,7 @@ class Command(BaseCommand):
                     "query": query,
                     "variables": variables,
                 }
+
                 response = requests.post(
                     api_url,
                     json=body,
@@ -158,6 +165,7 @@ class Command(BaseCommand):
                             "response": response.text,
                             "api_url": api_url,
                             "body": body,
+                            "command": "dossier_submission_admin_alert",
                         },
                     )
                     notify(message_body, "haie")

@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.geodata.conftest import herault_map, loire_atlantique_map  # noqa
+from envergo.moulinette.models import Criterion, MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
     CriterionFactory,
@@ -14,14 +14,14 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def conditionnalite_pac_criteria(france_map):  # noqa
+def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
-            activation_map=france_map,
+            activation_map=loire_atlantique_map,
         ),
     ]
     return criteria
@@ -76,6 +76,33 @@ def test_bcae8_impossible_case():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_disponible", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "non_disponible", data
+
+
+def test_bcae8_not_activated(herault_map):  # noqa
+    ConfigHaieFactory()
+    data = {
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.result == "non_soumis", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
+
+    criterion = Criterion.objects.all()[0]
+    criterion.activation_map = herault_map
+    criterion.save()
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.result == "non_disponible", data
+    assert moulinette.get_criteria().count() == 0
 
 
 def test_bcae8_small_dispense_petit():
