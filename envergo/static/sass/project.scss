@@ -9,6 +9,7 @@ $red: #b94a48;
   // Bump default font size from 16 to 18px.
   font-size: 112.5%;
   scroll-behavior: smooth;
+  overscroll-behavior-y: none;
 }
 
 // Prevent  scrolling when a dialog is open
