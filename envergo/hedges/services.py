@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum
+from itertools import product
 from typing import TYPE_CHECKING, Literal
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeData
+from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 
 if TYPE_CHECKING:
     from envergo.moulinette.models import MoulinetteHaie
@@ -12,6 +14,55 @@ if TYPE_CHECKING:
 class PlantationResults(Enum):
     Adequate = "adequate"
     Inadequate = "inadequate"
+
+
+PLANTATION_RESULT_MATRIX = {
+    (RESULTS.interdit, PlantationResults.Inadequate.value): RESULTS.interdit,
+    (RESULTS.interdit, PlantationResults.Adequate.value): RESULTS.interdit,
+    (
+        RESULTS.soumis,
+        PlantationResults.Inadequate.value,
+    ): PlantationResults.Inadequate.value,
+    (RESULTS.soumis, PlantationResults.Adequate.value): RESULTS.soumis,
+    # not used for now
+    (
+        RESULTS.action_requise,
+        PlantationResults.Inadequate.value,
+    ): RESULTS.non_disponible,
+    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    (RESULTS.non_soumis, PlantationResults.Inadequate.value): RESULTS.non_disponible,
+    (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    (
+        RESULTS.non_disponible,
+        PlantationResults.Inadequate.value,
+    ): RESULTS.non_disponible,
+    (RESULTS.non_disponible, PlantationResults.Adequate.value): RESULTS.non_disponible,
+}
+
+
+def _check_plantation_result_matrix():
+    all_global_results = [
+        global_result for global_result in set(GLOBAL_RESULT_MATRIX.values())
+    ]
+    all_plantation_results = [p.value for p in PlantationResults]
+
+    # Generate all possible combinations
+    expected_combinations = set(product(all_global_results, all_plantation_results))
+
+    # Get actual keys from the matrix
+    existing_combinations = set(PLANTATION_RESULT_MATRIX.keys())
+
+    # Find missing combinations
+    missing_combinations = expected_combinations - existing_combinations
+
+    # Raise an error if there are missing cases
+    if missing_combinations:
+        raise ValueError(
+            f"Missing cases in PLANTATION_RESULT_MATRIX: {missing_combinations}"
+        )
+
+
+_check_plantation_result_matrix()
 
 
 @dataclass
@@ -52,17 +103,7 @@ class PlantationEvaluator:
         if not hasattr(self, "_evaluation_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
-        result_matrix = {
-            (RESULTS.interdit, PlantationResults.Inadequate.value): RESULTS.interdit,
-            (RESULTS.interdit, PlantationResults.Adequate.value): RESULTS.interdit,
-            (
-                RESULTS.soumis,
-                PlantationResults.Inadequate.value,
-            ): PlantationResults.Inadequate.value,
-            (RESULTS.soumis, PlantationResults.Adequate.value): RESULTS.soumis,
-        }
-
-        return result_matrix.get(
+        return PLANTATION_RESULT_MATRIX.get(
             (self.moulinette.result, self.result), RESULTS.interdit
         )
 

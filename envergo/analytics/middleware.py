@@ -2,7 +2,6 @@ from uuid import uuid4
 
 from django.conf import settings
 
-from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.utils import set_visitor_id_cookie
 
 
@@ -28,14 +27,31 @@ class SetVisitorIdCookie:
         visitor_id = None
         if is_first_visit:
             visitor_id = uuid4()
-            request.COOKIES[VISITOR_COOKIE_NAME] = visitor_id
+            request.COOKIES[settings.VISITOR_COOKIE_NAME] = visitor_id
 
         response = self.get_response(request)
 
         if is_first_visit:
             set_visitor_id_cookie(response, visitor_id)
+        else:
+            # these part of the code can be removed 13 months after the release (2026-06-01)
+            self.remove_http_only_on_visitor_id_cookie(request, response)
 
         return response
+
+    def remove_http_only_on_visitor_id_cookie(self, request, response):
+        """Remove the httpOnly flag on the visitor id cookie.
+
+        This is a temporary fix to allow the frontend to read the visitor id cookie.
+        But it should be removed because it makes the cookie lifetime infinite
+
+        It does not set the cookie again, if it has already been set by another middleware/view
+        """
+        if not response.cookies.get(settings.VISITOR_COOKIE_NAME):
+            response.delete_cookie(settings.VISITOR_COOKIE_NAME)
+            set_visitor_id_cookie(
+                response, request.COOKIES[settings.VISITOR_COOKIE_NAME]
+            )
 
 
 # Parameters that we want to store in session

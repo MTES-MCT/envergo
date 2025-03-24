@@ -375,6 +375,16 @@ class HedgeList {
   }
 }
 
+function styleDrawGuide() {
+  setTimeout(() => {
+    const paths = document.querySelectorAll(".leaflet-zoom-animated g path:not(.hedge)");
+    let drawGuide = paths.length ? paths[paths.length - 1] : null;
+    if (drawGuide) {
+      drawGuide.classList.add('leaflet-draw-guide')
+    }
+  }, 100); // Wait 100ms to let the element be created
+}
+
 createApp({
   /**
    * Create show and draw hedges app
@@ -420,6 +430,8 @@ createApp({
       const newHedge = addHedge(type);
       hedgeBeingDrawn.value = newHedge;
       newHedge.polyline.on('editable:vertex:new', (event) => {
+        styleDrawGuide();
+
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           helpBubble.value = "drawingHelp";
         }
@@ -635,20 +647,40 @@ createApp({
         attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
       });
 
+      const pciLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
+        "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+        "&STYLE=normal" +
+        "&TILEMATRIXSET=PM" +
+        "&FORMAT=image/png" +
+        "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
+        "&TILEMATRIX={z}" +
+        "&TILEROW={y}" +
+        "&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
+
+
       // Display layer switching control
       const baseMaps = {
         "Plan": planLayer,
         "Satellite": satelliteLayer
       };
 
+      const overlayMaps = {
+        "Cadastre": pciLayer
+      };
+
       map = L.map('map', {
         editable: true,
         doubleClickZoom: false,
         zoomControl: false,
-        layers: [satelliteLayer]
+        layers: [satelliteLayer, pciLayer]
       });
 
-      L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+      L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'

@@ -59,9 +59,9 @@ def loisurleau_criteria(france_map):  # noqa
 @pytest.fixture
 def moulinette_data(footprint):
     return {
-        # Bizou coordinates
-        "lat": 48.4961953,
-        "lng": 0.7504093,
+        # Mouais coordinates
+        "lat": 47.696706,
+        "lng": -1.646947,
         "existing_surface": 0,
         "created_surface": footprint,
         "final_surface": footprint,
@@ -190,7 +190,7 @@ def test_3310_large_footprint_inside_doubt_department(moulinette_data):
 
     ConfigAmenagementFactory(zh_doubt=True)
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.catalog["within_potential_wetlands_deprartment"] = True
+    moulinette.catalog["within_potential_wetlands_department"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
@@ -277,10 +277,17 @@ def test_3220_medium_footprint_within_potential_flood_zones(moulinette_data):
 
 
 @pytest.mark.parametrize("footprint", [9000])
+def test_2150_not_so_big(moulinette_data):
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "action_requise"
+
+
+@pytest.mark.parametrize("footprint", [10000])
 def test_2150_big(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
-    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis_ou_pac"
 
 
 @pytest.mark.parametrize("footprint", [8000])

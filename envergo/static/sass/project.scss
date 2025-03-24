@@ -112,11 +112,13 @@ article {
     background-color: #ffb7a5;
   }
 
-  &.probability-cas_par_cas {
+  &.probability-cas_par_cas,
+  &.probability-5 {
     background-color: #ffd3a6;
   }
 
-  &.probability-interdit {
+  &.probability-interdit,
+  &.probability-6 {
     background-color: #ff5150;
     color: white;
   }

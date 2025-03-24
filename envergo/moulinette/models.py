@@ -6,7 +6,7 @@ from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
-from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
@@ -50,8 +50,6 @@ EPSG_MERCATOR = 3857
 
 logger = logging.getLogger(__name__)
 
-HAIE_REGULATIONS = ["conditionnalite_pac", "ep"]
-
 # A list of required action stakes.
 # For example, a user might learn that an action is required, to check if the
 # project is subject to the Water Law. Or if the project is forbidden.
@@ -74,6 +72,7 @@ RESULT_CASCADE = [
     RESULTS.interdit,
     RESULTS.systematique,
     RESULTS.cas_par_cas,
+    RESULTS.soumis_ou_pac,
     RESULTS.soumis,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
@@ -84,7 +83,42 @@ RESULT_CASCADE = [
     RESULTS.dispense,
     RESULTS.non_concerne,
     RESULTS.non_disponible,
+    RESULTS.non_applicable,
+    RESULTS.non_active,
 ]
+
+_missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in RESULT_CASCADE: {_missing_results}"
+    )
+
+
+GLOBAL_RESULT_MATRIX = {
+    RESULTS.interdit: RESULTS.interdit,
+    RESULTS.systematique: RESULTS.soumis,
+    RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.soumis_ou_pac: RESULTS.soumis,
+    RESULTS.soumis: RESULTS.soumis,
+    RESULTS.derogation_inventaire: RESULTS.soumis,
+    RESULTS.derogation_simplifiee: RESULTS.soumis,
+    RESULTS.action_requise: RESULTS.action_requise,
+    RESULTS.a_verifier: RESULTS.action_requise,
+    RESULTS.iota_a_verifier: RESULTS.action_requise,
+    RESULTS.non_soumis: RESULTS.non_soumis,
+    RESULTS.dispense: RESULTS.non_soumis,
+    RESULTS.non_concerne: RESULTS.non_soumis,
+    RESULTS.non_disponible: RESULTS.non_disponible,
+    RESULTS.non_applicable: RESULTS.non_disponible,
+    RESULTS.non_active: RESULTS.non_disponible,
+}
+
+
+_missing_results = [key for (key, label) in RESULTS if key not in GLOBAL_RESULT_MATRIX]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in GLOBAL_RESULT_MATRIX: {_missing_results}"
+    )
 
 
 # This is to use in model fields `default` attribute
@@ -441,7 +475,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["coords"],
+                center=self.moulinette.catalog["lng_lat"],
                 entries=polygons,
                 truncate=False,
                 zoom=None,
@@ -787,7 +821,11 @@ class ConfigHaie(ConfigBase):
     This object is dedicated to the Haie moulinette. For Amenagement, see ConfigAmenagement.
     """
 
-    regulations_available = HAIE_REGULATIONS
+    regulations_available = ArrayField(
+        base_field=models.CharField(max_length=64, choices=REGULATIONS),
+        blank=True,
+        default=list,
+    )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
@@ -1364,35 +1402,25 @@ class Moulinette(ABC):
     def result(self):
         """Compute global result from individual regulation results."""
 
+        # return the cached result if it was overriden
+        # Otherwise, we don't cache the result because it can change between invocations
+        if hasattr(self, "_result"):
+            return self._result
+
         results = [regulation.result for regulation in self.regulations]
 
-        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
-        rules = [
-            ((RESULTS.interdit,), RESULTS.interdit),
-            (
-                (
-                    RESULTS.soumis,
-                    RESULTS.systematique,
-                    RESULTS.cas_par_cas,
-                    RESULTS.derogation_inventaire,
-                    RESULTS.derogation_simplifiee,
-                ),
-                RESULTS.soumis,
-            ),
-            ((RESULTS.action_requise,), RESULTS.action_requise),
-            ((RESULTS.non_soumis, RESULTS.dispense), RESULTS.non_soumis),
-            ((RESULTS.non_disponible,), RESULTS.non_disponible),
-        ]
-
         result = None
-        for rule_statuses, rule_result in rules:
-            if any(rule_status in results for rule_status in rule_statuses):
-                result = rule_result
+        for cascading_result in RESULT_CASCADE:
+            if cascading_result in results:
+                result = GLOBAL_RESULT_MATRIX[cascading_result]
                 break
 
-        result = result or RESULTS.non_soumis
+        return result or RESULTS.non_soumis
 
-        return result
+    @result.setter
+    def result(self, value):
+        """Allow monkeypatching moulinette result for tests."""
+        self._result = value
 
     def all_required_actions(self):
         for regulation in self.regulations:
@@ -1665,7 +1693,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = HAIE_REGULATIONS
+    REGULATIONS = ["conditionnalite_pac", "ep"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1749,6 +1777,7 @@ class MoulinetteHaie(Moulinette):
                 Department.objects.defer("geometry")
                 .select_related("confighaie")
                 .filter(department=department_code)
+                .annotate(centroid=Centroid("geometry"))
                 .first()
             )
             if department_code
@@ -1762,6 +1791,16 @@ class MoulinetteHaie(Moulinette):
 
         regulations = super().get_regulations().prefetch_related("perimeters")
         return regulations
+
+    def get_criteria(self):
+        dept_centroid = self.department.centroid
+        criteria = (
+            super()
+            .get_criteria()
+            .filter(activation_map__zones__geometry__intersects=dept_centroid)
+        )
+
+        return criteria
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
