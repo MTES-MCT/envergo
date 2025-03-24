@@ -72,6 +72,7 @@ RESULT_CASCADE = [
     RESULTS.interdit,
     RESULTS.systematique,
     RESULTS.cas_par_cas,
+    RESULTS.soumis_ou_pac,
     RESULTS.soumis,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
@@ -82,7 +83,42 @@ RESULT_CASCADE = [
     RESULTS.dispense,
     RESULTS.non_concerne,
     RESULTS.non_disponible,
+    RESULTS.non_applicable,
+    RESULTS.non_active,
 ]
+
+_missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in RESULT_CASCADE: {_missing_results}"
+    )
+
+
+GLOBAL_RESULT_MATRIX = {
+    RESULTS.interdit: RESULTS.interdit,
+    RESULTS.systematique: RESULTS.soumis,
+    RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.soumis_ou_pac: RESULTS.soumis,
+    RESULTS.soumis: RESULTS.soumis,
+    RESULTS.derogation_inventaire: RESULTS.soumis,
+    RESULTS.derogation_simplifiee: RESULTS.soumis,
+    RESULTS.action_requise: RESULTS.action_requise,
+    RESULTS.a_verifier: RESULTS.action_requise,
+    RESULTS.iota_a_verifier: RESULTS.action_requise,
+    RESULTS.non_soumis: RESULTS.non_soumis,
+    RESULTS.dispense: RESULTS.non_soumis,
+    RESULTS.non_concerne: RESULTS.non_soumis,
+    RESULTS.non_disponible: RESULTS.non_disponible,
+    RESULTS.non_applicable: RESULTS.non_disponible,
+    RESULTS.non_active: RESULTS.non_disponible,
+}
+
+
+_missing_results = [key for (key, label) in RESULTS if key not in GLOBAL_RESULT_MATRIX]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in GLOBAL_RESULT_MATRIX: {_missing_results}"
+    )
 
 
 # This is to use in model fields `default` attribute
@@ -1373,28 +1409,10 @@ class Moulinette(ABC):
 
         results = [regulation.result for regulation in self.regulations]
 
-        # TODO Handle other statuses non_concerne, non_disponible, a_verifier
-        rules = [
-            ((RESULTS.interdit,), RESULTS.interdit),
-            (
-                (
-                    RESULTS.soumis,
-                    RESULTS.systematique,
-                    RESULTS.cas_par_cas,
-                    RESULTS.derogation_inventaire,
-                    RESULTS.derogation_simplifiee,
-                ),
-                RESULTS.soumis,
-            ),
-            ((RESULTS.action_requise,), RESULTS.action_requise),
-            ((RESULTS.non_soumis, RESULTS.dispense), RESULTS.non_soumis),
-            ((RESULTS.non_disponible,), RESULTS.non_disponible),
-        ]
-
         result = None
-        for rule_statuses, rule_result in rules:
-            if any(rule_status in results for rule_status in rule_statuses):
-                result = rule_result
+        for cascading_result in RESULT_CASCADE:
+            if cascading_result in results:
+                result = GLOBAL_RESULT_MATRIX[cascading_result]
                 break
 
         return result or RESULTS.non_soumis

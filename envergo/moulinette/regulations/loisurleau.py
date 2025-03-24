@@ -145,15 +145,18 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
-    CODES = ["soumis", "action_requise", "non_soumis", "non_concerne"]
+    CODES = ["soumis", "soumis_ou_pac", "action_requise", "non_soumis", "non_concerne"]
 
     CODE_MATRIX = {
-        ("inside", "big"): "soumis",
+        ("inside", "new_big"): "soumis",
+        ("inside", "big"): "soumis_ou_pac",
         ("inside", "medium"): "action_requise",
         ("inside", "small"): "non_soumis",
+        ("inside_potential", "new_big"): "action_requise_dans_doute",
         ("inside_potential", "big"): "action_requise_dans_doute",
         ("inside_potential", "medium"): "non_soumis",
         ("inside_potential", "small"): "non_soumis",
+        ("outside", "new_big"): "non_concerne",
         ("outside", "big"): "non_concerne",
         ("outside", "medium"): "non_concerne",
         ("outside", "small"): "non_concerne",
@@ -161,6 +164,7 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
 
     RESULT_MATRIX = {
         "soumis": RESULTS.soumis,
+        "soumis_ou_pac": RESULTS.soumis_ou_pac,
         "non_soumis": RESULTS.non_soumis,
         "non_concerne": RESULTS.non_concerne,
         "action_requise": RESULTS.action_requise,
@@ -177,8 +181,13 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         else:
             flood_zone_status = "outside"
 
-        if self.catalog["final_surface"] >= 400:
+        if (
+            self.catalog["final_surface"] >= 400
+            and self.catalog["existing_surface"] >= 400
+        ):
             project_size = "big"
+        elif self.catalog["final_surface"] >= 400:
+            project_size = "new_big"
         elif self.catalog["final_surface"] >= 300:
             project_size = "medium"
         else:
@@ -231,6 +240,7 @@ class EcoulementSansBV(CriterionEvaluator):
 
     CODES = [
         "soumis",
+        "soumis_ou_pac",
         "action_requise",
         "non_soumis",
         "action_requise_pv_sol",
@@ -239,6 +249,7 @@ class EcoulementSansBV(CriterionEvaluator):
 
     RESULT_MATRIX = {
         "soumis": RESULTS.soumis,
+        "soumis_ou_pac": RESULTS.soumis_ou_pac,
         "action_requise_pv_sol": RESULTS.action_requise,
         "action_requise": RESULTS.action_requise,
         "non_soumis_pv_sol": RESULTS.non_soumis,
@@ -246,17 +257,31 @@ class EcoulementSansBV(CriterionEvaluator):
     }
 
     CODE_MATRIX = {
-        ("gte_1ha", "non_pv_sol"): "soumis",
-        ("gte_9000", "non_pv_sol"): "soumis",
+        ("gte_1ha_new", "non_pv_sol"): "soumis",
+        ("gte_1ha", "non_pv_sol"): "soumis_ou_pac",
+        ("gte_9000", "non_pv_sol"): "action_requise",
         ("gte_8000", "non_pv_sol"): "action_requise",
         ("lt_8000", "non_pv_sol"): "non_soumis",
+        ("gte_1ha_new", "pv_sol"): "action_requise_pv_sol",
         ("gte_1ha", "pv_sol"): "action_requise_pv_sol",
         ("gte_9000", "pv_sol"): "action_requise_pv_sol",
         ("gte_8000", "pv_sol"): "non_soumis_pv_sol",
         ("lt_8000", "pv_sol"): "non_soumis_pv_sol",
     }
 
+    def get_catalog_data(self):
+        data = super().get_catalog_data()
+        data["existing_surface"] = (
+            self.catalog["final_surface"] - self.catalog["created_surface"]
+        )
+        return data
+
     def get_result_data(self):
+        if (
+            self.catalog["final_surface"] >= 10000
+            and self.catalog["existing_surface"] >= 10000
+        ):
+            final_surface = "gte_1ha_new"
         if self.catalog["final_surface"] >= 10000:
             final_surface = "gte_1ha"
         elif self.catalog["final_surface"] >= 9000:
@@ -285,6 +310,7 @@ class EcoulementAvecBV(CriterionEvaluator):
 
     CODES = [
         "soumis",
+        "soumis_ou_pac",
         "action_requise_probable_1ha",
         "action_requise",
         "non_soumis",
@@ -293,40 +319,96 @@ class EcoulementAvecBV(CriterionEvaluator):
     ]
 
     CODE_MATRIX = {
-        ("gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
-        ("gt_11000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
-        ("gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
-        ("gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
-        ("gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
-        ("lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
-        ("lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("gt_11000", "gt_1ha", "non_pv_sol"): "soumis",
-        ("gt_11000", "gt_9000", "non_pv_sol"): "action_requise_probable_1ha",
-        ("gt_11000", "gt_7000", "non_pv_sol"): "action_requise_probable_1ha",
-        ("gt_11000", "gt_500", "non_pv_sol"): "action_requise",
-        ("gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
-        ("gt_9000", "gt_1ha", "non_pv_sol"): "soumis",
-        ("gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
-        ("gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
-        ("gt_9000", "gt_500", "non_pv_sol"): "action_requise",
-        ("gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
-        ("lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
-        ("lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
-        ("lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
-        ("lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
-        ("lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        (
+            "existing_gte_10000",
+            "gt_11000",
+            "gt_9000",
+            "pv_sol",
+        ): "action_requise_pv_sol",
+        ("existing_gte_10000", "gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("existing_gte_10000", "gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("existing_gte_10000", "gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("existing_gte_10000", "lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("existing_gte_10000", "lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_11000", "gt_1ha", "non_pv_sol"): "soumis_ou_pac",
+        (
+            "existing_gte_10000",
+            "gt_11000",
+            "gt_9000",
+            "non_pv_sol",
+        ): "action_requise_probable_1ha",
+        (
+            "existing_gte_10000",
+            "gt_11000",
+            "gt_7000",
+            "non_pv_sol",
+        ): "action_requise_probable_1ha",
+        ("existing_gte_10000", "gt_11000", "gt_500", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis_ou_pac",
+        ("existing_gte_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_9000", "gt_500", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("existing_gte_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "gt_11000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
+        ("existing_lt_10000", "lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_11000", "gt_1ha", "non_pv_sol"): "soumis",
+        (
+            "existing_lt_10000",
+            "gt_11000",
+            "gt_9000",
+            "non_pv_sol",
+        ): "action_requise_probable_1ha",
+        (
+            "existing_lt_10000",
+            "gt_11000",
+            "gt_7000",
+            "non_pv_sol",
+        ): "action_requise_probable_1ha",
+        ("existing_lt_10000", "gt_11000", "gt_500", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("existing_lt_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_9000", "gt_500", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
+        ("existing_lt_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
     }
 
     RESULT_MATRIX = {
         "soumis": RESULTS.soumis,
+        "soumis_ou_pac": RESULTS.soumis_ou_pac,
         "action_requise_probable_1ha": RESULTS.action_requise,
         "action_requise_pv_sol": RESULTS.action_requise,
         "action_requise": RESULTS.action_requise,
@@ -350,6 +432,10 @@ class EcoulementAvecBV(CriterionEvaluator):
 
         data["catchment_surface"] = surface
         data["total_catchment_surface"] = total_surface
+
+        data["existing_surface"] = (
+            self.catalog["final_surface"] - self.catalog["created_surface"]
+        )
         return data
 
     def get_result_data(self):
@@ -375,7 +461,11 @@ class EcoulementAvecBV(CriterionEvaluator):
         if self.moulinette.raw_data.get("evalenv_rubrique_30-localisation") == "sol":
             is_pv_sol = "pv_sol"
 
-        return catchment_surface, final_surface, is_pv_sol
+        existing_surface = "existing_lt_10000"
+        if self.catalog["existing_surface"] >= 10000:
+            existing_surface = "existing_gte_10000"
+
+        return existing_surface, catchment_surface, final_surface, is_pv_sol
 
 
 class OtherCriteria(CriterionEvaluator):
