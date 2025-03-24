@@ -171,13 +171,6 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         "action_requise_dans_doute": RESULTS.action_requise,
     }
 
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-        data["existing_surface"] = (
-            self.catalog["final_surface"] - self.catalog["created_surface"]
-        )
-        return data
-
     def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
 
