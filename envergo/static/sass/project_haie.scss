@@ -161,6 +161,11 @@ div#app {
       }
     }
 
+    .leaflet-draw-guide {
+      stroke: #fff;
+      stroke-width: 2px;
+    }
+
     .help-bubble {
       position: absolute;
       bottom: 1rem;
