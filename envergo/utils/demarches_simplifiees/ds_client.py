@@ -31,6 +31,14 @@ class DsClient:
         if variables:
             data["variables"] = variables
 
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"\nrequest.url: {self.api_url}"
+                f"\nrequest.body: {data}"
+            )
+            return {}
+
         response = requests.post(self.api_url, json=data, headers=headers)
 
         logger.debug(
@@ -122,7 +130,7 @@ class DsClient:
         except Exception as e:
             logger.error(e)
             message = render_to_string(
-                "mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                "demarches_simplifiees/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
                 context={
                     "status_code": "?",
                     "response": results,
@@ -134,7 +142,7 @@ class DsClient:
             notify(dedent(message), "haie")
             return None
 
-        dossier = results["data"].get("dossier")
+        dossier = (results.get("data") or {}).get("dossier")
 
         if not dossier:
             logger.error(
@@ -145,7 +153,7 @@ class DsClient:
             )
 
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+                "demarches_simplifiees/mattermost_demarches_simplifiees_api_unexpected_format.txt",
                 context={
                     "status_code": 200,
                     "response": results,

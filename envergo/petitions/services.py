@@ -396,7 +396,7 @@ def fetch_project_details_from_demarches_simplifiees(
         )
 
         message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+            "demarches_simplifiees/mattermost_demarches_simplifiees_api_unexpected_format.txt",
             context={
                 "status_code": response.status_code,
                 "response": response.text,

@@ -168,7 +168,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
+@patch("envergo.utils.demarches_simplifiees.ds_client.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
     mock_post, mock_notify, haie_user, site
@@ -200,7 +200,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
+@patch("envergo.utils.demarches_simplifiees.ds_client.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user, site
