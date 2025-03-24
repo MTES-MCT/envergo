@@ -130,7 +130,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
@@ -223,7 +223,7 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
 
         if map_polygons:
             criterion_map = Map(
-                center=self.catalog["coords"],
+                center=self.catalog["lng_lat"],
                 entries=map_polygons,
                 caption=caption,
                 truncate=False,
