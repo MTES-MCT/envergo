@@ -39,7 +39,7 @@ class EvaluationFactory(DjangoModelFactory):
     def moulinette_url(self):
         created_surface = 1500
         final_surface = 3000
-        moulinette_url = f"http://envergo/?created_surface={created_surface}&final_surface={final_surface}&lng=-1.30933&lat=47.11971"  # noqa
+        moulinette_url = f"http://envergo/?created_surface={created_surface}&final_surface={final_surface}&lng=-1.646947&lat=47.696706"  # noqa
         return moulinette_url
 
 
