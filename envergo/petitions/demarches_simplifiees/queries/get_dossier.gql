@@ -17,6 +17,7 @@ query getDossier($dossierNumber: Int!) {
     }
     champs {
       id
+      __typename
       label
       stringValue
     }

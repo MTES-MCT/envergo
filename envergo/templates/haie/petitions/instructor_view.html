@@ -15,10 +15,10 @@
             <div class="fr-sidemenu__inner">
               <div id="fr-sidemenu-wrapper">
                 <ul class="fr-sidemenu__list">
+
                   <li class="fr-sidemenu__item fr-sidemenu__item--active">
                     <a class="fr-sidemenu__link"
                        href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
-                       target="_self"
                        aria-current="page">Caractéristiques du projet</a>
                   </li>
                   {% for information in project_details.details %}
@@ -30,10 +30,9 @@
                       </li>
                     {% endif %}
                   {% endfor %}
-                  <li class="fr-sidemenu__item fr-sidemenu__item--active">
+                  <li class="fr-sidemenu__item fr-sidemenu__item">
                     <a class="fr-sidemenu__link"
                        href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
-                       target="_self"
                        aria-current="page">Démarches Simplifiées</a>
                   </li>
                 </ul>

@@ -1,5 +1,7 @@
 {% extends 'haie/petitions/instructor_view.html' %}
 
+{% load utils %}
+
 {% block title %}Instruction du dossier{% endblock %}
 
 {% block project_content %}
@@ -24,8 +26,16 @@
             <strong>{{ item.label }}</strong>
           </p>
           <div class="champ-content">
-            {{ item.value }}
-            {% if item.unit %}{{ item.unit }}{% endif %}
+            {% if item.value|is_type:"ItemDetails" %}
+              {% if item.value.result %}
+                Oui
+              {% else %}
+                Non
+              {% endif %}
+            {% else %}
+              {{ item.value }}
+              {% if item.unit %}{{ item.unit }}{% endif %}
+            {% endif %}
           </div>
         </div>
       {% endif %}
@@ -33,4 +43,10 @@
 
   </section>
 
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var SOURCE_PAGE = "instruction-ds";</script>
 {% endblock %}
