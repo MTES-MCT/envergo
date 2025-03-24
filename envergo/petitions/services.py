@@ -369,6 +369,7 @@ def fetch_project_details_from_demarches_simplifiees(
             id
             number
             state
+            dateDepot
             usager {
               email
             }

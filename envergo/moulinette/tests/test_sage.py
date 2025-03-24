@@ -43,9 +43,9 @@ def sage_criteria(france_map):  # noqa
 @pytest.fixture
 def moulinette_data(footprint):
     return {
-        # Bizou coordinates
-        "lat": 48.496195,
-        "lng": 0.750409,
+        # Mouais coordinates
+        "lat": 47.696706,
+        "lng": -1.646947,
         "created_surface": footprint,
         "final_surface": footprint,
     }

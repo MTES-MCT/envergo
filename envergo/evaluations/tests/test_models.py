@@ -45,9 +45,9 @@ def moulinette_config(france_map, loire_atlantique_department):  # noqa
 @pytest.fixture
 def moulinette_url(footprint):
     params = {
-        # Somewhere south of Nantes, 44
-        "lat": 47.08285,
-        "lng": -1.66259,
+        # Mouais coordinates
+        "lat": 47.696706,
+        "lng": -1.646947,
         "created_surface": footprint,
         "final_surface": footprint,
     }
