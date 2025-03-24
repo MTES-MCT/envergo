@@ -204,7 +204,6 @@ class MoulinetteMixin:
         get = QueryDict("", mutable=True)
         form_data = form.cleaned_data
         form_data.pop("address", None)
-        form_data.pop("existing_surface", None)
         get.update(form_data)
 
         if hasattr(self, "moulinette"):
