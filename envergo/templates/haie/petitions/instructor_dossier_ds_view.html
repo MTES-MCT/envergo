@@ -6,6 +6,19 @@
 
   <h2>Formulaire rempli sur Démarches simplifiées</h2>
 
-  {{ project_details.ds_data }}
+  <section class="fr-py-3w"
+           {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+    {% if champs.label %}<h2 class="fr-mb-0">{{ champs.label }}</h2>{% endif %}
+
+    {% for item in project_details.ds_data %}
+      <div>
+        <span><b>{{ item.label }} :</b></span>
+        <br />
+        {{ item.value }}
+        {% if item.unit %}{{ item.unit }}{% endif %}
+      </div>
+    {% endfor %}
+
+  </section>
 
 {% endblock %}
