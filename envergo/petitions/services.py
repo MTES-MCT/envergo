@@ -343,6 +343,23 @@ class DemarchesSimplifieesDetails:
     champs: list | None
 
 
+def get_item_value_from_ds_champs(champs):
+    """get item value from dossier champs"""
+
+    type_name = champs.get("__typename") or ""
+    value = ""
+    logger.info(type(champs.get("stringValue")))
+    if type_name == "CheckboxChamp":
+        if champs.get("stringValue"):
+            value = "oui"
+        else:
+            value = "non"
+    else:
+        value = champs.get("stringValue") or ""
+
+    return value
+
+
 def compute_instructor_ds_informations(
     petition_project, config, site, visitor_id, user
 ) -> DemarchesSimplifieesDetails:
@@ -379,11 +396,7 @@ def compute_instructor_ds_informations(
     champs_display = [
         Item(
             c.get("label"),
-            (
-                ItemDetails(result=c.get("stringValue"))
-                if c.get("__typename") == "YesNoChamp"
-                else c.get("stringValue")
-            ),
+            get_item_value_from_ds_champs(c),
             None,
             None,
         )
