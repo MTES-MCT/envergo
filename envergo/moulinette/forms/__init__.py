@@ -360,7 +360,8 @@ class TriageFormHaie(forms.Form):
                     <span class="fr-hint-text">
                         Toute intervention qui supprime définitivement la végétation : arrachage,
                         coupe à blanc sur essences qui ne recèpent pas (ex : chêne,
-                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…), entretien sévère et récurrent, etc.
+                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…),
+                        entretien sévère et récurrent, etc.
                     </span>
                     """
                 ),
