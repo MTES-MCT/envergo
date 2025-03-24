@@ -5,18 +5,30 @@
 {% block project_content %}
 
   <h2>Formulaire rempli sur Démarches simplifiées</h2>
+  <div class="tab-title">
+    <h3>Identité du demandeur</h3>
+    <p>TODO:</p>
+  </div>
 
   <section class="fr-py-3w"
            {% if information.slug %}id="{{ information.slug }}"{% endif %}>
     {% if champs.label %}<h2 class="fr-mb-0">{{ champs.label }}</h2>{% endif %}
 
     {% for item in project_details.ds_data %}
-      <div>
-        <span><b>{{ item.label }} :</b></span>
-        <br />
-        {{ item.value }}
-        {% if item.unit %}{{ item.unit }}{% endif %}
-      </div>
+      {% if not item.value %}
+        <h3>{{ item.label }}</h3>
+
+      {% else %}
+        <div class="champ-row fr-my-2w">
+          <p class="champ-label fr-mb-0">
+            <strong>{{ item.label }}</strong>
+          </p>
+          <div class="champ-content">
+            {{ item.value }}
+            {% if item.unit %}{{ item.unit }}{% endif %}
+          </div>
+        </div>
+      {% endif %}
     {% endfor %}
 
   </section>
