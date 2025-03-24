@@ -22,13 +22,6 @@ def apply_new_layout_on_ar_latest_versions(apps, schema_editor):
                 if not latest_version:
                     # no version, no need to rerender
                     continue
-                elif not latest_version.published:
-                    # not published, no need to rerender
-                    continue
-                elif latest_version.created_at < evaluation.updated_at:
-                    # the evaluation has been updated since the version was created
-                    # no need to rerender
-                    continue
 
                 html = BeautifulSoup(latest_version.content, "html.parser")
                 new_layout_element = html.find("span", class_="regulation-result")
