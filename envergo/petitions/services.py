@@ -330,7 +330,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=ds_details.champs,
+        ds_data=ds_details.champs if ds_details else "",
     )
 
 
@@ -379,7 +379,11 @@ def compute_instructor_ds_informations(
     champs_display = [
         Item(
             c.get("label"),
-            c.get("stringValue"),
+            (
+                ItemDetails(result=c.get("stringValue"))
+                if c.get("__typename") == "YesNoChamp"
+                else c.get("stringValue")
+            ),
             None,
             None,
         )
@@ -467,8 +471,9 @@ def fetch_project_details_from_demarches_simplifiees(
             }
             champs {
               id
-              stringValue
+              __typename
               label
+              stringValue
             }
             demarche{
                 title
