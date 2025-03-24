@@ -330,7 +330,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=ds_details,
+        ds_data=ds_details.champs,
     )
 
 
@@ -340,7 +340,7 @@ class DemarchesSimplifieesDetails:
     city: str | None
     pacage: str | None
     usager: str
-    champs: dict
+    champs: list | None
 
 
 def compute_instructor_ds_informations(
@@ -376,18 +376,15 @@ def compute_instructor_ds_informations(
     pacage = None
     champs = dossier.get("champs", [])
 
-    champs_display = InstructorInformationDetails(
-        label="Plantation",
-        items=[
-            Item(
-                c.get("label"),
-                c.get("stringValue"),
-                None,
-                None,
-            )
-            for c in champs
-        ],
-    )
+    champs_display = [
+        Item(
+            c.get("label"),
+            c.get("stringValue"),
+            None,
+            None,
+        )
+        for c in champs
+    ]
 
     city_field = next(
         (
