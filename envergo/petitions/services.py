@@ -330,7 +330,7 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=ds_details.champs,
+        ds_data=ds_details.champs if ds_details else "",
     )
 
 
@@ -341,6 +341,23 @@ class DemarchesSimplifieesDetails:
     pacage: str | None
     usager: str
     champs: list | None
+
+
+def get_item_value_from_ds_champs(champs):
+    """get item value from dossier champs"""
+
+    type_name = champs.get("__typename") or ""
+    value = ""
+    logger.info(type(champs.get("stringValue")))
+    if type_name == "CheckboxChamp":
+        if champs.get("stringValue"):
+            value = "oui"
+        else:
+            value = "non"
+    else:
+        value = champs.get("stringValue") or ""
+
+    return value
 
 
 def compute_instructor_ds_informations(
@@ -379,7 +396,7 @@ def compute_instructor_ds_informations(
     champs_display = [
         Item(
             c.get("label"),
-            c.get("stringValue"),
+            get_item_value_from_ds_champs(c),
             None,
             None,
         )
