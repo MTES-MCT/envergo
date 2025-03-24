@@ -44,9 +44,14 @@ class SetVisitorIdCookie:
 
         This is a temporary fix to allow the frontend to read the visitor id cookie.
         But it should be removed because it makes the cookie lifetime infinite
+
+        It does not set the cookie again, if it has already been set by another middleware/view
         """
-        response.delete_cookie(settings.VISITOR_COOKIE_NAME)
-        set_visitor_id_cookie(response, request.COOKIES[settings.VISITOR_COOKIE_NAME])
+        if not response.cookies.get(settings.VISITOR_COOKIE_NAME):
+            response.delete_cookie(settings.VISITOR_COOKIE_NAME)
+            set_visitor_id_cookie(
+                response, request.COOKIES[settings.VISITOR_COOKIE_NAME]
+            )
 
 
 # Parameters that we want to store in session
