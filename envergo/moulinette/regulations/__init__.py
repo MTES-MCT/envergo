@@ -3,7 +3,7 @@ from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
 
-from envergo.evaluations.models import RESULTS
+from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT
 from envergo.geodata.utils import merge_geometries, to_geojson
 
 
@@ -253,6 +253,14 @@ class CriterionEvaluator(ABC):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._result
+
+    @property
+    def result_tag_style(self):
+        """"""
+        if not hasattr(self, "_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return TAG_STYLES_BY_RESULT[self._result]
 
     def get_map(self):
         """Returns a `Map` object."""

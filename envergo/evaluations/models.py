@@ -1,6 +1,7 @@
 import logging
 import secrets
 import uuid
+from enum import Enum
 from os.path import splitext
 from urllib.parse import urlencode, urlparse
 
@@ -138,6 +139,40 @@ _missing_results = [
 if _missing_results:
     raise ValueError(
         f"The following RESULTS are missing in SELF_DECLARATION_ELIGIBILITY_MATRIX: {_missing_results}"
+    )
+
+
+class TagStyleEnum(Enum):
+    Green = 1
+    Grey = 2
+    Yellow = 3
+    LightRed = 4
+    Orange = 5
+    StrongRed = 6
+
+
+TAG_STYLES_BY_RESULT = {
+    RESULTS.soumis: TagStyleEnum.LightRed,
+    RESULTS.soumis_ou_pac: TagStyleEnum.LightRed,
+    RESULTS.action_requise: TagStyleEnum.Yellow,
+    RESULTS.non_soumis: TagStyleEnum.Green,
+    RESULTS.non_disponible: TagStyleEnum.Grey,
+    RESULTS.non_applicable: TagStyleEnum.Grey,
+    RESULTS.cas_par_cas: TagStyleEnum.Orange,
+    RESULTS.systematique: TagStyleEnum.LightRed,
+    RESULTS.non_concerne: TagStyleEnum.Green,
+    RESULTS.a_verifier: TagStyleEnum.Yellow,
+    RESULTS.iota_a_verifier: TagStyleEnum.Yellow,
+    RESULTS.interdit: TagStyleEnum.StrongRed,
+    RESULTS.non_active: TagStyleEnum.Grey,
+    RESULTS.derogation_inventaire: TagStyleEnum.LightRed,
+    RESULTS.derogation_simplifiee: TagStyleEnum.LightRed,
+    RESULTS.dispense: TagStyleEnum.Green,
+}
+_missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in TAG_STYLES_BY_RESULT: {_missing_results}"
     )
 
 

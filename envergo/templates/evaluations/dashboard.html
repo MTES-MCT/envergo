@@ -67,8 +67,7 @@
             </td>
             <td>{{ evaluation.application_number }}</td>
             <td>{{ evaluation.created_surface }} m²</td>
-
-            <td>{% result_tag evaluation.result %}</td>
+            <td>{% result_tag evaluation.get_moulinette.result evaluation.get_moulinette.result_tag_style %}</td>
           </tr>
         {% empty %}
           <tr>

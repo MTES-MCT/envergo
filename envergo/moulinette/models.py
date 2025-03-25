@@ -23,7 +23,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
-from envergo.evaluations.models import RESULTS
+from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.forms import (
@@ -492,6 +492,14 @@ class Regulation(models.Model):
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
 
+    @property
+    def result_tag_style(self):
+        """Return the regulation result tag style."""
+        if not self.result:
+            return TagStyleEnum.Grey
+
+        return TAG_STYLES_BY_RESULT[self.result]
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -664,6 +672,16 @@ class Criterion(models.Model):
 
     def get_template(self, template_key):
         return self._templates.get(template_key, None)
+
+    @property
+    def result_tag_style(self):
+        """Return the criterion result tag style."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        return self._evaluator.result_tag_style
 
 
 class Perimeter(models.Model):
@@ -1420,6 +1438,11 @@ class Moulinette(ABC):
     def result(self, value):
         """Allow monkeypatching moulinette result for tests."""
         self._result = value
+
+    @property
+    def result_tag_style(self):
+        """Compute global result tag style."""
+        return TAG_STYLES_BY_RESULT[self.result]
 
     def all_required_actions(self):
         for regulation in self.regulations:
