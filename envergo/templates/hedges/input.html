@@ -13,7 +13,7 @@
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' mode=mode %}"
-       data-quality-url="{% url 'hedge_quality' %}"
+       data-quality-url="{% url 'hedge_quality' %}?{{ request.GET.urlencode|safe }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
 

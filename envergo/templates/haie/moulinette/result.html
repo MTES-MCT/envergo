@@ -22,7 +22,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='plantation' %}";</script>
+  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
   <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
