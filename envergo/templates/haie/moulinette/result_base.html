@@ -36,14 +36,13 @@
   {% block result_title %}<h1 class="fr-mb-5w">Simulation réglementaire</h1>{% endblock %}
 
   {% block result_header %}{% endblock %}
-  {% group_regulations_for_display moulinette as grouped_regulations %}
 
-  {% for result, regulations in grouped_regulations.items %}
-    {% if result == "interdit" %}
+  {% for result, regulations in moulinette.get_regulations_by_group.items %}
+    {% if result == 1 %}
       <h3>Réglementations interdisant le projet</h3>
-    {% elif result == "soumis" and moulinette.result != "soumis" %}
+    {% elif result == 2 and moulinette.result != "soumis" %}
       <h3>Autres réglementations concernant le projet</h3>
-    {% elif result == "soumis" %}
+    {% elif result == 2 %}
       <h3>Réglementations concernant le projet</h3>
     {% else %}
       <h3>Autres réglementations</h3>

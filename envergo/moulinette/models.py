@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
 
@@ -123,6 +124,63 @@ if _missing_results:
 # This is to use in model fields `default` attribute
 def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
+
+
+class ResultGroupEnum(IntEnum):
+    """Depending on their result, the regulation will be impacting more or less the project. This group defines the
+    level of impact of the regulation on the project.
+
+    The int value, is used to define the order of the group in the cascade (e.g. for display).
+    """
+
+    BlockingRegulations = (
+        1  # if there is some regulation in this group, the project cannot go further
+    )
+    RestrictiveRegulations = 2  # a dossier will be required
+    OtherRegulations = 3  # these regulations do not impact the project
+
+
+RESULTS_GROUP_MAPPING = {
+    RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
+    RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
+    RESULTS.dispense: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_active: ResultGroupEnum.OtherRegulations,
+}
+
+
+def _check_results_groups_matrices():
+    _missing_results = set()
+    _missing_groups = set()
+
+    for key, value in RESULTS:
+        if key not in RESULTS_GROUP_MAPPING:
+            _missing_results.add(key)
+            continue
+        if not isinstance(RESULTS_GROUP_MAPPING[key], ResultGroupEnum):
+            _missing_groups.add(RESULTS_GROUP_MAPPING[key])
+    if _missing_results:
+        raise ValueError(
+            f"The following RESULTS are missing in RESULTS_GROUP_KEYS: {_missing_results}"
+        )
+    if _missing_groups:
+        raise ValueError(
+            f"The following value is not from ResultGroupEnum: {_missing_groups}"
+        )
+
+
+_check_results_groups_matrices()
 
 
 class Regulation(models.Model):
@@ -499,6 +557,11 @@ class Regulation(models.Model):
             return TagStyleEnum.Grey
 
         return TAG_STYLES_BY_RESULT[self.result]
+
+    @property
+    def result_group(self):
+        """Get the result group of the regulation, depending on its impact on the project."""
+        return RESULTS_GROUP_MAPPING[self.result]
 
 
 class Criterion(models.Model):
@@ -1834,6 +1897,17 @@ class MoulinetteHaie(Moulinette):
             )
 
         return fields
+
+    def get_regulations_by_group(self):
+        """Group regulations by their result_group"""
+        regulations_list = list(self.regulations)
+
+        regulations_list.sort(key=attrgetter("result_group"))
+        grouped = {
+            key: list(group)
+            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
+        }
+        return grouped
 
 
 def get_moulinette_class_from_site(site):
