@@ -15,6 +15,7 @@ from envergo.analytics.utils import (
     is_request_from_a_bot,
     log_event,
 )
+from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
@@ -453,6 +454,8 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         context["envergo_url"] = self.request.build_absolute_uri("/")
         context["base_result"] = "moulinette/base_result.html"
         context["matomo_custom_url"] = matomo_bare_url
+
+        context["non_disponible_tag_style"] = TagStyleEnum.Grey
 
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
