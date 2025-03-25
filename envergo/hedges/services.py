@@ -182,7 +182,7 @@ class PlantationEvaluator:
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        evaluator = HedgeEvaluator(self.hedge_data)
+        evaluator = HedgeEvaluator(self)
         evaluation = evaluator.result
         result = EvaluationResult(
             result=(
@@ -206,8 +206,9 @@ class HedgeEvaluator:
     The plantation evaluator is used to evaluate if a project is compliant with the regulation.
     """
 
-    def __init__(self, hedge_data: HedgeData):
-        self.hedge_data = hedge_data
+    def __init__(self, plantation_evaluator: PlantationEvaluator):
+        self.plantation_evaluator = plantation_evaluator
+        self.hedge_data = plantation_evaluator.hedge_data
         self.result = self.evaluate()
 
     def is_not_planting_under_power_line(self):
@@ -231,7 +232,7 @@ class HedgeEvaluator:
         """
         return (
             self.hedge_data.length_to_plant()
-            >= self.hedge_data.minimum_length_to_plant()
+            >= self.plantation_evaluator.minimum_length_to_plant()
         )
 
     def evaluate_hedge_plantation_quality(self):
@@ -254,8 +255,10 @@ class HedgeEvaluator:
             }
         }
         """
-        minimum_lengths_to_plant = self.hedge_data.get_minimum_lengths_to_plant()
-        lengths_to_plant = self.hedge_data.get_lengths_to_plant()
+        minimum_lengths_to_plant = (
+            self.plantation_evaluator.get_minimum_lengths_to_plant()
+        )
+        lengths_to_plant = self.plantation_evaluator.get_lengths_to_plant()
 
         reliquat = {
             "mixte_remplacement_alignement": max(
@@ -338,12 +341,12 @@ class HedgeEvaluator:
         """Evaluate if there is enough hedges to plant in the project"""
         left_to_plant = max(
             0,
-            self.hedge_data.minimum_length_to_plant()
+            self.plantation_evaluator.minimum_length_to_plant()
             - self.hedge_data.length_to_plant(),
         )
         return {
             "result": self.is_length_to_plant_sufficient(),
-            "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
+            "minimum_length_to_plant": self.plantation_evaluator.minimum_length_to_plant(),
             "left_to_plant": left_to_plant,
         }
 
