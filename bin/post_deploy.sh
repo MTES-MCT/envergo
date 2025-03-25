@@ -6,7 +6,7 @@ set -e
 
 echo ">>> Starting the post_deploy hook"
 
-python manage.py migrate
+# python manage.py migrate
 
 if [ "$IS_REVIEW_APP" == "True" ]
 then
