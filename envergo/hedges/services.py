@@ -130,12 +130,23 @@ class PlantationEvaluator:
 
         return self._evaluation_result.conditions
 
+    def get_replantation_coefficient(self):
+        """Return the replantation coefficient"""
+        ep = self.moulinette.ep.ep_aisne
+        form = ep.get_settings_form()
+        form.is_valid()
+        R = form.cleaned_data.get("replantation_coefficient", 0)
+
+        return float(R)
+
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
+        R = self.get_replantation_coefficient()
         return R * self.hedge_data.length_to_remove()
 
     def get_minimum_lengths_to_plant(self):
+        R = self.get_replantation_coefficient()
         lengths_by_type = defaultdict(int)
         for to_remove in self.hedge_data.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
