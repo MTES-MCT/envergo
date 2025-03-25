@@ -2,7 +2,12 @@ import logging
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
-from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations import (
+    AmenagementEvaluatorMixin,
+    CriterionEvaluator,
+    Map,
+    MapPolygon,
+)
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
@@ -14,7 +19,7 @@ PINK = "#FF9575"
 logger = logging.getLogger(__name__)
 
 
-class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
+class ZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone humide"
     slug = "zone_humide"
 
@@ -141,7 +146,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
@@ -234,7 +239,7 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         return criterion_map
 
 
-class EcoulementSansBV(CriterionEvaluator):
+class EcoulementSansBV(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
 
@@ -304,7 +309,7 @@ class Ruissellement(EcoulementSansBV):
     choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
 
 
-class EcoulementAvecBV(CriterionEvaluator):
+class EcoulementAvecBV(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP avec BV"
     slug = "ecoulement_avec_bv"
 
@@ -468,7 +473,7 @@ class EcoulementAvecBV(CriterionEvaluator):
         return existing_surface, catchment_surface, final_surface, is_pv_sol
 
 
-class OtherCriteria(CriterionEvaluator):
+class OtherCriteria(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Autres rubriques"
     slug = "autres_rubriques"
 

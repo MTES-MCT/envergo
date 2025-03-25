@@ -256,7 +256,7 @@ class CriterionEvaluator(ABC):
 
     @property
     def result_tag_style(self):
-        """"""
+        """Define the style (mainly the color) of the result tag."""
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
@@ -288,3 +288,43 @@ class CriterionEvaluator(ABC):
         else:
             form = None
         return form
+
+
+SELF_DECLARATION_ELIGIBILITY_MATRIX = {
+    RESULTS.soumis: True,
+    RESULTS.soumis_ou_pac: True,
+    RESULTS.non_soumis: False,
+    RESULTS.action_requise: True,
+    RESULTS.non_disponible: False,
+    RESULTS.cas_par_cas: True,
+    RESULTS.systematique: True,
+    RESULTS.non_applicable: False,
+    RESULTS.non_concerne: False,
+    RESULTS.a_verifier: True,
+    RESULTS.iota_a_verifier: True,
+    RESULTS.interdit: True,
+    RESULTS.non_active: False,
+    RESULTS.derogation_inventaire: False,
+    RESULTS.derogation_simplifiee: False,
+    RESULTS.dispense: False,
+}
+
+
+_missing_results = [
+    key for (key, label) in RESULTS if key not in SELF_DECLARATION_ELIGIBILITY_MATRIX
+]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in SELF_DECLARATION_ELIGIBILITY_MATRIX: {_missing_results}"
+    )
+
+
+class AmenagementEvaluatorMixin:
+    """Mixin for Envergo Amenagement criterion evaluators"""
+
+    @property
+    def eligible_to_self_declaration(self):
+        """Should we display the "self declare" call to action?"""
+        if not hasattr(self, "_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+        return SELF_DECLARATION_ELIGIBILITY_MATRIX[self._result]

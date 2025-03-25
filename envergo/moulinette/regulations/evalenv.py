@@ -9,7 +9,7 @@ from envergo.moulinette.forms.fields import (
     extract_choices,
     extract_display_function,
 )
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import AmenagementEvaluatorMixin, CriterionEvaluator
 
 # Only ask the "emprise" question if final surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
@@ -52,7 +52,7 @@ class EmpriseForm(forms.Form):
             del self.fields["emprise"]
 
 
-class Emprise(CriterionEvaluator):
+class Emprise(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 39 (emprise)"
     slug = "emprise"
     form_class = EmpriseForm
@@ -107,7 +107,7 @@ class SurfacePlancherForm(forms.Form):
             del self.fields["surface_plancher_sup_thld"]
 
 
-class SurfacePlancher(CriterionEvaluator):
+class SurfacePlancher(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 39 (surface plancher)"
     slug = "surface_plancher"
     form_class = SurfacePlancherForm
@@ -159,7 +159,7 @@ class TerrainAssietteForm(forms.Form):
             del self.fields["operation_amenagement"]
 
 
-class TerrainAssiette(CriterionEvaluator):
+class TerrainAssiette(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 39 (terrain d'assiette)"
     slug = "terrain_assiette"
     form_class = TerrainAssietteForm
@@ -277,7 +277,7 @@ class RoutesForm(OptionalFormMixin, forms.Form):
     )
 
 
-class RoutePublique(CriterionEvaluator):
+class RoutePublique(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 6 (route publique)"
     slug = "route_publique"
     form_class = RoutesForm
@@ -294,7 +294,7 @@ class RoutePublique(CriterionEvaluator):
         return result
 
 
-class VoiePrivee(CriterionEvaluator):
+class VoiePrivee(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 6 (voie privée)"
     slug = "voie_privee"
     form_class = RoutesForm
@@ -310,7 +310,7 @@ class VoiePrivee(CriterionEvaluator):
         return result
 
 
-class PisteCyclable(CriterionEvaluator):
+class PisteCyclable(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 6 (piste cyclable)"
     slug = "piste_cyclable"
     form_class = RoutesForm
@@ -372,7 +372,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     )
 
 
-class Photovoltaique(CriterionEvaluator):
+class Photovoltaique(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 30 (PV)"
     slug = "photovoltaique"
     form_class = PhotovoltaiqueForm
@@ -472,7 +472,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     )
 
 
-class AireDeStationnement(CriterionEvaluator):
+class AireDeStationnement(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 41 (stationnement)"
     slug = "aire_de_stationnement"
     form_class = AireDeStationnementForm
@@ -523,7 +523,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
     )
 
 
-class Camping(CriterionEvaluator):
+class Camping(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 42 (camping)"
     slug = "camping"
     form_class = CampingForm
@@ -578,7 +578,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
     )
 
 
-class EquipementSportif(CriterionEvaluator):
+class EquipementSportif(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 44 (équipement sportif)"
     slug = "sport_loisir_culture"
     form_class = EquipementSportifForm
@@ -654,7 +654,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     )
 
 
-class DefrichementDeboisement(CriterionEvaluator):
+class DefrichementDeboisement(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 47 (déboisement)"
     slug = "defrichement_deboisement"
     form_class = DefrichementBoisementForm
@@ -670,7 +670,7 @@ class DefrichementDeboisement(CriterionEvaluator):
         return defrichement_deboisement
 
 
-class PremierBoisement(CriterionEvaluator):
+class PremierBoisement(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Rubrique 47 (premier boisement)"
     slug = "premier_boisement"
     form_class = DefrichementBoisementForm
@@ -686,7 +686,7 @@ class PremierBoisement(CriterionEvaluator):
         return premier_boisement
 
 
-class OtherCriteria(CriterionEvaluator):
+class OtherCriteria(AmenagementEvaluatorMixin, CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
     slug = "autres_rubriques"
 
