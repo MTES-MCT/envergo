@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Instruction du dossier{% endblock %}
+
+{% block container %}
+
+  <section class="fr-py-8w">
+    <div class="fr-container">
+      <div class="fr-grid-row">
+        <div class="fr-col fr-col-sm-3">
+          <nav class="fr-sidemenu fr-sidemenu--sticky"
+               aria-labelledby="fr-sidemenu-title">
+            <div class="fr-sidemenu__inner">
+              <div id="fr-sidemenu-wrapper">
+                <ul class="fr-sidemenu__list">
+
+                  {% block project_sidemenu %}
+                    <li class="fr-sidemenu__item fr-sidemenu__item--active">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
+                         aria-current="page">Caractéristiques du projet</a>
+                    </li>
+                    <li class="fr-sidemenu__item fr-sidemenu__item">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
+                         aria-current="page">Démarches Simplifiées</a>
+                    </li>
+                  {% endblock %}
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <div id="project-specifications-instructor" class="fr-col">
+
+          {% include 'haie/petitions/_summary_dossier.html' with project_details=project_details petition_project=petition_project %}
+
+          {% block project_content %}{% endblock %}
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+{% endblock %}
