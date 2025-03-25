@@ -1,8 +1,21 @@
-{% extends 'haie/petitions/instructor_view.html' %}
+{% extends "haie/petitions/instructor_view_base.html" %}
 
 {% load utils %}
 
 {% block title %}Instruction du dossier{% endblock %}
+
+{% block project_sidemenu %}
+  <li class="fr-sidemenu__item fr-sidemenu__item--active">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
+       aria-current="page">Caractéristiques du projet</a>
+  </li>
+  <li class="fr-sidemenu__item fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
+       aria-current="page">Démarches Simplifiées</a>
+  </li>
+{% endblock %}
 
 {% block project_content %}
 
