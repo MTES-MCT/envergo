@@ -1,3 +1,6 @@
+import logging
+import timeit
+
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
@@ -7,6 +10,8 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
+
+logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.django_db
 
@@ -145,10 +150,14 @@ def test_3310_medium_footprint_outside_wetlands(moulinette_data):
 @pytest.mark.parametrize("footprint", [1500])
 def test_3310_large_footprint_within_wetlands(moulinette_data):
     """Project with footprint >= 1000m² within a wetland."""
-
+    start = timeit.default_timer()
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    step_init = timeit.default_timer() - start
+    logger.warning(f"Temps pour moulinette : {step_init}")
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
+    step_eval = timeit.default_timer() - step_init
+    logger.warning(f"Temps pour évaluation : {step_eval}")
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
 

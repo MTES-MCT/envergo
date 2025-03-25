@@ -1,4 +1,5 @@
 import logging
+import timeit
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from itertools import groupby
@@ -1530,11 +1531,16 @@ class MoulinetteAmenagement(Moulinette):
 
         lng = self.catalog["lng"]
         lat = self.catalog["lat"]
+
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+
+        start = timeit.default_timer()
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
+        step_data_buffer3 = timeit.default_timer() - start
+        logger.info(f"Temps data buffers : {step_data_buffer3}")
 
         fetching_radius = int(self.raw_data.get("radius", "200"))
         zones = self.get_zones(catalog["lng_lat"], fetching_radius)
@@ -1548,7 +1554,10 @@ class MoulinetteAmenagement(Moulinette):
                 )
             )
 
+        start = timeit.default_timer()
         catalog["wetlands"] = list(filter(wetlands_filter, zones))
+        step_zones = timeit.default_timer() - start
+        logger.info(f"Temps zones humides certain : {step_zones}")
 
         def potential_wetlands_filter(zone):
             return all(
