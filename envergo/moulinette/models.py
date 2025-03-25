@@ -1516,10 +1516,9 @@ class MoulinetteAmenagement(Moulinette):
             .get_criteria()
             .filter(activation_map__zones__in=zones)
             .annotate(
-                distance=Cast(
-                    Distance("activation_map__zones__geometry", coords), IntegerField()
-                )
+                geometry=F("activation_map__zones__geometry"),
             )
+            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
             .filter(distance__lte=F("activation_distance"))
             .select_related("activation_map")
             .defer("activation_map__geometry")
