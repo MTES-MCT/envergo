@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
@@ -342,6 +344,24 @@ def test_2150_avec_bv_small(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
+
+
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+@pytest.mark.parametrize("footprint", [1400])
+def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area, moulinette_data):
+    mock_get_catchment_area.return_value = 12000
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
+
+
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+@pytest.mark.parametrize("footprint", [1600])
+def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area, moulinette_data):
+    mock_get_catchment_area.return_value = 12000
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
 
 
 @pytest.mark.parametrize("footprint", [10000])
