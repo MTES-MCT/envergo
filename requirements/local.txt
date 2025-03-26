@@ -28,12 +28,18 @@ attrs==25.1.0
     # via
     #   -r base.txt
     #   fiona
+beautifulsoup4==4.13.3
+    # via
+    #   -r base.txt
+    #   bs4
 billiard==4.2.1
     # via
     #   -r base.txt
     #   celery
 black==25.1.0
     # via -r local.in
+bs4==0.0.2
+    # via -r base.txt
 build==1.2.2.post1
     # via
     #   -r base.txt
@@ -369,6 +375,10 @@ six==1.17.0
     #   cssbeautifier
     #   jsbeautifier
     #   python-dateutil
+soupsieve==2.6
+    # via
+    #   -r base.txt
+    #   beautifulsoup4
 sqlparse==0.5.3
     # via
     #   -r base.txt
@@ -397,6 +407,7 @@ types-pyyaml==6.0.12.20241230
 typing-extensions==4.12.2
     # via
     #   -r base.txt
+    #   beautifulsoup4
     #   django-stubs
     #   django-stubs-ext
     #   faker

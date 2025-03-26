@@ -23,6 +23,10 @@ attrs==25.1.0
     # via
     #   -r base.txt
     #   fiona
+beautifulsoup4==4.13.3
+    # via
+    #   -r base.txt
+    #   bs4
 billiard==4.2.1
     # via
     #   -r base.txt
@@ -33,6 +37,8 @@ botocore==1.36.16
     # via
     #   boto3
     #   s3transfer
+bs4==0.0.2
+    # via -r base.txt
 build==1.2.2.post1
     # via
     #   -r base.txt
@@ -236,6 +242,10 @@ six==1.17.0
     # via
     #   -r base.txt
     #   python-dateutil
+soupsieve==2.6
+    # via
+    #   -r base.txt
+    #   beautifulsoup4
 sqlparse==0.5.3
     # via
     #   -r base.txt
@@ -249,6 +259,7 @@ tqdm==4.67.1
 typing-extensions==4.12.2
     # via
     #   -r base.txt
+    #   beautifulsoup4
     #   faker
     #   psycopg
 tzdata==2025.1

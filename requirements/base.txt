@@ -16,8 +16,12 @@ asgiref==3.8.1
     #   django-allauth
 attrs==25.1.0
     # via fiona
+beautifulsoup4==4.13.3
+    # via bs4
 billiard==4.2.1
     # via celery
+bs4==0.0.2
+    # via -r base.in
 build==1.2.2.post1
     # via pip-tools
 celery==5.4.0
@@ -161,6 +165,8 @@ shapely==2.0.7
     # via -r base.in
 six==1.17.0
     # via python-dateutil
+soupsieve==2.6
+    # via beautifulsoup4
 sqlparse==0.5.3
     # via django
 text-unidecode==1.3
@@ -169,6 +175,7 @@ tqdm==4.67.1
     # via -r base.in
 typing-extensions==4.12.2
     # via
+    #   beautifulsoup4
     #   faker
     #   psycopg
 tzdata==2025.1
