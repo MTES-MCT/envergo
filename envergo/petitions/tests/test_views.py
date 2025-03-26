@@ -130,3 +130,62 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
 
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_dossier_ds_view_requires_authentication(
+    haie_user, site
+):
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    factory = RequestFactory()
+    request = factory.get(
+        reverse(
+            "petition_project_instructor_dossier_ds_view",
+            kwargs={"reference": project.reference},
+        )
+    )
+
+    # Simulate an unauthenticated user
+    request.user = AnonymousUser()
+    request.site = site
+    request.session = {}
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response is a redirect to the login page
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    # Simulate an authenticated user
+    request.user = haie_user
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
+@patch("envergo.utils.mattermost.notify")
+def test_petition_project_instructor_display_dossier_ds_info(
+    mock_post, mock_notify, client, haie_user, site
+):
+    """Test if dossier data is in template"""
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    instructor_ds_url = reverse(
+        "petition_project_instructor_dossier_ds_view",
+        kwargs={"reference": project.reference},
+    )
+    client.user = haie_user
+    response = client.post(instructor_ds_url)
+
+    assert response is not None
