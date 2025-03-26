@@ -327,18 +327,18 @@ class EcoulementAvecBV(CriterionEvaluator):
             "pv_sol",
         ): "action_requise_pv_sol",
         ("existing_gte_10000", "gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_11000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_11000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_gte_10000", "gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_gte_10000", "gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_gte_10000", "gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_9000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "gt_9000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_gte_10000", "lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_gte_10000", "lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_gte_10000", "lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_gte_10000", "lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "lt_9000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_gte_10000", "lt_9000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_gte_10000", "gt_11000", "gt_1ha", "non_pv_sol"): "soumis_ou_pac",
         (
             "existing_gte_10000",
@@ -352,33 +352,33 @@ class EcoulementAvecBV(CriterionEvaluator):
             "gt_7000",
             "non_pv_sol",
         ): "action_requise_probable_1ha",
-        ("existing_gte_10000", "gt_11000", "gt_500", "non_pv_sol"): "action_requise",
-        ("existing_gte_10000", "gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_11000", "gt_1500", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis",
         ("existing_gte_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis_ou_pac",
         ("existing_gte_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
         ("existing_gte_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
-        ("existing_gte_10000", "gt_9000", "gt_500", "non_pv_sol"): "action_requise",
-        ("existing_gte_10000", "gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_9000", "gt_1500", "non_pv_sol"): "action_requise",
+        ("existing_gte_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
         ("existing_gte_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_gte_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
         ("existing_gte_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
-        ("existing_gte_10000", "lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
-        ("existing_gte_10000", "lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "gt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_11000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "gt_11000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "gt_11000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_11000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_11000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_lt_10000", "gt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "gt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "gt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_9000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "gt_9000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_lt_10000", "lt_9000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "lt_9000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "lt_9000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "lt_9000", "gt_500", "pv_sol"): "non_soumis_pv_sol",
-        ("existing_lt_10000", "lt_9000", "lt_500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "lt_9000", "gt_1500", "pv_sol"): "non_soumis_pv_sol",
+        ("existing_lt_10000", "lt_9000", "lt_1500", "pv_sol"): "non_soumis_pv_sol",
         ("existing_lt_10000", "gt_11000", "gt_1ha", "non_pv_sol"): "soumis",
         (
             "existing_lt_10000",
@@ -392,18 +392,18 @@ class EcoulementAvecBV(CriterionEvaluator):
             "gt_7000",
             "non_pv_sol",
         ): "action_requise_probable_1ha",
-        ("existing_lt_10000", "gt_11000", "gt_500", "non_pv_sol"): "action_requise",
-        ("existing_lt_10000", "gt_11000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_11000", "gt_1500", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_lt_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
         ("existing_lt_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
-        ("existing_lt_10000", "gt_9000", "gt_500", "non_pv_sol"): "action_requise",
-        ("existing_lt_10000", "gt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_9000", "gt_1500", "non_pv_sol"): "action_requise",
+        ("existing_lt_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_lt_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
-        ("existing_lt_10000", "lt_9000", "gt_500", "non_pv_sol"): "non_soumis",
-        ("existing_lt_10000", "lt_9000", "lt_500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "gt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
     }
 
     RESULT_MATRIX = {
@@ -445,10 +445,10 @@ class EcoulementAvecBV(CriterionEvaluator):
             final_surface = "gt_9000"
         elif self.catalog["final_surface"] >= 7000:
             final_surface = "gt_7000"
-        elif self.catalog["final_surface"] >= 500:
-            final_surface = "gt_500"
+        elif self.catalog["final_surface"] >= 1500:
+            final_surface = "gt_1500"
         else:
-            final_surface = "lt_500"
+            final_surface = "lt_1500"
 
         if self.catalog["total_catchment_surface"] >= 11000:
             catchment_surface = "gt_11000"
