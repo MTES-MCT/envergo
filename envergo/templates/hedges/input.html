@@ -19,25 +19,53 @@
 
     <div id="saisie-ui">
       <div id="map">
+        <div id="controls-container">
+          <div class="controls inline-controls">
+            <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+                 role="search">
+              <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
+              <input class="fr-input"
+                     placeholder="Rechercher une commune ou une adresse"
+                     type="search"
+                     id="id_address"
+                     name="address"
+                     :disabled="hedgeBeingDrawn">
+              <button class="fr-btn fr-btn--sm"
+                      title="Rechercher"
+                      :disabled="hedgeBeingDrawn">Rechercher</button>
+            </div>
 
-        <div id="drawing-controls" class="controls leaflet-top leaflet-right ">
-          <button v-if="mode === 'removal'"
-                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
-                  @click="startDrawingToRemove"
-                  :disabled="hedgeBeingDrawn">
-            <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
-            Tracer une haie à détruire
-          </button>
-          <button v-if="mode === 'plantation'"
-                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
-                  @click="startDrawingToPlant"
-                  :disabled="hedgeBeingDrawn">
-            <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
-            Tracer une haie à planter
-          </button>
-          <button v-if="hedgeBeingDrawn"
-                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
-                  @click="cancelDrawing">Annuler le tracé en cours</button>
+            <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
+              <div class="leaflet-control">
+                <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                        @click="zoomOut"
+                        :disabled="hedgeBeingDrawn">
+                  <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
+                  Vue d'ensemble
+                </button>
+              </div>
+            </template>
+
+          </div>
+          <div id="drawing-controls" class="controls">
+            <button v-if="mode === 'removal'"
+                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+                    @click="startDrawingToRemove"
+                    :disabled="hedgeBeingDrawn">
+              <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
+              Tracer une haie à détruire
+            </button>
+            <button v-if="mode === 'plantation'"
+                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
+                    @click="startDrawingToPlant"
+                    :disabled="hedgeBeingDrawn">
+              <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
+              Tracer une haie à planter
+            </button>
+            <button v-if="hedgeBeingDrawn"
+                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
+                    @click="cancelDrawing">Annuler le tracé en cours</button>
+          </div>
         </div>
 
         <div v-if="helpBubble" class="help-bubble">
@@ -46,37 +74,6 @@
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
         </div>
-      </div>
-
-      {% comment %}
-      There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
-      {% endcomment %}
-      <div class="controls leaflet-top leaflet-left inline-controls">
-        <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
-             role="search">
-          <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
-          <input class="fr-input"
-                 placeholder="Rechercher une commune ou une adresse"
-                 type="search"
-                 id="id_address"
-                 name="address"
-                 :disabled="hedgeBeingDrawn">
-          <button class="fr-btn fr-btn--sm"
-                  title="Rechercher"
-                  :disabled="hedgeBeingDrawn">Rechercher</button>
-        </div>
-
-        <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
-          <div class="leaflet-control">
-            <button class="fr-btn fr-btn--sm fr-btn--secondary"
-                    @click="zoomOut"
-                    :disabled="hedgeBeingDrawn">
-              <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
-              Vue d'ensemble
-            </button>
-          </div>
-        </template>
-
       </div>
 
       <div id="sidebar" class="fr-text--sm">
@@ -195,11 +192,16 @@
                   </div>
                   <div>
                     <h6>Maintien des haies PAC</h6>
-                    <p v-if="quality.length_to_plant_pac.result">Le linéaire de haie planté sur parcelle PAC est suffisant.</p>
+                    <p v-if="quality.length_to_plant_pac.result">
+                      Le linéaire de haie planté sur parcelle PAC est
+                      suffisant.
+                    </p>
                     <p v-else>
-                      Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[ Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
+                      Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[
+                      Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
                       <br />
-                      Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC, hors alignements d’arbres.
+                      Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC,
+                      hors alignements d’arbres.
                     </p>
                   </div>
                 </div>
@@ -216,17 +218,21 @@
                     <p>Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites.</p>
 
                     <p v-if="quality.quality.missing_plantation.alignement > 0">
-                      Il manque au moins  [[ Math.round(quality.quality.missing_plantation.mixte + quality.quality.missing_plantation.alignement) ]] m de haie mixte ou alignement d'arbres.
+                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
+                      quality.quality.missing_plantation.alignement) ]] m de haie mixte ou alignement d'arbres.
                     </p>
                     <p v-else-if="quality.quality.missing_plantation.mixte > 0 || quality.quality.missing_plantation.degradee > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte + quality.quality.missing_plantation.degradee) ]] m de haie mixte.
+                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
+                      quality.quality.missing_plantation.degradee) ]] m de haie mixte.
                     </p>
 
                     <p v-if="quality.quality.missing_plantation.buissonante > 0">
-                      Il manque au moins  [[ Math.round(quality.quality.missing_plantation.buissonante + quality.quality.missing_plantation.arbustive) ]] m de haie basse ou arbustive.
+                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.buissonante +
+                      quality.quality.missing_plantation.arbustive) ]] m de haie basse ou arbustive.
                     </p>
                     <p v-else-if="quality.quality.missing_plantation.arbustive > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.arbustive) ]] m de haie arbustive.
+                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.arbustive) ]] m de haie
+                      arbustive.
                     </p>
 
                   </div>
@@ -239,9 +245,13 @@
                 </div>
                 <div>
                   <h6>Sécurité</h6>
-                  <p v-if="quality.do_not_plant_under_power_line.result">Aucune haie haute sous une ligne électrique.</p>
+                  <p v-if="quality.do_not_plant_under_power_line.result">
+                    Aucune haie haute sous une ligne
+                    électrique.
+                  </p>
                   <p v-else>
-                    Aucune haie haute ne doit se situer sous une ligne électrique. Déplacez les haies ou ne plantez à cet endroit que des haies basses ou arbustives.
+                    Aucune haie haute ne doit se situer sous une ligne électrique. Déplacez les haies ou ne plantez à
+                    cet endroit que des haies basses ou arbustives.
                   </p>
                 </div>
               </div>
@@ -260,7 +270,8 @@
               <div class="fr-modal__body">
                 <div class="fr-modal__content fr-pt-4w">
                   <p>
-                    Souhaitez-vous vraiment quitter la carte de localisation des haies ? Vos modifications ne seront pas enregistrées.
+                    Souhaitez-vous vraiment quitter la carte de localisation des haies ? Vos modifications ne seront pas
+                    enregistrées.
                   </p>
                 </div>
                 <div class="fr-modal__footer">
@@ -287,7 +298,8 @@
                 <div class="fr-modal__content">
                   <h1 class="fr-modal__title">Complétez la description des haies pour pouvoir poursuivre</h1>
                   <p>
-                    Pour que le simulateur détermine les réglementations qui s’appliquent au projet, toutes les haies doivent être décrites complètement.
+                    Pour que le simulateur détermine les réglementations qui s’appliquent au projet, toutes les haies
+                    doivent être décrites complètement.
                   </p>
                   <p>Ces haies sont incomplètes : [[ invalidHedges ]]</p>
                 </div>
