@@ -141,6 +141,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
+
     assert details is None
 
 

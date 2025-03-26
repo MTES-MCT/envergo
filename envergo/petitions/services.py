@@ -360,7 +360,7 @@ def fetch_project_details_from_demarches_simplifiees(
         return None
 
     ds_client = DsClient()
-    dossier = ds_client.get_one_dossier(dossier_number)
+    dossier = ds_client.get_dossier(dossier_number)
 
     if dossier is None:
 

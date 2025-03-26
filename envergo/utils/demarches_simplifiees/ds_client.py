@@ -1,3 +1,4 @@
+import json
 import logging
 from collections.abc import Iterator
 from pathlib import Path
@@ -7,9 +8,14 @@ import requests
 from django.conf import settings
 from django.template.loader import render_to_string
 
+from envergo.petitions.tests.factories import DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
+
+
+class NotEnabledException(Exception):
+    pass
 
 
 class DsClient:
@@ -32,12 +38,12 @@ class DsClient:
             data["variables"] = variables
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            logger.warning(
+            raise NotEnabledException(
                 f"Demarches Simplifiees is not enabled. Doing nothing."
                 f"\nrequest.url: {self.api_url}"
                 f"\nrequest.body: {data}"
             )
-            return {}
+            return json.loads(DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER)
 
         response = requests.post(self.api_url, json=data, headers=headers)
 
@@ -119,7 +125,7 @@ class DsClient:
             result = self.launch_graphql_query("getDemarche", variables=variables)
             yield from result["data"]["demarche"]["dossiers"]["nodes"]
 
-    def get_one_dossier(self, dossier_number) -> dict:
+    def get_dossier(self, dossier_number) -> dict:
         variables = {
             "dossierNumber": dossier_number,
         }
@@ -127,6 +133,11 @@ class DsClient:
 
         try:
             results = self.launch_graphql_query("getDossier", variables)
+
+        except NotEnabledException as e:
+            logger.warning(e)
+            return None
+
         except Exception as e:
             logger.error(e)
             message = render_to_string(
@@ -136,7 +147,7 @@ class DsClient:
                     "response": results,
                     "api_url": self.api_url,
                     "body": "body",
-                    "command": "get_one_dossier",
+                    "command": "get_dossier",
                 },
             )
             notify(dedent(message), "haie")
@@ -159,7 +170,7 @@ class DsClient:
                     "response": results,
                     "api_url": self.api_url,
                     "body": "body",
-                    "command": "get_one_dossier",
+                    "command": "get_dossier",
                 },
             )
             notify(dedent(message), "haie")

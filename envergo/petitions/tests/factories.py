@@ -17,6 +17,12 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
 
+with open("envergo/petitions/tests/data/demarche_fake.json", "r") as file:
+    DEMARCHES_SIMPLIFIEES_FAKE_DEMARCHE = file.read()
+
+with open("envergo/petitions/tests/data/dossier_fake.json", "r") as file:
+    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER = file.read()
+
 
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
