@@ -1,5 +1,4 @@
 import random
-from string import ascii_uppercase
 
 import factory
 from django.contrib.gis.geos import MultiPolygon, Polygon
@@ -10,17 +9,8 @@ from faker import Faker
 
 from envergo.geodata.models import Department, Map, Zone
 
-
-def generate_section():
-    length = random.randint(1, 2)
-    section = "".join(random.choices(ascii_uppercase, k=length))
-    return section
-
-
-# Shamelessly stolen frow SO
-# https://stackoverflow.com/a/53570031/665797
-
-
+# This is a rough pentagon that I manually drew on geoportail and that contains
+# France's mainland.
 france_polygon = Polygon(
     [
         (2.239523057461999, 51.37848260569899),
@@ -31,8 +21,8 @@ france_polygon = Polygon(
         (2.239523057461999, 51.37848260569899),
     ]
 )
-france_multipolygon = MultiPolygon([france_polygon])
 
+# Very rough department outlines
 loire_atlantique_polygon = Polygon(
     [
         (-2.318813217788111, 47.11172939002415),
@@ -47,6 +37,19 @@ loire_atlantique_polygon = Polygon(
         (-2.318813217788111, 47.11172939002415),
     ]
 )
+
+herault_polygon = Polygon(
+    [
+        (3.215640301549349, 43.22794194612112),
+        (2.5426723773152715, 43.395887014114464),
+        (3.2656957338328425, 43.913967044500254),
+        (3.841333590843401, 43.96202635483297),
+        (4.262633800688122, 43.58351502379401),
+        (3.215640301549349, 43.22794194612112),
+    ]
+)
+
+france_multipolygon = MultiPolygon([france_polygon])
 loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
 
 

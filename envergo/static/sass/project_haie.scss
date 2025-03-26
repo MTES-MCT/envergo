@@ -57,7 +57,7 @@ div#app {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    min-width: 78em; // size xl
+    min-width: 768px; // size md
     position: relative;
     overflow: hidden;
 
@@ -68,17 +68,17 @@ div#app {
       .leaflet-control-layers-toggle {
         background-image: url("/static/icons/stack-line.svg");
       }
-    }
 
-    #drawing-controls {
-      display: flex;
-      flex-direction: column;
-
-      button {
-        flex: 1;
+      #controls-container {
         display: flex;
-        justify-content: center;
-        width: auto;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin: 10px;
+
+        .leaflet-control {
+          margin-bottom: 10px;
+          white-space: nowrap;
+        }
       }
     }
 
@@ -176,6 +176,7 @@ div#app {
       padding: 0.25rem 1rem;
       font-size: 1rem;
       border-radius: 0.75rem;
+      max-width: calc(100% - 8rem);
 
       &.hidden {
         display: none;
@@ -185,7 +186,7 @@ div#app {
     #sidebar {
       bottom: 0;
       overflow-y: auto;
-      width: 28em;
+      width: 26em;
       margin-bottom: 0;
 
       div#compensation {
