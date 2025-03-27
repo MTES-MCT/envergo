@@ -179,19 +179,22 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
 @patch("envergo.utils.mattermost.notify")
+@patch("requests.post")
 def test_petition_project_instructor_display_dossier_ds_info(
     mock_post, mock_notify, client, haie_user, site
 ):
     """Test if dossier data is in template"""
     ConfigHaieFactory()
     project = PetitionProjectFactory()
+
     instructor_ds_url = reverse(
         "petition_project_instructor_dossier_ds_view",
         kwargs={"reference": project.reference},
     )
-    client.user = haie_user
-    response = client.post(instructor_ds_url)
+    client.force_login(haie_user)
+    response = client.get(instructor_ds_url)
+    assert response.status_code == 200
 
-    assert response is not None
+    content = response.content.decode()
+    assert "Formulaire rempli sur Démarches simplifiées" in content
