@@ -347,7 +347,8 @@ def get_item_value_from_ds_champs(champs):
     """get item value from dossier champs"""
 
     type_name = champs.get("__typename") or ""
-    value = ""
+    value = champs.get("stringValue") or ""
+
     if type_name == "CheckboxChamp":
         if champs.get("checked"):
             value = "oui"
@@ -358,8 +359,6 @@ def get_item_value_from_ds_champs(champs):
             value = "oui"
         else:
             value = "non"
-    else:
-        value = champs.get("stringValue") or ""
 
     return value
 
