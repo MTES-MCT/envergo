@@ -65,6 +65,7 @@ class ProjectDetails:
     demarche_simplifiee_number: int
     usager: str
     details: list[InstructorInformation]
+    header_sections: list | None
     ds_data: dict
 
 
@@ -330,7 +331,8 @@ def compute_instructor_informations(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        ds_data=ds_details.champs if ds_details else "",
+        header_sections=ds_details.header_sections if ds_details else [],
+        ds_data=ds_details.champs if ds_details else [],
     )
 
 
@@ -340,6 +342,7 @@ class DemarchesSimplifieesDetails:
     city: str | None
     pacage: str | None
     usager: str
+    header_sections: list | None
     champs: list | None
 
 
@@ -347,7 +350,8 @@ def get_item_value_from_ds_champs(champs):
     """get item value from dossier champs"""
 
     type_name = champs.get("__typename") or ""
-    value = ""
+    value = champs.get("stringValue") or ""
+
     if type_name == "CheckboxChamp":
         if champs.get("checked"):
             value = "oui"
@@ -358,10 +362,24 @@ def get_item_value_from_ds_champs(champs):
             value = "oui"
         else:
             value = "non"
-    else:
-        value = champs.get("stringValue") or ""
 
     return value
+
+
+def get_header_sections_from_ds_demarche(demarche):
+    """Get header sections from demarche champDescriptors"""
+
+    champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
+    header_sections = []
+
+    if champ_descriptors:
+        for champ_descriptor in champ_descriptors:
+            type_name = champ_descriptor.get("__typename", "")
+            label = champ_descriptor.get("label", "")
+            if type_name == "HeaderSectionChampDescriptor":
+                header_sections.append(label)
+
+    return header_sections
 
 
 def compute_instructor_ds_informations(
@@ -395,7 +413,10 @@ def compute_instructor_ds_informations(
     )
     city = None
     pacage = None
+    demarche = dossier.get("demarche")
     champs = dossier.get("champs", [])
+
+    header_sections = get_header_sections_from_ds_demarche(demarche)
 
     champs_display = [
         Item(
@@ -431,7 +452,7 @@ def compute_instructor_ds_informations(
     usager = (dossier.get("usager") or {}).get("email", "")
 
     return DemarchesSimplifieesDetails(
-        applicant_name, city, pacage, usager, champs_display
+        applicant_name, city, pacage, usager, header_sections, champs_display
     )
 
 
