@@ -465,35 +465,278 @@ def fetch_project_details_from_demarches_simplifiees(
     variables = f"""{{
               "dossierNumber":{dossier_number}
             }}"""
-    query = """query getDossier($dossierNumber: Int!) {
-          dossier(number: $dossierNumber) {
+    query = """query getDossier(
+        $dossierNumber: Int!,
+        $includeChamps: Boolean = true,
+        $includeTraitements: Boolean = true,
+        ) {
+        dossier(number: $dossierNumber) {
+            __typename
             id
             number
+            archived
+            prefilled
             state
+            dateDerniereModification
             dateDepot
+            motivation
+            motivationAttachment {
+            ...FileFragment
+            }
+            attestation {
+            ...FileFragment
+            }
+            pdf {
+            ...FileFragment
+            }
             usager {
-              email
+            email
             }
+            prenomMandataire
+            nomMandataire
+            deposeParUnTiers
             demandeur {
-              ... on PersonnePhysique {
-                civilite
-                nom
-                prenom
-                email
-              }
+            __typename
+            ...PersonnePhysiqueFragment
+            ...PersonneMoraleFragment
+            ...PersonneMoraleIncompleteFragment
             }
-            champs {
-              id
-              __typename
-              label
-              stringValue
+            traitements @include(if: $includeTraitements) {
+            state
+            emailAgentTraitant
+            dateTraitement
+            motivation
+            revision {
+                id
+                datePublication
+            }
+            }
+            champs @include(if: $includeChamps) {
+            ...ChampFragment
             }
             demarche{
                 title
                 number
             }
-          }
-        }"""
+        }
+        }
+
+        fragment ChampFragment on Champ {
+        id
+        __typename
+        label
+        stringValue
+        ... on DateChamp {
+            date
+        }
+        ... on DatetimeChamp {
+            datetime
+        }
+        ... on CheckboxChamp {
+            checked: value
+        }
+        ... on YesNoChamp {
+            selected: value
+        }
+        ... on DecimalNumberChamp {
+            decimalNumber: value
+        }
+        ... on IntegerNumberChamp {
+            integerNumber: value
+        }
+        ... on CiviliteChamp {
+            civilite: value
+        }
+        ... on LinkedDropDownListChamp {
+            primaryValue
+            secondaryValue
+        }
+        ... on MultipleDropDownListChamp {
+            values
+        }
+        ... on PieceJustificativeChamp {
+            files {
+            ...FileFragment
+            }
+        }
+        ... on AddressChamp {
+            address {
+            ...AddressFragment
+            }
+            commune {
+            ...CommuneFragment
+            }
+            departement {
+            ...DepartementFragment
+            }
+        }
+        ... on EpciChamp {
+            epci {
+            ...EpciFragment
+            }
+            departement {
+            ...DepartementFragment
+            }
+        }
+        ... on CommuneChamp {
+            commune {
+            ...CommuneFragment
+            }
+            departement {
+            ...DepartementFragment
+            }
+        }
+        ... on DepartementChamp {
+            departement {
+            ...DepartementFragment
+            }
+        }
+        ... on RegionChamp {
+            region {
+            ...RegionFragment
+            }
+        }
+        ... on PaysChamp {
+            pays {
+            ...PaysFragment
+            }
+        }
+        ... on SiretChamp {
+            etablissement {
+            ...PersonneMoraleFragment
+            }
+        }
+        ... on RNFChamp {
+            rnf {
+            ...RNFFragment
+            }
+            commune {
+            ...CommuneFragment
+            }
+            departement {
+            ...DepartementFragment
+            }
+        }
+        ... on EngagementJuridiqueChamp {
+            engagementJuridique {
+            ...EngagementJuridiqueFragment
+            }
+        }
+        }
+
+        fragment PersonneMoraleFragment on PersonneMorale {
+        siret
+        siegeSocial
+        naf
+        libelleNaf
+        address {
+            ...AddressFragment
+        }
+        entreprise {
+            siren
+            capitalSocial
+            numeroTvaIntracommunautaire
+            formeJuridique
+            formeJuridiqueCode
+            nomCommercial
+            raisonSociale
+            siretSiegeSocial
+            codeEffectifEntreprise
+            dateCreation
+            nom
+            prenom
+            attestationFiscaleAttachment {
+            ...FileFragment
+            }
+            attestationSocialeAttachment {
+            ...FileFragment
+            }
+        }
+        association {
+            rna
+            titre
+            objet
+            dateCreation
+            dateDeclaration
+            datePublication
+        }
+        }
+
+        fragment PersonneMoraleIncompleteFragment on PersonneMoraleIncomplete {
+        siret
+        }
+
+        fragment PersonnePhysiqueFragment on PersonnePhysique {
+        civilite
+        nom
+        prenom
+        email
+        }
+
+        fragment FileFragment on File {
+        __typename
+        filename
+        contentType
+        checksum
+        byteSize: byteSizeBigInt
+        url
+        createdAt
+        }
+
+        fragment AddressFragment on Address {
+        label
+        type
+        streetAddress
+        streetNumber
+        streetName
+        postalCode
+        cityName
+        cityCode
+        departmentName
+        departmentCode
+        regionName
+        regionCode
+        }
+
+        fragment PaysFragment on Pays {
+        name
+        code
+        }
+
+        fragment RegionFragment on Region {
+        name
+        code
+        }
+
+        fragment DepartementFragment on Departement {
+        name
+        code
+        }
+
+        fragment EpciFragment on Epci {
+        name
+        code
+        }
+
+        fragment CommuneFragment on Commune {
+        name
+        code
+        postalCode
+        }
+
+        fragment RNFFragment on RNF {
+        id
+        title
+        address {
+            ...AddressFragment
+        }
+        }
+
+        fragment EngagementJuridiqueFragment on EngagementJuridique {
+        montantEngage
+        montantPaye
+        }
+    """
 
     body = {
         "query": query,
