@@ -1,12 +1,12 @@
-# EnvErgo
+# Envergo
 
 Améliorer la prise en compte de l'environnement dans les projets d'urbanisme.
 
 
 ## À propos
 
-Cette page concerne le code source du projet EnvErgo. Pour en savoir plus sur le
-projet lui-même, se référer au site [EnvErgo.beta.gouv.fr](https://envergo.beta.gouv.fr).
+Cette page concerne le code source du projet Envergo. Pour en savoir plus sur le
+projet lui-même, se référer au site [Envergo.beta.gouv.fr](https://envergo.beta.gouv.fr).
 
 ## Solution technique
 
@@ -77,7 +77,7 @@ $ docker compose run --rm django python manage.py collectstatic
 
 ```
 
-Ajouter dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
+Ajouter dans `/etc/hosts` les domaines utilisés pour Envergo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
 
 ```
 <url du conteneur envergo_django> envergo.local haie.local
@@ -380,7 +380,7 @@ Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
 ### Installation des dépendances Géo sur Scalingo
 
-EnvErgo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
+Envergo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
 externes pour les fonctions géographiques (gdal, geos, proj…).
 
 Pour installer ces dépendances, [Scalingo proposait un buildpack
