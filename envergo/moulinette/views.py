@@ -255,8 +255,9 @@ class MoulinetteMixin:
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
 
-        action = self.event_action_amenagement
-        if self.request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
+        if self.request.site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN:
+            action = self.event_action_amenagement
+        else:
             action = self.event_action_haie
 
         mtm_keys = get_matomo_tags(self.request)
@@ -306,10 +307,8 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         return context
 
 
-class MoulinetteResult(MoulinetteMixin, FormView):
-    event_category = "simulateur"
-    event_action_amenagement = "soumission"
-    event_action_haie = "soumission_d"
+class MoulinetteResultMixin:
+    """Common code for views displaying moulinette results."""
 
     def get_template_names(self):
         """Check which template to use depending on the moulinette result."""
@@ -343,43 +342,6 @@ class MoulinetteResult(MoulinetteMixin, FormView):
 
         return [template_name]
 
-    def get(self, request, *args, **kwargs):
-        is_edit = bool(self.request.GET.get("edit", False))
-        context = self.get_context_data(**kwargs)
-        res = self.render_to_response(context)
-        moulinette = self.moulinette
-        triage_form = self.triage_form
-
-        if "redirect_url" in context:
-            return HttpResponseRedirect(context["redirect_url"])
-        elif moulinette:
-            if (
-                "debug" not in self.request.GET
-                and not is_edit
-                and not self.validate_results_url(request, context)
-            ):
-                return HttpResponseRedirect(self.get_results_url(context["form"]))
-
-            if not (
-                moulinette.has_missing_data()
-                or is_request_from_a_bot(request)
-                or is_edit
-            ):
-                self.log_moulinette_event(moulinette, context)
-
-            return res
-        elif triage_form is not None:
-            log_event(
-                "simulateur",
-                "soumission_autre",
-                self.request,
-                **self.request.GET.dict(),
-                **get_matomo_tags(self.request),
-            )
-            return res
-        else:
-            return HttpResponseRedirect(reverse("moulinette_home"))
-
     def validate_results_url(self, request, context):
         """Check that the url parameter does not contain any unexpected parameter.
 
@@ -404,23 +366,23 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         )
         return current_qs
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_analytics_context_data(self, context):
+        """Custom context data related to analytics.
 
+        We have to build a bunch of "fake" urls for tracking purpose.
+        For example, we want the debug page to be logged as a `/simulateur/debug/`
+        url in matomo, even though the real url is `/simulateur/resultat/?debug=true`.
+        """
+        data = {}
         moulinette = context.get("moulinette", None)
+        is_debug = bool(self.request.GET.get("debug", False))
+        is_edit = bool(self.request.GET.get("edit", False))
+
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
-        debug_result_url = update_qs(current_url, {"debug": "true"})
-        result_url = remove_from_qs(current_url, "debug")
-        edit_url = (
-            update_qs(result_url, {"edit": "true"})
-            if moulinette
-            else context.get("triage_url", None)
-        )
+
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
         # For example, if the current url is /simulateur/resultat/?debug=true,
@@ -448,30 +410,13 @@ class MoulinetteResult(MoulinetteMixin, FormView):
         )
         matomo_invalid_form_url = update_qs(invalid_form_url, mtm_params)
 
-        context["current_url"] = current_url
-        context["share_btn_url"] = share_btn_url
-        context["share_print_url"] = share_print_url
-        context["envergo_url"] = self.request.build_absolute_uri("/")
-        context["base_result"] = "moulinette/base_result.html"
-        context["matomo_custom_url"] = matomo_bare_url
-
-        context["non_disponible_tag_style"] = TagStyleEnum.Grey
-
-        is_debug = bool(self.request.GET.get("debug", False))
-        is_edit = bool(self.request.GET.get("edit", False))
-
-        if moulinette:
-            context["base_result"] = moulinette.get_result_template()
+        data["matomo_custom_url"] = matomo_bare_url
 
         if moulinette and is_edit:
-            context["matomo_custom_url"] = form_url_with_edit
+            data["matomo_custom_url"] = form_url_with_edit
+
         elif moulinette and is_debug:
-            context = {
-                **context,
-                **moulinette.get_debug_context(),
-                "result_url": result_url,
-                "matomo_custom_url": matomo_debug_url,
-            }
+            data["matomo_custom_url"] = matomo_debug_url
 
         elif moulinette and moulinette.has_missing_data():
             if context["additional_forms_bound"]:
@@ -479,12 +424,127 @@ class MoulinetteResult(MoulinetteMixin, FormView):
             else:
                 context["matomo_custom_url"] = matomo_missing_data_url
 
-        elif moulinette:
-            context["debug_url"] = debug_result_url
         elif context.get("triage_form", None):
             context["matomo_custom_url"] = matomo_out_of_scope_result_url
 
-        if moulinette and moulinette.catalog:
+        return data
+
+    def get_urls_context_data(self, context):
+        """Custom context data related to urls.
+
+        We need to build different urls to make linking easier.
+        For example, we dislpay a "share" button that links to the current page
+        with additional mtm params, a "debug" button that links to the
+        debug page, etc.
+        """
+        data = {}
+        moulinette = context.get("moulinette", None)
+
+        current_url = self.request.build_absolute_uri()
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
+        result_url = remove_from_qs(current_url, "debug")
+        debug_result_url = update_qs(current_url, {"debug": "true"})
+        edit_url = (
+            update_qs(result_url, {"edit": "true"})
+            if moulinette
+            else context.get("triage_url", None)
+        )
+        data["result_url"] = result_url
+        data["edit_url"] = edit_url
+        data["current_url"] = current_url
+        data["share_btn_url"] = share_btn_url
+        data["share_print_url"] = share_print_url
+        data["envergo_url"] = self.request.build_absolute_uri("/")
+        data["debug_url"] = debug_result_url
+
+        return data
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = context.get("moulinette", None)
+        is_debug = bool(self.request.GET.get("debug", False))
+
+        context["non_disponible_tag_style"] = TagStyleEnum.Grey
+        context["is_admin"] = self.request.user.is_staff
+        context["is_debug"] = is_debug
+
+        if moulinette:
+            context["base_result"] = moulinette.get_result_template()
+        else:
+            context["base_result"] = "moulinette/base_result.html"
+
+        if moulinette and is_debug:
+            debug_context_data = moulinette.get_debug_context()
+            context.update(debug_context_data)
+
+        context["display_feedback_form"] = (
+            moulinette
+            and moulinette.is_evaluation_available()
+            and not self.request.GET.get("feedback", False)
+        )
+
+        analytics_data = self.get_analytics_context_data(context)
+        context.update(analytics_data)
+
+        urls_data = self.get_urls_context_data(context)
+        context.update(urls_data)
+
+        return context
+
+
+class BaseMoulinetteResult(FormView):
+    def get(self, request, *args, **kwargs):
+        is_edit = bool(self.request.GET.get("edit", False))
+        context = self.get_context_data(**kwargs)
+        res = self.render_to_response(context)
+        moulinette = self.moulinette
+        triage_form = self.triage_form
+
+        if "redirect_url" in context:
+            return HttpResponseRedirect(context["redirect_url"])
+
+        elif moulinette:
+            if (
+                "debug" not in self.request.GET
+                and not is_edit
+                and not self.validate_results_url(request, context)
+            ):
+                return HttpResponseRedirect(self.get_results_url(context["form"]))
+
+            if not (
+                moulinette.has_missing_data()
+                or is_request_from_a_bot(request)
+                or is_edit
+            ):
+                self.log_moulinette_event(moulinette, context)
+
+            return res
+
+        elif triage_form is not None:
+            log_event(
+                "simulateur",
+                "soumission_autre",
+                self.request,
+                **self.request.GET.dict(),
+                **get_matomo_tags(self.request),
+            )
+            return res
+        else:
+            return HttpResponseRedirect(reverse("moulinette_home"))
+
+
+class MoulinetteAmenagementResult(
+    MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
+):
+    event_category = "simulateur"
+    event_action_amenagement = "soumission"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = context.get("moulinette", None)
+
+        if moulinette:
             lng = moulinette.catalog.get("lng")
             lat = moulinette.catalog.get("lat")
             if lng and lat:
@@ -498,17 +558,31 @@ class MoulinetteResult(MoulinetteMixin, FormView):
                     context["address_coords"] = f"{lat}, {lng}"
                     context["form"].data["address"] = f"{lat}, {lng}"
 
-        context["is_admin"] = self.request.user.is_staff
-        context["edit_url"] = edit_url
-        context["display_feedback_form"] = (
-            moulinette
-            and moulinette.is_evaluation_available()
-            and not self.request.GET.get("feedback", False)
-        )
         return context
 
 
-class MoulinetteResultPlantation(MoulinetteResult):
+class MoulinetteHaieResult(
+    MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
+):
+    event_category = "simulateur"
+    event_action_haie = "soumission_d"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = context.get("moulinette", None)
+
+        if moulinette and "haies" in moulinette.catalog:
+            hedge_data = moulinette.catalog["haies"]
+            context["plantation_evaluation"] = PlantationEvaluator(
+                moulinette, hedge_data
+            )
+            plantation_url = reverse("input_hedges", args=["plantation", hedge_data.id])
+            plantation_url = update_qs(plantation_url, self.request.GET)
+            context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+        return context
+
+
+class MoulinetteResultPlantation(MoulinetteHaieResult):
     event_category = "simulateur"
     event_action_haie = "soumission_p"
 
