@@ -64,7 +64,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'avis réglementaire",
+        subject="[Envergo] Votre demande d'avis réglementaire",
         body=txt_body,
         from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
         to=user_emails,
@@ -136,7 +136,7 @@ def warn_admin_of_email_error(recipient_status_id):
     evalreq = evaluation.request
     base_url = get_base_url(
         settings.ENVERGO_AMENAGEMENT_DOMAIN
-    )  # Evaluations exist only for EnvErgo Amenagement.
+    )  # Evaluations exist only for Envergo Amenagement.
     eval_url = reverse(
         "admin:evaluations_evaluation_change",
         args=[evaluation.reference],

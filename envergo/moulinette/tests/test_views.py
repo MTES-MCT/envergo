@@ -23,7 +23,7 @@ RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
 )
-UNAVAIL = "Le simulateur EnvErgo n'est pas encore déployé dans votre département."
+UNAVAIL = "Le simulateur Envergo n'est pas encore déployé dans votre département."
 ADMIN_MSG = "Le simulateur n'est pas activé dans ce département"
 
 

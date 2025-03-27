@@ -20,9 +20,9 @@ Coordonnées que nous avons identifiées :
 
   https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}
 
-  ❌ Non, je ne souhaite pas que le pétitionnaire soit contacté par EnvErgo :
+  ❌ Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo :
 
-  https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par EnvErgo"|urlencode:""|iriencode }}
+  https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo"|urlencode:""|iriencode }}
 {% else %}
 À transmettre au porteur de projet.
 {% endif %}
