@@ -7,7 +7,7 @@ test('Display a result with the available regulations', async ({ page }) => {
   await page.getByLabel('Nouveaux impacts').fill('500');
   await page.getByLabel('État final').fill('500');
   await page.getByRole('button', { name: 'Démarrer la simulation' }).click();
-  await expect(page).toHaveTitle("Simulation réglementaire du projet — EnvErgo");
+  await expect(page).toHaveTitle("Simulation réglementaire du projet — Envergo");
   await expect(page.getByText('Le projet n’est pas soumis à la Loi sur l’eau pour ce qui concerne les impacts')).toBeVisible();
   await expect(page.getByText('Le projet n\'est pas soumis à Natura 2000')).toBeVisible();
   await expect(page.getByText('Le projet n’est pas soumis à Évaluation Environnementale')).toBeVisible();

@@ -568,7 +568,7 @@ def test_instructor_icpe_send_to_sponsor(rf, moulinette_url):
         in body
     )
     assert (
-        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        "nous n’avons pas envoyé cet avis directement au porteur, car Envergo ne se prononce pas encore"
         in body
     )
 
@@ -609,7 +609,7 @@ def test_instructor_icpe_dont_send_to_sponsor(rf, moulinette_url):
         in body
     )
     assert (
-        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        "nous n’avons pas envoyé cet avis directement au porteur, car Envergo ne se prononce pas encore"
         not in body
     )
 
@@ -646,7 +646,7 @@ def test_petitioner_icpe(rf, moulinette_url):
         in body
     )
     assert (
-        "nous n’avons pas envoyé cet avis directement au porteur, car EnvErgo ne se prononce pas encore"
+        "nous n’avons pas envoyé cet avis directement au porteur, car Envergo ne se prononce pas encore"
         not in body
     )
 

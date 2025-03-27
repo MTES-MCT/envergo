@@ -10,7 +10,7 @@ from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url, get_site_literal
 
 REGISTER_SUBJECT = {
-    "amenagement": "[EnvErgo] Activation de votre compte",
+    "amenagement": "[Envergo] Activation de votre compte",
     "haie": "[Guichet unique de la haie] Activation de votre compte",
 }
 
