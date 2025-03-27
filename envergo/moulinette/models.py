@@ -7,7 +7,7 @@ from operator import attrgetter
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import LineString, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -60,6 +60,7 @@ STAKES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -1677,7 +1678,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1777,12 +1778,32 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_criteria(self):
-        dept_centroid = self.department.centroid
-        criteria = (
-            super()
-            .get_criteria()
-            .filter(activation_map__zones__geometry__intersects=dept_centroid)
-        )
+        """filter criteria based on the intersection of the hedges to remove and the criteria map.
+
+        if there is no hedges to remove, we fallback on the department centroid.
+        """
+
+        if "haies" in self.catalog and self.catalog["haies"].length_to_remove() > 0:
+            hedges = self.catalog["haies"]
+            linestrings = [
+                LineString(
+                    [(point["lng"], point["lat"]) for point in hedge.latLngs],
+                    srid=EPSG_WGS84,
+                )
+                for hedge in hedges.hedges_to_remove()
+            ]
+            query = Q()
+            for line in linestrings:
+                query |= Q(activation_map__zones__geometry__intersects=line)
+
+            criteria = super().get_criteria().filter(query)
+        else:
+            dept_centroid = self.department.centroid
+            criteria = (
+                super()
+                .get_criteria()
+                .filter(activation_map__zones__geometry__intersects=dept_centroid)
+            )
 
         return criteria
 
