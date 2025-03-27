@@ -7,7 +7,7 @@ test('Display a result with the available regulations', async ({ page }) => {
   await page.getByLabel('Nouveaux impacts').fill('500');
   await page.getByLabel('État final').fill('500');
   await page.getByRole('button', { name: 'Démarrer la simulation' }).click();
-  await expect(page).toHaveTitle("Simulation réglementaire du projet — EnvErgo");
+  await expect(page).toHaveTitle("Simulation réglementaire du projet — Envergo");
   await expect(page.getByRole('heading', { name: 'Loi sur l\'eau Non soumis' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Règlement de SAGE Non disponible' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Natura 2000 Non soumis' })).toBeVisible();
