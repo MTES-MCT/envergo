@@ -2,7 +2,11 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteResultPlantation, Triage
+from envergo.moulinette.views import (
+    MoulinetteHaieResult,
+    MoulinetteResultPlantation,
+    Triage,
+)
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -23,6 +27,14 @@ urlpatterns = [
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_saisie_p",
                 ),
+            ]
+        ),
+    ),
+    path(
+        _("result/"),
+        include(
+            [
+                path("", MoulinetteHaieResult.as_view(), name="moulinette_result"),
             ]
         ),
     ),
