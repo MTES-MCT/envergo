@@ -52,6 +52,17 @@ query getDossier(
     demarche {
       title
       number
+      revision {
+        champDescriptors
+        {
+          id
+          __typename
+          ... on HeaderSectionChampDescriptor {
+            description
+            label
+          }
+        }
+      }
     }
   }
 }

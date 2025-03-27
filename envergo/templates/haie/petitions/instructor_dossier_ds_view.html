@@ -16,14 +16,12 @@
 
     <div id="fr-sidemenu-item-1">
       <ul class="fr-sidemenu__list">
-        {% for item in project_details.ds_data %}
-          {% if not item.value %}
-            <li class="fr-sidemenu__item">
-              <a class="fr-sidemenu__link"
-                 href="#section-{{ item.label|slugify }}"
-                 target="_self">{{ item.label }}</a>
-            </li>
-          {% endif %}
+        {% for item in project_details.header_sections %}
+          <li class="fr-sidemenu__item">
+            <a class="fr-sidemenu__link"
+               href="#section-{{ item|slugify }}"
+               target="_self">{{ item }}</a>
+          </li>
         {% endfor %}
       </ul>
     </div>
