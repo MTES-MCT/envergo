@@ -182,6 +182,6 @@ class NewsletterOptIn(FormView):
 class NewsletterDoubleOptInConfirmation(View):
     def get(self, request, *args, **kwargs):
         messages.success(
-            request, "Votre inscription à la newsletter EnvErgo est confirmée !"
+            request, "Votre inscription à la newsletter Envergo est confirmée !"
         )
         return HttpResponseRedirect(reverse("home"))

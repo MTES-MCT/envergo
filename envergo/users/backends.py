@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthBackend(ModelBackend):
-    """Custom Backend for EnvErgo.
+    """Custom Backend for Envergo.
 
     Login requirements are different for Amenagement and Haies.
     """
