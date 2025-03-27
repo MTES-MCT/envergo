@@ -68,17 +68,18 @@ div#app {
       .leaflet-control-layers-toggle {
         background-image: url("/static/icons/stack-line.svg");
       }
+    }
 
-      #controls-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        margin: 10px;
+    #controls-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin: 10px;
+      width: calc(100% - 26em); // 26em = width of sidebar
 
-        .leaflet-control {
-          margin-bottom: 10px;
-          white-space: nowrap;
-        }
+      .leaflet-control {
+        margin-bottom: 10px;
+        white-space: nowrap;
       }
     }
 
