@@ -472,7 +472,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
 
 class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
-    """Mixin for all Project Instructor views"""
+    """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
     form_class = PetitionProjectInstructorForm
@@ -503,6 +503,8 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 class PetitionProjectInstructorDossierDSView(
     PetitionProjectInstructorMixin, DetailView
 ):
+    """View for petition project page with demarches simplifiées data"""
+
     template_name = "haie/petitions/instructor_dossier_ds_view.html"
     matomo_tag = "consultation_i_ds"
 
