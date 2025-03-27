@@ -36,7 +36,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """Default user for EnvErgo."""
+    """Default user for Envergo."""
 
     objects = UserManager()
 

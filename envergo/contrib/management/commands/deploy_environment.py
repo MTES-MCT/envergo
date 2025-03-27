@@ -3,7 +3,7 @@ from django.core.management import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = "Set the url of the EnvErgo Amenagement Site on the new environment."
+    help = "Set the url of the Envergo Amenagement Site on the new environment."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -17,7 +17,7 @@ class Command(BaseCommand):
 
         site = Site.objects.order_by(
             "id"
-        ).first()  # the first one should be EnvErgo Amenagement
+        ).first()  # the first one should be Envergo Amenagement
         site.domain = options["url"]
         site.save()
 
