@@ -16,11 +16,15 @@
 
     <div id="fr-sidemenu-item-1">
       <ul class="fr-sidemenu__list">
-        <li class="fr-sidemenu__item">
-          <a class="fr-sidemenu__link"
-             href="#{{ information.slug }}"
-             target="_self">Id</a>
-        </li>
+        {% for item in project_details.ds_data %}
+          {% if not item.value %}
+            <li class="fr-sidemenu__item">
+              <a class="fr-sidemenu__link"
+                 href="#section-{{ item.label|slugify }}"
+                 target="_self">{{ item.label }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
       </ul>
     </div>
   </li>
@@ -34,13 +38,12 @@
     <p>TODO:</p>
   </div>
 
-  <section class="fr-py-3w"
-           {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+  <section class="fr-py-3w">
     {% if champs.label %}<h2 class="fr-mb-0">{{ champs.label }}</h2>{% endif %}
 
     {% for item in project_details.ds_data %}
       {% if not item.value %}
-        <h3 class="fr-h5">{{ item.label }}</h3>
+        <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
 
       {% else %}
         <div class="champ-row fr-my-2w">
@@ -48,16 +51,8 @@
             <strong>{{ item.label }}</strong>
           </p>
           <div class="champ-content">
-            {% if item.value|is_type:"ItemDetails" %}
-              {% if item.value.result %}
-                Oui
-              {% else %}
-                Non
-              {% endif %}
-            {% else %}
-              {{ item.value }}
-              {% if item.unit %}{{ item.unit }}{% endif %}
-            {% endif %}
+            {{ item.value }}
+            {% if item.unit %}{{ item.unit }}{% endif %}
           </div>
         </div>
       {% endif %}
