@@ -19,60 +19,64 @@
 
     <div id="saisie-ui">
       <div id="map">
-        <div id="controls-container">
-          <div class="controls inline-controls">
-            <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
-                 role="search">
-              <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
-              <input class="fr-input"
-                     placeholder="Rechercher une commune ou une adresse"
-                     type="search"
-                     id="id_address"
-                     name="address"
-                     :disabled="hedgeBeingDrawn">
-              <button class="fr-btn fr-btn--sm"
-                      title="Rechercher"
-                      :disabled="hedgeBeingDrawn">Rechercher</button>
-            </div>
-
-            <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
-              <div class="leaflet-control">
-                <button class="fr-btn fr-btn--sm fr-btn--secondary"
-                        @click="zoomOut"
-                        :disabled="hedgeBeingDrawn">
-                  <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
-                  Vue d'ensemble
-                </button>
-              </div>
-            </template>
-
-          </div>
-          <div id="drawing-controls" class="controls">
-            <button v-if="mode === 'removal'"
-                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
-                    @click="startDrawingToRemove"
-                    :disabled="hedgeBeingDrawn">
-              <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
-              Tracer une haie à détruire
-            </button>
-            <button v-if="mode === 'plantation'"
-                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
-                    @click="startDrawingToPlant"
-                    :disabled="hedgeBeingDrawn">
-              <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
-              Tracer une haie à planter
-            </button>
-            <button v-if="hedgeBeingDrawn"
-                    class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
-                    @click="cancelDrawing">Annuler le tracé en cours</button>
-          </div>
-        </div>
 
         <div v-if="helpBubble" class="help-bubble">
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
           <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
+        </div>
+      </div>
+      {% comment %}
+      There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
+      {% endcomment %}
+      <div id="controls-container"
+           class="leaflet-top leaflet-left inline-controls">
+        <div class="controls inline-controls">
+          <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+               role="search">
+            <label class="fr-label" for="id_address">Rechercher une commune ou une adresse</label>
+            <input class="fr-input"
+                   placeholder="Rechercher une commune ou une adresse"
+                   type="search"
+                   id="id_address"
+                   name="address"
+                   :disabled="hedgeBeingDrawn">
+            <button class="fr-btn fr-btn--sm"
+                    title="Rechercher"
+                    :disabled="hedgeBeingDrawn">Rechercher</button>
+          </div>
+
+          <template v-if="hedges.TO_REMOVE.hasCompletedHedge || hedges.TO_PLANT.hasCompletedHedge">
+            <div class="leaflet-control">
+              <button class="fr-btn fr-btn--sm fr-btn--secondary"
+                      @click="zoomOut"
+                      :disabled="hedgeBeingDrawn">
+                <img class="img-icon" src="{% static 'icons/focus-mode.svg' %}" alt="">
+                Vue d'ensemble
+              </button>
+            </div>
+          </template>
+
+        </div>
+        <div id="drawing-controls" class="controls">
+          <button v-if="mode === 'removal'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-mr-1w"
+                  @click="startDrawingToRemove"
+                  :disabled="hedgeBeingDrawn">
+            <img class="img-icon" src="{% static 'icons/arracher.svg' %}" alt="">
+            Tracer une haie à détruire
+          </button>
+          <button v-if="mode === 'plantation'"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary"
+                  @click="startDrawingToPlant"
+                  :disabled="hedgeBeingDrawn">
+            <img class="img-icon" src="{% static 'icons/planter.svg' %}" alt="">
+            Tracer une haie à planter
+          </button>
+          <button v-if="hedgeBeingDrawn"
+                  class="leaflet-control fr-btn fr-btn--sm fr-btn--secondary fr-btn--icon-left fr-icon-close-line"
+                  @click="cancelDrawing">Annuler le tracé en cours</button>
         </div>
       </div>
 
