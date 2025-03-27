@@ -172,6 +172,8 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
     assert response.status_code == 200
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 @patch("envergo.utils.mattermost.notify")
