@@ -348,9 +348,13 @@ def get_item_value_from_ds_champs(champs):
 
     type_name = champs.get("__typename") or ""
     value = ""
-    logger.info(type(champs.get("stringValue")))
     if type_name == "CheckboxChamp":
-        if champs.get("stringValue"):
+        if champs.get("checked"):
+            value = "oui"
+        else:
+            value = "non"
+    elif type_name == "YesNoChamp":
+        if champs.get("selected"):
             value = "oui"
         else:
             value = "non"
