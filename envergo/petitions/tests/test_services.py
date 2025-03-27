@@ -13,8 +13,10 @@ from envergo.petitions.services import (
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
-    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER,
     PetitionProjectFactory,
+)
+from envergo.utils.demarches_simplifiees.ds_client import (
+    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER,
 )
 
 pytestmark = pytest.mark.django_db
@@ -97,6 +99,24 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
                     {"id": "Q2hhbXAtNDcyOTIyNA==", "stringValue": "true"},
                     {"id": "Q2hhbXAtNDcyOTI4Mw==", "stringValue": "true"},
                 ],
+                "demarche": {
+                    "title": "Guichet unique de la haie – Aisne (02) / TEST",
+                    "number": 115910,
+                    "revision": {
+                        "champDescriptors": [
+                            {
+                                "id": "Q2hhbXAtNDUzNDEzNQ==",
+                                "__typename": "HeaderSectionChampDescriptor",
+                                "description": "",
+                                "label": "Identité",
+                            },
+                            {
+                                "id": "Q2hhbXAtNTA5MzU0NA==",
+                                "__typename": "YesNoChampDescriptor",
+                            },
+                        ]
+                    },
+                },
             }
         }
     }
@@ -178,7 +198,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
+@patch("envergo.utils.demarches_simplifiees.ds_client.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
     mock_post, mock_notify, haie_user, site
@@ -210,7 +230,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
+@patch("envergo.utils.demarches_simplifiees.ds_client.notify")
 @patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user, site

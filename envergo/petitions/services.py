@@ -1,16 +1,13 @@
-import json
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, List, Literal
 
-import requests
-from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.petitions.tests.factories import DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER
+from envergo.utils.demarches_simplifiees.ds_client import DsClient
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -486,124 +483,14 @@ def fetch_project_details_from_demarches_simplifiees(
         notify(dedent(message), "haie")
         return None
 
-    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
-    variables = f"""{{
-              "dossierNumber":{dossier_number}
-            }}"""
+    current_ds_client = DsClient("ds_queries_get_dossier.gql")
+    dossier = current_ds_client.get_dossier(dossier_number)
 
-    query = ""
-    with open(
-        "envergo/utils/demarches_simplifiees/graphql/ds_queries_get_dossier.gql", "r"
-    ) as file:
-        query = file.read()
-
-    body = {
-        "query": query,
-        "variables": variables,
-    }
-
-    dossier = None
-
-    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-        logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
-            f"\nrequest.url: {api_url}"
-            f"\nrequest.body: {body}"
-        )
-        dossier = json.loads(DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER)
-
-    else:
-        response = requests.post(
-            api_url,
-            json=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-            },
-        )
-
+    if dossier is None and not petition_project.is_dossier_submitted:
         logger.info(
-            f"""
-                Demarches simplifiees API request status: {response.status_code}"
-                * response.text: {response.text},
-                * response.status_code: {response.status_code},
-                * request.url: {api_url},
-                * request.body: {body},
-                """,
+            "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet"
         )
-
-        if response.status_code >= 400:
-            logger.error(
-                "Demarches simplifiees API request failed",
-                extra={
-                    "response.text": response.text,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
-
-            message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
-                context={
-                    "dossier_number": dossier_number,
-                    "status_code": response.status_code,
-                    "response": response.text,
-                    "api_url": api_url,
-                    "body": body,
-                },
-            )
-            notify(dedent(message), "haie")
-            return None
-
-        data = response.json() or {}
-
-        dossier = (data.get("data") or {}).get("dossier")
-
-    if dossier is None:
-
-        if (
-            any(
-                error["extensions"]["code"] == "not_found"
-                for error in data.get("errors") or []
-            )
-            and not petition_project.is_dossier_submitted
-        ):
-            # the dossier is not found, but it's normal if the project is not submitted
-            logger.info(
-                "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
-                extra={
-                    "response.json": data,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
-            return None
-
-        logger.error(
-            "Demarches simplifiees API response is not well formated",
-            extra={
-                "response.json": data,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
-            },
-        )
-
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
-            context={
-                "status_code": response.status_code,
-                "response": response.text,
-                "api_url": api_url,
-                "body": body,
-                "command": "fetch_project_details_from_demarches_simplifiees",
-            },
-        )
-        notify(dedent(message), "haie")
         return None
-    # we have got a dossier from DS for this petition project
 
     return dossier
 
