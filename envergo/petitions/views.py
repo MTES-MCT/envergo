@@ -15,6 +15,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
@@ -449,24 +450,34 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
-    template_name = "haie/petitions/instructor_view.html"
+class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
+    """Mixin for petition project instructor views"""
+
+    matomo_tag = "consultation_i"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    form_class = PetitionProjectInstructorForm
+    matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
         result = super().get(request, *args, **kwargs)
 
         log_event(
             "projet",
-            "consultation_i",
+            self.matomo_tag,
             self.request,
             **self.object.get_log_event_data(),
             **get_matomo_tags(self.request),
         )
         return result
+
+
+class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view.html"
+    form_class = PetitionProjectInstructorForm
+    matomo_tag = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -498,24 +509,31 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorDossierDSView(PetitionProjectInstructorView):
+class PetitionProjectInstructorDossierDSView(
+    PetitionProjectInstructorMixin, DetailView
+):
+    """View for petition project page with demarches simplifiées data"""
+
     template_name = "haie/petitions/instructor_dossier_ds_view.html"
-    queryset = PetitionProject.objects.all()
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
-    form_class = PetitionProjectInstructorForm
+    matomo_tag = "consultation_i_ds"
 
-    def get(self, request, *args, **kwargs):
-        result = super().get(request, *args, **kwargs)
-
-        log_event(
-            "projet",
-            "consultation_i_ds",
-            self.request,
-            **self.object.get_log_event_data(),
-            **get_matomo_tags(self.request),
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
         )
-        return result
+        context["project_details"] = compute_instructor_informations(
+            self.object,
+            moulinette,
+            self.request.site,
+            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
+            self.request.user,
+        )
+
+        return context
 
 
 class PetitionProjectHedgeDataExport(DetailView):
