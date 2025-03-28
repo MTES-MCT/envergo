@@ -3,19 +3,20 @@ import json
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views import View
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
+from django.views.generic.edit import FormMixin, FormView
 
 from envergo.hedges.forms import HedgeToPlantDataForm, HedgeToRemoveDataForm
 from envergo.hedges.models import HedgeData
-from envergo.hedges.services import HedgeEvaluator
+from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.moulinette.views import MoulinetteMixin
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
-class HedgeInput(DetailView):
+class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     """Create or update a hedge input."""
 
     template_name = "hedges/input.html"
@@ -33,20 +34,25 @@ class HedgeInput(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        mode = self.kwargs.get("mode", "removal")
 
-        context["mode"] = mode
-        hedge_data = json.dumps(self.object.data) if self.object else "[]"
-        context["hedge_data_json"] = hedge_data
+        if self.object:
+            moulinette = context["moulinette"]
+            plantation_evaluator = PlantationEvaluator(moulinette, self.object)
+            context["hedge_data_json"] = json.dumps(self.object.data)
+            context["minimum_length_to_plant"] = (
+                plantation_evaluator.minimum_length_to_plant()
+            )
+            context["is_removing_pac"] = len(self.object.hedges_to_remove_pac()) > 0
+        else:
+            context["hedge_data_json"] = "[]"
+            context["minimum_length_to_plant"] = 0
+            context["is_removing_pac"] = False
+
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
-        context["minimum_length_to_plant"] = (
-            self.object.minimum_length_to_plant() if self.object else 0
-        )
-        context["is_removing_pac"] = (
-            len(self.object.hedges_to_remove_pac()) > 0 if self.object else False
-        )
 
+        mode = self.kwargs.get("mode", "removal")
+        context["mode"] = mode
         if mode == "removal":
             context["matomo_custom_url"] = self.request.build_absolute_uri(
                 reverse("moulinette_saisie_d")
@@ -89,16 +95,39 @@ class HedgeInput(DetailView):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        return
 
-class HedgeQualityView(View):
+
+class HedgeQualityView(MoulinetteMixin, FormView):
+    def get_form_kwargs(self):
+        """Return the moulinette form args.
+
+        Even though the request is a POST, the moulinette arguments are passed
+        in the GET parameters. That's why we had to override this method.
+        """
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+            "data": self.request.GET,
+        }
+        return kwargs
+
     def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        moulinette = context["moulinette"]
+
         try:
             data = json.loads(request.body)
             hedge_data = HedgeData(data=data)
-            evaluator = HedgeEvaluator(hedge_data=hedge_data)
+            plantation_evaluator = PlantationEvaluator(moulinette, hedge_data)
+            evaluator = HedgeEvaluator(plantation_evaluator)
             evaluation = evaluator.evaluate()
             return JsonResponse(evaluation, status=200, safe=False)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        return
