@@ -113,8 +113,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
-  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "instruction";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script>

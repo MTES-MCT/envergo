@@ -267,7 +267,7 @@ def show_haie_plantation_liability_info(context, plantation_evaluation):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_plantation_evaluation(context, plantation_evaluation):
+def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
     """Render the evaluation of the plantation project"""
 
     context_data = context.flatten()
@@ -277,7 +277,7 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
     )
 
     context_data["minimum_length_to_plant"] = round(
-        context_data["moulinette"].catalog["haies"].minimum_length_to_plant()
+        plantation_evaluation.minimum_length_to_plant()
     )
 
     try:
