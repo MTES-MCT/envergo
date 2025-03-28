@@ -151,13 +151,16 @@
 
         let lastScrollTop = 0;
 
-        // Hide slimHeader on scroll down
-        window.addEventListener("scroll", function() {
-          let st = window.pageYOffset || window.scrollY;
-          slimHeader.classList.toggle('hidden-downscroll', st > lastScrollTop);
-          lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-        }, false);
+        if(slimHeader) {
+          // Hide slimHeader on scroll down
+          window.addEventListener("scroll", function () {
+            let st = window.pageYOffset || window.scrollY;
+            slimHeader.classList.toggle('hidden-downscroll', st > lastScrollTop);
+            lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
+          }, false);
+        }
       });
+
 
 
     </script>
