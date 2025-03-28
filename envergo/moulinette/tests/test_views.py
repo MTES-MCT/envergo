@@ -142,6 +142,22 @@ def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
     assertTemplateUsed(res, "moulinette/result.html")
 
 
+def test_moulinette_result_debug_page(client):
+    """Debug page
+    But no activation map is triggered / no criterion, no perimeter, no zone
+    """
+
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=2000&final_surface=2000&lng=-1.54394&lat=47.21381&debug=true"
+    )
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    assertTemplateUsed(res, "amenagement/moulinette/result_debug.html")
+
+
 def test_moulinette_result_custom_matomo_tracking_url(client):
     ConfigAmenagementFactory(is_activated=True)
 

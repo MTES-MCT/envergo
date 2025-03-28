@@ -1658,6 +1658,9 @@ class MoulinetteAmenagement(Moulinette):
             )
             .distinct("activation_map__name", "id"),
             "grouped_criteria": self.get_criteria()
+            .annotate(
+                geometry=F("activation_map__zones__geometry"),
+            )
             .order_by(
                 "activation_map__name",
                 "id",
