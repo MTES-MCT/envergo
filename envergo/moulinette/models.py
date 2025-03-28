@@ -13,6 +13,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
@@ -1788,7 +1789,12 @@ class MoulinetteHaie(Moulinette):
             query = Q()
             for line in lines:
                 query |= Q(activation_map__zones__geometry__intersects=line)
-            perimeters = Perimeter.objects.filter(query).order_by("id").distinct("id")
+            perimeters = (
+                Perimeter.objects.filter(query)
+                .annotate(distance=Value(0, output_field=IntegerField()))
+                .order_by("id")
+                .distinct("id")
+            )
         else:
             perimeters = Perimeter.objects.none()
 
