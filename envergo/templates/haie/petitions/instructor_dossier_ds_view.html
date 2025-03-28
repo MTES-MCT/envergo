@@ -1,0 +1,67 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load utils %}
+
+{% block title %}Instruction du dossier{% endblock %}
+
+{% block project_sidemenu %}
+  <li class="fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor">Caractéristiques du projet</a>
+  </li>
+  <li class="fr-sidemenu__item fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
+       aria-current="page">Démarches Simplifiées</a>
+
+    <div id="fr-sidemenu-item-1">
+      <ul class="fr-sidemenu__list">
+        {% for item in project_details.header_sections %}
+          <li class="fr-sidemenu__item">
+            <a class="fr-sidemenu__link"
+               href="#section-{{ item|slugify }}"
+               target="_self">{{ item }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </li>
+{% endblock %}
+
+{% block project_content %}
+
+  <h2>Formulaire rempli sur Démarches simplifiées</h2>
+  <div class="tab-title">
+    <h3>Identité du demandeur</h3>
+    <p>TODO:</p>
+  </div>
+
+  <section class="fr-py-3w">
+    {% if champs.label %}<h2 class="fr-mb-0">{{ champs.label }}</h2>{% endif %}
+
+    {% for item in project_details.ds_data %}
+      {% if not item.value %}
+        <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
+
+      {% else %}
+        <div class="champ-row fr-my-2w">
+          <p class="champ-label fr-mb-0">
+            <strong>{{ item.label }}</strong>
+          </p>
+          <div class="champ-content">
+            {{ item.value }}
+            {% if item.unit %}{{ item.unit }}{% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+  </section>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var SOURCE_PAGE = "instruction-ds";</script>
+{% endblock %}
