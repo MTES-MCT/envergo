@@ -30,6 +30,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations,
+    compute_instructor_informations_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -525,7 +526,7 @@ class PetitionProjectInstructorDossierDSView(
         context["project_url"] = reverse(
             "petition_project", kwargs={"reference": self.object.reference}
         )
-        context["project_details"] = compute_instructor_informations(
+        context["project_details"] = compute_instructor_informations_ds(
             self.object,
             moulinette,
             self.request.site,
