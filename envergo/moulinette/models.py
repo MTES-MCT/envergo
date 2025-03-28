@@ -488,7 +488,7 @@ class Regulation(models.Model):
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
-        return all((self.is_activated(), self.show_map, self.map))
+        return self.is_activated() and self.show_map and self.map
 
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
@@ -1773,29 +1773,37 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+        perimeters = self.get_perimeters()
 
-        regulations = super().get_regulations().prefetch_related("perimeters")
+        regulations = (
+            super()
+            .get_regulations()
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
         return regulations
+
+    def get_perimeters(self):
+        lines = self.get_hedges_to_remove_as_linestrings()
+        if lines:
+            query = Q()
+            for line in lines:
+                query |= Q(activation_map__zones__geometry__intersects=line)
+            perimeters = Perimeter.objects.filter(query).order_by("id").distinct("id")
+        else:
+            perimeters = Perimeter.objects.none()
+
+        return perimeters
 
     def get_criteria(self):
         """filter criteria based on the intersection of the hedges to remove and the criteria map.
 
         if there is no hedges to remove, we fallback on the department centroid.
         """
-
-        if "haies" in self.catalog and self.catalog["haies"].length_to_remove() > 0:
-            hedges = self.catalog["haies"]
-            linestrings = [
-                LineString(
-                    [(point["lng"], point["lat"]) for point in hedge.latLngs],
-                    srid=EPSG_WGS84,
-                )
-                for hedge in hedges.hedges_to_remove()
-            ]
+        lines = self.get_hedges_to_remove_as_linestrings()
+        if lines:
             query = Q()
-            for line in linestrings:
+            for line in lines:
                 query |= Q(activation_map__zones__geometry__intersects=line)
-
             criteria = super().get_criteria().filter(query)
         else:
             dept_centroid = self.department.centroid
@@ -1806,6 +1814,21 @@ class MoulinetteHaie(Moulinette):
             )
 
         return criteria
+
+    def get_hedges_to_remove_as_linestrings(self):
+        if "haies" not in self.catalog or self.catalog["haies"].length_to_remove() <= 0:
+            return None
+
+        hedges = self.catalog["haies"]
+        linestrings = [
+            LineString(
+                [(point["lng"], point["lat"]) for point in hedge.latLngs],
+                srid=EPSG_WGS84,
+            )
+            for hedge in hedges.hedges_to_remove()
+        ]
+
+        return linestrings
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""

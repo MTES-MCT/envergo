@@ -7,7 +7,8 @@ class Natura2000Haie(CriterionEvaluator):
     slug = "natura2000_haie"
 
     CODE_MATRIX = {
-        True: "soumis",
+        "soumis": "soumis",
+        "non_soumis": "non_soumis",
     }
 
     RESULT_MATRIX = {
@@ -17,4 +18,4 @@ class Natura2000Haie(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        return True
+        return self.settings.get("result", "non_soumis")
