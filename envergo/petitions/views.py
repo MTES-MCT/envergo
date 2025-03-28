@@ -531,7 +531,7 @@ class PetitionProjectInstructorDossierDSView(
             messages.info(
                 self.request,
                 """L'accès à l'API démarches simplifiées n'est pas activée.
-                Affichage d'un dossier imaginaire.""",
+                Affichage d'un dossier factice.""",
             )
 
         # Send message if info from DS is not in project details
