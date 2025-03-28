@@ -449,6 +449,7 @@ def build_ds_details(
     dossier = fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, visitor_id, user
     )
+
     if not dossier:
         return None
 

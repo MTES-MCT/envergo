@@ -1,4 +1,5 @@
-from unittest.mock import patch
+import json
+from unittest.mock import Mock, patch
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
@@ -9,6 +10,7 @@ from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER,
     PetitionProjectFactory,
 )
 from envergo.petitions.views import (
@@ -175,13 +177,23 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.utils.mattermost.notify")
 @patch("requests.post")
 def test_petition_project_instructor_display_dossier_ds_info(
-    mock_post, mock_notify, client, haie_user, site
+    mock_post, client, haie_user, site
 ):
     """Test if dossier data is in template"""
-    ConfigHaieFactory()
+    mock_response = Mock()
+    mock_response.status_code = 200
+    fake_response = {"data": {"dossier": {}}}
+    fake_response["data"]["dossier"] = json.loads(DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER)
+    mock_response.json.return_value = fake_response
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
     project = PetitionProjectFactory()
 
     instructor_ds_url = reverse(
@@ -194,3 +206,4 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
     content = response.content.decode()
     assert "Formulaire rempli sur Démarches simplifiées" in content
+    assert "Vous déposez cette demande en tant que :" in content
