@@ -49,9 +49,6 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
-    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
-    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
     dossier = fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, "", haie_user
