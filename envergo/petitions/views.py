@@ -527,6 +527,14 @@ class PetitionProjectInstructorDossierDSView(
         )
 
         # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Affichage d'un dossier imaginaire.""",
+            )
+
+        # Send message if info from DS is not in project details
         if not context["project_details"].usager:
             messages.warning(
                 self.request,
