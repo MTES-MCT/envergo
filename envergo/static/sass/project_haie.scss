@@ -263,9 +263,16 @@ div#app {
             }
 
             button {
-              visibility: hidden;
+              visibility: visible; // Styles for touch UIs
+
+              @media (hover: hover) {
+                /* Styles for mouse UIs */
+                visibility: hidden;
+              }
+
               margin-left: auto;
               font-size: 14px;
+              padding: 0.5rem;
 
               --hover-tint: var(--background-alt-grey-hover);
               --active-tint: var(--background-alt-grey-active);
