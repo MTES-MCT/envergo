@@ -414,9 +414,11 @@ def compute_instructor_ds_informations(
     city = None
     pacage = None
     demarche = dossier.get("demarche")
+    header_sections = None
     champs = dossier.get("champs", [])
 
-    header_sections = get_header_sections_from_ds_demarche(demarche)
+    if demarche:
+        header_sections = get_header_sections_from_ds_demarche(demarche)
 
     champs_display = [
         Item(
