@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import fiona
 import requests
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
@@ -523,6 +524,14 @@ class PetitionProjectInstructorDossierDSView(
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
+
+        # Send message if info from DS is not in project details
+        if not context["project_details"].usager:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
 
         return context
 
