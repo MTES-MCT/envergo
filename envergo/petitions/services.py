@@ -69,11 +69,12 @@ class ProjectDetails:
     ds_data: dict
 
 
-def compute_instructor_informations_bcae8(
-    hedge_data, moulinette
+def build_instructor_informations_bcae8(
+    petition_project, moulinette
 ) -> InstructorInformation:
-    """Compute BCAE8 for instructor page view"""
+    """Build BCAE8 for instructor page view"""
 
+    hedge_data = petition_project.hedge_data
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     motif = moulinette.catalog.get("motif", "")
@@ -155,8 +156,10 @@ def compute_instructor_informations_bcae8(
     return bcae8
 
 
-def compute_instructor_informations_ep(hedge_data) -> InstructorInformation:
-    """Compute Espèces Protégées informations for instructor page view"""
+def build_instructor_informations_ep(petition_project) -> InstructorInformation:
+    """Build Espèces Protégées informations for instructor page view"""
+
+    hedge_data = petition_project.hedge_data
 
     hedges_to_remove_near_pond = [
         h for h in hedge_data.hedges_to_remove() if h.proximite_mare
@@ -269,15 +272,8 @@ def compute_instructor_informations_ep(hedge_data) -> InstructorInformation:
     return ep
 
 
-def compute_instructor_informations(
-    petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    """Build ProjectDetails with instructor informations"""
-
-    config = moulinette.config
-    ds_details = compute_instructor_ds_informations(
-        petition_project, config, site, visitor_id, user
-    )
+def build_project_details(petition_project) -> InstructorInformation:
+    """Build project details from petition project data"""
 
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
@@ -327,6 +323,21 @@ def compute_instructor_informations(
         ],
     )
 
+    return project_details
+
+
+def compute_instructor_informations(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
+    """Compute ProjectDetails with instructor informations"""
+
+    # Get ds details
+    config = moulinette.config
+    ds_details = build_ds_details(petition_project, config, site, visitor_id, user)
+
+    # Build project details
+    project_details = build_project_details(petition_project)
+
     if ds_details:
         if ds_details.city:
             project_details.items.append(
@@ -337,23 +348,48 @@ def compute_instructor_informations(
                 Item("Nom du demandeur", ds_details.applicant_name, None, None)
             )
 
-    # Compute BCAE8
-    bcae8 = compute_instructor_informations_bcae8(hedge_data, moulinette)
+    # Build BCAE8
+    bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
 
     if ds_details:
         if ds_details.pacage:
             bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
 
-    # Compute Espèces Protégées
-    ep = compute_instructor_informations_ep(hedge_data)
+    # Build Espèces Protégées
+    ep = build_instructor_informations_ep(petition_project)
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
-        header_sections=ds_details.header_sections if ds_details else [],
-        ds_data=ds_details.champs if ds_details else [],
+        header_sections=[],
+        ds_data=[],
+    )
+
+
+def compute_instructor_informations_ds(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
+    """Compute ProjectDetails with instructor informations"""
+
+    # Build project details
+    project_details = build_project_details(petition_project)
+
+    # Get ds details
+    config = moulinette.config
+    ds_details = build_ds_details(petition_project, config, site, visitor_id, user)
+
+    header_sections = ds_details.header_sections if ds_details else []
+    ds_data = ds_details.champs if ds_details else []
+
+    return ProjectDetails(
+        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+        demarche_simplifiee_number=config.demarche_simplifiee_number,
+        usager=ds_details.usager if ds_details else "",
+        details=[project_details],
+        header_sections=header_sections,
+        ds_data=ds_data,
     )
 
 
@@ -405,9 +441,11 @@ def get_header_sections_from_ds_demarche(demarche):
     return header_sections
 
 
-def compute_instructor_ds_informations(
+def build_ds_details(
     petition_project, config, site, visitor_id, user
 ) -> DemarchesSimplifieesDetails:
+    """Build démarches simplifiées details from dossier in démarches simplifiées"""
+
     dossier = fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, visitor_id, user
     )
