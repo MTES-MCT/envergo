@@ -69,77 +69,15 @@ class ProjectDetails:
     ds_data: dict
 
 
-def compute_instructor_informations(
-    petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    """Build ProjectDetails with instructor informations"""
+def compute_instructor_informations_bcae8(
+    hedge_data, moulinette
+) -> InstructorInformation:
+    """Compute BCAE8 for instructor page view"""
 
-    config = moulinette.config
-    ds_details = compute_instructor_ds_informations(
-        petition_project, config, site, visitor_id, user
-    )
-
-    hedge_data = petition_project.hedge_data
-    length_to_remove = hedge_data.length_to_remove()
-    length_to_plant = hedge_data.length_to_plant()
-    project_details = InstructorInformation(
-        slug=None,
-        label=None,
-        items=[
-            Item("Référence", petition_project.reference, None, None),
-            "instructor_free_mention",
-        ],
-        details=[
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
-                ],
-            ),
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire planté", round(length_to_plant), "m", None),
-                    Item(
-                        "Ratio en longueur",
-                        (
-                            round(length_to_plant / length_to_remove, 2)
-                            if length_to_remove
-                            else ""
-                        ),
-                        None,
-                        "Longueur plantée / longueur détruite",
-                    ),
-                ],
-            ),
-        ],
-    )
-
-    if ds_details:
-        if ds_details.city:
-            project_details.items.append(
-                Item("Commune principale", ds_details.city, None, None)
-            )
-        if ds_details.applicant_name:
-            project_details.items.append(
-                Item("Nom du demandeur", ds_details.applicant_name, None, None)
-            )
-
-    lineaire_total = moulinette.catalog.get("lineaire_total", "")
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
+    lineaire_total = moulinette.catalog.get("lineaire_total", "")
     motif = moulinette.catalog.get("motif", "")
+
     bcae8 = InstructorInformation(
         slug="bcae8",
         comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
@@ -214,9 +152,11 @@ def compute_instructor_informations(
         ],
     )
 
-    if ds_details:
-        if ds_details.pacage:
-            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+    return bcae8
+
+
+def compute_instructor_informations_ep(hedge_data) -> InstructorInformation:
+    """Compute Espèces Protégées informations for instructor page view"""
 
     hedges_to_remove_near_pond = [
         h for h in hedge_data.hedges_to_remove() if h.proximite_mare
@@ -326,6 +266,87 @@ def compute_instructor_informations(
         details=[],
     )
 
+    return ep
+
+
+def compute_instructor_informations(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
+    """Build ProjectDetails with instructor informations"""
+
+    config = moulinette.config
+    ds_details = compute_instructor_ds_informations(
+        petition_project, config, site, visitor_id, user
+    )
+
+    hedge_data = petition_project.hedge_data
+    length_to_remove = hedge_data.length_to_remove()
+    length_to_plant = hedge_data.length_to_plant()
+    project_details = InstructorInformation(
+        slug=None,
+        label=None,
+        items=[
+            Item("Référence", petition_project.reference, None, None),
+            "instructor_free_mention",
+        ],
+        details=[
+            InstructorInformationDetails(
+                label="Destruction",
+                items=[
+                    Item(
+                        "Nombre de tracés",
+                        len(hedge_data.hedges_to_remove()),
+                        None,
+                        None,
+                    ),
+                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
+                ],
+            ),
+            InstructorInformationDetails(
+                label="Plantation",
+                items=[
+                    Item(
+                        "Nombre de tracés",
+                        len(hedge_data.hedges_to_plant()),
+                        None,
+                        None,
+                    ),
+                    Item("Total linéaire planté", round(length_to_plant), "m", None),
+                    Item(
+                        "Ratio en longueur",
+                        (
+                            round(length_to_plant / length_to_remove, 2)
+                            if length_to_remove
+                            else ""
+                        ),
+                        None,
+                        "Longueur plantée / longueur détruite",
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    if ds_details:
+        if ds_details.city:
+            project_details.items.append(
+                Item("Commune principale", ds_details.city, None, None)
+            )
+        if ds_details.applicant_name:
+            project_details.items.append(
+                Item("Nom du demandeur", ds_details.applicant_name, None, None)
+            )
+
+    # Compute BCAE8
+    bcae8 = compute_instructor_informations_bcae8(hedge_data, moulinette)
+
+    if ds_details:
+        if ds_details.pacage:
+            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+
+    # Compute Espèces Protégées
+    ep = compute_instructor_informations_ep(hedge_data)
+
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
@@ -347,7 +368,9 @@ class DemarchesSimplifieesDetails:
 
 
 def get_item_value_from_ds_champs(champs):
-    """get item value from dossier champs"""
+    """get item value from dossier champs
+    Ok better to do with yesno filter…
+    """
 
     type_name = champs.get("__typename") or ""
     value = champs.get("stringValue") or ""
