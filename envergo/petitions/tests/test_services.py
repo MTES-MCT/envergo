@@ -7,7 +7,7 @@ from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import (
-    compute_instructor_ds_informations,
+    build_ds_details,
     fetch_project_details_from_demarches_simplifiees,
 )
 from envergo.petitions.tests.factories import (
@@ -112,9 +112,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
     assert dossier is not None
 
-    details = compute_instructor_ds_informations(
-        petition_project, config, site, "", haie_user
-    )
+    details = build_ds_details(petition_project, config, site, "", haie_user)
 
     assert details.applicant_name == "Mme dez dez"
     assert details.city == "Ladaux (33760)"
