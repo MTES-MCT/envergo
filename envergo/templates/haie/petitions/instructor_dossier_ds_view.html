@@ -16,7 +16,7 @@
 
     <div id="fr-sidemenu-item-1">
       <ul class="fr-sidemenu__list">
-        {% for item in project_details.header_sections %}
+        {% for item in project_details.ds_data.header_sections %}
           <li class="fr-sidemenu__item">
             <a class="fr-sidemenu__link"
                href="#section-{{ item|slugify }}"
@@ -33,13 +33,11 @@
   <h2>Formulaire rempli sur Démarches simplifiées</h2>
   <div class="tab-title">
     <h3>Identité du demandeur</h3>
-    <p>TODO:</p>
+    <div class="champ-content">{{ project_details.ds_data.applicant_name }}</div>
   </div>
 
   <section class="fr-py-3w">
-    {% if champs.label %}<h2 class="fr-mb-0">{{ champs.label }}</h2>{% endif %}
-
-    {% for item in project_details.ds_data %}
+    {% for item in project_details.ds_data.champs %}
       {% if not item.value %}
         <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
 
