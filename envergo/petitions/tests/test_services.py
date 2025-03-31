@@ -9,7 +9,7 @@ from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.services import (
-    build_ds_details,
+    compute_instructor_informations,
     fetch_project_details_from_demarches_simplifiees,
 )
 from envergo.petitions.tests.factories import (
@@ -49,17 +49,21 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     petition_project = PetitionProjectFactory()
+    moulinette = petition_project.get_moulinette()
 
     dossier = fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, "", haie_user
     )
     assert dossier is not None
 
-    details = build_ds_details(petition_project, config, site, "", haie_user)
+    project_details = compute_instructor_informations(
+        petition_project, moulinette, site, "", haie_user
+    )
+    ds_data = project_details.ds_data
 
-    assert details.applicant_name == "Mme Lamarr Hedy"
-    assert details.city == "Laon (02000)"
-    assert details.pacage == "123456789"
+    assert ds_data.applicant_name == "Mme Hedy Lamarr"
+    assert ds_data.city == "Laon (02000)"
+    assert ds_data.pacage == "123456789"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
