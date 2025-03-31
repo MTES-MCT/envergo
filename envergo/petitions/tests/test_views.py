@@ -153,6 +153,9 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
         )
     )
 
+    # Add support  django messaging framework
+    request._messages = messages.storage.default_storage(request)
+
     # Simulate an unauthenticated user
     request.user = AnonymousUser()
     request.site = site
