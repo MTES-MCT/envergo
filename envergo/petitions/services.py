@@ -25,6 +25,17 @@ class AdditionalInfo:
 
 
 @dataclass
+class FileInfo:
+    filename: str
+    url: str
+
+
+@dataclass
+class ItemFiles:
+    files: list[FileInfo]
+
+
+@dataclass
 class ItemDetails:
     result: bool
     details: list[AdditionalInfo]
@@ -495,6 +506,17 @@ def get_item_value_from_ds_champs(champs):
             value = "oui"
         else:
             value = "non"
+    elif type_name == "PieceJustificativeChamp":
+        pieces = champs.get("files") or []
+        value = ItemFiles(
+            [
+                FileInfo(
+                    p["filename"],
+                    p["url"],
+                )
+                for p in pieces
+            ]
+        )
 
     return value
 

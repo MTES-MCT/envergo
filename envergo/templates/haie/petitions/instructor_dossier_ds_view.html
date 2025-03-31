@@ -44,11 +44,15 @@
       {% else %}
         <div class="champ-row fr-my-2w">
           <p class="champ-label fr-mb-0">
-            <strong>{{ item.label }}</strong>
+            <b>{{ item.label }}</b>
           </p>
           <div class="champ-content">
-            {{ item.value }}
-            {% if item.unit %}{{ item.unit }}{% endif %}
+            {% if item.value|is_type:"ItemFiles" %}
+              {% for file in item.value.files %}<img alt="{{ file.filename }}" src="{{ file.url }}" />{% endfor %}
+            {% else %}
+              {{ item.value }}
+              {% if item.unit %}{{ item.unit }}{% endif %}
+            {% endif %}
           </div>
         </div>
       {% endif %}
