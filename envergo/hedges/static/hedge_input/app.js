@@ -146,6 +146,11 @@ const showHedgeModal = (hedge, hedgeType) => {
   dsfr(dialog).modal.disclose();
 };
 
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+
 /**
  * Represent a single hedge object.
  *
@@ -160,7 +165,7 @@ class Hedge {
     this.map = map;
     this.type = type;
     this.onRemove = onRemove;
-    this.isHovered = false;
+    this.isHovered = isTouchDevice(); // On touch devices, consider the hover state as always true
     this.isDrawingCompleted = isDrawingCompleted;
 
     this.latLngs = [];
