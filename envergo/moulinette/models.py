@@ -1798,16 +1798,7 @@ class MoulinetteHaie(Moulinette):
     def get_perimeters(self):
         lines = self.get_hedges_to_remove_as_linestrings()
         if lines:
-            query = Q()
-            for line in lines:
-                query |= Q(geometry__intersects=line)
-
-            # Define a subquery for EXISTS condition
-            zone_subquery = Zone.objects.filter(
-                Q(map_id=OuterRef("activation_map_id")) & query
-            ).values(
-                "id"
-            )  # Selecting an existing row
+            zone_subquery = self.get_zone_subquery(lines)
 
             perimeters = (
                 Perimeter.objects.annotate(
@@ -1829,10 +1820,8 @@ class MoulinetteHaie(Moulinette):
         """
         lines = self.get_hedges_to_remove_as_linestrings()
         if lines:
-            query = Q()
-            for line in lines:
-                query |= Q(activation_map__zones__geometry__intersects=line)
-            criteria = super().get_criteria().filter(query)
+            zone_subquery = self.get_zone_subquery(lines)
+            criteria = super().get_criteria().filter(Exists(zone_subquery))
         else:
             dept_centroid = self.department.centroid
             criteria = (
@@ -1857,6 +1846,16 @@ class MoulinetteHaie(Moulinette):
         ]
 
         return linestrings
+
+    def get_zone_subquery(self, lines):
+        query = Q()
+        for line in lines:
+            query |= Q(geometry__intersects=line)
+
+        zone_subquery = Zone.objects.filter(
+            Q(map_id=OuterRef("activation_map_id")) & query
+        ).values("id")
+        return zone_subquery
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
