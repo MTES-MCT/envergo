@@ -105,7 +105,7 @@ class NewsletterOptInForm(forms.Form):
         ),
         widget=AllowDisabledSelect(attrs={"placeholder": "Sélectionnez votre type"}),
     )
-    email = forms.EmailField(
+    email = NoIdnEmailField(
         required=True,
         label="Votre adresse email",
         widget=forms.EmailInput(attrs={"placeholder": "ex. : nom@domaine.fr"}),
