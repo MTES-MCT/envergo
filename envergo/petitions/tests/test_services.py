@@ -1,10 +1,7 @@
 import datetime
-import json
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from django.conf import settings
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
@@ -15,23 +12,11 @@ from envergo.petitions.services import (
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
-
-
-with open(
-    Path(
-        settings.APPS_DIR
-        / "petitions"
-        / "demarches_simplifiees"
-        / "data"
-        / "fake_dossier.json"
-    ),
-    "r",
-) as file:
-    GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
@@ -97,7 +82,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         > 0
     )
     fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
-    assert details.usager == fake_dossier.get("usager").get("email")
+    assert details == fake_dossier
 
 
 @patch("envergo.petitions.services.notify")

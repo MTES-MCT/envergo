@@ -1,4 +1,3 @@
-import json
 from unittest.mock import Mock, patch
 
 import pytest
@@ -11,7 +10,7 @@ from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
-    DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER,
+    GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 from envergo.petitions.views import (
@@ -188,9 +187,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     """Test if dossier data is in template"""
     mock_response = Mock()
     mock_response.status_code = 200
-    fake_response = {"data": {"dossier": {}}}
-    fake_response["data"]["dossier"] = json.loads(DEMARCHES_SIMPLIFIEES_FAKE_DOSSIER)
-    mock_response.json.return_value = fake_response
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
 
     mock_post.return_value = mock_response
 

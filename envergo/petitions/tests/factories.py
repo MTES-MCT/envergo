@@ -1,6 +1,9 @@
+import json
 from copy import copy
+from pathlib import Path
 
 import factory
+from django.conf import settings
 from factory.django import DjangoModelFactory
 
 from envergo.hedges.tests.factories import HedgeDataFactory
@@ -16,6 +19,18 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
 
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
+
+with open(
+    Path(
+        settings.APPS_DIR
+        / "petitions"
+        / "demarches_simplifiees"
+        / "data"
+        / "fake_dossier.json"
+    ),
+    "r",
+) as file:
+    GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 
 class PetitionProjectFactory(DjangoModelFactory):
