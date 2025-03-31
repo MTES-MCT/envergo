@@ -3,10 +3,10 @@ import logging
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
-    AmenagementEvaluatorMixin,
     CriterionEvaluator,
     Map,
     MapPolygon,
+    SelfDeclarationMixin,
 )
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
@@ -19,7 +19,7 @@ PINK = "#FF9575"
 logger = logging.getLogger(__name__)
 
 
-class ZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
+class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone humide"
     slug = "zone_humide"
 
@@ -146,7 +146,7 @@ class ZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator)
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
@@ -239,7 +239,7 @@ class ZoneInondable(ZoneInondableMixin, AmenagementEvaluatorMixin, CriterionEval
         return criterion_map
 
 
-class EcoulementSansBV(AmenagementEvaluatorMixin, CriterionEvaluator):
+class EcoulementSansBV(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
 
@@ -309,7 +309,7 @@ class Ruissellement(EcoulementSansBV):
     choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
 
 
-class EcoulementAvecBV(AmenagementEvaluatorMixin, CriterionEvaluator):
+class EcoulementAvecBV(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP avec BV"
     slug = "ecoulement_avec_bv"
 
@@ -473,7 +473,7 @@ class EcoulementAvecBV(AmenagementEvaluatorMixin, CriterionEvaluator):
         return existing_surface, catchment_surface, final_surface, is_pv_sol
 
 
-class OtherCriteria(AmenagementEvaluatorMixin, CriterionEvaluator):
+class OtherCriteria(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Autres rubriques"
     slug = "autres_rubriques"
 

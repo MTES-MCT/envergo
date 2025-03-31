@@ -5,10 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import (
-    AmenagementEvaluatorMixin,
     CriterionEvaluator,
     Map,
     MapPolygon,
+    SelfDeclarationMixin,
 )
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
@@ -24,7 +24,7 @@ class ZoneHumideSettingsForm(forms.Form):
     )
 
 
-class ZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
+class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone humide"
     slug = "zone_humide"
     settings_form_class = ZoneHumideSettingsForm
@@ -134,7 +134,7 @@ class ZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator)
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone inondable"
     slug = "zone_inondable"
 
@@ -184,7 +184,7 @@ class ZoneInondable(ZoneInondableMixin, AmenagementEvaluatorMixin, CriterionEval
         return criterion_map
 
 
-class IOTA(AmenagementEvaluatorMixin, CriterionEvaluator):
+class IOTA(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
     slug = "iota"
 
@@ -207,7 +207,7 @@ class IOTA(AmenagementEvaluatorMixin, CriterionEvaluator):
         self._result_code, self._result = result, result
 
 
-class EvalEnv(AmenagementEvaluatorMixin, CriterionEvaluator):
+class EvalEnv(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > EE"
     slug = "eval_env"
 
@@ -280,7 +280,7 @@ class AutorisationUrbanismeSettingsForm(forms.Form):
     )
 
 
-class AutorisationUrbanisme(AmenagementEvaluatorMixin, CriterionEvaluator):
+class AutorisationUrbanisme(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Autorisation urba"
     slug = "autorisation_urba"
     form_class = AutorisationUrbanismeForm

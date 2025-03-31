@@ -319,8 +319,8 @@ if _missing_results:
     )
 
 
-class AmenagementEvaluatorMixin:
-    """Mixin for Envergo Amenagement criterion evaluators"""
+class SelfDeclarationMixin:
+    """Mixin for criterion evaluators that need to display the "self declare" call to action."""
 
     @property
     def eligible_to_self_declaration(self):

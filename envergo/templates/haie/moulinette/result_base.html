@@ -38,11 +38,11 @@
   {% block result_header %}{% endblock %}
 
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
-    {% if result == 1 %}
+    {% if result.name == "BlockingRegulations" %}
       <h3>Réglementations interdisant le projet</h3>
-    {% elif result == 2 and moulinette.result != "soumis" %}
+    {% elif result.name == "RestrictiveRegulations" and moulinette.result != "soumis" %}
       <h3>Autres réglementations concernant le projet</h3>
-    {% elif result == 2 %}
+    {% elif result.name == "RestrictiveRegulations" %}
       <h3>Réglementations concernant le projet</h3>
     {% else %}
       <h3>Autres réglementations</h3>

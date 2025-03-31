@@ -2,10 +2,10 @@ from django import forms
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
-    AmenagementEvaluatorMixin,
     CriterionEvaluator,
     Map,
     MapPolygon,
+    SelfDeclarationMixin,
 )
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin
 
@@ -26,7 +26,7 @@ class ImpactZHSettings(forms.Form):
     )
 
 
-class ImpactZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator):
+class ImpactZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
@@ -179,9 +179,7 @@ class ImpactZoneHumide(ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEval
         return criterion_map
 
 
-class ImpactZoneHumideStrict(
-    ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator
-):
+class ImpactZoneHumideStrict(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH (carte stricte)"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
@@ -285,9 +283,7 @@ class ImpactZHIOTASettings(forms.Form):
     )
 
 
-class ImpactZoneHumideIOTA(
-    ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator
-):
+class ImpactZoneHumideIOTA(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH si IOTA"
     slug = "interdiction_impact_zh_iota"
     settings_form_class = ImpactZHIOTASettings
@@ -430,7 +426,7 @@ class ImpactZoneHumideIOTA(
 
 
 class ImpactZoneHumideIOTAStrict(
-    ZoneHumideMixin, AmenagementEvaluatorMixin, CriterionEvaluator
+    ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator
 ):
     choice_label = "SAGE > Interdiction impact ZH si IOTA (carte stricte)"
     slug = "interdiction_impact_zh_iota"
