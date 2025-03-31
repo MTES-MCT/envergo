@@ -12,7 +12,15 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import (
+    CheckConstraint,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+)
 from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
@@ -1788,10 +1796,20 @@ class MoulinetteHaie(Moulinette):
         if lines:
             query = Q()
             for line in lines:
-                query |= Q(activation_map__zones__geometry__intersects=line)
+                query |= Q(geometry__intersects=line)
+
+            # Define a subquery for EXISTS condition
+            zone_subquery = Zone.objects.filter(
+                Q(map_id=OuterRef("activation_map_id")) & query
+            ).values(
+                "id"
+            )  # Selecting an existing row
+
             perimeters = (
-                Perimeter.objects.filter(query)
-                .annotate(distance=Value(0, output_field=IntegerField()))
+                Perimeter.objects.annotate(
+                    distance=Value(0, output_field=IntegerField())
+                )
+                .filter(Exists(zone_subquery))  # EXISTS condition
                 .order_by("id")
                 .distinct("id")
             )
