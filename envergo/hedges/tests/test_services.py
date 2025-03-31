@@ -11,24 +11,28 @@ def test_hedge_quality_should_be_sufficient():
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
-    hedge_data.minimum_length_to_plant.return_value = 0
-    hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
-    hedge_data.get_minimum_lengths_to_plant.return_value = {
+    hedge_data.length_to_plant_pac.return_value = 5
+
+    plantation_evaluator = Mock()
+    plantation_evaluator.hedge_data = hedge_data
+    plantation_evaluator.minimum_length_to_plant.return_value = 0
+    plantation_evaluator.get_minimum_lengths_to_plant.return_value = {
         "degradee": 12,
         "buissonnante": 12,
         "arbustive": 16,
         "mixte": 18,
         "alignement": 20,
     }
-    hedge_data.get_lengths_to_plant.return_value = {
+    plantation_evaluator.get_lengths_to_plant.return_value = {
         "buissonnante": 24,
         "arbustive": 16,
         "mixte": 18,
         "alignement": 20,
     }
 
-    evaluator = HedgeEvaluator(hedge_data=hedge_data)
+    # plantation_evaluator = PlantationEvaluator(moulinette, hedge_data)
+    evaluator = HedgeEvaluator(plantation_evaluator)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
         "result": True,
@@ -46,24 +50,27 @@ def test_hedge_quality_should_not_be_sufficient():
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
-    hedge_data.minimum_length_to_plant.return_value = 0
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
-    hedge_data.get_minimum_lengths_to_plant.return_value = {
+
+    plantation_evaluator = Mock()
+    plantation_evaluator.hedge_data = hedge_data
+    plantation_evaluator.minimum_length_to_plant.return_value = 0
+    plantation_evaluator.get_minimum_lengths_to_plant.return_value = {
         "degradee": 10,
         "buissonnante": 10,
         "arbustive": 10,
         "mixte": 10,
         "alignement": 10,
     }
-    hedge_data.get_lengths_to_plant.return_value = {
+    plantation_evaluator.get_lengths_to_plant.return_value = {
         "buissonnante": 5,
         "arbustive": 5,
         "mixte": 5,
         "alignement": 5,
     }
 
-    evaluator = HedgeEvaluator(hedge_data=hedge_data)
+    evaluator = HedgeEvaluator(plantation_evaluator)
 
     assert evaluator.evaluate_hedge_plantation_quality() == {
         "result": False,
@@ -84,15 +91,18 @@ def test_hedge_quality_evaluation():
     hedge_data.length_to_plant.return_value = 10
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
-    hedge_data.minimum_length_to_plant.return_value = 90
-    hedge_data.get_minimum_lengths_to_plant.return_value = {
+
+    plantation_evaluator = Mock()
+    plantation_evaluator.hedge_data = hedge_data
+    plantation_evaluator.minimum_length_to_plant.return_value = 90
+    plantation_evaluator.get_minimum_lengths_to_plant.return_value = {
         "degradee": 10,
         "buissonnante": 10,
         "arbustive": 10,
         "mixte": 10,
         "alignement": 10,
     }
-    hedge_data.get_lengths_to_plant.return_value = {
+    plantation_evaluator.get_lengths_to_plant.return_value = {
         "buissonnante": 5,
         "arbustive": 5,
         "mixte": 5,
@@ -100,7 +110,7 @@ def test_hedge_quality_evaluation():
     }
 
     # when evaluating the hedge quality
-    evaluator = HedgeEvaluator(hedge_data=hedge_data)
+    evaluator = HedgeEvaluator(plantation_evaluator)
 
     # then the left_to_plant should be positive
     assert evaluator.result == {
@@ -129,12 +139,12 @@ def test_hedge_quality_evaluation():
 
     # given enough hedges to plant
     hedge_data.length_to_plant.return_value = 100
-    hedge_data.minimum_length_to_plant.return_value = 90
     hedge_data.length_to_plant_pac.return_value = 100
     hedge_data.lineaire_detruit_pac.return_value = 90
+    plantation_evaluator.minimum_length_to_plant.return_value = 90
 
     # when evaluating the hedge quality
-    evaluator = HedgeEvaluator(hedge_data=hedge_data)
+    evaluator = HedgeEvaluator(plantation_evaluator)
 
     # then the left_to_plant should be 0
     assert evaluator.result == {
