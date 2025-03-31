@@ -707,4 +707,11 @@ class Migration(migrations.Migration):
                 verbose_name="Regulation",
             ),
         ),
+        migrations.AddField(
+            model_name="confighaie",
+            name="natura2000_coordinators_list_url",
+            field=models.URLField(
+                blank=True, verbose_name="Liste des animateurs Natura2000"
+            ),
+        ),
     ]

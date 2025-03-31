@@ -152,8 +152,8 @@ class CriterionEvaluator(ABC):
             )
         self.moulinette = moulinette
         self.distance = distance
-        self.settings = settings
         self.moulinette.catalog.update(self.get_catalog_data())
+        self.settings = settings
 
     @property
     def catalog(self):

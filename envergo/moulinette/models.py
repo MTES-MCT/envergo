@@ -838,6 +838,10 @@ class ConfigHaie(ConfigBase):
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
+    natura2000_coordinators_list_url = models.URLField(
+        "Liste des animateurs Natura2000", blank=True
+    )
+
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
         blank=True,

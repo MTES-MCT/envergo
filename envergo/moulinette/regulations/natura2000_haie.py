@@ -19,8 +19,3 @@ class Natura2000Haie(CriterionEvaluator):
 
     def get_result_data(self):
         return self.settings.get("result", "non_soumis")
-
-    def get_catalog_data(self):
-        catalog = super().get_catalog_data()
-        catalog["animators"] = self.settings.get("animators")
-        return catalog
