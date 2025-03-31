@@ -27,12 +27,12 @@ def compute_surfaces(data: QueryDict):
 
     if final_surface is None or final_surface == "":
         try:
-            final_surface = int(created_surface) + int(existing_surface)
+            final_surface = str(int(created_surface) + int(existing_surface))
         except ValueError:
             final_surface = None
     elif existing_surface is None or existing_surface == "":
         try:
-            existing_surface = int(final_surface) - int(created_surface)
+            existing_surface = str(int(final_surface) - int(created_surface))
         except ValueError:
             existing_surface = None
 

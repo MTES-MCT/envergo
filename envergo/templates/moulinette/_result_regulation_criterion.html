@@ -6,16 +6,6 @@
     <button class="fr-accordion__btn"
             aria-expanded="false"
             aria-controls="read-more-{{ criterion.unique_slug }}">
-
-      {% comment %}
-      We need to handle the exception where the same result "iota_a_verifier" has a different label on the criterion and on the evaluation result.
-      {% endcomment %}
-      {% if criterion.result == "iota_a_verifier" %}
-        {% result_tag "a_verifier" criterion.result_tag_style %}
-      {% else %}
-        {% result_tag criterion.result criterion.result_tag_style %}
-      {% endif %}
-
       <span class="title">
         {% if criterion.perimeter and regulation.has_several_perimeters %}
           <span class="perimeter">{{ criterion.perimeter }}</span>
@@ -27,6 +17,15 @@
           {{ criterion.subtitle }}
         {% endif %}
       </span>
+
+      {% comment %}
+      We need to handle the exception where the same result "iota_a_verifier" has a different label on the criterion and on the evaluation result.
+      {% endcomment %}
+      {% if criterion.result == "iota_a_verifier" %}
+        {% result_tag "a_verifier" criterion.result_tag_style %}
+      {% else %}
+        {% result_tag criterion.result criterion.result_tag_style %}
+      {% endif %}
     </button>
 
   </h4>

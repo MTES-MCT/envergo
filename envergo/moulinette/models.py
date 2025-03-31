@@ -1289,6 +1289,7 @@ class Moulinette(ABC):
             .distinct("weight", "id")
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
+            .order_by("weight", "id", "distance")
         )
 
         # We might have to filter out optional criteria
@@ -1578,10 +1579,13 @@ class MoulinetteAmenagement(Moulinette):
 
         perimeters = (
             Perimeter.objects.filter(activation_map__zones__in=zones)
+            .annotate(geometry=F("activation_map__geometry"))
             .annotate(
-                geometry=F("activation_map__zones__geometry"),
+                distance=Cast(
+                    Distance("activation_map__zones__geometry", coords), IntegerField()
+                )
             )
-            .annotate(distance=Cast(Distance("geometry", coords), IntegerField()))
+            .order_by("id", "distance")
             .distinct("id")
             .select_related("activation_map")
             .defer("activation_map__geometry")
