@@ -48,7 +48,15 @@
           </p>
           <div class="champ-content">
             {% if item.value|is_type:"ItemFiles" %}
-              {% for file in item.value.files %}<img alt="{{ file.filename }}" src="{{ file.url }}" />{% endfor %}
+              <div class="fr-grid-row fr-grid-row--gutters">
+                {% for file in item.value.files %}
+                  <div class="fr-col-12 fr-col-lg-4">
+                    <img class="fr-responsive-img"
+                         src="{{ file.url }}"
+                         alt="{{ file.filename }}" />
+                  </div>
+                {% endfor %}
+              </div>
             {% else %}
               {{ item.value }}
               {% if item.unit %}{{ item.unit }}{% endif %}
