@@ -2,9 +2,11 @@
 
 {% load evaluations static l10n %}
 
-{% block top-bar %}{#  no top bar on result pages#}{% endblock %}
+{% block top-bar %}{# no top bar on result pages#}{% endblock %}
 
+{% block messages %}{# messages are displayed in the result container #}{% endblock %}
 {% block result %}
+  {% include '_messages.html' %}
   {% if config and not config.is_activated %}
     <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
       Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
