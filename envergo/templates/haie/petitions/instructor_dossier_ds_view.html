@@ -40,7 +40,7 @@
 
   <section class="fr-py-3w">
     {% for item in project_details.ds_data.champs %}
-      {% if not item.value %}
+      {% if not item.value and item.label in project_details.ds_data.header_sections %}
         <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
 
       {% else %}
