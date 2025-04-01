@@ -398,6 +398,7 @@
         _paq.push(['setCustomUrl', customUrl]);
         _paq.push(['trackEvent', 'Error', '500', getCookieValue('visitorid')]);
 
+        _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
           var u="//stats.beta.gouv.fr/";
