@@ -75,7 +75,10 @@ div#app {
       flex-wrap: wrap;
       justify-content: space-between;
       margin: 10px;
-      width: calc(100% - 26em); // 26em = width of sidebar
+      padding-right: 10px;
+      width: calc(
+        100% - 26rem - 20px
+      ); // 26rem = width of sidebar ; 20px = 2*10px = margins
 
       .leaflet-control {
         margin-bottom: 10px;
@@ -187,7 +190,7 @@ div#app {
     #sidebar {
       bottom: 0;
       overflow-y: auto;
-      width: 26em;
+      width: 26rem;
       margin-bottom: 0;
 
       div#compensation {
