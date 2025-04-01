@@ -7,12 +7,21 @@ from operator import attrgetter
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import LineString, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import (
+    CheckConstraint,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+)
+from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
@@ -60,6 +69,7 @@ STAKES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -487,7 +497,7 @@ class Regulation(models.Model):
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
-        return all((self.is_activated(), self.show_map, self.map))
+        return self.is_activated() and self.show_map and self.map
 
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
@@ -827,6 +837,10 @@ class ConfigHaie(ConfigBase):
     )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
+
+    natura2000_coordinators_list_url = models.URLField(
+        "Liste des animateurs Natura2000", blank=True
+    )
 
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
@@ -1677,7 +1691,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1772,19 +1786,76 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+        perimeters = self.get_perimeters()
 
-        regulations = super().get_regulations().prefetch_related("perimeters")
+        regulations = (
+            super()
+            .get_regulations()
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
         return regulations
 
+    def get_perimeters(self):
+        lines = self.get_hedges_to_remove_as_linestrings()
+        if lines:
+            zone_subquery = self.get_zone_subquery(lines)
+
+            perimeters = (
+                Perimeter.objects.annotate(
+                    distance=Value(0, output_field=IntegerField())
+                )
+                .filter(Exists(zone_subquery))  # EXISTS condition
+                .order_by("id")
+                .distinct("id")
+            )
+        else:
+            perimeters = Perimeter.objects.none()
+
+        return perimeters
+
     def get_criteria(self):
-        dept_centroid = self.department.centroid
-        criteria = (
-            super()
-            .get_criteria()
-            .filter(activation_map__zones__geometry__intersects=dept_centroid)
-        )
+        """filter criteria based on the intersection of the hedges to remove and the criteria map.
+
+        if there is no hedges to remove, we fallback on the department centroid.
+        """
+        lines = self.get_hedges_to_remove_as_linestrings()
+        if lines:
+            zone_subquery = self.get_zone_subquery(lines)
+            criteria = super().get_criteria().filter(Exists(zone_subquery))
+        else:
+            dept_centroid = self.department.centroid
+            criteria = (
+                super()
+                .get_criteria()
+                .filter(activation_map__zones__geometry__intersects=dept_centroid)
+            )
 
         return criteria
+
+    def get_hedges_to_remove_as_linestrings(self):
+        if "haies" not in self.catalog or self.catalog["haies"].length_to_remove() <= 0:
+            return None
+
+        hedges = self.catalog["haies"]
+        linestrings = [
+            LineString(
+                [(point["lng"], point["lat"]) for point in hedge.latLngs],
+                srid=EPSG_WGS84,
+            )
+            for hedge in hedges.hedges_to_remove()
+        ]
+
+        return linestrings
+
+    def get_zone_subquery(self, lines):
+        query = Q()
+        for line in lines:
+            query |= Q(geometry__intersects=line)
+
+        zone_subquery = Zone.objects.filter(
+            Q(map_id=OuterRef("activation_map_id")) & query
+        ).values("id")
+        return zone_subquery
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
