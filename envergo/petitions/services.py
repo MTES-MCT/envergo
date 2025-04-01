@@ -27,6 +27,7 @@ class AdditionalInfo:
 @dataclass
 class FileInfo:
     filename: str
+    content_type: str
     url: str
 
 
@@ -512,6 +513,7 @@ def get_item_value_from_ds_champs(champs):
             [
                 FileInfo(
                     p["filename"],
+                    p["contentType"],
                     p["url"],
                 )
                 for p in pieces
