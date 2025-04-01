@@ -58,11 +58,17 @@
             {% if item.value|is_type:"ItemFiles" %}
               <div class="fr-grid-row fr-grid-row--gutters">
                 {% for file in item.value.files %}
-                  <div class="fr-col-12 fr-col-lg-4">
-                    <img class="fr-responsive-img"
-                         src="{{ file.url }}"
-                         alt="{{ file.filename }}" />
-                  </div>
+                  {% if file.content_type == "image/jpeg" %}
+                    <div class="fr-col-12 fr-col-lg-4">
+                      <img class="fr-responsive-img"
+                           src="{{ file.url }}"
+                           alt="{{ file.filename }}" />
+                    </div>
+                  {% else %}
+                    <div class="fr-col-12 fr-col-lg-4">
+                      <a href="{{ file.url }}">{{ file.filename }}</a>
+                    </div>
+                  {% endif %}
                 {% endfor %}
               </div>
             {% else %}
