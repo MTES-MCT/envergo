@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from decimal import Decimal as D
 from enum import Enum
 from itertools import product
 from typing import TYPE_CHECKING, Literal
@@ -71,13 +72,25 @@ _check_plantation_result_matrix()
 def get_replantation_coefficient(moulinette):
     """Get the "R" value.
 
-    It depends on the activated "Espèces protégées" criterion.
+    It depends on the activated criteria.
     """
-    ep = moulinette.ep.criteria.all().first()
-    form = ep.get_settings_form()
-    form.is_valid()
-    R = form.cleaned_data.get("replantation_coefficient", 0)
-    return float(R)
+    ep_R = D("0")
+    if moulinette.ep.is_activated():
+        ep = moulinette.ep.criteria.all().first()
+        if ep:
+            form = ep.get_settings_form()
+            form.is_valid()
+            ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
+
+    ep_bcae8 = D("1")
+    if moulinette.conditionnalite_pac.is_activated():
+        bcae8 = moulinette.conditionnalite_pac.criteria.all().first()
+        if bcae8:
+            form = bcae8.get_settings_form()
+            form.is_valid()
+            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
+
+    return float(max(ep_R, ep_bcae8))
 
 
 @dataclass
@@ -205,7 +218,7 @@ class PlantationEvaluator:
 class HedgeEvaluator:
     """Evaluate the adequacy of a plantation project.
 
-    The plantation evaluator is used to evaluate if a project is compliant with the regulation.
+    This is the "conditions d'acceptabilité" part of the plantation evaluation.
     """
 
     def __init__(self, plantation_evaluator: PlantationEvaluator):
@@ -369,6 +382,8 @@ class HedgeEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
+        # Note :
+        # Si pas de ep, on désactive quality et power lines
         return {
             "length_to_plant": self.evaluate_length_to_plant(),
             "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
