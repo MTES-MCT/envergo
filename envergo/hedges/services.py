@@ -382,13 +382,33 @@ class HedgeEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
-        # Note :
-        # Si pas de ep, on désactive quality et power lines
-        return {
+
+        result = {
             "length_to_plant": self.evaluate_length_to_plant(),
-            "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
-            "quality": self.evaluate_hedge_plantation_quality(),
-            "do_not_plant_under_power_line": {
-                "result": self.is_not_planting_under_power_line(),
-            },
         }
+
+        # Is there an ep criterion activated?
+        moulinette = self.plantation_evaluator.moulinette
+        ep = moulinette.ep
+        ep_criterion = ep.criteria.first()
+        if ep.is_activated() and ep_criterion:
+            result.update(
+                {
+                    "quality": self.evaluate_hedge_plantation_quality(),
+                    "do_not_plant_under_power_line": {
+                        "result": self.is_not_planting_under_power_line(),
+                    },
+                }
+            )
+
+        # Is there a bcae8 criterion activated?
+        bcae8 = moulinette.conditionnalite_pac
+        bcae8_criterion = bcae8.criteria.first()
+        if bcae8.is_activated() and bcae8_criterion:
+            result.update(
+                {
+                    "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
+                }
+            )
+
+        return result
