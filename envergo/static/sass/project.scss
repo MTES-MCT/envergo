@@ -1155,14 +1155,6 @@ $content-max-width: 40rem;
   a.cc-1m2mf {
     border: 2px solid var(--background-default-grey) !important;
   }
-
-  #top-bar {
-    z-index: 2;
-  }
-
-  main:has(#top-bar) #project-summary {
-    padding-top: 10em;
-  }
 }
 
 @media only screen and (width > 991px) {
