@@ -109,38 +109,6 @@ def faq_menu(context):
 
 
 @register.simple_tag(takes_context=True)
-def evaluation_menu(context):
-    """Generate html for the "Mes avis réglementaires" collapsible menu."""
-    links = (
-        (reverse("evaluation_search"), "Retrouver un avis", []),
-        (reverse("dashboard"), "Tableau de bord", []),
-    )
-
-    # Other urls that can be reached from the menu
-    additional_routes = ["evaluation_detail"]
-
-    return collapsible_menu(
-        context, links, "Mes avis", "menu-evaluations", additional_routes
-    )
-
-
-@register.simple_tag(takes_context=True)
-def project_owner_menu(context, is_slim=False):
-    """Generate html for the "Equipes projet" collapsible menu."""
-    links = (
-        (
-            reverse("geometricians"),
-            "Géomètres-experts",
-            ["GeometrePage", "SimulationClick", "Nav"],
-        ),
-    )
-
-    return collapsible_menu(
-        context, links, "Équipes projet", "menu-project-owner", is_slim=is_slim
-    )
-
-
-@register.simple_tag(takes_context=True)
 def pilote_departments_menu(context, is_slim=False):
     """Generate html for the "Départements pilotes" collapsible menu."""
     cache_key = "activated_departments"
