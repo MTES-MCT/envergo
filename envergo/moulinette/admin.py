@@ -41,7 +41,7 @@ class RegulationAdmin(admin.ModelAdmin):
     list_display = [
         "get_regulation_display",
         "regulation_slug",
-        "has_perimeters",
+        "show_map",
         "weight",
     ]
     list_editable = ["weight"]
