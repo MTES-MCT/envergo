@@ -59,7 +59,6 @@ def admin_client(admin_client):
 def test_create_eval_from_request(client, admin_user, eval_request):
     qs = Evaluation.objects.all()
     assert qs.count() == 0
-
     client.force_login(admin_user)
     url = reverse("admin:evaluations_request_changelist")
     data = {"action": "make_evaluation", "_selected_action": eval_request.id}
@@ -138,6 +137,43 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
     mail = mailoutbox[0]
     assert mail.to == to
     assert mail.cc == cc
+    assert mail.bcc == bcc
+
+    assert RegulatoryNoticeLog.objects.count() == 1
+    log = RegulatoryNoticeLog.objects.first()
+    assert log.evaluation == evaluation
+
+
+def test_evaluation_email_without_to_recipient_should_use_cc_instead(
+    admin_client, evaluation, mailoutbox
+):
+    # Make sure the "loi sur l'eau" result will be set
+    ConfigAmenagementFactory()
+
+    # Force the moulinette result
+    evaluation.get_moulinette()
+    evaluation._moulinette.result = "soumis"
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    email = evaluation.get_evaluation_email()
+    cc = email.get_cc_recipients()
+    bcc = email.get_bcc_recipients()
+    assert cc == ["instructor@example.org"]
+    assert bcc == []
+
+    data = {"to": [], "cc": cc, "bcc": bcc}
+
+    admin_client.post(url, data=data)
+    assert len(mailoutbox) == 1
+
+    mail = mailoutbox[0]
+    assert mail.to == cc
+    assert mail.cc == []
     assert mail.bcc == bcc
 
     assert RegulatoryNoticeLog.objects.count() == 1

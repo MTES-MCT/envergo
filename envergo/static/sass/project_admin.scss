@@ -59,3 +59,8 @@ form .aligned .hedge ul {
   margin-left: 1em;
   list-style-type: inherit;
 }
+
+fieldset.module.recipients:has(input[type="checkbox"]:checked)
+  #no-recipients-message {
+  display: none;
+}
