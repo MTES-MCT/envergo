@@ -7,12 +7,14 @@
 {% block project_sidemenu %}
   <li class="fr-sidemenu__item">
     <a class="fr-sidemenu__link"
-       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor">Caractéristiques du projet</a>
+       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor">
+      Informations générales
+    </a>
   </li>
-  <li class="fr-sidemenu__item fr-sidemenu__item">
+  <li class="fr-sidemenu__item fr-sidemenu__item fr-sidemenu-item-form-ds">
     <a class="fr-sidemenu__link"
        href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
-       aria-current="page">Démarches Simplifiées</a>
+       aria-current="page">Formulaire rempli sur Démarches simplifiées</a>
 
     <div id="fr-sidemenu-item-1">
       <ul class="fr-sidemenu__list">

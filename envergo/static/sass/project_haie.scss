@@ -468,6 +468,17 @@ div#project-specifications-instructor {
  * Page instructor
  */
 
+.fr-sidemenu .fr-sidemenu-item-form-ds > .fr-sidemenu__link::after {
+  content: "";
+  background-image: url("/static/images/logo_demarches_simplifiees.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center right;
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
 div#project-dossier-no {
   border-bottom: solid 1px var(--border-default-grey);
 }

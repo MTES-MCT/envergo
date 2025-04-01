@@ -8,7 +8,7 @@
   <li class="fr-sidemenu__item fr-sidemenu__item--active">
     <a class="fr-sidemenu__link"
        href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
-       aria-current="page">Caractéristiques du projet</a>
+       aria-current="page">Informations générales</a>
 
     <div id="fr-sidemenu-item-0">
       <ul class="fr-sidemenu__list">
@@ -24,10 +24,10 @@
       </ul>
     </div>
   </li>
-  <li class="fr-sidemenu__item">
+  <li class="fr-sidemenu__item fr-sidemenu-item-form-ds">
     <a class="fr-sidemenu__link"
        href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor">
-    Démarches Simplifiées</a>
+    Formulaire rempli sur Démarches simplifiées</a>
   </li>
 {% endblock %}
 
