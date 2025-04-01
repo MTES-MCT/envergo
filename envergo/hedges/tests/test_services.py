@@ -1,10 +1,156 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from envergo.hedges.services import HedgeEvaluator
+from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def ep_criterion(france_map):  # noqa
+    criterion = CriterionFactory(
+        title="Espèces protégées",
+        regulation=RegulationFactory(regulation="ep"),
+        evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
+        activation_map=france_map,
+        evaluator_settings='{"replantation_coefficient": "4.0"}',
+    )
+    return criterion
+
+
+@patch("envergo.hedges.services.get_replantation_coefficient")
+def test_minimum_length_to_plant(mock_get_R):
+    """Length to plant deponds on the replantation coefficient."""
+
+    moulinette = Mock()
+
+    hedge_data = Mock()
+    hedge_data.hedges_to_remove.return_value = []
+    hedge_data.length_to_remove.return_value = 100
+
+    hedge_data.hedges_to_plant.return_value = []
+    hedge_data.length_to_plant.return_value = 0
+
+    hedge_data.lineaire_detruit_pac.return_value = 0
+    hedge_data.length_to_plant_pac.return_value = 0
+
+    mock_get_R.return_value = 2.0
+    evaluator = PlantationEvaluator(moulinette, hedge_data)
+    assert evaluator.minimum_length_to_plant() == 200
+
+    mock_get_R.return_value = 4.0
+    assert evaluator.minimum_length_to_plant() == 400
+
+
+@patch("envergo.hedges.services.get_replantation_coefficient")
+def test_minimum_lengths_to_plant(mock_get_R):
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "typeHaie": "degradee",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694364, "lng": 3.615415},
+                    {"lat": 43.694094, "lng": 3.615085},
+                ],
+                "additionalData": {
+                    "typeHaie": "buissonnante",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D3",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694347, "lng": 3.615455},
+                    {"lat": 43.694144, "lng": 3.615210},
+                ],
+                "additionalData": {
+                    "typeHaie": "arbustive",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D4",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694328, "lng": 3.615493},
+                    {"lat": 43.694192, "lng": 3.615332},
+                ],
+                "additionalData": {
+                    "typeHaie": "mixte",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D5",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694305, "lng": 3.615543},
+                    {"lat": 43.694235, "lng": 3.615464},
+                ],
+                "additionalData": {
+                    "typeHaie": "alignement",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+        ]
+    )
+    moulinette = Mock()
+
+    mock_get_R.return_value = 2.0
+    evaluator = PlantationEvaluator(moulinette, hedge_data)
+    minimum_lengths_to_plant = evaluator.get_minimum_lengths_to_plant()
+
+    assert round(minimum_lengths_to_plant["degradee"]) == 2 * 50
+    assert round(minimum_lengths_to_plant["buissonnante"]) == 2 * 40
+    assert round(minimum_lengths_to_plant["arbustive"]) == 2 * 30
+    assert round(minimum_lengths_to_plant["mixte"]) == 2 * 20
+    assert round(minimum_lengths_to_plant["alignement"]) == 2 * 10
+
+    mock_get_R.return_value = 4.0
+    minimum_lengths_to_plant = evaluator.get_minimum_lengths_to_plant()
+    assert round(minimum_lengths_to_plant["degradee"]) == 4 * 50
+    assert round(minimum_lengths_to_plant["buissonnante"]) == 4 * 40
+    assert round(minimum_lengths_to_plant["arbustive"]) == 4 * 30
+    assert round(minimum_lengths_to_plant["mixte"]) == 4 * 20
+    assert round(minimum_lengths_to_plant["alignement"]) == 4 * 10
 
 
 def test_hedge_quality_should_be_sufficient():

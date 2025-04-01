@@ -1,6 +1,5 @@
 import operator
 import uuid
-from collections import defaultdict
 from functools import reduce
 
 from django.contrib.gis.geos import Polygon
