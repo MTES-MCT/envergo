@@ -1894,6 +1894,19 @@ class MoulinetteHaie(Moulinette):
 
         return criteria
 
+    def must_check_acceptability_conditions(self):
+        """Some conditions must only be evaluated when a ep criterion exists."""
+
+        ep = self.ep
+        ep_criterion = ep.criteria.first()
+        return ep.is_activated() and ep_criterion
+
+    def must_check_pac_condition(self):
+        """The pac condition must only be evaluated when a bcea8 criterion exists."""
+        bcae8 = self.conditionnalite_pac
+        bcae8_criterion = bcae8.criteria.first()
+        return bcae8.is_activated() and bcae8_criterion
+
     def summary_fields(self):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
@@ -1939,13 +1952,6 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates the perimeter."""
 
         return self.department.centroid
-
-    def get_replantation_coefficient(self):
-        ep = self.ep.criteria.all().first()
-        form = ep.get_settings_form()
-        form.is_valid()
-        R = form.cleaned_data.get("replantation_coefficient", 0)
-        return float(R)
 
 
 def get_moulinette_class_from_site(site):

@@ -386,12 +386,9 @@ class HedgeEvaluator:
         result = {
             "length_to_plant": self.evaluate_length_to_plant(),
         }
-
-        # Is there an ep criterion activated?
         moulinette = self.plantation_evaluator.moulinette
-        ep = moulinette.ep
-        ep_criterion = ep.criteria.first()
-        if ep.is_activated() and ep_criterion:
+
+        if moulinette.must_check_acceptability_conditions():
             result.update(
                 {
                     "quality": self.evaluate_hedge_plantation_quality(),
@@ -401,10 +398,7 @@ class HedgeEvaluator:
                 }
             )
 
-        # Is there a bcae8 criterion activated?
-        bcae8 = moulinette.conditionnalite_pac
-        bcae8_criterion = bcae8.criteria.first()
-        if bcae8.is_activated() and bcae8_criterion:
+        if moulinette.must_check_pac_condition():
             result.update(
                 {
                     "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
