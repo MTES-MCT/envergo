@@ -543,7 +543,7 @@ class PetitionProjectInstructorDossierDSView(
             )
 
         # Send message if info from DS is not in project details
-        if not context["project_details"].usager:
+        if not context["project_details"]:
             messages.warning(
                 self.request,
                 """Impossible de récupérer les informations du dossier Démarches Simplifiées.
