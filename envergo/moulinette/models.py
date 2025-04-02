@@ -1841,7 +1841,7 @@ class MoulinetteHaie(Moulinette):
         return fields
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
 
