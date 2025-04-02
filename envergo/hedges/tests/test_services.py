@@ -4,7 +4,6 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
 pytestmark = pytest.mark.django_db
