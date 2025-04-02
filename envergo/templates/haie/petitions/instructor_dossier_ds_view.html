@@ -46,7 +46,7 @@
       <h3>Sections du formulaire</h3>
     </div>
     {% for item in project_details.ds_data.champs %}
-      {% if not item.value and item.label in project_details.ds_data.header_sections %}
+      {% if item.label in project_details.ds_data.header_sections %}
         <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
 
       {% else %}
@@ -71,9 +71,15 @@
                   {% endif %}
                 {% endfor %}
               </div>
+            {% elif item.value == "" %}
+              <div>
+                <i>Non renseigné</i>
+              </div>
             {% else %}
-              {{ item.value }}
-              {% if item.unit %}{{ item.unit }}{% endif %}
+              <div>
+                {{ item.value }}
+                {% if item.unit %}{{ item.unit }}{% endif %}
+              </div>
             {% endif %}
           </div>
         </div>

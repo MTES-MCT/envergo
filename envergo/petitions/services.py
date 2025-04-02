@@ -462,10 +462,13 @@ def compute_instructor_informations_ds(
     champs = dossier.get("champs", [])
 
     if demarche:
-        header_sections = get_header_sections_from_ds_demarche(demarche)
+        header_sections, explication_champs_ids = (
+            get_header_explication_from_ds_demarche(demarche)
+        )
 
     usager = (dossier.get("usager") or {}).get("email", "")
 
+    # Build champs_display list without explication_champs
     champs_display = [
         Item(
             c.get("label"),
@@ -474,6 +477,7 @@ def compute_instructor_informations_ds(
             None,
         )
         for c in champs
+        if c.get("id") not in explication_champs_ids
     ]
 
     ds_details = DemarchesSimplifieesDetails(
@@ -523,20 +527,24 @@ def get_item_value_from_ds_champs(champs):
     return value
 
 
-def get_header_sections_from_ds_demarche(demarche):
-    """Get header sections from demarche champDescriptors"""
+def get_header_explication_from_ds_demarche(demarche):
+    """Get header sections and explications from demarche champDescriptors"""
 
     champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
     header_sections = []
+    excplication_champs = []
 
     if champ_descriptors:
         for champ_descriptor in champ_descriptors:
             type_name = champ_descriptor.get("__typename", "")
-            label = champ_descriptor.get("label", "")
             if type_name == "HeaderSectionChampDescriptor":
+                label = champ_descriptor.get("label", "")
                 header_sections.append(label)
+            if type_name == "ExplicationChampDescriptor":
+                champ_id = champ_descriptor.get("id")
+                excplication_champs.append(champ_id)
 
-    return header_sections
+    return header_sections, excplication_champs
 
 
 def fetch_project_details_from_demarches_simplifiees(
