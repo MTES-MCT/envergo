@@ -57,7 +57,7 @@ div#app {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    min-width: 78em; // size xl
+    min-width: 768px; // size md
     position: relative;
     overflow: hidden;
 
@@ -70,15 +70,19 @@ div#app {
       }
     }
 
-    #drawing-controls {
+    #controls-container {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin: 10px;
+      padding-right: 10px;
+      width: calc(
+        100% - 26rem - 20px
+      ); // 26rem = width of sidebar ; 20px = 2*10px = margins
 
-      button {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        width: auto;
+      .leaflet-control {
+        margin-bottom: 10px;
+        white-space: nowrap;
       }
     }
 
@@ -176,6 +180,7 @@ div#app {
       padding: 0.25rem 1rem;
       font-size: 1rem;
       border-radius: 0.75rem;
+      max-width: calc(100% - 8rem);
 
       &.hidden {
         display: none;
@@ -185,7 +190,7 @@ div#app {
     #sidebar {
       bottom: 0;
       overflow-y: auto;
-      width: 28em;
+      width: 26rem;
       margin-bottom: 0;
 
       div#compensation {
@@ -261,9 +266,16 @@ div#app {
             }
 
             button {
-              visibility: hidden;
+              visibility: visible; // Styles for touch UIs
+
+              @media (hover: hover) {
+                /* Styles for mouse UIs */
+                visibility: hidden;
+              }
+
               margin-left: auto;
               font-size: 14px;
+              padding: 0.5rem;
 
               --hover-tint: var(--background-alt-grey-hover);
               --active-tint: var(--background-alt-grey-active);

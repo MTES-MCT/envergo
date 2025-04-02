@@ -31,6 +31,7 @@ scipy  # Just for interpolation, remove later
 django-otp[qrcode]
 faker
 tqdm
+bs4
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926

@@ -6,9 +6,8 @@ $dark-pink: #eed3d7;
 $red: #b94a48;
 
 :root {
-  // Bump default font size from 16 to 18px.
-  font-size: 112.5%;
   scroll-behavior: smooth;
+  overscroll-behavior-y: none;
 }
 
 // Prevent  scrolling when a dialog is open
@@ -188,31 +187,77 @@ article {
 }
 
 nav#evaluation-summary {
-  li a {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    background-image: none;
-    padding: 0.25rem 0;
-    color: var(--text-action-high-grey);
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
 
-    &:hover {
-      background-color: var(--hover);
+  li:not(:last-child) > .summary-link {
+    border-bottom: 1px solid var(--border-default-grey);
+  }
+
+  li {
+    span.regulation-result,
+    a {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
 
-    .action-link {
-      margin-left: 1.5rem;
-      white-space: nowrap;
+    span.regulation-result {
+      width: 100%;
     }
 
-    .fr-link {
-      text-decoration: underline;
-      font-weight: 500;
+    span.regulation-result,
+    span.regulation-result span.fr-tag {
+      flex-direction: column;
     }
 
-    .undertitle {
-      font-size: 0.875rem;
-      line-height: 1.5rem;
+    span.regulation-result span.fr-tag {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    a {
+      background-image: none;
+      padding: 0.25rem 0;
+      color: var(--text-action-high-grey);
+
+      &:hover {
+        background-color: var(--hover);
+      }
+
+      .action-link {
+        margin-left: 1.5rem;
+        white-space: nowrap;
+      }
+
+      .fr-link {
+        text-decoration: underline;
+        font-weight: 500;
+      }
+
+      .undertitle {
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+      }
+    }
+  }
+
+  @media (width >= 36em) {
+    li:not(:last-child) > .summary-link {
+      border-bottom: none;
+    }
+
+    li {
+      span.regulation-result,
+      span.regulation-result span.fr-tag {
+        flex-direction: row;
+      }
+
+      span.regulation-result span.fr-tag {
+        margin-top: unset;
+      }
     }
   }
 }
@@ -311,12 +356,11 @@ nav#evaluation-summary {
 section.regulation {
   h2 {
     display: flex;
-    align-items: center;
-    line-height: 2rem;
+    align-items: end;
+    flex-wrap: wrap;
 
     span.content {
       margin-right: 0.5em;
-      white-space: nowrap;
 
       .undertitle {
         font-weight: normal;
@@ -325,8 +369,8 @@ section.regulation {
     }
 
     span.fr-tag {
-      margin-top: 0.75em;
       white-space: nowrap;
+      margin-bottom: -0.125rem;
     }
   }
 
@@ -360,11 +404,19 @@ section.regulation {
 
   .fr-accordion {
     .fr-accordion__btn {
+      flex-flow: row wrap;
       color: inherit;
+      justify-content: space-between;
 
       span.title .perimeter {
         font-weight: 300;
         color: var(--grey-925-100);
+      }
+    }
+
+    @media (width < 36em) {
+      .fr-accordion__btn {
+        flex-direction: column;
       }
     }
 
@@ -402,6 +454,13 @@ section.regulation {
     line-height: 1.75rem;
   }
 
+  // Cadre lila en pleine largeur sur simu et AR pour petits écrans
+  div.alt {
+    padding: 1rem !important;
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+
   @media (width >= 48em) {
     h3 {
       font-size: 1.5rem;
@@ -411,6 +470,14 @@ section.regulation {
     h4 {
       font-size: 1.375rem;
       line-height: 1.75rem;
+    }
+  }
+
+  @media (width >= 42em) {
+    div.alt {
+      padding: unset;
+      margin-left: unset;
+      margin-right: unset;
     }
   }
 
@@ -841,7 +908,6 @@ button .img-icon {
 
     .fr-accordion__btn span.fr-tag {
       white-space: nowrap;
-      margin-left: auto;
     }
 
     .fr-accordion__title span.title {
@@ -1003,6 +1069,8 @@ div.hero-alt {
 }
 
 // moulinette result page styles
+$content-max-width: 40rem;
+
 .moulinette-result-body {
   #content {
     display: flex;
@@ -1070,7 +1138,7 @@ div.hero-alt {
   #project-result,
   #after_result_content {
     & > section {
-      max-width: 42rem;
+      max-width: $content-max-width;
       margin: 0 auto;
     }
 
@@ -1090,6 +1158,20 @@ div.hero-alt {
 }
 
 @media only screen and (width > 991px) {
+  // compute some variables for big screen layout
+  $fr-container-max-width: 78rem;
+  $sidebar-width: min(calc(400% / 12), calc($fr-container-max-width / 3));
+  $main-column-width: min(
+    calc(800% / 12),
+    calc(2 * $fr-container-max-width / 3)
+  );
+  $result-width: min($main-column-width, $content-max-width);
+  $container-margin-x: max(calc((100vw - $fr-container-max-width) / 2), 0rem);
+  $main-column-margin-left: calc($container-margin-x + $sidebar-width);
+  $result-margin-left: calc(
+    $main-column-margin-left + ($main-column-width - $result-width) / 2
+  );
+
   .moulinette-result-body {
     height: 100%;
     padding-bottom: 5rem;
@@ -1099,9 +1181,40 @@ div.hero-alt {
       position: relative;
     }
 
-    & > main,
-    & > footer {
-      padding-left: calc(400% / 12);
+    #project-result {
+      margin-left: $result-margin-left;
+
+      & > section {
+        margin: 0;
+      }
+    }
+
+    #project-summary {
+      margin-left: $container-margin-x;
+      width: $sidebar-width;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      padding-top: 5rem;
+    }
+
+    #after_result_content {
+      margin-left: $main-column-margin-left;
+
+      & > section {
+        margin-left: 6rem;
+      }
+
+      div.fr-follow {
+        max-width: 52rem;
+      }
+    }
+
+    footer#footer {
+      margin-left: $main-column-margin-left;
+      max-width: $main-column-width;
+      padding-bottom: 5rem;
     }
 
     #project-summary,
@@ -1110,15 +1223,6 @@ div.hero-alt {
       overflow-y: scroll;
       flex-wrap: nowrap;
       scroll-behavior: smooth;
-    }
-
-    #project-summary {
-      width: calc(400% / 12); // because 33.333333…% is not a valid css value
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      padding-top: 5rem;
     }
   }
 }
@@ -1934,7 +2038,7 @@ main.demonstrateur_2150 {
 
     #moulinette,
     #triage {
-      max-width: 650px;
+      max-width: 36rem;
 
       @media (width < 20em) {
         #map-container {
@@ -2035,7 +2139,8 @@ main.demonstrateur_2150 {
   }
 
   .fr-follow__newsletter form {
-    min-width: 350px;
+    width: 350px;
+    max-width: 100%;
 
     button {
       margin-left: auto;
@@ -2066,4 +2171,8 @@ main.demonstrateur_2150 {
 .inline-button:hover,
 .inline-button:active {
   --underline-hover-width: var(--underline-max-width);
+}
+
+article#evaluation {
+  max-width: 38rem;
 }

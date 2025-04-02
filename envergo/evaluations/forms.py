@@ -167,6 +167,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         NoIdnEmailField(),
         label=_("Urbanism department email address(es)"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=forms.EmailInput(attrs={"type": "email", "inputmode": "email"}),
     )
     urbanism_department_phone = PhoneNumberField(
         label=_("Urbanism department phone number"),
@@ -178,6 +179,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Project sponsor email address(es)"),
         help_text=_("Petitioner, project manager…"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=forms.EmailInput(attrs={"type": "email", "inputmode": "email"}),
     )
     project_owner_phone = PhoneNumberField(
         label=_("Project sponsor phone number"),
@@ -295,6 +297,7 @@ class EvaluationShareForm(forms.Form):
         label=_("Select your recipient(s) email address(es)"),
         help_text=_("Separate several addresses with a comma « , »"),
         error_messages={"item_invalid": _("The %(nth)s address is invalid:")},
+        widget=forms.EmailInput(attrs={"type": "email", "inputmode": "email"}),
     )
 
 

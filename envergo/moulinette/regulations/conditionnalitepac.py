@@ -24,7 +24,9 @@ class Bcae8Form(forms.Form):
         help_text="Si la valeur exacte est inconnue, une estimation est suffisante",
         required=True,
         min_value=0,
-        widget=forms.TextInput(attrs={"placeholder": "En mètres"}),
+        widget=forms.TextInput(
+            attrs={"placeholder": "En mètres", "inputmode": "numeric"}
+        ),
         display_unit="m",
         display_help_text="",
         display_label="Linéaire total de haies sur l’exploitation déclarée à la PAC :",
