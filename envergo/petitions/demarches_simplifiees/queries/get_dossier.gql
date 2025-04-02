@@ -52,7 +52,9 @@ query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeT
           id
           __typename
           ... on HeaderSectionChampDescriptor {
-            description
+            label
+          }
+          ... on ExplicationChampDescriptor {
             label
           }
         }

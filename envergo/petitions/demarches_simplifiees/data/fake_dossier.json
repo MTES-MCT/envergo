@@ -386,11 +386,11 @@
         "title": "Guichet unique de la haie – Aisne (02) / TEST",
         "number": 115910,
         "revision": {
+          "champDescriptors":
           "champDescriptors": [
             {
               "id": "Q2hhbXAtNDUzNDEzNQ==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Identité"
             },
             {
@@ -424,12 +424,12 @@
             {
               "id": "Q2hhbXAtNDUzNDE1Ng==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Description du projet"
             },
             {
               "id": "Q2hhbXAtNDc0NDcyMQ==",
-              "__typename": "ExplicationChampDescriptor"
+              "__typename": "ExplicationChampDescriptor",
+              "label": "Ce formulaire est pré-rempli à partir de la simulation que vous avez réalisée"
             },
             {
               "id": "Q2hhbXAtNDU0Mzk0Mw==",
@@ -462,7 +462,6 @@
             {
               "id": "Q2hhbXAtNDcyOTE3OA==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Autorisation du propriétaire"
             },
             {
@@ -476,7 +475,6 @@
             {
               "id": "Q2hhbXAtNDU5NjU1Mw==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Conditionnalité PAC – BCAE8"
             },
             {
@@ -493,11 +491,13 @@
             },
             {
               "id": "Q2hhbXAtNDcyOTI4NQ==",
-              "__typename": "ExplicationChampDescriptor"
+              "__typename": "ExplicationChampDescriptor",
+              "label": "Vous n'avez pas de renseignements à saisir concernant la conditionnalité PAC"
             },
             {
               "id": "Q2hhbXAtNDc2NDA2Ng==",
-              "__typename": "ExplicationChampDescriptor"
+              "__typename": "ExplicationChampDescriptor",
+              "label": "Vous devez préciser la raison du dépôt de votre demande"
             },
             {
               "id": "Q2hhbXAtNDcyOTE4NA==",
@@ -542,7 +542,6 @@
             {
               "id": "Q2hhbXAtNDU5NjU2NA==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Réglementation « Espèces protégées »"
             },
             {
@@ -551,7 +550,8 @@
             },
             {
               "id": "Q2hhbXAtNDg3NjUwMA==",
-              "__typename": "ExplicationChampDescriptor"
+              "__typename": "ExplicationChampDescriptor",
+              "label": "Vous devez préciser la raison du dépôt de votre demande"
             },
             {
               "id": "Q2hhbXAtNDg3NjUxNQ==",
@@ -568,7 +568,6 @@
             {
               "id": "Q2hhbXAtNDcyOTIwMQ==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Description des haies à détruire"
             },
             {
@@ -626,7 +625,6 @@
             {
               "id": "Q2hhbXAtNDcyOTIxMw==",
               "__typename": "HeaderSectionChampDescriptor",
-              "description": "",
               "label": "Description de la plantation"
             },
             {
@@ -671,7 +669,8 @@
             },
             {
               "id": "Q2hhbXAtNDU1OTU0Nw==",
-              "__typename": "ExplicationChampDescriptor"
+              "__typename": "ExplicationChampDescriptor",
+              "label": "Pour déposer votre demande, cochez les cases ci-dessous et cliquez sur le bouton \"Déposer le dossier\""
             },
             {
               "id": "Q2hhbXAtNDcyOTIyNA==",
