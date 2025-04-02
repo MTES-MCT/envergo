@@ -828,6 +828,8 @@ class ConfigHaie(ConfigBase):
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
+    hedge_maintenance_html = models.TextField("Champ html pour l’entretien", blank=True)
+
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
         blank=True,
@@ -1714,7 +1716,10 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_template(cls, triage_form):
         """Return the template to display the triage out of scope result."""
-        if triage_form["element"].value() == "haie":
+        if (
+            triage_form["element"].value() == "haie"
+            and triage_form["travaux"].value() != "destruction"
+        ):
             return "haie/moulinette/entretien_haies_result.html"
 
         return "haie/moulinette/triage_result.html"
@@ -1745,12 +1750,18 @@ class MoulinetteHaie(Moulinette):
             (
                 Department.objects.defer("geometry")
                 .filter(confighaie__is_activated=True, department=department_code)
+                .select_related("confighaie")
                 .first()
             )
             if department_code
             else None
         )
         context["department"] = department
+
+        if department.confighaie:
+            context["hedge_maintenance_html"] = (
+                department.confighaie.hedge_maintenance_html
+            )
 
         return context
 
