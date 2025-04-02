@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000 Haie"),
+                        ("natura2000_haie", "Natura 2000"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000 Haie"),
+                        ("natura2000_haie", "Natura 2000"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -697,7 +697,7 @@ class Migration(migrations.Migration):
                 choices=[
                     ("loi_sur_leau", "Loi sur l'eau"),
                     ("natura2000", "Natura 2000"),
-                    ("natura2000_haie", "Natura 2000 Haie"),
+                    ("natura2000_haie", "Natura 2000"),
                     ("eval_env", "Évaluation environnementale"),
                     ("sage", "Règlement de SAGE"),
                     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -711,7 +711,7 @@ class Migration(migrations.Migration):
             model_name="confighaie",
             name="natura2000_coordinators_list_url",
             field=models.URLField(
-                blank=True, verbose_name="Liste des animateurs Natura2000"
+                blank=True, verbose_name="URL liste des animateurs Natura 2000"
             ),
         ),
     ]
