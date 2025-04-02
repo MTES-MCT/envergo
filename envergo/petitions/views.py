@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import fiona
 import requests
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
@@ -422,6 +423,10 @@ class PetitionProjectDetail(DetailView):
         context["demarches_simplifiees_date_depot"] = (
             self.object.demarches_simplifiees_date_depot
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
@@ -482,6 +487,18 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Les données proviennent d'un dossier factice.""",
+            )
 
         return context
 

@@ -39,6 +39,8 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 CELERY_TASK_ALWAYS_EAGER = True
 
+MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
+
 
 # Your stuff...
 # ------------------------------------------------------------------------------

@@ -1,0 +1,209 @@
+{
+  "data": {
+    "dossier": {
+      "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+      "number": 23178443,
+      "state": "en_construction",
+      "dateDepot": "2025-03-21T11:08:34+01:00",
+      "usager": {
+        "email": "hedy.lamarr@exemple.com"
+      },
+      "demandeur": {
+        "civilite": "Mme",
+        "nom": "Hedy",
+        "prenom": "Lamarr",
+        "email": null
+      },
+      "champs": [
+        {
+          "id": "Q2hhbXAtNDUzNDEzNQ==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNTA5MzU0NA==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3MA==",
+          "stringValue": "Agriculteur, agricultrice"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3MQ==",
+          "stringValue": "GAEC Choupi"
+        },
+        {
+          "id": "Q2hhbXAtNDUzNDE0NA==",
+          "stringValue": "Laon (02000)"
+        },
+        {
+          "id": "Q2hhbXAtNDUzNDE0NQ==",
+          "stringValue": "hedy.lamarr@exemple.com"
+        },
+        {
+          "id": "Q2hhbXAtNDU0MzkzMg==",
+          "stringValue": "01 23 45 67 89"
+        },
+        {
+          "id": "Q2hhbXAtNDU0MzkzOA==",
+          "stringValue": "123456789"
+        },
+        {
+          "id": "Q2hhbXAtNDUzNDE1Ng==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDc0NDcyMQ==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDU0Mzk0Mw==",
+          "stringValue": "http://haie.local:8000/projet/AT9ZK7/consultation/"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE4Nw==",
+          "stringValue": "Laon (02000)"
+        },
+        {
+          "id": "Q2hhbXAtNDUzNDE0Ng==",
+          "stringValue": "La motivation"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3Ng==",
+          "stringValue": "Ouiiii j'ai cherché"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3NQ==",
+          "stringValue": "TINA"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3Nw==",
+          "stringValue": "Au max"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE4OA==",
+          "stringValue": null
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3OA==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE3OQ==",
+          "stringValue": "true"
+        },
+        {
+          "id": "Q2hhbXAtNDU5NjU1Mw==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTI4NA==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTI4Ng==",
+          "stringValue": "Aucune haie sur parcelle déclarée à la PAC"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTI4NQ==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDU5NjU2NA==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDg3NjQ5Nw==",
+          "stringValue": "Dérogation"
+        },
+        {
+          "id": "Q2hhbXAtNDg3NjUxNQ==",
+          "stringValue": "Je n'ai pas consulté les structures"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIwMQ==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDU5Nzc0Mw==",
+          "stringValue": "Hêtre et chêne"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIwMg==",
+          "stringValue": "Moins de 25 ans"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIwMw==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTI4Mg==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIwNg==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIwOQ==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxMQ==",
+          "stringValue": "Plus rarement"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxMg==",
+          "stringValue": "élagage"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxMw==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxNA==",
+          "stringValue": "hêtre chêne fresne peuplier"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxNQ==",
+          "stringValue": "oui"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxNg==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxOA==",
+          "stringValue": "oui"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIxOQ==",
+          "stringValue": "oui"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIyMA==",
+          "stringValue": "élagage tous les ans"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIyMQ==",
+          "stringValue": "false"
+        },
+        {
+          "id": "Q2hhbXAtNDU1OTU0Nw==",
+          "stringValue": ""
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTIyNA==",
+          "stringValue": "true"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTI4Mw==",
+          "stringValue": "true"
+        }
+      ],
+      "demarche": {
+        "title": "Guichet unique de la haie – Aisne (02) / TEST",
+        "number": 115910
+      }
+    }
+  }
+}

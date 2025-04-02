@@ -1,5 +1,7 @@
+import json
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from textwrap import dedent
 from typing import Any, List, Literal
 
@@ -364,93 +366,95 @@ def fetch_project_details_from_demarches_simplifiees(
     variables = f"""{{
               "dossierNumber":{dossier_number}
             }}"""
-    query = """query getDossier($dossierNumber: Int!) {
-          dossier(number: $dossierNumber) {
-            id
-            number
-            state
-            dateDepot
-            usager {
-              email
-            }
-            demandeur {
-              ... on PersonnePhysique {
-                civilite
-                nom
-                prenom
-                email
-              }
-            }
-            champs {
-              id
-              stringValue
-            }
-            demarche{
-                title
-                number
-            }
-          }
-        }"""
+
+    query = ""
+
+    with open(
+        Path(
+            settings.APPS_DIR
+            / "petitions"
+            / "demarches_simplifiees"
+            / "queries"
+            / "get_dossier.gql"
+        ),
+        "r",
+    ) as file:
+        query = file.read()
 
     body = {
         "query": query,
         "variables": variables,
     }
 
+    dossier = {}
+
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing."
+            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
             f"\nrequest.url: {api_url}"
             f"\nrequest.body: {body}"
         )
-        return None
 
-    response = requests.post(
-        api_url,
-        json=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-        },
-    )
+        with open(
+            Path(
+                settings.APPS_DIR
+                / "petitions"
+                / "demarches_simplifiees"
+                / "data"
+                / "fake_dossier.json"
+            ),
+            "r",
+        ) as file:
+            response = json.load(file)
+            dossier = response.get("data", {}).get("dossier") or {}
 
-    logger.info(
-        f"""
-            Demarches simplifiees API request status: {response.status_code}"
-            * response.text: {response.text},
-            * response.status_code: {response.status_code},
-            * request.url: {api_url},
-            * request.body: {body},
-            """,
-    )
-
-    if response.status_code >= 400:
-        logger.error(
-            "Demarches simplifiees API request failed",
-            extra={
-                "response.text": response.text,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
+    else:
+        response = requests.post(
+            api_url,
+            json=body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
             },
         )
 
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
-            context={
-                "dossier_number": dossier_number,
-                "status_code": response.status_code,
-                "response": response.text,
-                "api_url": api_url,
-                "body": body,
-            },
+        logger.info(
+            f"""
+                Demarches simplifiees API request status: {response.status_code}"
+                * response.text: {response.text},
+                * response.status_code: {response.status_code},
+                * request.url: {api_url},
+                * request.body: {body},
+                """,
         )
-        notify(dedent(message), "haie")
-        return None
 
-    data = response.json() or {}
+        if response.status_code >= 400:
+            logger.error(
+                "Demarches simplifiees API request failed",
+                extra={
+                    "response.text": response.text,
+                    "response.status_code": response.status_code,
+                    "request.url": api_url,
+                    "request.body": body,
+                },
+            )
 
-    dossier = (data.get("data") or {}).get("dossier")
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                context={
+                    "dossier_number": dossier_number,
+                    "status_code": response.status_code,
+                    "response": response.text,
+                    "api_url": api_url,
+                    "body": body,
+                },
+            )
+            notify(dedent(message), "haie")
+            return None
+
+        data = response.json() or {}
+
+        dossier = (data.get("data") or {}).get("dossier")
 
     if dossier is None:
 
@@ -500,6 +504,7 @@ def fetch_project_details_from_demarches_simplifiees(
     demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
     demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
     demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+
     ds_url = (
         f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
         f"{dossier_number}"
