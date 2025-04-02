@@ -132,9 +132,11 @@ class Regulation(models.Model):
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
-        _("Has perimeters"),
+        "Utilise des informations attachées à un périmètre ?",
         default=False,
-        help_text=_("Is this regulation linked to local perimetres?"),
+        help_text="Cocher si l'affichage des résultats pour cette réglementation dépend"
+        "de variables paramétrées dans le périmètre, par exemple personne de"
+        "contact, lien internet…",
     )
     show_map = models.BooleanField(
         _("Show perimeter map"),
@@ -826,10 +828,12 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
-    contacts_and_links = models.TextField("Champ html d’information", blank=True)
+    contacts_and_links = models.TextField(
+        "Champ html d’information fléchage", blank=True
+    )
 
     demarche_simplifiee_number = models.IntegerField(
-        "Numéro de la démarche sur démarche simplifiée",
+        "Numéro de la démarche DS",
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
@@ -838,26 +842,26 @@ class ConfigHaie(ConfigBase):
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
-        "Configuration du pré-remplissage de la démarche",
+        "Configuration pré-remplissage DS",
         blank=True,
         null=False,
         default=list,
     )
 
     demarches_simplifiees_city_id = models.CharField(
-        'Identifiant de la "commune principale" dans Démarches Simplifiées',
+        'Identifiant DS "Commune principale"',
         blank=True,
         max_length=64,
     )
 
     demarches_simplifiees_pacage_id = models.CharField(
-        'Identifiant du "numéro de PACAGE" dans Démarches Simplifiées',
+        'Identifiant DS "numéro de PACAGE"',
         blank=True,
         max_length=64,
     )
 
     demarches_simplifiees_project_url_id = models.CharField(
-        'Identifiant du "Lien internet de la simulation réglementaire de votre projet" dans Démarches Simplifiées',
+        'Identifiant DS "Lien internet de la simulation réglementaire de votre projet"',
         blank=True,
         max_length=64,
     )
