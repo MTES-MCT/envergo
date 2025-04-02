@@ -17,7 +17,7 @@ def ep_criterion(france_map):  # noqa
         regulation=RegulationFactory(regulation="ep"),
         evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
         activation_map=france_map,
-        evaluator_settings='{"replantation_coefficient": "4.0"}',
+        evaluator_settings={"replantation_coefficient": "4.0"},
     )
     return criterion
 
