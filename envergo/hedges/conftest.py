@@ -5,14 +5,14 @@ from envergo.hedges.tests.factories import HedgeDataFactory
 
 @pytest.fixture
 def hedge_data():
-    hedges = HedgeDataFactory(
+    hedge_data = HedgeDataFactory(
         data=[
             {
                 "id": "D1",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 43.69437648171791, "lng": 3.615381717681885},
-                    {"lat": 43.69405067324741, "lng": 3.6149525642395024},
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
                 ],
                 "additionalData": {
                     "typeHaie": "degradee",
@@ -27,8 +27,8 @@ def hedge_data():
                 "id": "D2",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 43.694364845731585, "lng": 3.6154152452945714},
-                    {"lat": 43.69409430841308, "lng": 3.6150853335857396},
+                    {"lat": 43.694364, "lng": 3.615415},
+                    {"lat": 43.694094, "lng": 3.615085},
                 ],
                 "additionalData": {
                     "typeHaie": "buissonnante",
@@ -43,8 +43,8 @@ def hedge_data():
                 "id": "D3",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 43.69434739174787, "lng": 3.6154554784297948},
-                    {"lat": 43.69414473123166, "lng": 3.615212738513947},
+                    {"lat": 43.694347, "lng": 3.615455},
+                    {"lat": 43.694144, "lng": 3.615210},
                 ],
                 "additionalData": {
                     "typeHaie": "arbustive",
@@ -59,8 +59,8 @@ def hedge_data():
                 "id": "D4",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 43.694328968092876, "lng": 3.615493029356003},
-                    {"lat": 43.69419215400783, "lng": 3.6153347790241246},
+                    {"lat": 43.694328, "lng": 3.615493},
+                    {"lat": 43.694192, "lng": 3.615332},
                 ],
                 "additionalData": {
                     "typeHaie": "mixte",
@@ -75,8 +75,8 @@ def hedge_data():
                 "id": "D5",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 43.69430763543265, "lng": 3.615543991327286},
-                    {"lat": 43.694235789068386, "lng": 3.6154729127883916},
+                    {"lat": 43.694305, "lng": 3.615543},
+                    {"lat": 43.694235, "lng": 3.615464},
                 ],
                 "additionalData": {
                     "typeHaie": "alignement",
@@ -89,4 +89,4 @@ def hedge_data():
             },
         ]
     )
-    return hedges
+    return hedge_data
