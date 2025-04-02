@@ -65,10 +65,14 @@
                            alt="{{ file.filename }}" />
                     </div>
                   {% else %}
-                    <div class="fr-col-12 fr-col-lg-4">
+                    <div class="fr-col-12">
                       <a href="{{ file.url }}">{{ file.filename }}</a>
                     </div>
                   {% endif %}
+                {% empty %}
+                  <div class="fr-col-12">
+                    <i>Pas de fichier disponible</i>
+                  </div>
                 {% endfor %}
               </div>
             {% elif item.value == "" %}

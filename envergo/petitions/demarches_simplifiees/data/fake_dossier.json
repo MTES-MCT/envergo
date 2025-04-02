@@ -220,20 +220,50 @@
           "id": "Q2hhbXAtNDcyOTI4NA==",
           "__typename": "YesNoChamp",
           "label": "Projet soumis à déclaration préalable PAC",
-          "stringValue": "false",
-          "selected": false
+          "stringValue": "true",
+          "selected": true
         },
         {
-          "id": "Q2hhbXAtNDcyOTI4Ng==",
+          "id": "Q2hhbXAtNDU1OTU2Mw==",
           "__typename": "TextChamp",
-          "label": "Motif de dispense de déclaration préalable au titre de la conditionnalité PAC (BCAE 8)",
-          "stringValue": "Aucune haie sur parcelle déclarée à la PAC"
+          "label": "Motif prévu au titre de la conditionnalité PAC (BCAE 8)",
+          "stringValue": "Transfert de parcelles"
         },
         {
-          "id": "Q2hhbXAtNDcyOTI4NQ==",
+          "id": "Q2hhbXAtNDcyOTE4NQ==",
           "__typename": "TextChamp",
-          "label": "Vous n'avez pas de renseignements à saisir concernant la conditionnalité PAC",
-          "stringValue": ""
+          "label": "Localisation PAC des haies à détruire",
+          "stringValue": "D1"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE4Ng==",
+          "__typename": "TextChamp",
+          "label": "Localisation PAC des haies à planter",
+          "stringValue": "P1"
+        },
+        {
+          "id": "Q2hhbXAtNDcyOTE4OQ==",
+          "__typename": "PieceJustificativeChamp",
+          "label": "Justificatif du transfert de parcelles",
+          "stringValue": null,
+          "files": [
+            {
+              "__typename": "File",
+              "filename": "Mon dossier-1.pdf",
+              "contentType": "application/pdf",
+              "checksum": "RRzFd09kaTp0p8rfS7NWMA==",
+              "byteSize": "59082",
+              "url": "https://static.demarches-simplifiees.fr:443/v1/AUTH_db3cbfc79c914f87b192ff7c6bb176f0/ds_activestorage_backup/2025/04/02/56/56VfxWbfSjF5XTH5f8eXqcdtvrir?temp_url_sig=4ce8e0b5d48adf3e9d89a5f335d80f763e15ed60&temp_url_expires=1743588230&filename=Mon%20dossier-1.pdf&inline",
+              "createdAt": "2025-04-02T11:03:05+02:00"
+            }
+          ]
+        },
+        {
+          "id": "Q2hhbXAtNTAwNzQ1Mw==",
+          "__typename": "PieceJustificativeChamp",
+          "label": "Attestation pour meilleur emplacement environnemental de la haie",
+          "stringValue": "",
+          "files": []
         },
         {
           "id": "Q2hhbXAtNDU5NjU2NA==",
