@@ -55,7 +55,11 @@
             <b>{{ item.label }}</b>
           </p>
           <div class="champ-content">
-            {% if item.value|is_type:"ItemFiles" %}
+            {% if item.value == "" %}
+              <div>
+                <i>Non renseigné</i>
+              </div>
+            {% elif item.value|is_type:"ItemFiles" %}
               <div class="fr-grid-row fr-grid-row--gutters">
                 {% for file in item.value.files %}
                   {% if file.content_type == "image/jpeg" %}
@@ -75,13 +79,9 @@
                   </div>
                 {% endfor %}
               </div>
-            {% elif item.value == "" %}
-              <div>
-                <i>Non renseigné</i>
-              </div>
             {% else %}
               <div>
-                {{ item.value }}
+                {{ item.value|urlize }}
                 {% if item.unit %}{{ item.unit }}{% endif %}
               </div>
             {% endif %}
