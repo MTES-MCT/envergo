@@ -1,6 +1,5 @@
 import operator
 import uuid
-from collections import defaultdict
 from functools import reduce
 
 from django.contrib.gis.geos import Polygon
@@ -206,36 +205,6 @@ class HedgeData(models.Model):
     def is_removing_old_tree(self):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
-
-    def minimum_length_to_plant(self):
-        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
-        replantation coefficient"""
-        return R * self.length_to_remove()
-
-    def get_minimum_lengths_to_plant(self):
-        lengths_by_type = defaultdict(int)
-        for to_remove in self.hedges_to_remove():
-            lengths_by_type[to_remove.hedge_type] += to_remove.length
-
-        return {
-            "degradee": R * lengths_by_type["degradee"],
-            "buissonnante": R * lengths_by_type["buissonnante"],
-            "arbustive": R * lengths_by_type["arbustive"],
-            "mixte": R * lengths_by_type["mixte"],
-            "alignement": R * lengths_by_type["alignement"],
-        }
-
-    def get_lengths_to_plant(self):
-        lengths_by_type = defaultdict(int)
-        for to_plant in self.hedges_to_plant():
-            lengths_by_type[to_plant.hedge_type] += to_plant.length
-
-        return {
-            "buissonnante": lengths_by_type["buissonnante"],
-            "arbustive": lengths_by_type["arbustive"],
-            "mixte": lengths_by_type["mixte"],
-            "alignement": lengths_by_type["alignement"],
-        }
 
     def get_hedge_species(self):
         """Return species that may live in the hedges."""

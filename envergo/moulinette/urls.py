@@ -2,7 +2,7 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteHome, MoulinetteResult
+from envergo.moulinette.views import MoulinetteHome
 
 urlpatterns = [
     # Redirections history
@@ -51,7 +51,6 @@ urlpatterns = [
         _("result/"),
         include(
             [
-                path("", MoulinetteResult.as_view(), name="moulinette_result"),
                 # This is another "fake" url, only for matomo tracking
                 path(
                     _("debug/"),

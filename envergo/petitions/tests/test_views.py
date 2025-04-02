@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
@@ -107,6 +108,9 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
             "petition_project_instructor_view", kwargs={"reference": project.reference}
         )
     )
+
+    # Add support  django messaging framework
+    request._messages = messages.storage.default_storage(request)
 
     # Simulate an unauthenticated user
     request.user = AnonymousUser()

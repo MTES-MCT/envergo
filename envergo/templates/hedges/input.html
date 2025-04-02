@@ -13,7 +13,7 @@
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' mode=mode %}"
-       data-quality-url="{% url 'hedge_quality' %}"
+       data-quality-url="{% url 'hedge_quality' %}?{{ request.GET.urlencode|safe }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
 
@@ -188,8 +188,9 @@
                   </p>
                 </div>
               </div>
+
               {% if is_removing_pac %}
-                <div>
+                <div v-if="quality.length_to_plant_pac">
                   <div>
                     <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
                        class="fr-badge"></p>
@@ -210,7 +211,8 @@
                   </div>
                 </div>
               {% endif %}
-              <div>
+
+              <div v-if="quality.quality">
                 <div>
                   <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "
                      class="fr-badge"></p>
@@ -242,7 +244,8 @@
                   </div>
                 </div>
               </div>
-              <div>
+
+              <div v-if="quality.do_not_plant_under_power_line">
                 <div>
                   <p :class="{ 'fr-badge--success': quality.do_not_plant_under_power_line.result, 'fr-badge--error': !quality.do_not_plant_under_power_line.result} "
                      class="fr-badge"></p>
