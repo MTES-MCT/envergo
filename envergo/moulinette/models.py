@@ -69,7 +69,7 @@ STAKES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
-    ("natura2000_haie", "Natura 2000 Haie"),
+    ("natura2000_haie", "Natura 2000"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -839,7 +839,7 @@ class ConfigHaie(ConfigBase):
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
     natura2000_coordinators_list_url = models.URLField(
-        "Liste des animateurs Natura2000", blank=True
+        "URL liste des animateurs Natura 2000", blank=True
     )
 
     demarche_simplifiee_number = models.IntegerField(
