@@ -36,8 +36,23 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
         return queryset
 
 
+class RegulationAdminForm(forms.ModelForm):
+    class Meta:
+        model = Regulation
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Natura 2000 have the same human readable name for GUH and Envergo...
+        self.fields["regulation"].choices = [
+            (choice[0], choice[0] if "natura2000" in choice[0] else choice[1])
+            for choice in self.fields["regulation"].choices
+        ]
+
+
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
+    form = RegulationAdminForm
     list_display = [
         "get_regulation_display",
         "regulation_slug",
