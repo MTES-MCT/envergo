@@ -1,4 +1,4 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import call, patch
 from urllib.parse import urlencode
 
 import pytest
@@ -59,25 +59,21 @@ def moulinette_url(footprint):
 def test_call_to_action_action(moulinette_url):
     evaluation = EvaluationFactory(moulinette_url=moulinette_url)
     moulinette = evaluation.get_moulinette()
-    regulation = RegulationFactory()
 
     assert not evaluation.is_icpe
 
-    moulinette.regulations = [Mock(regulation, wraps=regulation, result="non_soumis")]
     assert moulinette.result == "non_soumis"
     assert not evaluation.is_eligible_to_self_declaration()
 
-    moulinette.regulations = [
-        Mock(regulation, wraps=regulation, result="action_requise")
-    ]
+    moulinette.regulations[0].criteria.first()._evaluator._result = "action_requise"
     assert moulinette.result == "action_requise"
     assert evaluation.is_eligible_to_self_declaration()
 
-    moulinette.regulations = [Mock(regulation, wraps=regulation, result="soumis")]
+    moulinette.regulations[0].criteria.first()._evaluator._result = "soumis"
     assert moulinette.result == "soumis"
     assert evaluation.is_eligible_to_self_declaration()
 
-    moulinette.regulations = [Mock(regulation, wraps=regulation, result="interdit")]
+    moulinette.regulations[0].criteria.first()._evaluator._result = "interdit"
     assert moulinette.result == "interdit"
     assert evaluation.is_eligible_to_self_declaration()
 

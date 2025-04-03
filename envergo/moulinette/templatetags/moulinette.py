@@ -1,7 +1,6 @@
 import json
 import logging
 import string
-from itertools import groupby
 
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
@@ -10,7 +9,6 @@ from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
-from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.models import get_moulinette_class_from_site
 
@@ -293,80 +291,3 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
         content = ""
 
     return content
-
-
-RESULTS_GROUP_KEYS = {
-    RESULTS.interdit: RESULTS.interdit,
-    RESULTS.systematique: RESULTS.soumis,
-    RESULTS.cas_par_cas: RESULTS.soumis,
-    RESULTS.soumis: RESULTS.soumis,
-    RESULTS.soumis_ou_pac: RESULTS.soumis,
-    RESULTS.derogation_inventaire: RESULTS.soumis,
-    RESULTS.derogation_simplifiee: RESULTS.soumis,
-    RESULTS.action_requise: RESULTS.soumis,
-    RESULTS.a_verifier: RESULTS.soumis,
-    RESULTS.iota_a_verifier: RESULTS.soumis,
-    RESULTS.non_soumis: "autre",
-    RESULTS.dispense: "autre",
-    RESULTS.non_concerne: "autre",
-    RESULTS.non_disponible: "autre",
-    RESULTS.non_applicable: "autre",
-    RESULTS.non_active: "autre",
-}
-
-RESULTS_GROUP_CASCADE = [
-    RESULTS.interdit,
-    RESULTS.soumis,
-    "autre",
-]
-
-
-def _check_results_groups_matrices():
-    _missing_results = set()
-    _missing_groups = set()
-
-    for key, value in RESULTS:
-        if key not in RESULTS_GROUP_KEYS:
-            _missing_results.add(key)
-            continue
-        if RESULTS_GROUP_KEYS[key] not in RESULTS_GROUP_CASCADE:
-            _missing_groups.add(RESULTS_GROUP_KEYS[key])
-    if _missing_results:
-        raise ValueError(
-            f"The following RESULTS are missing in RESULTS_GROUP_KEYS: {_missing_results}"
-        )
-    if _missing_groups:
-        raise ValueError(
-            f"The following value are missing in RESULTS_GROUP_CASCADE: {_missing_groups}"
-        )
-
-
-_check_results_groups_matrices()
-
-
-def get_result_group_key(regulation):
-    """Get the grouping key for the regulation result."""
-    return RESULTS_GROUP_KEYS.get(regulation.result, "autre")
-
-
-@register.simple_tag
-def group_regulations_for_display(moulinette):
-    """Group regulations by result : "interdit" and "soumis" first, then the rest in an "autre" category."""
-    regulations_list = list(moulinette.regulations)
-
-    result_cascade = [
-        RESULTS.interdit,
-        RESULTS.soumis,
-        "autre",
-    ]
-
-    regulations_list.sort(
-        key=lambda reg: result_cascade.index(get_result_group_key(reg))
-    )
-
-    # Group the regulations by their result
-    grouped = {
-        key: list(group)
-        for key, group in groupby(regulations_list, key=get_result_group_key)
-    }
-    return grouped
