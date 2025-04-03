@@ -3,7 +3,7 @@
 {% load static moulinette %}
 
 {% block result_header %}
-  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette.result moulinette.main_form.haies %}</div>
+  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
 
   <p class="fr-hint-text fr-mb-3w">
     Ce simulateur est fourni à titre informatif, et ne vaut pas position de l’administration.
@@ -22,8 +22,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='plantation' %}";</script>
-  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
   <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>

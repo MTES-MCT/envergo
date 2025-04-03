@@ -614,7 +614,13 @@ createApp({
       })
         .then(response => response.json())
         .then(data => {
-          data = {status: 'loaded', ...data};
+          data = { status: 'loaded', ...data };
+
+          // Note : using Object.assign will not delete keys.
+          // E.g if the initial evaluation data has a `length_to_plant_pac` key,
+          // and then an admin deactives the bcae8 regulation, the key will
+          // not be present in the following requests, but the initial value
+          // will remain in the current variable without ever being updated.
           Object.assign(quality, data);
         })
         .catch(error => console.error('Error:', error));
@@ -726,7 +732,7 @@ createApp({
       map.setView([43.6861, 3.5911], 22);
       restoreHedges();
 
-      if(mode === PLANTATION_MODE) {
+      if (mode === PLANTATION_MODE) {
         // We need to call this function once to initialize the quality object
         onHedgesToPlantChange();
       }
