@@ -463,7 +463,7 @@ def compute_instructor_informations_ds(
 
     if demarche:
         header_sections, explication_champs_ids = (
-            get_header_explication_from_ds_demarche(demarche)
+            get_header_explanation_from_ds_demarche(demarche)
         )
 
     usager = (dossier.get("usager") or {}).get("email", "")
@@ -527,12 +527,12 @@ def get_item_value_from_ds_champs(champs):
     return value
 
 
-def get_header_explication_from_ds_demarche(demarche):
-    """Get header sections and explications from demarche champDescriptors"""
+def get_header_explanation_from_ds_demarche(demarche):
+    """Get header sections and explanation from demarche champDescriptors"""
 
     champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
     header_sections = []
-    excplication_champs = []
+    explication_champs = []
 
     if champ_descriptors:
         for champ_descriptor in champ_descriptors:
@@ -542,9 +542,9 @@ def get_header_explication_from_ds_demarche(demarche):
                 header_sections.append(label)
             if type_name == "ExplicationChampDescriptor":
                 champ_id = champ_descriptor.get("id")
-                excplication_champs.append(champ_id)
+                explication_champs.append(champ_id)
 
-    return header_sections, excplication_champs
+    return header_sections, explication_champs
 
 
 def fetch_project_details_from_demarches_simplifiees(
