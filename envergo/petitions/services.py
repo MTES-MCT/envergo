@@ -25,6 +25,18 @@ class AdditionalInfo:
 
 
 @dataclass
+class FileInfo:
+    filename: str
+    content_type: str
+    url: str
+
+
+@dataclass
+class ItemFiles:
+    files: list[FileInfo]
+
+
+@dataclass
 class ItemDetails:
     result: bool
     details: list[AdditionalInfo]
@@ -40,12 +52,16 @@ class Item:
 
 @dataclass
 class InstructorInformationDetails:
+    """Instructor information details class formatted to be displayed in templates"""
+
     label: str
     items: list[Item]
 
 
 @dataclass
 class InstructorInformation:
+    """Instructor information class formatted to be displayed in templates"""
+
     slug: str | None
     label: str | None
     items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
@@ -54,82 +70,36 @@ class InstructorInformation:
 
 
 @dataclass
+class DemarchesSimplifieesDetails:
+    applicant_name: str | None
+    city: str | None
+    pacage: str | None
+    usager: str
+    header_sections: list | None
+    champs: list | None
+
+
+@dataclass
 class ProjectDetails:
+    """Project details class formatted to be displayed in templates"""
+
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
     details: list[InstructorInformation]
+    ds_data: DemarchesSimplifieesDetails | None
 
 
-def compute_instructor_informations(
-    petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    config = moulinette.config
-    ds_details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
-    )
+def build_instructor_informations_bcae8(
+    petition_project, moulinette
+) -> InstructorInformation:
+    """Build BCAE8 for instructor page view"""
 
     hedge_data = petition_project.hedge_data
-    length_to_remove = hedge_data.length_to_remove()
-    length_to_plant = hedge_data.length_to_plant()
-    project_details = InstructorInformation(
-        slug=None,
-        label=None,
-        items=[
-            Item("Référence", petition_project.reference, None, None),
-            "instructor_free_mention",
-        ],
-        details=[
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
-                ],
-            ),
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire planté", round(length_to_plant), "m", None),
-                    Item(
-                        "Ratio en longueur",
-                        (
-                            round(length_to_plant / length_to_remove, 2)
-                            if length_to_remove
-                            else ""
-                        ),
-                        None,
-                        "Longueur plantée / longueur détruite",
-                    ),
-                ],
-            ),
-        ],
-    )
-
-    if ds_details:
-        if ds_details.city:
-            project_details.items.append(
-                Item("Commune principale", ds_details.city, None, None)
-            )
-        if ds_details.applicant_name:
-            project_details.items.append(
-                Item("Nom du demandeur", ds_details.applicant_name, None, None)
-            )
-
-    lineaire_total = moulinette.catalog.get("lineaire_total", "")
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
+    lineaire_total = moulinette.catalog.get("lineaire_total", "")
     motif = moulinette.catalog.get("motif", "")
+
     bcae8 = InstructorInformation(
         slug="bcae8",
         comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
@@ -204,9 +174,13 @@ def compute_instructor_informations(
         ],
     )
 
-    if ds_details:
-        if ds_details.pacage:
-            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+    return bcae8
+
+
+def build_instructor_informations_ep(petition_project) -> InstructorInformation:
+    """Build Espèces Protégées informations for instructor page view"""
+
+    hedge_data = petition_project.hedge_data
 
     hedges_to_remove_near_pond = [
         h for h in hedge_data.hedges_to_remove() if h.proximite_mare
@@ -316,25 +290,266 @@ def compute_instructor_informations(
         details=[],
     )
 
+    return ep
+
+
+def build_project_details(petition_project) -> InstructorInformation:
+    """Build project details from petition project data"""
+
+    hedge_data = petition_project.hedge_data
+    length_to_remove = hedge_data.length_to_remove()
+    length_to_plant = hedge_data.length_to_plant()
+    project_details = InstructorInformation(
+        slug=None,
+        label=None,
+        items=[
+            Item("Référence", petition_project.reference, None, None),
+            "instructor_free_mention",
+        ],
+        details=[
+            InstructorInformationDetails(
+                label="Destruction",
+                items=[
+                    Item(
+                        "Nombre de tracés",
+                        len(hedge_data.hedges_to_remove()),
+                        None,
+                        None,
+                    ),
+                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
+                ],
+            ),
+            InstructorInformationDetails(
+                label="Plantation",
+                items=[
+                    Item(
+                        "Nombre de tracés",
+                        len(hedge_data.hedges_to_plant()),
+                        None,
+                        None,
+                    ),
+                    Item("Total linéaire planté", round(length_to_plant), "m", None),
+                    Item(
+                        "Ratio en longueur",
+                        (
+                            round(length_to_plant / length_to_remove, 2)
+                            if length_to_remove
+                            else ""
+                        ),
+                        None,
+                        "Longueur plantée / longueur détruite",
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    return project_details
+
+
+def compute_instructor_informations(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
+    """Compute ProjectDetails with instructor informations"""
+
+    # Get ds details
+    config = moulinette.config
+
+    dossier = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, visitor_id, user
+    )
+
+    if not dossier:
+        return None
+
+    applicant = dossier.get("demandeur") or {}
+    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
+    applicant_name = (
+        None
+        if applicant_name is None or applicant_name.strip() == ""
+        else applicant_name
+    )
+    city = None
+    pacage = None
+    champs = dossier.get("champs", [])
+
+    city_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_city_id
+        ),
+        None,
+    )
+    if city_field:
+        city = city_field.get("stringValue", None)
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ["id"] == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.get("stringValue", None)
+
+    usager = (dossier.get("usager") or {}).get("email", "")
+
+    ds_details = DemarchesSimplifieesDetails(
+        applicant_name, city, pacage, usager, None, None
+    )
+
+    # Build project details
+    project_details = build_project_details(petition_project)
+
+    if ds_details:
+        if ds_details.city:
+            project_details.items.append(
+                Item("Commune principale", ds_details.city, None, None)
+            )
+        if ds_details.applicant_name:
+            project_details.items.append(
+                Item("Nom du demandeur", ds_details.applicant_name, None, None)
+            )
+
+    # Build BCAE8
+    bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
+
+    if ds_details:
+        if ds_details.pacage:
+            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+
+    # Build Espèces Protégées
+    ep = build_instructor_informations_ep(petition_project)
+
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         details=[project_details, bcae8, ep],
+        ds_data=ds_details,
     )
 
 
-@dataclass
-class DemarchesSimplifieesDetails:
-    applicant_name: str | None
-    city: str | None
-    pacage: str | None
-    usager: str
+def compute_instructor_informations_ds(
+    petition_project, moulinette, site, visitor_id, user
+) -> ProjectDetails:
+    """Compute ProjectDetails with instructor informations"""
+
+    # Build project details
+    project_details = build_project_details(petition_project)
+
+    # Get ds details
+    config = moulinette.config
+
+    dossier = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, visitor_id, user
+    )
+
+    if not dossier:
+        return None
+
+    applicant = dossier.get("demandeur") or {}
+    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
+    applicant_name = (
+        None
+        if applicant_name is None or applicant_name.strip() == ""
+        else applicant_name
+    )
+    demarche = dossier.get("demarche")
+    header_sections = None
+    champs = dossier.get("champs", [])
+
+    if demarche:
+        header_sections, explication_champs_ids = (
+            get_header_explanation_from_ds_demarche(demarche)
+        )
+
+    usager = (dossier.get("usager") or {}).get("email", "")
+
+    # Build champs_display list without explication_champs
+    champs_display = [
+        Item(
+            c.get("label"),
+            get_item_value_from_ds_champs(c),
+            None,
+            None,
+        )
+        for c in champs
+        if c.get("id") not in explication_champs_ids
+    ]
+
+    ds_details = DemarchesSimplifieesDetails(
+        applicant_name, None, None, usager, header_sections, champs_display
+    )
+
+    return ProjectDetails(
+        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+        demarche_simplifiee_number=config.demarche_simplifiee_number,
+        usager=ds_details.usager if ds_details else "",
+        details=[project_details],
+        ds_data=ds_details,
+    )
+
+
+def get_item_value_from_ds_champs(champs):
+    """get item value from dossier champs
+    Ok better to do with yesno filter…
+    """
+
+    type_name = champs.get("__typename") or ""
+    value = champs.get("stringValue") or ""
+
+    if type_name == "CheckboxChamp":
+        if champs.get("checked"):
+            value = "oui"
+        else:
+            value = "non"
+    elif type_name == "YesNoChamp":
+        if champs.get("selected"):
+            value = "oui"
+        else:
+            value = "non"
+    elif type_name == "PieceJustificativeChamp":
+        pieces = champs.get("files") or []
+        value = ItemFiles(
+            [
+                FileInfo(
+                    p["filename"],
+                    p["contentType"],
+                    p["url"],
+                )
+                for p in pieces
+            ]
+        )
+
+    return value
+
+
+def get_header_explanation_from_ds_demarche(demarche):
+    """Get header sections and explanation from demarche champDescriptors"""
+
+    champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
+    header_sections = []
+    explication_champs = []
+
+    if champ_descriptors:
+        for champ_descriptor in champ_descriptors:
+            type_name = champ_descriptor.get("__typename", "")
+            if type_name == "HeaderSectionChampDescriptor":
+                label = champ_descriptor.get("label", "")
+                header_sections.append(label)
+            if type_name == "ExplicationChampDescriptor":
+                champ_id = champ_descriptor.get("id")
+                explication_champs.append(champ_id)
+
+    return header_sections, explication_champs
 
 
 def fetch_project_details_from_demarches_simplifiees(
     petition_project, config, site, visitor_id, user
-) -> DemarchesSimplifieesDetails | None:
+) -> dict | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     if (
@@ -386,7 +601,7 @@ def fetch_project_details_from_demarches_simplifiees(
         "variables": variables,
     }
 
-    dossier = {}
+    dossier = None
 
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
@@ -499,7 +714,10 @@ def fetch_project_details_from_demarches_simplifiees(
         )
         notify(dedent(message), "haie")
         return None
-    # we have got a dossier from DS for this petition project
+
+    # we have got a dossier from DS for this petition project,
+    # let's synchronize project
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
     demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
@@ -513,41 +731,7 @@ def fetch_project_details_from_demarches_simplifiees(
         dossier, site, demarche_label, ds_url, visitor_id, user
     )
 
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    city = None
-    pacage = None
-    champs = dossier.get("champs", [])
-
-    city_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_city_id
-        ),
-        None,
-    )
-    if city_field:
-        city = city_field.get("stringValue", None)
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.get("stringValue", None)
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    return DemarchesSimplifieesDetails(applicant_name, city, pacage, usager)
+    return dossier
 
 
 class PetitionProjectCreationProblem:

@@ -1,0 +1,101 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load utils %}
+
+{% block title %}Instruction du dossier – Formulaire rempli sur Démarches simplifiées{% endblock %}
+
+{% block project_sidemenu %}
+  <li class="fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor">
+      Informations générales
+    </a>
+  </li>
+  <li class="fr-sidemenu__item fr-sidemenu__item ds-item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
+       aria-current="page">Formulaire rempli sur Démarches simplifiées</a>
+
+    <div id="fr-sidemenu-item-1">
+      <ul class="fr-sidemenu__list">
+        {% for item in project_details.ds_data.header_sections %}
+          <li class="fr-sidemenu__item">
+            <a class="fr-sidemenu__link"
+               href="#section-{{ item|slugify }}"
+               target="_self">{{ item }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </li>
+{% endblock %}
+
+{% block project_content %}
+
+  <h2>Formulaire rempli sur Démarches simplifiées</h2>
+
+  <section class="fr-py-3w">
+    <div class="tab-title">
+      <h3>Identité du demandeur</h3>
+      <div class="champ-content">{{ project_details.ds_data.applicant_name }}</div>
+    </div>
+  </section>
+
+  <section class="section-ds fr-py-3w">
+    <div class="tab-title">
+      <h3>Sections du formulaire</h3>
+    </div>
+    {% for item in project_details.ds_data.champs %}
+      {% if item.label in project_details.ds_data.header_sections %}
+        <h3 class="fr-h5" id="section-{{ item.label|slugify }}">{{ item.label }}</h3>
+
+      {% else %}
+        <div class="champ-row fr-my-2w">
+          <p class="champ-label fr-mb-0">
+            <b>{{ item.label }}</b>
+          </p>
+          <div class="champ-content">
+            {% if item.value == "" %}
+              <div>
+                <i>Non renseigné</i>
+              </div>
+            {% elif item.value|is_type:"ItemFiles" %}
+              <div class="fr-grid-row fr-grid-row--gutters">
+                {% for file in item.value.files %}
+                  {% if file.content_type == "image/jpeg" %}
+                    <div class="fr-col-12 fr-col-lg-4">
+                      <img class="fr-responsive-img"
+                           src="{{ file.url }}"
+                           alt="{{ file.filename }}" />
+                    </div>
+                  {% else %}
+                    <div class="fr-col-12">
+                      <a href="{{ file.url }}">{{ file.filename }}</a>
+                    </div>
+                  {% endif %}
+                {% empty %}
+                  <div class="fr-col-12">
+                    <i>Pas de fichier disponible</i>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div>
+                {{ item.value|urlize }}
+                {% if item.unit %}{{ item.unit }}{% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+  </section>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{% url 'input_hedges'  mode='read_only' %}";</script>
+  <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
+  <script>var SOURCE_PAGE = "instruction-ds";</script>
+{% endblock %}
