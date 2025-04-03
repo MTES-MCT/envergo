@@ -468,7 +468,7 @@ div#project-specifications-instructor {
  * Page instructor
  */
 
-.fr-sidemenu .fr-sidemenu-item-form-ds > .fr-sidemenu__link::after {
+.ds-item > .fr-sidemenu__link::after {
   content: "";
   background-image: url("/static/images/logo_demarches_simplifiees.png");
   background-repeat: no-repeat;
