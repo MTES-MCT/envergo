@@ -519,7 +519,7 @@ def test_users_can_see_dashboard_menu(user, client):
     res = client.get(home_url, follow=True)
 
     assert res.status_code == 200
-    assert "Tableau de bord" in res.content.decode()
+    assert "Mes avis" in res.content.decode()
 
 
 def test_eval_detail_shows_version_content(client):
