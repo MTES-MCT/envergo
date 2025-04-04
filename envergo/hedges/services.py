@@ -76,7 +76,7 @@ def get_replantation_coefficient(moulinette):
     """
     ep_R = D("0")
     if moulinette.ep.is_activated():
-        ep = moulinette.ep.criteria.all().first()
+        ep = moulinette.ep.criteria.first()
         if ep:
             form = ep.get_settings_form()
             form.is_valid()
