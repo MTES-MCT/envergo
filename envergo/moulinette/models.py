@@ -588,6 +588,18 @@ class Criterion(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        super().clean()
+        if (
+            self.regulation.regulation in MoulinetteHaie.REGULATIONS
+            and not self.activation_mode
+        ):
+            raise ValidationError(
+                {
+                    "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
+                }
+            )
+
     @property
     def slug(self):
         return self.evaluator.slug

@@ -714,4 +714,20 @@ class Migration(migrations.Migration):
                 blank=True, verbose_name="URL liste des animateurs Natura 2000"
             ),
         ),
+        migrations.AddField(
+            model_name="criterion",
+            name="activation_mode",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("department_centroid", "Centroïde du département dans la carte"),
+                    (
+                        "hedges_intersection",
+                        "Intersection de la carte et des haies à détruire",
+                    ),
+                ],
+                max_length=32,
+                verbose_name="Mode d'activation (GUH uniquement)",
+            ),
+        ),
     ]
