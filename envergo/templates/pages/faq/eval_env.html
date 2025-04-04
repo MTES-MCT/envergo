@@ -1,33 +1,39 @@
 {% extends "pages/faq/index.html" %}
 
-{% load static %}
+{% load static pages %}
 
 {% block title %}Questions fréquentes : Évaluation environnementale{% endblock %}
-
 {% block faq_content %}
   <h1>Questions fréquentes : Évaluation environnementale</h1>
-
-  <p class="fr-text--lead">Évaluation environnementale</p>
-
   <div id="faq-accordion">
-
     <section class="fr-accordion">
       <h3 class="fr-accordion__title">
-        <button class="fr-accordion__btn"
-                aria-expanded="false"
-                aria-controls="accordion-eval_env">
-          <span>Qu'est-ce que l'Évaluation environnementale ?</span>
-        </button>
+      <button class="fr-accordion__btn"
+            aria-expanded="false"
+            aria-controls="accordion-evaluation_environnementale">
+        <span>Qu’est-ce que l’évaluation environnementale ?</span>
+      </button>
       </h3>
+      <div class="fr-collapse" id="accordion-evaluation_environnementale">
+        <p><strong>L’évaluation environnementale</strong> est une procédure réglementaire qui vise à intégrer l’environnement et la santé humaine dans l’élaboration d’un projet, dès les premières étapes de sa conception.</p>
 
-      <div class="fr-collapse" id="accordion-eval_env">
-        <p>Bla bla bla</p>
+        <p>L’analyse complète des impacts possibles du projet est formalisée dans un document appelé <strong>étude d’impact</strong>. Elle prend en compte l’ensemble des composantes de l’environnement :</p>
+
+        <ul>
+          <li><strong>le milieu naturel</strong> : biodiversité, eau, pollution ;</li>
+          <li><strong>le milieu physique</strong> : sol, sous-sol, qualité de l’air ;</li>
+          <li><strong>les risques naturels</strong> : inondations, cavités, mouvements de terrain ;</li>
+          <li><strong>le milieu humain</strong> : santé, cadre de vie, patrimoine, paysages.</li>
+        </ul>
+  
+        <p>Elle comprend également une phase de <strong>participation du public</strong>, qui prend la forme d’une <strong>enquête publique</strong>. Celle-ci permet aux citoyens et aux parties prenantes de s’exprimer sur le projet, avant qu’une décision ne soit prise.</p>
+  
+        <p>Certains projets sont systématiquement soumis à cette procédure. D’autres doivent d’abord passer par un <strong>examen au cas par cas</strong>, une étape de vérification réalisée par l’administration. Le porteur de projet déclare ses intentions, et l’administration décide, en fonction des caractéristiques du projet et de la sensibilité de la zone, si une évaluation environnementale complète est nécessaire, avec étude d’impact et enquête publique.</p>
       </div>
     </section>
 
   </div>
 {% endblock %}
-
 {% block extra_js %}
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
   <script>
@@ -37,5 +43,4 @@
       accordion.init();
     });
   </script>
-
 {% endblock %}
