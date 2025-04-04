@@ -35,7 +35,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        if self.object:
+        if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
             context["hedge_data_json"] = json.dumps(self.object.data)
