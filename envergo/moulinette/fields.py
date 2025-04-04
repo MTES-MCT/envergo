@@ -10,6 +10,7 @@ from envergo.moulinette.regulations import (  # noqa
     evalenv,
     loisurleau,
     natura2000,
+    natura2000_haie,
     sage,
 )
 
