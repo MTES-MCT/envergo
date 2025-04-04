@@ -74,7 +74,7 @@ ACTIVATION_MODES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
-    ("natura2000_haie", "Natura 2000"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -225,7 +225,13 @@ class Regulation(models.Model):
 
     @property
     def title(self):
-        return self.get_regulation_display()
+        # there is a conflict between natura2000 and natura2000_haie, they need different human-readable values
+        # for configuration, but the same display title.
+        return (
+            self.get_regulation_display()
+            if self.regulation != "natura2000_haie"
+            else "Natura 2000"
+        )
 
     @property
     def subtitle(self):

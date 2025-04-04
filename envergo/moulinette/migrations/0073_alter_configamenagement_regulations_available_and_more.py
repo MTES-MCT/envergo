@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000"),
+                        ("natura2000_haie", "Natura 2000 Haie"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000"),
+                        ("natura2000_haie", "Natura 2000 Haie"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -697,7 +697,7 @@ class Migration(migrations.Migration):
                 choices=[
                     ("loi_sur_leau", "Loi sur l'eau"),
                     ("natura2000", "Natura 2000"),
-                    ("natura2000_haie", "Natura 2000"),
+                    ("natura2000_haie", "Natura 2000 Haie"),
                     ("eval_env", "Évaluation environnementale"),
                     ("sage", "Règlement de SAGE"),
                     ("conditionnalite_pac", "Conditionnalité PAC"),
