@@ -7,7 +7,7 @@ from operator import attrgetter
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import LineString, Point
+from django.contrib.gis.geos import GEOSGeometry, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -64,6 +64,11 @@ logger = logging.getLogger(__name__)
 STAKES = Choices(
     ("soumis", "Soumis"),
     ("interdit", "Interdit"),
+)
+
+ACTIVATION_MODES = Choices(
+    ("department_centroid", "Centroïde du département dans la carte"),
+    ("hedges_intersection", "Intersection de la carte et des haies à détruire"),
 )
 
 REGULATIONS = Choices(
@@ -538,6 +543,12 @@ class Criterion(models.Model):
     )
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
+    )
+    activation_mode = models.CharField(
+        "Mode d'activation (GUH uniquement)",
+        choices=ACTIVATION_MODES,
+        max_length=32,
+        blank=True,
     )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     evaluator_settings = models.JSONField(
@@ -1796,15 +1807,24 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        lines = self.get_hedges_to_remove_as_linestrings()
-        if lines:
-            zone_subquery = self.get_zone_subquery(lines)
+        """Fetch the perimeters that are intersecting the hedges to remove.
 
+        Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
+        """
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
+        )
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
             perimeters = (
                 Perimeter.objects.annotate(
-                    distance=Value(0, output_field=IntegerField())
+                    distance=Value(
+                        0, output_field=IntegerField()
+                    )  # We use an exists subquery that check for intersection so the distance is 0
                 )
-                .filter(Exists(zone_subquery))  # EXISTS condition
+                .filter(Exists(zone_subquery))
                 .order_by("id")
                 .distinct("id")
             )
@@ -1814,43 +1834,49 @@ class MoulinetteHaie(Moulinette):
         return perimeters
 
     def get_criteria(self):
-        """filter criteria based on the intersection of the hedges to remove and the criteria map.
+        """Fetch the criteria that can be activated for this project
 
-        if there is no hedges to remove, we fallback on the department centroid.
+        There is two kind of activation mode for a criterion:
+         * department_centroid : the criteria is activated if the department centroid is in the activation map
+         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
         """
-        lines = self.get_hedges_to_remove_as_linestrings()
-        if lines:
-            zone_subquery = self.get_zone_subquery(lines)
-            criteria = super().get_criteria().filter(Exists(zone_subquery))
-        else:
-            dept_centroid = self.department.centroid
-            criteria = (
+
+        dept_centroid = self.department.centroid
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
+        )
+
+        # Filter for department_centroid activation mode
+        subquery = Zone.objects.filter(
+            map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
+        ).values("id")
+        department_centroid_criteria = (
+            super()
+            .get_criteria()
+            .filter(
+                Exists(subquery),
+                activation_mode="department_centroid",
+            )
+        )
+
+        # Filter for hedges_intersection activation mode
+        hedges_intersection_criteria = super().get_criteria().none()
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            hedges_intersection_criteria = (
                 super()
                 .get_criteria()
-                .filter(activation_map__zones__geometry__intersects=dept_centroid)
+                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
             )
 
-        return criteria
+        return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_hedges_to_remove_as_linestrings(self):
-        if "haies" not in self.catalog or self.catalog["haies"].length_to_remove() <= 0:
-            return None
-
-        hedges = self.catalog["haies"]
-        linestrings = [
-            LineString(
-                [(point["lng"], point["lat"]) for point in hedge.latLngs],
-                srid=EPSG_WGS84,
-            )
-            for hedge in hedges.hedges_to_remove()
-        ]
-
-        return linestrings
-
-    def get_zone_subquery(self, lines):
+    def get_zone_subquery(self, hedges_to_remove):
         query = Q()
-        for line in lines:
-            query |= Q(geometry__intersects=line)
+        for hedge in hedges_to_remove:
+            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
 
         zone_subquery = Zone.objects.filter(
             Q(map_id=OuterRef("activation_map_id")) & query
