@@ -84,7 +84,7 @@ def get_replantation_coefficient(moulinette):
 
     ep_bcae8 = D("1")
     if moulinette.conditionnalite_pac.is_activated():
-        bcae8 = moulinette.conditionnalite_pac.criteria.all().first()
+        bcae8 = moulinette.conditionnalite_pac.criteria.first()
         if bcae8:
             form = bcae8.get_settings_form()
             form.is_valid()
