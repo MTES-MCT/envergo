@@ -1847,6 +1847,8 @@ class MoulinetteHaie(Moulinette):
                 .distinct("id")
             )
         else:
+            # if there is no hedge to remove in the project
+            # no perimeters can be activated as we do not know where the project will be.
             perimeters = Perimeter.objects.none()
 
         return perimeters
