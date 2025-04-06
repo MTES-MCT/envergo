@@ -103,7 +103,7 @@
         <p><strong>La liste des projets concernés est définie dans une nomenclature réglementaire</strong>, disponible <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329" rel="noopener" target="_blank">en annexe de l’article R.122-2 du code de l’environnement</a>. 
            Cette liste est technique et nécessite une lecture attentive. Un <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf" target="_blank" rel="noopener">guide de lecture de la nomenclature</a> est également disponible.</p>
     
-        <p><strong>💡 Pour les projets d’aménagement ou de construction, vous pouvez utiliser le simulateur réglementaire Envergo</strong>. En quelques clics, il permet de vérifier si un projet entre dans le champ de la rubrique 39 de la nomenclature de l’évaluation environnementale, et s’il est concerné par d’autres réglementations environnementales (Loi sur l’eau, Natura 2000, etc.). Ce simulateur est un service public gratuit proposé par le Ministère de la transition écologique. Il est disponible dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a> et sera progressivement étendu à l'ensemble du territoire national.</p>
+        <p><strong>💡 Pour les projets d’aménagement ou de construction, vous pouvez utiliser le <a href="/simulateur/formulaire">simulateur réglementaire Envergo</strong></a>. En quelques clics, il permet de vérifier si un projet entre dans le champ de la rubrique 39 de la nomenclature de l’évaluation environnementale, et s’il est concerné par d’autres réglementations environnementales (Loi sur l’eau, Natura 2000, etc.). Ce simulateur est un service public gratuit proposé par le Ministère de la transition écologique. Il est disponible dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a> et sera progressivement étendu à l'ensemble du territoire national.</p>
     
         <p>Pour une analyse plus approfondie, il est recommandé de faire appel à un <strong>bureau d’études environnemental</strong>. Il peut :</p>
         <ul>
@@ -135,7 +135,7 @@
     
         <p>L’ensemble doit être transmis à la <strong>DREAL</strong> (ou son équivalent en outre-mer ou en Île-de-France). Le dépôt peut se faire en ligne ou par voie postale, selon les modalités précisées par chaque région.</p>
     
-        <p>💡Le <strong>simulateur réglementaire Envergo</strong> indique, selon la localisation du projet, les contacts de l’administration et la procédure de dépôt de la demande d’examen au cas par cas.</p>
+        <p>💡 Le <a href="/simulateur/formulaire"><strong>simulateur réglementaire Envergo</strong></a> indique, selon la localisation du projet, les contacts de l’administration et la procédure de dépôt de la demande d’examen au cas par cas.</p>
     
         <p>Une fois le dossier complet, l’administration dispose d’un <strong>délai de 35 jours</strong> pour rendre sa décision :</p>
         <ul>
@@ -238,6 +238,63 @@
         <p>L’autorité compétente ne peut prendre sa décision <strong>qu’après la clôture de l’enquête</strong>. Celle-ci constitue donc une étape incontournable dans l’instruction du dossier.</p>
     
         <p>Les projets soumis à enquête publique sont consultables sur <a href="https://www.projets-environnement.gouv.fr" rel="noopener" target="_blank">projets-environnement.gouv.fr</a>.</p>
+      </div>
+    </section>
+
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-consequences_omission">
+          <span>Quelles sont les conséquences en cas d'omission ?</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-consequences_omission">
+        <p>Si un projet est soumis à évaluation environnementale, l’étude d’impact et l’enquête publique sont <strong>obligatoires</strong>. Leur absence peut avoir des conséquences importantes.</p>
+    
+        <p><strong>1. Refus de permis</strong></p>
+        <p>L’administration peut <strong>refuser la demande d’autorisation</strong> (permis de construire, permis d’aménager, autorisation environnementale), au motif que le dossier est incomplet.</p>
+    
+        <p><strong>2. Annulation du permis même après délivrance</strong></p>
+        
+        <p>Un permis de construire ou d’aménager délivré sans étude d’impact ou sans enquête publique alors qu’elles étaient nécessaires peut être contesté par la préfecture, par une collectivité, par une association, ou par un riverain.</p>
+        <p>L’autorisation peut alors être <strong>retirée ou annulée, même après avoir été accordée.</strong></p>
+        <p>Si un projet est réalisé alors qu’il n’a plus d’autorisation d’urbanisme valable, le porteur s’expose à des sanctions prévues par le code de l’urbanisme. Le juge peut notamment imposer la remise en état du site, assortie d’une astreinte pouvant atteindre 500 € par jour (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000041411238" rel="noopener" target="_blank">art. L.480-7 du code de l’urbanisme</a>).</p>
+        <p>Ces sanctions peuvent s’appliquer même plusieurs années après la réalisation du projet.</p>
+      </div>
+    </section>
+
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-examen_permis">
+          <span>Le projet est soumis à examen au cas par cas, quelles conséquences sur la demande de permis de construire ou d’aménager ?</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-examen_permis">
+        <p>Il est fortement conseillé de suivre la procédure d’examen au cas par cas <strong>avant</strong> la demande de permis, car plusieurs documents sont des pièces complémentaires obligatoires à joindre à celle-ci.</p>
+    
+        <p>Les pièces dépendent des conclusions de l’examen au cas par cas.</p>
+    
+        <p><strong>1 / Si le projet a été dispensé d’étude d’impact, doivent être jointes au dossier :</strong></p>
+    
+        <ul>
+          <li><strong>la décision de dispense</strong> rendue par l’autorité environnementale (pièce complémentaire n° PC11-2 pour un PC, n° PA15-1 pour un PA) ;</li>
+          <li><strong>une évaluation des incidences Natura 2000</strong>, et ce <em>même si le projet est situé hors d’un site Natura 2000</em>.
+            <a href="/foire-aux-questions/natura-2000/#accordion-quels_projets">Tous les projets soumis à examen au cas par cas sont soumis à EIN, où qu’ils se situent.</a>
+            C’est le principe de la « liste nationale » Natura 2000, définie à l’<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033498289/" rel="noopener" target="_blank">article R414-19 I-2° et II du code de l’environnement</a>.
+            <br>Il existe généralement des formulaires simplifiés qui sont mis à disposition par l’administration et sont assez rapides à compléter lorsque le projet est loin d’un site Natura 2000.
+</li>
+        </ul>
+    
+        <p>💡 Le simulateur EnvErgo</strong> permet de déterminer si un projet de construction ou d’aménagement est soumis à examen au cas par caset de connaître les procédures à suivre. Le simulateur fournit en particulier le formulaire simplifié d’évaluation des incidences Natura 2000 à compléter, et indique la procédure pour déposer le dossier.</p>
+    
+        <p><strong>2/ Si le projet a été soumis à évaluation environnementale</strong>, le dossier de demande de permis doit contenir <strong>l’étude d’impact complète</strong>.</p>
+    
+        <p>Si elles sont absentes, par oubli ou parce que l’examen au cas par cas n’a pas été réalisé, ces pièces peuvent faire l’objet d’une <strong>demande de compléments</strong> par le service instructeur urbanisme. Cela suspend les délais d’instruction et repousse la délivrance du permis.</p>
+    
+        <p><strong>Les travaux ne peuvent pas commencer</strong> tant que l’autorisation d’urbanisme n’a pas été délivrée.</p>
       </div>
     </section>
     
