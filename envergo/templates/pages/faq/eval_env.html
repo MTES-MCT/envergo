@@ -43,9 +43,9 @@
       <div class="fr-collapse" id="accordion-etude_impact">
         <p><strong>L’étude d’impact</strong> est un document qui décrit les effets d’un projet sur l’environnement et la santé humaine. Elle doit permettre à l’administration et au public de comprendre les enjeux du projet et ses conséquences sur le territoire.</p>
 
-        <p>L’étude d’impact doit être réalisée le plus en amont possible, pour pouvoir adapter le projet dès sa conception si nécessaire.</p>
+        <p>L’étude d’impact doit être réalisée <strong>le plus en amont possible</strong>, pour pouvoir adapter le projet dès sa conception si nécessaire.</p>
 
-        <p>Elle est généralement réalisée par un bureau d’études spécialisé, sur une période d’environ un an. C’est un travail complet et détaillé.</p>
+        <p>Elle est généralement réalisée par un bureau d’études spécialisé, sur <strong>une période d’environ un an</strong>. C’est un travail complet et détaillé.</p>
 
         <p>L’étude d’impact analyse notamment :</p>
         <ul>
@@ -59,6 +59,62 @@
       </div>
     </section>
 
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-examen_cas_par_cas">
+          <span>Qu’est-ce que l’examen au cas par cas ?</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-examen_cas_par_cas">
+        <p><strong>L’examen au cas par cas</strong> est une procédure de vérification. Elle permet à l’administration de décider si un projet doit faire l’objet d’une évaluation environnementale complète.</p>
+    
+        <p>Elle concerne les projets qui <strong>ne sont pas systématiquement soumis à une étude d’impact</strong>, mais qui peuvent avoir des effets notables sur l’environnement.</p>
+    
+        <p>Le porteur de projet transmet à l’administration une description du projet et de son contexte. Sur cette base, l’administration examine :</p>
+        <ul>
+          <li>les caractéristiques du projet (taille, nature, fonctionnement…) ;</li>
+          <li>la sensibilité environnementale de la zone (biodiversité, eau, risques…) ;</li>
+          <li>les impacts potentiels du projet sur l’environnement et la santé humaine.</li>
+        </ul>
+    
+        <p>La décision est rendue dans un <strong>délai de 35 jours</strong>. Elle peut être de deux types :</p>
+        <ul>
+          <li><strong>dispense d’évaluation environnementale</strong> : le projet peut être autorisé sans étude d’impact ;</li>
+          <li><strong>soumission à évaluation environnementale</strong> : la procédure complète est alors obligatoire, avec étude d’impact et enquête publique.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-savoir_si_soumis">
+          <span>Comment savoir si un projet est soumis à évaluation environnementale ou à examen au cas par cas ?</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-savoir_si_soumis">
+        <p>Cela dépend de la nature, de la taille et de la localisation du projet.</p>
+    
+        <p>Certains projets sont <strong>systématiquement soumis</strong> à évaluation environnementale. D’autres doivent passer par un <strong>examen au cas par cas</strong>, pour que l’administration décide s’il faut réaliser une étude d’impact.</p>
+    
+        <p><strong>La liste des projets concernés est définie dans une nomenclature réglementaire</strong>, disponible <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042369329" rel="noopener" target="_blank">en annexe de l’article R.122-2 du code de l’environnement</a>. 
+           Cette liste est technique et nécessite une lecture attentive. Un <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf" target="_blank" rel="noopener">guide de lecture de la nomenclature</a> est également disponible.</p>
+    
+        <p><strong>💡 Pour les projets d’aménagement ou de construction, vous pouvez utiliser le simulateur réglementaire Envergo</strong>. En quelques clics, il permet de vérifier si un projet entre dans le champ de la rubrique 39 de la nomenclature de l’évaluation environnementale, et s’il est concerné par d’autres réglementations environnementales (Loi sur l’eau, Natura 2000, etc.). Ce simulateur est un service public gratuit proposé par le Ministère de la transition écologique. Il est disponible dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a> et sera progressivement étendu à l'ensemble du territoire national.</p>
+    
+        <p>Pour une analyse plus approfondie, il est recommandé de faire appel à un <strong>bureau d’études environnemental</strong>. Il peut :</p>
+        <ul>
+          <li>vérifier si le projet est concerné par l’évaluation environnementale ou d’autres réglementations ;</li>
+          <li>préparer l’éventuelle demande d’examen au cas par cas ;</li>
+          <li>réaliser l’étude d’impact si nécessaire ;</li>
+          <li>constituer les dossiers à déposer auprès de l’administration.</li>
+        </ul>
+      </div>
+    </section>
+    
   </div>
 {% endblock %}
 {% block extra_js %}
