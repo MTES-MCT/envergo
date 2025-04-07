@@ -216,7 +216,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list_view_requires_authentication(haie_user, site):
+def test_petition_project_list_requires_authentication(haie_user, site):
 
     ConfigHaieFactory()
     project = PetitionProjectFactory()
