@@ -38,15 +38,19 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
-            context["hedge_data_json"] = json.dumps(self.object.data)
             context["minimum_length_to_plant"] = (
                 plantation_evaluator.minimum_length_to_plant()
             )
             context["is_removing_pac"] = len(self.object.hedges_to_remove_pac()) > 0
         else:
-            context["hedge_data_json"] = "[]"
             context["minimum_length_to_plant"] = 0
             context["is_removing_pac"] = False
+
+        # TODO Refactor removal and plantation to be different views
+        if self.object:
+            context["hedge_data_json"] = json.dumps(self.object.data)
+        else:
+            context["hedge_data_json"] = "[]"
 
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
