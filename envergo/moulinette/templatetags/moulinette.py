@@ -185,20 +185,22 @@ def field_summary(field):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_moulinette_result(context, result, hedges_field):
+def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
-    hedges = hedges_field.field.clean(hedges_field.value())
-    context_data["length_to_remove"] = hedges.length_to_remove()
-    context_data["minimum_length_to_plant"] = hedges.minimum_length_to_plant()
+    hedge_data = moulinette.catalog["haies"]
+    context_data["length_to_remove"] = hedge_data.length_to_remove()
+    context_data["minimum_length_to_plant"] = (
+        plantation_evaluation.minimum_length_to_plant()
+    )
 
-    template_name = f"haie/moulinette/result/{result}.html"
+    template_name = f"haie/moulinette/result/{moulinette.result}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
             "Template for GUH global result is missing.",
-            extra={"result": result, "template_name": template_name},
+            extra={"result": moulinette.result, "template_name": template_name},
         )
         content = ""
 
@@ -265,7 +267,7 @@ def show_haie_plantation_liability_info(context, plantation_evaluation):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_plantation_evaluation(context, plantation_evaluation):
+def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
     """Render the evaluation of the plantation project"""
 
     context_data = context.flatten()
@@ -275,7 +277,7 @@ def show_haie_plantation_evaluation(context, plantation_evaluation):
     )
 
     context_data["minimum_length_to_plant"] = round(
-        context_data["moulinette"].catalog["haies"].minimum_length_to_plant()
+        plantation_evaluation.minimum_length_to_plant()
     )
 
     try:

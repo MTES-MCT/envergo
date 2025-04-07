@@ -425,6 +425,10 @@ class PetitionProjectDetail(DetailView):
         context["demarches_simplifiees_date_depot"] = (
             self.object.demarches_simplifiees_date_depot
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
@@ -495,6 +499,10 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         # Send message if info from DS is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:

@@ -532,7 +532,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["lng_lat"],
+                center=self.moulinette.get_map_center(),
                 entries=polygons,
                 truncate=False,
                 zoom=None,
@@ -1552,6 +1552,10 @@ class Moulinette(ABC):
 
         return {}
 
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        raise NotImplementedError
+
 
 class MoulinetteAmenagement(Moulinette):
     REGULATIONS = ["loi_sur_leau", "natura2000", "eval_env", "sage"]
@@ -1766,6 +1770,10 @@ class MoulinetteAmenagement(Moulinette):
     def get_triage_params(cls):
         return set()
 
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        return self.catalog["lng_lat"]
+
 
 class MoulinetteHaie(Moulinette):
     REGULATIONS = ["conditionnalite_pac", "ep"]
@@ -1886,6 +1894,19 @@ class MoulinetteHaie(Moulinette):
 
         return criteria
 
+    def must_check_acceptability_conditions(self):
+        """Some conditions must only be evaluated when a ep criterion exists."""
+
+        ep = self.ep
+        ep_criterion = ep.criteria.first()
+        return ep.is_activated() and ep_criterion
+
+    def must_check_pac_condition(self):
+        """The pac condition must only be evaluated when a bcea8 criterion exists."""
+        bcae8 = self.conditionnalite_pac
+        bcae8_criterion = bcae8.criteria.first()
+        return bcae8.is_activated() and bcae8_criterion
+
     def summary_fields(self):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
@@ -1926,6 +1947,11 @@ class MoulinetteHaie(Moulinette):
             for key, group in groupby(regulations_list, key=attrgetter("result_group"))
         }
         return grouped
+
+    def get_map_center(self):
+        """Returns at what coordinates is the perimeter."""
+
+        return self.department.centroid
 
 
 def get_moulinette_class_from_site(site):
