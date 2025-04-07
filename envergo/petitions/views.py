@@ -39,7 +39,7 @@ from envergo.utils.urls import extract_param_from_url, update_qs
 logger = logging.getLogger(__name__)
 
 
-class PetitionProjectList(ListView):
+class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/moulinette/petition_project_list.html"
