@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import fiona
 import requests
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
@@ -14,6 +15,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
@@ -28,6 +30,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations,
+    compute_instructor_informations_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -422,6 +425,10 @@ class PetitionProjectDetail(DetailView):
         context["demarches_simplifiees_date_depot"] = (
             self.object.demarches_simplifiees_date_depot
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
@@ -448,24 +455,34 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
-    template_name = "haie/petitions/instructor_view.html"
+class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
+    """Mixin for petition project instructor views"""
+
+    matomo_tag = "consultation_i"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    form_class = PetitionProjectInstructorForm
+    matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
         result = super().get(request, *args, **kwargs)
 
         log_event(
             "projet",
-            "consultation_i",
+            self.matomo_tag,
             self.request,
             **self.object.get_log_event_data(),
             **get_matomo_tags(self.request),
         )
         return result
+
+
+class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view.html"
+    form_class = PetitionProjectInstructorForm
+    matomo_tag = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -482,11 +499,66 @@ class PetitionProjectInstructorView(LoginRequiredMixin, UpdateView):
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
+        plantation_url = reverse(
+            "input_hedges", args=["read_only", self.object.hedge_data.id]
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Les données proviennent d'un dossier factice.""",
+            )
 
         return context
 
     def get_success_url(self):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+
+
+class PetitionProjectInstructorDossierDSView(
+    PetitionProjectInstructorMixin, DetailView
+):
+    """View for petition project page with demarches simplifiées data"""
+
+    template_name = "haie/petitions/instructor_dossier_ds_view.html"
+    matomo_tag = "consultation_i_ds"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
+        context["project_details"] = compute_instructor_informations_ds(
+            self.object,
+            moulinette,
+            self.request.site,
+            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
+            self.request.user,
+        )
+
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Affichage d'un dossier factice.""",
+            )
+
+        # Send message if info from DS is not in project details
+        if not context["project_details"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        return context
 
 
 class PetitionProjectHedgeDataExport(DetailView):

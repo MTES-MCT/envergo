@@ -1,6 +1,7 @@
 import logging
 import secrets
 import uuid
+from enum import Enum
 from os.path import splitext
 from urllib.parse import urlencode, urlparse
 
@@ -112,32 +113,38 @@ EVAL_RESULTS = Choices(
     ("action_requise", "Action requise"),
 )
 
-SELF_DECLARATION_ELIGIBILITY_MATRIX = {
-    RESULTS.soumis: True,
-    RESULTS.soumis_ou_pac: True,
-    RESULTS.non_soumis: False,
-    RESULTS.action_requise: True,
-    RESULTS.non_disponible: False,
-    RESULTS.cas_par_cas: True,
-    RESULTS.systematique: True,
-    RESULTS.non_applicable: False,
-    RESULTS.non_concerne: False,
-    RESULTS.a_verifier: True,
-    RESULTS.iota_a_verifier: True,
-    RESULTS.interdit: True,
-    RESULTS.non_active: False,
-    RESULTS.derogation_inventaire: False,
-    RESULTS.derogation_simplifiee: False,
-    RESULTS.dispense: False,
+
+class TagStyleEnum(Enum):
+    Green = 1
+    Grey = 2
+    Yellow = 3
+    LightRed = 4
+    Orange = 5
+    StrongRed = 6
+
+
+TAG_STYLES_BY_RESULT = {
+    RESULTS.soumis: TagStyleEnum.LightRed,
+    RESULTS.soumis_ou_pac: TagStyleEnum.LightRed,
+    RESULTS.action_requise: TagStyleEnum.Yellow,
+    RESULTS.non_soumis: TagStyleEnum.Green,
+    RESULTS.non_disponible: TagStyleEnum.Grey,
+    RESULTS.non_applicable: TagStyleEnum.Grey,
+    RESULTS.cas_par_cas: TagStyleEnum.Orange,
+    RESULTS.systematique: TagStyleEnum.LightRed,
+    RESULTS.non_concerne: TagStyleEnum.Green,
+    RESULTS.a_verifier: TagStyleEnum.Yellow,
+    RESULTS.iota_a_verifier: TagStyleEnum.Yellow,
+    RESULTS.interdit: TagStyleEnum.StrongRed,
+    RESULTS.non_active: TagStyleEnum.Grey,
+    RESULTS.derogation_inventaire: TagStyleEnum.LightRed,
+    RESULTS.derogation_simplifiee: TagStyleEnum.LightRed,
+    RESULTS.dispense: TagStyleEnum.Green,
 }
-
-
-_missing_results = [
-    key for (key, label) in RESULTS if key not in SELF_DECLARATION_ELIGIBILITY_MATRIX
-]
+_missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
     raise ValueError(
-        f"The following RESULTS are missing in SELF_DECLARATION_ELIGIBILITY_MATRIX: {_missing_results}"
+        f"The following RESULTS are missing in TAG_STYLES_BY_RESULT: {_missing_results}"
     )
 
 
@@ -333,13 +340,15 @@ class Evaluation(models.Model):
         if self.is_icpe:
             return False
 
-        eligible = False
         moulinette = self.get_moulinette()
+        all_criteria = []
         for regulation in moulinette.regulations:
-            if SELF_DECLARATION_ELIGIBILITY_MATRIX[regulation.result]:
-                eligible = True
-                break
-        return eligible
+            all_criteria.extend(regulation.criteria.all())
+
+        return any(
+            criterion._evaluator.eligible_to_self_declaration
+            for criterion in all_criteria
+        )
 
     def unpublish(self):
         """Unpublish the evaluation."""

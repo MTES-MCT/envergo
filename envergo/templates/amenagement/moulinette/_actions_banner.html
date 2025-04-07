@@ -22,15 +22,15 @@
         </span>
       </button>
     </div>
-    {% if debug_url %}
-      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
-        <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
-           href="{{ debug_url }}">Voir le debug</a>
-      </div>
-    {% elif result_url %}
+    {% if is_debug %}
       <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
         <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
            href="{{ result_url }}">Voir la simulation</a>
+      </div>
+    {% else %}
+      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
+        <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
+           href="{{ debug_url }}">Voir le debug</a>
       </div>
     {% endif %}
   {% else %}

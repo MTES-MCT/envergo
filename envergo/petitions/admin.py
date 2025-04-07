@@ -9,6 +9,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         "reference",
         "length_to_remove",
         "length_to_plant",
+        "demarches_simplifiees_state",
         "created_at",
     )
     ordering = ("-created_at",)

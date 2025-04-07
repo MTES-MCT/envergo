@@ -142,10 +142,22 @@ class Bcae8Form(forms.Form):
             )
 
 
+class Bcae8Settings(forms.Form):
+    replantation_coefficient = forms.DecimalField(
+        label="Coefficient de replantation",
+        help_text="Coefficient « R » de replantation des haies",
+        min_value=0,
+        max_value=10,
+        max_digits=4,
+        decimal_places=1,
+    )
+
+
 class Bcae8(CriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     slug = "bcae8"
     form_class = Bcae8Form
+    settings_form_class = Bcae8Settings
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,

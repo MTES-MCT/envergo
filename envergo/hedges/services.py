@@ -1,4 +1,6 @@
+from collections import defaultdict
 from dataclasses import dataclass
+from decimal import Decimal as D
 from enum import Enum
 from itertools import product
 from typing import TYPE_CHECKING, Literal
@@ -65,6 +67,32 @@ def _check_plantation_result_matrix():
 _check_plantation_result_matrix()
 
 
+# This method is outside the PlantationEvaluator class because it makes it
+# easier to patch it in tests.
+def get_replantation_coefficient(moulinette):
+    """Get the "R" value.
+
+    It depends on the activated criteria.
+    """
+    ep_R = D("0")
+    if moulinette.ep.is_activated():
+        ep = moulinette.ep.criteria.first()
+        if ep:
+            form = ep.get_settings_form()
+            form.is_valid()
+            ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
+
+    ep_bcae8 = D("1")
+    if moulinette.conditionnalite_pac.is_activated():
+        bcae8 = moulinette.conditionnalite_pac.criteria.first()
+        if bcae8:
+            form = bcae8.get_settings_form()
+            form.is_valid()
+            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
+
+    return float(max(ep_R, ep_bcae8))
+
+
 @dataclass
 class EvaluationResult:
     result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
@@ -126,6 +154,38 @@ class PlantationEvaluator:
 
         return self._evaluation_result.conditions
 
+    def minimum_length_to_plant(self):
+        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
+        replantation coefficient"""
+        R = get_replantation_coefficient(self.moulinette)
+        return R * self.hedge_data.length_to_remove()
+
+    def get_minimum_lengths_to_plant(self):
+        R = get_replantation_coefficient(self.moulinette)
+        lengths_by_type = defaultdict(int)
+        for to_remove in self.hedge_data.hedges_to_remove():
+            lengths_by_type[to_remove.hedge_type] += to_remove.length
+
+        return {
+            "degradee": R * lengths_by_type["degradee"],
+            "buissonnante": R * lengths_by_type["buissonnante"],
+            "arbustive": R * lengths_by_type["arbustive"],
+            "mixte": R * lengths_by_type["mixte"],
+            "alignement": R * lengths_by_type["alignement"],
+        }
+
+    def get_lengths_to_plant(self):
+        lengths_by_type = defaultdict(int)
+        for to_plant in self.hedge_data.hedges_to_plant():
+            lengths_by_type[to_plant.hedge_type] += to_plant.length
+
+        return {
+            "buissonnante": lengths_by_type["buissonnante"],
+            "arbustive": lengths_by_type["arbustive"],
+            "mixte": lengths_by_type["mixte"],
+            "alignement": lengths_by_type["alignement"],
+        }
+
     @property
     def evaluation(self):
         """Return the list of conditions that are not met to make the plantation project adequate."""
@@ -137,7 +197,7 @@ class PlantationEvaluator:
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        evaluator = HedgeEvaluator(self.hedge_data)
+        evaluator = HedgeEvaluator(self)
         evaluation = evaluator.result
         result = EvaluationResult(
             result=(
@@ -158,11 +218,12 @@ class PlantationEvaluator:
 class HedgeEvaluator:
     """Evaluate the adequacy of a plantation project.
 
-    The plantation evaluator is used to evaluate if a project is compliant with the regulation.
+    This is the "conditions d'acceptabilité" part of the plantation evaluation.
     """
 
-    def __init__(self, hedge_data: HedgeData):
-        self.hedge_data = hedge_data
+    def __init__(self, plantation_evaluator: PlantationEvaluator):
+        self.plantation_evaluator = plantation_evaluator
+        self.hedge_data = plantation_evaluator.hedge_data
         self.result = self.evaluate()
 
     def is_not_planting_under_power_line(self):
@@ -186,7 +247,7 @@ class HedgeEvaluator:
         """
         return (
             self.hedge_data.length_to_plant()
-            >= self.hedge_data.minimum_length_to_plant()
+            >= self.plantation_evaluator.minimum_length_to_plant()
         )
 
     def evaluate_hedge_plantation_quality(self):
@@ -209,8 +270,10 @@ class HedgeEvaluator:
             }
         }
         """
-        minimum_lengths_to_plant = self.hedge_data.get_minimum_lengths_to_plant()
-        lengths_to_plant = self.hedge_data.get_lengths_to_plant()
+        minimum_lengths_to_plant = (
+            self.plantation_evaluator.get_minimum_lengths_to_plant()
+        )
+        lengths_to_plant = self.plantation_evaluator.get_lengths_to_plant()
 
         reliquat = {
             "mixte_remplacement_alignement": max(
@@ -293,12 +356,12 @@ class HedgeEvaluator:
         """Evaluate if there is enough hedges to plant in the project"""
         left_to_plant = max(
             0,
-            self.hedge_data.minimum_length_to_plant()
+            self.plantation_evaluator.minimum_length_to_plant()
             - self.hedge_data.length_to_plant(),
         )
         return {
             "result": self.is_length_to_plant_sufficient(),
-            "minimum_length_to_plant": self.hedge_data.minimum_length_to_plant(),
+            "minimum_length_to_plant": self.plantation_evaluator.minimum_length_to_plant(),
             "left_to_plant": left_to_plant,
         }
 
@@ -319,11 +382,27 @@ class HedgeEvaluator:
 
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
-        return {
+
+        result = {
             "length_to_plant": self.evaluate_length_to_plant(),
-            "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
-            "quality": self.evaluate_hedge_plantation_quality(),
-            "do_not_plant_under_power_line": {
-                "result": self.is_not_planting_under_power_line(),
-            },
         }
+        moulinette = self.plantation_evaluator.moulinette
+
+        if moulinette.must_check_acceptability_conditions():
+            result.update(
+                {
+                    "quality": self.evaluate_hedge_plantation_quality(),
+                    "do_not_plant_under_power_line": {
+                        "result": self.is_not_planting_under_power_line(),
+                    },
+                }
+            )
+
+        if moulinette.must_check_pac_condition():
+            result.update(
+                {
+                    "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
+                }
+            )
+
+        return result

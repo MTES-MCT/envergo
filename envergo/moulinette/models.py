@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
 
@@ -32,7 +33,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
-from envergo.evaluations.models import RESULTS
+from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.forms import (
@@ -138,6 +139,63 @@ if _missing_results:
 # This is to use in model fields `default` attribute
 def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
+
+
+class ResultGroupEnum(IntEnum):
+    """Depending on their result, the regulation will be impacting more or less the project. This group defines the
+    level of impact of the regulation on the project.
+
+    The int value, is used to define the order of the group in the cascade (e.g. for display).
+    """
+
+    BlockingRegulations = (
+        1  # if there is some regulation in this group, the project cannot go further
+    )
+    RestrictiveRegulations = 2  # a dossier will be required
+    OtherRegulations = 3  # these regulations do not impact the project
+
+
+RESULTS_GROUP_MAPPING = {
+    RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
+    RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
+    RESULTS.dispense: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_active: ResultGroupEnum.OtherRegulations,
+}
+
+
+def _check_results_groups_matrices():
+    _missing_results = set()
+    _missing_groups = set()
+
+    for key, value in RESULTS:
+        if key not in RESULTS_GROUP_MAPPING:
+            _missing_results.add(key)
+            continue
+        if not isinstance(RESULTS_GROUP_MAPPING[key], ResultGroupEnum):
+            _missing_groups.add(RESULTS_GROUP_MAPPING[key])
+    if _missing_results:
+        raise ValueError(
+            f"The following RESULTS are missing in RESULTS_GROUP_KEYS: {_missing_results}"
+        )
+    if _missing_groups:
+        raise ValueError(
+            f"The following value is not from ResultGroupEnum: {_missing_groups}"
+        )
+
+
+_check_results_groups_matrices()
 
 
 class Regulation(models.Model):
@@ -495,7 +553,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["lng_lat"],
+                center=self.moulinette.get_map_center(),
                 entries=polygons,
                 truncate=False,
                 zoom=None,
@@ -512,6 +570,19 @@ class Regulation(models.Model):
 
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
+
+    @property
+    def result_tag_style(self):
+        """Return the regulation result tag style."""
+        if not self.result:
+            return TagStyleEnum.Grey
+
+        return TAG_STYLES_BY_RESULT[self.result]
+
+    @property
+    def result_group(self):
+        """Get the result group of the regulation, depending on its impact on the project."""
+        return RESULTS_GROUP_MAPPING[self.result]
 
 
 class Criterion(models.Model):
@@ -704,6 +775,16 @@ class Criterion(models.Model):
     def get_template(self, template_key):
         return self._templates.get(template_key, None)
 
+    @property
+    def result_tag_style(self):
+        """Return the criterion result tag style."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        return self._evaluator.result_tag_style
+
 
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
@@ -866,6 +947,8 @@ class ConfigHaie(ConfigBase):
     )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
+
+    hedge_maintenance_html = models.TextField("Champ html pour l’entretien", blank=True)
 
     natura2000_coordinators_list_url = models.URLField(
         "URL liste des animateurs Natura 2000", blank=True
@@ -1465,6 +1548,11 @@ class Moulinette(ABC):
         """Allow monkeypatching moulinette result for tests."""
         self._result = value
 
+    @property
+    def result_tag_style(self):
+        """Compute global result tag style."""
+        return TAG_STYLES_BY_RESULT[self.result]
+
     def all_required_actions(self):
         for regulation in self.regulations:
             for required_action in regulation.required_actions():
@@ -1506,6 +1594,10 @@ class Moulinette(ABC):
         """
 
         return {}
+
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        raise NotImplementedError
 
 
 class MoulinetteAmenagement(Moulinette):
@@ -1701,6 +1793,9 @@ class MoulinetteAmenagement(Moulinette):
             )
             .distinct("activation_map__name", "id"),
             "grouped_criteria": self.get_criteria()
+            .annotate(
+                geometry=F("activation_map__zones__geometry"),
+            )
             .order_by(
                 "activation_map__name",
                 "id",
@@ -1717,6 +1812,10 @@ class MoulinetteAmenagement(Moulinette):
     @classmethod
     def get_triage_params(cls):
         return set()
+
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        return self.catalog["lng_lat"]
 
 
 class MoulinetteHaie(Moulinette):
@@ -1757,7 +1856,10 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_template(cls, triage_form):
         """Return the template to display the triage out of scope result."""
-        if triage_form["element"].value() == "haie":
+        if (
+            triage_form["element"].value() == "haie"
+            and triage_form["travaux"].value() != "destruction"
+        ):
             return "haie/moulinette/entretien_haies_result.html"
 
         return "haie/moulinette/triage_result.html"
@@ -1788,12 +1890,18 @@ class MoulinetteHaie(Moulinette):
             (
                 Department.objects.defer("geometry")
                 .filter(confighaie__is_activated=True, department=department_code)
+                .select_related("confighaie")
                 .first()
             )
             if department_code
             else None
         )
         context["department"] = department
+
+        if hasattr(department, "confighaie") and department.confighaie:
+            context["hedge_maintenance_html"] = (
+                department.confighaie.hedge_maintenance_html
+            )
 
         return context
 
@@ -1903,6 +2011,19 @@ class MoulinetteHaie(Moulinette):
         ).values("id")
         return zone_subquery
 
+    def must_check_acceptability_conditions(self):
+        """Some conditions must only be evaluated when a ep criterion exists."""
+
+        ep = self.ep
+        ep_criterion = ep.criteria.first()
+        return ep.is_activated() and ep_criterion
+
+    def must_check_pac_condition(self):
+        """The pac condition must only be evaluated when a bcea8 criterion exists."""
+        bcae8 = self.conditionnalite_pac
+        bcae8_criterion = bcae8.criteria.first()
+        return bcae8.is_activated() and bcae8_criterion
+
     def summary_fields(self):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
@@ -1932,6 +2053,22 @@ class MoulinetteHaie(Moulinette):
             )
 
         return fields
+
+    def get_regulations_by_group(self):
+        """Group regulations by their result_group"""
+        regulations_list = list(self.regulations)
+
+        regulations_list.sort(key=attrgetter("result_group"))
+        grouped = {
+            key: list(group)
+            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
+        }
+        return grouped
+
+    def get_map_center(self):
+        """Returns at what coordinates is the perimeter."""
+
+        return self.department.centroid
 
 
 def get_moulinette_class_from_site(site):

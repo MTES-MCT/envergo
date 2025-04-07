@@ -4,7 +4,12 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import DisplayChoiceField
-from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    Map,
+    MapPolygon,
+    SelfDeclarationMixin,
+)
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
@@ -19,7 +24,7 @@ class ZoneHumideSettingsForm(forms.Form):
     )
 
 
-class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
+class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone humide"
     slug = "zone_humide"
     settings_form_class = ZoneHumideSettingsForm
@@ -129,7 +134,7 @@ class ZoneHumide(ZoneHumideMixin, CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
+class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Zone inondable"
     slug = "zone_inondable"
 
@@ -179,7 +184,7 @@ class ZoneInondable(ZoneInondableMixin, CriterionEvaluator):
         return criterion_map
 
 
-class IOTA(CriterionEvaluator):
+class IOTA(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > IOTA"
     slug = "iota"
 
@@ -202,7 +207,7 @@ class IOTA(CriterionEvaluator):
         self._result_code, self._result = result, result
 
 
-class EvalEnv(CriterionEvaluator):
+class EvalEnv(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > EE"
     slug = "eval_env"
 
@@ -275,7 +280,7 @@ class AutorisationUrbanismeSettingsForm(forms.Form):
     )
 
 
-class AutorisationUrbanisme(CriterionEvaluator):
+class AutorisationUrbanisme(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Natura 2000 > Autorisation urba"
     slug = "autorisation_urba"
     form_class = AutorisationUrbanismeForm

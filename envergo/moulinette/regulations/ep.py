@@ -1,3 +1,5 @@
+from django import forms
+
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator
 
@@ -30,11 +32,23 @@ class EspecesProtegeesSimple(EspecesProtegees):
     slug = "ep_simple"
 
 
+class EspecesProtegeesSettings(forms.Form):
+    replantation_coefficient = forms.DecimalField(
+        label="Coefficient de replantation",
+        help_text="Coefficient « R » de replantation des haies",
+        min_value=0,
+        max_value=10,
+        max_digits=4,
+        decimal_places=1,
+    )
+
+
 class EspecesProtegeesAisne(CriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
+    settings_form_class = EspecesProtegeesSettings
 
     CODE_MATRIX = {
         (False, True): "interdit",

@@ -15,13 +15,7 @@
       <span><b>{{ item.label }} :</b></span>
 
       {% if item.value|is_type:"ItemDetails" %}
-        <span>
-          {% if item.value.result %}
-            Oui
-          {% else %}
-            Non
-          {% endif %}
-        </span>
+        <span>{{ item.value.result|yesno }}</span>
         {% if item.value.result %}
           {% for details in item.value.details %}
             <br />

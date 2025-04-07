@@ -5,13 +5,9 @@ window.addEventListener("load", function () {
   let hedgeIframe;
 
   const openModal = function () {
-    let saveUrl = HEDGES_PLANTATION_URL;
-    const hedgeId = HEDGE_DATA_ID;
-    if (hedgeId) {
-      saveUrl += hedgeId + "/";
-    }
+    let saveUrl = new URL(HEDGES_PLANTATION_URL);
     if (typeof SOURCE_PAGE !== 'undefined') {
-        saveUrl += "?source_page=" + SOURCE_PAGE;
+      saveUrl.searchParams.set("source_page", SOURCE_PAGE);
     }
 
     hedgeIframe = window.open(saveUrl, "hedge-input-iframe");

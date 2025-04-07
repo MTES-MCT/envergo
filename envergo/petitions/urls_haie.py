@@ -6,6 +6,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
+    PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorView,
 )
 
@@ -38,6 +39,11 @@ urlpatterns = [
         "<slug:reference>/instruction/",
         PetitionProjectInstructorView.as_view(),
         name="petition_project_instructor_view",
+    ),
+    path(
+        "<slug:reference>/instruction/dossier-ds/",
+        PetitionProjectInstructorDossierDSView.as_view(),
+        name="petition_project_instructor_dossier_ds_view",
     ),
     path(
         "<slug:reference>/haies.gpkg",
