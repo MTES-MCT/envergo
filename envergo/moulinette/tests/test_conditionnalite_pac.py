@@ -1,3 +1,4 @@
+from decimal import Decimal as D
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,7 +23,6 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
             activation_map=loire_atlantique_map,
-            evaluator_settings={"replantation_coefficient": "1.0"},
         ),
     ]
     return criteria
@@ -124,6 +124,10 @@ def test_bcae8_small_dispense_petit():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "non_soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("1")
+    )
 
 
 def test_bcae8_small_interdit_transfert_parcelles():
@@ -316,6 +320,10 @@ def test_bcae8_big_soumis_remplacement():
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
     ), data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("1")
+    )
 
 
 def test_bcae8_big_soumis_transfer_parcelles():
@@ -338,6 +346,10 @@ def test_bcae8_big_soumis_transfer_parcelles():
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
     ), data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("1")
+    )
 
 
 def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
@@ -361,6 +373,10 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
         moulinette.conditionnalite_pac.bcae8.result_code
         == "soumis_meilleur_emplacement"
     ), data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("1")
+    )
 
 
 def test_bcae8_big_interdit_amelioration_culture():
@@ -423,6 +439,10 @@ def test_bcae8_big_soumis_fosse():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_fosse", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("0")
+    )
 
 
 def test_bcae8_big_soumis_incendie():
@@ -442,6 +462,10 @@ def test_bcae8_big_soumis_incendie():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_incendie", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("0")
+    )
 
 
 def test_bcae8_big_soumis_maladie():
@@ -461,6 +485,10 @@ def test_bcae8_big_soumis_maladie():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_maladie", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("0")
+    )
 
 
 def test_bcae8_big_interdit_autre():
