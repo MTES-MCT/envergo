@@ -1,11 +1,15 @@
 import logging
+from decimal import Decimal as D
 
 from django import forms
 from django.conf import settings
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import DisplayIntegerField
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    ReplantationCoefficientMixin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,22 +146,10 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8Settings(forms.Form):
-    replantation_coefficient = forms.DecimalField(
-        label="Coefficient de replantation",
-        help_text="Coefficient « R » de replantation des haies",
-        min_value=0,
-        max_value=10,
-        max_digits=4,
-        decimal_places=1,
-    )
-
-
-class Bcae8(CriterionEvaluator):
+class Bcae8(ReplantationCoefficientMixin, CriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     slug = "bcae8"
     form_class = Bcae8Form
-    settings_form_class = Bcae8Settings
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -178,6 +170,20 @@ class Bcae8(CriterionEvaluator):
         "interdit_embellissement": RESULTS.interdit,
         "interdit_securite": RESULTS.interdit,
         "interdit_autre": RESULTS.interdit,
+    }
+
+    # Result code to replantation coefficient
+    R_MATRIX = {
+        "non_soumis": D("0"),
+        "dispense_petit": D("1"),
+        "soumis_remplacement": D("1"),
+        "soumis_transfert_parcelles": D("1"),
+        "soumis_meilleur_emplacement": D("1"),
+        "soumis_chemin_acces": D("0"),
+        "soumis_amenagement": D("0"),
+        "soumis_fosse": D("0"),
+        "soumis_incendie": D("0"),
+        "soumis_maladie": D("0"),
     }
 
     def get_catalog_data(self):
@@ -374,3 +380,7 @@ class Bcae8(CriterionEvaluator):
             result_code = RESULTS.non_disponible
 
         return result_code
+
+    def get_replantation_coefficient(self):
+        R = self.R_MATRIX.get(self._result_code, D("1"))
+        return R

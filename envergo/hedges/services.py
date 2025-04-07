@@ -74,23 +74,14 @@ def get_replantation_coefficient(moulinette):
 
     It depends on the activated criteria.
     """
-    ep_R = D("0")
-    if moulinette.ep.is_activated():
-        ep = moulinette.ep.criteria.first()
-        if ep:
-            form = ep.get_settings_form()
-            form.is_valid()
-            ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
+    R = D("0")
+    for regulation in moulinette.regulations:
+        if regulation.is_activated():
+            for criterion in regulation.criteria.all():
+                if hasattr(criterion._evaluator, "get_replantation_coefficient"):
+                    R = max(R, criterion._evaluator.get_replantation_coefficient())
 
-    ep_bcae8 = D("1")
-    if moulinette.conditionnalite_pac.is_activated():
-        bcae8 = moulinette.conditionnalite_pac.criteria.first()
-        if bcae8:
-            form = bcae8.get_settings_form()
-            form.is_valid()
-            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
-
-    return float(max(ep_R, ep_bcae8))
+    return float(R)
 
 
 @dataclass
