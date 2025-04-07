@@ -8,10 +8,12 @@ from envergo.petitions.views import (
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorView,
+    PetitionProjectList,
 )
 
 urlpatterns = [
     path("", PetitionProjectCreate.as_view(), name="petition_project_create"),
+    path("liste", PetitionProjectList.as_view(), name="petition_project_list"),
     path(
         "<slug:reference>/consultation/",
         PetitionProjectDetail.as_view(),
