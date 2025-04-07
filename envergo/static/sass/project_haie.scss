@@ -467,6 +467,13 @@ div#project-specifications-instructor {
 }
 
 /**
+ * Page project list
+ */
+.fr-link--icon-right.link-project-detail::after {
+  margin: 0;
+}
+
+/**
  * Page instructor
  */
 
