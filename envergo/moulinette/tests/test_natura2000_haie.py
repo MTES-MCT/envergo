@@ -33,6 +33,7 @@ def n2000_criteria(bizous_town_center):  # noqa
             perimeter=perimeter,
             evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
             activation_map=bizous_town_center,
+            activation_mode="hedges_intersection",
             evaluator_settings={"result": "soumis"},
         ),
     ]
