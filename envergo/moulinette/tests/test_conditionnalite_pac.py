@@ -23,16 +23,10 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
             activation_map=loire_atlantique_map,
             evaluator_settings={"replantation_coefficient": "1.0"},
+            activation_mode="department_centroid",
         ),
     ]
     return criteria
-
-
-@pytest.fixture
-def mock_haie():
-    haie = MagicMock()
-    haie.length_to_remove.return_value = 0
-    return haie
 
 
 def test_conditionnalite_pac_only_for_agri_pac():
@@ -64,7 +58,7 @@ def test_conditionnalite_pac_only_for_agri_pac():
             )
 
 
-def test_bcae8_impossible_case(mock_haie):
+def test_bcae8_impossible_case():
     """Impossible simulation data.
 
     This data configuration is prevented by the form validation.
@@ -75,7 +69,7 @@ def test_bcae8_impossible_case(mock_haie):
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 100,
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
@@ -86,14 +80,14 @@ def test_bcae8_impossible_case(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "non_disponible", data
 
 
-def test_bcae8_not_activated(herault_map, mock_haie):  # noqa
+def test_bcae8_not_activated(herault_map):  # noqa
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
@@ -113,14 +107,14 @@ def test_bcae8_not_activated(herault_map, mock_haie):  # noqa
     assert moulinette.get_criteria().count() == 0
 
 
-def test_bcae8_small_dispense_petit(mock_haie):
+def test_bcae8_small_dispense_petit():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
@@ -133,14 +127,14 @@ def test_bcae8_small_dispense_petit(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
 
 
-def test_bcae8_small_interdit_transfert_parcelles(mock_haie):
+def test_bcae8_small_interdit_transfert_parcelles():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "oui",
         "meilleur_emplacement": "non",
@@ -156,14 +150,14 @@ def test_bcae8_small_interdit_transfert_parcelles(mock_haie):
     ), data
 
 
-def test_bcae8_small_interdit_amelioration_culture(mock_haie):
+def test_bcae8_small_interdit_amelioration_culture():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
@@ -179,14 +173,14 @@ def test_bcae8_small_interdit_amelioration_culture(mock_haie):
     ), data
 
 
-def test_bcae8_small_soumis_chemin_acces(mock_haie):
+def test_bcae8_small_soumis_chemin_acces():
     ConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
     }
@@ -200,14 +194,14 @@ def test_bcae8_small_soumis_chemin_acces(mock_haie):
     ), data
 
 
-def test_bcae8_small_interdit_chemin_acces(mock_haie):
+def test_bcae8_small_interdit_chemin_acces():
     ConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
     }
@@ -221,14 +215,14 @@ def test_bcae8_small_interdit_chemin_acces(mock_haie):
     ), data
 
 
-def test_bcae8_small_interdit_securite(mock_haie):
+def test_bcae8_small_interdit_securite():
     ConfigHaieFactory()
     data = {
         "motif": "securite",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "motif_pac": "aucun",
@@ -241,14 +235,14 @@ def test_bcae8_small_interdit_securite(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_securite", data
 
 
-def test_bcae8_small_soumis_amenagement(mock_haie):
+def test_bcae8_small_soumis_amenagement():
     ConfigHaieFactory()
     data = {
         "motif": "amenagement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "amenagement_dup": "oui",
     }
@@ -262,14 +256,14 @@ def test_bcae8_small_soumis_amenagement(mock_haie):
     ), data
 
 
-def test_bcae8_small_interdit_amenagement(mock_haie):
+def test_bcae8_small_interdit_amenagement():
     ConfigHaieFactory()
     data = {
         "motif": "amenagement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "amenagement_dup": "non",
     }
@@ -283,14 +277,14 @@ def test_bcae8_small_interdit_amenagement(mock_haie):
     ), data
 
 
-def test_bcae8_small_interdit_embellissement(mock_haie):
+def test_bcae8_small_interdit_embellissement():
     ConfigHaieFactory()
     data = {
         "motif": "embellissement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
@@ -303,14 +297,14 @@ def test_bcae8_small_interdit_embellissement(mock_haie):
     ), data
 
 
-def test_bcae8_big_soumis_remplacement(mock_haie):
+def test_bcae8_big_soumis_remplacement():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
@@ -325,14 +319,14 @@ def test_bcae8_big_soumis_remplacement(mock_haie):
     ), data
 
 
-def test_bcae8_big_soumis_transfer_parcelles(mock_haie):
+def test_bcae8_big_soumis_transfer_parcelles():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "oui",
         "meilleur_emplacement": "non",
@@ -347,14 +341,14 @@ def test_bcae8_big_soumis_transfer_parcelles(mock_haie):
     ), data
 
 
-def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture(mock_haie):
+def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "oui",
@@ -370,14 +364,14 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture(mock_haie):
     ), data
 
 
-def test_bcae8_big_interdit_amelioration_culture(mock_haie):
+def test_bcae8_big_interdit_amelioration_culture():
     ConfigHaieFactory()
     data = {
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
@@ -393,14 +387,14 @@ def test_bcae8_big_interdit_amelioration_culture(mock_haie):
     ), data
 
 
-def test_bcae8_big_interdit_embellissement(mock_haie):
+def test_bcae8_big_interdit_embellissement():
     ConfigHaieFactory()
     data = {
         "motif": "embellissement",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
@@ -413,14 +407,14 @@ def test_bcae8_big_interdit_embellissement(mock_haie):
     ), data
 
 
-def test_bcae8_big_soumis_fosse(mock_haie):
+def test_bcae8_big_soumis_fosse():
     ConfigHaieFactory()
     data = {
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "motif_pac": "rehabilitation_fosse",
     }
@@ -432,14 +426,14 @@ def test_bcae8_big_soumis_fosse(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_fosse", data
 
 
-def test_bcae8_big_soumis_incendie(mock_haie):
+def test_bcae8_big_soumis_incendie():
     ConfigHaieFactory()
     data = {
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "motif_pac": "protection_incendie",
     }
@@ -451,14 +445,14 @@ def test_bcae8_big_soumis_incendie(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_incendie", data
 
 
-def test_bcae8_big_soumis_maladie(mock_haie):
+def test_bcae8_big_soumis_maladie():
     ConfigHaieFactory()
     data = {
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "motif_pac": "gestion_sanitaire",
     }
@@ -470,14 +464,14 @@ def test_bcae8_big_soumis_maladie(mock_haie):
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_maladie", data
 
 
-def test_bcae8_big_interdit_autre(mock_haie):
+def test_bcae8_big_interdit_autre():
     ConfigHaieFactory()
     data = {
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": mock_haie,
+        "haies": MagicMock(),
         "lineaire_total": 5000,
         "motif_pac": "aucun",
     }

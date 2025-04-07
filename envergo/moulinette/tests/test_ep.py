@@ -20,6 +20,7 @@ def ep_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.ep.EspecesProtegees",
             activation_map=france_map,
+            activation_mode="department_centroid",
         ),
     ]
     return criteria

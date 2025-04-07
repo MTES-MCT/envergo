@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000"),
+                        ("natura2000_haie", "Natura 2000 Haie"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     choices=[
                         ("loi_sur_leau", "Loi sur l'eau"),
                         ("natura2000", "Natura 2000"),
-                        ("natura2000_haie", "Natura 2000"),
+                        ("natura2000_haie", "Natura 2000 Haie"),
                         ("eval_env", "Évaluation environnementale"),
                         ("sage", "Règlement de SAGE"),
                         ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -697,7 +697,7 @@ class Migration(migrations.Migration):
                 choices=[
                     ("loi_sur_leau", "Loi sur l'eau"),
                     ("natura2000", "Natura 2000"),
-                    ("natura2000_haie", "Natura 2000"),
+                    ("natura2000_haie", "Natura 2000 Haie"),
                     ("eval_env", "Évaluation environnementale"),
                     ("sage", "Règlement de SAGE"),
                     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -712,6 +712,22 @@ class Migration(migrations.Migration):
             name="natura2000_coordinators_list_url",
             field=models.URLField(
                 blank=True, verbose_name="URL liste des animateurs Natura 2000"
+            ),
+        ),
+        migrations.AddField(
+            model_name="criterion",
+            name="activation_mode",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("department_centroid", "Centroïde du département dans la carte"),
+                    (
+                        "hedges_intersection",
+                        "Intersection de la carte et des haies à détruire",
+                    ),
+                ],
+                max_length=32,
+                verbose_name="Mode d'activation (GUH uniquement)",
             ),
         ),
     ]

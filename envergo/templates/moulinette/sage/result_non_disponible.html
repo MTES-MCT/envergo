@@ -1,5 +1,9 @@
 {% if regulation.perimeters.all.count > 0 %}
-  {% include 'moulinette/sage/_result_multiple_perimeters.html' %}
+  {% for perimeter in regulation.perimeters.all %}
+    {% include 'moulinette/sage/result_non_disponible_single_perimeter.html' %}
+    {% if not forloop.last %}<hr>{% endif %}
+
+  {% endfor %}
 {% else %}
   {% include 'moulinette/sage/result_non_active.html' %}
 {% endif %}
