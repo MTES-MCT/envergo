@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from django.contrib import messages
@@ -10,6 +10,7 @@ from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 from envergo.petitions.views import (
@@ -134,3 +135,79 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
 
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_dossier_ds_view_requires_authentication(
+    haie_user, site
+):
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    factory = RequestFactory()
+    request = factory.get(
+        reverse(
+            "petition_project_instructor_dossier_ds_view",
+            kwargs={"reference": project.reference},
+        )
+    )
+
+    # Add support  django messaging framework
+    request._messages = messages.storage.default_storage(request)
+
+    # Simulate an unauthenticated user
+    request.user = AnonymousUser()
+    request.site = site
+    request.session = {}
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response is a redirect to the login page
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    # Simulate an authenticated user
+    request.user = haie_user
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
+def test_petition_project_instructor_display_dossier_ds_info(
+    mock_post, client, haie_user, site
+):
+    """Test if dossier data is in template"""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory()
+
+    instructor_ds_url = reverse(
+        "petition_project_instructor_dossier_ds_view",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_user)
+    response = client.get(instructor_ds_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "Formulaire rempli sur Démarches simplifiées" in content
+    assert "Vous déposez cette demande en tant que :" in content

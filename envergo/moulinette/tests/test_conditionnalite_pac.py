@@ -207,11 +207,47 @@ def test_bcae8_small_interdit_chemin_acces():
     }
     data["haies"].lineaire_detruit_pac.return_value = 11
 
+    data["haies"].hedges_to_remove_pac.return_value = [MagicMock(length=11)]
+
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
+    ), data
+
+
+def test_bcae8_multi_chemin_acces():
+    ConfigHaieFactory()
+    data = {
+        "motif": "chemin_acces",
+        "reimplantation": "non",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "transfert_parcelles": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 50
+
+    data["haies"].hedges_to_remove_pac.return_value = [
+        MagicMock(length=9),
+        MagicMock(length=8),
+        MagicMock(length=7),
+        MagicMock(length=6),
+        MagicMock(length=5),
+        MagicMock(length=5),
+        MagicMock(length=4),
+        MagicMock(length=3),
+        MagicMock(length=2),
+        MagicMock(length=1),
+    ]
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
     ), data
 
 

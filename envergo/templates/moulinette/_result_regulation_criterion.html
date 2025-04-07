@@ -22,9 +22,9 @@
       We need to handle the exception where the same result "iota_a_verifier" has a different label on the criterion and on the evaluation result.
       {% endcomment %}
       {% if criterion.result == "iota_a_verifier" %}
-        {% result_tag "a_verifier" %}
+        {% result_tag "a_verifier" criterion.result_tag_style %}
       {% else %}
-        {% result_tag criterion.result %}
+        {% result_tag criterion.result criterion.result_tag_style %}
       {% endif %}
     </button>
 

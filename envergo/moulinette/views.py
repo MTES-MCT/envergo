@@ -15,6 +15,7 @@ from envergo.analytics.utils import (
     is_request_from_a_bot,
     log_event,
 )
+from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
@@ -464,6 +465,7 @@ class MoulinetteResultMixin:
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
 
+        context["non_disponible_tag_style"] = TagStyleEnum.Grey
         context["is_admin"] = self.request.user.is_staff
         context["is_debug"] = is_debug
 
