@@ -173,7 +173,8 @@
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Plantation minimum attendue</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
-              <div>
+
+              <div v-if="quality.length_to_plant">
                 <div>
                   <p :class="{ 'fr-badge--success': quality.length_to_plant.result, 'fr-badge--error': !quality.length_to_plant.result} "
                      class="fr-badge"></p>
