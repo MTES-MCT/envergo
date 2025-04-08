@@ -493,6 +493,10 @@ div#project-specifications-instructor {
  * Page instructor
  */
 
+.project-inner-content {
+  max-width: 42em;
+}
+
 .ds-item > .fr-sidemenu__link::after {
   content: "";
   background-image: url("/static/images/logo_demarches_simplifiees.png");

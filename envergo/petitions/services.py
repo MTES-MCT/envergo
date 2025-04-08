@@ -300,7 +300,7 @@ def build_project_details(petition_project) -> InstructorInformation:
         slug=None,
         label=None,
         items=[
-            Item("Référence", petition_project.reference, None, None),
+            Item("Référence interne", petition_project.reference, None, None),
             "instructor_free_mention",
         ],
         details=[
@@ -380,6 +380,7 @@ def compute_instructor_informations(
     )
     if city_field:
         city = city_field.get("stringValue", None)
+
     pacage_field = next(
         (
             champ
