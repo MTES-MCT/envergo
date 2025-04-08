@@ -1,23 +1,26 @@
-<p>Le projet est interdit car la longueur de haie à détruire pour créer un chemin d’accès dépasse 10 mètres.</p>
+<p>Le projet est interdit car au moins une des brèches dépasse 10 mètres.</p>
+
+<p>
+  Au titre de la conditionnalité PAC, la création de brèches de moins de 10 mètres, pour l'accès et l'exploitation des parcelles, est autorisée sans obligation de replantation d'un linéaire équivalent.
+</p>
 
 <p>Options pour rendre le projet autorisable :</p>
 
 <ul>
-  <li>réduire le linéaire à détruire à moins de 10 mètres ;</li>
-  <li>
-    prévoir de planter une autre haie, de longueur au moins égale au linéaire détruit (à condition qu’il soit inférieur à 2% du linéaire total de l’exploitation).
-  </li>
+  <li>réduire la longueur de chaque portion de haie à détruire à moins de 10 mètres ;</li>
+
+  {% if reimplantation == 'replantation' %}
+    <li>
+      justifier le projet de destruction et de replantation par un autre motif que la création d'un chemin d'accès. Par exemple « amélioration des conditions agricoles » en cas de transfert de parcelles entre exploitations,
+      ou « amélioration écologique » (dans ce cas une attestation de meilleur emplacement environnemental, délivrée par un organisme agréé, sera nécessaire).
+    </li>
+  {% else %}
+    <li>
+      prévoir de planter une autre haie, de longueur au moins égale au linéaire détruit (à condition qu’il soit inférieur à 2% du linéaire total de l’exploitation).
+    </li>
+  {% endif %}
 </ul>
 
 <p>
   Vous pouvez <a href="{{ edit_url }}">modifier votre projet</a> dans le simulateur.
 </p>
-
-{% if reimplantation == 'replantation' %}
-  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
-  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
-    <p>
-      Bien que le projet prévoie la réimplantation d’une haie, l’aménagement d’un chemin d’accès ne fait pas partie des motifs autorisés au titre des règles de conditionnalité PAC, si le linéaire détruit excède 10 mètres.
-    </p>
-  </div>
-{% endif %}
