@@ -307,24 +307,12 @@ def build_project_details(petition_project) -> InstructorInformation:
             InstructorInformationDetails(
                 label="Destruction",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire détruit", round(length_to_remove), "m", None),
                 ],
             ),
             InstructorInformationDetails(
                 label="Plantation",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
