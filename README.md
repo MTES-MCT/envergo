@@ -2,6 +2,7 @@
 
 Améliorer la prise en compte de l'environnement dans les projets d'urbanisme.
 
+:note: PR pour un environnement de recette.
 
 ## À propos
 
