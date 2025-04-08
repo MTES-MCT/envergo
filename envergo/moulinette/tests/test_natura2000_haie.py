@@ -1,0 +1,108 @@
+import pytest
+
+from envergo.geodata.conftest import bizous_town_center  # noqa
+from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
+    CriterionFactory,
+    PerimeterFactory,
+    RegulationFactory,
+)
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def autouse_site(site):
+    pass
+
+
+@pytest.fixture(autouse=True)
+def n2000_criteria(bizous_town_center):  # noqa
+    regulation = RegulationFactory(regulation="natura2000_haie", has_perimeters=True)
+
+    perimeter = PerimeterFactory(
+        name="N2000 Bizous", activation_map=bizous_town_center, regulation=regulation
+    )
+
+    criteria = [
+        CriterionFactory(
+            title="Natura 2000 Haie > Haie Bizous",
+            regulation=regulation,
+            perimeter=perimeter,
+            evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+            activation_map=bizous_town_center,
+            activation_mode="hedges_intersection",
+            evaluator_settings={"result": "soumis"},
+        ),
+    ]
+    return criteria
+
+
+@pytest.fixture
+def moulinette_data(lat1, lng1, lat2, lng2):
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": lat1, "lng": lng1},
+                    {"lat": lat2, "lng": lng2},
+                ],
+                "additionalData": {
+                    "typeHaie": "degradee",
+                    "vieilArbre": False,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            }
+        ]
+    )
+    return {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+
+@pytest.mark.parametrize(
+    "lat1, lng1, lat2, lng2, expected_result",
+    [
+        (
+            43.06930871579473,
+            0.4421436860179369,
+            43.069162248282396,
+            0.44236765047068033,
+            "soumis",
+        ),  # inside
+        (
+            43.069807900393826,
+            0.4426179348420038,
+            43.068048918563875,
+            0.4415625648710002639653,
+            "soumis",
+        ),  # edge inside but vertices outside
+        (
+            43.09248072614743,
+            0.48007431760217484,
+            43.09280782621999,
+            0.48095944654749073,
+            "non_concerne",
+        ),  # outside
+    ],
+)
+def test_moulinette_evaluation(moulinette_data, expected_result):
+    ConfigHaieFactory()
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.natura2000_haie.result == expected_result
+    if expected_result != "non_concerne":
+        assert moulinette.natura2000_haie.natura2000_haie.result == expected_result

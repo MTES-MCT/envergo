@@ -8,12 +8,21 @@ from operator import attrgetter
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import (
+    CheckConstraint,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+)
+from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
@@ -58,9 +67,15 @@ STAKES = Choices(
     ("interdit", "Interdit"),
 )
 
+ACTIVATION_MODES = Choices(
+    ("department_centroid", "Centroïde du département dans la carte"),
+    ("hedges_intersection", "Intersection de la carte et des haies à détruire"),
+)
+
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -187,6 +202,14 @@ class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
+
+    custom_title = models.CharField(
+        "Titre personnalisé (facultatif)",
+        help_text="Si non renseigné, le nom de la réglementation sera utilisé.",
+        max_length=256,
+        blank=True,
+    )
+
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
@@ -268,7 +291,7 @@ class Regulation(models.Model):
 
     @property
     def title(self):
-        return self.get_regulation_display()
+        return self.custom_title or self.get_regulation_display()
 
     @property
     def subtitle(self):
@@ -545,7 +568,7 @@ class Regulation(models.Model):
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
-        return all((self.is_activated(), self.show_map, self.map))
+        return self.is_activated() and self.show_map and self.map
 
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
@@ -600,6 +623,12 @@ class Criterion(models.Model):
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
+    activation_mode = models.CharField(
+        "Mode d'activation (GUH uniquement)",
+        choices=ACTIVATION_MODES,
+        max_length=32,
+        blank=True,
+    )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
@@ -637,6 +666,18 @@ class Criterion(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if (
+            self.regulation.regulation in MoulinetteHaie.REGULATIONS
+            and not self.activation_mode
+        ):
+            raise ValidationError(
+                {
+                    "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
+                }
+            )
 
     @property
     def slug(self):
@@ -910,6 +951,10 @@ class ConfigHaie(ConfigBase):
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
 
     hedge_maintenance_html = models.TextField("Champ html pour l’entretien", blank=True)
+
+    natura2000_coordinators_list_url = models.URLField(
+        "URL liste des animateurs Natura 2000", blank=True
+    )
 
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
@@ -1776,7 +1821,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1880,19 +1925,93 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+        perimeters = self.get_perimeters()
 
-        regulations = super().get_regulations().prefetch_related("perimeters")
+        regulations = (
+            super()
+            .get_regulations()
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
         return regulations
 
+    def get_perimeters(self):
+        """Fetch the perimeters that are intersecting the hedges to remove.
+
+        Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
+        """
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
+        )
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            perimeters = (
+                Perimeter.objects.annotate(
+                    distance=Value(
+                        0, output_field=IntegerField()
+                    )  # We use an exists subquery that check for intersection so the distance is 0
+                )
+                .filter(Exists(zone_subquery))
+                .order_by("id")
+                .distinct("id")
+            )
+        else:
+            # if there is no hedge to remove in the project
+            # no perimeters can be activated as we do not know where the project will be.
+            perimeters = Perimeter.objects.none()
+
+        return perimeters
+
     def get_criteria(self):
+        """Fetch the criteria that can be activated for this project
+
+        There is two kind of activation mode for a criterion:
+         * department_centroid : the criteria is activated if the department centroid is in the activation map
+         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+        """
+
         dept_centroid = self.department.centroid
-        criteria = (
-            super()
-            .get_criteria()
-            .filter(activation_map__zones__geometry__intersects=dept_centroid)
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
         )
 
-        return criteria
+        # Filter for department_centroid activation mode
+        subquery = Zone.objects.filter(
+            map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
+        ).values("id")
+        department_centroid_criteria = (
+            super()
+            .get_criteria()
+            .filter(
+                Exists(subquery),
+                activation_mode="department_centroid",
+            )
+        )
+
+        # Filter for hedges_intersection activation mode
+        hedges_intersection_criteria = super().get_criteria().none()
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            hedges_intersection_criteria = (
+                super()
+                .get_criteria()
+                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
+            )
+
+        return department_centroid_criteria | hedges_intersection_criteria
+
+    def get_zone_subquery(self, hedges_to_remove):
+        query = Q()
+        for hedge in hedges_to_remove:
+            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
+
+        zone_subquery = Zone.objects.filter(
+            Q(map_id=OuterRef("activation_map_id")) & query
+        ).values("id")
+        return zone_subquery
 
     def must_check_acceptability_conditions(self):
         """Some conditions must only be evaluated when a ep criterion exists."""
