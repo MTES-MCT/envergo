@@ -38,36 +38,41 @@
   <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
      href="{{ project_url }}"
      target="_blank"
-     rel="noopener external">Consulter les résultats de la simulation</a>
-  <form method="post"
-        action="{% url 'petition_project_instructor_view' petition_project.reference %}">
-    {% csrf_token %}
-    {% for information in project_details.details %}
-      <section class="fr-py-3w"
-               {% if information.slug %}id="{{ information.slug }}"{% endif %}>
-        {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
-        <p class="fr-hint-text">
-          {% if information.comment %}{{ information.comment }}{% endif %}
-        </p>
-        {% include "haie/petitions/_items.html" with items=information.items %}
-        {% if information.details %}
-          {% for information_details in information.details %}
-            <h3 class="fr-mt-4w">{{ information_details.label }}</h3>
+     class="fr-btn  fr-btn--secondary"
+     rel="noopener external">Voir le résultat de la simulation</a>
 
-            {% include "haie/petitions/_items.html" with items=information_details.items %}
+  <div class="project-inner-content">
 
-          {% endfor %}
-        {% endif %}
-        {% if forloop.first %}
-          <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
-                  type="button"
-                  data-fr-opened="false"
-                  aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
-        {% endif %}
-      </section>
-    {% endfor %}
-  </form>
+    <form method="post"
+          action="{% url 'petition_project_instructor_view' petition_project.reference %}">
+      {% csrf_token %}
+      {% for information in project_details.details %}
+        <section class="fr-py-3w"
+                 {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+          {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
+          <p class="fr-hint-text">
+            {% if information.comment %}{{ information.comment }}{% endif %}
+          </p>
+          {% include "haie/petitions/_items.html" with items=information.items %}
+          {% if information.details %}
+            {% for information_details in information.details %}
+              <h3 class="fr-h4 fr-mt-4w fr-mb-2w">{{ information_details.label }}</h3>
 
+              {% include "haie/petitions/_items.html" with items=information_details.items %}
+
+            {% endfor %}
+          {% endif %}
+          {% if forloop.first %}
+            <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
+                    type="button"
+                    data-fr-opened="false"
+                    aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </form>
+
+  </div>
 {% endblock %}
 
 {% block extra_body %}
