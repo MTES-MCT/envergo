@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0072_alter_confighaie_regulations_available"),
+        ("moulinette", "0073_alter_configamenagement_regulations_available_and_more"),
     ]
 
     operations = [
