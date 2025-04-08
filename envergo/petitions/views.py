@@ -44,7 +44,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/moulinette/petition_project_list.html"
     queryset = (
-        PetitionProject.objects.filter(
+        PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
         .select_related("hedge_data")

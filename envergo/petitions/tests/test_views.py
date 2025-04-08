@@ -7,6 +7,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -254,7 +255,10 @@ def test_petition_project_list(client, haie_user, site):
     """Test petition projects list"""
 
     ConfigHaieFactory()
-    project = PetitionProjectFactory()
+    # Create a project not draft
+    project = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+    )
 
     petition_project_list_url = reverse(
         "petition_project_list",
