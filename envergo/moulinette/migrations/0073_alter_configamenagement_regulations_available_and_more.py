@@ -730,4 +730,14 @@ class Migration(migrations.Migration):
                 verbose_name="Mode d'activation (GUH uniquement)",
             ),
         ),
+        migrations.AddField(
+            model_name="regulation",
+            name="custom_title",
+            field=models.CharField(
+                blank=True,
+                help_text="Si non renseigné, le nom de la réglementation sera utilisé.",
+                max_length=256,
+                verbose_name="Titre personnalisé (facultatif)",
+            ),
+        ),
     ]

@@ -202,6 +202,14 @@ class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
+
+    custom_title = models.CharField(
+        "Titre personnalisé (facultatif)",
+        help_text="Si non renseigné, le nom de la réglementation sera utilisé.",
+        max_length=256,
+        blank=True,
+    )
+
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
@@ -283,13 +291,7 @@ class Regulation(models.Model):
 
     @property
     def title(self):
-        # there is a conflict between natura2000 and natura2000_haie, they need different human-readable values
-        # for configuration, but the same display title.
-        return (
-            self.get_regulation_display()
-            if self.regulation != "natura2000_haie"
-            else "Natura 2000"
-        )
+        return self.custom_title or self.get_regulation_display()
 
     @property
     def subtitle(self):
