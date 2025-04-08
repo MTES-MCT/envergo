@@ -374,26 +374,22 @@ class HedgeEvaluator:
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        result = {
-            "length_to_plant": self.evaluate_length_to_plant(),
-        }
+        result = {}
+
+        R = get_replantation_coefficient(self.plantation_evaluator.moulinette)
+        if R > 0:
+            result["length_to_plant"] = self.evaluate_length_to_plant()
+
         moulinette = self.plantation_evaluator.moulinette
+        if moulinette.must_check_acceptability_conditions() and R > 0:
+            result["quality"] = self.evaluate_hedge_plantation_quality()
 
         if moulinette.must_check_acceptability_conditions():
-            result.update(
-                {
-                    "quality": self.evaluate_hedge_plantation_quality(),
-                    "do_not_plant_under_power_line": {
-                        "result": self.is_not_planting_under_power_line(),
-                    },
-                }
-            )
+            result["do_not_plant_under_power_line"] = {
+                "result": self.is_not_planting_under_power_line()
+            }
 
         if moulinette.must_check_pac_condition():
-            result.update(
-                {
-                    "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
-                }
-            )
+            result["length_to_plant_pac"] = self.evaluate_length_to_plant_pac()
 
         return result
