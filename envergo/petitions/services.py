@@ -97,7 +97,8 @@ def build_instructor_informations_bcae8(
 
     hedge_data = petition_project.hedge_data
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-    lineaire_total = moulinette.catalog.get("lineaire_total", "")
+    lineaire_total = float(moulinette.catalog.get("lineaire_total", ""))
+    ratio_detruit = round(lineaire_detruit_pac / lineaire_total * 100, 2)
     motif = moulinette.catalog.get("motif", "")
 
     bcae8 = InstructorInformation(
@@ -131,11 +132,7 @@ def build_instructor_informations_bcae8(
                     ),
                     Item(
                         "Pourcentage détruit / total linéaire",
-                        (
-                            round(lineaire_detruit_pac / lineaire_total * 100, 2)
-                            if lineaire_total
-                            else ""
-                        ),
+                        (ratio_detruit if lineaire_total else ""),
                         "%",
                         None,
                     ),
