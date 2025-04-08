@@ -22,6 +22,8 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
             activation_map=loire_atlantique_map,
+            activation_mode="department_centroid",
+            evaluator_settings={"replantation_coefficient": "1.0"},
         ),
     ]
     return criteria

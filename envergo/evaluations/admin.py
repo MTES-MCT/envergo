@@ -366,6 +366,11 @@ class EvaluationAdmin(admin.ModelAdmin):
                 )
                 return HttpResponseRedirect(url)
 
+            # our email provider cannot send email without "To" recipients.
+            if len(to) == 0:
+                to = cc
+                cc = list()
+
             eval_email.to = to
             eval_email.cc = cc
             eval_email.bcc = bcc

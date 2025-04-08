@@ -1,18 +1,28 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import CheckConstraint, F, IntegerField, Prefetch, Q
+from django.db.models import (
+    CheckConstraint,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+)
+from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
@@ -23,7 +33,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
-from envergo.evaluations.models import RESULTS
+from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField
 from envergo.moulinette.forms import (
@@ -57,9 +67,15 @@ STAKES = Choices(
     ("interdit", "Interdit"),
 )
 
+ACTIVATION_MODES = Choices(
+    ("department_centroid", "Centroïde du département dans la carte"),
+    ("hedges_intersection", "Intersection de la carte et des haies à détruire"),
+)
+
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
@@ -125,10 +141,75 @@ def all_regulations():
     return list(dict(REGULATIONS._doubles).keys())
 
 
+class ResultGroupEnum(IntEnum):
+    """Depending on their result, the regulation will be impacting more or less the project. This group defines the
+    level of impact of the regulation on the project.
+
+    The int value, is used to define the order of the group in the cascade (e.g. for display).
+    """
+
+    BlockingRegulations = (
+        1  # if there is some regulation in this group, the project cannot go further
+    )
+    RestrictiveRegulations = 2  # a dossier will be required
+    OtherRegulations = 3  # these regulations do not impact the project
+
+
+RESULTS_GROUP_MAPPING = {
+    RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
+    RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
+    RESULTS.dispense: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_active: ResultGroupEnum.OtherRegulations,
+}
+
+
+def _check_results_groups_matrices():
+    _missing_results = set()
+    _missing_groups = set()
+
+    for key, value in RESULTS:
+        if key not in RESULTS_GROUP_MAPPING:
+            _missing_results.add(key)
+            continue
+        if not isinstance(RESULTS_GROUP_MAPPING[key], ResultGroupEnum):
+            _missing_groups.add(RESULTS_GROUP_MAPPING[key])
+    if _missing_results:
+        raise ValueError(
+            f"The following RESULTS are missing in RESULTS_GROUP_KEYS: {_missing_results}"
+        )
+    if _missing_groups:
+        raise ValueError(
+            f"The following value is not from ResultGroupEnum: {_missing_groups}"
+        )
+
+
+_check_results_groups_matrices()
+
+
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
     regulation = models.CharField(_("Regulation"), max_length=64, choices=REGULATIONS)
+
+    custom_title = models.CharField(
+        "Titre personnalisé (facultatif)",
+        help_text="Si non renseigné, le nom de la réglementation sera utilisé.",
+        max_length=256,
+        blank=True,
+    )
+
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
@@ -210,7 +291,7 @@ class Regulation(models.Model):
 
     @property
     def title(self):
-        return self.get_regulation_display()
+        return self.custom_title or self.get_regulation_display()
 
     @property
     def subtitle(self):
@@ -474,7 +555,7 @@ class Regulation(models.Model):
             ]
             map = Map(
                 type="regulation",
-                center=self.moulinette.catalog["lng_lat"],
+                center=self.moulinette.get_map_center(),
                 entries=polygons,
                 truncate=False,
                 zoom=None,
@@ -487,10 +568,23 @@ class Regulation(models.Model):
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
-        return all((self.is_activated(), self.show_map, self.map))
+        return self.is_activated() and self.show_map and self.map
 
     def has_several_perimeters(self):
         return len(self.perimeters.all()) > 1
+
+    @property
+    def result_tag_style(self):
+        """Return the regulation result tag style."""
+        if not self.result:
+            return TagStyleEnum.Grey
+
+        return TAG_STYLES_BY_RESULT[self.result]
+
+    @property
+    def result_group(self):
+        """Get the result group of the regulation, depending on its impact on the project."""
+        return RESULTS_GROUP_MAPPING[self.result]
 
 
 class Criterion(models.Model):
@@ -529,6 +623,12 @@ class Criterion(models.Model):
     activation_distance = models.PositiveIntegerField(
         _("Activation distance"), default=0
     )
+    activation_mode = models.CharField(
+        "Mode d'activation (GUH uniquement)",
+        choices=ACTIVATION_MODES,
+        max_length=32,
+        blank=True,
+    )
     evaluator = CriterionEvaluatorChoiceField(_("Evaluator"))
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
@@ -566,6 +666,18 @@ class Criterion(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if (
+            self.regulation.regulation in MoulinetteHaie.REGULATIONS
+            and not self.activation_mode
+        ):
+            raise ValidationError(
+                {
+                    "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
+                }
+            )
 
     @property
     def slug(self):
@@ -664,6 +776,16 @@ class Criterion(models.Model):
 
     def get_template(self, template_key):
         return self._templates.get(template_key, None)
+
+    @property
+    def result_tag_style(self):
+        """Return the criterion result tag style."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing the result code."
+            )
+
+        return self._evaluator.result_tag_style
 
 
 class Perimeter(models.Model):
@@ -827,6 +949,12 @@ class ConfigHaie(ConfigBase):
     )
 
     contacts_and_links = models.TextField("Champ html d’information", blank=True)
+
+    hedge_maintenance_html = models.TextField("Champ html pour l’entretien", blank=True)
+
+    natura2000_coordinators_list_url = models.URLField(
+        "URL liste des animateurs Natura 2000", blank=True
+    )
 
     demarche_simplifiee_number = models.IntegerField(
         "Numéro de la démarche sur démarche simplifiée",
@@ -1422,6 +1550,11 @@ class Moulinette(ABC):
         """Allow monkeypatching moulinette result for tests."""
         self._result = value
 
+    @property
+    def result_tag_style(self):
+        """Compute global result tag style."""
+        return TAG_STYLES_BY_RESULT[self.result]
+
     def all_required_actions(self):
         for regulation in self.regulations:
             for required_action in regulation.required_actions():
@@ -1463,6 +1596,10 @@ class Moulinette(ABC):
         """
 
         return {}
+
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        raise NotImplementedError
 
 
 class MoulinetteAmenagement(Moulinette):
@@ -1658,6 +1795,9 @@ class MoulinetteAmenagement(Moulinette):
             )
             .distinct("activation_map__name", "id"),
             "grouped_criteria": self.get_criteria()
+            .annotate(
+                geometry=F("activation_map__zones__geometry"),
+            )
             .order_by(
                 "activation_map__name",
                 "id",
@@ -1675,9 +1815,13 @@ class MoulinetteAmenagement(Moulinette):
     def get_triage_params(cls):
         return set()
 
+    def get_map_center(self):
+        """Returns at what coordinates the perimeter."""
+        return self.catalog["lng_lat"]
+
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result.html"
@@ -1714,7 +1858,10 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_template(cls, triage_form):
         """Return the template to display the triage out of scope result."""
-        if triage_form["element"].value() == "haie":
+        if (
+            triage_form["element"].value() == "haie"
+            and triage_form["travaux"].value() != "destruction"
+        ):
             return "haie/moulinette/entretien_haies_result.html"
 
         return "haie/moulinette/triage_result.html"
@@ -1745,12 +1892,18 @@ class MoulinetteHaie(Moulinette):
             (
                 Department.objects.defer("geometry")
                 .filter(confighaie__is_activated=True, department=department_code)
+                .select_related("confighaie")
                 .first()
             )
             if department_code
             else None
         )
         context["department"] = department
+
+        if hasattr(department, "confighaie") and department.confighaie:
+            context["hedge_maintenance_html"] = (
+                department.confighaie.hedge_maintenance_html
+            )
 
         return context
 
@@ -1772,19 +1925,106 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
+        perimeters = self.get_perimeters()
 
-        regulations = super().get_regulations().prefetch_related("perimeters")
+        regulations = (
+            super()
+            .get_regulations()
+            .prefetch_related(Prefetch("perimeters", queryset=perimeters))
+        )
         return regulations
 
+    def get_perimeters(self):
+        """Fetch the perimeters that are intersecting the hedges to remove.
+
+        Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
+        """
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
+        )
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            perimeters = (
+                Perimeter.objects.annotate(
+                    distance=Value(
+                        0, output_field=IntegerField()
+                    )  # We use an exists subquery that check for intersection so the distance is 0
+                )
+                .filter(Exists(zone_subquery))
+                .order_by("id")
+                .distinct("id")
+            )
+        else:
+            # if there is no hedge to remove in the project
+            # no perimeters can be activated as we do not know where the project will be.
+            perimeters = Perimeter.objects.none()
+
+        return perimeters
+
     def get_criteria(self):
+        """Fetch the criteria that can be activated for this project
+
+        There is two kind of activation mode for a criterion:
+         * department_centroid : the criteria is activated if the department centroid is in the activation map
+         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+        """
+
         dept_centroid = self.department.centroid
-        criteria = (
-            super()
-            .get_criteria()
-            .filter(activation_map__zones__geometry__intersects=dept_centroid)
+        hedges_to_remove = (
+            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
+            if "haies" in self.catalog
+            else []
         )
 
-        return criteria
+        # Filter for department_centroid activation mode
+        subquery = Zone.objects.filter(
+            map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
+        ).values("id")
+        department_centroid_criteria = (
+            super()
+            .get_criteria()
+            .filter(
+                Exists(subquery),
+                activation_mode="department_centroid",
+            )
+        )
+
+        # Filter for hedges_intersection activation mode
+        hedges_intersection_criteria = super().get_criteria().none()
+        if hedges_to_remove:
+            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            hedges_intersection_criteria = (
+                super()
+                .get_criteria()
+                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
+            )
+
+        return department_centroid_criteria | hedges_intersection_criteria
+
+    def get_zone_subquery(self, hedges_to_remove):
+        query = Q()
+        for hedge in hedges_to_remove:
+            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
+
+        zone_subquery = Zone.objects.filter(
+            Q(map_id=OuterRef("activation_map_id")) & query
+        ).values("id")
+        return zone_subquery
+
+    def must_check_acceptability_conditions(self):
+        """Some conditions must only be evaluated when a ep criterion exists."""
+
+        ep = self.ep
+        ep_criterion = ep.criteria.first()
+        return ep.is_activated() and ep_criterion
+
+    def must_check_pac_condition(self):
+        """The pac condition must only be evaluated when a bcea8 criterion exists."""
+        bcae8 = self.conditionnalite_pac
+        bcae8_criterion = bcae8.criteria.first()
+        return bcae8.is_activated() and bcae8_criterion
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
@@ -1815,6 +2055,22 @@ class MoulinetteHaie(Moulinette):
             )
 
         return fields
+
+    def get_regulations_by_group(self):
+        """Group regulations by their result_group"""
+        regulations_list = list(self.regulations)
+
+        regulations_list.sort(key=attrgetter("result_group"))
+        grouped = {
+            key: list(group)
+            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
+        }
+        return grouped
+
+    def get_map_center(self):
+        """Returns at what coordinates is the perimeter."""
+
+        return self.department.centroid
 
 
 def get_moulinette_class_from_site(site):

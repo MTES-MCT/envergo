@@ -7,6 +7,7 @@ $red: #b94a48;
 
 :root {
   scroll-behavior: smooth;
+  overscroll-behavior-y: none;
 }
 
 // Prevent  scrolling when a dialog is open
@@ -1838,6 +1839,10 @@ main.contrast-bg {
 
 #top-bar {
   filter: drop-shadow(var(--raised-shadow));
+
+  .fr-notice__title {
+    flex: 1;
+  }
 }
 
 .title-line {
