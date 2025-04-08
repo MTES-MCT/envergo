@@ -376,7 +376,12 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         (
             None,
             {
-                "fields": ["department", "is_activated", "regulations_available"],
+                "fields": [
+                    "department",
+                    "is_activated",
+                    "regulations_available",
+                    "natura2000_coordinators_list_url",
+                ],
             },
         ),
         (
@@ -384,6 +389,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     "contacts_and_links",
+                    "hedge_maintenance_html",
                 ],
             },
         ),
