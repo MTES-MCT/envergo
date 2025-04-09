@@ -7,13 +7,13 @@
 {% endblock title %}
 
 {% block content %}
-  <h1 class="fr-mt-4w fr-mb-1w">Tous les dossiers</h1>
+  <h1 class="fr-my-4w project-list__title">Tous les dossiers</h1>
   <div class="fr-table--lg fr-table">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
         <div class="fr-table__content">
-          <table id="table-dossier-list">
-            <caption>
+          <table id="table-dossier-list" class="project-list__table">
+            <caption class="fr-mt-1w fr-mb-0">
               {% with project_number=object_list.count %}{{ project_number }} dossier{{ project_number|pluralize }}{% endwith %}
             </caption>
             <thead>
