@@ -216,8 +216,8 @@ class Regulation(models.Model):
         "Utilise des informations attachées à un périmètre ?",
         default=False,
         help_text="Cocher si l'affichage des résultats pour cette réglementation dépend"
-        "de variables paramétrées dans le périmètre, par exemple personne de"
-        "contact, lien internet…",
+        " de variables paramétrées dans le périmètre, par exemple personne de"
+        " contact, lien internet…",
     )
     show_map = models.BooleanField(
         _("Show perimeter map"),
