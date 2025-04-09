@@ -31,7 +31,7 @@ class PetitionProjectInstructorForm(forms.ModelForm):
                 attrs={"placeholder": "AAAA-MM-XXX-NNNNN"}
             ),
             "instructor_free_mention": forms.Textarea(
-                attrs={"rows": 3, "placeholder": "Ajoutez vos notes ici…"},
+                attrs={"rows": 10, "placeholder": "Ajoutez vos notes ici…"},
             ),
         }
-        labels = {"instructor_free_mention": "Notes libres"}
+        labels = {"instructor_free_mention": "Notes libres pour l'instructeur"}

@@ -41,6 +41,12 @@
      class="fr-btn  fr-btn--secondary"
      rel="noopener external">Voir le résultat de la simulation</a>
 
+  {% if project_details.details %}
+    <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+  {% endif %}
   <div class="project-inner-content">
 
     <form method="post"
@@ -61,12 +67,6 @@
               {% include "haie/petitions/_items.html" with items=information_details.items %}
 
             {% endfor %}
-          {% endif %}
-          {% if forloop.first %}
-            <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
-                    type="button"
-                    data-fr-opened="false"
-                    aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
           {% endif %}
         </section>
       {% endfor %}
