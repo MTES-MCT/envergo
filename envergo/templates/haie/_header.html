@@ -50,6 +50,11 @@
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
         <li class="fr-nav__item">{% pilote_departments_menu %}</li>
+        {% if user.is_authenticated %}
+          <li class="fr-nav__item">
+            <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Tous les dossiers</a>
+          </li>
+        {% endif %}
         <li class="fr-nav__item">
           <a class="fr-nav__link"
              href="{{ HAIE_FAQ_URL }}"
