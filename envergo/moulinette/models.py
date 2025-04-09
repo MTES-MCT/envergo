@@ -213,11 +213,10 @@ class Regulation(models.Model):
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
-        "Utilise des informations attachées à un périmètre ?",
+        "Réglementation liée aux périmètres ?",
         default=False,
-        help_text="Cocher si l'affichage des résultats pour cette réglementation dépend"
-        " de variables paramétrées dans le périmètre, par exemple personne de"
-        " contact, lien internet…",
+        help_text="Le calcul du résultat dépend de la présence ou non de périmètres,"
+        " en plus des résultats des critères",
     )
     show_map = models.BooleanField(
         _("Show perimeter map"),
