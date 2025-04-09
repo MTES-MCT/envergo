@@ -104,7 +104,8 @@ def build_instructor_informations_bcae8(
 
     bcae8 = InstructorInformation(
         slug="bcae8",
-        comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
+        comment="Les décomptes de cette section n'incluent que les haies déclarées "
+        "sur parcelle PAC. Les alignements d’arbres sont également exclus.",
         label="BCAE 8",
         items=[
             Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
