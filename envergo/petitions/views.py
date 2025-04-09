@@ -50,6 +50,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         .select_related("hedge_data")
         .order_by("-created_at")
     )
+    paginate_by = 10
 
 
 class PetitionProjectCreate(FormView):
