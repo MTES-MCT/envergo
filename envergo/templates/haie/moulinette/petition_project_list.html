@@ -44,8 +44,10 @@
           </table>
         </div>
 
+      </div>
+      {% if page_obj.paginator.num_pages > 1 %}
         <div class="fr-table__footer">
-          <div class="fr-table__footer--middle">
+          <div class="fr-table__footer--middle fr-mt-0">
 
             <nav role="navigation" class="fr-pagination" aria-label="Pagination">
               <ul class="fr-pagination__list">
@@ -84,7 +86,7 @@
             </nav>
           </div>
         </div>
-      </div>
+      {% endif %}
     </div>
   </div>
 
