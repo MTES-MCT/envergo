@@ -469,6 +469,22 @@ div#project-specifications-instructor {
 /**
  * Page project list
  */
+.project-list__title {
+  text-align: center;
+}
+
+.project-list__table {
+  caption {
+    font-weight: lighter;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+
+  a.link-project-detail {
+    text-decoration: none;
+  }
+}
+
 .fr-link--icon-right.link-project-detail::after {
   margin: 0;
 }
