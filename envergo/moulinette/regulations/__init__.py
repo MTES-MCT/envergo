@@ -35,6 +35,7 @@ class MapPolygon:
     perimeters: list  # List of objects with a `geometry` property
     color: str
     label: str
+    class_name: str = ""  # CSS class name to apply to the polygon
 
     @property
     def geometry(self):
@@ -93,6 +94,7 @@ class Map:
                         ),
                         "color": entry.color,
                         "label": entry.label,
+                        "className": entry.class_name,
                     }
                     for entry in self.entries
                 ],
@@ -217,7 +219,8 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
                         for hedge in haies.hedges_to_remove()
                     ],
                     "red",
-                    "Haie à détruire",
+                    "Haies à détruire",
+                    class_name="hedge to-remove",
                 )
 
                 polygons.append(hedges_to_remove)
