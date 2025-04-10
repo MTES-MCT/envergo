@@ -102,7 +102,8 @@ def build_instructor_informations_bcae8(
 
     bcae8 = InstructorInformation(
         slug="bcae8",
-        comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
+        comment="Les décomptes de cette section n'incluent que les haies déclarées "
+        "sur parcelle PAC. Les alignements d’arbres sont également exclus.",
         label="BCAE 8",
         items=[
             Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
@@ -303,31 +304,19 @@ def build_project_details(petition_project) -> InstructorInformation:
         slug=None,
         label=None,
         items=[
-            Item("Référence", petition_project.reference, None, None),
+            Item("Référence interne", petition_project.reference, None, None),
             "instructor_free_mention",
         ],
         details=[
             InstructorInformationDetails(
                 label="Destruction",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire détruit", round(length_to_remove), "m", None),
                 ],
             ),
             InstructorInformationDetails(
                 label="Plantation",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
@@ -383,6 +372,7 @@ def compute_instructor_informations(
     )
     if city_field:
         city = city_field.get("stringValue", None)
+
     pacage_field = next(
         (
             champ
@@ -605,11 +595,11 @@ def fetch_project_details_from_demarches_simplifiees(
 
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
+            f"Demarches Simplifiees is not enabled. Doing nothing."
+            f"Use fake dossier if dossier is not draft."
             f"\nrequest.url: {api_url}"
             f"\nrequest.body: {body}"
         )
-
         with open(
             Path(
                 settings.APPS_DIR
@@ -622,7 +612,6 @@ def fetch_project_details_from_demarches_simplifiees(
         ) as file:
             response = json.load(file)
             dossier = response.get("data", {}).get("dossier") or {}
-
     else:
         response = requests.post(
             api_url,
