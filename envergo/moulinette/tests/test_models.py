@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 from django.core.exceptions import ValidationError
 
@@ -209,3 +211,72 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         ],
     )
     config_haie.clean()
+
+
+def test_regulation_with_map_factory_can_create_a_location_centric_map(
+    france_map,  # noqa
+):
+    regulation = RegulationFactory(
+        has_perimeters=True,
+        show_map=True,
+        map_factory_name="envergo.moulinette.regulations.LocationCentricMapFactory",
+    )
+    regulation.moulinette = MagicMock(
+        get_map_center=MagicMock(return_value=(47.0, -1.0))
+    )
+    PerimeterFactory(
+        regulation=regulation,
+        activation_map=france_map,
+    )
+    PerimeterFactory(
+        regulation=regulation,
+        activation_map=france_map,
+    )
+    assert regulation.map
+    assert len(regulation.map.entries) == 2
+    assert regulation.map.entries[0].color == regulation.polygon_color
+    assert regulation.map.center == regulation.moulinette.get_map_center()
+    assert regulation.map.display_marker_at_center
+
+
+def test_regulation_with_map_factory_can_create_a_hedge_to_remove_map(
+    france_map,  # noqa
+):
+    regulation = RegulationFactory(
+        has_perimeters=True,
+        show_map=True,
+        map_factory_name="envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory",
+    )
+    regulation.moulinette = MagicMock(
+        get_map_center=MagicMock(return_value=(47.0, -1.0)),
+        catalog={
+            "haies": MagicMock(
+                hedges_to_remove=MagicMock(
+                    return_value=[
+                        MagicMock(
+                            geometry=MagicMock(
+                                wkt="MULTILINESTRING((-1.165924 49.320479, -1.147814 49.312645, -1.139402 49.314548))"
+                            )
+                        )
+                    ]
+                )
+            )
+        },
+    )
+
+    regulation.moulinette = MagicMock(
+        get_map_center=MagicMock(return_value=(47.0, -1.0))
+    )
+    PerimeterFactory(
+        regulation=regulation,
+        activation_map=france_map,
+    )
+    PerimeterFactory(
+        regulation=regulation,
+        activation_map=france_map,
+    )
+    assert regulation.map
+    assert len(regulation.map.entries) == 3
+    assert regulation.map.entries[0].color == regulation.polygon_color
+    assert regulation.map.entries[-1].color == "red"
+    assert not regulation.map.display_marker_at_center
