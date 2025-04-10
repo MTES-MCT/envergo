@@ -546,7 +546,7 @@ class Regulation(models.Model):
             # Dynamically import and return the class object
             module_name, class_name = self.map_factory_name.rsplit(".", 1)
             module = __import__(module_name, fromlist=[class_name])
-            return getattr(module, class_name)
+            return getattr(module, class_name)(self)
         except (ImportError, AttributeError, ValueError):
             raise ValueError(f"Invalid class name: {self.map_factory_name}")
 
@@ -558,7 +558,7 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-        return self.map_factory(self).create_map()
+        return self.map_factory.create_map() if self.map_factory else None
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
