@@ -100,10 +100,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
             context["minimum_length_to_plant"] = (
                 plantation_evaluator.minimum_length_to_plant()
             )
-            context["is_removing_pac"] = len(self.object.hedges_to_remove_pac()) > 0
         else:
             context["minimum_length_to_plant"] = 0
-            context["is_removing_pac"] = False
 
         # TODO Refactor removal and plantation to be different views
         if self.object:

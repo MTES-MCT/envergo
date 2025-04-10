@@ -2048,11 +2048,23 @@ class MoulinetteHaie(Moulinette):
 
     def must_check_pac_condition(self):
         """The pac condition must only be evaluated when a bcea8 criterion exists."""
-        return (
+
+        has_bcae8 = (
             self.conditionnalite_pac
             and self.conditionnalite_pac.is_activated()
             and self.conditionnalite_pac.criteria.first()
         )
+        R = 0.0
+        if has_bcae8:
+            criterion = self.conditionnalite_pac.criteria.first()
+            if hasattr(criterion._evaluator, "get_replantation_coefficient"):
+                R = max(R, criterion._evaluator.get_replantation_coefficient())
+
+        has_pac_hedges = False
+        if "haies" in self.catalog:
+            has_pac_hedges = len(self.catalog["haies"].hedges_to_remove_pac()) > 0
+
+        return has_bcae8 and R > 0.0 and has_pac_hedges
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
