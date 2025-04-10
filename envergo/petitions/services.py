@@ -11,7 +11,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.petitions.models import DOSSIER_STATES
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -601,20 +600,18 @@ def fetch_project_details_from_demarches_simplifiees(
             f"\nrequest.url: {api_url}"
             f"\nrequest.body: {body}"
         )
-        if petition_project.demarches_simplifiees_state != DOSSIER_STATES.draft:
-            with open(
-                Path(
-                    settings.APPS_DIR
-                    / "petitions"
-                    / "demarches_simplifiees"
-                    / "data"
-                    / "fake_dossier.json"
-                ),
-                "r",
-            ) as file:
-                response = json.load(file)
-                dossier = response.get("data", {}).get("dossier") or {}
-
+        with open(
+            Path(
+                settings.APPS_DIR
+                / "petitions"
+                / "demarches_simplifiees"
+                / "data"
+                / "fake_dossier.json"
+            ),
+            "r",
+        ) as file:
+            response = json.load(file)
+            dossier = response.get("data", {}).get("dossier") or {}
     else:
         response = requests.post(
             api_url,
