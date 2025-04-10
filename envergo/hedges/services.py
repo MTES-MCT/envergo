@@ -100,6 +100,7 @@ class PlantationEvaluator:
     def __init__(self, moulinette: "MoulinetteHaie", hedge_data: HedgeData):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
+        self.replantation_coefficient = get_replantation_coefficient(moulinette)
         self.evaluate()
 
     @property
@@ -148,11 +149,11 @@ class PlantationEvaluator:
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
-        R = get_replantation_coefficient(self.moulinette)
+        R = self.replantation_coefficient
         return R * self.hedge_data.length_to_remove()
 
     def get_minimum_lengths_to_plant(self):
-        R = get_replantation_coefficient(self.moulinette)
+        R = self.replantation_coefficient
         lengths_by_type = defaultdict(int)
         for to_remove in self.hedge_data.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
@@ -376,7 +377,7 @@ class HedgeEvaluator:
 
         result = {}
 
-        R = get_replantation_coefficient(self.plantation_evaluator.moulinette)
+        R = self.plantation_evaluator.replantation_coefficient
         if R > 0:
             result["length_to_plant"] = self.evaluate_length_to_plant()
 
