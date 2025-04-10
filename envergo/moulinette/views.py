@@ -573,15 +573,20 @@ class MoulinetteHaieResult(
 
         if moulinette and "haies" in moulinette.catalog:
             hedge_data = moulinette.catalog["haies"]
-            context["plantation_evaluation"] = PlantationEvaluator(
-                moulinette, hedge_data
-            )
+            evaluator = PlantationEvaluator(moulinette, hedge_data)
+            context["plantation_evaluation"] = evaluator
+            context["replantation_coefficient"] = evaluator.replantation_coefficient
+
             plantation_url = reverse(
                 "input_hedges",
                 args=[moulinette.department.department, "plantation", hedge_data.id],
             )
             plantation_url = update_qs(plantation_url, self.request.GET)
             context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+            result_p_url = reverse("moulinette_result_plantation")
+            result_p_url = update_qs(result_p_url, self.request.GET)
+            context["result_p_url"] = result_p_url
         return context
 
 
