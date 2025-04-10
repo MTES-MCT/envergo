@@ -620,9 +620,9 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         context["is_result_plantation"] = True
 
         if moulinette:
-            context["plantation_evaluation"] = PlantationEvaluator(
-                moulinette, moulinette.catalog["haies"]
-            )
+            evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+            context["plantation_evaluation"] = evaluator
+            context["replantation_coefficient"] = evaluator.replantation_coefficient
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
         context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
