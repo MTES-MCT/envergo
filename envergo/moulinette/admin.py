@@ -36,6 +36,22 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
         return queryset
 
 
+class RegulationAdminForm(forms.ModelForm):
+
+    def clean(self):
+
+        data = super().clean()
+        show_map = bool(data.get("show_map"))
+        has_map_factory_name = bool(data.get("map_factory_name"))
+        if show_map and not has_map_factory_name:
+            raise forms.ValidationError(
+                {
+                    "map_factory_name": "Ce champ est obligatoire lorsque l'on veut afficher la carte du périmètre."
+                }
+            )
+        return data
+
+
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
     list_display = [
@@ -45,6 +61,7 @@ class RegulationAdmin(admin.ModelAdmin):
         "weight",
     ]
     list_editable = ["weight"]
+    form = RegulationAdminForm
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

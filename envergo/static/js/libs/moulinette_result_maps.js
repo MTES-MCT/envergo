@@ -97,10 +97,11 @@
     layerControl.addTo(map);
 
     // Display the project's coordinates as a maker
-    const marker = L.marker(centerCoords);
-    marker.addTo(map);
-
-    // Display all polygons
+    if(!("displayMarkerAtCenter" in mapData ) || mapData["displayMarkerAtCenter"]) { // default to true
+      const marker = L.marker(centerCoords);
+      marker.addTo(map);
+    }
+   // Display all polygons
     const bounds = L.latLngBounds();
     for (const polygonId in mapData.polygons) {
       const polygon = mapData.polygons[polygonId];
@@ -110,7 +111,12 @@
       polygonJson.addTo(map);
     }
 
-    if (mapData["zoom"] === null) {
+    if(mapData["zoomOnGeometry"]){
+      const geometry = mapData["zoomOnGeometry"];
+      const geometryJson = L.geoJSON(geometry);
+      const geometryBounds = geometryJson.getBounds();
+      map.fitBounds(geometryBounds);
+    } else if (mapData["zoom"] === null) {
       map.fitBounds(bounds);
     }
 
