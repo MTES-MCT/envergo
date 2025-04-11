@@ -16,7 +16,7 @@ def update_map_factory_name(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0074_confighaie_hedge_maintenance_html_and_more"),
+        ("moulinette", "0077_alter_moulinettetemplate_key"),
     ]
 
     operations = [
