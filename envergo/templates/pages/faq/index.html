@@ -23,6 +23,7 @@
                     {# djlint:off #}
                     {% sidemenu_item 'faq_loi_sur_leau' "Loi sur l'eau" %}
                     {% sidemenu_item 'faq_natura_2000' "Natura 2000" %}
+                    {% sidemenu_item 'faq_eval_env' "Évaluation environnementale" %}
                     {# djlint:on #}
                   </ul>
                 </li>
@@ -40,7 +41,7 @@
       </div>
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-7 fr-col-xl-6">
         {% block faq_content %}
-          <h1 id="questcequelaloisurleau">Questions fréquentes</h1>
+          <h1 id="questionsfrequentes">Questions fréquentes</h1>
           <p class="fr-text--lead">
             Consultez les réponses aux questions fréquentes sur les réglementations environnementales prises en compte par EnvErgo.
           </p>
@@ -53,7 +54,7 @@
                       <a href="{% url 'faq_loi_sur_leau' %}">Loi sur l'eau</a>
                     </h2>
                     <p class="fr-card__desc">
-                      La loi sur l'eau encadre tous les projets
+                      La Loi sur l'eau encadre tous les projets
                       qui risquent d'impacter l'eau et les milieux aquatiques.
                     </p>
                   </div>
@@ -69,6 +70,20 @@
                     </h2>
                     <p class="fr-card__desc">
                       Natura 2000 est un dispositif visant la protection d'espèces animales et végétales fragiles et de leur habitat.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="fr-col fr-col-12 fr-col-md-6">
+              <div class="fr-card fr-card--shadow fr-enlarge-link">
+                <div class="fr-card__body">
+                  <div class="fr-card__content">
+                    <h2 class="fr-card__title">
+                      <a href="{% url 'faq_eval_env' %}">Évaluation environnementale</a>
+                    </h2>
+                    <p class="fr-card__desc">
+                      L’évaluation environnementale est une procédure réglementaire visant à intégrer l’environnement et la santé humaine dans l’élaboration d’un projet.
                     </p>
                   </div>
                 </div>
