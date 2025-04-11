@@ -9,7 +9,7 @@ def update_map_factory_name(apps, schema_editor):
         if regulation.regulation == "natura2000_haie":
             regulation.map_factory_name = "envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory"
         else:
-            regulation.map_factory_name = "envergo.moulinette.regulations.LocationCentricMapFactory"
+            regulation.map_factory_name = "envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory"
         regulation.save()
 
 
