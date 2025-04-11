@@ -55,9 +55,8 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "consultation";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
-  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
-  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 {% endblock %}
