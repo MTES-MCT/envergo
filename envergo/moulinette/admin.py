@@ -57,7 +57,7 @@ class RegulationAdmin(admin.ModelAdmin):
     list_display = [
         "get_regulation_display",
         "regulation_slug",
-        "has_perimeters",
+        "show_map",
         "weight",
     ]
     list_editable = ["weight"]
@@ -389,6 +389,40 @@ class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
     list_display = ["department", "is_activated"]
     list_filter = ["is_activated"]
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    "department",
+                    "is_activated",
+                    "regulations_available",
+                ],
+            },
+        ),
+        (
+            "Contenus",
+            {
+                "fields": [
+                    "contacts_and_links",
+                    "hedge_maintenance_html",
+                    "natura2000_coordinators_list_url",
+                ],
+            },
+        ),
+        (
+            "Démarches simplifiées",
+            {
+                "fields": [
+                    "demarche_simplifiee_number",
+                    "demarche_simplifiee_pre_fill_config",
+                    "demarches_simplifiees_city_id",
+                    "demarches_simplifiees_pacage_id",
+                    "demarches_simplifiees_project_url_id",
+                ],
+            },
+        ),
+    ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
