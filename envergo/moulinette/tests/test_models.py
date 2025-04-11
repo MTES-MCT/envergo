@@ -219,7 +219,7 @@ def test_regulation_with_map_factory_can_create_a_location_centric_map(
     regulation = RegulationFactory(
         has_perimeters=True,
         show_map=True,
-        map_factory_name="envergo.moulinette.regulations.LocationCentricMapFactory",
+        map_factory_name="envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory",
     )
     regulation.moulinette = MagicMock(
         get_map_center=MagicMock(return_value=(47.0, -1.0))
