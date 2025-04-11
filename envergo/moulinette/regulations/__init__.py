@@ -171,12 +171,12 @@ class MapFactory(ABC):
         raise NotImplementedError
 
 
-class LocationCentricMapFactory(MapFactory):
-    """A factory that creates a map centered on a given location."""
+class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
+    """A factory that creates a map with a marker on moulinette center and bounded by perimeters."""
 
     @classmethod
     def human_readable_name(cls):
-        return "Une carte centrée sur la localisation de la moulinette"
+        return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre de la moulinette"
 
     def create_map(self) -> Map | None:
         """Create a map centered on moulinette location."""
@@ -203,7 +203,7 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
 
     @classmethod
     def human_readable_name(cls):
-        return "Une carte centrée sur les haies à détruire"
+        return "Une carte centrée sur les haies à détruire (GUH uniquement)"
 
     def create_map(self) -> Map | None:
         """Create a map centered on the hedges to remove."""

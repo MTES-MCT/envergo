@@ -16,7 +16,7 @@ def update_map_factory_name(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0076_alter_regulation_has_perimeters"),
+        ("moulinette", "0077_alter_moulinettetemplate_key"),
     ]
 
     operations = [
@@ -27,12 +27,12 @@ class Migration(migrations.Migration):
                 blank=True,
                 choices=[
                     (
-                        "envergo.moulinette.regulations.LocationCentricMapFactory",
-                        "Une carte centrée sur la localisation de la moulinette",
+                        "envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory",
+                        "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre de la moulinette",
                     ),
                     (
                         "envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory",
-                        "Une carte centrée sur les haies à détruire",
+                        "Une carte centrée sur les haies à détruire (GUH uniquement)",
                     ),
                 ],
                 max_length=256,
