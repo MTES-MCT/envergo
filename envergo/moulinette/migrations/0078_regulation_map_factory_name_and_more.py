@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 choices=[
                     (
                         "envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory",
-                        "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre de la moulinette",
+                        "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet",
                     ),
                     (
                         "envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory",

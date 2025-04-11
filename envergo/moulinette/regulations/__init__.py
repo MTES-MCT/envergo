@@ -172,11 +172,11 @@ class MapFactory(ABC):
 
 
 class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
-    """A factory that creates a map with a marker on moulinette center and bounded by perimeters."""
+    """A factory that creates a map with a marker on project center and bounded by perimeters."""
 
     @classmethod
     def human_readable_name(cls):
-        return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre de la moulinette"
+        return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet"
 
     def create_map(self) -> Map | None:
         """Create a map centered on moulinette location."""
