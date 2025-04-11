@@ -70,3 +70,16 @@
 {% block extra_body %}
   {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (réponses au formulaire et dessins de haies) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
 {% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+
+  <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+{% endblock %}
