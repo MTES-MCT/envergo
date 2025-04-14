@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import mark_safe
 
-from envergo.hedges.models import HEDGE_TYPES, HedgeData, Species
+from envergo.hedges.models import HEDGE_TYPES, HedgeData, Species, SpeciesMap
 
 
 @admin.register(HedgeData)
@@ -111,3 +111,14 @@ class SpeciesAdmin(admin.ModelAdmin):
     form = SpeciesAdminForm
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
     readonly_fields = ["kingdom", "taxref_ids"]
+
+
+@admin.register(SpeciesMap)
+class SpeciesMapAdmin(admin.ModelAdmin):
+    form = SpeciesAdminForm
+    list_display = [
+        "species",
+        "map",
+        "hedge_types",
+    ]
+    autocomplete_fields = ["species", "map"]
