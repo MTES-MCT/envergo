@@ -1816,7 +1816,7 @@ class MoulinetteHaie(Moulinette):
     REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
-    debug_result_template = "haie/moulinette/result.html"
+    debug_result_template = "haie/moulinette/result_debug.html"
     result_available_soon = "haie/moulinette/result_non_disponible.html"
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
