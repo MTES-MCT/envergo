@@ -53,13 +53,15 @@
           action="{% url 'petition_project_instructor_view' petition_project.reference %}">
       {% csrf_token %}
       {% for information in project_details.details %}
+
         <section class="fr-py-3w"
                  {% if information.slug %}id="{{ information.slug }}"{% endif %}>
+
           {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
-          <p class="fr-hint-text">
-            {% if information.comment %}{{ information.comment }}{% endif %}
-          </p>
+          {% if information.comment %}<p class="fr-callout fr-icon-information-line">{{ information.comment }}</p>{% endif %}
+
           {% include "haie/petitions/_items.html" with items=information.items %}
+
           {% if information.details %}
             {% for information_details in information.details %}
               <h3 class="fr-h4 fr-mt-4w fr-mb-2w">{{ information_details.label }}</h3>
