@@ -102,7 +102,8 @@ def build_instructor_informations_bcae8(
 
     bcae8 = InstructorInformation(
         slug="bcae8",
-        comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
+        comment="Les décomptes de cette section n'incluent que les haies déclarées "
+        "sur parcelle PAC. Les alignements d’arbres sont également exclus.",
         label="BCAE 8",
         items=[
             Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
@@ -118,19 +119,28 @@ def build_instructor_informations_bcae8(
                 label="Destruction",
                 items=[
                     Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove_pac()),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Total linéaire détruit",
+                        "Total linéaire détruit sur parcelle PAC",
                         round(hedge_data.lineaire_detruit_pac()),
                         "m",
                         None,
                     ),
                     Item(
-                        "Pourcentage détruit / total linéaire",
+                        "Détail",
+                        (
+                            ", ".join(
+                                [
+                                    f"{round(h.length)} ⋅ {h.id}"
+                                    for h in hedge_data.hedges_to_remove_pac()
+                                ]
+                            )
+                            if hedge_data.hedges_to_remove_pac
+                            else ""
+                        ),
+                        None,
+                        None,
+                    ),
+                    Item(
+                        "Pourcentage linéaire à détruire / total linéaire exploitation",
                         (
                             round(lineaire_detruit_pac / lineaire_total * 100, 2)
                             if lineaire_total
@@ -145,19 +155,28 @@ def build_instructor_informations_bcae8(
                 label="Plantation",
                 items=[
                     Item(
-                        "Nombre de tracés plantés",
-                        len(hedge_data.hedges_to_plant_pac()),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Total linéaire planté",
+                        "Total linéaire à planter sur parcelle PAC",
                         round(hedge_data.length_to_plant_pac()),
                         "m",
                         None,
                     ),
                     Item(
-                        "Ratio en longueur",
+                        "Détail",
+                        (
+                            ", ".join(
+                                [
+                                    f"{round(h.length)} ⋅ {h.id}"
+                                    for h in hedge_data.hedges_to_plant_pac()
+                                ]
+                            )
+                            if hedge_data.hedges_to_plant_pac
+                            else ""
+                        ),
+                        None,
+                        None,
+                    ),
+                    Item(
+                        "Ratio de replantation",
                         (
                             round(
                                 hedge_data.length_to_plant_pac() / lineaire_detruit_pac,
@@ -167,7 +186,7 @@ def build_instructor_informations_bcae8(
                             else ""
                         ),
                         None,
-                        "Longueur plantée / longueur détruite",
+                        "Linéaire à planter / linéaire à détruire, sur parcelle PAC",
                     ),
                 ],
             ),
@@ -293,7 +312,7 @@ def build_instructor_informations_ep(petition_project) -> InstructorInformation:
     return ep
 
 
-def build_project_details(petition_project) -> InstructorInformation:
+def build_project_summary(petition_project) -> InstructorInformation:
     """Build project details from petition project data"""
 
     hedge_data = petition_project.hedge_data
@@ -303,31 +322,13 @@ def build_project_details(petition_project) -> InstructorInformation:
         slug=None,
         label=None,
         items=[
-            Item("Référence", petition_project.reference, None, None),
-            "instructor_free_mention",
+            Item("Référence interne", petition_project.reference, None, None),
         ],
         details=[
             InstructorInformationDetails(
-                label="Destruction",
+                label="Résumé du projet",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire détruit", round(length_to_remove), "m", None),
-                ],
-            ),
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
                     Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
                         "Ratio en longueur",
@@ -383,6 +384,7 @@ def compute_instructor_informations(
     )
     if city_field:
         city = city_field.get("stringValue", None)
+
     pacage_field = next(
         (
             champ
@@ -400,18 +402,28 @@ def compute_instructor_informations(
         applicant_name, city, pacage, usager, None, None
     )
 
-    # Build project details
-    project_details = build_project_details(petition_project)
+    # Build project summary
+    project_summary = build_project_summary(petition_project)
 
     if ds_details:
         if ds_details.city:
-            project_details.items.append(
+            project_summary.items.append(
                 Item("Commune principale", ds_details.city, None, None)
             )
         if ds_details.applicant_name:
-            project_details.items.append(
+            project_summary.items.append(
                 Item("Nom du demandeur", ds_details.applicant_name, None, None)
             )
+
+    # Build notes instruction
+    notes_instruction = InstructorInformation(
+        slug=None,
+        label="Notes instruction",
+        items=[
+            "instructor_free_mention",
+        ],
+        details=None,
+    )
 
     # Build BCAE8
     bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
@@ -427,7 +439,7 @@ def compute_instructor_informations(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        details=[project_details, bcae8, ep],
+        details=[project_summary, notes_instruction, bcae8, ep],
         ds_data=ds_details,
     )
 
@@ -438,7 +450,7 @@ def compute_instructor_informations_ds(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_details = build_project_details(petition_project)
+    project_details = build_project_summary(petition_project)
 
     # Get ds details
     config = moulinette.config
@@ -605,11 +617,11 @@ def fetch_project_details_from_demarches_simplifiees(
 
     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
         logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
+            f"Demarches Simplifiees is not enabled. Doing nothing."
+            f"Use fake dossier if dossier is not draft."
             f"\nrequest.url: {api_url}"
             f"\nrequest.body: {body}"
         )
-
         with open(
             Path(
                 settings.APPS_DIR
@@ -622,7 +634,6 @@ def fetch_project_details_from_demarches_simplifiees(
         ) as file:
             response = json.load(file)
             dossier = response.get("data", {}).get("dossier") or {}
-
     else:
         response = requests.post(
             api_url,
