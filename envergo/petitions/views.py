@@ -14,7 +14,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import DetailView, FormView, UpdateView
+from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
@@ -25,7 +25,7 @@ from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
-from envergo.petitions.models import PetitionProject
+from envergo.petitions.models import DOSSIER_STATES, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -37,6 +37,20 @@ from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
+
+
+class PetitionProjectList(LoginRequiredMixin, ListView):
+    """View list for PetitionProject"""
+
+    template_name = "haie/petitions/instructor_dossier_list.html"
+    queryset = (
+        PetitionProject.objects.exclude(
+            demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+        )
+        .select_related("hedge_data")
+        .order_by("-created_at")
+    )
+    paginate_by = 30
 
 
 class PetitionProjectCreate(FormView):
