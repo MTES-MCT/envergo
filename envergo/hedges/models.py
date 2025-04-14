@@ -332,3 +332,38 @@ class Species(models.Model):
 
     def __str__(self):
         return f"{self.common_name} ({self.scientific_name})"
+
+
+class SpeciesMap(models.Model):
+    """Represent a single species map."""
+
+    species = models.ForeignKey(
+        Species,
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Espèce",
+    )
+    map = models.ForeignKey(
+        "geodata.Map",
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Carte",
+    )
+
+    hedge_types = ArrayField(
+        verbose_name="Types de haies considérés",
+        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
+    )
+    # Those fields are in french to match existing fields describing hedges
+    proximite_mare = models.BooleanField("Mare à moins de 200 m")
+    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
+    connexion_boisement = models.BooleanField(
+        "Connectée à un boisement ou à une autre haie"
+    )
+    vieil_arbre = models.BooleanField(
+        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+    )
+
+    class Meta:
+        verbose_name = "Carte d'espèce"
+        verbose_name_plural = "Cartes d'espèces"
