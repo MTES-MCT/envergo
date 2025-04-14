@@ -39,16 +39,16 @@ const showHedgeModal = (hedge, hedgeType) => {
   const dialogId = `${dialogMode}-hedge-data-dialog`
   const dialog = document.getElementById(dialogId);
   const form = dialog.querySelector("form");
-  const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
-  const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
-  const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
-  const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
-  const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
-  const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
-  const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
-  const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
-  const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
-  const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
+  // const hedgeTypeField = document.getElementById(`id_${dialogMode}-hedge_type`);
+  // const pacField = document.getElementById(`id_${dialogMode}-sur_parcelle_pac`);
+  // const nearPondField = document.getElementById(`id_${dialogMode}-proximite_mare`);
+  // const oldTreeField = document.getElementById(`id_${dialogMode}-vieil_arbre`);
+  // const nearWaterField = document.getElementById(`id_${dialogMode}-proximite_point_eau`);
+  // const woodlandConnectionField = document.getElementById(`id_${dialogMode}-connexion_boisement`);
+  // const underPowerLineField = document.getElementById(`id_${dialogMode}-sous_ligne_electrique`);
+  // const nearbyRoadField = document.getElementById(`id_${dialogMode}-proximite_voirie`);
+  // const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
+  // const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
   const resetForm = () => {
     form.reset();
     const inputs = form.querySelectorAll("input");
@@ -64,19 +64,19 @@ const showHedgeModal = (hedge, hedgeType) => {
 
   // Pre-fill the form with hedge data if it's an edition
   if (hedge.additionalData) {
-    hedgeTypeField.value = hedge.additionalData.typeHaie;
-    fillBooleanField(pacField, "surParcellePac", hedge.additionalData);
-    fillBooleanField(nearPondField, "proximiteMare", hedge.additionalData);
-    fillBooleanField(oldTreeField, "vieilArbre", hedge.additionalData);
-    fillBooleanField(nearWaterField, "proximitePointEau", hedge.additionalData);
-    fillBooleanField(woodlandConnectionField, "connexionBoisement", hedge.additionalData);
-    fillBooleanField(underPowerLineField, "sousLigneElectrique", hedge.additionalData);
-    fillBooleanField(nearbyRoadField, "proximiteVoirie", hedge.additionalData);
+    // hedgeTypeField.value = hedge.additionalData.typeHaie;
+    // fillBooleanField(pacField, "surParcellePac", hedge.additionalData);
+    // fillBooleanField(nearPondField, "proximiteMare", hedge.additionalData);
+    // fillBooleanField(oldTreeField, "vieilArbre", hedge.additionalData);
+    // fillBooleanField(nearWaterField, "proximitePointEau", hedge.additionalData);
+    // fillBooleanField(woodlandConnectionField, "connexionBoisement", hedge.additionalData);
+    // fillBooleanField(underPowerLineField, "sousLigneElectrique", hedge.additionalData);
+    // fillBooleanField(nearbyRoadField, "proximiteVoirie", hedge.additionalData);
   } else {
     form.reset();
   }
-  hedgeName.textContent = hedge.id;
-  hedgeLength.textContent = hedge.length.toFixed(0);
+  // hedgeName.textContent = hedge.id;
+  // hedgeLength.textContent = hedge.length.toFixed(0);
 
   // Save form data to the hedge object
   // This is the form submit event handler
