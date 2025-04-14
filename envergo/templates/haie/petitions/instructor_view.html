@@ -34,18 +34,21 @@
 {% block project_content %}
 
   <h2>Informations générales</h2>
-
-  <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-     href="{{ project_url }}"
-     target="_blank"
-     class="fr-btn  fr-btn--secondary"
-     rel="noopener external">Voir le résultat de la simulation</a>
+  <div class="fr-mb-2w">
+    <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
+       href="{{ project_url }}"
+       target="_blank"
+       class="fr-btn"
+       rel="noopener external">Voir le résultat de la simulation</a>
+  </div>
 
   {% if project_details.details %}
-    <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-2w"
-            type="button"
-            data-fr-opened="false"
-            aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+    <div>
+      <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+    </div>
   {% endif %}
   <div class="project-inner-content">
 
@@ -57,7 +60,7 @@
         <section class="fr-py-3w"
                  {% if information.slug %}id="{{ information.slug }}"{% endif %}>
 
-          {% if information.label %}<h2 class="fr-mb-0">{{ information.label }}</h2>{% endif %}
+          {% if information.label %}<h2>{{ information.label }}</h2>{% endif %}
           {% if information.comment %}<p class="fr-callout fr-icon-information-line">{{ information.comment }}</p>{% endif %}
 
           {% include "haie/petitions/_items.html" with items=information.items %}
