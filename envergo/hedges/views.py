@@ -8,7 +8,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
-from envergo.hedges.forms import HedgeToPlantDataForm, HedgeToRemoveDataForm
+from envergo.hedges.forms import (
+    HedgeLocationPlantationCalvadosForm,
+    HedgeLocationRemovalCalvadosForm,
+    HedgePropertiesPlantationCalvadosForm,
+    HedgePropertiesRemovalCalvadosForm,
+    HedgeToPlantDataForm,
+    HedgeToRemoveDataForm,
+    PlantationTypeCalvadosForm,
+    RemovalModeForm,
+)
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
 from envergo.moulinette.views import MoulinetteMixin
@@ -54,6 +63,19 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
         context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
         context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
+
+        context["forms"] = {
+            "removal": {
+                "mode": RemovalModeForm(),
+                "properties": HedgePropertiesRemovalCalvadosForm(),
+                "location": HedgeLocationRemovalCalvadosForm(),
+            },
+            "plantation": {
+                "mode": PlantationTypeCalvadosForm(),
+                "properties": HedgePropertiesPlantationCalvadosForm(),
+                "location": HedgeLocationPlantationCalvadosForm(),
+            },
+        }
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode

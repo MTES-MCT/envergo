@@ -15,8 +15,12 @@
               <p class="fr-tag fr-mb-3w">
                 Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
               </p>
-
-              {% include '_form_snippet.html' with form=form %}
+              <h6>Mode de destruction</h6>
+              {% include '_form_snippet.html' with form=forms.mode %}
+              <h6>Caractéristiques de la haie</h6>
+              {% include '_form_snippet.html' with form=forms.properties %}
+              <h6>Situation de la haie</h6>
+              {% include '_form_snippet.html' with form=forms.location %}
             </div>
 
             <div class="fr-modal__footer">
