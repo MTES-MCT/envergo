@@ -312,7 +312,7 @@ def build_instructor_informations_ep(petition_project) -> InstructorInformation:
     return ep
 
 
-def build_project_details(petition_project) -> InstructorInformation:
+def build_project_summary(petition_project) -> InstructorInformation:
     """Build project details from petition project data"""
 
     hedge_data = petition_project.hedge_data
@@ -402,19 +402,28 @@ def compute_instructor_informations(
         applicant_name, city, pacage, usager, None, None
     )
 
-    # Build project details
-    project_details = build_project_details(petition_project)
+    # Build project summary
+    project_summary = build_project_summary(petition_project)
 
     if ds_details:
         if ds_details.city:
-            project_details.items.append(
+            project_summary.items.append(
                 Item("Commune principale", ds_details.city, None, None)
             )
         if ds_details.applicant_name:
-            project_details.items.append(
+            project_summary.items.append(
                 Item("Nom du demandeur", ds_details.applicant_name, None, None)
             )
-    project_details.items.append("instructor_free_mention")
+
+    # Build notes instruction
+    notes_instruction = InstructorInformation(
+        slug=None,
+        label="Notes instruction",
+        items=[
+            "instructor_free_mention",
+        ],
+        details=None,
+    )
 
     # Build BCAE8
     bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
@@ -430,7 +439,7 @@ def compute_instructor_informations(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        details=[project_details, bcae8, ep],
+        details=[project_summary, notes_instruction, bcae8, ep],
         ds_data=ds_details,
     )
 
@@ -441,7 +450,7 @@ def compute_instructor_informations_ds(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_details = build_project_details(petition_project)
+    project_details = build_project_summary(petition_project)
 
     # Get ds details
     config = moulinette.config
