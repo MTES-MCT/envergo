@@ -270,12 +270,12 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     assertTemplateUsed(res, "moulinette/result.html")
 
     assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
+        "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
         "de surface plancher, d'emprise au sol et de terrain d'assiette."
         in res.content.decode()
     )
     assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        "Le projet n’est pas soumis à évaluation environnementale, ni à examen au cas par cas."
         not in res.content.decode()
     )
 
@@ -313,12 +313,12 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
     assertTemplateUsed(res, "moulinette/result.html")
 
     assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale au titre des seuils "
+        "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
         "de surface plancher, d'emprise au sol et de terrain d'assiette."
         not in res.content.decode()
     )
     assert (
-        "Le projet n’est pas soumis à Évaluation Environnementale, ni à examen au cas par cas."
+        "Le projet n’est pas soumis à évaluation environnementale, ni à examen au cas par cas."
         in res.content.decode()
     )
 
