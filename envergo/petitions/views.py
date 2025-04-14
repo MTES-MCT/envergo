@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
-    template_name = "haie/moulinette/petition_project_list.html"
+    template_name = "haie/petitions/instructor_dossier_list.html"
     queryset = (
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
@@ -50,7 +50,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         .select_related("hedge_data")
         .order_by("-created_at")
     )
-    paginate_by = 10
+    paginate_by = 30
 
 
 class PetitionProjectCreate(FormView):
