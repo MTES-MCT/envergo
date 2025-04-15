@@ -9,14 +9,8 @@ from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
 from envergo.hedges.forms import (
-    HedgeLocationPlantationCalvadosForm,
-    HedgeLocationRemovalCalvadosForm,
-    HedgePropertiesPlantationCalvadosForm,
-    HedgePropertiesRemovalCalvadosForm,
-    HedgeToPlantDataForm,
-    HedgeToRemoveDataForm,
-    PlantationTypeCalvadosForm,
-    RemovalModeForm,
+    HedgeToPlantPropertiesCalvadosForm,
+    HedgeToRemovePropertiesCalvadosForm,
 )
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
@@ -61,21 +55,12 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         else:
             context["hedge_data_json"] = "[]"
 
-        context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
-        context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
-
-        context["forms"] = {
-            "removal": {
-                "mode": RemovalModeForm(),
-                "properties": HedgePropertiesRemovalCalvadosForm(),
-                "location": HedgeLocationRemovalCalvadosForm(),
-            },
-            "plantation": {
-                "mode": PlantationTypeCalvadosForm(),
-                "properties": HedgePropertiesPlantationCalvadosForm(),
-                "location": HedgeLocationPlantationCalvadosForm(),
-            },
-        }
+        context["hedge_to_plant_data_form"] = HedgeToPlantPropertiesCalvadosForm(
+            prefix="plantation"
+        )
+        context["hedge_to_remove_data_form"] = HedgeToRemovePropertiesCalvadosForm(
+            prefix="removal"
+        )
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode

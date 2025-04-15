@@ -267,8 +267,8 @@
         </div>
       </div>
 
-      {% include 'hedges/_hedge_data_dialog.html' with forms=forms.plantation dialog_id="plantation-hedge-data-dialog" %}
-      {% include 'hedges/_hedge_data_dialog.html' with forms=forms.removal dialog_id="removal-hedge-data-dialog" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" %}
 
       <dialog id="cancel-modal" class="fr-modal" role="dialog">
         <div class="fr-container fr-container--fluid fr-container-md">
