@@ -86,7 +86,7 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
-    summary: InstructorInformation
+    summary: InstructorInformation | None
     details: list[InstructorInformation]
     ds_data: DemarchesSimplifieesDetails | None
 
@@ -538,6 +538,7 @@ def compute_instructor_informations_ds(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
+        summary=None,
         details=[project_details],
         ds_data=ds_details,
     )
