@@ -28,6 +28,7 @@ from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
 from django.urls import reverse
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -543,13 +544,7 @@ class Regulation(models.Model):
         if not self.map_factory_name:
             return None
 
-        try:
-            # Dynamically import and return the class object
-            module_name, class_name = self.map_factory_name.rsplit(".", 1)
-            module = __import__(module_name, fromlist=[class_name])
-            return getattr(module, class_name)(self)
-        except (ImportError, AttributeError, ValueError):
-            raise ValueError(f"Invalid class name: {self.map_factory_name}")
+        return import_string(self.map_factory_name)(self)
 
     @property
     def map(self):
