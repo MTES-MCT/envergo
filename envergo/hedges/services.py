@@ -74,23 +74,14 @@ def get_replantation_coefficient(moulinette):
 
     It depends on the activated criteria.
     """
-    ep_R = D("0")
-    if moulinette.ep.is_activated():
-        ep = moulinette.ep.criteria.first()
-        if ep:
-            form = ep.get_settings_form()
-            form.is_valid()
-            ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
+    R = D("0")
+    for regulation in moulinette.regulations:
+        if regulation.is_activated():
+            for criterion in regulation.criteria.all():
+                if hasattr(criterion._evaluator, "get_replantation_coefficient"):
+                    R = max(R, criterion._evaluator.get_replantation_coefficient())
 
-    ep_bcae8 = D("1")
-    if moulinette.conditionnalite_pac.is_activated():
-        bcae8 = moulinette.conditionnalite_pac.criteria.first()
-        if bcae8:
-            form = bcae8.get_settings_form()
-            form.is_valid()
-            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
-
-    return float(max(ep_R, ep_bcae8))
+    return float(R)
 
 
 @dataclass
@@ -109,6 +100,7 @@ class PlantationEvaluator:
     def __init__(self, moulinette: "MoulinetteHaie", hedge_data: HedgeData):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
+        self.replantation_coefficient = get_replantation_coefficient(moulinette)
         self.evaluate()
 
     @property
@@ -157,11 +149,11 @@ class PlantationEvaluator:
     def minimum_length_to_plant(self):
         """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
         replantation coefficient"""
-        R = get_replantation_coefficient(self.moulinette)
+        R = self.replantation_coefficient
         return R * self.hedge_data.length_to_remove()
 
     def get_minimum_lengths_to_plant(self):
-        R = get_replantation_coefficient(self.moulinette)
+        R = self.replantation_coefficient
         lengths_by_type = defaultdict(int)
         for to_remove in self.hedge_data.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
@@ -383,26 +375,22 @@ class HedgeEvaluator:
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        result = {
-            "length_to_plant": self.evaluate_length_to_plant(),
-        }
+        result = {}
+
+        R = self.plantation_evaluator.replantation_coefficient
+        if R > 0:
+            result["length_to_plant"] = self.evaluate_length_to_plant()
+
         moulinette = self.plantation_evaluator.moulinette
+        if moulinette.must_check_acceptability_conditions() and R > 0:
+            result["quality"] = self.evaluate_hedge_plantation_quality()
 
         if moulinette.must_check_acceptability_conditions():
-            result.update(
-                {
-                    "quality": self.evaluate_hedge_plantation_quality(),
-                    "do_not_plant_under_power_line": {
-                        "result": self.is_not_planting_under_power_line(),
-                    },
-                }
-            )
+            result["do_not_plant_under_power_line"] = {
+                "result": self.is_not_planting_under_power_line()
+            }
 
         if moulinette.must_check_pac_condition():
-            result.update(
-                {
-                    "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
-                }
-            )
+            result["length_to_plant_pac"] = self.evaluate_length_to_plant_pac()
 
         return result
