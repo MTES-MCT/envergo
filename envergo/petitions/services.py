@@ -390,67 +390,8 @@ def compute_instructor_informations(
 ) -> ProjectDetails:
     """Compute ProjectDetails with instructor informations"""
 
-    # Get ds details
-    config = moulinette.config
-
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
-    )
-
-    if not dossier:
-        return None
-
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    city = None
-    pacage = None
-    champs = dossier.get("champs", [])
-
-    city_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_city_id
-        ),
-        None,
-    )
-    if city_field:
-        city = city_field.get("stringValue", None)
-
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.get("stringValue", None)
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    ds_details = DemarchesSimplifieesDetails(
-        applicant_name, city, pacage, usager, None, None
-    )
-
-    # Build project summary
+    # Build project details
     project_summary = build_project_summary(petition_project)
-
-    if ds_details:
-        if ds_details.city:
-            project_summary.items.append(
-                Item("Commune principale", ds_details.city, None, None)
-            )
-        if ds_details.applicant_name:
-            project_summary.items.append(
-                Item("Nom du demandeur", ds_details.applicant_name, None, None)
-            )
 
     # Build notes instruction
     notes_instruction = InstructorInformation(
@@ -465,12 +406,72 @@ def compute_instructor_informations(
     # Build BCAE8
     bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
 
-    if ds_details:
-        if ds_details.pacage:
-            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
-
     # Build Espèces Protégées
     ep = build_instructor_informations_ep(petition_project)
+
+    # Get ds details
+    config = moulinette.config
+    dossier = fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, visitor_id, user
+    )
+
+    city = None
+    pacage = None
+    applicant_name = None
+    ds_details = None
+
+    if dossier:
+        applicant = dossier.get("demandeur") or {}
+        applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
+        applicant_name = (
+            None
+            if applicant_name is None or applicant_name.strip() == ""
+            else applicant_name
+        )
+        champs = dossier.get("champs", [])
+
+        city_field = next(
+            (
+                champ
+                for champ in champs
+                if champ["id"] == config.demarches_simplifiees_city_id
+            ),
+            None,
+        )
+        if city_field:
+            city = city_field.get("stringValue", None)
+
+        pacage_field = next(
+            (
+                champ
+                for champ in champs
+                if champ["id"] == config.demarches_simplifiees_pacage_id
+            ),
+            None,
+        )
+        if pacage_field:
+            pacage = pacage_field.get("stringValue", None)
+
+        usager = (dossier.get("usager") or {}).get("email", "")
+
+        ds_details = DemarchesSimplifieesDetails(
+            applicant_name, city, pacage, usager, None, None
+        )
+
+        # Add info to project summary and BCAE8
+        if ds_details:
+            if ds_details.city:
+                project_summary.items.append(
+                    Item("Commune principale", ds_details.city, None, None)
+                )
+            if ds_details.applicant_name:
+                project_summary.items.append(
+                    Item("Nom du demandeur", ds_details.applicant_name, None, None)
+                )
+
+        if ds_details:
+            if ds_details.pacage:
+                bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
@@ -488,7 +489,7 @@ def compute_instructor_informations_ds(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_details = build_project_summary(petition_project)
+    project_summary = build_project_summary(petition_project)
 
     # Get ds details
     config = moulinette.config
@@ -498,7 +499,14 @@ def compute_instructor_informations_ds(
     )
 
     if not dossier:
-        return None
+        return ProjectDetails(
+            demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+            demarche_simplifiee_number=config.demarche_simplifiee_number,
+            usager="",
+            summary=None,
+            details=[project_summary],
+            ds_data=None,
+        )
 
     applicant = dossier.get("demandeur") or {}
     applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
@@ -539,7 +547,7 @@ def compute_instructor_informations_ds(
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         summary=None,
-        details=[project_details],
+        details=[project_summary],
         ds_data=ds_details,
     )
 
