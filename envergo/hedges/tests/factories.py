@@ -1,7 +1,8 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from envergo.hedges.models import Hedge, HedgeData, Species
+from envergo.geodata.tests.factories import MapFactory
+from envergo.hedges.models import Hedge, HedgeData, Species, SpeciesMap
 
 
 class HedgeFactory(factory.Factory):
@@ -46,6 +47,20 @@ class SpeciesFactory(DjangoModelFactory):
 
     common_name = factory.Sequence(lambda n: f"Trucmuche {n}")
     scientific_name = factory.Sequence(lambda n: f"Machinchose {n}")
+
+    hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
+    proximite_mare = False
+    proximite_point_eau = False
+    connexion_boisement = False
+    vieil_arbre = False
+
+
+class SpeciesMapFactory(DjangoModelFactory):
+    class Meta:
+        model = SpeciesMap
+
+    species = factory.SubFactory(SpeciesFactory)
+    map = factory.SubFactory(MapFactory)
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
     proximite_mare = False
     proximite_point_eau = False

@@ -1,12 +1,14 @@
 import pytest
 from shapely import centroid
 
+from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
 from envergo.geodata.tests.factories import DepartmentFactory, herault_multipolygon
 from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
     SpeciesFactory,
+    SpeciesMapFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -16,6 +18,103 @@ pytestmark = pytest.mark.django_db
 def cleanup():
     # Remove demo species
     Species.objects.all().delete()
+
+
+@pytest.fixture
+def aisne_hedge_data():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.571258332741955, "lng": 3.613762429205578},
+                    {"lat": 49.57123937690368, "lng": 3.613863328804695},
+                ],
+                "additionalData": {
+                    "typeHaie": "degradee",
+                    "vieilArbre": True,
+                    "proximiteMare": False,
+                    "surParcellePac": True,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.57154029531499, "lng": 3.6139268852842137},
+                    {"lat": 49.57134548129514, "lng": 3.6138314019310296},
+                ],
+                "additionalData": {
+                    "typeHaie": "arbustive",
+                    "vieilArbre": False,
+                    "proximiteMare": True,
+                    "surParcellePac": False,
+                    "proximitePointEau": True,
+                    "connexionBoisement": False,
+                },
+            },
+        ]
+    )
+    return hedge_data
+
+
+@pytest.fixture
+def calvados_hedge_data():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.187457248991315, "lng": -0.3704281832567369},
+                    {"lat": 49.18726791868085, "lng": -0.3697896493669539},
+                    {"lat": 49.18677355278797, "lng": -0.36971989356386026},
+                    {"lat": 49.18668940491001, "lng": -0.3697842835359544},
+                ],
+                "additionalData": {
+                    "typeHaie": "degradee",
+                    "vieilArbre": True,
+                    "proximiteMare": True,
+                    "surParcellePac": True,
+                    "proximitePointEau": False,
+                    "connexionBoisement": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.187352065574956, "lng": -0.3704711099047931},
+                    {"lat": 49.18668239258037, "lng": -0.3712706187247817},
+                ],
+                "additionalData": {
+                    "typeHaie": "alignement",
+                    "vieilArbre": True,
+                    "proximiteMare": False,
+                    "surParcellePac": False,
+                    "proximitePointEau": False,
+                    "connexionBoisement": True,
+                },
+            },
+        ]
+    )
+    return hedge_data
+
+
+def test_species_are_filtered_by_geography(
+    aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
+):
+    aisne_species = SpeciesMapFactory(map=aisne_map).species
+    calvados_species = SpeciesMapFactory(map=calvados_map).species
+
+    hedge = calvados_hedge_data.hedges()[0]
+    assert set(hedge.get_species()) == set([calvados_species])
+
+    hedge = aisne_hedge_data.hedges()[0]
+    assert set(hedge.get_species()) == set([aisne_species])
 
 
 def test_species_are_filtered_by_hedge_type():
