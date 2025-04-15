@@ -82,15 +82,15 @@ def get_replantation_coefficient(moulinette):
             form.is_valid()
             ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
 
-    ep_bcae8 = D("1")
+    bcae8_R = D("1")
     if moulinette.conditionnalite_pac.is_activated():
         bcae8 = moulinette.conditionnalite_pac.criteria.first()
         if bcae8:
             form = bcae8.get_settings_form()
             form.is_valid()
-            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
+            bcae8_R = form.cleaned_data.get("replantation_coefficient", D("1"))
 
-    return float(max(ep_R, ep_bcae8))
+    return float(max(ep_R, bcae8_R))
 
 
 @dataclass
