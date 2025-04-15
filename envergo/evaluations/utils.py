@@ -22,6 +22,17 @@ def extract_department_from_address(address):
     return extract_department_from_postal_code(postal_code)
 
 
+def extract_department_from_address_or_city_string(address_or_city):
+    """Extract the department number from a complete address or a city + department string.
+    Return None if no department number is found.
+    """
+    # Regular expression to match the format "CityName (DepartmentNumber)"
+    match = re.match(r".*\(([0-9AB]{2,3})\)$", address_or_city)
+    if match:
+        return match.group(1)  # Extract the department number
+    return extract_department_from_address(address_or_city)
+
+
 def extract_department_from_postal_code(postal_code):
     department = None
     if postal_code:
