@@ -396,7 +396,7 @@ def compute_instructor_informations(
     # Build notes instruction
     notes_instruction = InstructorInformation(
         slug=None,
-        label="Notes instruction",
+        label=None,
         items=[
             "instructor_free_mention",
         ],
