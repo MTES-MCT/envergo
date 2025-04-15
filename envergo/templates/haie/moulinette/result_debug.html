@@ -40,7 +40,11 @@
           <ul>
             {% for criterion in criteria %}
               <li>
-                {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %} <small>({{ criterion.result_code }})</small>
+                {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
+                <small>({{ criterion.result_code }})</small>
+                {% if criterion.evaluator_settings.replantation_coefficient %}
+                  <p>R = {{ criterion.evaluator_settings.replantation_coefficient }}</p>
+                {% endif %}
               </li>
             {% endfor %}
           </ul>
