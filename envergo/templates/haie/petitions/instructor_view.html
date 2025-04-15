@@ -34,22 +34,39 @@
 {% block project_content %}
 
   <h2>Informations générales</h2>
-  <div class="fr-mb-2w">
-    <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-       href="{{ project_url }}"
-       target="_blank"
-       class="fr-btn"
-       rel="noopener external">Voir le résultat de la simulation</a>
+
+  <section class="fr-py-3w"
+           {% if project_details.summary.slug %}id="{{ project_details.summary.slug }}"{% endif %}>
+    {% with summary=project_details.summary %}
+      {% if summary.label %}<h2>{{ summary.label }}</h2>{% endif %}
+      {% if summary.comment %}<p class="fr-callout fr-icon-information-line">{{ summary.comment }}</p>{% endif %}
+
+      {% include "haie/petitions/_items.html" with items=summary.items %}
+
+      {% if summary.details %}
+        {% for summary_details in summary.details %}
+          <h3 class="fr-h4 fr-mt-4w fr-mb-2w">{{ summary_details.label }}</h3>
+
+          {% include "haie/petitions/_items.html" with items=summary_details.items %}
+
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </section>
+
+  <div class="fr-my-2w">
+    <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
   </div>
 
-  {% if project_details.details %}
-    <div>
-      <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
-              type="button"
-              data-fr-opened="false"
-              aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
-    </div>
-  {% endif %}
+  <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
+     href="{{ project_url }}"
+     target="_blank"
+     class="fr-btn fr-btn--secondary"
+     rel="noopener external">Voir le résultat de la simulation</a>
+
   <div class="project-inner-content">
 
     <form method="post"
