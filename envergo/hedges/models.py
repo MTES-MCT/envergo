@@ -109,18 +109,18 @@ class Hedge:
         MAY live in an "alignement arboré" or "haie multistrate" and
         requires old trees (vieil_arbre is checked).
         """
-        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
+        q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
 
         exclude = []
 
         if not self.proximite_mare:
-            exclude.append(Q(proximite_mare=True))
+            exclude.append(Q(species_maps__proximite_mare=True))
         if not self.vieil_arbre:
-            exclude.append(Q(vieil_arbre=True))
+            exclude.append(Q(species_maps__vieil_arbre=True))
         if not self.proximite_point_eau:
-            exclude.append(Q(proximite_point_eau=True))
+            exclude.append(Q(species_maps__proximite_point_eau=True))
         if not self.connexion_boisement:
-            exclude.append(Q(connexion_boisement=True))
+            exclude.append(Q(species_maps__connexion_boisement=True))
 
         filter = q_hedge_type
         if exclude:
@@ -131,7 +131,15 @@ class Hedge:
     def get_species(self):
         """Return known species that may be related to this hedge."""
 
-        qs = Species.objects.filter(self.get_species_filter())
+        zone_subquery = Zone.objects.filter(
+            Q(geometry__intersects=self.geos_geometry)
+        ).filter(Q(map_id=OuterRef("map_id")))
+
+        qs = (
+            Species.objects.annotate(map_id=F("species_maps__map_id"))
+            .filter(self.get_species_filter())
+            .filter(Exists(zone_subquery))
+        )
         return qs
 
 
@@ -228,32 +236,22 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
-    def get_hedge_species(self):
-        """Return species that may live in the hedges."""
-
-        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
-        union = reduce(operator.or_, filters)
-        species = Species.objects.filter(union).order_by("group", "common_name")
-        return species
-
-    def get_local_species_codes(self):
-        """Return species names that are known to live here."""
-
-        bbox = self.get_bounding_box(self.hedges_to_remove())
-        zones = Zone.objects.filter(geometry__intersects=bbox).filter(
-            map__map_type="species"
-        )
-        codes = set()
-        for zone in zones:
-            codes.update(zone.attributes.get("especes", []))
-        return list(codes)
-
     def get_all_species(self):
         """Return the local list of protected species."""
 
-        hedge_species_qs = self.get_hedge_species()
-        local_species_codes = self.get_local_species_codes()
-        return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
+        zone_subquery = Zone.objects.filter(
+            Q(geometry__intersects=self.get_bounding_box(self.hedges()))
+        ).filter(Q(map_id=OuterRef("map_id")))
+
+        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        union = reduce(operator.or_, filters)
+        species = (
+            Species.objects.filter(union)
+            .annotate(map_id=F("species_maps__map_id"))
+            .order_by("group", "common_name")
+            .filter(Exists(zone_subquery))
+        )
+        return species
 
 
 HEDGE_TYPES = (
