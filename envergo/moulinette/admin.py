@@ -36,15 +36,32 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
         return queryset
 
 
+class RegulationAdminForm(forms.ModelForm):
+
+    def clean(self):
+
+        data = super().clean()
+        show_map = bool(data.get("show_map"))
+        has_map_factory_name = bool(data.get("map_factory_name"))
+        if show_map and not has_map_factory_name:
+            raise forms.ValidationError(
+                {
+                    "map_factory_name": "Ce champ est obligatoire lorsque l'on veut afficher la carte du périmètre."
+                }
+            )
+        return data
+
+
 @admin.register(Regulation)
 class RegulationAdmin(admin.ModelAdmin):
     list_display = [
         "get_regulation_display",
         "regulation_slug",
-        "has_perimeters",
+        "show_map",
         "weight",
     ]
     list_editable = ["weight"]
+    form = RegulationAdminForm
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -372,6 +389,40 @@ class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
     list_display = ["department", "is_activated"]
     list_filter = ["is_activated"]
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    "department",
+                    "is_activated",
+                    "regulations_available",
+                ],
+            },
+        ),
+        (
+            "Contenus",
+            {
+                "fields": [
+                    "contacts_and_links",
+                    "hedge_maintenance_html",
+                    "natura2000_coordinators_list_url",
+                ],
+            },
+        ),
+        (
+            "Démarches simplifiées",
+            {
+                "fields": [
+                    "demarche_simplifiee_number",
+                    "demarche_simplifiee_pre_fill_config",
+                    "demarches_simplifiees_city_id",
+                    "demarches_simplifiees_pacage_id",
+                    "demarches_simplifiees_project_url_id",
+                ],
+            },
+        ),
+    ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

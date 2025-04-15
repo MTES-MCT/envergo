@@ -1,10 +1,13 @@
 import json
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from types import SimpleNamespace
+
+from django.contrib.gis.geos import GEOSGeometry
 
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT
-from envergo.geodata.utils import merge_geometries, to_geojson
+from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
 
 
 class Stake(Enum):
@@ -32,6 +35,7 @@ class MapPolygon:
     perimeters: list  # List of objects with a `geometry` property
     color: str
     label: str
+    class_name: str = ""  # CSS class name to apply to the polygon
 
     @property
     def geometry(self):
@@ -61,6 +65,10 @@ class Map:
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
     zoom: int = 17  # the map zoom to pass to leaflet
+    zoom_on_geometry: MapPolygon = (
+        None  # Polygon to zoom on when the map is loaded. If set, center and zoom level are ignored
+    )
+    display_marker_at_center: bool = True  # Add a Map Marker at the center of the map
     ratio_classes: str = (
         "ratio-4x3 ratio-sm-4x5"  # Check for "project.scss" for available ratios
     )
@@ -86,6 +94,7 @@ class Map:
                         ),
                         "color": entry.color,
                         "label": entry.label,
+                        "className": entry.class_name,
                     }
                     for entry in self.entries
                 ],
@@ -94,6 +103,12 @@ class Map:
                     {"name": map.name, "url": map.source} for map in self.sources
                 ],
                 "fixed": self.fixed,
+                "zoomOnGeometry": (
+                    to_geojson(self.zoom_on_geometry.geometry)
+                    if self.zoom_on_geometry
+                    else None
+                ),
+                "displayMarkerAtCenter": self.display_marker_at_center,
             }
         )
         return data
@@ -105,6 +120,125 @@ class Map:
             for map in entry.maps:
                 maps.add(map)
         return maps
+
+
+class MapFactory(ABC):
+    """A factory that creates a map."""
+
+    def __init__(self, regulation):
+        self.regulation = regulation
+
+        # We use visually distinctive color palette to display perimeters.
+        # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
+        self.palette = [
+            self.regulation.polygon_color,
+            "#4e79a7",
+            "#e15759",
+            "#76b7b2",
+            "#59a14f",
+            "#edc949",
+            "#af7aa1",
+            "#ff9da7",
+            "#9c755f",
+            "#bab0ab",
+        ]
+
+    def create_perimeter_polygons(self):
+        """Create MapPolygon objects from perimeters."""
+
+        perimeters = self.regulation.perimeters.all()
+        polygons = None
+        if perimeters:
+            polygons = [
+                MapPolygon(
+                    [perimeter],
+                    self.palette[counter % len(self.palette)],
+                    perimeter.map_legend,
+                )
+                for counter, perimeter in enumerate(perimeters)
+            ]
+
+        return polygons
+
+    @abstractmethod
+    def create_map(self) -> Map | None:
+        """Create a map."""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def human_readable_name(cls):
+        raise NotImplementedError
+
+
+class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
+    """A factory that creates a map with a marker on project center and bounded by perimeters."""
+
+    @classmethod
+    def human_readable_name(cls):
+        return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet"
+
+    def create_map(self) -> Map | None:
+        """Create a map centered on moulinette location."""
+        polygons = self.create_perimeter_polygons()
+
+        if polygons:
+            map = Map(
+                type="regulation",
+                center=self.regulation.moulinette.get_map_center(),
+                entries=polygons,
+                truncate=False,
+                display_marker_at_center=True,
+                zoom=None,
+                ratio_classes="ratio-2x1 ratio-sm-4x5",
+                fixed=False,
+            )
+            return map
+
+        return None
+
+
+class HedgesToRemoveCentricMapFactory(MapFactory):
+    """A factory that creates a map centered on the hedges to remove."""
+
+    @classmethod
+    def human_readable_name(cls):
+        return "Une carte centrée sur les haies à détruire (GUH uniquement)"
+
+    def create_map(self) -> Map | None:
+        """Create a map centered on the hedges to remove."""
+        polygons = self.create_perimeter_polygons()
+        if polygons:
+            haies = self.regulation.moulinette.catalog.get("haies")
+            if haies:
+                hedges_to_remove = MapPolygon(
+                    [
+                        SimpleNamespace(
+                            geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                        )
+                        for hedge in haies.hedges_to_remove()
+                    ],
+                    "red",
+                    "Haies à détruire",
+                    class_name="hedge to-remove",
+                )
+
+                polygons.append(hedges_to_remove)
+
+                map = Map(
+                    type="regulation",
+                    center=self.regulation.moulinette.get_map_center(),
+                    entries=polygons,
+                    truncate=False,
+                    zoom_on_geometry=hedges_to_remove,
+                    display_marker_at_center=False,
+                    zoom=None,
+                    ratio_classes="ratio-2x1 ratio-sm-4x5",
+                    fixed=False,
+                )
+                return map
+
+        return None
 
 
 class CriterionEvaluator(ABC):

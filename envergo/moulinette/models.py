@@ -28,6 +28,7 @@ from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
 from django.urls import reverse
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -35,14 +36,14 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
-from envergo.moulinette.fields import CriterionEvaluatorChoiceField
+from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
     MoulinetteFormAmenagement,
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import Map, MapPolygon
+from envergo.moulinette.regulations import MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -198,6 +199,13 @@ def _check_results_groups_matrices():
 _check_results_groups_matrices()
 
 
+def get_map_factory_class_names():
+    return [
+        (f"{cls.__module__}.{cls.__name__}", cls.human_readable_name())
+        for cls in get_subclasses(MapFactory)
+    ]
+
+
 class Regulation(models.Model):
     """A single regulation (e.g Loi sur l'eau)."""
 
@@ -213,9 +221,10 @@ class Regulation(models.Model):
     weight = models.PositiveIntegerField(_("Order"), default=1)
 
     has_perimeters = models.BooleanField(
-        _("Has perimeters"),
+        "Réglementation liée aux périmètres ?",
         default=False,
-        help_text=_("Is this regulation linked to local perimetres?"),
+        help_text="Le calcul du résultat dépend de la présence ou non de périmètres,"
+        " en plus des résultats des critères",
     )
     show_map = models.BooleanField(
         _("Show perimeter map"),
@@ -223,6 +232,13 @@ class Regulation(models.Model):
         default=False,
     )
     polygon_color = models.CharField(_("Polygon color"), max_length=7, default="blue")
+
+    map_factory_name = models.CharField(
+        "Type de carte affichée",
+        choices=get_map_factory_class_names(),
+        max_length=256,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Regulation")
@@ -523,6 +539,14 @@ class Regulation(models.Model):
         return self.is_activated() and bool(self.perimeters.all())
 
     @property
+    def map_factory(self):
+        """Instantiate the map factory class from its name"""
+        if not self.map_factory_name:
+            return None
+
+        return import_string(self.map_factory_name)(self)
+
+    @property
     def map(self):
         """Returns a map to be displayed for the regulation.
 
@@ -530,41 +554,7 @@ class Regulation(models.Model):
         This map object will be serialized to Json and passed to a Leaflet
         configuration script.
         """
-
-        # We use visually distinctive color palette to display perimeters.
-        # https://d3js.org/d3-scale-chromatic/categorical#schemeTableau10
-        palette = [
-            self.polygon_color,
-            "#4e79a7",
-            "#e15759",
-            "#76b7b2",
-            "#59a14f",
-            "#edc949",
-            "#af7aa1",
-            "#ff9da7",
-            "#9c755f",
-            "#bab0ab",
-        ]
-        perimeters = self.perimeters.all()
-        if perimeters:
-            polygons = [
-                MapPolygon(
-                    [perimeter], palette[counter % len(palette)], perimeter.map_legend
-                )
-                for counter, perimeter in enumerate(perimeters)
-            ]
-            map = Map(
-                type="regulation",
-                center=self.moulinette.get_map_center(),
-                entries=polygons,
-                truncate=False,
-                zoom=None,
-                ratio_classes="ratio-2x1 ratio-sm-4x5",
-                fixed=False,
-            )
-            return map
-
-        return None
+        return self.map_factory.create_map() if self.map_factory else None
 
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
@@ -948,7 +938,9 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
-    contacts_and_links = models.TextField("Champ html d’information", blank=True)
+    contacts_and_links = models.TextField(
+        "Champ html d’information fléchage", blank=True
+    )
 
     hedge_maintenance_html = models.TextField("Champ html pour l’entretien", blank=True)
 
@@ -957,7 +949,7 @@ class ConfigHaie(ConfigBase):
     )
 
     demarche_simplifiee_number = models.IntegerField(
-        "Numéro de la démarche sur démarche simplifiée",
+        "Numéro de la démarche DS",
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
@@ -966,26 +958,26 @@ class ConfigHaie(ConfigBase):
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
-        "Configuration du pré-remplissage de la démarche",
+        "Configuration pré-remplissage DS",
         blank=True,
         null=False,
         default=list,
     )
 
     demarches_simplifiees_city_id = models.CharField(
-        'Identifiant de la "commune principale" dans Démarches Simplifiées',
+        'Identifiant DS "Commune principale"',
         blank=True,
         max_length=64,
     )
 
     demarches_simplifiees_pacage_id = models.CharField(
-        'Identifiant du "numéro de PACAGE" dans Démarches Simplifiées',
+        'Identifiant DS "numéro de PACAGE"',
         blank=True,
         max_length=64,
     )
 
     demarches_simplifiees_project_url_id = models.CharField(
-        'Identifiant du "Lien internet de la simulation réglementaire de votre projet" dans Démarches Simplifiées',
+        'Identifiant DS "Lien internet de la simulation réglementaire de votre projet"',
         blank=True,
         max_length=64,
     )
@@ -1952,6 +1944,7 @@ class MoulinetteHaie(Moulinette):
                         0, output_field=IntegerField()
                     )  # We use an exists subquery that check for intersection so the distance is 0
                 )
+                .annotate(geometry=F("activation_map__geometry"))
                 .filter(Exists(zone_subquery))
                 .order_by("id")
                 .distinct("id")

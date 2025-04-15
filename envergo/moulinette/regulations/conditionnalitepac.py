@@ -198,6 +198,9 @@ class Bcae8(CriterionEvaluator):
         is_small = False
         haies = self.catalog["haies"]
         lineaire_detruit_pac = haies.lineaire_detruit_pac()
+        lte_10m_sections_only = all(
+            section.length <= 10 for section in haies.hedges_to_remove_pac()
+        )
         ratio_detruit = 0
         if "lineaire_total" in self.catalog:
             lineaire_total = self.catalog["lineaire_total"]
@@ -217,6 +220,7 @@ class Bcae8(CriterionEvaluator):
             # Computed vars
             lineaire_detruit_pac,
             is_small,
+            lte_10m_sections_only,
         )
 
     def get_result_motif_pac(self, motif_pac):
@@ -241,6 +245,7 @@ class Bcae8(CriterionEvaluator):
             motif_pac,
             lineaire_detruit_pac,
             is_small,
+            lte_10m_sections_only,
         ) = result_data
 
         result_code = None
@@ -264,7 +269,7 @@ class Bcae8(CriterionEvaluator):
                         else:
                             result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":
-                        if lineaire_detruit_pac <= 10:
+                        if lte_10m_sections_only:
                             result_code = "soumis_chemin_acces"
                         else:
                             result_code = "interdit_chemin_acces"
@@ -305,7 +310,7 @@ class Bcae8(CriterionEvaluator):
                         else:
                             result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":
-                        if lineaire_detruit_pac <= 10:
+                        if lte_10m_sections_only:
                             result_code = "soumis_chemin_acces"
                         else:
                             result_code = "interdit_chemin_acces"
@@ -338,7 +343,7 @@ class Bcae8(CriterionEvaluator):
                         else:
                             result_code = "interdit_amelioration_culture"
                     elif motif == "chemin_acces":
-                        if lineaire_detruit_pac <= 10:
+                        if lte_10m_sections_only:
                             result_code = "soumis_chemin_acces"
                         else:
                             result_code = "interdit_chemin_acces"

@@ -35,6 +35,15 @@ html.saisie {
   }
 }
 
+.hedge.to-remove {
+  stroke: #f00;
+  stroke-width: 6px;
+  stroke-dasharray: 12 10;
+  stroke-linecap: square;
+  filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
+    drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
+}
+
 div#app {
   height: 100%;
   display: flex;
@@ -152,13 +161,6 @@ div#app {
     }
 
     .hedge.to-remove {
-      stroke: #f00;
-      stroke-width: 6px;
-      stroke-dasharray: 12 10;
-      stroke-linecap: square;
-      filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
-        drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
-
       &:hover,
       &.hovered {
         stroke-width: 8px;
@@ -462,6 +464,29 @@ div#project-specifications-instructor {
   i.optional-tag {
     display: none;
   }
+}
+
+/**
+ * Page project list
+ */
+.project-list__title {
+  text-align: center;
+}
+
+.project-list__table {
+  caption {
+    font-weight: lighter;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+
+  .fr-table__footer {
+    justify-content: center;
+  }
+}
+
+.fr-link--icon-right.link-project-detail::after {
+  margin: 0;
 }
 
 /**
