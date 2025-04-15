@@ -5,6 +5,8 @@ from envergo.geodata.tests.factories import (
     DepartmentFactory,
     MapFactory,
     ZoneFactory,
+    aisne_polygon,
+    calvados_polygon,
     france_polygon,
     herault_polygon,
     loire_atlantique_polygon,
@@ -70,6 +72,26 @@ def herault_map():
         name="Hérault",
         map_type="",
         zones=[ZoneFactory(geometry=MultiPolygon([herault_polygon]))],
+    )
+    return map
+
+
+@pytest.fixture
+def aisne_map():
+    map = MapFactory(
+        name="Aisne",
+        map_type="",
+        zones=[ZoneFactory(geometry=MultiPolygon([aisne_polygon]))],
+    )
+    return map
+
+
+@pytest.fixture
+def calvados_map():
+    map = MapFactory(
+        name="Calvados",
+        map_type="",
+        zones=[ZoneFactory(geometry=MultiPolygon([calvados_polygon]))],
     )
     return map
 
