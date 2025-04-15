@@ -2,10 +2,10 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, F, OuterRef, Q
 from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString, centroid, union_all
@@ -52,6 +52,11 @@ class Hedge:
             "additionalData": self.additionalData,
             "latLngs": self.latLngs,
         }
+
+    @property
+    def geos_geometry(self):
+        geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
+        return geom
 
     @property
     def length(self):
