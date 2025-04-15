@@ -86,6 +86,7 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
+    summary: InstructorInformation
     details: list[InstructorInformation]
     ds_data: DemarchesSimplifieesDetails | None
 
@@ -97,6 +98,7 @@ def build_instructor_informations_bcae8(
 
     hedge_data = petition_project.hedge_data
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
+    lineaire_to_plant_pac = hedge_data.length_to_plant_pac()
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     motif = moulinette.catalog.get("motif", "")
 
@@ -114,12 +116,16 @@ def build_instructor_informations_bcae8(
                 None,
             ),
         ],
-        details=[
+        details=[],
+    )
+
+    if lineaire_detruit_pac:
+        bcae8.details.append(
             InstructorInformationDetails(
                 label="Destruction",
                 items=[
                     Item(
-                        "Total linéaire détruit sur parcelle PAC",
+                        "Total linéaire à détruire sur parcelle PAC",
                         round(hedge_data.lineaire_detruit_pac()),
                         "m",
                         None,
@@ -129,7 +135,7 @@ def build_instructor_informations_bcae8(
                         (
                             ", ".join(
                                 [
-                                    f"{round(h.length)} ⋅ {h.id}"
+                                    f"{round(h.length)} m ⋅ {h.id}"
                                     for h in hedge_data.hedges_to_remove_pac()
                                 ]
                             )
@@ -150,13 +156,31 @@ def build_instructor_informations_bcae8(
                         None,
                     ),
                 ],
-            ),
+            )
+        )
+    else:
+        bcae8.details.append(
+            InstructorInformationDetails(
+                label="Destruction",
+                items=[
+                    Item(
+                        "Total linéaire détruit sur parcelle PAC",
+                        round(hedge_data.lineaire_detruit_pac()),
+                        "m",
+                        None,
+                    ),
+                ],
+            )
+        )
+
+    if lineaire_to_plant_pac:
+        bcae8.details.append(
             InstructorInformationDetails(
                 label="Plantation",
                 items=[
                     Item(
                         "Total linéaire à planter sur parcelle PAC",
-                        round(hedge_data.length_to_plant_pac()),
+                        round(lineaire_to_plant_pac),
                         "m",
                         None,
                     ),
@@ -165,7 +189,7 @@ def build_instructor_informations_bcae8(
                         (
                             ", ".join(
                                 [
-                                    f"{round(h.length)} ⋅ {h.id}"
+                                    f"{round(h.length)} m ⋅ {h.id}"
                                     for h in hedge_data.hedges_to_plant_pac()
                                 ]
                             )
@@ -179,7 +203,7 @@ def build_instructor_informations_bcae8(
                         "Ratio de replantation",
                         (
                             round(
-                                hedge_data.length_to_plant_pac() / lineaire_detruit_pac,
+                                lineaire_to_plant_pac / lineaire_detruit_pac,
                                 2,
                             )
                             if lineaire_detruit_pac > 0
@@ -190,8 +214,21 @@ def build_instructor_informations_bcae8(
                     ),
                 ],
             ),
-        ],
-    )
+        )
+    else:
+        bcae8.details.append(
+            InstructorInformationDetails(
+                label="Plantation",
+                items=[
+                    Item(
+                        "Total linéaire à planter sur parcelle PAC",
+                        round(lineaire_to_plant_pac),
+                        "m",
+                        None,
+                    ),
+                ],
+            )
+        )
 
     return bcae8
 
@@ -318,7 +355,7 @@ def build_project_summary(petition_project) -> InstructorInformation:
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
     length_to_plant = hedge_data.length_to_plant()
-    project_details = InstructorInformation(
+    project_summary = InstructorInformation(
         slug=None,
         label=None,
         items=[
@@ -345,7 +382,7 @@ def build_project_summary(petition_project) -> InstructorInformation:
         ],
     )
 
-    return project_details
+    return project_summary
 
 
 def compute_instructor_informations(
@@ -439,7 +476,8 @@ def compute_instructor_informations(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        details=[project_summary, notes_instruction, bcae8, ep],
+        summary=project_summary,
+        details=[notes_instruction, bcae8, ep],
         ds_data=ds_details,
     )
 
