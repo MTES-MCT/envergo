@@ -11,9 +11,6 @@
     <h2>Données initiales</h2>
 
     <ul>
-      <p>{{ moulinette.catalog }}</p>
-      <p>{{ regulation }}</p>
-      <p>{{ moulinette.summary }}</p>
       <li>Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m</li>
       <li>Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m</li>
 
@@ -39,11 +36,14 @@
         {% if criteria %}
           <ul>
             {% for criterion in criteria %}
-              <li>
+              <li class="fr-mb-2w">
                 {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
+                <br />
+                Déclenchement géographique : {{ criterion.activation_mode }}
+                <br />
                 {% if criterion.evaluator_settings.replantation_coefficient %}
-                  <p>R = {{ criterion.evaluator_settings.replantation_coefficient }}</p>
+                  R = {{ criterion.evaluator_settings.replantation_coefficient }}
                 {% endif %}
               </li>
             {% endfor %}
