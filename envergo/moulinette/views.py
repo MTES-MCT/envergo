@@ -591,6 +591,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
 
         moulinette = self.moulinette
         triage_form = self.triage_form
+        is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
         is_admin = self.request.user.is_staff
 
@@ -599,6 +600,8 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             template_name = MoulinetteClass.get_home_template()
         elif moulinette is None:
             template_name = "haie/moulinette/triage_result.html"
+        elif is_debug:
+            template_name = moulinette.get_debug_result_template()
         elif is_edit:
             template_name = "TODO"  # TODO
         elif not moulinette.has_config():
