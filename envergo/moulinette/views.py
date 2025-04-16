@@ -591,11 +591,30 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         """Check which template to use depending on the moulinette result."""
 
         moulinette = self.moulinette
+        triage_form = self.triage_form
+        is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
+        is_admin = self.request.user.is_staff
 
-        template_name = super().get_template_names()
-        if is_edit:
+        # We want to display the moulinette result template, but must check all
+        # previous cases where we cannot do it
+
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+
+        if moulinette is None and triage_form is None:
+            template_name = MoulinetteClass.get_home_template()
+        elif moulinette is None:
+            template_name = MoulinetteClass.get_triage_template(triage_form)
+        elif is_debug:
+            template_name = moulinette.get_debug_result_template()
+        elif is_edit:
             template_name = "TODO"  # TODO
+        elif not moulinette.has_config():
+            template_name = moulinette.get_result_non_disponible_template()
+        elif not (moulinette.is_evaluation_available() or is_admin):
+            template_name = moulinette.get_result_available_soon_template()
+        elif moulinette.has_missing_data():
+            template_name = moulinette.get_home_template()
         elif moulinette.has_missing_data():  # TODO missing only hedges to plant
             template_name = moulinette.get_result_template()
         else:
