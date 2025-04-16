@@ -10,7 +10,7 @@
 
     <h2>Données initiales</h2>
 
-    <ul>
+    <ul class="fr-mb-2w">
       <li>
         Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
         <ul>
@@ -32,6 +32,22 @@
         <li>Département : {{ moulinette.department }}</li>
       {% endif %}
     </ul>
+
+    <h2>Évaluation</h2>
+
+    {% with evaluation=plantation_evaluation.evaluation %}
+      <ul class="fr-mb-2w">
+        <li>Longueur à planter restante : {{ evaluation.length_to_plant.left_to_plant|floatformat:"g" }} m</li>
+        <li>
+          Qualité :
+          <ul>
+            {% for quality, length in evaluation.quality.missing_plantation.items %}
+              <li>{{ quality }} : {{ length|floatformat:"g" }} m</li>
+            {% endfor %}
+          </ul>
+        </li>
+      </ul>
+    {% endwith %}
 
     <h2>Réglementations</h2>
 
