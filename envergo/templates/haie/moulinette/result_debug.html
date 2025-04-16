@@ -11,8 +11,18 @@
     <h2>Données initiales</h2>
 
     <ul>
-      <li>Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m</li>
-      <li>Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m</li>
+      <li>
+        Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_remove %}<li>{{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>{% endfor %}
+        </ul>
+      </li>
+      <li>
+        Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_plant %}<li>{{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>{% endfor %}
+        </ul>
+      </li>
 
       {% if moulinette.config %}
         <li>
