@@ -25,13 +25,12 @@ class HedgePropertiesBaseForm(forms.Form):
     )
     position = forms.ChoiceField(
         choices=[
-            ("", "Sélectionner une option"),
             ("interchamp", "Inter-champ"),
             ("bord_route", "Bordure de voirie ouverte à la circulation"),
             ("autre", "Autre (bord de chemin, bâtiment…)"),
         ],
         label="Situation de la haie",
-        widget=AllowDisabledSelect(),
+        widget=forms.RadioSelect,
     )
     proximite_mare = forms.BooleanField(
         label="Mare à moins de 200 m",
@@ -47,6 +46,8 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
             ("autre", "Autre"),
         ],
         label="",
+        widget=forms.RadioSelect,
+        initial="arrachage",
     )
     vieil_arbre = forms.BooleanField(
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
@@ -91,7 +92,10 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
 
 class EssencesNonBocageresMixin(forms.Form):
     essences_non_bocageres = forms.BooleanField(
-        label="Composée d'essences non bocagères Thuya, cyprès, laurier-palme, photinia, eleagnus…",
+        label=mark_safe(
+            "Composée d'essences non bocagères "
+            '<span class="fr-hint-text">Thuya, cyprès, laurier-palme, photinia, eleagnus…</span>'
+        ),
         required=False,
     )
 
@@ -107,7 +111,9 @@ class HedgeToRemovePropertiesCalvadosForm(
     EssencesNonBocageresMixin, SurTalusMixin, HedgeToRemovePropertiesForm
 ):
     recemment_plantee = forms.BooleanField(
-        label="Haie récemment plantée Après le 1er janvier 2023",
+        label=mark_safe(
+            'Haie récemment plantée <span class="fr-hint-text">Après le 1er janvier 2023</span>'
+        ),
         required=False,
     )
 
@@ -123,18 +129,31 @@ class HedgeToPlantPropertiesCalvadosForm(
 ):
     mode_plantation = forms.ChoiceField(
         choices=[
-            ("plantation", "Plantation nouvelle ou remplacement d'une haie existante"),
+            (
+                "plantation",
+                mark_safe(
+                    'Plantation nouvelle <span class="fr-hint-text">ou remplacement d\'une haie existante</span>'
+                ),
+            ),
             (
                 "renforcement",
-                "Renforcement d'une haie existante par exemple en garnissant la strate arbustive d’un alignement "
-                "d’arbres, ou en plantant des arbres de haut-jet dans une haie d’arbustes",
+                mark_safe(
+                    "Renforcement d'une haie existante "
+                    '<span class="fr-hint-text">par exemple en garnissant la strate arbustive d’un alignement d’arbres,'
+                    " ou en plantant des arbres de haut-jet dans une haie d’arbustes</span>"
+                ),
             ),
             (
                 "reconnexion",
-                "Reconnexion d'une haie discontinue c'est-à-dire en « bouchant les trous »",
+                mark_safe(
+                    "Reconnexion d'une haie discontinue "
+                    '<span class="fr-hint-text">c\'est-à-dire en « bouchant les trous »</span>'
+                ),
             ),
         ],
         label="",
+        widget=forms.RadioSelect,
+        initial="plantation",
     )
 
     fieldsets = {
