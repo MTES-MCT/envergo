@@ -7,7 +7,7 @@ from envergo.hedges.models import HEDGE_TYPES
 
 
 class HedgePropertiesBaseForm(forms.Form):
-    hedge_type = forms.ChoiceField(
+    type_haie = forms.ChoiceField(
         choices=HEDGE_TYPES,
         label=mark_safe(
             """
@@ -51,7 +51,7 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
 
     fieldsets = {
         "Mode de destruction": ["mode_destruction"],
-        "Caractéristiques de la haie": ["hedge_type", "vieil_arbre"],
+        "Caractéristiques de la haie": ["type_haie", "vieil_arbre"],
         "Situation de la haie": ["sur_parcelle_pac", "position", "proximite_mare"],
     }
 
@@ -65,7 +65,7 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
 
     fieldsets = {
         "Caractéristiques de la haie": [
-            "hedge_type",
+            "type_haie",
         ],
         "Situation de la haie": [
             "sur_parcelle_pac",
@@ -77,8 +77,8 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Remove the 'degradee' option from hedge_type choices
-        self.fields["hedge_type"].choices = [
+        # Remove the 'degradee' option from type_haie choices
+        self.fields["type_haie"].choices = [
             choice for choice in HEDGE_TYPES if choice[0] != "degradee"
         ]
 

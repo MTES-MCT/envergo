@@ -224,10 +224,10 @@ class Hedge {
 
   // Make sure all additional data is filled
   isValid() {
-    const { hedge_type } = this.additionalData;
+    const { type_haie } = this.additionalData;
 
     // TODO add some frontend validation ?
-    return hedge_type !== undefined;
+    return type_haie !== undefined;
   }
 
   remove() {
