@@ -22,7 +22,9 @@
       <li>
         Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
         <ul>
-          {% for h in haies.hedges_to_plant %}<li>{{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>{% endfor %}
+          {% for h in haies.hedges_to_plant %}
+            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
+          {% endfor %}
         </ul>
       </li>
 
