@@ -226,8 +226,7 @@ class Hedge {
   isValid() {
     const { type_haie } = this.additionalData;
 
-    // TODO add some frontend validation ?
-    return type_haie !== undefined;
+    return type_haie !== undefined && type_haie && (!(position in this.additionalData) || this.additionalData.position);
   }
 
   remove() {

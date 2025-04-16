@@ -4,11 +4,12 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
+from envergo.utils.fields import AllowDisabledSelect
 
 
 class HedgePropertiesBaseForm(forms.Form):
     type_haie = forms.ChoiceField(
-        choices=HEDGE_TYPES,
+        choices=(("", "Sélectionner une option"),) + HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
@@ -16,6 +17,7 @@ class HedgePropertiesBaseForm(forms.Form):
         target="_blank" rel="noopener">Aide</a>
         """
         ),
+        widget=AllowDisabledSelect(),
     )
     sur_parcelle_pac = forms.BooleanField(
         label="Située sur une parcelle PAC",
@@ -23,11 +25,13 @@ class HedgePropertiesBaseForm(forms.Form):
     )
     position = forms.ChoiceField(
         choices=[
+            ("", "Sélectionner une option"),
             ("interchamp", "Inter-champ"),
             ("bord_route", "Bordure de voirie ouverte à la circulation"),
             ("autre", "Autre (bord de chemin, bâtiment…)"),
         ],
         label="Situation de la haie",
+        widget=AllowDisabledSelect(),
     )
     proximite_mare = forms.BooleanField(
         label="Mare à moins de 200 m",
@@ -79,7 +83,9 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
         super().__init__(*args, **kwargs)
         # Remove the 'degradee' option from type_haie choices
         self.fields["type_haie"].choices = [
-            choice for choice in HEDGE_TYPES if choice[0] != "degradee"
+            choice
+            for choice in self.fields["type_haie"].choices
+            if choice[0] != "degradee"
         ]
 
 
