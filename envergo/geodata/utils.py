@@ -294,7 +294,9 @@ def merge_geometries(polygons):
     merged = GEOSGeometry("POLYGON EMPTY", srid=4326)
     for polygon in polygons:
         try:
-            merged = merged.union(polygon.simplify(preserve_topology=True))
+            merged = merged.union(
+                polygon.simplify(preserve_topology=True, tolerance=0.0)
+            )
         except:  # noqa
             pass
 

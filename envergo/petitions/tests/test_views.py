@@ -7,6 +7,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -17,6 +18,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
     PetitionProjectInstructorView,
+    PetitionProjectList,
 )
 
 pytestmark = pytest.mark.django_db
@@ -211,3 +213,60 @@ def test_petition_project_instructor_display_dossier_ds_info(
     content = response.content.decode()
     assert "Formulaire rempli sur Démarches simplifiées" in content
     assert "Vous déposez cette demande en tant que :" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_list_requires_authentication(haie_user, site):
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    factory = RequestFactory()
+    request = factory.get(reverse("petition_project_list"))
+
+    # Add support  django messaging framework
+    request._messages = messages.storage.default_storage(request)
+
+    # Simulate an unauthenticated user
+    request.user = AnonymousUser()
+    request.site = site
+    request.session = {}
+
+    response = PetitionProjectList.as_view()(request)
+
+    # Check that the response is a redirect to the login page
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    # Simulate an authenticated user
+    request.user = haie_user
+
+    response = PetitionProjectInstructorView.as_view()(
+        request, reference=project.reference
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_list(client, haie_user, site):
+    """Test petition projects list"""
+
+    ConfigHaieFactory()
+    # Create a project not draft
+    project = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+    )
+
+    petition_project_list_url = reverse(
+        "petition_project_list",
+    )
+
+    client.force_login(haie_user)
+    response = client.get(petition_project_list_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert project.reference in content

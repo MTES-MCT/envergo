@@ -43,6 +43,7 @@ from envergo.evaluations.tasks import (
     confirm_request_to_requester,
     post_evalreq_to_automation,
 )
+from envergo.evaluations.utils import extract_department_from_address_or_city_string
 from envergo.geodata.models import Department
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.utils.urls import update_qs
@@ -458,6 +459,9 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
                 request_reference=request.reference,
                 request_url=reverse(
                     "admin:evaluations_request_change", args=[request.id]
+                ),
+                department=extract_department_from_address_or_city_string(
+                    request.address
                 ),
                 **mtm_keys,
             )
