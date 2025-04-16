@@ -33,6 +33,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   const dialogId = `${dialogMode}-hedge-data-dialog`
   const dialog = document.getElementById(dialogId);
   const form = dialog.querySelector("form");
+  const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
+  const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
   const resetForm = () => {
     form.reset();
     const inputs = form.querySelectorAll("input");
@@ -61,8 +63,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   } else {
     form.reset();
   }
-  // hedgeName.textContent = hedge.id;
-  // hedgeLength.textContent = hedge.length.toFixed(0);
+  hedgeName.textContent = hedge.id;
+  hedgeLength.textContent = hedge.length.toFixed(0);
 
   // Save form data to the hedge object
   // This is the form submit event handler
@@ -226,7 +228,7 @@ class Hedge {
   isValid() {
     const { type_haie } = this.additionalData;
 
-    return type_haie !== undefined && type_haie && (!(position in this.additionalData) || this.additionalData.position);
+    return type_haie !== undefined && type_haie && (!("position" in this.additionalData) || this.additionalData.position);
   }
 
   remove() {
