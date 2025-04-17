@@ -440,7 +440,12 @@ class PetitionProjectDetail(DetailView):
             self.object.demarches_simplifiees_date_depot
         )
         plantation_url = reverse(
-            "input_hedges", args=["read_only", self.object.hedge_data.id]
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                self.object.hedge_data.id,
+            ],
         )
         context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
@@ -490,6 +495,28 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         return result
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        moulinette = self.object.get_moulinette()
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
+
+        plantation_url = reverse(
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                self.object.hedge_data.id,
+            ],
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+        return context
+
 
 class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     """View for petition project instructor page"""
@@ -500,23 +527,13 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        moulinette = self.object.get_moulinette()
-        context["petition_project"] = self.object
-        context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
         context["project_details"] = compute_instructor_informations(
             self.object,
-            moulinette,
+            context["moulinette"],
             self.request.site,
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
-        plantation_url = reverse(
-            "input_hedges", args=["read_only", self.object.hedge_data.id]
-        )
-        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         # Send message if info from DS is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
@@ -542,15 +559,9 @@ class PetitionProjectInstructorDossierDSView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        moulinette = self.object.get_moulinette()
-        context["petition_project"] = self.object
-        context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
         context["project_details"] = compute_instructor_informations_ds(
             self.object,
-            moulinette,
+            context["moulinette"],
             self.request.site,
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
