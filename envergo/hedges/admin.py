@@ -1,13 +1,21 @@
 import json
 
+from celery.result import AsyncResult
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import mark_safe
 
-from envergo.hedges.models import HEDGE_TYPES, HedgeData, Species, SpeciesMap
+from envergo.hedges.models import (
+    HEDGE_TYPES,
+    HedgeData,
+    Species,
+    SpeciesMap,
+    SpeciesMapFile,
+)
+from envergo.hedges.tasks import process_species_map_file
 
 
 @admin.register(HedgeData)
@@ -122,3 +130,69 @@ class SpeciesMapAdmin(admin.ModelAdmin):
         "hedge_types",
     ]
     autocomplete_fields = ["species", "map"]
+
+
+@admin.register(SpeciesMapFile)
+class SpeciesMapFileAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "file",
+        "map",
+        "col_import_status",
+    ]
+    readonly_fields = [
+        "created_at",
+        "import_status",
+        "import_date",
+        "task_status",
+        "import_log",
+    ]
+    ordering = ["-id"]
+    search_fields = ["name"]
+    autocomplete_fields = ["map"]
+    actions = ["process"]
+    exclude = ["task_id", "geometry"]
+
+    @admin.display(
+        ordering="import_status",
+        description=mark_safe("<abbr title='Importé avec succes ?'>Imp.</abbr>"),
+    )
+    def col_import_status(self, obj):
+        if not obj.import_status:
+            return ""
+
+        icons = {
+            "success": "/static/admin/img/icon-yes.svg",
+            "failure": "/static/admin/img/icon-no.svg",
+            "partial_success": "/static/admin/img/icon-alert.svg",
+        }
+        icon = icons.get(obj.import_status)
+        html = f"<img src='{icon}' title='{obj.get_import_status_display()}' alt='{obj.get_import_status_display()}'/>"
+        return mark_safe(html)
+
+    def task_status(self, obj):
+        if not obj.task_id:
+            return "ND"
+
+        result = AsyncResult(obj.task_id)
+        try:
+            status = result.info["msg"]
+        except (TypeError, AttributeError, IndexError, KeyError):
+            status = "ND"
+        return status
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("map").defer("map__geometry")
+
+    @admin.action(description="Importer la carte d'espèces")
+    def process(self, request, queryset):
+        if queryset.count() > 1:
+            error = "Merci de ne sélectionner qu'une seule carte"
+            self.message_user(request, error, level=messages.ERROR)
+            return
+
+        map = queryset[0]
+        process_species_map_file.delay(map.id)
+        msg = "Votre fichier est en cours de traitement."
+        self.message_user(request, msg, level=messages.INFO)
