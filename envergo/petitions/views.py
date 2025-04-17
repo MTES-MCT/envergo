@@ -606,24 +606,10 @@ class PetitionProjectHedgeDataExport(DetailView):
                         {
                             "id": hedge.id,
                             "type": (
-                                "A_PLANTER" if hedge.type == TO_PLANT else "A_ARRACHER"
+                                "A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE"
                             ),
-                            "typeHaie": hedge.hedge_type,
-                            "vieilArbre": "oui" if hedge.vieil_arbre else "non",
-                            "proximiteMare": ("oui" if hedge.proximite_mare else "non"),
-                            "surParcellePac": "oui" if hedge.is_on_pac else "non",
-                            "proximitePointEau": (
-                                "oui" if hedge.proximite_point_eau else "non"
-                            ),
-                            "connexionBoisement": (
-                                "oui" if hedge.connexion_boisement else "non"
-                            ),
-                            "sousLigneElectrique": (
-                                "oui" if hedge.sous_ligne_electrique else "non"
-                            ),
-                            "proximiteVoirie": (
-                                "oui" if hedge.proximite_voirie else "non"
-                            ),
+                            "type_haie": hedge.hedge_type,
+                            "sur_parcelle_pac": "oui" if hedge.is_on_pac else "non",
                         }
                     )
                     feat = Feature(geometry=geometry, properties=properties)
