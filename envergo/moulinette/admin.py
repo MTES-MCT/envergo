@@ -397,6 +397,8 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "department",
                     "is_activated",
                     "regulations_available",
+                    "hedge_to_plant_properties_form",
+                    "hedge_to_remove_properties_form",
                 ],
             },
         ),

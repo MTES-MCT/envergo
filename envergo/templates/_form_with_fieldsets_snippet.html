@@ -1,0 +1,15 @@
+{% load utils %}
+
+{{ form.media }}
+
+{% include '_form_header.html' with form=form %}
+
+{% for name, fields in form.fieldsets.items %}
+
+  <h6>{{ name }}</h6>
+  {% for field_name in fields %}
+    {% with form|get_item:field_name as field %}
+      {% include '_field.html' with field=field %}
+    {% endwith %}
+  {% endfor %}
+{% endfor %}
