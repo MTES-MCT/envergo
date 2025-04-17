@@ -12,6 +12,7 @@ from django.views.generic.edit import FormMixin, FormView
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
 
@@ -36,6 +37,27 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["hedge_to_plant_data_form"] = HedgeToPlantPropertiesForm(
+            prefix="plantation"
+        )
+        context["hedge_to_remove_data_form"] = HedgeToRemovePropertiesForm(
+            prefix="removal"
+        )
+
+        department = self.kwargs.get("department", "")
+        context["department"] = department
+        if department:
+            config = ConfigHaie.objects.filter(
+                department__department=department
+            ).first()
+            if config:
+                context["hedge_to_plant_data_form"] = import_string(
+                    config.hedge_to_plant_properties_form
+                )(prefix="plantation")
+                context["hedge_to_remove_data_form"] = import_string(
+                    config.hedge_to_remove_properties_form
+                )(prefix="removal")
+
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
@@ -43,22 +65,9 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 plantation_evaluator.minimum_length_to_plant()
             )
             context["is_removing_pac"] = len(self.object.hedges_to_remove_pac()) > 0
-
-            context["hedge_to_plant_data_form"] = import_string(
-                moulinette.config.hedge_to_plant_properties_form
-            )(prefix="plantation")
-            context["hedge_to_remove_data_form"] = import_string(
-                moulinette.config.hedge_to_remove_properties_form
-            )(prefix="removal")
         else:
             context["minimum_length_to_plant"] = 0
             context["is_removing_pac"] = False
-            context["hedge_to_plant_data_form"] = HedgeToPlantPropertiesForm(
-                prefix="plantation"
-            )
-            context["hedge_to_remove_data_form"] = HedgeToRemovePropertiesForm(
-                prefix="removal"
-            )
 
         # TODO Refactor removal and plantation to be different views
         if self.object:

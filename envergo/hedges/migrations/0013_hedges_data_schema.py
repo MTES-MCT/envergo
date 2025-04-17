@@ -18,13 +18,12 @@ def update_hedges_data_json_schema(apps, schema_editor):
                 if not model.data:
                     continue
                 for hedge in model.data:
-                    old = hedge.get("additionalData", {})
-                    new = {}
+                    data = hedge.get("additionalData", {})
                     # update attributes for Aisne
-                    if "mode_destruction" not in old:
-                        new["mode_destruction"] = "arrachage"
-                    if "position" not in old:
-                        new["position"] = "bord_route" if "proximiteVoirie" in old and old["proximiteVoirie"] else "interchamp"
+                    if "mode_destruction" not in data:
+                        data["mode_destruction"] = "arrachage"
+                    if "position" not in data:
+                        data["position"] = "bord_route" if "proximiteVoirie" in data and data["proximiteVoirie"] else "interchamp"
                     # use snake_case instead of camelCase
                     map = [("type_haie", "typeHaie"),
                            ("vieil_arbre", "vieilArbre"),
@@ -35,9 +34,10 @@ def update_hedges_data_json_schema(apps, schema_editor):
                            ("proximite_voirie", "proximiteVoirie"),
                            ("connexion_boisement", "connexionBoisement"), ]
                     for snake, camel in map:
-                        if camel in old:
-                            new[snake] = old[camel]
-                    hedge["additionalData"] = new
+                        if camel in data:
+                            data[snake] = data[camel]
+                            del data[camel]
+                    hedge["additionalData"] = data
 
                 to_update.append(model)
 
