@@ -1,3 +1,5 @@
+from os.path import exists
+
 from celery.result import AsyncResult
 from django import forms
 from django.contrib import admin, messages
@@ -98,7 +100,17 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return queryset, may_have_duplicates
 
     def save_model(self, request, obj, form, change):
-        obj.expected_zones = count_features(obj.file)
+
+        # We want to open the file to count the expected zones
+        # We do this by opening the file field
+        # However, when it's a first upload, the file has not been saved and moved to
+        # it's definitive place yet. Hence we use the FieldFile object instead
+        file_path = obj.file.path
+        if exists(file_path):
+            file = obj.file
+        else:
+            file = obj.file.file
+        obj.expected_zones = count_features(file)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
