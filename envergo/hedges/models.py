@@ -6,6 +6,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
+from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString, centroid, union_all
@@ -352,6 +353,13 @@ class SpeciesMap(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Carte",
     )
+    species_map_file = models.ForeignKey(
+        "SpeciesMapFile",
+        verbose_name="Importé par",
+        related_name="species_maps",
+        null=True,
+        on_delete=models.CASCADE,
+    )
 
     hedge_types = ArrayField(
         verbose_name="Types de haies considérés",
@@ -370,3 +378,31 @@ class SpeciesMap(models.Model):
     class Meta:
         verbose_name = "Carte d'espèce"
         verbose_name_plural = "Cartes d'espèces"
+        unique_together = ("species", "map")
+
+
+IMPORT_STATUSES = Choices(
+    ("success", "Succès"),
+    ("partial_success", "Succès partiel"),
+    ("failure", "Échec"),
+)
+
+
+class SpeciesMapFile(models.Model):
+    name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
+    file = models.FileField("Fichier", upload_to="species_maps/")
+    map = models.ForeignKey(
+        "geodata.Map", on_delete=models.PROTECT, verbose_name="Carte"
+    )
+
+    created_at = models.DateTimeField("Créé le", default=timezone.now)
+    import_status = models.CharField(
+        "Statut d'import", max_length=32, choices=IMPORT_STATUSES, null=True
+    )
+    import_date = models.DateTimeField("Date du dernier import", null=True, blank=True)
+    task_id = models.CharField("Celery task id", max_length=256, null=True, blank=True)
+    import_log = models.TextField("Log d'import", blank=True)
+
+    class Meta:
+        verbose_name = "Fichier de carte d'espèces"
+        verbose_name_plural = "Fichiers de carte d'espèces"
