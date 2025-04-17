@@ -2,10 +2,11 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, F, OuterRef, Q
+from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString
@@ -51,6 +52,11 @@ class Hedge:
             "additionalData": self.additionalData,
             "latLngs": self.latLngs,
         }
+
+    @property
+    def geos_geometry(self):
+        geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
+        return geom
 
     @property
     def length(self):
@@ -99,18 +105,18 @@ class Hedge:
         MAY live in an "alignement arboré" or "haie multistrate" and
         requires old trees (vieil_arbre is checked).
         """
-        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
+        q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
 
         exclude = []
 
         if not self.proximite_mare:
-            exclude.append(Q(proximite_mare=True))
+            exclude.append(Q(species_maps__proximite_mare=True))
         if not self.vieil_arbre:
-            exclude.append(Q(vieil_arbre=True))
+            exclude.append(Q(species_maps__vieil_arbre=True))
         if not self.proximite_point_eau:
-            exclude.append(Q(proximite_point_eau=True))
+            exclude.append(Q(species_maps__proximite_point_eau=True))
         if not self.connexion_boisement:
-            exclude.append(Q(connexion_boisement=True))
+            exclude.append(Q(species_maps__connexion_boisement=True))
 
         filter = q_hedge_type
         if exclude:
@@ -121,7 +127,15 @@ class Hedge:
     def get_species(self):
         """Return known species that may be related to this hedge."""
 
-        qs = Species.objects.filter(self.get_species_filter())
+        zone_subquery = Zone.objects.filter(
+            Q(geometry__intersects=self.geos_geometry)
+        ).filter(Q(map_id=OuterRef("map_id")))
+
+        qs = (
+            Species.objects.annotate(map_id=F("species_maps__map_id"))
+            .filter(self.get_species_filter())
+            .filter(Exists(zone_subquery))
+        )
         return qs
 
 
@@ -206,32 +220,22 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
-    def get_hedge_species(self):
-        """Return species that may live in the hedges."""
-
-        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
-        union = reduce(operator.or_, filters)
-        species = Species.objects.filter(union).order_by("group", "common_name")
-        return species
-
-    def get_local_species_codes(self):
-        """Return species names that are known to live here."""
-
-        bbox = self.get_bounding_box(self.hedges_to_remove())
-        zones = Zone.objects.filter(geometry__intersects=bbox).filter(
-            map__map_type="species"
-        )
-        codes = set()
-        for zone in zones:
-            codes.update(zone.attributes.get("especes", []))
-        return list(codes)
-
     def get_all_species(self):
         """Return the local list of protected species."""
 
-        hedge_species_qs = self.get_hedge_species()
-        local_species_codes = self.get_local_species_codes()
-        return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
+        zone_subquery = Zone.objects.filter(
+            Q(geometry__intersects=self.get_bounding_box(self.hedges()))
+        ).filter(Q(map_id=OuterRef("map_id")))
+
+        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        union = reduce(operator.or_, filters)
+        species = (
+            Species.objects.filter(union)
+            .annotate(map_id=F("species_maps__map_id"))
+            .order_by("group", "common_name")
+            .filter(Exists(zone_subquery))
+        )
+        return species
 
 
 HEDGE_TYPES = (
@@ -315,3 +319,73 @@ class Species(models.Model):
 
     def __str__(self):
         return f"{self.common_name} ({self.scientific_name})"
+
+
+class SpeciesMap(models.Model):
+    """Represent a single species map."""
+
+    species = models.ForeignKey(
+        Species,
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Espèce",
+    )
+    map = models.ForeignKey(
+        "geodata.Map",
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Carte",
+    )
+    species_map_file = models.ForeignKey(
+        "SpeciesMapFile",
+        verbose_name="Importé par",
+        related_name="species_maps",
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    hedge_types = ArrayField(
+        verbose_name="Types de haies considérés",
+        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
+    )
+    # Those fields are in french to match existing fields describing hedges
+    proximite_mare = models.BooleanField("Mare à moins de 200 m")
+    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
+    connexion_boisement = models.BooleanField(
+        "Connectée à un boisement ou à une autre haie"
+    )
+    vieil_arbre = models.BooleanField(
+        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+    )
+
+    class Meta:
+        verbose_name = "Carte d'espèce"
+        verbose_name_plural = "Cartes d'espèces"
+        unique_together = ("species", "map")
+
+
+IMPORT_STATUSES = Choices(
+    ("success", "Succès"),
+    ("partial_success", "Succès partiel"),
+    ("failure", "Échec"),
+)
+
+
+class SpeciesMapFile(models.Model):
+    name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
+    file = models.FileField("Fichier", upload_to="species_maps/")
+    map = models.ForeignKey(
+        "geodata.Map", on_delete=models.PROTECT, verbose_name="Carte"
+    )
+
+    created_at = models.DateTimeField("Créé le", default=timezone.now)
+    import_status = models.CharField(
+        "Statut d'import", max_length=32, choices=IMPORT_STATUSES, null=True
+    )
+    import_date = models.DateTimeField("Date du dernier import", null=True, blank=True)
+    task_id = models.CharField("Celery task id", max_length=256, null=True, blank=True)
+    import_log = models.TextField("Log d'import", blank=True)
+
+    class Meta:
+        verbose_name = "Fichier de carte d'espèces"
+        verbose_name_plural = "Fichiers de carte d'espèces"
