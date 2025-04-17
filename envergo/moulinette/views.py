@@ -581,6 +581,15 @@ class MoulinetteHaieResult(
             context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
         return context
 
+    def log_moulinette_event(self, moulinette, context, **kwargs):
+        """Add centroid and department of haies to remove"""
+        if moulinette and "haies" in moulinette.catalog:
+            hedge_data = moulinette.catalog["haies"]
+            hedge_centroid_coords = hedge_data.get_centroid_to_remove()
+            kwargs["x,y"] = f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            kwargs["departement"] = hedge_data.get_department()
+            super().log_moulinette_event(moulinette, context, **kwargs)
+
 
 class MoulinetteResultPlantation(MoulinetteHaieResult):
     event_category = "simulateur"
