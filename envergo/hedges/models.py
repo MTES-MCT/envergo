@@ -8,9 +8,10 @@ from django.db import models
 from django.db.models import Q
 from model_utils import Choices
 from pyproj import Geod
-from shapely import LineString
+from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
+from envergo.geodata.utils import get_department_from_coords
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -174,6 +175,18 @@ class HedgeData(models.Model):
             for h in self.hedges_to_remove()
             if h.is_on_pac and h.hedge_type != "alignement"
         ]
+
+    def get_centroid_to_remove(self):
+        hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
+        hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
+        return hedges_centroid
+
+    def get_department(self):
+        hedges_centroid = self.get_centroid_to_remove()
+        code_department = get_department_from_coords(
+            hedges_centroid.x, hedges_centroid.y
+        )
+        return code_department
 
     def hedges_to_plant_pac(self):
         return [

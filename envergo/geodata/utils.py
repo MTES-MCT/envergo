@@ -288,6 +288,24 @@ def get_commune_from_coords(lng, lat, timeout=0.5):
     return data["nom"] if data else None
 
 
+def get_department_from_coords(lng, lat, timeout=0.5):
+    url = f"https://geo.api.gouv.fr/communes?lon={lng}&lat={lat}&fields=code,nom,codeDepartement"
+
+    if is_test():
+        raise NotImplementedError("You should mock this function in tests")
+
+    data = None
+    try:
+        res = requests.get(url, timeout=timeout)
+        if res.status_code == 200:
+            json = res.json()
+            data = json[0]
+    except (requests.exceptions.Timeout, KeyError, IndexError):
+        pass
+
+    return data["codeDepartement"] if data else None
+
+
 def merge_geometries(polygons):
     """Return a single polygon that is the fusion of the given polygons."""
 
