@@ -1,4 +1,5 @@
 import copy
+from abc import abstractmethod
 
 from django import forms
 from django.utils.safestring import mark_safe
@@ -60,6 +61,11 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
         "Situation de la haie": ["sur_parcelle_pac", "position", "proximite_mare"],
     }
 
+    @classmethod
+    @abstractmethod
+    def human_readable_name(cls):
+        return "Caractéristiques de base"
+
 
 class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
 
@@ -88,6 +94,11 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
             for choice in self.fields["type_haie"].choices
             if choice[0] != "degradee"
         ]
+
+    @classmethod
+    @abstractmethod
+    def human_readable_name(cls):
+        return "Caractéristiques de base"
 
 
 class EssencesNonBocageresMixin(forms.Form):
@@ -122,6 +133,10 @@ class HedgeToRemovePropertiesCalvadosForm(
         ["essences_non_bocageres", "recemment_plantee"]
     )
     fieldsets["Situation de la haie"].extend(["sur_talus"])
+
+    @classmethod
+    def human_readable_name(cls):
+        return "Caractéristiques du Calvados ( + talus, essences non bocagères, récemment plantée)"
 
 
 class HedgeToPlantPropertiesCalvadosForm(
@@ -163,6 +178,10 @@ class HedgeToPlantPropertiesCalvadosForm(
     fieldsets["Caractéristiques de la haie"].extend(["essences_non_bocageres"])
     fieldsets["Situation de la haie"].extend(["sur_talus"])
 
+    @classmethod
+    def human_readable_name(cls):
+        return "Caractéristiques du Calvados ( + talus, essences non bocagères, type de plantation)"
+
 
 class ProximitePointEauMixin(forms.Form):
     proximite_point_eau = forms.BooleanField(
@@ -187,6 +206,10 @@ class HedgeToRemovePropertiesAisneForm(
         ["proximite_point_eau", "connexion_boisement"]
     )
 
+    @classmethod
+    def human_readable_name(cls):
+        return "Caractéristiques de l'Aisne ( + proximité point d'eau, connexion boisement)"
+
 
 class HedgeToPlantPropertiesAisneForm(
     ProximitePointEauMixin, ConnexionBoisementMixin, HedgeToPlantPropertiesForm
@@ -196,3 +219,7 @@ class HedgeToPlantPropertiesAisneForm(
     fieldsets["Situation de la haie"].extend(
         ["proximite_point_eau", "connexion_boisement"]
     )
+
+    @classmethod
+    def human_readable_name(cls):
+        return "Caractéristiques de l'Aisne ( + proximité point d'eau, connexion boisement)"
