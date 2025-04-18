@@ -1815,6 +1815,17 @@ li.btn-link {
   }
 }
 
+.fr-card.fr-card--no-arrow {
+  .fr-card__title a::after {
+    content: none;
+  }
+
+  .fr-card__body > .fr-card__title {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+}
+
 .dark-only {
   display: none;
 }
