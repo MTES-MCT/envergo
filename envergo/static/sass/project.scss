@@ -1826,8 +1826,23 @@ li.btn-link {
   }
 }
 
+.card--horizontal-1-5 .fr-card__header {
+  width: 20%;
+  flex: 0 0 20%;
+}
+
+.responsive-image,
+.fr-card--horizontal .fr-card__img img.responsive-image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
+
 .dark-only {
-  display: none;
+  display: none !important;
 }
 
 :root[data-fr-theme="dark"] {
@@ -1836,7 +1851,7 @@ li.btn-link {
   }
 
   .light-only {
-    display: none;
+    display: none !important;
   }
 }
 
