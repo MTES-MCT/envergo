@@ -493,6 +493,16 @@ div#project-specifications-instructor {
  * Page instructor
  */
 
+.project-inner-content {
+  max-width: 42em;
+}
+
+#form-group-instructor_free_mention .label-content {
+  font-weight: bold;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
 .ds-item > .fr-sidemenu__link::after {
   content: "";
   background-image: url("/static/images/logo_demarches_simplifiees.png");
