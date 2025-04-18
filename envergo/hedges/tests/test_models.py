@@ -8,7 +8,6 @@ from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
-    SpeciesFactory,
     SpeciesMapFactory,
 )
 
@@ -132,7 +131,7 @@ def test_species_are_filtered_by_hedge_type():
     s1 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s2 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s3 = SpeciesMapFactory(hedge_types=["arbustive"]).species
-    hedge = HedgeFactory(additionalData__typeHaie="degradee")
+    hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
     hedges_species = hedges.get_all_species()
@@ -140,7 +139,7 @@ def test_species_are_filtered_by_hedge_type():
     assert s2 in hedges_species
     assert s3 not in hedges_species
 
-    hedge = HedgeFactory(additionalData__typeHaie="arbustive")
+    hedge = HedgeFactory(additionalData__type_haie="arbustive")
     hedges = HedgeDataFactory(hedges=[hedge])
     hedges_species = hedges.get_all_species()
     assert s1 not in hedges_species
@@ -169,25 +168,25 @@ def test_species_are_filtered_by_hedge_features():
     s4 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=False).species
 
     hedge = HedgeFactory(
-        additionalData__proximiteMare=False, additionalData__vieilArbre=False
+        additionalData__proximite_mare=False, additionalData__vieil_arbre=False
     )
     hedge_species = hedge.get_species()
     assert set(hedge_species) == set([s4])
 
     hedge = HedgeFactory(
-        additionalData__proximiteMare=True, additionalData__vieilArbre=False
+        additionalData__proximite_mare=True, additionalData__vieil_arbre=False
     )
     hedge_species = hedge.get_species()
     assert set(hedge_species) == set([s2, s4])
 
     hedge = HedgeFactory(
-        additionalData__proximiteMare=False, additionalData__vieilArbre=True
+        additionalData__proximite_mare=False, additionalData__vieil_arbre=True
     )
     hedge_species = hedge.get_species()
     assert set(hedge_species) == set([s3, s4])
 
     hedge = HedgeFactory(
-        additionalData__proximiteMare=True, additionalData__vieilArbre=True
+        additionalData__proximite_mare=True, additionalData__vieil_arbre=True
     )
     hedge_species = hedge.get_species()
     assert set(hedge_species) == set([s1, s2, s3, s4])
@@ -200,13 +199,13 @@ def test_multiple_hedges_combine_their_species():
     s4 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=False).species
 
     hedge1 = HedgeFactory(
-        additionalData__proximiteMare=True, additionalData__vieilArbre=False
+        additionalData__proximite_mare=True, additionalData__vieil_arbre=False
     )
     hedge_species = hedge1.get_species()
     assert set(hedge_species) == set([s2, s4])
 
     hedge2 = HedgeFactory(
-        additionalData__proximiteMare=False, additionalData__vieilArbre=True
+        additionalData__proximite_mare=False, additionalData__vieil_arbre=True
     )
     hedge_species = hedge2.get_species()
     assert set(hedge_species) == set([s3, s4])
