@@ -3,14 +3,16 @@ import json
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.module_loading import import_string
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
-from envergo.hedges.forms import HedgeToPlantDataForm, HedgeToRemoveDataForm
+from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
 
@@ -35,6 +37,27 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["hedge_to_plant_data_form"] = HedgeToPlantPropertiesForm(
+            prefix="plantation"
+        )
+        context["hedge_to_remove_data_form"] = HedgeToRemovePropertiesForm(
+            prefix="removal"
+        )
+
+        department = self.kwargs.get("department", "")
+        context["department"] = department
+        if department:
+            config = ConfigHaie.objects.filter(
+                department__department=department
+            ).first()
+            if config:
+                context["hedge_to_plant_data_form"] = import_string(
+                    config.hedge_to_plant_properties_form
+                )(prefix="plantation")
+                context["hedge_to_remove_data_form"] = import_string(
+                    config.hedge_to_remove_properties_form
+                )(prefix="removal")
+
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
@@ -51,9 +74,6 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
             context["hedge_data_json"] = json.dumps(self.object.data)
         else:
             context["hedge_data_json"] = "[]"
-
-        context["hedge_to_plant_data_form"] = HedgeToPlantDataForm(prefix="plantation")
-        context["hedge_to_remove_data_form"] = HedgeToRemoveDataForm(prefix="removal")
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode

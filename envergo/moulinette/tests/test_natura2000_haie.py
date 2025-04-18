@@ -52,12 +52,12 @@ def moulinette_data(lat1, lng1, lat2, lng2):
                     {"lat": lat2, "lng": lng2},
                 ],
                 "additionalData": {
-                    "typeHaie": "degradee",
-                    "vieilArbre": False,
-                    "proximiteMare": False,
-                    "surParcellePac": False,
-                    "proximitePointEau": False,
-                    "connexionBoisement": False,
+                    "type_haie": "degradee",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
                 },
             }
         ]
