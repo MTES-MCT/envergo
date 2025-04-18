@@ -586,8 +586,10 @@ class MoulinetteHaieResult(
         if moulinette and "haies" in moulinette.catalog:
             hedge_data = moulinette.catalog["haies"]
             hedge_centroid_coords = hedge_data.get_centroid_to_remove()
-            kwargs["x,y"] = f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
-            kwargs["departement"] = hedge_data.get_department()
+            kwargs["lnglat_centroide_haie_detruite"] = (
+                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            )
+            kwargs["dept_haie_detruite"] = hedge_data.get_department()
             super().log_moulinette_event(moulinette, context, **kwargs)
 
 
