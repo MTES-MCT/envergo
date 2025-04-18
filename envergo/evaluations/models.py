@@ -574,7 +574,10 @@ class EvaluationEmail:
                 evaluation.send_eval_to_project_owner,
             )
         ):
-            if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
+            if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result in [
+                "soumis",
+                "soumis_ou_pac",
+            ]:
                 if config.ddtm_water_police_email:
                     bcc_recipients.append(config.ddtm_water_police_email)
                 else:
