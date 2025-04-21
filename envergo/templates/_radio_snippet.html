@@ -7,7 +7,7 @@
             {% if field.errors %}aria-labelledby="legend-{{ field.html_name }} error-text-{{ field.html_name }}"{% endif %}>
 
     {% if field.label or field.help_text %}
-      <legend class="fr-fieldset__legend fr-text--regular"
+      <legend class="fr-fieldset__legend fr-text--bold"
               id="legend-{{ field.html_name }}">
         {{ field.label }}
         {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
