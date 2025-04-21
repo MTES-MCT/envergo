@@ -9,6 +9,8 @@ from envergo.utils.fields import AllowDisabledSelect
 
 
 class HedgePropertiesBaseForm(forms.Form):
+    """Base Hedge properties form"""
+
     type_haie = forms.ChoiceField(
         choices=(("", "Sélectionner une option"),) + HEDGE_TYPES,
         label=mark_safe(
@@ -40,6 +42,8 @@ class HedgePropertiesBaseForm(forms.Form):
 
 
 class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
+    """Hedge to remove properties form"""
+
     mode_destruction = forms.ChoiceField(
         choices=[
             ("arrachage", "Arrachage"),
@@ -68,6 +72,7 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
 
 
 class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
+    """Hedge to plant properties form"""
 
     sous_ligne_electrique = forms.BooleanField(
         label="Sous une ligne électrique ou téléphonique",
@@ -121,6 +126,8 @@ class SurTalusMixin(forms.Form):
 class HedgeToRemovePropertiesCalvadosForm(
     EssencesNonBocageresMixin, SurTalusMixin, HedgeToRemovePropertiesForm
 ):
+    """Hedge to remove properties form : Calvados specific"""
+
     recemment_plantee = forms.BooleanField(
         label=mark_safe(
             'Haie récemment plantée <span class="fr-hint-text">Après le 1er janvier 2023</span>'
@@ -142,6 +149,8 @@ class HedgeToRemovePropertiesCalvadosForm(
 class HedgeToPlantPropertiesCalvadosForm(
     EssencesNonBocageresMixin, SurTalusMixin, HedgeToPlantPropertiesForm
 ):
+    """Hedge to plant properties form : Calvados specific"""
+
     mode_plantation = forms.ChoiceField(
         choices=[
             (
@@ -200,6 +209,7 @@ class ConnexionBoisementMixin(forms.Form):
 class HedgeToRemovePropertiesAisneForm(
     ProximitePointEauMixin, ConnexionBoisementMixin, HedgeToRemovePropertiesForm
 ):
+    """Hedge to remove properties form : Aisne specific"""
 
     fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
     fieldsets["Situation de la haie"].extend(
@@ -214,6 +224,7 @@ class HedgeToRemovePropertiesAisneForm(
 class HedgeToPlantPropertiesAisneForm(
     ProximitePointEauMixin, ConnexionBoisementMixin, HedgeToPlantPropertiesForm
 ):
+    """Hedge to plant properties form : Aisne specific"""
 
     fieldsets = copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets)
     fieldsets["Situation de la haie"].extend(
