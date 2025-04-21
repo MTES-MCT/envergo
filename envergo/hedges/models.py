@@ -69,6 +69,14 @@ class Hedge:
         return self.additionalData.get("type_haie", None)
 
     @property
+    def mode_destruction(self):
+        return self.additionalData.get("mode_destruction", None)
+
+    @property
+    def position(self):
+        return self.additionalData.get("position", None)
+
+    @property
     def proximite_mare(self):
         return self.additionalData.get("proximite_mare", None)
 
@@ -87,10 +95,6 @@ class Hedge:
     @property
     def sous_ligne_electrique(self):
         return self.additionalData.get("sous_ligne_electrique", None)
-
-    @property
-    def proximite_voirie(self):
-        return self.additionalData.get("proximite_voirie", None)
 
     def get_species_filter(self):
         """Build the filter to get possible protected species.

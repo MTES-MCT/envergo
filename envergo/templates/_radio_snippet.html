@@ -4,6 +4,7 @@
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
   <fieldset class="fr-fieldset {{ field.field.widget.fieldset_class }} {% if field.errors %}fr-fieldset--error{% endif %}"
             role="group"
+            id="id_{{ field.html_name }}"
             {% if field.errors %}aria-labelledby="legend-{{ field.html_name }} error-text-{{ field.html_name }}"{% endif %}>
 
     {% if field.label or field.help_text %}
