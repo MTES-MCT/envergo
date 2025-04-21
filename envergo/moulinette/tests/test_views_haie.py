@@ -5,6 +5,7 @@ from django.test import override_settings
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
+from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 
 pytestmark = pytest.mark.django_db
@@ -46,17 +47,19 @@ def test_triage_result(client):
 def test_debug_result(client):
 
     ConfigHaieFactory()
+    haies = HedgeDataFactory()
 
     data = {
         "profil": "autre",
         "element": "haie",
-        "motif": "chemin_acces",
+        "motif": "amelioration_ecologique",
         "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "travaux": "destruction",
+        "haies": str(haies.id),
         "department": "44",
         "debug": "true",
-        "haies": "abdc-1234",
     }
-
     url = reverse("moulinette_result")
     params = urlencode(data)
     full_url = f"{url}?{params}"
