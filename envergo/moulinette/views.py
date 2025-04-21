@@ -595,7 +595,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         # Moulinette result template for plantation is not the moulinette ABC class result template
         # So we get the template name super and check specific cases
 
-        template_name = super().get_template_names()
+        template_name = super().get_template_names()[0]
 
         if is_edit:
             template_name = "TODO"  # TODO
