@@ -30,7 +30,7 @@ class HedgePropertiesBaseForm(forms.Form):
             ("bord_route", "Bordure de voirie ouverte à la circulation"),
             ("autre", "Autre (bord de chemin, bâtiment…)"),
         ],
-        label="Situation de la haie",
+        label="Localisation de la haie",
         widget=forms.RadioSelect,
     )
     proximite_mare = forms.BooleanField(
