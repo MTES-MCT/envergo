@@ -68,7 +68,8 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Centroïde des haies à détruire")
     def centroid(self, obj):
-        return obj.get_centroid_to_remove()
+        hedge_centroid_coords = obj.get_centroid_to_remove()
+        return f"{hedge_centroid_coords.y}, {hedge_centroid_coords.x}"
 
     @admin.display(description="Nombre de haies à planter")
     def hedges_to_plant(self, obj):
