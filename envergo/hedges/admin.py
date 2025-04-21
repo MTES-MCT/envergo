@@ -24,6 +24,8 @@ class HedgeDataAdmin(admin.ModelAdmin):
     readonly_fields = [
         "data",
         "hedges",
+        "department",
+        "centroid",
         "hedges_to_plant",
         "length_to_plant",
         "hedges_to_remove",
@@ -60,15 +62,27 @@ class HedgeDataAdmin(admin.ModelAdmin):
         )
         return mark_safe(content)
 
+    @admin.display(description="Département")
+    def department(self, obj):
+        return obj.get_department()
+
+    @admin.display(description="Centroïde des haies à détruire")
+    def centroid(self, obj):
+        return obj.get_centroid_to_remove()
+
+    @admin.display(description="Nombre de haies à planter")
     def hedges_to_plant(self, obj):
         return len(obj.hedges_to_plant())
 
+    @admin.display(description="Longueur des haies à planter")
     def length_to_plant(self, obj):
         return round(obj.length_to_plant())
 
+    @admin.display(description="Nombre de haies à détruire")
     def hedges_to_remove(self, obj):
         return len(obj.hedges_to_remove())
 
+    @admin.display(description="Longueur des haies à détruire")
     def length_to_remove(self, obj):
         return round(obj.length_to_remove())
 
