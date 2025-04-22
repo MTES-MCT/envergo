@@ -604,7 +604,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             # By opening a layer in write mode, it will squash the layer data
             # Luckily for us, that's the behaviour we want
             with fiona.open(template_file) as src, fiona.open(
-                export_file, "w", layer="haie_envergo", **src.meta
+                export_file, "w", layer="haie", **src.meta
             ) as dst:
                 for hedge in data.hedges():
                     transformer = Transformer.from_crs(
@@ -630,7 +630,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")
                 response["Content-Disposition"] = (
-                    'attachment; filename="guh_export.gpkg"'
+                    f'attachment; filename="haies_dossier_{self.object.reference}.gpkg"'
                 )
 
         return response
