@@ -55,6 +55,15 @@ const showHedgeModal = (hedge, hedgeType) => {
       if (field) {
         if (field.type === "checkbox") {
           field.checked = hedge.additionalData[property];
+        } else if (field.type === "fieldset") {
+          // radio group
+          for(let i = 0; i < field.elements.length; i++){
+            let value = field.elements[i].value;
+            if (value === hedge.additionalData[property]) {
+              console.log(value)
+              field.elements[i].checked = true
+            }
+          }
         } else {
           field.value = hedge.additionalData[property];
         }
@@ -81,7 +90,16 @@ const showHedgeModal = (hedge, hedgeType) => {
         if (!element.name || element.type === 'submit' || element.type === 'button') continue;
 
         const propertyName = element.name.split("-")[1]; // remove prefix
-        hedge.additionalData[propertyName] = element.type === "checkbox" ? element.checked : element.value;
+        if (element.type === "checkbox") {
+          hedge.additionalData[propertyName] = element.checked;
+        } else if (element.type === "radio") {
+          if (element.checked) {
+            hedge.additionalData[propertyName] = element.value;
+          }
+        }
+        else {
+            hedge.additionalData[propertyName] = element.value;
+        }
       }
     }
     // Reset the form and hide the modal
