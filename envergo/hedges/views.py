@@ -34,29 +34,65 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         except AttributeError:
             return None
 
+    def get_hedge_to_plant_data_form(self, config=None):
+        """Return hedge data form to plant from config"""
+        data_form = HedgeToPlantPropertiesForm(prefix="plantation")
+        if config:
+            data_form = import_string(config.hedge_to_plant_properties_form)(
+                prefix="plantation"
+            )
+
+        return data_form
+
+    def get_hedge_to_remove_data_form(self, config=None):
+        """Return hedge data form to remove from config"""
+        data_form = HedgeToRemovePropertiesForm(prefix="removal")
+        if config:
+            data_form = import_string(config.hedge_to_remove_properties_form)(
+                prefix="removal"
+            )
+
+        return data_form
+
+    def get_matomo_custom_url(self, mode="removal"):
+        """Return matomo custom url depending on mode"""
+        matomo_custom_url = ""
+        if mode == "removal":
+            matomo_custom_url = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_d")
+            )
+        if mode == "plantation":
+            matomo_custom_url = self.request.build_absolute_uri(
+                reverse("moulinette_saisie_p")
+            )
+        elif mode == "read_only":
+            source_page = self.request.GET.get("source_page")
+            if source_page == "consultation":
+                matomo_custom_url = self.request.build_absolute_uri(
+                    reverse("petition_project_hedges")
+                )
+            elif source_page == "instruction":
+                matomo_custom_url = self.request.build_absolute_uri(
+                    reverse("instructor_view_hedges")
+                )
+
+        return matomo_custom_url
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["hedge_to_plant_data_form"] = HedgeToPlantPropertiesForm(
-            prefix="plantation"
-        )
-        context["hedge_to_remove_data_form"] = HedgeToRemovePropertiesForm(
-            prefix="removal"
-        )
-
+        config = None
         department = self.kwargs.get("department", "")
         context["department"] = department
         if department:
             config = ConfigHaie.objects.filter(
                 department__department=department
             ).first()
-            if config:
-                context["hedge_to_plant_data_form"] = import_string(
-                    config.hedge_to_plant_properties_form
-                )(prefix="plantation")
-                context["hedge_to_remove_data_form"] = import_string(
-                    config.hedge_to_remove_properties_form
-                )(prefix="removal")
+
+        context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
+        context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(
+            config
+        )
 
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
@@ -77,24 +113,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode
-        if mode == "removal":
-            context["matomo_custom_url"] = self.request.build_absolute_uri(
-                reverse("moulinette_saisie_d")
-            )
-        elif mode == "plantation":
-            context["matomo_custom_url"] = self.request.build_absolute_uri(
-                reverse("moulinette_saisie_p")
-            )
-        elif mode == "read_only":
-            source_page = self.request.GET.get("source_page")
-            if source_page == "consultation":
-                context["matomo_custom_url"] = self.request.build_absolute_uri(
-                    reverse("petition_project_hedges")
-                )
-            elif source_page == "instruction":
-                context["matomo_custom_url"] = self.request.build_absolute_uri(
-                    reverse("instructor_view_hedges")
-                )
+        context["matomo_custom_url"] = self.get_matomo_custom_url(mode)
 
         return context
 
