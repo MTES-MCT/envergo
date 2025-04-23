@@ -627,10 +627,14 @@ class PetitionProjectHedgeDataExport(DetailView):
                     dst.write(feat)
 
             # Create a response with the GeoPackage file
+            export_filename = "haies_dossier.gpkg"
+            if self.object.demarches_simplifiees_dossier_number:
+                export_filename = f"haies_dossier_{self.object.demarches_simplifiees_dossier_number}.gpkg"
+
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")
                 response["Content-Disposition"] = (
-                    f'attachment; filename="haies_dossier_{self.object.reference}.gpkg"'
+                    f'attachment; filename="haies_dossier_{export_filename}.gpkg"'
                 )
 
         return response

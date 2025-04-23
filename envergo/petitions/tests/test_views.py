@@ -286,7 +286,8 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
     client.force_login(haie_user)
     response = client.get(geopkg_url)
     response.get("Content-Disposition")
-    assert f"haies_dossier_{project.reference}.gpkg" in response.get(
-        "Content-Disposition"
+    assert (
+        f"haies_dossier_{project.demarches_simplifiees_dossier_number}.gpkg"
+        in response.get("Content-Disposition")
     )
     # TODO: check the features
