@@ -18,6 +18,10 @@ class UserFactory(DjangoModelFactory):
         model = get_user_model()
         django_get_or_create = ["email"]
 
+
+class User44Factory(UserFactory):
+    """User instructeur with rights to department 44"""
+
     @factory.post_generation
     def create_user(obj, create, extracted, **kwargs):
         department_44 = DepartmentFactory.create()
