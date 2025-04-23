@@ -634,7 +634,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")
                 response["Content-Disposition"] = (
-                    f'attachment; filename="{export_filename}.gpkg"'
+                    f'attachment; filename="{export_filename}"'
                 )
 
         return response
