@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
+from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
@@ -20,9 +21,19 @@ from envergo.petitions.views import (
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
-from envergo.users.tests.factories import User44Factory
+from envergo.users.models import User
+from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def haie_user_44(haie_user) -> User:
+    """Haie user with dept 44"""
+    haie_user_44 = UserFactory(access_amenagement=False, access_haie=True)
+    department_44 = DepartmentFactory.create()
+    haie_user_44.departments.add(department_44)
+    return haie_user_44
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
@@ -103,10 +114,12 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_instructor_view_requires_authentication(haie_user, site):
-    """Test petition project instructor page requires authentication
-
-    User must be authenticated, and project department must be in user departments permissions
+def test_petition_project_instructor_view_requires_authentication(
+    haie_user, haie_user_44, site
+):
+    """
+    Test petition project instructor page requires authentication
+    User must be authenticated, haie user, and project department must be in user departments permissions
     """
 
     ConfigHaieFactory()
@@ -146,7 +159,6 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
-    haie_user_44 = User44Factory()
     request.user = haie_user_44
 
     response = PetitionProjectInstructorView.as_view()(
@@ -161,7 +173,7 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_dossier_ds_view_requires_authentication(
-    haie_user, site
+    haie_user, haie_user_44, site
 ):
 
     ConfigHaieFactory()
@@ -202,7 +214,6 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
-    haie_user_44 = User44Factory()
     request.user = haie_user_44
 
     response = PetitionProjectInstructorView.as_view()(
@@ -218,7 +229,9 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
-def test_petition_project_instructor_display_dossier_ds_info(mock_post, client, site):
+def test_petition_project_instructor_display_dossier_ds_info(
+    mock_post, haie_user_44, client, site
+):
     """Test if dossier data is in template"""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -237,7 +250,6 @@ def test_petition_project_instructor_display_dossier_ds_info(mock_post, client, 
         kwargs={"reference": project.reference},
     )
 
-    haie_user_44 = User44Factory()
     client.force_login(haie_user_44)
     response = client.get(instructor_ds_url)
     assert response.status_code == 200
@@ -249,7 +261,7 @@ def test_petition_project_instructor_display_dossier_ds_info(mock_post, client, 
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list_requires_authentication(haie_user, site):
+def test_petition_project_list_requires_authentication(haie_user, haie_user_44, site):
 
     ConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -282,7 +294,6 @@ def test_petition_project_list_requires_authentication(haie_user, site):
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
-    haie_user_44 = User44Factory()
     request.user = haie_user_44
 
     response = PetitionProjectInstructorView.as_view()(
