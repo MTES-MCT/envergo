@@ -1,9 +1,6 @@
-import factory
 from django.contrib.auth import get_user_model
 from factory import Faker
 from factory.django import DjangoModelFactory, Password
-
-from envergo.geodata.tests.factories import DepartmentFactory
 
 
 class UserFactory(DjangoModelFactory):
@@ -17,14 +14,3 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = get_user_model()
         django_get_or_create = ["email"]
-
-
-class User44Factory(UserFactory):
-    """User instructeur with rights to department 44"""
-
-    @factory.post_generation
-    def create_user(obj, create, extracted, **kwargs):
-        department_44 = DepartmentFactory.create()
-
-        if create:
-            obj.departments.add(department_44)

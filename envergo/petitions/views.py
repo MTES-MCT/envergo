@@ -484,14 +484,15 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
+        """Authorize user according to project department and log event"""
 
         result = super().get(request, *args, **kwargs)
 
         user = request.user
         department = self.object.get_moulinette().get_department()
 
+        # check if user is authorize, else returns 403 error HttpResponseForbidden
         if department not in user.departments.all():
-            # returns 403 error HttpResponseForbidden
             return redirect("403.html")
 
         log_event(
@@ -595,6 +596,8 @@ class PetitionProjectInstructorDossierDSView(
 
 
 class PetitionProjectHedgeDataExport(DetailView):
+    """Export Hedge data in geopackage"""
+
     model = PetitionProject
     slug_field = "reference"
     slug_url_kwarg = "reference"
