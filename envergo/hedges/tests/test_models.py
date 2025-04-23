@@ -1,5 +1,7 @@
 import pytest
+from shapely import centroid
 
+from envergo.geodata.tests.factories import DepartmentFactory, herault_multipolygon
 from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
@@ -34,6 +36,22 @@ def test_species_are_filtered_by_hedge_type():
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
+
+
+def test_hedges_has_centroid_and_department():
+    """Test hedges centroid and departement"""
+    DepartmentFactory(
+        department=34,
+        geometry=herault_multipolygon,
+    )
+    hedge = HedgeDataFactory()
+    centroid_to_remove = hedge.get_centroid_to_remove()
+    centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
+
+    assert centroid_to_remove == centroid_computed
+    department = hedge.get_department()
+
+    assert department == "34"
 
 
 def test_species_are_filtered_by_hedge_features():

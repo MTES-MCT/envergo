@@ -1868,6 +1868,11 @@ class MoulinetteHaie(Moulinette):
             haies = self.catalog["haies"]
             summary["longueur_detruite"] = haies.length_to_remove()
             summary["longueur_plantee"] = haies.length_to_plant()
+            hedge_centroid_coords = haies.get_centroid_to_remove()
+            summary["lnglat_centroide_haie_detruite"] = (
+                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            )
+            summary["dept_haie_detruite"] = haies.get_department()
 
         return summary
 

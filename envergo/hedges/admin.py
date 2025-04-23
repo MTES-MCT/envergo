@@ -60,15 +60,19 @@ class HedgeDataAdmin(admin.ModelAdmin):
         )
         return mark_safe(content)
 
+    @admin.display(description="Nombre de haies à planter")
     def hedges_to_plant(self, obj):
         return len(obj.hedges_to_plant())
 
+    @admin.display(description="Longueur des haies à planter")
     def length_to_plant(self, obj):
         return round(obj.length_to_plant())
 
+    @admin.display(description="Nombre de haies à détruire")
     def hedges_to_remove(self, obj):
         return len(obj.hedges_to_remove())
 
+    @admin.display(description="Longueur des haies à détruire")
     def length_to_remove(self, obj):
         return round(obj.length_to_remove())
 

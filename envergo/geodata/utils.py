@@ -18,7 +18,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +286,14 @@ def get_commune_from_coords(lng, lat, timeout=0.5):
         pass
 
     return data["nom"] if data else None
+
+
+def get_department_from_coords(lng, lat):
+    """Get department code from lng lat"""
+    lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+    department = Department.objects.filter(geometry__contains=lng_lat).first()
+
+    return department.department if department else ""
 
 
 def merge_geometries(polygons):
