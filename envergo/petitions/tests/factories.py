@@ -45,20 +45,3 @@ class PetitionProjectFactory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
     demarches_simplifiees_state = DOSSIER_STATES.draft
-
-    def get_log_event_data(self):
-        hedge_centroid_coords = self.hedge_data.get_centroid_to_remove()
-        return {
-            "reference": self.reference,
-            "department": "34",
-            "longueur_detruite": (
-                self.hedge_data.length_to_remove() if self.hedge_data else None
-            ),
-            "longueur_plantee": (
-                self.hedge_data.length_to_plant() if self.hedge_data else None
-            ),
-            "lnglat_centroide_haie_detruite": (
-                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
-            ),
-            "dept_haie_detruite": "34",
-        }
