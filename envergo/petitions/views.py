@@ -440,7 +440,12 @@ class PetitionProjectDetail(DetailView):
             self.object.demarches_simplifiees_date_depot
         )
         plantation_url = reverse(
-            "input_hedges", args=["read_only", self.object.hedge_data.id]
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                self.object.hedge_data.id,
+            ],
         )
         context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
@@ -490,6 +495,28 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         return result
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        moulinette = self.object.get_moulinette()
+        context["petition_project"] = self.object
+        context["moulinette"] = moulinette
+        context["project_url"] = reverse(
+            "petition_project", kwargs={"reference": self.object.reference}
+        )
+
+        plantation_url = reverse(
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                self.object.hedge_data.id,
+            ],
+        )
+        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+        return context
+
 
 class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     """View for petition project instructor page"""
@@ -500,23 +527,13 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        moulinette = self.object.get_moulinette()
-        context["petition_project"] = self.object
-        context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
         context["project_details"] = compute_instructor_informations(
             self.object,
-            moulinette,
+            context["moulinette"],
             self.request.site,
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
         )
-        plantation_url = reverse(
-            "input_hedges", args=["read_only", self.object.hedge_data.id]
-        )
-        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
 
         # Send message if info from DS is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
@@ -542,15 +559,9 @@ class PetitionProjectInstructorDossierDSView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        moulinette = self.object.get_moulinette()
-        context["petition_project"] = self.object
-        context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
         context["project_details"] = compute_instructor_informations_ds(
             self.object,
-            moulinette,
+            context["moulinette"],
             self.request.site,
             self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
             self.request.user,
@@ -606,34 +617,24 @@ class PetitionProjectHedgeDataExport(DetailView):
                         {
                             "id": hedge.id,
                             "type": (
-                                "A_PLANTER" if hedge.type == TO_PLANT else "A_ARRACHER"
+                                "A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE"
                             ),
-                            "typeHaie": hedge.hedge_type,
-                            "vieilArbre": "oui" if hedge.vieil_arbre else "non",
-                            "proximiteMare": ("oui" if hedge.proximite_mare else "non"),
-                            "surParcellePac": "oui" if hedge.is_on_pac else "non",
-                            "proximitePointEau": (
-                                "oui" if hedge.proximite_point_eau else "non"
-                            ),
-                            "connexionBoisement": (
-                                "oui" if hedge.connexion_boisement else "non"
-                            ),
-                            "sousLigneElectrique": (
-                                "oui" if hedge.sous_ligne_electrique else "non"
-                            ),
-                            "proximiteVoirie": (
-                                "oui" if hedge.proximite_voirie else "non"
-                            ),
+                            "type_haie": hedge.hedge_type,
+                            "sur_parcelle_pac": "oui" if hedge.is_on_pac else "non",
                         }
                     )
                     feat = Feature(geometry=geometry, properties=properties)
                     dst.write(feat)
 
             # Create a response with the GeoPackage file
+            export_filename = "haies_dossier.gpkg"
+            if self.object.demarches_simplifiees_dossier_number:
+                export_filename = f"haies_dossier_{self.object.demarches_simplifiees_dossier_number}.gpkg"
+
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")
                 response["Content-Disposition"] = (
-                    'attachment; filename="guh_export.gpkg"'
+                    f'attachment; filename="haies_dossier_{export_filename}.gpkg"'
                 )
 
         return response

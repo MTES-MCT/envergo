@@ -4,6 +4,7 @@ from collections import OrderedDict
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
@@ -36,6 +37,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
+from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
@@ -926,6 +929,20 @@ class ConfigAmenagement(ConfigBase):
         verbose_name_plural = _("Configs amenagement")
 
 
+def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
+    """Get hedge properties form
+    TODO: move this in hedges/forms.py
+    """
+    cls = (
+        HedgeToPlantPropertiesForm if type == TO_PLANT else HedgeToRemovePropertiesForm
+    )
+
+    return [
+        (f"{cls.__module__}.{cls.__name__}", cls.human_readable_name())
+        for cls in [cls] + list(get_subclasses(cls))
+    ]
+
+
 class ConfigHaie(ConfigBase):
     """Some moulinette content depends on the department.
 
@@ -946,6 +963,20 @@ class ConfigHaie(ConfigBase):
 
     natura2000_coordinators_list_url = models.URLField(
         "URL liste des animateurs Natura 2000", blank=True
+    )
+
+    hedge_to_plant_properties_form = models.CharField(
+        "Caractéristiques demandées pour les haies à planter",
+        choices=get_hedge_properties_form(TO_PLANT),
+        max_length=256,
+        default=f"{HedgeToPlantPropertiesForm.__module__}.{HedgeToPlantPropertiesForm.__name__}",
+    )
+
+    hedge_to_remove_properties_form = models.CharField(
+        "Caractéristiques demandées pour les haies à détruire",
+        choices=get_hedge_properties_form(TO_REMOVE),
+        max_length=256,
+        default=f"{HedgeToRemovePropertiesForm.__module__}.{HedgeToRemovePropertiesForm.__name__}",
     )
 
     demarche_simplifiee_number = models.IntegerField(

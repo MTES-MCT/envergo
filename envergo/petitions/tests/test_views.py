@@ -270,3 +270,24 @@ def test_petition_project_list(client, haie_user, site):
 
     content = response.content.decode()
     assert project.reference in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_dl_geopkg(client, haie_user, site):
+    """Test Geopkg download"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    geopkg_url = reverse(
+        "petition_project_hedge_data_export",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_user)
+    response = client.get(geopkg_url)
+    response.get("Content-Disposition")
+    assert (
+        f"haies_dossier_{project.demarches_simplifiees_dossier_number}.gpkg"
+        in response.get("Content-Disposition")
+    )
+    # TODO: check the features

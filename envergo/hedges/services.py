@@ -231,7 +231,7 @@ class HedgeEvaluator:
         that are under power line"""
         return not any(
             h.hedge_type in ["alignement", "mixte"]
-            and h.additionalData.get("sousLigneElectrique", False)
+            and h.additionalData.get("sous_ligne_electrique", False)
             for h in self.hedge_data.hedges_to_plant()
         )
 

@@ -576,7 +576,10 @@ class MoulinetteHaieResult(
             context["plantation_evaluation"] = PlantationEvaluator(
                 moulinette, hedge_data
             )
-            plantation_url = reverse("input_hedges", args=["plantation", hedge_data.id])
+            plantation_url = reverse(
+                "input_hedges",
+                args=[moulinette.department.department, "plantation", hedge_data.id],
+            )
             plantation_url = update_qs(plantation_url, self.request.GET)
             context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
         return context

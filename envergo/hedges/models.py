@@ -62,42 +62,46 @@ class Hedge:
 
     @property
     def is_on_pac(self):
-        return self.additionalData.get("surParcellePac", False)
+        return self.additionalData.get("sur_parcelle_pac", False)
 
     @property
     def hedge_type(self):
-        return self.additionalData.get("typeHaie", None)
+        return self.additionalData.get("type_haie", None)
+
+    @property
+    def mode_destruction(self):
+        return self.additionalData.get("mode_destruction", None)
+
+    @property
+    def position(self):
+        return self.additionalData.get("position", None)
 
     @property
     def proximite_mare(self):
-        return self.additionalData.get("proximiteMare", None)
+        return self.additionalData.get("proximite_mare", None)
 
     @property
     def vieil_arbre(self):
-        return self.additionalData.get("vieilArbre", None)
+        return self.additionalData.get("vieil_arbre", None)
 
     @property
     def proximite_point_eau(self):
-        return self.additionalData.get("proximitePointEau", None)
+        return self.additionalData.get("proximite_point_eau", None)
 
     @property
     def connexion_boisement(self):
-        return self.additionalData.get("connexionBoisement", None)
+        return self.additionalData.get("connexion_boisement", None)
 
     @property
     def sous_ligne_electrique(self):
-        return self.additionalData.get("sousLigneElectrique", None)
-
-    @property
-    def proximite_voirie(self):
-        return self.additionalData.get("proximiteVoirie", None)
+        return self.additionalData.get("sous_ligne_electrique", None)
 
     def get_species_filter(self):
         """Build the filter to get possible protected species.
 
         Species have requirements. For example, a "Pipistrelle commune" bat
         MAY live in an "alignement arboré" or "haie multistrate" and
-        requires old trees (vieilArbre is checked).
+        requires old trees (vieil_arbre is checked).
         """
         q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
 
