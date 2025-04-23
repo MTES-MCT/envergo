@@ -25,9 +25,10 @@ pytestmark = pytest.mark.django_db
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.hedges.models.get_department_from_coords")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
+def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post, mock_get_department):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
 
     mock_post.return_value.status_code = 200
@@ -38,6 +39,8 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_number": 21075665,
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
+    mock_get_department.return_value = "34"
+
     ConfigHaieFactory()
 
     view = PetitionProjectCreate()
@@ -69,10 +72,14 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@patch("envergo.hedges.models.get_department_from_coords")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
+def test_pre_fill_demarche_simplifiee_not_enabled(
+    mock_reverse, mock_post, mock_get_department, caplog
+):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
+    mock_get_department.return_value = "34"
     ConfigHaieFactory()
 
     view = PetitionProjectCreate()
@@ -185,9 +192,10 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.hedges.models.get_department_from_coords")
 @patch("requests.post")
 def test_petition_project_instructor_display_dossier_ds_info(
-    mock_post, client, haie_user, site
+    mock_post, mock_get_department, client, haie_user, site
 ):
     """Test if dossier data is in template"""
     mock_response = Mock()
@@ -195,6 +203,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
 
     mock_post.return_value = mock_response
+    mock_get_department.return_value = "34"
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",

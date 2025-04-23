@@ -42,9 +42,10 @@ def test_dossier_submission_admin_alert_ds_not_enabled(
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
+@patch("envergo.hedges.models.get_department_from_coords")
 @patch("requests.post")
 def test_dossier_submission_admin_alert(
-    mock_post, mock_notify_command, mock_notify_model
+    mock_post, mock_get_department, mock_notify_command, mock_notify_model
 ):
     # Define the first mock response
     mock_response_1 = Mock()
@@ -100,6 +101,7 @@ def test_dossier_submission_admin_alert(
     }
 
     mock_post.side_effect = [mock_response_1, mock_response_2]
+    mock_get_department.return_value = "34"
     project = PetitionProjectFactory()
     ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")

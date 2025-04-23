@@ -41,6 +41,7 @@ def test_species_are_filtered_by_hedge_type():
 
 @patch("envergo.hedges.models.get_department_from_coords")
 def test_hedges_has_centroid_and_department(mock_get_department):
+    """Test hedges centroid and departement"""
     hedge = HedgeDataFactory()
     centroid_to_remove = hedge.get_centroid_to_remove()
     centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
