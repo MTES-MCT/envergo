@@ -1,8 +1,7 @@
-from unittest.mock import patch
-
 import pytest
 from shapely import centroid
 
+from envergo.geodata.tests.factories import DepartmentFactory, herault_multipolygon
 from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
@@ -39,16 +38,17 @@ def test_species_are_filtered_by_hedge_type():
     assert s3 in hedges_species
 
 
-@patch("envergo.hedges.models.get_department_from_coords")
-def test_hedges_has_centroid_and_department(mock_get_department):
+def test_hedges_has_centroid_and_department():
     """Test hedges centroid and departement"""
+    DepartmentFactory(
+        department=34,
+        geometry=herault_multipolygon,
+    )
     hedge = HedgeDataFactory()
     centroid_to_remove = hedge.get_centroid_to_remove()
     centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
 
     assert centroid_to_remove == centroid_computed
-
-    mock_get_department.return_value = "34"
     department = hedge.get_department()
 
     assert department == "34"

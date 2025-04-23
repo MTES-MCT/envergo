@@ -51,6 +51,7 @@ herault_polygon = Polygon(
 
 france_multipolygon = MultiPolygon([france_polygon])
 loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
+herault_multipolygon = MultiPolygon([herault_polygon])
 
 
 class FuzzyPolygon(fuzzy.BaseFuzzyAttribute):
