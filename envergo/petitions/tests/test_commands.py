@@ -17,11 +17,15 @@ pytestmark = pytest.mark.django_db
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 @patch("requests.post")
-def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
+@patch("envergo.hedges.models.get_department_from_coords")
+def test_dossier_submission_admin_alert_ds_not_enabled(
+    mock_post, mock_get_department, caplog
+):
 
     mock_post.side_effect = []
     PetitionProjectFactory()
     ConfigHaieFactory()
+    mock_get_department.return_value = "34"
     call_command("dossier_submission_admin_alert")
     assert (
         len(
