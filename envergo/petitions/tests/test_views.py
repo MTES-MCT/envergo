@@ -20,6 +20,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
+from envergo.users.tests.factories import User44Factory
 
 pytestmark = pytest.mark.django_db
 
@@ -103,6 +104,10 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(haie_user, site):
+    """Test petition project instructor page requires authentication
+
+    User must be authenticated, and project department must be in user departments permissions
+    """
 
     ConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -129,11 +134,24 @@ def test_petition_project_instructor_view_requires_authentication(haie_user, sit
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated user
+    # Simulate an authenticated user, by default no departments
     request.user = haie_user
 
     response = PetitionProjectInstructorView.as_view()(
         request, reference=project.reference
+    )
+
+    # Check that the response status code is 302 to 403 page
+    assert response.status_code == 302
+    assert response.url == "403.html"
+
+    # Simulate an authenticated user, with department 44, same as project
+    haie_user_44 = User44Factory()
+    request.user = haie_user_44
+
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
     )
 
     # Check that the response status code is 200 (OK)
@@ -179,6 +197,19 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
         request, reference=project.reference
     )
 
+    # Check that the response status code is 302 to 403 page
+    assert response.status_code == 302
+    assert response.url == "403.html"
+
+    # Simulate an authenticated user, with department 44, same as project
+    haie_user_44 = User44Factory()
+    request.user = haie_user_44
+
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
@@ -187,9 +218,7 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
-def test_petition_project_instructor_display_dossier_ds_info(
-    mock_post, client, haie_user, site
-):
+def test_petition_project_instructor_display_dossier_ds_info(mock_post, client, site):
     """Test if dossier data is in template"""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -207,7 +236,9 @@ def test_petition_project_instructor_display_dossier_ds_info(
         "petition_project_instructor_dossier_ds_view",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_user)
+
+    haie_user_44 = User44Factory()
+    client.force_login(haie_user_44)
     response = client.get(instructor_ds_url)
     assert response.status_code == 200
 
@@ -244,6 +275,19 @@ def test_petition_project_list_requires_authentication(haie_user, site):
 
     response = PetitionProjectInstructorView.as_view()(
         request, reference=project.reference
+    )
+
+    # Check that the response status code is 302 to 403 page
+    assert response.status_code == 302
+    assert response.url == "403.html"
+
+    # Simulate an authenticated user, with department 44, same as project
+    haie_user_44 = User44Factory()
+    request.user = haie_user_44
+
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
     )
 
     # Check that the response status code is 200 (OK)

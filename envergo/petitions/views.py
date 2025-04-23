@@ -484,7 +484,15 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
+
         result = super().get(request, *args, **kwargs)
+
+        user = request.user
+        department = self.object.get_moulinette().get_department()
+
+        if department not in user.departments.all():
+            # returns 403 error HttpResponseForbidden
+            return redirect("403.html")
 
         log_event(
             "projet",
