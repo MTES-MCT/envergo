@@ -1,0 +1,97 @@
+{% extends 'haie/moulinette/result.html' %}
+
+{% load evaluations static moulinette %}
+
+{% block result %}
+
+  <section class="debug">
+
+    <h1>Paramètres de la moulinette</h1>
+
+    <h2>Données initiales</h2>
+
+    <ul class="fr-mb-2w">
+      <li>
+        Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_remove %}
+            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+      <li>
+        Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_plant %}
+            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+
+      {% if moulinette.config %}
+        <li>
+          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+        </li>
+      {% else %}
+        <li>Département : {{ moulinette.department }}</li>
+      {% endif %}
+    </ul>
+
+    <h2>Évaluation</h2>
+
+    {% with evaluation=plantation_evaluation.evaluation %}
+      <ul class="fr-mb-2w">
+        <li>Conditions d'acceptabilité non remplies : {{ plantation_evaluation.unfulfilled_conditions }}</li>
+        <li>Longueur à planter restante : {{ evaluation.length_to_plant.left_to_plant|floatformat:"g" }} m</li>
+        <li>
+          Qualité :
+          <ul>
+            {% for quality, length in evaluation.quality.missing_plantation.items %}
+              <li>{{ quality }} : {{ length|floatformat:"g" }} m</li>
+            {% endfor %}
+          </ul>
+        </li>
+      </ul>
+    {% endwith %}
+
+    <h2>Réglementations</h2>
+
+    {% for regulation in moulinette.regulations %}
+      <h3>{{ regulation.title }}</h3>
+      <p>
+        {% result_tag regulation.result regulation.result_tag_style %}
+        <small>({{ regulation.result }})</small>
+      </p>
+
+      {% with criteria=regulation.criteria.all %}
+        {% if criteria %}
+          <ul>
+            {% for criterion in criteria %}
+              <li class="fr-mb-2w">
+                {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
+                <small>({{ criterion.result_code }})</small>
+                <br />
+                Déclenchement géographique : {{ criterion.activation_mode }}
+                <br />
+                {% if criterion.evaluator_settings.replantation_coefficient %}
+                  R = {{ criterion.evaluator_settings.replantation_coefficient }}
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+
+    <h2>Catalogue de données</h2>
+
+    <dd>
+      {% for key, value in moulinette.catalog.items %}
+        <dt>{{ key }}</dt>
+        <dd>
+          {{ value|truncatechars:150 }}
+        </dd>
+      {% endfor %}
+    </dd>
+  </section>
+{% endblock %}

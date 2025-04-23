@@ -23,19 +23,35 @@
         {% endif %}
       </a>
     </div>
-
   {% endif %}
-  <div class="banner-item">
-    {% if plantation_evaluation.global_result == "soumis" %}
-      <button id="demarche-simplifiee-banner-btn"
-              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
-              aria-controls="demarches-simplifiees-modal"
-              data-fr-opened="false">Déposer une demande d'autorisation</button>
-    {% elif moulinette.result == "soumis" and not is_result_plantation %}
-      <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
-              type="button"
-              data-fr-opened="false"
-              aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
+
+  {% if is_admin %}
+
+    {% if is_debug %}
+      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
+        <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
+           href="{{ result_url }}">Voir la simulation</a>
+      </div>
+    {% else %}
+      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
+        <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
+           href="{{ debug_url }}">Voir le debug</a>
+      </div>
     {% endif %}
-  </div>
+
+  {% else %}
+    <div class="banner-item">
+      {% if plantation_evaluation.global_result == "soumis" %}
+        <button id="demarche-simplifiee-banner-btn"
+                class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
+                aria-controls="demarches-simplifiees-modal"
+                data-fr-opened="false">Déposer une demande d'autorisation</button>
+      {% elif moulinette.result == "soumis" and not is_result_plantation %}
+        <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
+                type="button"
+                data-fr-opened="false"
+                aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endblock %}

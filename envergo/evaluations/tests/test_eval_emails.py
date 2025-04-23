@@ -401,6 +401,22 @@ def test_lse_soumis_content(rf, moulinette_url):
 
 
 @pytest.mark.parametrize("footprint", [1200])
+def test_lse_soumis_ou_pac_content(rf, moulinette_url):
+    eval, moulinette = fake_moulinette(
+        moulinette_url, "soumis_ou_pac", "non_soumis", "non_soumis", "non_soumis"
+    )
+    req = rf.get("/")
+    eval_email = eval.get_evaluation_email()
+    email = eval_email.get_email(req)
+    body = email.alternatives[0][0]
+    assert "Le projet est soumis à la Loi sur l'eau" in body
+    assert "Le projet est soumis à Natura 2000" not in body
+    assert "Le projet est soumis à examen au cas par cas" not in body
+    assert "Le projet est soumis à évaluation environnementale" not in body
+    assert "ddtm_email_test@example.org" in email.bcc
+
+
+@pytest.mark.parametrize("footprint", [1200])
 def test_n2000_soumis_content(rf, moulinette_url):
     eval, moulinette = fake_moulinette(
         moulinette_url, "non_soumis", "soumis", "non_soumis", "non_soumis"

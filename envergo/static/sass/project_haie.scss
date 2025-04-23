@@ -374,8 +374,8 @@ dialog#hedge-input-modal {
 }
 
 dialog.hedge-data-dialog {
-  #form-group-removal-hedge_type label span.label-content,
-  #form-group-plantation-hedge_type label span.label-content {
+  #form-group-removal-type_haie label span.label-content,
+  #form-group-plantation-type_haie label span.label-content {
     display: flex;
     justify-content: space-between;
   }
@@ -492,6 +492,16 @@ div#project-specifications-instructor {
 /**
  * Page instructor
  */
+
+.project-inner-content {
+  max-width: 42em;
+}
+
+#form-group-instructor_free_mention .label-content {
+  font-weight: bold;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
 
 .ds-item > .fr-sidemenu__link::after {
   content: "";

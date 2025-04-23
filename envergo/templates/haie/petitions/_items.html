@@ -32,7 +32,11 @@
       {% endif %}
     {% else %}
       <span>
-        {{ item.value }}
+        {% if item.value|is_type:"int" or item.value|is_type:"float" %}
+          {{ item.value|floatformat:"g" }}
+        {% else %}
+          {{ item.value }}
+        {% endif %}
         {% if item.unit and item.value is not None and item.value != "" %}{{ item.unit }}{% endif %}
       </span>
     {% endif %}

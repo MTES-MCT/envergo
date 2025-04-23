@@ -16,12 +16,14 @@ class HedgeFactory(factory.Factory):
     ]
     additionalData = factory.Dict(
         {
-            "typeHaie": "degradee",
-            "surParcellePac": True,
-            "proximiteMare": False,
-            "vieilArbre": False,
-            "proximitePointEau": False,
-            "connexionBoisement": False,
+            "position": "autre",
+            "mode_destruction": "autre",
+            "type_haie": "degradee",
+            "sur_parcelle_pac": True,
+            "proximite_mare": False,
+            "vieil_arbre": False,
+            "proximite_point_eau": False,
+            "connexion_boisement": False,
         }
     )
 
