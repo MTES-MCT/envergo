@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
@@ -503,7 +503,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         # check if user is authorize, else returns 403 error HttpResponseForbidden
         if department not in user.departments.all():
-            return redirect("403.html")
+            return HttpResponseForbidden()
 
         log_event(
             "projet",
