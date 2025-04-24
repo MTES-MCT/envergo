@@ -155,8 +155,8 @@ def test_petition_project_instructor_view_requires_authentication(
         request, reference=project.reference
     )
 
-    # Check that the response status code is 302 to 403 page
-    assert response.status_code == 302
+    # Check that the response status code is 403
+    assert response.status_code == 403
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
@@ -210,8 +210,8 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
         request, reference=project.reference
     )
 
-    # Check that the response status code is 302 to 403 page
-    assert response.status_code == 302
+    # Check that the response status code is 403
+    assert response.status_code == 403
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
@@ -290,8 +290,8 @@ def test_petition_project_list_requires_authentication(haie_user, haie_user_44, 
         request, reference=project.reference
     )
 
-    # Check that the response status code is 302 to 403 page
-    assert response.status_code == 302
+    # Check that the response status code is 403
+    assert response.status_code == 403
     assert response.url == "403.html"
 
     # Simulate an authenticated user, with department 44, same as project
