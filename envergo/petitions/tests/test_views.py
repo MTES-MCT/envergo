@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 
-import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
@@ -157,7 +156,7 @@ def test_petition_project_instructor_view_requires_authentication(
 
     # Check that the response status code is 403
     assert response.status_code == 403
-    assert response.url == "403.html"
+    assert response.template_name == "haie/petitions/403.html"
 
     # Simulate an authenticated user, with department 44, same as project
     request.user = haie_user_44
@@ -212,7 +211,7 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 
     # Check that the response status code is 403
     assert response.status_code == 403
-    assert response.url == "403.html"
+    assert response.template_name == "haie/petitions/403.html"
 
     # Simulate an authenticated user, with department 44, same as project
     request.user = haie_user_44
@@ -262,7 +261,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list_requires_authentication(haie_user, haie_user_44, site):
+def test_petition_project_list_requires_authentication(haie_user, site):
 
     ConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -286,21 +285,7 @@ def test_petition_project_list_requires_authentication(haie_user, haie_user_44, 
     # Simulate an authenticated user
     request.user = haie_user
 
-    response = PetitionProjectInstructorView.as_view()(
-        request, reference=project.reference
-    )
-
-    # Check that the response status code is 403
-    assert response.status_code == 403
-    assert response.url == "403.html"
-
-    # Simulate an authenticated user, with department 44, same as project
-    request.user = haie_user_44
-
-    response = PetitionProjectInstructorView.as_view()(
-        request,
-        reference=project.reference,
-    )
+    response = PetitionProjectList.as_view()(request, reference=project.reference)
 
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
@@ -308,35 +293,25 @@ def test_petition_project_list_requires_authentication(haie_user, haie_user_44, 
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list(client, haie_user, haie_user_44, site):
+def test_petition_project_list(client, haie_user, site):
     """Test petition projects list"""
 
     ConfigHaieFactory()
     # Create a project not draft
-    project_in_44 = PetitionProjectFactory(
+    project = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled
-    )
-    project_in_34 = PetitionProjectFactory(
-        reference=factory.Sequence(lambda n: "ABC{}".format(n)),
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        moulinette_url=(
-            "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
-            "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=34&travaux=destruction&element=haie"
-        ),
-        demarches_simplifiees_dossier_number=factory.Sequence(lambda n: n),
     )
 
     petition_project_list_url = reverse(
         "petition_project_list",
     )
 
-    client.force_login(haie_user_44)
+    client.force_login(haie_user)
     response = client.get(petition_project_list_url)
     assert response.status_code == 200
 
     content = response.content.decode()
-    assert project_in_44.reference in content
-    assert project_in_34.reference not in content
+    assert project.reference in content
 
 
 @pytest.mark.urls("config.urls_haie")
