@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 
+import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
@@ -307,25 +308,35 @@ def test_petition_project_list_requires_authentication(haie_user, haie_user_44, 
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list(client, haie_user, site):
+def test_petition_project_list(client, haie_user, haie_user_44, site):
     """Test petition projects list"""
 
     ConfigHaieFactory()
     # Create a project not draft
-    project = PetitionProjectFactory(
+    project_in_44 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled
+    )
+    project_in_34 = PetitionProjectFactory(
+        reference=factory.Sequence(lambda n: "ABC{}".format(n)),
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        moulinette_url=(
+            "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
+            "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=34&travaux=destruction&element=haie"
+        ),
+        demarches_simplifiees_dossier_number=factory.Sequence(lambda n: n),
     )
 
     petition_project_list_url = reverse(
         "petition_project_list",
     )
 
-    client.force_login(haie_user)
+    client.force_login(haie_user_44)
     response = client.get(petition_project_list_url)
     assert response.status_code == 200
 
     content = response.content.decode()
-    assert project.reference in content
+    assert project_in_44.reference in content
+    assert project_in_34.reference not in content
 
 
 @pytest.mark.urls("config.urls_haie")

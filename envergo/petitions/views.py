@@ -52,6 +52,16 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     )
     paginate_by = 30
 
+    def get(self, request, *args, **kwargs):
+        """Override queryset filtering projects from user departments"""
+
+        # user_departments = request.user.departments.all()
+        result = super().get(request, *args, **kwargs)
+
+        # Filter object_list on department, but project model don't have department columns
+
+        return result
+
 
 class PetitionProjectCreate(FormView):
     form_class = PetitionProjectForm

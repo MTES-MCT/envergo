@@ -95,12 +95,16 @@ class PetitionProject(models.Model):
     def __str__(self):
         return self.reference
 
+    def get_department(self):
+        """Get department from moulinette url"""
+        return extract_param_from_url(self.moulinette_url, "department")
+
     def get_log_event_data(self):
-        department = extract_param_from_url(self.moulinette_url, "department")
+        """Get log event data for analytics"""
         hedge_centroid_coords = self.hedge_data.get_centroid_to_remove()
         return {
             "reference": self.reference,
-            "department": department,
+            "department": self.get_department(),
             "longueur_detruite": (
                 self.hedge_data.length_to_remove() if self.hedge_data else None
             ),
@@ -123,7 +127,7 @@ class PetitionProject(models.Model):
     def synchronize_with_demarches_simplifiees(
         self, dossier, site, demarche_label, ds_url, visitor_id, user
     ):
-        """update the petition project with the latest data from demarches-simplifiees.fr
+        """Update the petition project with the latest data from demarches-simplifiees.fr
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
@@ -166,6 +170,7 @@ class PetitionProject(models.Model):
         self.save()
 
     def get_moulinette(self):
+        """Recreate moulinette from moulinette url and hedge data"""
         parsed_url = urlparse(self.moulinette_url)
         query_string = parsed_url.query
         # We need to convert the query string to a flat dict
