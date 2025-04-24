@@ -302,18 +302,23 @@ class ImpactZoneHumideIOTA(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvalu
 
     CODE_MATRIX = {
         ("inside", "soumis"): "interdit",
+        ("inside", "soumis_ou_pac"): "interdit",
         ("inside", "action_requise"): "a_verifier",
         ("inside", "non_soumis"): "non_soumis",
         ("close_to", "soumis"): "action_requise_proche_interdit",
+        ("close_to", "soumis_ou_pac"): "action_requise_proche_interdit",
         ("close_to", "action_requise"): "action_requise_interdit",
         ("close_to", "non_soumis"): "non_soumis",
         ("potential", "soumis"): "action_requise_dans_doute_interdit",
+        ("potential", "soumis_ou_pac"): "action_requise_dans_doute_interdit",
         ("potential", "action_requise"): "action_requise_interdit",
         ("potential", "non_soumis"): "non_soumis",
         ("inside_wetlands_dpt", "soumis"): "action_requise_tout_dpt_interdit",
+        ("inside_wetlands_dpt", "soumis_ou_pac"): "action_requise_tout_dpt_interdit",
         ("inside_wetlands_dpt", "action_requise"): "action_requise_interdit",
         ("inside_wetlands_dpt", "non_soumis"): "non_soumis",
         ("outside", "soumis"): "non_soumis_dehors",
+        ("outside", "soumis_ou_pac"): "non_soumis_dehors",
         ("outside", "action_requise"): "non_soumis_dehors",
         ("outside", "non_soumis"): "non_soumis_dehors",
     }
@@ -444,12 +449,15 @@ class ImpactZoneHumideIOTAStrict(
 
     CODE_MATRIX = {
         ("inside", "soumis"): "interdit",
+        ("inside", "soumis_ou_pac"): "interdit",
         ("inside", "action_requise"): "a_verifier",
         ("inside", "non_soumis"): "non_soumis",
         ("close_to", "soumis"): "action_requise_proche_interdit",
+        ("close_to", "soumis_ou_pac"): "action_requise_proche_interdit",
         ("close_to", "action_requise"): "action_requise_interdit",
         ("close_to", "non_soumis"): "non_soumis",
         ("outside", "soumis"): "non_soumis_dehors",
+        ("outside", "soumis_ou_pac"): "non_soumis_dehors",
         ("outside", "action_requise"): "non_soumis_dehors",
         ("outside", "non_soumis"): "non_soumis_dehors",
     }
