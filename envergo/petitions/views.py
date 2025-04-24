@@ -56,7 +56,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     def get(self, request, *args, **kwargs):
         """Override queryset filtering projects from user departments"""
 
-        # user_departments = request.user.departments.all()
+        user_departments = request.user.departments.values_list("department")
+        self.object_list = self.get_queryset().filter(
+            department_code__in=user_departments
+        )
         result = super().get(request, *args, **kwargs)
 
         # Filter object_list on department, but project model don't have department columns
