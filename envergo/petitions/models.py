@@ -51,6 +51,14 @@ class PetitionProject(models.Model):
     )
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
+    department_code = models.CharField(
+        _("Department"),
+        max_length=3,
+        editable=False,
+        blank=True,
+        null=True,
+    )
+
     hedge_data = models.ForeignKey(
         HedgeData,
         on_delete=models.PROTECT,
@@ -94,6 +102,12 @@ class PetitionProject(models.Model):
 
     def __str__(self):
         return self.reference
+
+    def save(self, *args, **kwargs):
+        """Set department code before saving"""
+        if not self.department_code:
+            self.department_code = self.get_department()
+        super().save(*args, **kwargs)
 
     def get_department(self):
         """Get department from moulinette url"""
