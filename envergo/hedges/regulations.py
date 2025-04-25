@@ -4,6 +4,7 @@ from collections import defaultdict
 class PlantationCondition:
     """Evaluator for a single plantation condition."""
 
+    label: str
     result: bool
     context: dict = dict()
     valid_text: str = "Condition validée"
@@ -27,6 +28,7 @@ class PlantationCondition:
 class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
+    label = "Longueur de la haie plantée"
     valid_text = "La longueur de la haie à planter est suffisante."
     invalid_text = """
     La longueur de la haie à planter est insuffisante.
@@ -41,8 +43,8 @@ class MinLengthCondition(PlantationCondition):
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
-            "length_to_plant": length_to_plant,
-            "length_to_remove": length_to_remove,
+            "length_to_plant": round(length_to_plant),
+            "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
         }
@@ -51,6 +53,7 @@ class MinLengthCondition(PlantationCondition):
 
 class MinLengthPacCondition(PlantationCondition):
 
+    label = "Maintien des haies PAC"
     valid_text = "Le linéaire de haie planté sur parcelle PAC est suffisant."
     invalid_text = """
     La longueur de la haie à planter sur parcelle PAC est insuffisante.
@@ -73,6 +76,7 @@ class MinLengthPacCondition(PlantationCondition):
 
 
 class QualityCondition(PlantationCondition):
+    label = "Type de haie plantée"
     valid_text = "La qualité de la haie plantée est suffisante."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
@@ -198,6 +202,7 @@ class QualityCondition(PlantationCondition):
 
 
 class SafetyCondition(PlantationCondition):
+    label = "Sécurité"
     valid_text = "La haie à planter ne se trouve pas sous une ligne électrique."
     invalid_text = """
         Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte »,

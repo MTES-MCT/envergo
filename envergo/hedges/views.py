@@ -138,7 +138,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         return
 
 
-class HedgeQualityView(MoulinetteMixin, FormView):
+class HedgeConditionsView(MoulinetteMixin, FormView):
     def get_form_kwargs(self):
         """Return the moulinette form args.
 

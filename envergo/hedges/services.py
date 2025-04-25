@@ -171,4 +171,13 @@ class PlantationEvaluator:
         return [condition for condition in self.conditions if not condition.result]
 
     def to_json(self):
-        return {}
+        data = [
+            {
+                "label": condition.label,
+                "result": condition.result,
+                "text": condition.text,
+                "context": condition.context,
+            }
+            for condition in self.conditions
+        ]
+        return data
