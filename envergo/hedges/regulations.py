@@ -216,6 +216,11 @@ class QualityCondition(PlantationCondition):
             "alignement": lengths_by_type["alignement"],
         }
 
+    def must_display(self):
+        lengths = self.get_minimum_lengths_to_plant()
+        sum_lengths = sum(lengths.values())
+        return sum_lengths > 0
+
     @property
     def text(self):
         """Return the text to display for the condition."""
