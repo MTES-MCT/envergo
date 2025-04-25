@@ -181,5 +181,6 @@ class PlantationEvaluator:
                 "context": condition.context,
             }
             for condition in self.conditions
+            if condition.must_display()
         ]
         return data

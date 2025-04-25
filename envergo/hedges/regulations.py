@@ -16,6 +16,14 @@ class PlantationCondition:
         self.hedge_data = hedge_data
         self.R = R
 
+    def must_display(self):
+        """Should the condition be displayed?
+
+        It does not make any sense to display the condition if it is related to a
+        minimal length to plant and the length to plant is 0.
+        """
+        return True
+
     def evaluate(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.evaluate` method."
@@ -52,6 +60,9 @@ class MinLengthCondition(PlantationCondition):
         }
         return self
 
+    def must_display(self):
+        return self.context["minimum_length_to_plant"] > 0
+
 
 class MinLengthPacCondition(PlantationCondition):
 
@@ -75,6 +86,9 @@ class MinLengthPacCondition(PlantationCondition):
             "left_to_plant_pac": round(left_to_plant),
         }
         return self
+
+    def must_display(self):
+        return self.context["minimum_length_to_plant_pac"] > 0
 
 
 class QualityCondition(PlantationCondition):
