@@ -244,7 +244,7 @@ class QualityCondition(PlantationCondition):
                 """
                 )
 
-        return "<br />\n".join(t)
+        return mark_safe("<br />\n".join(t))
 
 
 class SafetyCondition(PlantationCondition):
