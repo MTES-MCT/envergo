@@ -2,6 +2,8 @@ from collections import defaultdict
 
 
 class PlantationCondition:
+    """Evaluator for a single plantation condition."""
+
     result: bool
     context: dict = dict()
     valid_text: str = "Condition validée"
@@ -18,11 +20,18 @@ class PlantationCondition:
 
     @property
     def text(self):
-        return self.valid_text if self.result else self.invalid_text
+        t = self.valid_text if self.result else self.invalid_text
+        return t % self.context
 
 
 class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
+
+    valid_text = "La longueur de la haie à planter est suffisante."
+    invalid_text = """
+    La longueur de la haie à planter est insuffisante.
+    Elle doit être supérieure à %(minimum_length_to_plant)s m.
+    """
 
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
@@ -32,13 +41,20 @@ class MinLengthCondition(PlantationCondition):
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
             "length_to_plant": length_to_plant,
-            "minimum_length_to_plant": minimum_length_to_plant,
-            "left_to_plant": left_to_plant,
+            "minimum_length_to_plant": round(minimum_length_to_plant),
+            "left_to_plant": round(left_to_plant),
         }
         return self
 
 
 class MinLengthPacCondition(PlantationCondition):
+
+    valid_text = "La longueur de la haie à planter sur parcelle PAC est suffisante." ""
+    invalid_text = """
+    La longueur de la haie à planter sur parcelle PAC est insuffisante.
+    Elle doit être supérieure à %(minimum_length_to_plant_pac)s m,
+    hors alignements d’arbres.
+    """
 
     def evaluate(self):
         # no R coefficient for PAC
@@ -48,13 +64,18 @@ class MinLengthPacCondition(PlantationCondition):
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
-            "minimum_length_to_plant": minimum_length_to_plant,
-            "left_to_plant": left_to_plant,
+            "minimum_length_to_plant_pac": round(minimum_length_to_plant),
+            "left_to_plant_pac": round(left_to_plant),
         }
         return self
 
 
 class QualityCondition(PlantationCondition):
+    valid_text = "Le type de haie plantée est adaptée au type de haie détruite."
+    invalid_text = """
+      Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
+    """
+
     def evaluate(self):
         """Evaluate the quality of the plantation project.
         The quality of the hedge planted must be at least as good as that of the hedge destroyed:
@@ -175,6 +196,15 @@ class QualityCondition(PlantationCondition):
 
 
 class SafetyCondition(PlantationCondition):
+    valid_text = "La haie à planter ne présente pas de risque pour la sécurité."
+    invalid_text = """
+        Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte »,
+        se situe sous une ligne électrique.
+        Ceci doit être évité pour des raisons de sécurité.
+        La haie doit être positionnée ailleurs, ou son type modifié pour ne contenir
+        que des arbustes (« haie basse » ou « haie arbustive »).
+    """
+
     def evaluate(self):
         unsafe_hedges = [
             h
