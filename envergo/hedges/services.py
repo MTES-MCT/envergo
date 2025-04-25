@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeData
-from envergo.hedges.regulations import PlantationCondition
+from envergo.hedges.regulations import MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 
 if TYPE_CHECKING:
@@ -131,24 +131,16 @@ class PlantationEvaluator:
         """
         return f"{self.moulinette.result}_{self.result}"
 
-    def minimum_length_to_plant(self):
-        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
-        replantation coefficient"""
-        R = self.replantation_coefficient
-        return R * self.hedge_data.length_to_remove()
-
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        conditions = []
         R = self.replantation_coefficient
+        conditions = [MinLengthCondition().evaluate()]
         self.moulinette.evaluate()
         for regulation in self.moulinette.regulations:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(criterion._evaluator.plantation_evaluate(R))
-
-        conditions.append(PlantationCondition())
 
         self.conditions = conditions
         self._result = (
@@ -167,78 +159,3 @@ class PlantationEvaluator:
 
     def to_json(self):
         return {}
-
-
-class HedgeEvaluator:
-    """Evaluate the adequacy of a plantation project.
-
-    This is the "conditions d'acceptabilité" part of the plantation evaluation.
-    """
-
-    def __init__(self, plantation_evaluator: PlantationEvaluator):
-        self.plantation_evaluator = plantation_evaluator
-        self.hedge_data = plantation_evaluator.hedge_data
-        self.result = self.evaluate()
-
-    def is_length_to_plant_sufficient(self):
-        """Returns True if the length of hedges to plant is sufficient
-
-        LP : longueur totale plantée
-        LD : longueur totale détruite
-        R : coefficient de replantation exigée
-
-        Condition à remplir :
-        LP ≥ R x LD
-        """
-        return (
-            self.hedge_data.length_to_plant()
-            >= self.plantation_evaluator.minimum_length_to_plant()
-        )
-
-    def evaluate_length_to_plant(self):
-        """Evaluate if there is enough hedges to plant in the project"""
-        left_to_plant = max(
-            0,
-            self.plantation_evaluator.minimum_length_to_plant()
-            - self.hedge_data.length_to_plant(),
-        )
-        return {
-            "result": self.is_length_to_plant_sufficient(),
-            "minimum_length_to_plant": self.plantation_evaluator.minimum_length_to_plant(),
-            "left_to_plant": left_to_plant,
-        }
-
-    def evaluate_length_to_plant_pac(self):
-        """Evaluate if there is enough hedges to plant in PAC parcel in the project"""
-        minimum_length_to_plant = (
-            self.hedge_data.lineaire_detruit_pac()
-        )  # no R coefficient for PAC
-        left_to_plant = max(
-            0,
-            minimum_length_to_plant - self.hedge_data.length_to_plant_pac(),
-        )
-        return {
-            "result": left_to_plant == 0,
-            "minimum_length_to_plant": minimum_length_to_plant,
-            "left_to_plant": left_to_plant,
-        }
-
-    def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
-
-        result = {"length_to_plant": self.evaluate_length_to_plant()}
-        R = self.plantation_evaluator.replantation_coefficient
-
-        moulinette = self.plantation_evaluator.moulinette
-        if moulinette.must_check_acceptability_conditions() and R > 0:
-            result["quality"] = self.evaluate_hedge_plantation_quality()
-
-        if moulinette.must_check_acceptability_conditions():
-            result["do_not_plant_under_power_line"] = {
-                "result": self.is_not_planting_under_power_line()
-            }
-
-        if moulinette.must_check_pac_condition():
-            result["length_to_plant_pac"] = self.evaluate_length_to_plant_pac()
-
-        return result

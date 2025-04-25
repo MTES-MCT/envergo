@@ -1,11 +1,207 @@
-from dataclasses import dataclass, field
+from collections import defaultdict
+from dataclasses import field
 
 
-@dataclass
 class PlantationCondition:
     result: bool
-    text: str
     context: dict = field(default_factory=dict)
+    valid_text: str = "Condition validée"
+    invalid_text: str = "Condition non validée"
+
+    def evaluate(self):
+        raise NotImplementedError(
+            f"Implement the `{type(self).__name__}.evaluate` method."
+        )
+
+    @property
+    def text(self):
+        return self.valid_text if self.result else self.invalid_text
+
+
+class MinLengthCondition(PlantationCondition):
+    """Evaluate if there is enough hedges to plant in the project"""
+
+    def minimum_length_to_plant(self):
+        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
+        replantation coefficient"""
+
+        R = self.replantation_coefficient
+        return R * self.hedge_data.length_to_remove()
+
+    def evaluate(self):
+        length_to_plant = self.hedge_data.length_to_plant()
+        minimum_length_to_plant = self.minimum_length_to_plant()
+        self.result = length_to_plant >= minimum_length_to_plant
+
+        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
+        self.context = {
+            "length_to_plant": length_to_plant,
+            "minimum_length_to_plant": minimum_length_to_plant,
+            "left_to_plant": left_to_plant,
+        }
+        return self
+
+
+class MinLengthPacCondition(PlantationCondition):
+
+    def evaluate(self):
+        # no R coefficient for PAC
+        hedge_data = self.catalog["haies"]
+        length_to_plant = hedge_data.length_to_plant_pac()
+        minimum_length_to_plant = hedge_data.lineaire_detruit_pac()
+        self.result = length_to_plant >= minimum_length_to_plant
+
+        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
+        self.context = {
+            "minimum_length_to_plant": minimum_length_to_plant,
+            "left_to_plant": left_to_plant,
+        }
+
+        return self
+
+
+class QualityCondition(PlantationCondition):
+    def evaluate(self):
+        """Evaluate the quality of the plantation project.
+        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
+            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
+            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
+            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
+            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
+            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
+
+        return: {
+            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
+            missing_plantation: {
+                mixte: missing length of mixte hedges to plant,
+                alignement: missing length of alignement hedges to plant,
+                arbustive: missing length of arbustive hedges to plant,
+                buissonante: missing length of buissonante hedges to plant,
+                degradee: missing length of dégradée hedges to plant,
+            }
+        }
+        """
+        minimum_lengths_to_plant = self.get_minimum_lengths_to_plant(R)
+        lengths_to_plant = self.get_lengths_to_plant()
+
+        reliquat = {
+            "mixte_remplacement_alignement": max(
+                0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"]
+            ),
+            "mixte_remplacement_dégradée": max(
+                0,
+                max(0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"])
+                - max(
+                    0,
+                    minimum_lengths_to_plant["alignement"]
+                    - lengths_to_plant["alignement"],
+                ),
+            ),
+            "arbustive_remplacement_buissonnante": max(
+                0, lengths_to_plant["arbustive"] - minimum_lengths_to_plant["arbustive"]
+            ),
+            "arbustive_remplacement_dégradée": max(
+                0,
+                max(
+                    0,
+                    lengths_to_plant["arbustive"]
+                    - minimum_lengths_to_plant["arbustive"],
+                )
+                - max(
+                    0,
+                    minimum_lengths_to_plant["buissonnante"]
+                    - lengths_to_plant["buissonnante"],
+                ),
+            ),
+            "buissonnante_remplacement_dégradée": max(
+                0,
+                lengths_to_plant["buissonnante"]
+                - minimum_lengths_to_plant["buissonnante"],
+            ),
+        }
+
+        missing_plantation = {
+            "mixte": max(
+                0, minimum_lengths_to_plant["mixte"] - lengths_to_plant["mixte"]
+            ),
+            "alignement": max(
+                0,
+                minimum_lengths_to_plant["alignement"]
+                - lengths_to_plant["alignement"]
+                - reliquat["mixte_remplacement_alignement"],
+            ),
+            "arbustive": max(
+                0, minimum_lengths_to_plant["arbustive"] - lengths_to_plant["arbustive"]
+            ),
+            "buissonante": max(
+                0,
+                minimum_lengths_to_plant["buissonnante"]
+                - lengths_to_plant["buissonnante"]
+                - reliquat["arbustive_remplacement_buissonnante"],
+            ),
+            "degradee": max(
+                0,
+                minimum_lengths_to_plant["degradee"]
+                - reliquat["mixte_remplacement_dégradée"]
+                - reliquat["arbustive_remplacement_dégradée"]
+                - reliquat["buissonnante_remplacement_dégradée"],
+            ),
+        }
+
+        quality_condition = PlantationCondition(
+            result=all(
+                [
+                    missing_plantation["mixte"] == 0,
+                    missing_plantation["alignement"] == 0,
+                    missing_plantation["arbustive"] == 0,
+                    missing_plantation["buissonante"] == 0,
+                    missing_plantation["degradee"] == 0,
+                ]
+            ),
+            context={
+                "missing_plantation": missing_plantation,
+            },
+        )
+        return quality_condition
+
+    def get_minimum_lengths_to_plant(self, R):
+        hedge_data = self.catalog["haies"]
+        lengths_by_type = defaultdict(int)
+        for to_remove in hedge_data.hedges_to_remove():
+            lengths_by_type[to_remove.hedge_type] += to_remove.length
+
+        return {
+            "degradee": R * lengths_by_type["degradee"],
+            "buissonnante": R * lengths_by_type["buissonnante"],
+            "arbustive": R * lengths_by_type["arbustive"],
+            "mixte": R * lengths_by_type["mixte"],
+            "alignement": R * lengths_by_type["alignement"],
+        }
+
+    def get_lengths_to_plant(self):
+        hedge_data = self.catalog["haies"]
+        lengths_by_type = defaultdict(int)
+        for to_plant in hedge_data.hedges_to_plant():
+            lengths_by_type[to_plant.hedge_type] += to_plant.length
+
+        return {
+            "buissonnante": lengths_by_type["buissonnante"],
+            "arbustive": lengths_by_type["arbustive"],
+            "mixte": lengths_by_type["mixte"],
+            "alignement": lengths_by_type["alignement"],
+        }
+
+
+class SafetyCondition(PlantationCondition):
+    def evaluate(self):
+        hedge_data = self.catalog["haies"]
+        unsafe_hedges = [
+            h
+            for h in hedge_data.hedges_to_plant()
+            if h.hedge_type in ["alignement", "mixte"] and h.sous_ligne_electrique
+        ]
+        self.result = not unsafe_hedges
+        return self
 
 
 class PlantationConditionMixin:
@@ -14,12 +210,13 @@ class PlantationConditionMixin:
     This is an "acceptability condition."
     """
 
+    plantation_conditions: list[PlantationCondition]
+
     def get_replantation_coefficient(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
     def plantation_evaluate(self, R):
-        raise NotImplementedError(
-            f"Implement the `{type(self).__name__}.plantation_evaluate` method."
-        )
+        results = [condition().evaluate() for condition in self.plantation_conditions]
+        return results
