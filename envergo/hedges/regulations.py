@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from django.utils.safestring import mark_safe
+
 
 class PlantationCondition:
     """Evaluator for a single plantation condition."""
@@ -22,17 +24,17 @@ class PlantationCondition:
     @property
     def text(self):
         t = self.valid_text if self.result else self.invalid_text
-        return t % self.context
+        return mark_safe(t % self.context)
 
 
 class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
-    valid_text = "La longueur de la haie à planter est suffisante."
+    valid_text = "Le linéaire total planté est suffisant."
     invalid_text = """
-    La longueur de la haie à planter est insuffisante.
-    Elle doit être supérieure à %(minimum_length_to_plant)s m.
+    Le linéaire total planté doit être supérieur à %(minimum_length_to_plant)s m.<br />
+    Il manque au moins %(left_to_plant)s m.
     """
 
     def evaluate(self):
@@ -56,9 +58,9 @@ class MinLengthPacCondition(PlantationCondition):
     label = "Maintien des haies PAC"
     valid_text = "Le linéaire de haie planté sur parcelle PAC est suffisant."
     invalid_text = """
-    La longueur de la haie à planter sur parcelle PAC est insuffisante.
-    Elle doit être supérieure à %(minimum_length_to_plant_pac)s m,
-    hors alignements d’arbres.
+        Le linéaire de haie planté sur parcelle PAC doit être supérieur à %(minimum_length_to_plant_pac)s m.
+        <br />
+        Il manque au moins %(left_to_plant_pac)s m sur parcelle PAC, hors alignements d’arbres.
     """
 
     def evaluate(self):
@@ -203,13 +205,10 @@ class QualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    valid_text = "La haie à planter ne se trouve pas sous une ligne électrique."
+    valid_text = "Aucune haie haute sous une ligne électrique."
     invalid_text = """
-        Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte »,
-        se situe sous une ligne électrique.
-        Ceci doit être évité pour des raisons de sécurité.
-        La haie doit être positionnée ailleurs, ou son type modifié pour ne contenir
-        que des arbustes (« haie basse » ou « haie arbustive »).
+        Aucune haie haute ne doit se situer sous une ligne électrique.
+        Déplacez les haies ou ne plantez à cet endroit que des haies basses ou arbustives.
     """
 
     def evaluate(self):
