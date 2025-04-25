@@ -1,12 +1,15 @@
 from collections import defaultdict
-from dataclasses import field
 
 
 class PlantationCondition:
     result: bool
-    context: dict = field(default_factory=dict)
+    context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
+
+    def __init__(self, hedge_data, R):
+        self.hedge_data = hedge_data
+        self.R = R
 
     def evaluate(self):
         raise NotImplementedError(
@@ -21,16 +24,9 @@ class PlantationCondition:
 class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
-    def minimum_length_to_plant(self):
-        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
-        replantation coefficient"""
-
-        R = self.replantation_coefficient
-        return R * self.hedge_data.length_to_remove()
-
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
-        minimum_length_to_plant = self.minimum_length_to_plant()
+        minimum_length_to_plant = self.hedge_data.length_to_remove() * self.R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -46,9 +42,8 @@ class MinLengthPacCondition(PlantationCondition):
 
     def evaluate(self):
         # no R coefficient for PAC
-        hedge_data = self.catalog["haies"]
-        length_to_plant = hedge_data.length_to_plant_pac()
-        minimum_length_to_plant = hedge_data.lineaire_detruit_pac()
+        length_to_plant = self.hedge_data.length_to_plant_pac()
+        minimum_length_to_plant = self.hedge_data.lineaire_detruit_pac()
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -56,7 +51,6 @@ class MinLengthPacCondition(PlantationCondition):
             "minimum_length_to_plant": minimum_length_to_plant,
             "left_to_plant": left_to_plant,
         }
-
         return self
 
 
@@ -81,7 +75,7 @@ class QualityCondition(PlantationCondition):
             }
         }
         """
-        minimum_lengths_to_plant = self.get_minimum_lengths_to_plant(R)
+        minimum_lengths_to_plant = self.get_minimum_lengths_to_plant()
         lengths_to_plant = self.get_lengths_to_plant()
 
         reliquat = {
@@ -147,41 +141,29 @@ class QualityCondition(PlantationCondition):
                 - reliquat["buissonnante_remplacement_dégradée"],
             ),
         }
+        total_missing = sum(missing_plantation.values())
+        self.result = total_missing == 0
+        self.context = {
+            "missing_plantation": missing_plantation,
+        }
+        return self
 
-        quality_condition = PlantationCondition(
-            result=all(
-                [
-                    missing_plantation["mixte"] == 0,
-                    missing_plantation["alignement"] == 0,
-                    missing_plantation["arbustive"] == 0,
-                    missing_plantation["buissonante"] == 0,
-                    missing_plantation["degradee"] == 0,
-                ]
-            ),
-            context={
-                "missing_plantation": missing_plantation,
-            },
-        )
-        return quality_condition
-
-    def get_minimum_lengths_to_plant(self, R):
-        hedge_data = self.catalog["haies"]
+    def get_minimum_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
-        for to_remove in hedge_data.hedges_to_remove():
+        for to_remove in self.hedge_data.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
 
         return {
-            "degradee": R * lengths_by_type["degradee"],
-            "buissonnante": R * lengths_by_type["buissonnante"],
-            "arbustive": R * lengths_by_type["arbustive"],
-            "mixte": R * lengths_by_type["mixte"],
-            "alignement": R * lengths_by_type["alignement"],
+            "degradee": self.R * lengths_by_type["degradee"],
+            "buissonnante": self.R * lengths_by_type["buissonnante"],
+            "arbustive": self.R * lengths_by_type["arbustive"],
+            "mixte": self.R * lengths_by_type["mixte"],
+            "alignement": self.R * lengths_by_type["alignement"],
         }
 
     def get_lengths_to_plant(self):
-        hedge_data = self.catalog["haies"]
         lengths_by_type = defaultdict(int)
-        for to_plant in hedge_data.hedges_to_plant():
+        for to_plant in self.hedge_data.hedges_to_plant():
             lengths_by_type[to_plant.hedge_type] += to_plant.length
 
         return {
@@ -194,10 +176,9 @@ class QualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     def evaluate(self):
-        hedge_data = self.catalog["haies"]
         unsafe_hedges = [
             h
-            for h in hedge_data.hedges_to_plant()
+            for h in self.hedge_data.hedges_to_plant()
             if h.hedge_type in ["alignement", "mixte"] and h.sous_ligne_electrique
         ]
         self.result = not unsafe_hedges
@@ -218,5 +199,9 @@ class PlantationConditionMixin:
         )
 
     def plantation_evaluate(self, R):
-        results = [condition().evaluate() for condition in self.plantation_conditions]
+        hedge_data = self.catalog["haies"]
+        results = [
+            condition(hedge_data, R).evaluate()
+            for condition in self.plantation_conditions
+        ]
         return results

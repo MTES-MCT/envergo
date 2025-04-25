@@ -272,12 +272,10 @@ def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
 
     context_data = context.flatten()
     context_data["plantation_evaluation"] = plantation_evaluation
+    context_data.update(plantation_evaluation.get_context())
+
     template_name = (
         f"haie/moulinette/plantation_evaluation/{plantation_evaluation.result}.html"
-    )
-
-    context_data["minimum_length_to_plant"] = round(
-        plantation_evaluation.minimum_length_to_plant()
     )
 
     try:

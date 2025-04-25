@@ -135,7 +135,7 @@ class PlantationEvaluator:
         """Returns if the plantation is compliant with the regulation"""
 
         R = self.replantation_coefficient
-        conditions = [MinLengthCondition().evaluate()]
+        conditions = [MinLengthCondition(self.hedge_data, R).evaluate()]
         self.moulinette.evaluate()
         for regulation in self.moulinette.regulations:
             for criterion in regulation.criteria.all():
@@ -148,6 +148,12 @@ class PlantationEvaluator:
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
+
+    def get_context(self):
+        context = {}
+        for condition in self.conditions:
+            context.update(condition.context)
+        return context
 
     @property
     def valid_conditions(self):
