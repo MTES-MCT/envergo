@@ -460,10 +460,3 @@ class SelfDeclarationMixin:
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
         return SELF_DECLARATION_ELIGIBILITY_MATRIX[self._result]
-
-
-class ReplantationCoefficientMixin:
-    def get_replantation_coefficient(self):
-        raise NotImplementedError(
-            f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
-        )

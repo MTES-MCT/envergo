@@ -5,11 +5,9 @@ from django import forms
 from django.conf import settings
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.regulations import PlantationCondition, PlantationConditionMixin
 from envergo.moulinette.forms import DisplayIntegerField
-from envergo.moulinette.regulations import (
-    CriterionEvaluator,
-    ReplantationCoefficientMixin,
-)
+from envergo.moulinette.regulations import CriterionEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +144,7 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8(ReplantationCoefficientMixin, CriterionEvaluator):
+class Bcae8(PlantationConditionMixin, CriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     slug = "bcae8"
     form_class = Bcae8Form
@@ -384,3 +382,22 @@ class Bcae8(ReplantationCoefficientMixin, CriterionEvaluator):
     def get_replantation_coefficient(self):
         R = self.R_MATRIX.get(self._result_code, D("1"))
         return R
+
+    def plantation_evaluate(self, R):
+        # no R coefficient for PAC
+        hedge_data = self.catalog["haies"]
+        minimum_length_to_plant = hedge_data.lineaire_detruit_pac()
+        left_to_plant = max(
+            0,
+            minimum_length_to_plant - hedge_data.length_to_plant_pac(),
+        )
+
+        context = {
+            "minimum_length_to_plant": minimum_length_to_plant,
+            "left_to_plant": left_to_plant,
+        }
+        pac_evaluation = PlantationCondition(
+            result=(left_to_plant == 0), context=context
+        )
+
+        return [pac_evaluation]

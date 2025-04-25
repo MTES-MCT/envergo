@@ -11,7 +11,7 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
-from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
@@ -161,10 +161,9 @@ class HedgeQualityView(MoulinetteMixin, FormView):
         try:
             data = json.loads(request.body)
             hedge_data = HedgeData(data=data)
-            plantation_evaluator = PlantationEvaluator(moulinette, hedge_data)
-            evaluator = HedgeEvaluator(plantation_evaluator)
-            evaluation = evaluator.evaluate()
-            return JsonResponse(evaluation, status=200, safe=False)
+            evaluator = PlantationEvaluator(moulinette, hedge_data)
+            evaluator.evaluate()
+            return JsonResponse(evaluator.to_json(), status=200, safe=False)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
