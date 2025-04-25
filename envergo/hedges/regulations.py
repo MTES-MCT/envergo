@@ -79,7 +79,7 @@ class MinLengthPacCondition(PlantationCondition):
 
 class QualityCondition(PlantationCondition):
     label = "Type de haie plantée"
-    valid_text = "La qualité de la haie plantée est suffisante."
+    valid_text = "La qualité écologique du linéaire planté est suffisante."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
@@ -201,6 +201,50 @@ class QualityCondition(PlantationCondition):
             "mixte": lengths_by_type["mixte"],
             "alignement": lengths_by_type["alignement"],
         }
+
+    @property
+    def text(self):
+        """Return the text to display for the condition."""
+        if self.result:
+            t = [self.valid_text]
+        else:
+            missing_plantation = self.context["missing_plantation"]
+            t = [
+                "Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites."
+            ]
+
+            if missing_plantation["alignement"] > 0:
+                t.append(
+                    f"""
+                    Il manque au moins {round(missing_plantation['mixte'] + missing_plantation['alignement'])} m
+                    de haie mixte ou alignement d'arbres.
+                    """
+                )
+
+            if missing_plantation["mixte"] > 0 or missing_plantation["degradee"] > 0:
+                t.append(
+                    f"""
+                    Il manque au moins {round(missing_plantation['mixte'] + missing_plantation['degradee'])} m
+                    de haie mixte.
+                """
+                )
+
+            if missing_plantation["buissonante"] > 0:
+                t.append(
+                    f"""
+                    Il manque au moins {round(missing_plantation['buissonante'] + missing_plantation['arbustive'])} m
+                    de haie basse ou arbustive.
+                """
+                )
+
+            if missing_plantation["arbustive"] > 0:
+                t.append(
+                    f"""
+                    Il manque au moins {round(missing_plantation['arbustive'])} m de haie arbustive.
+                """
+                )
+
+        return "<br />\n".join(t)
 
 
 class SafetyCondition(PlantationCondition):
