@@ -97,9 +97,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
-            context["minimum_length_to_plant"] = (
-                plantation_evaluator.minimum_length_to_plant()
-            )
+            context.update(plantation_evaluator.get_context())
         else:
             context["minimum_length_to_plant"] = 0
 

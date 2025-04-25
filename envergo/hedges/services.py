@@ -114,6 +114,13 @@ class PlantationEvaluator:
         return self._result
 
     @property
+    def conditions(self):
+        if not hasattr(self, "_conditions"):
+            self.evaluate()
+
+        return self._conditions
+
+    @property
     def global_result(self):
         """Return the project result combining both removal and plantation.
 
@@ -142,7 +149,7 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(criterion._evaluator.plantation_evaluate(R))
 
-        self.conditions = conditions
+        self._conditions = conditions
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0

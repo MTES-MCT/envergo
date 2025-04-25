@@ -35,12 +35,14 @@ class MinLengthCondition(PlantationCondition):
 
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
-        minimum_length_to_plant = self.hedge_data.length_to_remove() * self.R
+        length_to_remove = self.hedge_data.length_to_remove()
+        minimum_length_to_plant = length_to_remove * self.R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
             "length_to_plant": length_to_plant,
+            "length_to_remove": length_to_remove,
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
         }
