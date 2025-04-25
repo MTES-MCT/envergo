@@ -49,7 +49,7 @@ class MinLengthCondition(PlantationCondition):
 
 class MinLengthPacCondition(PlantationCondition):
 
-    valid_text = "La longueur de la haie à planter sur parcelle PAC est suffisante." ""
+    valid_text = "Le linéaire de haie planté sur parcelle PAC est suffisant."
     invalid_text = """
     La longueur de la haie à planter sur parcelle PAC est insuffisante.
     Elle doit être supérieure à %(minimum_length_to_plant_pac)s m,
@@ -71,7 +71,7 @@ class MinLengthPacCondition(PlantationCondition):
 
 
 class QualityCondition(PlantationCondition):
-    valid_text = "Le type de haie plantée est adaptée au type de haie détruite."
+    valid_text = "La qualité de la haie plantée est suffisante."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
@@ -196,7 +196,7 @@ class QualityCondition(PlantationCondition):
 
 
 class SafetyCondition(PlantationCondition):
-    valid_text = "La haie à planter ne présente pas de risque pour la sécurité."
+    valid_text = "La haie à planter ne se trouve pas sous une ligne électrique."
     invalid_text = """
         Une partie de la haie à planter, de type « alignement d'arbres » ou « haie mixte »,
         se situe sous une ligne électrique.
