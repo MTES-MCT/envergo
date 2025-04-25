@@ -147,7 +147,9 @@ class PlantationEvaluator:
         for regulation in self.moulinette.regulations:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
-                    conditions.extend(criterion._evaluator.plantation_evaluate(R))
+                    conditions.extend(
+                        criterion._evaluator.plantation_evaluate(self.hedge_data, R)
+                    )
 
         self._conditions = conditions
         self._result = (

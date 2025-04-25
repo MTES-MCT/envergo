@@ -235,8 +235,7 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, R):
-        hedge_data = self.catalog["haies"]
+    def plantation_evaluate(self, hedge_data, R):
         results = [
             condition(hedge_data, R).evaluate()
             for condition in self.plantation_conditions
