@@ -38,6 +38,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_number": 21075665,
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
+
     ConfigHaieFactory()
 
     view = PetitionProjectCreate()
