@@ -113,6 +113,8 @@ def extract_map(archive):
     elif archive.name.endswith(".gpkg"):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
+
+        # Local files also get an url, but its just unreachable
         elif hasattr(archive, "url") and archive.url.startswith("http"):
             yield archive.url
         else:
