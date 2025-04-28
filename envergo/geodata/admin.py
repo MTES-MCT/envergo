@@ -101,27 +101,11 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return queryset, may_have_duplicates
 
     def save_model(self, request, obj, form, change):
-<<<<<<< HEAD
-
-        # We want to open the file to count the expected zones
-        # We do this by opening the file field
-        # However, when it's a first upload, the file has not been saved and moved to
-        # it's definitive place yet. Hence we use the FieldFile object instead
-        file_path = obj.file.path
-        if exists(file_path):
-            file = obj.file
-        else:
-            file = obj.file.file
-        obj.expected_zones = count_features(file)
-||||||| 057aa9de
-        obj.expected_zones = count_features(obj.file.file)
-=======
         # Django's DataSource seems to only be able to open local files
         # So we only can (and need) to extract the file to count the expected features
         # if a new file is uploaded and is currently being processed on the server
         if isinstance(obj.file.file, TemporaryUploadedFile):
             obj.expected_zones = count_features(obj.file.file)
->>>>>>> map_update_bug
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
