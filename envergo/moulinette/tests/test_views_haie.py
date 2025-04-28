@@ -148,3 +148,59 @@ def test_debug_result(client):
 
     assert res.status_code == 200
     # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
+
+
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+@patch("envergo.hedges.services.get_replantation_coefficient")
+def test_result_p_view_with_R_gt_0(mock_R, client):
+    ConfigHaieFactory()
+    hedges = HedgeDataFactory()
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    query = urlencode(data)
+    mock_R.return_value = 1.0
+    res = client.get(f"{url}?{query}")
+
+    assert "Déposer une demande sans plantation" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+@patch("envergo.hedges.services.get_replantation_coefficient")
+def test_result_p_view_with_R_eq_0(mock_R, client):
+    ConfigHaieFactory()
+    hedges = HedgeDataFactory()
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    query = urlencode(data)
+    mock_R.return_value = 0.0
+    res = client.get(f"{url}?{query}")
+
+    # R should be 0
+    assert "Déposer une demande sans plantation" in res.content.decode()

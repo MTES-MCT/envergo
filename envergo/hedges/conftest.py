@@ -87,6 +87,22 @@ def hedge_data():
                     "connexion_boisement": False,
                 },
             },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.694305, "lng": 3.615543},
+                    {"lat": 43.694235, "lng": 3.615464},
+                ],
+                "additionalData": {
+                    "type_haie": "alignement",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
+                },
+            },
         ]
     )
     return hedge_data

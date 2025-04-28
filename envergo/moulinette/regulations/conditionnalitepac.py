@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
 from envergo.moulinette.forms import DisplayIntegerField
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
@@ -146,10 +147,11 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8(ReplantationCoefficientMixin, CriterionEvaluator):
+class Bcae8(PlantationConditionMixin, ReplantationCoefficientMixin, CriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     slug = "bcae8"
     form_class = Bcae8Form
+    plantation_conditions = [MinLengthPacCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
