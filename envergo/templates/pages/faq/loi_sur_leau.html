@@ -63,16 +63,14 @@
       </h3>
       <div class="fr-collapse" id="accordion-savoir_si_mon_projet_est_soumis">
 
-        <div class="fr-card fr-enlarge-link fr-card--horizontal fr-card--no-arrow fr-my-2w">
+        <div class="fr-card fr-card--horizontal fr-my-2w">
           <div class="fr-card__body fr-p-4w">
-            <p class="fr-card__title">
-              <a href="{% url 'moulinette_home' %}"></a>
-            </p>
             <p>
               Avec le simulateur Envergo, vérifiez en quelques clics si un projet est soumis à la Loi sur l'eau,
               ainsi qu’aux autres réglementations
             </p>
-            <button class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</button>
+            <a href="{% url 'moulinette_home' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
             <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
           </div>
         </div>
