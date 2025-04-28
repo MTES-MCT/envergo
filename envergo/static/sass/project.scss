@@ -1815,28 +1815,25 @@ li.btn-link {
   }
 }
 
-.fr-card.fr-card--no-arrow {
-  .fr-card__title a::after {
-    content: none;
+img.moulinette-incentive-img {
+  max-height: 138px;
+}
+
+@media (width >= 48em) {
+  .card--horizontal-1-5 .fr-card__header {
+    width: 20%;
+    flex: 0 0 20%;
   }
 
-  .fr-card__body > .fr-card__title {
-    margin-bottom: 0;
-    margin-top: 0;
+  img.moulinette-incentive-img {
+    max-height: unset;
   }
 }
 
-.card--horizontal-1-5 .fr-card__header {
-  width: 20%;
-  flex: 0 0 20%;
-}
-
-.responsive-image,
-.fr-card--horizontal .fr-card__img img.responsive-image {
+.responsive-img,
+.fr-card--horizontal .fr-card__img img.responsive-img {
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
   object-fit: contain;
   object-position: 50% 50%;
 }

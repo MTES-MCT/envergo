@@ -1,13 +1,20 @@
 {% load static %}
 
 <div class="fr-mt-8w">
-  <div class="fr-card fr-card--download fr-enlarge-link  fr-card--horizontal card--horizontal-1-5 fr-card--no-icon">
+  <div class="fr-card fr-card--horizontal card--horizontal-1-5">
+    <div class="fr-card__header">
+      <div class="fr-card__img">
+        <img src="{% static 'images/simu-light.svg' %}"
+             alt=""
+             class="light-only responsive-img moulinette-incentive-img">
+        <img src="{% static 'images/simu-dark.svg' %}"
+             alt=""
+             class="dark-only responsive-img moulinette-incentive-img">
+      </div>
+    </div>
     <div class="fr-card__body">
       <div class="fr-card__content fr-px-2w">
-        <h3 class="fr-card__title">
-          <a href="{% url 'moulinette_home' %}">Vous êtes un porteur de projet ?</a>
-        </h3>
-        <p class="fr-card__desc">Planifiez vos études et procédures en ne manquant aucune obligation légale.</p>
+        <h3 class="fr-card__title">Vous êtes un porteur de projet ?</h3>
         <div class="fr-card__start">
           <ul class="fr-tags-group">
             <li>
@@ -25,7 +32,8 @@
           </ul>
         </div>
         <div class="fr-card__end">
-          <ul class="fr-badge-group fr-my-3w">
+          <p>Planifiez vos études et procédures en ne manquant aucune obligation légale.</p>
+          <ul class="fr-badge-group fr-mb-3w fr-mt-1w">
             <li>
               <p class="fr-badge fr-badge--blue-ecume fr-text--xs">💧 Loi sur l'eau</p>
             </li>
@@ -39,20 +47,10 @@
               <p class="fr-badge fr-badge--blue-ecume fr-text--xs">📖 Évaluation environnementale</p>
             </li>
           </ul>
-
-          <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</button>
+          <a href="{% url 'moulinette_home' %}"
+             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
           <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
         </div>
-      </div>
-    </div>
-    <div class="fr-card__header">
-      <div class="fr-card__img">
-        <img src="{% static 'images/simu-light.svg' %}"
-             alt=""
-             class="light-only responsive-image">
-        <img src="{% static 'images/simu-dark.svg' %}"
-             alt=""
-             class="dark-only responsive-image">
       </div>
     </div>
   </div>
