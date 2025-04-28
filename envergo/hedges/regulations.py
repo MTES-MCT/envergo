@@ -77,9 +77,10 @@ class MinLengthPacCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        # no R coefficient for PAC
+        # For pac regulations, R is ignored unless it is zero
+        R = 1 if self.R > 0 else 0
         length_to_plant = self.hedge_data.length_to_plant_pac()
-        minimum_length_to_plant = self.hedge_data.lineaire_detruit_pac()
+        minimum_length_to_plant = self.hedge_data.lineaire_detruit_pac() * R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)

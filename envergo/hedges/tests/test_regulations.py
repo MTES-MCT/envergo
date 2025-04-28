@@ -56,6 +56,10 @@ def test_minimum_length_pac_condition():
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
+    condition = MinLengthPacCondition(hedge_data, 0.0)
+    condition.evaluate()
+    assert condition.context["minimum_length_to_plant_pac"] == 0
+
 
 def test_safety_condition(hedge_data):
     """Planting under power lines is not ok."""
