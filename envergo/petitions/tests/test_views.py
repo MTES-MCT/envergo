@@ -262,7 +262,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list(haie_user_44, client, site):
+def test_petition_project_list(haie_user_44, admin_user, client, site):
 
     ConfigHaieFactory()
     ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
@@ -286,9 +286,16 @@ def test_petition_project_list(haie_user_44, client, site):
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
-    # Check project is present
+    # Check only project 44 is present
     content = response.content.decode()
     assert project_34.reference not in content
+    assert project_44.reference in content
+
+    client.force_login(admin_user)
+    response = client.get(reverse("petition_project_list"))
+    # Check all project are present
+    content = response.content.decode()
+    assert project_34.reference in content
     assert project_44.reference in content
 
 
