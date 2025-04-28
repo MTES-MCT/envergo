@@ -4,6 +4,7 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import Q
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -98,7 +99,11 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return queryset, may_have_duplicates
 
     def save_model(self, request, obj, form, change):
-        obj.expected_zones = count_features(obj.file)
+        # Django's DataSource seems to only be able to open local files
+        # So we only can (and need) to extract the file to count the expected features
+        # if a new file is uploaded and is currently being processed on the server
+        if isinstance(obj.file.file, TemporaryUploadedFile):
+            obj.expected_zones = count_features(obj.file.file)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
