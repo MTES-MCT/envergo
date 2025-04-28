@@ -1,25 +1,26 @@
 from unittest.mock import Mock, patch
 
+import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
-from envergo.geodata.tests.factories import DepartmentFactory
+from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    PetitionProject34Factory,
     PetitionProjectFactory,
 )
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
     PetitionProjectInstructorView,
-    PetitionProjectList,
 )
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
@@ -261,57 +262,34 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list_requires_authentication(haie_user, site):
+def test_petition_project_list(haie_user_44, client, site):
 
     ConfigHaieFactory()
-    project = PetitionProjectFactory()
-    factory = RequestFactory()
-    request = factory.get(reverse("petition_project_list"))
-
-    # Add support  django messaging framework
-    request._messages = messages.storage.default_storage(request)
-
-    # Simulate an unauthenticated user
-    request.user = AnonymousUser()
-    request.site = site
-    request.session = {}
-
-    response = PetitionProjectList.as_view()(request)
+    ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    # Create two projects non draft, one in 34 and one in 44
+    project_34 = PetitionProject34Factory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+    )
+    project_44 = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+    )
+    response = client.get(reverse("petition_project_list"))
 
     # Check that the response is a redirect to the login page
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
     # Simulate an authenticated user
-    request.user = haie_user
-
-    response = PetitionProjectList.as_view()(request, reference=project.reference)
+    client.force_login(haie_user_44)
+    response = client.get(reverse("petition_project_list"))
 
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
-
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_list(client, haie_user, site):
-    """Test petition projects list"""
-
-    ConfigHaieFactory()
-    # Create a project not draft
-    project = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
-    )
-
-    petition_project_list_url = reverse(
-        "petition_project_list",
-    )
-
-    client.force_login(haie_user)
-    response = client.get(petition_project_list_url)
-    assert response.status_code == 200
-
+    # Check project is present
     content = response.content.decode()
-    assert project.reference in content
+    assert project_34.reference not in content
+    assert project_44.reference in content
 
 
 @pytest.mark.urls("config.urls_haie")
