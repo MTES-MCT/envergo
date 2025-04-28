@@ -930,6 +930,9 @@ class ConfigAmenagement(ConfigBase):
 
 
 def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
+    """Get hedge properties form
+    TODO: move this in hedges/forms.py
+    """
     cls = (
         HedgeToPlantPropertiesForm if type == TO_PLANT else HedgeToRemovePropertiesForm
     )
