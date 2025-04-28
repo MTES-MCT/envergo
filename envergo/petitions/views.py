@@ -55,8 +55,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments"""
-        user_departments = self.request.user.departments.values_list("department")
-        queryset = self.queryset.filter(department_code__in=user_departments)
+        user_departments = self.request.user.departments.all()
+        queryset = self.queryset.filter(department__in=user_departments)
         return queryset
 
 

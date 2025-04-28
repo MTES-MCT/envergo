@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from urllib.parse import urlparse
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import QueryDict
 from django.template.loader import render_to_string
@@ -12,7 +13,7 @@ from model_utils import Choices
 
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
-from envergo.geodata.models import DEPARTMENT_CHOICES
+from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.utils.mattermost import notify
@@ -51,9 +52,9 @@ class PetitionProject(models.Model):
     )
     moulinette_url = models.URLField(_("Moulinette url"), max_length=1024, blank=True)
 
-    department_code = models.CharField(
-        _("Department"),
-        max_length=3,
+    department = models.ForeignKey(
+        "geodata.Department",
+        on_delete=models.PROTECT,
         editable=False,
         blank=True,
         null=True,
@@ -105,11 +106,15 @@ class PetitionProject(models.Model):
 
     def save(self, *args, **kwargs):
         """Set department code before saving"""
-        if not self.department_code:
-            self.department_code = self.get_department()
+        if not self.department:
+            department_code = self.get_department_code()
+            try:
+                self.department = Department.objects.get(department=department_code)
+            except ObjectDoesNotExist:
+                self.department = None
         super().save(*args, **kwargs)
 
-    def get_department(self):
+    def get_department_code(self):
         """Get department from moulinette url"""
         return extract_param_from_url(self.moulinette_url, "department")
 
@@ -118,7 +123,7 @@ class PetitionProject(models.Model):
         hedge_centroid_coords = self.hedge_data.get_centroid_to_remove()
         return {
             "reference": self.reference,
-            "department": self.get_department(),
+            "department": self.get_department_code(),
             "longueur_detruite": (
                 self.hedge_data.length_to_remove() if self.hedge_data else None
             ),
