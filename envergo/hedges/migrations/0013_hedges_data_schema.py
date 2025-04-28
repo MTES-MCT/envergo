@@ -7,43 +7,40 @@ from tqdm import tqdm
 def update_hedges_data_json_schema(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
     qs = HedgeData.objects.filter(data__isnull=False)
-    total = qs.count()
-    batch_size = 1000
-    i = 0
-    with tqdm(total=total) as pbar:
-        while i < total:
-            models = qs[i: i + batch_size].iterator()  # noqa
-            to_update = []
-            for model in models:
-                if not model.data:
-                    continue
-                for hedge in model.data:
-                    data = hedge.get("additionalData", {})
-                    # update attributes for Aisne
-                    if "mode_destruction" not in data:
-                        data["mode_destruction"] = "arrachage"
-                    if "position" not in data:
-                        data["position"] = "bord_route" if "proximiteVoirie" in data and data["proximiteVoirie"] else "interchamp"
-                    # use snake_case instead of camelCase
-                    map = [("type_haie", "typeHaie"),
-                           ("vieil_arbre", "vieilArbre"),
-                           ("sur_parcelle_pac", "surParcellePac"),
-                           ("proximite_mare", "proximiteMare"),
-                           ("proximite_point_eau", "proximitePointEau"),
-                           ("sous_ligne_electrique", "sousLigneElectrique"),
-                           ("proximite_voirie", "proximiteVoirie"),
-                           ("connexion_boisement", "connexionBoisement"), ]
-                    for snake, camel in map:
-                        if camel in data:
-                            data[snake] = data[camel]
-                            del data[camel]
-                    hedge["additionalData"] = data
+    for model in qs:
+        if not model.data:
+            continue
 
-                to_update.append(model)
+        for hedge in model.data:
+            data = hedge.get("additionalData", {})
+            # update attributes for Aisne
+            if "mode_destruction" not in data:
+                data["mode_destruction"] = "arrachage"
+            if "position" not in data:
+                data["position"] = (
+                    "bord_route"
+                    if "proximiteVoirie" in data and data["proximiteVoirie"]
+                    else "interchamp"
+                )
+            # use snake_case instead of camelCase
+            map = [
+                ("type_haie", "typeHaie"),
+                ("vieil_arbre", "vieilArbre"),
+                ("sur_parcelle_pac", "surParcellePac"),
+                ("proximite_mare", "proximiteMare"),
+                ("proximite_point_eau", "proximitePointEau"),
+                ("sous_ligne_electrique", "sousLigneElectrique"),
+                ("proximite_voirie", "proximiteVoirie"),
+                ("connexion_boisement", "connexionBoisement"),
+            ]
+            for snake, camel in map:
+                if camel in data:
+                    data[snake] = data[camel]
+                    del data[camel]
+            hedge["additionalData"] = data
 
-            HedgeData.objects.bulk_update(to_update, ["data"])
-            i += batch_size
-            pbar.update(batch_size)
+            model.save()
+
 
 class Migration(migrations.Migration):
 
