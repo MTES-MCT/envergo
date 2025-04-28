@@ -119,3 +119,32 @@ def test_result_p_view_with_R_eq_0(mock_R, client):
 
     # R should be 0
     assert "Déposer une demande sans plantation" in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_debug_result(client):
+    """WIP: Test for debug page.
+    Missing fixtures criteria ep and pac for MoulinetteHaie"""
+
+    ConfigHaieFactory()
+    haies = HedgeDataFactory()
+
+    data = {
+        "profil": "autre",
+        "element": "haie",
+        "motif": "amelioration_ecologique",
+        "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "travaux": "destruction",
+        "haies": str(haies.id),
+        "department": "44",
+        "debug": "true",
+    }
+    url = reverse("moulinette_result")
+    params = urlencode(data)
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
