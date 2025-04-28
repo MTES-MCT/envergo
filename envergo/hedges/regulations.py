@@ -270,9 +270,9 @@ class QualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    valid_text = "Aucune haie haute sous une ligne électrique."
+    valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
-        Aucune haie haute ne doit se situer sous une ligne électrique.
+        Aucune haie haute ne doit se situer sous une ligne électrique ou téléphonique.
         Déplacez les haies ou ne plantez à cet endroit que des haies basses ou arbustives.
     """
 
