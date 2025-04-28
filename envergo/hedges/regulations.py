@@ -1,9 +1,10 @@
+from abc import ABC, abstractmethod
 from collections import defaultdict
 
 from django.utils.safestring import mark_safe
 
 
-class PlantationCondition:
+class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
@@ -24,6 +25,7 @@ class PlantationCondition:
         """
         return True
 
+    @abstractmethod
     def evaluate(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.evaluate` method."
