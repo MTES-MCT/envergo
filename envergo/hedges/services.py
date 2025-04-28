@@ -143,7 +143,6 @@ class PlantationEvaluator:
 
         R = self.replantation_coefficient
         conditions = [MinLengthCondition(self.hedge_data, R).evaluate()]
-        self.moulinette.evaluate()
         for regulation in self.moulinette.regulations:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
