@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
+EPSG_MERCATOR = 3857
 
 
 class CeleryDebugStream:

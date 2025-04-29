@@ -1,0 +1,40 @@
+{% load l10n %}
+{% load static %}
+
+<h6>Densité de haie</h6>
+<p>ICI commence le calcul de densité {{ centroid.coordinates }}</p>
+<style>
+  #map_densite {
+    height: 600px;
+    width: 100%;
+  }
+</style>
+<div id="map_densite"></div>
+
+
+<script>
+     window.addEventListener('load', function() {
+
+      const map = L.map('map_densite').setView({lng: {{ centroid.0|unlocalize }}, lat: {{ centroid.1|unlocalize }}}, 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Show the center point
+      L.marker({lng: {{ centroid.0|unlocalize }}, lat: {{ centroid.1|unlocalize }}}).addTo(map);
+
+      // Parse GeoJSON buffers from Django
+      const circle200 = L.geoJSON({{ circle_200|safe }}, {
+        style: {color: 'red', fillOpacity: 0.3}
+      }).addTo(map);
+
+      const circle5000 = L.geoJSON({{ circle_5000|safe }}, {
+        style: {color: 'blue', fillOpacity: 0.2}
+      }).addTo(map);
+
+      // Zoom to fit
+      const group = new L.featureGroup([circle200, circle5000]);
+      map.fitBounds(group.getBounds());
+    });
+</script>

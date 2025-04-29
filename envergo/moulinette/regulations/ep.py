@@ -1,6 +1,8 @@
 from django import forms
+from django.contrib.gis.geos import GEOSGeometry
 
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.utils import EPSG_MERCATOR, EPSG_WGS84
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
@@ -87,3 +89,36 @@ class EspecesProtegeesAisne(CriterionEvaluator):
                 break
 
         return has_reimplantation, has_sensitive_species
+
+
+class Densite(CriterionEvaluator):
+    """Legacy criterion for protected species."""
+
+    choice_label = "EP > Densité"
+    slug = "densite"
+
+    CODE_MATRIX = {
+        "non_applicable": "non_applicable",
+    }
+
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        haies = self.catalog.get("haies")
+        if not haies:
+            return catalog
+
+        centroid_shapely = haies.get_centroid_to_remove()
+        centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=4326)
+        centroid_meter = centroid_geos.transform(EPSG_MERCATOR, clone=True)
+        circle_200 = centroid_meter.buffer(200)
+        circle_5000 = centroid_meter.buffer(5000)
+
+        circle_200 = circle_200.transform(EPSG_WGS84, clone=True)
+        circle_5000 = circle_5000.transform(EPSG_WGS84, clone=True)
+        catalog["centroid"] = centroid_geos
+        catalog["circle_200"] = circle_200.geojson
+        catalog["circle_5000"] = circle_5000.geojson
+        return catalog
+
+    def get_result_data(self):
+        return "non_applicable"
