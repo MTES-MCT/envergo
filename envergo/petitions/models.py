@@ -55,6 +55,7 @@ class PetitionProject(models.Model):
     department = models.ForeignKey(
         "geodata.Department",
         on_delete=models.PROTECT,
+        related_name="petitionprojects",
         editable=False,
         blank=True,
         null=True,

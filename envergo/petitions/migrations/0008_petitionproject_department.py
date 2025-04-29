@@ -2,6 +2,18 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
+from envergo.utils.urls import extract_param_from_url
+
+
+def set_department(apps, schema_editor):
+    """Set department in existing petition project"""
+
+    Department = apps.get_model('geodata', 'Department')
+    PetitionProject = apps.get_model('petitions', 'PetitionProject')
+    for project in PetitionProject.objects.filter(department__isnull=True):
+        department_code = extract_param_from_url(project.moulinette_url, "department")
+        project.department = Department.objects.filter(department=department_code).first()
+        project.save()
 
 
 class Migration(migrations.Migration):
@@ -20,7 +32,9 @@ class Migration(migrations.Migration):
                 editable=False,
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
+                related_name="petitionprojects",
                 to="geodata.department",
             ),
         ),
+        migrations.RunPython(set_department, migrations.RunPython.noop),
     ]
