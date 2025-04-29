@@ -501,7 +501,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         department = self.object.get_moulinette().get_department()
 
         # check if user is authorize, else returns 403 error HttpResponseForbidden
-        if department not in user.departments.all():
+        if not any((user.is_superuser, department in user.departments.all())):
             response = TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )

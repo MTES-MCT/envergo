@@ -116,7 +116,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
-    haie_user, haie_user_44, site
+    haie_user, haie_user_44, admin_user, site
 ):
     """
     Test petition project instructor page requires authentication
@@ -170,11 +170,22 @@ def test_petition_project_instructor_view_requires_authentication(
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
+    # Simulate admin user, should be autorised
+    request.user = admin_user
+
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_dossier_ds_view_requires_authentication(
-    haie_user, haie_user_44, site
+    haie_user, haie_user_44, admin_user, site
 ):
 
     ConfigHaieFactory()
@@ -216,6 +227,17 @@ def test_petition_project_instructor_dossier_ds_view_requires_authentication(
 
     # Simulate an authenticated user, with department 44, same as project
     request.user = haie_user_44
+
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+    # Simulate admin user, should be autorised
+    request.user = admin_user
 
     response = PetitionProjectInstructorView.as_view()(
         request,
