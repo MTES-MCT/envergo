@@ -362,10 +362,6 @@ class TriageFormHaie(forms.Form):
                 mark_safe(
                     """Destruction<br />
 <span class="fr-hint-text">
-Toute intervention qui supprime définitivement la végétation :
-arrachage, coupe à blanc sur essences qui ne recèpent pas
-(ex : chêne, sorbier, noyer, merisier, bouleau, hêtre,
-tous les résineux…), entretien sévère et récurrent, etc.
 Toute intervention supprimant définitivement la végétation :
 arrachage ; « déplacement » de haie ;
 coupe à blanc sur essences qui ne recèpent pas
