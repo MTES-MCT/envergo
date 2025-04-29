@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Accès interdit (code 403){% endblock %}
+
+{% block article %}
+  <h1>Accès interdit</h1>
+  <p>Erreur 403</p>
+
+  <p class="fr-text--lead">
+    La page que vous cherchez n'est accessible
+    qu'avec un compte instructeur associé à ce département.
+  </p>
+  <p>
+    <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail"
+       href="{% url 'contact_us' %}">Contactez le support</a>
+  </p>
+{% endblock %}

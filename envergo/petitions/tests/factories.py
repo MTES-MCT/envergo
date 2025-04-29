@@ -45,3 +45,17 @@ class PetitionProjectFactory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
     demarches_simplifiees_state = DOSSIER_STATES.draft
+
+
+class PetitionProject34Factory(DjangoModelFactory):
+    class Meta:
+        model = PetitionProject
+
+    reference = "ABC124"
+    moulinette_url = (
+        "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
+        "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=34&travaux=destruction&element=haie"
+    )
+    hedge_data = factory.SubFactory(HedgeDataFactory)
+    demarches_simplifiees_dossier_number = 21059676
+    demarches_simplifiees_state = DOSSIER_STATES.draft

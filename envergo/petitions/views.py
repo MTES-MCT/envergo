@@ -12,6 +12,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView, UpdateView
@@ -51,6 +52,14 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         .order_by("-created_at")
     )
     paginate_by = 30
+
+    def get_queryset(self):
+        """Override queryset filtering projects from user departments"""
+        queryset = self.queryset
+        if not self.request.user.is_superuser:
+            user_departments = self.request.user.departments.all()
+            queryset = self.queryset.filter(department__in=user_departments)
+        return queryset
 
 
 class PetitionProjectCreate(FormView):
@@ -484,7 +493,19 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
+        """Authorize user according to project department and log event"""
+
         result = super().get(request, *args, **kwargs)
+
+        user = request.user
+        department = self.object.get_moulinette().get_department()
+
+        # check if user is authorize, else returns 403 error HttpResponseForbidden
+        if department not in user.departments.all():
+            response = TemplateResponse(
+                request, template="haie/petitions/403.html", status=403
+            )
+            return response
 
         log_event(
             "projet",
@@ -587,6 +608,8 @@ class PetitionProjectInstructorDossierDSView(
 
 
 class PetitionProjectHedgeDataExport(DetailView):
+    """Export Hedge data in geopackage"""
+
     model = PetitionProject
     slug_field = "reference"
     slug_url_kwarg = "reference"

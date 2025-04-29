@@ -38,6 +38,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "is_staff",
                     "is_superuser",
                     "groups",
+                    "departments",
                 ),
             },
         ),

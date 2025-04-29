@@ -52,6 +52,12 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
+    departments = models.ManyToManyField(
+        "geodata.Department",
+        verbose_name=_("Departements"),
+        related_name="members",
+    )
+
     username = None  # type: ignore
     first_name = None  # type: ignore
     last_name = None  # type: ignore
