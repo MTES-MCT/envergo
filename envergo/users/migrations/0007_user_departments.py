@@ -3,6 +3,16 @@
 from django.db import migrations, models
 
 
+def set_default_department_aisne_to_instructors(apps, schema_editor):
+    """Set department Aisne for existing instructors"""
+
+    Department = apps.get_model('geodata', 'Department')
+    Department_Aisne = Department.objects.filter(department="02").first()
+    User = apps.get_model('users', 'User')
+    for user in User.objects.filter(is_confirmed_by_admin=True, access_haie=True):
+        user.departments.add(Department_Aisne)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -20,4 +30,5 @@ class Migration(migrations.Migration):
                 verbose_name="Departements",
             ),
         ),
+        migrations.RunPython(set_default_department_aisne_to_instructors, migrations.RunPython.noop),
     ]
