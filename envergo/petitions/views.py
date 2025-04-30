@@ -57,7 +57,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         """Override queryset filtering projects from user departments"""
         queryset = self.queryset
         if not self.request.user.is_superuser:
-            user_departments = self.request.user.departments.all()
+            user_departments = self.request.user.departments.defer("geometry").all()
             queryset = self.queryset.filter(department__in=user_departments)
         return queryset
 
@@ -501,7 +501,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         department = self.object.get_moulinette().get_department()
 
         # check if user is authorize, else returns 403 error HttpResponseForbidden
-        if not any((user.is_superuser, department in user.departments.all())):
+        if not any(
+            (user.is_superuser, department in user.departments.defer("geometry").all())
+        ):
             response = TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
