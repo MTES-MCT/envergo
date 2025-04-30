@@ -127,6 +127,22 @@ class Zone(gis_models.Model):
         ]
 
 
+class Line(gis_models.Model):
+    """Stores an annotated geographic Line(s)."""
+
+    map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
+    geometry = gis_models.LineStringField(
+        geography=True,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+            but if you use it, you will break EnvErgo.
+            """
+        ),
+    )
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
+
+
 class Department(models.Model):
     """Water law contact data for a departement."""
 

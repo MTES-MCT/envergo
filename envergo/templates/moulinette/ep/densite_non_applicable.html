@@ -1,0 +1,11 @@
+<h6>Densité de haie</h6>
+<ul>
+  <li>Surface zone de 200m : {{ area_200 }}</li>
+  <li>Surface zone de 5000m : {{ area_5000 }}</li>
+  <li>Linéaire de haies 200m : {{ length_200 }}</li>
+  <li>Linéaire de haies 5000m : {{ length_5000 }}</li>
+  <li>Densité 200m : {{ density_200 }}</li>
+  <li>Densité 5000m : {{ density_5000 }}</li>
+</ul>
+
+{% include '_map_snippet.html' with map=map map_id=criterion.unique_slug %}
