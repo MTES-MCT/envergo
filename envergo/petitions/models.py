@@ -110,7 +110,9 @@ class PetitionProject(models.Model):
         if not self.department:
             department_code = self.get_department_code()
             try:
-                self.department = Department.objects.get(department=department_code)
+                self.department = Department.objects.defer("geometry").get(
+                    department=department_code
+                )
             except ObjectDoesNotExist:
                 self.department = None
         super().save(*args, **kwargs)
