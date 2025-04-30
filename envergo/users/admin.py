@@ -18,10 +18,24 @@ class NoIdnUserCreationForm(UserCreationForm):
     )
 
 
+class UserForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Let's not fetch the department geometries when displaying the
+        # department select widget
+        if "departments" in self.fields:
+            self.fields["departments"].queryset = self.fields[
+                "departments"
+            ].queryset.defer("geometry")
+
+
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
 
     add_form = NoIdnUserCreationForm
+    form = UserForm
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         (_("Personal info"), {"fields": ("name",)}),
