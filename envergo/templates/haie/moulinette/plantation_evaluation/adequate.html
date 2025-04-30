@@ -1,15 +1,17 @@
-<div class="fr-alert fr-alert--success fr-mb-3w">
-  <h3 class="fr-alert__title">La plantation envisagée est suffisante</h3>
-  <p>Le projet de plantation décrit dans le simulateur apparaît acceptable au regard des haies détruites :</p>
-  <ul>
-    <li>La longueur de la haie à planter est suffisante.</li>
-    <li>Le linéaire de haie planté sur parcelle PAC est suffisant.</li>
-    <li>La qualité de la haie plantée est suffisante.</li>
-  </ul>
+{% if replantation_coefficient > 0.0 %}
+  <div class="fr-alert fr-alert--success fr-mb-3w">
+    <h3 class="fr-alert__title">La plantation envisagée est suffisante</h3>
+    <p>Le projet de plantation décrit dans le simulateur apparaît acceptable au regard des haies détruites :</p>
+    <ul>
+      {% for condition in plantation_evaluation.valid_conditions %}
+        {% if condition.must_display %}<li>{{ condition.text }}</li>{% endif %}
+      {% endfor %}
+    </ul>
 
-  {% if moulinette.result != "interdit" %}
-    <p class="fr-hint-text">
-      Cette estimation n'est pas une position définitive de l'administration. Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
-    </p>
-  {% endif %}
-</div>
+    {% if moulinette.result != "interdit" %}
+      <p class="fr-hint-text">
+        Cette estimation n'est pas une position définitive de l'administration. Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
+      </p>
+    {% endif %}
+  </div>
+{% endif %}

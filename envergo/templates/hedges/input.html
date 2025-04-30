@@ -13,7 +13,7 @@
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
-       data-quality-url="{% url 'hedge_quality' %}?{{ request.GET.urlencode|safe }}"
+       data-conditions-url="{% url 'hedge_conditions' %}?{{ request.GET.urlencode|safe }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
 
@@ -168,100 +168,23 @@
             </template>
           </div>
         </div>
-        <div id="hedge-quality"
-             v-if="quality.status === 'loaded' && mode === 'plantation'">
+        <div id="hedge-conditions"
+             v-if="conditions.length > 0 && mode === 'plantation'">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Plantation minimum attendue</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
-              <div>
+
+              <div v-for="condition in conditions">
                 <div>
-                  <p :class="{ 'fr-badge--success': quality.length_to_plant.result, 'fr-badge--error': !quality.length_to_plant.result} "
+                  <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
                 </div>
                 <div>
-                  <h6>Longueur de la haie plantée</h6>
-                  <p v-if="quality.length_to_plant.result">Le linéaire total planté est suffisant.</p>
-                  <p v-else>
-                    Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant|floatformat:0 }} m.
-                    <br />
-                    Il manque au moins [[ Math.round(quality.length_to_plant.left_to_plant) ]] m.
-                  </p>
+                  <h6>[[ condition.label ]]</h6>
+                  <p v-html="condition.text"></p>
                 </div>
               </div>
 
-              {% if is_removing_pac %}
-                <div v-if="quality.length_to_plant_pac">
-                  <div>
-                    <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
-                       class="fr-badge"></p>
-                  </div>
-                  <div>
-                    <h6>Maintien des haies PAC</h6>
-                    <p v-if="quality.length_to_plant_pac.result">
-                      Le linéaire de haie planté sur parcelle PAC est
-                      suffisant.
-                    </p>
-                    <p v-else>
-                      Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[
-                      Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
-                      <br />
-                      Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC,
-                      hors alignements d’arbres.
-                    </p>
-                  </div>
-                </div>
-              {% endif %}
-
-              <div v-if="quality.quality">
-                <div>
-                  <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "
-                     class="fr-badge"></p>
-                </div>
-                <div>
-                  <h6>Type de haie plantée</h6>
-                  <p v-if="quality.quality.result">La qualité écologique du linéaire planté est suffisante.</p>
-                  <div v-else>
-                    <p>Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites.</p>
-
-                    <p v-if="quality.quality.missing_plantation.alignement > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
-                      quality.quality.missing_plantation.alignement) ]] m de haie mixte ou alignement d'arbres.
-                    </p>
-                    <p v-else-if="quality.quality.missing_plantation.mixte > 0 || quality.quality.missing_plantation.degradee > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
-                      quality.quality.missing_plantation.degradee) ]] m de haie mixte.
-                    </p>
-
-                    <p v-if="quality.quality.missing_plantation.buissonante > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.buissonante +
-                      quality.quality.missing_plantation.arbustive) ]] m de haie basse ou arbustive.
-                    </p>
-                    <p v-else-if="quality.quality.missing_plantation.arbustive > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.arbustive) ]] m de haie
-                      arbustive.
-                    </p>
-
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="quality.do_not_plant_under_power_line">
-                <div>
-                  <p :class="{ 'fr-badge--success': quality.do_not_plant_under_power_line.result, 'fr-badge--error': !quality.do_not_plant_under_power_line.result} "
-                     class="fr-badge"></p>
-                </div>
-                <div>
-                  <h6>Sécurité</h6>
-                  <p v-if="quality.do_not_plant_under_power_line.result">
-                    Aucune haie haute sous une ligne
-                    électrique.
-                  </p>
-                  <p v-else>
-                    Aucune haie haute ne doit se situer sous une ligne électrique. Déplacez les haies ou ne plantez à
-                    cet endroit que des haies basses ou arbustives.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
