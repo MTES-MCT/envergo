@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
 from itertools import product
+from operator import attrgetter
 from typing import TYPE_CHECKING, Literal
 
 from envergo.evaluations.models import RESULTS
@@ -150,7 +151,7 @@ class PlantationEvaluator:
                         criterion._evaluator.plantation_evaluate(self.hedge_data, R)
                     )
 
-        self._conditions = conditions
+        self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0

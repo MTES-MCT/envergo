@@ -9,6 +9,7 @@ class PlantationCondition(ABC):
 
     label: str
     result: bool
+    order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
@@ -41,6 +42,7 @@ class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
+    order = 0
     valid_text = "Le linéaire total planté est suffisant."
     invalid_text = """
     Le linéaire total planté doit être supérieur à %(minimum_length_to_plant)s m.<br />
@@ -69,6 +71,7 @@ class MinLengthCondition(PlantationCondition):
 class MinLengthPacCondition(PlantationCondition):
 
     label = "Maintien des haies PAC"
+    order = 1
     valid_text = "Le linéaire de haie planté sur parcelle PAC est suffisant."
     invalid_text = """
         Le linéaire de haie planté sur parcelle PAC doit être supérieur à %(minimum_length_to_plant_pac)s m.
@@ -96,6 +99,7 @@ class MinLengthPacCondition(PlantationCondition):
 
 class QualityCondition(PlantationCondition):
     label = "Type de haie plantée"
+    order = 2
     valid_text = "La qualité écologique du linéaire planté est suffisante."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
@@ -271,6 +275,7 @@ class QualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
+    order = 4
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
         Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
