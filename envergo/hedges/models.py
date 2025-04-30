@@ -389,6 +389,8 @@ IMPORT_STATUSES = Choices(
 
 
 class SpeciesMapFile(models.Model):
+    """Holds a csv file that links species and their caracteristics to a map."""
+
     name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
     file = models.FileField("Fichier", upload_to="species_maps/")
     map = models.ForeignKey(

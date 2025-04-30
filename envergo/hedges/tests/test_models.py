@@ -130,7 +130,7 @@ def test_species_are_filtered_by_hedge_type():
     s1 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s2 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s3 = SpeciesMapFactory(hedge_types=["arbustive"]).species
-    hedge = HedgeFactory(additionalData__type_haie="degradee")
+    hedge = HedgeFactory(additionalData__typeHaie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
     hedges_species = hedges.get_all_species()
