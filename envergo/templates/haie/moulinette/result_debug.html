@@ -37,20 +37,11 @@
       {% endif %}
     </ul>
 
-    <h2>Évaluation</h2>
+    <h2>Conditions d'acceptabilité</h2>
 
     {% with evaluation=plantation_evaluation.evaluation %}
       <ul class="fr-mb-2w">
         <li>Conditions d'acceptabilité non remplies : {{ plantation_evaluation.unfulfilled_conditions }}</li>
-        <li>Longueur à planter restante : {{ evaluation.length_to_plant.left_to_plant|floatformat:"g" }} m</li>
-        <li>
-          Qualité :
-          <ul>
-            {% for quality, length in evaluation.quality.missing_plantation.items %}
-              <li>{{ quality }} : {{ length|floatformat:"g" }} m</li>
-            {% endfor %}
-          </ul>
-        </li>
       </ul>
     {% endwith %}
 
@@ -70,8 +61,6 @@
               <li class="fr-mb-2w">
                 {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
-                <br />
-                Déclenchement géographique : {{ criterion.activation_mode }}
                 <br />
                 {% if criterion.evaluator_settings.replantation_coefficient %}
                   R = {{ criterion.evaluator_settings.replantation_coefficient }}
