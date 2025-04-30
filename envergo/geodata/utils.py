@@ -18,7 +18,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
-from envergo.geodata.models import Department, Zone
+from envergo.geodata.models import Department, Line, Zone
 
 logger = logging.getLogger(__name__)
 
@@ -134,28 +134,45 @@ def count_features(map_file):
     return nb_zones
 
 
-def process_map_file(map, file, task=None):
-    logger.info("Creating temporary directory")
-    with extract_map(file) as map_file:
-        if task:
-            debug_stream = CeleryDebugStream(task, map.expected_zones)
-        else:
-            debug_stream = sys.stdout
+def process_geographic_file(map, lm, task):
+    if task:
+        debug_stream = CeleryDebugStream(task, map.expected_zones)
+    else:
+        debug_stream = sys.stdout
 
-        logger.info("Instanciating custom LayerMapping")
-        mapping = {"geometry": "MULTIPOLYGON"}
-        extra = {"map": map}
-        lm = CustomMapping(
-            Zone,
-            map_file,
-            mapping,
-            transaction_mode="autocommit",
-            extra_kwargs=extra,
-        )
+    logger.info("Calling layer mapping `save`")
+    lm.save(strict=False, progress=True, stream=debug_stream)
+    logger.info("Importing is done")
 
-        logger.info("Calling layer mapping `save`")
-        lm.save(strict=False, progress=True, stream=debug_stream)
-        logger.info("Importing is done")
+
+def process_zones_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "MULTIPOLYGON"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Zone,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
+
+
+def process_lines_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "LINESTRING"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Line,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
 
 
 def make_polygons_valid(map):

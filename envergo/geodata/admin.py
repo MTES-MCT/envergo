@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.models import Department, Map, Zone
+from envergo.geodata.models import Department, Line, Map, Zone
 from envergo.geodata.tasks import generate_map_preview, process_map
 from envergo.geodata.utils import count_features, extract_map
 
@@ -273,6 +273,34 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
         "npoints",
     ]
     readonly_fields = ["map", "created_at", "area", "npoints", "attributes"]
+    list_filter = ["map__map_type", "map__data_type"]
+
+    # Prevent an expensive count query
+    show_full_result_count = False
+
+    @admin.display(description=_("Data type"))
+    def map_type(self, obj):
+        return obj.map.get_map_type_display()
+
+    @admin.display(description=_("Data certainty"))
+    def data_type(self, obj):
+        return obj.map.get_data_type_display()
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("map").defer("geometry", "map__geometry")
+
+
+@admin.register(Line)
+class LineAdmin(gis_admin.GISModelAdmin):
+    list_display = [
+        "id",
+        "map",
+        "created_at",
+        "map_type",
+        "data_type",
+    ]
+    readonly_fields = ["map", "created_at", "attributes"]
     list_filter = ["map__map_type", "map__data_type"]
 
     # Prevent an expensive count query
