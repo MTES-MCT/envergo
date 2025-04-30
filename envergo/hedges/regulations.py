@@ -273,8 +273,10 @@ class SafetyCondition(PlantationCondition):
     label = "Sécurité"
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
-        Aucune haie haute ne doit se situer sous une ligne électrique ou téléphonique.
-        Déplacez les haies ou ne plantez à cet endroit que des haies basses ou arbustives.
+        Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
+        Ceci est à éviter pour des raisons de sécurité.
+        Seuls des linéaires de type « haie buissonnante basse » ou « haie arbustive »
+        peuvent être plantés à ces endroits.
     """
 
     def evaluate(self):
