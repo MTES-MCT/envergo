@@ -118,11 +118,14 @@ class MapAdmin(gis_admin.GISModelAdmin):
         and would crash the entire server.
         """
         zone_count = Zone.objects.filter(map__in=objs).count()
+        line_count = Line.objects.filter(map__in=objs).count()
         deleted_objects = [str(map) for map in objs]
         deleted_objects.append(f"{zone_count} zones associées")
+        deleted_objects.append(f"{line_count} lignes associées")
         model_count = {
             "Cartes": len(objs),
             "Zones": zone_count,
+            "Lignes": line_count,
         }
         perms_needed = set()
         protected = {}

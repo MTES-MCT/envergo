@@ -11,7 +11,7 @@ from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import Line
-from envergo.geodata.utils import EPSG_MERCATOR, EPSG_WGS84
+from envergo.geodata.utils import EPSG_WGS84, get_best_epsg_for_location
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
 
@@ -116,7 +116,11 @@ class Densite(CriterionEvaluator):
 
         Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
         so it uses raw SQL
+        Returns:
+            - the intersection of the circle with the map zones
+            - None if there is no intersection
         """
+
         with connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -134,8 +138,11 @@ class Densite(CriterionEvaluator):
                 [circle_geom.ewkt, map_name, circle_geom.ewkt],
             )
             wkt = cursor.fetchone()[0]
-            geom = GEOSGeometry(wkt)
-            geom.srid = circle_geom.srid  # Set SRID explicitly
+            if wkt:
+                geom = GEOSGeometry(wkt)
+                geom.srid = circle_geom.srid  # Set SRID explicitly
+            else:
+                geom = None
             return geom
 
     def get_catalog_data(self):
@@ -147,9 +154,10 @@ class Densite(CriterionEvaluator):
         # get two circles at 200m and 5000m from the centroid of the hedges to remove
         centroid_shapely = haies.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
-        centroid_meter = centroid_geos.transform(
-            EPSG_MERCATOR, clone=True
-        )  # use mercator to be able to buffer in meters
+
+        # use specific projection to be able to use meters for buffering
+        epsg_utm = get_best_epsg_for_location(centroid_geos.x, centroid_geos.y)
+        centroid_meter = centroid_geos.transform(epsg_utm, clone=True)
         circle_200 = centroid_meter.buffer(200)
         circle_5000 = centroid_meter.buffer(5000)
 
@@ -164,98 +172,99 @@ class Densite(CriterionEvaluator):
         )  # TODO this map should depend on the department
         truncated_circle_5000 = self.get_truncated_circle(
             circle_5000, "Calvados buffer 5km sans la mer"
-        )
+        )  # TODO this map should depend on the department
 
-        # get the area of the circles
-        truncated_circle_200_m = truncated_circle_200.transform(
-            EPSG_MERCATOR, clone=True
-        )  # use mercator to compute the area in square meters
-        truncated_circle_5000_m = truncated_circle_5000.transform(
-            EPSG_MERCATOR, clone=True
-        )
-
-        area_200 = truncated_circle_200_m.area
-        area_5000 = truncated_circle_5000_m.area
-
-        # get the hedges in the circles : FOR DISPLAY ONLY => it can be removed if there is performance issues
-        hedges_5000 = Line.objects.filter(
-            map__name="haies_2024_dpt14_buffer5km",
-            geometry__intersects=truncated_circle_5000,
-        ).select_related("map")
-
-        # get the length of the hedges in the circles
-        length_200 = (
-            Line.objects.filter(
-                geometry__intersects=truncated_circle_200,
-                map__name="haies_2024_dpt14_buffer5km",
+        if truncated_circle_200 and truncated_circle_5000:
+            # get the area of the circles
+            truncated_circle_200_m = truncated_circle_200.transform(
+                epsg_utm, clone=True
+            )  # use specific projection to compute the area in square meters
+            truncated_circle_5000_m = truncated_circle_5000.transform(
+                epsg_utm, clone=True
             )
-            .annotate(clipped=Intersection("geometry", truncated_circle_200))
-            .annotate(length=Length(Cast("clipped", GeometryField())))
-            .aggregate(total=Sum("length"))["total"]
-        )
-        length_200 = length_200 if length_200 else Distance(0)
-        length_5000 = (
-            Line.objects.filter(
-                geometry__intersects=truncated_circle_5000,
-                map__name="haies_2024_dpt14_buffer5km",
-            )  # TODO this map should depend on the department
-            .annotate(clipped=Intersection("geometry", truncated_circle_5000))
-            .annotate(length=Length(Cast("clipped", GeometryField())))
-            .aggregate(total=Sum("length"))["total"]
-        )
-        length_5000 = length_5000 if length_5000 else Distance(0)
 
-        polygons = [
-            MapPolygon(
-                [SimpleNamespace(geometry=truncated_circle_200)],
-                "orange",
-                "200m",
-            ),
-            MapPolygon(
-                [SimpleNamespace(geometry=truncated_circle_5000)],
-                "blue",
-                "5km",
-            ),
-            MapPolygon(
-                hedges_5000,
-                "green",
-                "Haies existantes",
-            ),
-            MapPolygon(
-                [
-                    SimpleNamespace(
-                        geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
-                    )
-                    for hedge in haies.hedges_to_remove()
-                ],
-                "red",
-                "Haies à détruire",
-                class_name="hedge to-remove",
-            ),
-        ]
+            area_200 = truncated_circle_200_m.area
+            area_5000 = truncated_circle_5000_m.area
 
-        map = Map(
-            type="regulation",
-            center=centroid_geos,
-            entries=polygons,
-            truncate=False,
-            display_marker_at_center=True,
-            zoom=None,
-            ratio_classes="ratio-2x1 ratio-sm-4x5",
-            fixed=False,
-        )
+            # get the hedges in the circles : FOR DISPLAY ONLY => it can be removed if there is performance issues
+            # hedges_5000 = Line.objects.filter(
+            #     map__name="haies_2024_dpt14_buffer5km",
+            #     geometry__intersects=truncated_circle_5000,
+            # ).select_related("map")
 
-        catalog["map"] = map
-        catalog["area_200"] = area_200
-        catalog["area_5000"] = area_5000
-        catalog["length_200"] = length_200
-        catalog["length_5000"] = length_5000
-        catalog["density_200"] = (
-            length_200.standard / area_200 if area_200 > 0 else 1000
-        )
-        catalog["density_5000"] = (
-            length_5000.standard / area_5000 if area_5000 > 0 else 1000
-        )
+            # get the length of the hedges in the circles
+            length_200 = (
+                Line.objects.filter(
+                    geometry__intersects=truncated_circle_200,
+                    map__name="haies_2024_dpt14_buffer5km",
+                )  # TODO this map should depend on the department
+                .annotate(clipped=Intersection("geometry", truncated_circle_200))
+                .annotate(length=Length(Cast("clipped", GeometryField())))
+                .aggregate(total=Sum("length"))["total"]
+            )
+            length_200 = length_200 if length_200 else Distance(0)
+            length_5000 = (
+                Line.objects.filter(
+                    geometry__intersects=truncated_circle_5000,
+                    map__name="haies_2024_dpt14_buffer5km",
+                )  # TODO this map should depend on the department
+                .annotate(clipped=Intersection("geometry", truncated_circle_5000))
+                .annotate(length=Length(Cast("clipped", GeometryField())))
+                .aggregate(total=Sum("length"))["total"]
+            )
+            length_5000 = length_5000 if length_5000 else Distance(0)
+
+            polygons = [
+                MapPolygon(
+                    [SimpleNamespace(geometry=truncated_circle_200)],
+                    "orange",
+                    "200m",
+                ),
+                MapPolygon(
+                    [SimpleNamespace(geometry=truncated_circle_5000)],
+                    "blue",
+                    "5km",
+                ),
+                # MapPolygon(
+                #     hedges_5000,
+                #     "green",
+                #     "Haies existantes",
+                # ),
+                MapPolygon(
+                    [
+                        SimpleNamespace(
+                            geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                        )
+                        for hedge in haies.hedges_to_remove()
+                    ],
+                    "red",
+                    "Haies à détruire",
+                    class_name="hedge to-remove",
+                ),
+            ]
+
+            map = Map(
+                type="regulation",
+                center=centroid_geos,
+                entries=polygons,
+                truncate=False,
+                display_marker_at_center=True,
+                zoom=None,
+                ratio_classes="ratio-2x1 ratio-sm-4x5",
+                fixed=False,
+            )
+
+            catalog["map"] = map
+            catalog["area_200"] = area_200
+            catalog["area_5000"] = area_5000
+            catalog["length_200"] = length_200
+            catalog["length_5000"] = length_5000
+            catalog["density_200"] = (
+                length_200.standard / area_200 if area_200 > 0 else 1000
+            )
+            catalog["density_5000"] = (
+                length_5000.standard / area_5000 if area_5000 > 0 else 1000
+            )
 
         return catalog
 

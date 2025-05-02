@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
-EPSG_MERCATOR = 3857
 
 
 class CeleryDebugStream:
@@ -479,3 +478,21 @@ def get_catchment_area_pixel_values(lng, lat):
 
 def is_test():
     return "pytest" in sys.modules
+
+
+def get_best_epsg_for_location(longitude, latitude) -> int:
+    """
+    Determine the most accurate EPSG code to use for geographical computation in meters,
+    based on a location latitude and longitude.
+
+    Returns:
+        EPSG code as int (326xx for northern UTM, 327xx for southern UTM)
+    """
+    utm_zone = int((longitude + 180) / 6) + 1
+
+    if latitude >= 0:
+        epsg_code = 32600 + utm_zone  # Northern hemisphere
+    else:
+        epsg_code = 32700 + utm_zone  # Southern hemisphere
+
+    return epsg_code
