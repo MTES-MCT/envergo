@@ -506,7 +506,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
         user = request.user
-        department = self.object.get_moulinette().get_department()
+        department = self.object.department
 
         # check if user is authorize, else returns 403 error
         if user.is_superuser or all(
@@ -523,10 +523,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             return result
 
         else:
-            response = TemplateResponse(
+            return TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
-            return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
