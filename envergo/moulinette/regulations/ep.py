@@ -165,10 +165,3 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
 
     def get_replantation_coefficient(self):
         return 2
-
-    @property
-    def minimum_length_to_plant(self):
-        if not hasattr(self, "_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
-
-        return self._minimum_length_to_plant
