@@ -113,14 +113,15 @@ class Hedge:
         q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
 
         properties_to_exclude = []
-        for p in HEDGE_PROPERTIES:
-            if p in self.additionalData and self.additionalData[p]:
+        for p, _ in HEDGE_PROPERTIES:
+            if p in self.additionalData and not self.additionalData[p]:
                 properties_to_exclude.append(p)
 
         filter = q_hedge_type
         if properties_to_exclude:
             q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
             filter &= ~q_exclude
+
         return filter
 
     def get_species(self):
