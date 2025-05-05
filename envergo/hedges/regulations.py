@@ -72,6 +72,21 @@ class MinLengthCondition(PlantationCondition):
         return self.context["minimum_length_to_plant"] > 0
 
 
+class CriterionBasedMinLengthCondition(MinLengthCondition):
+    """Evaluate if there is enough hedges to plant in the project
+
+    This condition is used when the minimum length to plant is set by a criterion"""
+
+    def get_minimum_length_to_plant(self):
+        minimum_length_to_plant = self.kwargs.get("minimum_length_to_plant")
+        if minimum_length_to_plant is None:
+            raise RuntimeError(
+                "This condition should be called by a criterion that is populating its catalog with the minimum length "
+                "to plant"
+            )
+        return minimum_length_to_plant
+
+
 class MinLengthPacCondition(PlantationCondition):
 
     label = "Maintien des haies PAC"

@@ -2,7 +2,7 @@ from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
-    MinLengthCondition,
+    CriterionBasedMinLengthCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -85,19 +85,12 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         return D("1.5")
 
 
-class MinLengthConditionNormandie(MinLengthCondition):
-    """Evaluate if there is enough hedges to plant in the project"""
-
-    def get_minimum_length_to_plant(self):
-        return self.kwargs.get("minimum_length_to_plant")
-
-
 class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition, MinLengthConditionNormandie]
+    plantation_conditions = [SafetyCondition, CriterionBasedMinLengthCondition]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
