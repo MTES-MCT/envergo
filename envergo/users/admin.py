@@ -71,3 +71,16 @@ class UserAdmin(auth_admin.UserAdmin):
     readonly_fields = ["last_login", "date_joined"]
     search_fields = ["name", "email"]
     ordering = ["email"]
+
+    filter_horizontal = (
+        "groups",
+        "departments",
+    )
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.name == "departments":
+            qs = kwargs.get("queryset", db_field.remote_field.model.objects)
+            # Let's not fetch the department geometries when displaying the
+            # department select widget
+            kwargs["queryset"] = qs.defer("geometry")
+        return super().formfield_for_manytomany(db_field, request=request, **kwargs)
