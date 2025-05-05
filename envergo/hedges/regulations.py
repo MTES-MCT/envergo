@@ -15,6 +15,10 @@ class PlantationCondition(ABC):
     invalid_text: str = "Condition non validée"
 
     def __init__(self, hedge_data, R, **kwargs):
+        """Initialize the condition with the hedge data and the replantation coefficient.
+
+        If the condition is linked to a criterion, the kwargs should contain the criterion catalog
+        """
         self.hedge_data = hedge_data
         self.R = R
         self.kwargs = kwargs
