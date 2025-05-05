@@ -2,6 +2,7 @@ from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
+    MinLengthCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -84,12 +85,19 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         return D("1.5")
 
 
+class MinLengthConditionNormandie(MinLengthCondition):
+    """Evaluate if there is enough hedges to plant in the project"""
+
+    def get_minimum_length_to_plant(self):
+        return self.kwargs.get("minimum_length_to_plant")
+
+
 class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition]
+    plantation_conditions = [SafetyCondition, MinLengthConditionNormandie]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
@@ -121,12 +129,13 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         ("gt_1", True, "replantation"): "derogation_simplifiee",
     }
 
-    def get_result_data(self):
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         all_r = []
         coupe_a_blanc_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
-        self._minimum_length_to_plant = 0.0
+        minimum_length_to_plant = 0.0
 
         if haies:
             for hedge in haies.hedges_to_remove():
@@ -145,11 +154,18 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
                 else:
                     r = self.get_replantation_coefficient()
                 all_r.append(r)
-                self._minimum_length_to_plant = (
-                    self._minimum_length_to_plant + hedge.length * r
-                )
+                minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
 
         r_max = max(all_r) if all_r else self.get_replantation_coefficient()
+        catalog["r_max"] = r_max
+        catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
+        catalog["minimum_length_to_plant"] = minimum_length_to_plant
+        return catalog
+
+    def get_result_data(self):
+        reimplantation = self.catalog.get("reimplantation")
+        r_max = self.catalog.get("r_max")
+        coupe_a_blanc_every_hedge = self.catalog.get("coupe_a_blanc_every_hedge")
         r_max_value = "0" if r_max == 0 else "lte_1" if r_max <= 1 else "gt_1"
 
         return r_max_value, coupe_a_blanc_every_hedge, reimplantation
