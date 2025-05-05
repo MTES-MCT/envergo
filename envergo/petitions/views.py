@@ -54,11 +54,21 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        """Override queryset filtering projects from user departments"""
-        queryset = self.queryset
-        if not self.request.user.is_superuser:
-            user_departments = self.request.user.departments.defer("geometry").all()
+        """Override queryset filtering projects from user departments
+
+        Returns
+        - all objects if user is superuser
+        - filtered objects on department if user is instructor
+        - none object if user is not instructor or not superuser
+        """
+        current_user = self.request.user
+        if current_user.is_superuser:
+            queryset = self.queryset
+        elif current_user.is_instructor:
+            user_departments = current_user.departments.defer("geometry").all()
             queryset = self.queryset.filter(department__in=user_departments)
+        else:
+            queryset = self.queryset.none()
         return queryset
 
 
@@ -494,29 +504,29 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
-
         result = super().get(request, *args, **kwargs)
-
         user = request.user
         department = self.object.get_moulinette().get_department()
 
-        # check if user is authorize, else returns 403 error HttpResponseForbidden
-        if not any(
-            (user.is_superuser, department in user.departments.defer("geometry").all())
+        # check if user is authorize, else returns 403 error
+        if user.is_superuser or all(
+            (user.is_instructor, department in user.departments.defer("geometry").all())
         ):
+
+            log_event(
+                "projet",
+                self.matomo_tag,
+                self.request,
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+            return result
+
+        else:
             response = TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
             return response
-
-        log_event(
-            "projet",
-            self.matomo_tag,
-            self.request,
-            **self.object.get_log_event_data(),
-            **get_matomo_tags(self.request),
-        )
-        return result
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
