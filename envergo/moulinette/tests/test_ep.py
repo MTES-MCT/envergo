@@ -1,6 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -308,3 +309,48 @@ def test_ep_normandie_derogation_simplifiee(ep_normandie_criterion):  # noqa
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
+
+
+def test_min_length_condition_normandie(ep_normandie_criterion):  # noqa
+    ConfigHaieFactory()
+
+    hedge_lt10m_1 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.139896816121265, "lng": -0.1718410849571228},
+            {"lat": 49.13988277820264, "lng": -0.17171770334243774},
+        ]
+    )
+    hedge_lt10m_2 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.13984943813004, "lng": -0.17185986042022708},
+            {"lat": 49.139831890714404, "lng": -0.17174050211906436},
+        ]
+    )
+    hedge_lt20m_1 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.139679227936156, "lng": -0.17190009355545047},
+            {"lat": 49.13965115197173, "lng": -0.17171099781990054},
+        ],
+        additionalData__mode_destruction="coupe_a_blanc",
+    )
+    hedge_gt20m = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ]
+    )
+    hedges = HedgeDataFactory(
+        hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_gt20m]
+    )
+    data = {
+        "profil": "autre",
+        "motif": "chemin_acces",
+        "reimplantation": "remplacement",
+        "department": "44",
+        "haies": hedges,
+    }
+
+    moulinette = MoulinetteHaie(data, data, False)
+    evaluator = PlantationEvaluator(moulinette, hedges)
+
+    assert evaluator.get_context().get("minimum_length_to_plant") == 69
