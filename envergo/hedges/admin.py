@@ -9,6 +9,7 @@ from django.urls import path, reverse
 from django.utils.html import mark_safe
 
 from envergo.hedges.models import (
+    HEDGE_PROPERTIES,
     HEDGE_TYPES,
     HedgeData,
     Species,
@@ -94,15 +95,6 @@ class HedgeDataAdmin(admin.ModelAdmin):
         return mark_safe(content)
 
 
-class SpeciesAdminForm(forms.ModelForm):
-    hedge_types = forms.MultipleChoiceField(
-        choices=HEDGE_TYPES,
-        widget=forms.CheckboxSelectMultiple,
-        label="Types de haies considérés",
-        required=False,
-    )
-
-
 @admin.register(Species)
 class SpeciesAdmin(admin.ModelAdmin):
     list_display = [
@@ -111,23 +103,37 @@ class SpeciesAdmin(admin.ModelAdmin):
         "group",
         "level_of_concern",
         "highly_sensitive",
-        "hedge_types",
         "taxref_ids",
     ]
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
-    form = SpeciesAdminForm
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
     readonly_fields = ["kingdom", "taxref_ids"]
 
 
+class SpeciesMapAdminForm(forms.ModelForm):
+    hedge_types = forms.MultipleChoiceField(
+        choices=HEDGE_TYPES,
+        widget=forms.CheckboxSelectMultiple,
+        label="Types de haies considérés",
+        required=False,
+    )
+    hedge_properties = forms.MultipleChoiceField(
+        choices=HEDGE_PROPERTIES,
+        widget=forms.CheckboxSelectMultiple,
+        label="Caractéristiques de haies concernées",
+        required=False,
+    )
+
+
 @admin.register(SpeciesMap)
 class SpeciesMapAdmin(admin.ModelAdmin):
-    form = SpeciesAdminForm
+    form = SpeciesMapAdminForm
     list_display = [
         "species",
         "map",
         "hedge_types",
+        "hedge_properties",
     ]
     autocomplete_fields = ["species", "map"]
 

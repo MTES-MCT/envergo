@@ -1,11 +1,11 @@
 import csv
 import logging
 
-from django.db import transaction
 from django.utils import timezone
 
 from config.celery_app import app
 from envergo.hedges.models import (
+    HEDGE_PROPERTIES,
     HEDGE_TYPES,
     IMPORT_STATUSES,
     Species,
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 ALL_HEDGE_TYPES = dict(HEDGE_TYPES).keys()
+ALL_HEDGE_PROPERTIES = dict(HEDGE_PROPERTIES).keys()
 
 
 @app.task(bind=True)
@@ -50,8 +51,8 @@ def process_species_map_file(task, object_id):
                 species_map = process_species_file_map_row(row, smf)
                 species_maps.append(species_map)
             except Species.DoesNotExist:
-                if "Nom commun" in row:
-                    msg = f"Espèce inconnue {row["Nom commun"]}"
+                if "common_name" in row:
+                    msg = f"Espèce inconnue {row["common_name"]}"
                 else:
                     msg = f"Espèce inconnue à la ligne {nb_lines + 1}"
                 import_log.append(msg)
@@ -80,21 +81,26 @@ def process_species_map_file(task, object_id):
 
 def process_species_file_map_row(row, smf):
     """Process a single file row."""
-    species_taxref_id = row["CD_NOM"]
-    species = Species.objects.get(taxref_ids__contains=[species_taxref_id])
+    if "CD_NOM" in row:
+        species_taxref_id = row["CD_NOM"]
+        species = Species.objects.get(taxref_ids__contains=[species_taxref_id])
+    else:
+        species = Species.objects.get(common_name=row["common_name"])
 
     hedge_types = []
     for hedge_type in ALL_HEDGE_TYPES:
         if bool(row[hedge_type]):
             hedge_types.append(hedge_type)
 
+    hedge_properties = []
+    for hedge_property in ALL_HEDGE_PROPERTIES:
+        if row.get(hedge_property, False):
+            hedge_properties.append(hedge_property)
+
     return SpeciesMap(
         species=species,
         map=smf.map,
         species_map_file=smf,
         hedge_types=hedge_types,
-        proximite_mare=bool(row["proximite_mare"]),
-        proximite_point_eau=bool(row["proximite_point_eau"]),
-        connexion_boisement=bool(row["connexion_boisement"]),
-        vieil_arbre=bool(row["vieil_arbre"]),
+        hedge_properties=hedge_properties,
     )
