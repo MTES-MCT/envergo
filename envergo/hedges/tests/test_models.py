@@ -32,12 +32,12 @@ def aisne_hedge_data():
                     {"lat": 49.57123937690368, "lng": 3.613863328804695},
                 ],
                 "additionalData": {
-                    "typeHaie": "degradee",
-                    "vieilArbre": True,
-                    "proximiteMare": False,
-                    "surParcellePac": True,
-                    "proximitePointEau": False,
-                    "connexionBoisement": False,
+                    "type_haie": "degradee",
+                    "vieil_arbre": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": True,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
                 },
             },
             {
@@ -48,12 +48,12 @@ def aisne_hedge_data():
                     {"lat": 49.57134548129514, "lng": 3.6138314019310296},
                 ],
                 "additionalData": {
-                    "typeHaie": "arbustive",
-                    "vieilArbre": False,
-                    "proximiteMare": True,
-                    "surParcellePac": False,
-                    "proximitePointEau": True,
-                    "connexionBoisement": False,
+                    "type_haie": "arbustive",
+                    "vieil_arbre": False,
+                    "proximite_mare": True,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": True,
+                    "connexion_boisement": False,
                 },
             },
         ]
@@ -75,12 +75,12 @@ def calvados_hedge_data():
                     {"lat": 49.18668940491001, "lng": -0.3697842835359544},
                 ],
                 "additionalData": {
-                    "typeHaie": "degradee",
-                    "vieilArbre": True,
-                    "proximiteMare": True,
-                    "surParcellePac": True,
-                    "proximitePointEau": False,
-                    "connexionBoisement": False,
+                    "type_haie": "degradee",
+                    "vieil_arbre": True,
+                    "proximite_mare": True,
+                    "sur_parcelle_pac": True,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
                 },
             },
             {
@@ -91,12 +91,12 @@ def calvados_hedge_data():
                     {"lat": 49.18668239258037, "lng": -0.3712706187247817},
                 ],
                 "additionalData": {
-                    "typeHaie": "alignement",
-                    "vieilArbre": True,
-                    "proximiteMare": False,
-                    "surParcellePac": False,
-                    "proximitePointEau": False,
-                    "connexionBoisement": True,
+                    "type_haie": "alignement",
+                    "vieil_arbre": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": True,
                 },
             },
         ]
@@ -110,11 +110,11 @@ def test_hedge_species_are_filtered_by_geography(
     aisne_species = SpeciesMapFactory(map=aisne_map).species
     calvados_species = SpeciesMapFactory(map=calvados_map).species
 
-    hedge = calvados_hedge_data.hedges()[0]
-    assert set(hedge.get_species()) == set([calvados_species])
-
     hedge = aisne_hedge_data.hedges()[0]
     assert set(hedge.get_species()) == set([aisne_species])
+
+    hedge = calvados_hedge_data.hedges()[0]
+    assert set(hedge.get_species()) == set([calvados_species])
 
 
 def test_hedge_data_species_are_filtered_by_geography(
@@ -164,10 +164,10 @@ def test_hedges_has_centroid_and_department():
 
 
 def test_species_are_filtered_by_hedge_features():
-    s1 = SpeciesMapFactory(proximite_mare=True, vieil_arbre=True).species
-    s2 = SpeciesMapFactory(proximite_mare=True, vieil_arbre=False).species
-    s3 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=True).species
-    s4 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=False).species
+    s1 = SpeciesMapFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    s2 = SpeciesMapFactory(hedge_properties=["proximite_mare"]).species
+    s3 = SpeciesMapFactory(hedge_properties=["vieil_arbre"]).species
+    s4 = SpeciesMapFactory(hedge_properties=[]).species
 
     hedge = HedgeFactory(
         additionalData__proximite_mare=False, additionalData__vieil_arbre=False
@@ -195,10 +195,10 @@ def test_species_are_filtered_by_hedge_features():
 
 
 def test_multiple_hedges_combine_their_species():
-    _ = SpeciesMapFactory(proximite_mare=True, vieil_arbre=True).species
-    s2 = SpeciesMapFactory(proximite_mare=True, vieil_arbre=False).species
-    s3 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=True).species
-    s4 = SpeciesMapFactory(proximite_mare=False, vieil_arbre=False).species
+    _ = SpeciesMapFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    s2 = SpeciesMapFactory(hedge_properties=["proximite_mare"]).species
+    s3 = SpeciesMapFactory(hedge_properties=["vieil_arbre"]).species
+    s4 = SpeciesMapFactory(hedge_properties=[]).species
 
     hedge1 = HedgeFactory(
         additionalData__proximite_mare=True, additionalData__vieil_arbre=False

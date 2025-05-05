@@ -48,12 +48,6 @@ class SpeciesFactory(DjangoModelFactory):
     common_name = factory.Sequence(lambda n: f"Trucmuche {n}")
     scientific_name = factory.Sequence(lambda n: f"Machinchose {n}")
 
-    hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
-    proximite_mare = False
-    proximite_point_eau = False
-    connexion_boisement = False
-    vieil_arbre = False
-
 
 class SpeciesMapFactory(DjangoModelFactory):
     class Meta:
@@ -62,7 +56,4 @@ class SpeciesMapFactory(DjangoModelFactory):
     species = factory.SubFactory(SpeciesFactory)
     map = factory.SubFactory(MapFactory)
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
-    proximite_mare = False
-    proximite_point_eau = False
-    connexion_boisement = False
-    vieil_arbre = False
+    hedge_properties = []
