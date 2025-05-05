@@ -26,6 +26,8 @@ def process_species_map_file(task, object_id):
 
     This scripts import the file data and associatets Species with Maps.
     """
+    logger.info(f"Starting import on species map file {object_id}")
+
     smf = SpeciesMapFile.objects.get(pk=object_id)
     import_log = []
 
@@ -37,9 +39,11 @@ def process_species_map_file(task, object_id):
     smf.save()
 
     # Clear existing data
+    logger.info("Clearing existing data")
     SpeciesMap.objects.filter(species_map_file=smf).delete()
 
     # Process csv file
+    logger.info("Processing csv file")
     species_maps = []
     with open(smf.file.path, "r") as csvfile:
         nb_lines = 0
@@ -63,6 +67,7 @@ def process_species_map_file(task, object_id):
                 logger.error(msg)
 
     # Create objects with a single query
+    logger.info("Saving data objects")
     objects = SpeciesMap.objects.bulk_create(species_maps)
 
     # Update the import status and metadata
@@ -77,6 +82,7 @@ def process_species_map_file(task, object_id):
     smf.import_date = timezone.now()
     smf.import_log = "\n".join(import_log)
     smf.save()
+    logger.info("Import finished")
 
 
 def process_species_file_map_row(row, smf):
