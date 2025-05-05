@@ -4,6 +4,7 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.regulations import (
+    CriterionBasedMinLengthCondition,
     MinLengthCondition,
     MinLengthPacCondition,
     QualityCondition,
@@ -14,7 +15,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_minimum_length_condition():
-    """Length to plant deponds on the replantation coefficient."""
+    """Length to plant depends on the replantation coefficient."""
 
     hedge_data = Mock()
     hedge_data.hedges_to_remove.return_value = []
@@ -33,6 +34,29 @@ def test_minimum_length_condition():
     condition = MinLengthCondition(hedge_data, 4.0)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 400
+
+
+def test_criterion_based_minimum_length_condition():
+    """Length to plant depends on a criterion custom computation."""
+
+    hedge_data = Mock()
+    hedge_data.hedges_to_remove.return_value = []
+    hedge_data.length_to_remove.return_value = 100
+
+    hedge_data.hedges_to_plant.return_value = []
+    hedge_data.length_to_plant.return_value = 0
+
+    condition = CriterionBasedMinLengthCondition(
+        hedge_data, 2.0, **{"minimum_length_to_plant": 200}
+    )
+    condition.evaluate()
+    assert condition.context["minimum_length_to_plant"] == 200
+
+    condition = CriterionBasedMinLengthCondition(
+        hedge_data, 4.0, **{"minimum_length_to_plant": 200}
+    )
+    condition.evaluate()
+    assert condition.context["minimum_length_to_plant"] == 200
 
 
 def test_minimum_length_pac_condition():
