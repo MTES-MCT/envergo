@@ -1,6 +1,9 @@
 import csv
+import io
 import logging
+import os
 
+import requests
 from django.utils import timezone
 
 from config.celery_app import app
@@ -45,7 +48,7 @@ def process_species_map_file(task, object_id):
     # Process csv file
     logger.info("Processing csv file")
     species_maps = []
-    with open(smf.file.path, "r") as csvfile:
+    with extract_file(smf.file) as csvfile:
         nb_lines = 0
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -83,6 +86,22 @@ def process_species_map_file(task, object_id):
     smf.import_log = "\n".join(import_log)
     smf.save()
     logger.info("Import finished")
+
+
+def extract_file(field_file):
+    """Handle local and remote files."""
+
+    if field_file.url.startswith("http"):
+        r = requests.get(field_file.url, stream=True)
+        content = io.StringIO(r.content.decode())
+        return content
+
+    elif os.path.exists(field_file.path):
+        content = open(field_file.path, "rb").read()
+        return io.StringIO(content.decode())
+
+    else:
+        raise RuntimeError("File not found")
 
 
 def process_species_file_map_row(row, smf):
