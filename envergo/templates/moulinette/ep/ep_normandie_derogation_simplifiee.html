@@ -1,0 +1,32 @@
+<p>
+  Le projet est soumis à la réglementation sur les espèces protégées. Pour être autorisé, il doit obtenir une dérogation des services de l’État.
+</p>
+
+<p>
+  Au vu des caractéristiques des haies détruites, une procédure simplifiée peut être suivie : l’inventaire de terrain pour recenser les espèces présentes dans les haies détruites n’est pas nécessaire.
+</p>
+
+<p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
+
+<ul>
+  <li>de la raison pour laquelle la haie est détruite ;</li>
+  <li>de l’absence de solution alternative qui permettrait d’éviter la destruction ;</li>
+  <li>
+    des mesures mises en œuvre pour réduire, et à défaut pour compenser, les impacts du projet sur les espèces et les habitats abrités par les haies détruites.
+  </li>
+</ul>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    La procédure mise en place en Normandie pour la prise en compte des espèces protégées dans les demandes de travaux sur haies est décrite dans
+    <a href="https://www.notion.so/Normandie-prise-en-compte-des-esp-ces-prot-g-es-pour-les-demandes-de-travaux-sur-haies-1bffe5fe476680f29375d34db7da53fc"
+       target="_blank"
+       rel="noopener">cette page d'information</a>
+  </p>
+
+  {% if protected_species %}
+    {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% endif %}
+</div>
