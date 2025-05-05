@@ -263,6 +263,13 @@ HEDGE_TYPES = (
     ("mixte", "Haie mixte"),
 )
 
+HEDGE_PROPERTIES = (
+    ("proximite_mare", "Mare à moins de 200 m"),
+    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
+    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
+    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
+)
+
 SPECIES_GROUPS = Choices(
     ("amphibiens", "Amphibiens"),
     ("chauves-souris", "Chauves-souris"),
@@ -316,20 +323,6 @@ class Species(models.Model):
     )
     highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
 
-    hedge_types = ArrayField(
-        verbose_name="Types de haies considérés",
-        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
-    )
-    # Those fields are in french to match existing fields describing hedges
-    proximite_mare = models.BooleanField("Mare à moins de 200 m")
-    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
-    connexion_boisement = models.BooleanField(
-        "Connectée à un boisement ou à une autre haie"
-    )
-    vieil_arbre = models.BooleanField(
-        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-    )
-
     class Meta:
         verbose_name = "Espèce"
         verbose_name_plural = "Espèces"
@@ -365,14 +358,10 @@ class SpeciesMap(models.Model):
         verbose_name="Types de haies considérés",
         base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
     )
-    # Those fields are in french to match existing fields describing hedges
-    proximite_mare = models.BooleanField("Mare à moins de 200 m")
-    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
-    connexion_boisement = models.BooleanField(
-        "Connectée à un boisement ou à une autre haie"
-    )
-    vieil_arbre = models.BooleanField(
-        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+    hedge_properties = ArrayField(
+        verbose_name="Propriétés de la haie",
+        help_text="Propriétés requises par l'espèce",
+        base_field=models.CharField(max_length=32, choices=HEDGE_PROPERTIES),
     )
 
     class Meta:
@@ -408,3 +397,6 @@ class SpeciesMapFile(models.Model):
     class Meta:
         verbose_name = "Fichier de carte d'espèces"
         verbose_name_plural = "Fichiers de carte d'espèces"
+
+    def __str__(self):
+        return self.file.name
