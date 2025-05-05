@@ -1,18 +1,16 @@
-from django import forms
+from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.regulations import (
+    PlantationConditionMixin,
+    QualityCondition,
+    SafetyCondition,
+)
 from envergo.moulinette.regulations import CriterionEvaluator
 
 
-class EspecesProtegees(CriterionEvaluator):
+class EPMixin:
     """Legacy criterion for protected species."""
-
-    choice_label = "EP > EP (obsolète)"
-    slug = "ep"
-
-    CODE_MATRIX = {
-        "soumis": "soumis",
-    }
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
@@ -21,34 +19,28 @@ class EspecesProtegees(CriterionEvaluator):
             catalog["protected_species"] = haies.get_all_species()
         return catalog
 
-    def get_result_data(self):
-        return "soumis"
 
-
-class EspecesProtegeesSimple(EspecesProtegees):
+class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluator):
     """Basic criterion: always returns "soumis."""
 
     choice_label = "EP > EP simple"
     slug = "ep_simple"
+    plantation_conditions = [SafetyCondition]
+
+    CODE_MATRIX = {
+        "soumis": "soumis",
+    }
+
+    def get_result_data(self):
+        return "soumis"
 
 
-class EspecesProtegeesSettings(forms.Form):
-    replantation_coefficient = forms.DecimalField(
-        label="Coefficient de replantation",
-        help_text="Coefficient « R » de replantation des haies",
-        min_value=0,
-        max_value=10,
-        max_digits=4,
-        decimal_places=1,
-    )
-
-
-class EspecesProtegeesAisne(CriterionEvaluator):
+class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
-    settings_form_class = EspecesProtegeesSettings
+    plantation_conditions = [SafetyCondition, QualityCondition]
 
     CODE_MATRIX = {
         (False, True): "interdit",
@@ -87,3 +79,6 @@ class EspecesProtegeesAisne(CriterionEvaluator):
                 break
 
         return has_reimplantation, has_sensitive_species
+
+    def get_replantation_coefficient(self):
+        return D("1.5")

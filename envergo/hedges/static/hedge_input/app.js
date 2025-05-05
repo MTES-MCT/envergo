@@ -22,7 +22,7 @@ const fitBoundsOptions = { padding: [10, 10] };
 
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
-const qualityUrl = document.getElementById('app').dataset.qualityUrl;
+const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
 
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
@@ -50,14 +50,14 @@ const showHedgeModal = (hedge, hedgeType) => {
 
   // Pre-fill the form with hedge data if it's an edition
   if (hedge.additionalData) {
-    for(const property in hedge.additionalData) {
+    for (const property in hedge.additionalData) {
       const field = document.getElementById(`id_${dialogMode}-${property}`);
       if (field) {
         if (field.type === "checkbox") {
           field.checked = hedge.additionalData[property];
         } else if (field.type === "fieldset") {
           // radio group
-          for(let i = 0; i < field.elements.length; i++){
+          for (let i = 0; i < field.elements.length; i++) {
             let value = field.elements[i].value;
             if (value === hedge.additionalData[property]) {
               console.log(value)
@@ -84,8 +84,8 @@ const showHedgeModal = (hedge, hedgeType) => {
 
     for (const element of form.elements) {
       if (element instanceof HTMLInputElement ||
-          element instanceof HTMLSelectElement ||
-          element instanceof HTMLTextAreaElement) {
+        element instanceof HTMLSelectElement ||
+        element instanceof HTMLTextAreaElement) {
         // Skip buttons or inputs without a name
         if (!element.name || element.type === 'submit' || element.type === 'button') continue;
 
@@ -98,7 +98,7 @@ const showHedgeModal = (hedge, hedgeType) => {
           }
         }
         else {
-            hedge.additionalData[propertyName] = element.value;
+          hedge.additionalData[propertyName] = element.value;
         }
       }
     }
@@ -140,7 +140,7 @@ const showHedgeModal = (hedge, hedgeType) => {
 };
 
 function isTouchDevice() {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
 
@@ -379,10 +379,8 @@ createApp({
     const helpBubble = mode !== READ_ONLY_MODE ? ref("initialHelp") : ref(null);
     const hedgeBeingDrawn = ref(null);
 
-    // Reactive properties for quality conditions
-    const quality = reactive({
-      status: 'loading',
-    });
+    // Reactive properties for acceptability conditions
+    const conditions = reactive([]);
 
     // Computed property to track changes in the hedges array
     const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
@@ -575,7 +573,7 @@ createApp({
       // Prepare the hedge data to be sent in the request body
       const hedgeData = serializeHedgesData();
 
-      fetch(qualityUrl, {
+      fetch(conditionsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -585,14 +583,12 @@ createApp({
       })
         .then(response => response.json())
         .then(data => {
-          data = { status: 'loaded', ...data };
-
           // Note : using Object.assign will not delete keys.
           // E.g if the initial evaluation data has a `length_to_plant_pac` key,
           // and then an admin deactives the bcae8 regulation, the key will
           // not be present in the following requests, but the initial value
           // will remain in the current variable without ever being updated.
-          Object.assign(quality, data);
+          Object.assign(conditions, data);
         })
         .catch(error => console.error('Error:', error));
     }
@@ -723,7 +719,7 @@ createApp({
       cancel,
       showHedgeModal,
       invalidHedges,
-      quality,
+      conditions,
       hedgeBeingDrawn,
       cancelDrawing,
     };
