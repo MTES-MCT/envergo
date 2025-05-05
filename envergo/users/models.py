@@ -56,6 +56,7 @@ class User(AbstractUser):
         "geodata.Department",
         verbose_name=_("Departements"),
         related_name="members",
+        blank=True,
     )
 
     username = None  # type: ignore
