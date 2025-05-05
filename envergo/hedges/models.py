@@ -112,20 +112,14 @@ class Hedge:
         """
         q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
 
-        exclude = []
-
-        if not self.proximite_mare:
-            exclude.append(Q(species_maps__proximite_mare=True))
-        if not self.vieil_arbre:
-            exclude.append(Q(species_maps__vieil_arbre=True))
-        if not self.proximite_point_eau:
-            exclude.append(Q(species_maps__proximite_point_eau=True))
-        if not self.connexion_boisement:
-            exclude.append(Q(species_maps__connexion_boisement=True))
+        properties_to_exclude = []
+        for p in HEDGE_PROPERTIES:
+            if p in self.additionalData and self.additionalData[p]:
+                properties_to_exclude.append(p)
 
         filter = q_hedge_type
-        if exclude:
-            q_exclude = reduce(operator.or_, exclude)
+        if properties_to_exclude:
+            q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
             filter &= ~q_exclude
         return filter
 
