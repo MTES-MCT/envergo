@@ -81,8 +81,11 @@ def process_species_map_file(task, object_id):
 
 def process_species_file_map_row(row, smf):
     """Process a single file row."""
-    species_taxref_id = row["CD_NOM"]
-    species = Species.objects.get(taxref_ids__contains=[species_taxref_id])
+    if "CD_NOM" in row:
+        species_taxref_id = row["CD_NOM"]
+        species = Species.objects.get(taxref_ids__contains=[species_taxref_id])
+    else:
+        species = Species.objects.get(common_name=row["common_name"])
 
     hedge_types = []
     for hedge_type in ALL_HEDGE_TYPES:
