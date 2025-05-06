@@ -21,6 +21,8 @@ MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
     ("species", _("Espèces protégées")),
+    ("haies", "Haies existantes"),
+    ("terres_emergees", "Délimitation terres + France"),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -96,6 +98,9 @@ class Map(models.Model):
         verbose_name = _("Map")
         verbose_name_plural = _("Maps")
         ordering = ["name"]
+        indexes = [
+            models.Index(fields=["map_type"]),
+        ]
 
     def __str__(self):
         return self.name

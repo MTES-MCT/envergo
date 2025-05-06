@@ -3,14 +3,14 @@ from types import SimpleNamespace
 from django import forms
 from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Intersection, Length
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from django.contrib.gis.measure import Distance
 from django.db import connection
 from django.db.models import Sum
 from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
-from envergo.geodata.models import Line
+from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84, get_best_epsg_for_location
 from envergo.moulinette.regulations import CriterionEvaluator, Map, MapPolygon
 
@@ -111,8 +111,8 @@ class Densite(CriterionEvaluator):
     }
 
     @classmethod
-    def get_truncated_circle(cls, circle_geom, map_name):
-        """find the intersection of a circle with a map zones
+    def trim_imerged_land(cls, geom):
+        """Keep only the part of the geometry that is in France and not in the sea.
 
         Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
         so it uses raw SQL
@@ -124,26 +124,28 @@ class Densite(CriterionEvaluator):
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT ST_AsText(
-                    ST_Intersection(
-                        ST_GeomFromEWKT(%s),
-                        ST_Union(z.geometry::geometry)
-                    )
+                WITH input_poly AS (
+                  SELECT ST_GeomFromEWKT(%s) AS geom
+                ),
+                unioned_geom AS (
+                  SELECT ST_Union(z.geometry::geometry) AS merged_geom
+                  FROM geodata_zone z
+                  JOIN geodata_map m ON z.map_id = m.id
+                  JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
+                  WHERE m.map_type = %s
                 )
-                FROM geodata_zone z
-                INNER JOIN geodata_map m ON z.map_id = m.id
-                WHERE m.name = %s
-                  AND ST_Intersects(z.geometry, ST_GeomFromEWKT(%s))
+                SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
+                FROM unioned_geom u, input_poly i;
             """,
-                [circle_geom.ewkt, map_name, circle_geom.ewkt],
+                [geom.ewkt, MAP_TYPES.terres_emergees],
             )
             wkt = cursor.fetchone()[0]
             if wkt:
-                geom = GEOSGeometry(wkt)
-                geom.srid = circle_geom.srid  # Set SRID explicitly
+                trimmed_geom = GEOSGeometry(wkt)
+                trimmed_geom.srid = geom.srid  # Set SRID explicitly
             else:
-                geom = None
-            return geom
+                trimmed_geom = None
+            return trimmed_geom
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
@@ -167,12 +169,8 @@ class Densite(CriterionEvaluator):
         circle_5000 = circle_5000.transform(EPSG_WGS84, clone=True)
 
         # remove the sea from the circles
-        truncated_circle_200 = self.get_truncated_circle(
-            circle_200, "Calvados buffer 5km sans la mer"
-        )  # TODO this map should depend on the department
-        truncated_circle_5000 = self.get_truncated_circle(
-            circle_5000, "Calvados buffer 5km sans la mer"
-        )  # TODO this map should depend on the department
+        truncated_circle_200 = self.trim_imerged_land(circle_200)
+        truncated_circle_5000 = self.trim_imerged_land(circle_5000)
 
         if truncated_circle_200 and truncated_circle_5000:
             # get the area of the circles
@@ -185,19 +183,21 @@ class Densite(CriterionEvaluator):
 
             area_200 = truncated_circle_200_m.area
             area_5000 = truncated_circle_5000_m.area
+            area_200_ha = area_200 * 0.0001
+            area_5000_ha = area_5000 * 0.0001
 
             # get the hedges in the circles : FOR DISPLAY ONLY => it can be removed if there is performance issues
-            # hedges_5000 = Line.objects.filter(
-            #     map__name="haies_2024_dpt14_buffer5km",
-            #     geometry__intersects=truncated_circle_5000,
-            # ).select_related("map")
+            hedges_5000 = Line.objects.filter(
+                map__name="haies_2024_dpt14_buffer5km",
+                geometry__intersects=truncated_circle_5000,
+            ).select_related("map")
 
             # get the length of the hedges in the circles
             length_200 = (
                 Line.objects.filter(
                     geometry__intersects=truncated_circle_200,
-                    map__name="haies_2024_dpt14_buffer5km",
-                )  # TODO this map should depend on the department
+                    map__map_type=MAP_TYPES.haies,
+                )
                 .annotate(clipped=Intersection("geometry", truncated_circle_200))
                 .annotate(length=Length(Cast("clipped", GeometryField())))
                 .aggregate(total=Sum("length"))["total"]
@@ -206,8 +206,8 @@ class Densite(CriterionEvaluator):
             length_5000 = (
                 Line.objects.filter(
                     geometry__intersects=truncated_circle_5000,
-                    map__name="haies_2024_dpt14_buffer5km",
-                )  # TODO this map should depend on the department
+                    map__map_type=MAP_TYPES.haies,
+                )
                 .annotate(clipped=Intersection("geometry", truncated_circle_5000))
                 .annotate(length=Length(Cast("clipped", GeometryField())))
                 .aggregate(total=Sum("length"))["total"]
@@ -225,11 +225,18 @@ class Densite(CriterionEvaluator):
                     "blue",
                     "5km",
                 ),
-                # MapPolygon(
-                #     hedges_5000,
-                #     "green",
-                #     "Haies existantes",
-                # ),
+                MapPolygon(
+                    [
+                        SimpleNamespace(
+                            geometry=MultiLineString(
+                                [hedge.geometry for hedge in hedges_5000],
+                                srid=EPSG_WGS84,
+                            )
+                        )
+                    ],
+                    "green",
+                    "Haies existantes",
+                ),
                 MapPolygon(
                     [
                         SimpleNamespace(
@@ -254,16 +261,16 @@ class Densite(CriterionEvaluator):
                 fixed=False,
             )
 
-            catalog["map"] = map
-            catalog["area_200"] = area_200
-            catalog["area_5000"] = area_5000
-            catalog["length_200"] = length_200
-            catalog["length_5000"] = length_5000
+            catalog["density_map"] = map
+            catalog["area_200_ha"] = area_200_ha
+            catalog["area_5000_ha"] = area_5000_ha
+            catalog["length_200"] = length_200.standard
+            catalog["length_5000"] = length_5000.standard
             catalog["density_200"] = (
-                length_200.standard / area_200 if area_200 > 0 else 1000
+                length_200.standard / area_200_ha if area_200_ha > 0 else 1000
             )
             catalog["density_5000"] = (
-                length_5000.standard / area_5000 if area_5000 > 0 else 1000
+                length_5000.standard / area_5000_ha if area_5000_ha > 0 else 1000
             )
 
         return catalog
