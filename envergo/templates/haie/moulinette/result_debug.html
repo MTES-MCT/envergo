@@ -39,11 +39,19 @@
 
     <h2>Conditions d'acceptabilité</h2>
 
-    {% with evaluation=plantation_evaluation.evaluation %}
-      <ul class="fr-mb-2w">
-        <li>Conditions d'acceptabilité non remplies : {{ plantation_evaluation.unfulfilled_conditions }}</li>
-      </ul>
-    {% endwith %}
+    <ul class="fr-mb-2w">
+      {% for condition in plantation_evaluation.conditions %}
+        <li>
+          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
+          {% if condition.debug_context %}
+            <br />
+            (
+            {% for k, v in condition.debug_context.items %}{{ k }} = {{ v }}{% endfor %}
+            )
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
 
     <h2>Réglementations</h2>
 
@@ -61,9 +69,12 @@
               <li class="fr-mb-2w">
                 {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
-                <br />
-                {% if criterion.evaluator_settings.replantation_coefficient %}
-                  R = {{ criterion.evaluator_settings.replantation_coefficient }}
+                {% if criterion.get_evaluator.plantation_conditions %}
+                  <br />
+                  R = {{ criterion.get_evaluator.get_replantation_coefficient }}
+                  <br />
+                  conditions =
+                  {% for condition in criterion.get_evaluator.plantation_conditions %}{{ condition.label }},&nbsp;{% endfor %}
                 {% endif %}
               </li>
             {% endfor %}

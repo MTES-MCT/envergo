@@ -692,6 +692,14 @@ class Criterion(models.Model):
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
 
+    def get_evaluator(self):
+        """Return the evaluator instance.
+
+        This method is useful because templates cannot access properties starting
+        with an underscore.
+        """
+        return self._evaluator
+
     @property
     def result_code(self):
         """Return the criterion result code."""
