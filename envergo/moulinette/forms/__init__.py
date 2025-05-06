@@ -361,12 +361,14 @@ class TriageFormHaie(forms.Form):
                 "destruction",
                 mark_safe(
                     """Destruction<br />
-                    <span class="fr-hint-text">
-                        Toute intervention qui supprime définitivement la végétation : arrachage,
-                        coupe à blanc sur essences qui ne recèpent pas (ex : chêne,
-                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…),
-                        entretien sévère et récurrent, etc.
-                    </span>
+<span class="fr-hint-text">
+Toute intervention supprimant définitivement la végétation :
+arrachage ; « déplacement » de haie ;
+coupe à blanc sur essences qui ne recèpent pas
+(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+target="_blank" rel="noopener">voir liste</a>) ;
+entretien sévère et récurrent ; etc.
+</span>
                     """
                 ),
             ),
@@ -374,10 +376,12 @@ class TriageFormHaie(forms.Form):
                 "entretien",
                 mark_safe(
                     """Entretien<br />
-                    <span class="fr-hint-text">
-                        Intervention qui permet la repousse durable de la végétation : élagage, taille,
-                        coupe à blanc sur une essence capable de recéper, etc.
-                    </span>
+<span class="fr-hint-text">
+    Intervention qui permet la repousse durable de la végétation :
+    élagage, taille, coupe à blanc sur une essence capable de recéper
+    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    target="_blank" rel="noopener">voir liste</a>), etc.
+</span>
                     """
                 ),
             ),
