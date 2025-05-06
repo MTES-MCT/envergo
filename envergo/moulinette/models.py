@@ -1877,7 +1877,11 @@ class MoulinetteHaie(Moulinette):
         return summary
 
     def get_debug_context(self):
-        return {}
+        context = {}
+        if "haies" in self.catalog:
+            haies = self.catalog["haies"]
+            context.update(haies.compute_density(create_map=True))
+        return context
 
     @classmethod
     def get_triage_params(cls):

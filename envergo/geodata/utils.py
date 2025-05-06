@@ -18,7 +18,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
-from envergo.geodata.models import Department, Line, Zone
+from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 logger = logging.getLogger(__name__)
 
@@ -496,3 +496,40 @@ def get_best_epsg_for_location(longitude, latitude) -> int:
         epsg_code = 32700 + utm_zone  # Southern hemisphere
 
     return epsg_code
+
+
+def trim_imerged_land(geom):
+    """Keep only the part of the geometry that is in France and not in the sea.
+
+    Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
+    so it uses raw SQL
+    Returns:
+        - the intersection of the circle with the map zones
+        - None if there is no intersection
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            WITH input_poly AS (
+              SELECT ST_GeomFromEWKT(%s) AS geom
+            ),
+            unioned_geom AS (
+              SELECT ST_Union(z.geometry::geometry) AS merged_geom
+              FROM geodata_zone z
+              JOIN geodata_map m ON z.map_id = m.id
+              JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
+              WHERE m.map_type = %s
+            )
+            SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
+            FROM unioned_geom u, input_poly i;
+        """,
+            [geom.ewkt, MAP_TYPES.terres_emergees],
+        )
+        wkt = cursor.fetchone()[0]
+        if wkt:
+            trimmed_geom = GEOSGeometry(wkt)
+            trimmed_geom.srid = geom.srid  # Set SRID explicitly
+        else:
+            trimmed_geom = None
+        return trimmed_geom
