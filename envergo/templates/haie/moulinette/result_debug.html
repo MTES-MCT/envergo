@@ -67,14 +67,22 @@
           <ul>
             {% for criterion in criteria %}
               <li class="fr-mb-2w">
-                {{ criterion.title }} : {% result_tag criterion.result criterion.result_tag_style %}
+                {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
                 {% if criterion.get_evaluator.plantation_conditions %}
                   <br />
                   R = {{ criterion.get_evaluator.get_replantation_coefficient }}
                   <br />
-                  conditions =
-                  {% for condition in criterion.get_evaluator.plantation_conditions %}{{ condition.label }},&nbsp;{% endfor %}
+                  Conditions d'acceptabilité =
+                  {% for condition in criterion.get_evaluator.plantation_conditions %}
+                    {{ condition.label }}
+                    {% if not forloop.last %},&nbsp;{% endif %}
+                  {% endfor %}
+                {% else %}
+                  <br />
+                  R = ND
+                  <br />
+                  Conditions d'acceptabilité = aucune
                 {% endif %}
               </li>
             {% endfor %}
