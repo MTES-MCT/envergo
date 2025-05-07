@@ -48,9 +48,7 @@
             (
             {% for k, v in condition.debug_context.items %}
               {{ k }} = {{ v }}
-              {% if not forloop.last %}
-                ,
-              {% endfor %}
+              {% if not forloop.last %},{% endif %}
             {% endfor %}
             )
           {% endif %}
