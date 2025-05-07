@@ -143,21 +143,13 @@ class PlantationEvaluator:
         """Returns if the plantation is compliant with the regulation"""
 
         R = self.replantation_coefficient
-        conditions = []
+        conditions = [MinLengthCondition(self.hedge_data, R).evaluate()]
         for regulation in self.moulinette.regulations:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
-                        criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, **criterion._evaluator.catalog
-                        )
+                        criterion._evaluator.plantation_evaluate(self.hedge_data, R)
                     )
-
-        # Add the minimum length condition if it has not been added by criteria
-        if not any(
-            isinstance(condition, MinLengthCondition) for condition in conditions
-        ):
-            conditions.append(MinLengthCondition(self.hedge_data, R).evaluate())
 
         self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (

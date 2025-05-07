@@ -156,7 +156,7 @@ class HedgeToPlantPropertiesCalvadosForm(
             (
                 "plantation",
                 mark_safe(
-                    'Plantation nouvelle <span class="fr-hint-text">ou remplacement d\'une haie existante</span>'
+                    'Plantation nouvelle <span class="fr-hint-text">ou remplacement d\'une haie à détruire</span>'
                 ),
             ),
             (
