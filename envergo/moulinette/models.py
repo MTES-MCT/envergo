@@ -2105,6 +2105,15 @@ class MoulinetteHaie(Moulinette):
 
         return self.department.centroid
 
+    @property
+    def requires_hedge_density(self):
+        """Check if the moulinette requires the hedge density to be evaluated."""
+        return any(
+            criterion.requires_hedge_density
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+        )
+
 
 def get_moulinette_class_from_site(site):
     """Return the correct Moulinette class depending on the current site."""
