@@ -14,14 +14,9 @@ class PlantationCondition(ABC):
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
 
-    def __init__(self, hedge_data, R, **kwargs):
-        """Initialize the condition with the hedge data and the replantation coefficient.
-
-        If the condition is linked to a criterion, the kwargs should contain the criterion catalog
-        """
+    def __init__(self, hedge_data, R):
         self.hedge_data = hedge_data
         self.R = R
-        self.kwargs = kwargs
 
     def must_display(self):
         """Should the condition be displayed?
@@ -57,7 +52,7 @@ class MinLengthCondition(PlantationCondition):
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = self.get_minimum_length_to_plant()
+        minimum_length_to_plant = length_to_remove * self.R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -69,26 +64,8 @@ class MinLengthCondition(PlantationCondition):
         }
         return self
 
-    def get_minimum_length_to_plant(self):
-        return self.hedge_data.length_to_remove() * self.R
-
     def must_display(self):
         return self.context["minimum_length_to_plant"] > 0
-
-
-class CriterionBasedMinLengthCondition(MinLengthCondition):
-    """Evaluate if there is enough hedges to plant in the project
-
-    This condition is used when the minimum length to plant is set by a criterion"""
-
-    def get_minimum_length_to_plant(self):
-        minimum_length_to_plant = self.kwargs.get("minimum_length_to_plant")
-        if minimum_length_to_plant is None:
-            raise RuntimeError(
-                "This condition should be called by a criterion that is populating its catalog with the minimum length "
-                "to plant"
-            )
-        return minimum_length_to_plant
 
 
 class MinLengthPacCondition(PlantationCondition):
@@ -330,9 +307,9 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, hedge_data, R, **kwargs):
+    def plantation_evaluate(self, hedge_data, R):
         results = [
-            condition(hedge_data, R, **kwargs).evaluate()
+            condition(hedge_data, R).evaluate()
             for condition in self.plantation_conditions
         ]
         return results

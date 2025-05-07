@@ -2,7 +2,6 @@ from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
-    CriterionBasedMinLengthCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -90,7 +89,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition, CriterionBasedMinLengthCondition]
+    plantation_conditions = [SafetyCondition]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
@@ -129,6 +128,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         coupe_a_blanc_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = 0.0
+        aggregated_r = 0.0
 
         if haies:
             for hedge in haies.hedges_to_remove():
@@ -145,14 +145,17 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
                 ):
                     r = 1
                 else:
-                    r = self.get_replantation_coefficient()
+                    r = 2
                 all_r.append(r)
                 minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
+
+            if haies.length_to_remove() > 0:
+                aggregated_r = minimum_length_to_plant / haies.length_to_remove()
 
         r_max = max(all_r) if all_r else self.get_replantation_coefficient()
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
-        catalog["minimum_length_to_plant"] = minimum_length_to_plant
+        catalog["aggregated_r"] = aggregated_r
         return catalog
 
     def get_result_data(self):
@@ -164,4 +167,4 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         return r_max_value, coupe_a_blanc_every_hedge, reimplantation
 
     def get_replantation_coefficient(self):
-        return 2
+        return self.catalog.get("aggregated_r")
