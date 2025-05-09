@@ -9,39 +9,4 @@
   internet permet de réaliser cette démarche en ligne. La prochaine étape est de décrire le projet de plantation.
 </p>
 
-{% if replantation_coefficient > 0 %}
-  <h6>
-    🌳 <strong>Plantation requise : {{ minimum_length_to_plant|floatformat:0 }} m</strong>
-  </h6>
-  <p>
-    Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
-    {{ minimum_length_to_plant|floatformat:0 }} m sera exigée pour que le projet puisse être autorisé.
-    D’autres conditions sont également à remplir : type de haie, maintien de certaines caractéristiques…
-  </p>
-  <p>
-    Ce simulateur accompagne la saisie des haies à planter et indique si la plantation respecte les critères attendus.
-  </p>
-  <p>
-    Prochaine étape :
-    <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
-            type="button"
-            data-fr-opened="false"
-            aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
-  </p>
-
-{% else %}
-  <h6>
-    🌳 <strong>Projet de plantation</strong>
-  </h6>
-  <p>Au vu des caractéristiques du projet, la plantation d’une haie n'est pas requise. Souhaitez-vous :</p>
-  <p>
-    <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mb-3w"
-            type="button"
-            data-fr-opened="false"
-            aria-controls="hedge-input-modal">Proposer un projet de plantation</button>
-
-    <a href="{{ result_p_url }}"
-       class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line">Déposer une demande sans plantation</a>
-  </p>
-
-{% endif %}
+{% include "haie/moulinette/result/_replantation.html" %}

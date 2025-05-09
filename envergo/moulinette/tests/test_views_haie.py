@@ -6,7 +6,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from envergo.geodata.conftest import loire_atlantique_map  # noqa
-from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
     CriterionFactory,
@@ -150,41 +150,19 @@ def test_debug_result(client):
     # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
 
 
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
-@patch("envergo.hedges.services.get_replantation_coefficient")
-def test_result_p_view_with_R_gt_0(mock_R, client):
-    ConfigHaieFactory()
-    hedges = HedgeDataFactory()
-    data = {
-        "element": "haie",
-        "travaux": "destruction",
-        "motif": "amelioration_culture",
-        "reimplantation": "remplacement",
-        "localisation_pac": "oui",
-        "department": "44",
-        "haies": hedges.id,
-        "lineaire_total": 100,
-        "transfert_parcelles": "non",
-        "meilleur_emplacement": "non",
-    }
-    url = reverse("moulinette_result")
-    query = urlencode(data)
-    mock_R.return_value = 1.0
-    res = client.get(f"{url}?{query}")
-
-    assert "Déposer une demande sans plantation" not in res.content.decode()
-
-
 @pytest.mark.urls("config.urls_haie")
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
-@patch("envergo.hedges.services.get_replantation_coefficient")
-def test_result_p_view_with_R_eq_0(mock_R, client):
+def test_result_p_view_non_soumis_with_r_gt_0(client):
     ConfigHaieFactory()
-    hedges = HedgeDataFactory()
+    hedge_lt5m = HedgeFactory(
+        latLngs=[
+            {"lat": 49.37830760743562, "lng": 0.10241746902465822},
+            {"lat": 49.37828490574639, "lng": 0.10244965553283693},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_lt5m])
     data = {
         "element": "haie",
         "travaux": "destruction",
@@ -193,14 +171,12 @@ def test_result_p_view_with_R_eq_0(mock_R, client):
         "localisation_pac": "oui",
         "department": "44",
         "haies": hedges.id,
-        "lineaire_total": 100,
+        "lineaire_total": 20000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
     url = reverse("moulinette_result")
     query = urlencode(data)
-    mock_R.return_value = 0.0
     res = client.get(f"{url}?{query}")
 
-    # R should be 0
-    assert "Déposer une demande sans plantation" in res.content.decode()
+    assert "Déposer une demande sans plantation" not in res.content.decode()
