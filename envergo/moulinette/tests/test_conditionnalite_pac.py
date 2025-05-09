@@ -120,6 +120,7 @@ def test_bcae8_small_dispense_petit():
         "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
+    data["haies"].length_to_remove.return_value = 4
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -128,6 +129,13 @@ def test_bcae8_small_dispense_petit():
     assert (
         moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
         == D("1")
+    )
+
+    # GIVEN hedges to remove other than PAC, the R is computed only on PAC ones
+    data["haies"].length_to_remove.return_value = 8
+    assert (
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
+        == D("0.5")
     )
 
 
@@ -350,6 +358,7 @@ def test_bcae8_big_soumis_remplacement():
         "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -376,6 +385,7 @@ def test_bcae8_big_soumis_transfer_parcelles():
         "meilleur_emplacement": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -402,6 +412,7 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
         "meilleur_emplacement": "oui",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -471,6 +482,7 @@ def test_bcae8_big_soumis_fosse():
         "motif_pac": "rehabilitation_fosse",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -494,6 +506,7 @@ def test_bcae8_big_soumis_incendie():
         "motif_pac": "protection_incendie",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
@@ -517,6 +530,7 @@ def test_bcae8_big_soumis_maladie():
         "motif_pac": "gestion_sanitaire",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4000
+    data["haies"].length_to_remove.return_value = 4000
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
