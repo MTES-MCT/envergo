@@ -780,6 +780,10 @@ class Criterion(models.Model):
 
         return self._evaluator.result_tag_style
 
+    @property
+    def requires_hedge_density(self):
+        return self._evaluator.requires_hedge_density
+
 
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.

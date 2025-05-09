@@ -404,7 +404,8 @@ class HedgeData(models.Model):
         return result
 
     def save(self, *args, **kwargs):
-        self.density = self.compute_density()
+        if self.should_compute_density:
+            self.density = self.compute_density()
         super().save(*args, **kwargs)
 
 

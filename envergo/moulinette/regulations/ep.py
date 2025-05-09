@@ -87,3 +87,12 @@ class EspecesProtegeesAisne(CriterionEvaluator):
                 break
 
         return has_reimplantation, has_sensitive_species
+
+
+# TODO remove when the real EP Normandie evaluator is implemented
+class EspecesProtegeesDensite(EspecesProtegees):
+    """Demonstrator for density calculation: always returns "soumis, display density computation and map in debug"""
+
+    choice_label = "EP > EP simple avec calcul de densité"
+    slug = "ep_densite"
+    requires_hedge_density = True
