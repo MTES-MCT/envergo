@@ -18,6 +18,115 @@ def cleanup():
     Species.objects.all().delete()
 
 
+@pytest.fixture
+def aisne_hedge_data():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.571258332741955, "lng": 3.613762429205578},
+                    {"lat": 49.57123937690368, "lng": 3.613863328804695},
+                ],
+                "additionalData": {
+                    "type_haie": "degradee",
+                    "vieil_arbre": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": True,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.57154029531499, "lng": 3.6139268852842137},
+                    {"lat": 49.57134548129514, "lng": 3.6138314019310296},
+                ],
+                "additionalData": {
+                    "type_haie": "arbustive",
+                    "vieil_arbre": False,
+                    "proximite_mare": True,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": True,
+                    "connexion_boisement": False,
+                },
+            },
+        ]
+    )
+    return hedge_data
+
+
+@pytest.fixture
+def calvados_hedge_data():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.187457248991315, "lng": -0.3704281832567369},
+                    {"lat": 49.18726791868085, "lng": -0.3697896493669539},
+                    {"lat": 49.18677355278797, "lng": -0.36971989356386026},
+                    {"lat": 49.18668940491001, "lng": -0.3697842835359544},
+                ],
+                "additionalData": {
+                    "type_haie": "degradee",
+                    "vieil_arbre": True,
+                    "proximite_mare": True,
+                    "sur_parcelle_pac": True,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
+                    "sur_talus": True,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.187352065574956, "lng": -0.3704711099047931},
+                    {"lat": 49.18668239258037, "lng": -0.3712706187247817},
+                ],
+                "additionalData": {
+                    "type_haie": "alignement",
+                    "vieil_arbre": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": True,
+                    "sur_talus": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 49.187432687770894, "lng": -0.37046536803245544},
+                    {"lat": 49.1867549442284, "lng": -0.37125259637832647},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": True,
+                    "type_haie": "buissonnante",
+                    "proximite_mare": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": False,
+                    "essences_non_bocageres": True,
+                },
+            },
+        ]
+    )
+
+    return hedge_data
+
+
 def test_species_are_filtered_by_hedge_type():
     s1 = SpeciesFactory(hedge_types=["degradee"])
     s2 = SpeciesFactory(hedge_types=["degradee"])
@@ -106,3 +215,19 @@ def test_multiple_hedges_combine_their_species():
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
     all_species = hedges.get_hedge_species()
     assert set(all_species) == set([s2, s3, s4])
+
+
+def test_hedge_to_plant_pac_depends_on_plantation_mode(calvados_hedge_data):
+    # mode_plantation is "plantation", hedges is taken into account for pac min length
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 1
+
+    # hedges with other plantation modes are excluded
+    calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 0
+
+    # We ignore the property altogether if it's not set
+    del calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"]
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 1
