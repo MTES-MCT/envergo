@@ -162,6 +162,10 @@ class HedgeData(models.Model):
         verbose_name = "Hedge data"
         verbose_name_plural = "Hedge data"
 
+    def __init__(self, *args, **kwargs):
+        self.should_compute_density = kwargs.pop("should_compute_density", False)
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
         return str(self.id)
 
@@ -399,7 +403,8 @@ class HedgeData(models.Model):
         return result
 
     def save(self, *args, **kwargs):
-        self.density = self.compute_density()
+        if self.should_compute_density:
+            self.density = self.compute_density()
         super().save(*args, **kwargs)
 
 

@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                     ("zone_humide", "Zone humide"),
                     ("zone_inondable", "Zone inondable"),
                     ("species", "Espèces protégées"),
-                    ("haies", "Haies existantes"),
+                    ("haies", "Haies"),
                     ("terres_emergees", "Délimitation terres + France"),
                 ],
                 max_length=50,

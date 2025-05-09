@@ -158,6 +158,9 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
 
         try:
             data = json.loads(request.body)
+            data["should_compute_density"] = (
+                moulinette and moulinette.requires_hedge_density
+            )
             hedge_data = HedgeData(data=data)
             evaluator = PlantationEvaluator(moulinette, hedge_data)
             evaluator.evaluate()
