@@ -125,6 +125,16 @@ class ZoneFactory(DjangoModelFactory):
 class DepartmentFactory(DjangoModelFactory):
     class Meta:
         model = Department
+        django_get_or_create = ["department"]
 
     department = 44
     geometry = loire_atlantique_multipolygon
+
+
+class Department34Factory(DjangoModelFactory):
+    class Meta:
+        model = Department
+        django_get_or_create = ["department"]
+
+    department = 34
+    geometry = herault_multipolygon
