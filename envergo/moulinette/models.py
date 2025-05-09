@@ -780,6 +780,10 @@ class Criterion(models.Model):
 
         return self._evaluator.result_tag_style
 
+    @property
+    def requires_hedge_density(self):
+        return self._evaluator.requires_hedge_density
+
 
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
@@ -1877,7 +1881,11 @@ class MoulinetteHaie(Moulinette):
         return summary
 
     def get_debug_context(self):
-        return {}
+        context = {}
+        if "haies" in self.catalog:
+            haies = self.catalog["haies"]
+            context.update(haies.compute_density(create_map=True))
+        return context
 
     @classmethod
     def get_triage_params(cls):
@@ -2086,6 +2094,15 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
+
+    @property
+    def requires_hedge_density(self):
+        """Check if the moulinette requires the hedge density to be evaluated."""
+        return any(
+            criterion.requires_hedge_density
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+        )
 
 
 def get_moulinette_class_from_site(site):

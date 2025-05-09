@@ -21,6 +21,8 @@ MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
     ("species", _("Espèces protégées")),
+    ("haies", "Haies"),
+    ("terres_emergees", "Délimitation terres + France"),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -96,6 +98,9 @@ class Map(models.Model):
         verbose_name = _("Map")
         verbose_name_plural = _("Maps")
         ordering = ["name"]
+        indexes = [
+            models.Index(fields=["map_type"]),
+        ]
 
     def __str__(self):
         return self.name
@@ -125,6 +130,22 @@ class Zone(gis_models.Model):
             models.Index(fields=["-area"]),
             models.Index(fields=["-npoints"]),
         ]
+
+
+class Line(gis_models.Model):
+    """Stores an annotated geographic Line(s)."""
+
+    map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
+    geometry = gis_models.LineStringField(
+        geography=True,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+            but if you use it, you will break EnvErgo.
+            """
+        ),
+    )
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
 
 
 class Department(models.Model):

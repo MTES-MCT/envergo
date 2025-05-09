@@ -272,6 +272,9 @@ class CriterionEvaluator(ABC):
     # The form class to use to ask the admin for necessary settings
     settings_form_class = None
 
+    # Does this criterion need hedge density for its evaluation?
+    requires_hedge_density = False
+
     def __init__(self, moulinette, distance, settings):
         """Initialize the evaluator.
 

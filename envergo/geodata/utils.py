@@ -18,7 +18,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
-from envergo.geodata.models import Department, Zone
+from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 logger = logging.getLogger(__name__)
 
@@ -135,28 +135,45 @@ def count_features(map_file):
     return nb_zones
 
 
-def process_map_file(map, file, task=None):
-    logger.info("Creating temporary directory")
-    with extract_map(file) as map_file:
-        if task:
-            debug_stream = CeleryDebugStream(task, map.expected_zones)
-        else:
-            debug_stream = sys.stdout
+def process_geographic_file(map, lm, task):
+    if task:
+        debug_stream = CeleryDebugStream(task, map.expected_zones)
+    else:
+        debug_stream = sys.stdout
 
-        logger.info("Instanciating custom LayerMapping")
-        mapping = {"geometry": "MULTIPOLYGON"}
-        extra = {"map": map}
-        lm = CustomMapping(
-            Zone,
-            map_file,
-            mapping,
-            transaction_mode="autocommit",
-            extra_kwargs=extra,
-        )
+    logger.info("Calling layer mapping `save`")
+    lm.save(strict=False, progress=True, stream=debug_stream)
+    logger.info("Importing is done")
 
-        logger.info("Calling layer mapping `save`")
-        lm.save(strict=False, progress=True, stream=debug_stream)
-        logger.info("Importing is done")
+
+def process_zones_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "MULTIPOLYGON"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Zone,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
+
+
+def process_lines_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "LINESTRING"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Line,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
 
 
 def make_polygons_valid(map):
@@ -463,3 +480,58 @@ def get_catchment_area_pixel_values(lng, lat):
 
 def is_test():
     return "pytest" in sys.modules
+
+
+def get_best_epsg_for_location(longitude, latitude) -> int:
+    """
+    Determine the most accurate EPSG code to use for geographical computation in meters,
+    based on a location latitude and longitude.
+
+    Returns:
+        EPSG code as int (326xx for northern UTM, 327xx for southern UTM)
+    """
+    utm_zone = int((longitude + 180) / 6) + 1
+
+    if latitude >= 0:
+        epsg_code = 32600 + utm_zone  # Northern hemisphere
+    else:
+        epsg_code = 32700 + utm_zone  # Southern hemisphere
+
+    return epsg_code
+
+
+def trim_imerged_land(geom):
+    """Keep only the part of the geometry that is in France and not in the sea.
+
+    Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
+    so it uses raw SQL
+    Returns:
+        - the intersection of the circle with the map zones
+        - None if there is no intersection
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            WITH input_poly AS (
+              SELECT ST_GeomFromEWKT(%s) AS geom
+            ),
+            unioned_geom AS (
+              SELECT ST_Union(z.geometry::geometry) AS merged_geom
+              FROM geodata_zone z
+              JOIN geodata_map m ON z.map_id = m.id
+              JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
+              WHERE m.map_type = %s
+            )
+            SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
+            FROM unioned_geom u, input_poly i;
+        """,
+            [geom.ewkt, MAP_TYPES.terres_emergees],
+        )
+        wkt = cursor.fetchone()[0]
+        if wkt:
+            trimmed_geom = GEOSGeometry(wkt)
+            trimmed_geom.srid = geom.srid  # Set SRID explicitly
+        else:
+            trimmed_geom = None
+        return trimmed_geom
