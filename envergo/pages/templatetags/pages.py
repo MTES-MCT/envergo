@@ -184,7 +184,7 @@ def collapsible_menu(
 
 @register.simple_tag()
 def nb_available_depts(site: Literal["haie", "amenagement"] = "amenagement"):
-    """Return nb of depts where EnvErgo is available."""
+    """Return nb of depts where Envergo is available."""
     Config = {"haie": ConfigHaie, "amenagement": ConfigAmenagement}.get(site)
     return Config.objects.filter(is_activated=True).count()
 

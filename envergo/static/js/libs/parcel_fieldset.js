@@ -27,7 +27,7 @@
 
     this.citycodeHintElement = undefined;
 
-    window.addEventListener('EnvErgo:citycode_selected', this.onCitycodeSelected.bind(this));
+    window.addEventListener('Envergo:citycode_selected', this.onCitycodeSelected.bind(this));
   };
   exports.Formset = Formset;
 
