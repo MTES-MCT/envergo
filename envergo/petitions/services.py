@@ -9,7 +9,9 @@ import requests
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.module_loading import import_string
 
+from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
@@ -40,6 +42,7 @@ class ItemFiles:
 class ItemDetails:
     result: bool
     details: list[AdditionalInfo]
+    display_result: bool = True
 
 
 @dataclass
@@ -349,12 +352,105 @@ def build_instructor_informations_ep(petition_project) -> InstructorInformation:
     return ep
 
 
-def build_project_summary(petition_project) -> InstructorInformation:
+def build_project_summary(petition_project, moulinette) -> InstructorInformation:
     """Build project details from petition project data"""
 
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
     length_to_plant = hedge_data.length_to_plant()
+
+    hedge_to_remove_by_destruction_mode = {
+        key: [] for key, _ in MODE_DESTRUCTION_CHOICES
+    }
+
+    for hedge in hedge_data.hedges_to_remove():
+        hedge_to_remove_by_destruction_mode[hedge.mode_destruction].append(hedge)
+
+    hedge_to_plant_by_plantation_mode = {
+        key: [] for key, _, _ in MODE_PLANTATION_CHOICES
+    }
+
+    for hedge in hedge_data.hedges_to_plant():
+        hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
+
+    hedge_to_plant_properties_form = import_string(
+        moulinette.config.hedge_to_plant_properties_form
+    )
+    if "mode_plantation" in hedge_to_plant_properties_form.base_fields:
+        plantation_details = [
+            Item(
+                "Total linéaire à planter, renforcer ou reconnecter",
+                round(length_to_plant),
+                "m",
+                None,
+            ),
+            Item(
+                "Mode de plantation",
+                ItemDetails(
+                    result=True,
+                    details=[
+                        AdditionalInfo(
+                            label={
+                                key: value for key, _, value in MODE_PLANTATION_CHOICES
+                            }.get(mode, "Inconnue"),
+                            value=f"{round(sum(h.length for h in hedges_by_mode))} m "
+                            + (
+                                f" • {', '.join([h.id for h in hedges_by_mode])}"
+                                if hedges_by_mode
+                                else ""
+                            ),
+                            unit=None,
+                        )
+                        for mode, hedges_by_mode in hedge_to_plant_by_plantation_mode.items()
+                    ],
+                    display_result=False,
+                ),
+                None,
+                None,
+            ),
+            Item(
+                "Ratio de replantation, renforcement ou reconnexion",
+                (
+                    round(length_to_plant / length_to_remove, 2)
+                    if length_to_remove
+                    else ""
+                ),
+                None,
+                "Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire",
+            ),
+            Item(
+                "Ratio de replantation uniquement",
+                (
+                    round(
+                        sum(
+                            h.length
+                            for h in hedge_to_plant_by_plantation_mode["plantation"]
+                        )
+                        / length_to_remove,
+                        2,
+                    )
+                    if length_to_remove
+                    else ""
+                ),
+                None,
+                "Linéaire plantation nouvelle ou remplacement / linéaire à détruire",
+            ),
+        ]
+    else:
+        plantation_details = [
+            Item("Total linéaire à planter", round(length_to_plant), "m", None),
+            Item(
+                "Ratio de replantation",
+                (
+                    round(length_to_plant / length_to_remove, 2)
+                    if length_to_remove
+                    else ""
+                ),
+                None,
+                "Linéaire à planter / linéaire à détruire",
+            ),
+        ]
+
     project_summary = InstructorInformation(
         slug=None,
         label=None,
@@ -363,20 +459,47 @@ def build_project_summary(petition_project) -> InstructorInformation:
         ],
         details=[
             InstructorInformationDetails(
-                label="Résumé du projet",
+                label="Destruction",
                 items=[
-                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
-                    Item("Total linéaire planté", round(length_to_plant), "m", None),
                     Item(
-                        "Ratio en longueur",
-                        (
-                            round(length_to_plant / length_to_remove, 2)
-                            if length_to_remove
-                            else ""
+                        "Total linéaire à détruire", round(length_to_remove), "m", None
+                    ),
+                    Item(
+                        "Mode de destruction",
+                        ItemDetails(
+                            result=True,
+                            details=[
+                                AdditionalInfo(
+                                    label=dict(MODE_DESTRUCTION_CHOICES).get(
+                                        mode, "Inconnue"
+                                    ),
+                                    value=f"{round(sum(h.length for h in hedges_by_mode))} m "
+                                    + (
+                                        f" • {', '.join([h.id for h in hedges_by_mode])}"
+                                        if hedges_by_mode
+                                        else ""
+                                    ),
+                                    unit=None,
+                                )
+                                for mode, hedges_by_mode in hedge_to_remove_by_destruction_mode.items()
+                            ],
+                            display_result=False,
                         ),
                         None,
-                        "Longueur plantée / longueur détruite",
+                        None,
                     ),
+                ],
+            ),
+            InstructorInformationDetails(
+                label="Plantation",
+                items=[
+                    Item(
+                        "Nombre de tracés",
+                        len(hedge_data.hedges_to_plant()),
+                        None,
+                        None,
+                    ),
+                    *plantation_details,
                 ],
             ),
         ],
@@ -391,7 +514,7 @@ def compute_instructor_informations(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_summary = build_project_summary(petition_project)
+    project_summary = build_project_summary(petition_project, moulinette)
 
     # Build notes instruction
     notes_instruction = InstructorInformation(
@@ -489,7 +612,7 @@ def compute_instructor_informations_ds(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_summary = build_project_summary(petition_project)
+    project_summary = build_project_summary(petition_project, moulinette)
 
     # Get ds details
     config = moulinette.config

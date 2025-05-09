@@ -41,15 +41,18 @@ class HedgePropertiesBaseForm(forms.Form):
     )
 
 
+MODE_DESTRUCTION_CHOICES = (
+    ("arrachage", "Arrachage"),
+    ("coupe_a_blanc", "Coupe à blanc (sur essence ne recépant pas)"),
+    ("autre", "Autre"),
+)
+
+
 class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
     """Hedge to remove properties form"""
 
     mode_destruction = forms.ChoiceField(
-        choices=[
-            ("arrachage", "Arrachage"),
-            ("coupe_a_blanc", "Coupe à blanc (sur essence ne recépant pas)"),
-            ("autre", "Autre"),
-        ],
+        choices=MODE_DESTRUCTION_CHOICES,
         label="",
         widget=forms.RadioSelect,
         initial="arrachage",
@@ -146,35 +149,41 @@ class HedgeToRemovePropertiesCalvadosForm(
         return "Caractéristiques du Calvados ( + talus, essences non bocagères, récemment plantée)"
 
 
+MODE_PLANTATION_CHOICES = (
+    (
+        "plantation",
+        mark_safe(
+            'Plantation nouvelle <span class="fr-hint-text">ou remplacement d\'une haie existante</span>'
+        ),
+        "Plantation nouvelle ou remplacement",
+    ),
+    (
+        "renforcement",
+        mark_safe(
+            "Renforcement d'une haie existante "
+            '<span class="fr-hint-text">par exemple en garnissant la strate arbustive d’un alignement d’arbres,'
+            " ou en plantant des arbres de haut-jet dans une haie d’arbustes</span>"
+        ),
+        "Renforcement d'une haie existante",
+    ),
+    (
+        "reconnexion",
+        mark_safe(
+            "Reconnexion d'une haie discontinue "
+            '<span class="fr-hint-text">c\'est-à-dire en « bouchant les trous »</span>'
+        ),
+        "Reconnexion d'une haie discontinue",
+    ),
+)
+
+
 class HedgeToPlantPropertiesCalvadosForm(
     EssencesNonBocageresMixin, SurTalusMixin, HedgeToPlantPropertiesForm
 ):
     """Hedge to plant properties form : Calvados specific"""
 
     mode_plantation = forms.ChoiceField(
-        choices=[
-            (
-                "plantation",
-                mark_safe(
-                    'Plantation nouvelle <span class="fr-hint-text">ou remplacement d\'une haie existante</span>'
-                ),
-            ),
-            (
-                "renforcement",
-                mark_safe(
-                    "Renforcement d'une haie existante "
-                    '<span class="fr-hint-text">par exemple en garnissant la strate arbustive d’un alignement d’arbres,'
-                    " ou en plantant des arbres de haut-jet dans une haie d’arbustes</span>"
-                ),
-            ),
-            (
-                "reconnexion",
-                mark_safe(
-                    "Reconnexion d'une haie discontinue "
-                    '<span class="fr-hint-text">c\'est-à-dire en « bouchant les trous »</span>'
-                ),
-            ),
-        ],
+        choices=[(first, second) for first, second, _ in MODE_PLANTATION_CHOICES],
         label="",
         widget=forms.RadioSelect,
         initial="plantation",

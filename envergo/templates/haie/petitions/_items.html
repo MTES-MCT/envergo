@@ -15,11 +15,11 @@
       <span><b>{{ item.label }} :</b></span>
 
       {% if item.value|is_type:"ItemDetails" %}
-        <span>{{ item.value.result|yesno }}</span>
+        {% if item.value.display_result %}<span>{{ item.value.result|yesno }}</span>{% endif %}
         {% if item.value.result %}
           {% for details in item.value.details %}
             <br />
-            <span>{{ details.label }} : <span>
+            <span class="fr-pl-4w">{{ details.label }} : <span>
               {{ details.value }}
               {% if details.unit %}{{ details.unit }}{% endif %}
             </span>
