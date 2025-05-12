@@ -44,7 +44,7 @@ def process_map(task, map_id):
                 geom_type = layer.geom_type.name
                 if geom_type == "LineString":
                     process_lines_file(map, map_file, task)
-                elif geom_type == "Polygon":
+                else:
                     process_zones_file(map, map_file, task)
                     make_polygons_valid(map)
                     map.geometry = simplify_map(map)
