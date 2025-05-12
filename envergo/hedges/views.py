@@ -115,10 +115,23 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         try:
+            context = super().get_context_data(**kwargs)
+            moulinette = context["moulinette"]
+
             data = json.loads(request.body)
-            hedge_data, created = HedgeData.objects.update_or_create(
-                id=kwargs.get("id"), defaults={"data": data}
+            try:
+                hedge_data = HedgeData.objects.get(id=kwargs.get("id"))
+                hedge_data.data = data
+                created = False
+            except HedgeData.DoesNotExist:
+                hedge_data = HedgeData(id=kwargs.get("id"), data=data)
+                created = True
+
+            hedge_data.should_compute_density = (
+                moulinette and moulinette.requires_hedge_density
             )
+            hedge_data.save()
+
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
@@ -158,10 +171,10 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
 
         try:
             data = json.loads(request.body)
-            data["should_compute_density"] = (
-                moulinette and moulinette.requires_hedge_density
+            should_compute_density = moulinette and moulinette.requires_hedge_density
+            hedge_data = HedgeData(
+                data=data, should_compute_density=should_compute_density
             )
-            hedge_data = HedgeData(data=data)
             evaluator = PlantationEvaluator(moulinette, hedge_data)
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
