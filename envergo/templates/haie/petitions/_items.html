@@ -11,7 +11,9 @@
           Enregistrer
         </button>
       </div>
-    {% else %}
+    {% elif item|is_type:"Title" %}
+      <h3>{{ item.label }}</h3>
+    {% elif item|is_type:"Item" %}
       <span><b>{{ item.label }} :</b></span>
 
       {% if item.value|is_type:"ItemDetails" %}

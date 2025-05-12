@@ -1,6 +1,7 @@
 import json
 import logging
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from textwrap import dedent
 from typing import Any, List, Literal
@@ -12,7 +13,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.petitions.regulations import get_instructors_information
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -48,9 +49,14 @@ class ItemDetails:
 @dataclass
 class Item:
     label: str
-    value: str | int | float | ItemDetails
+    value: str | int | float | Decimal | ItemDetails
     unit: str | None
     comment: str | None
+
+
+@dataclass
+class Title:
+    label: str
 
 
 @dataclass
@@ -67,7 +73,7 @@ class InstructorInformation:
 
     slug: str | None
     label: str | None
-    items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
+    items: list[Item | Title | Literal["instructor_free_mention", "onagre_number"]]
     details: list[InstructorInformationDetails]
     comment: str | None = None
 
@@ -92,264 +98,6 @@ class ProjectDetails:
     summary: InstructorInformation | None
     details: list[InstructorInformation]
     ds_data: DemarchesSimplifieesDetails | None
-
-
-def build_instructor_informations_bcae8(
-    petition_project, moulinette
-) -> InstructorInformation:
-    """Build BCAE8 for instructor page view"""
-
-    hedge_data = petition_project.hedge_data
-    lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-    lineaire_to_plant_pac = hedge_data.length_to_plant_pac()
-    lineaire_total = moulinette.catalog.get("lineaire_total", "")
-    motif = moulinette.catalog.get("motif", "")
-
-    bcae8 = InstructorInformation(
-        slug="bcae8",
-        comment="Les décomptes de cette section n'incluent que les haies déclarées "
-        "sur parcelle PAC. Les alignements d’arbres sont également exclus.",
-        label="BCAE 8",
-        items=[
-            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
-            Item(
-                "Motif",
-                next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
-                None,
-                None,
-            ),
-        ],
-        details=[],
-    )
-
-    if lineaire_detruit_pac:
-        bcae8.details.append(
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Total linéaire à détruire sur parcelle PAC",
-                        round(hedge_data.lineaire_detruit_pac()),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Détail",
-                        (
-                            ", ".join(
-                                [
-                                    f"{round(h.length)} m ⋅ {h.id}"
-                                    for h in hedge_data.hedges_to_remove_pac()
-                                ]
-                            )
-                            if hedge_data.hedges_to_remove_pac
-                            else ""
-                        ),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Pourcentage linéaire à détruire / total linéaire exploitation",
-                        (
-                            round(lineaire_detruit_pac / lineaire_total * 100, 2)
-                            if lineaire_total
-                            else ""
-                        ),
-                        "%",
-                        None,
-                    ),
-                ],
-            )
-        )
-    else:
-        bcae8.details.append(
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Total linéaire détruit sur parcelle PAC",
-                        round(hedge_data.lineaire_detruit_pac()),
-                        "m",
-                        None,
-                    ),
-                ],
-            )
-        )
-
-    if lineaire_to_plant_pac:
-        bcae8.details.append(
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Total linéaire à planter sur parcelle PAC",
-                        round(lineaire_to_plant_pac),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Détail",
-                        (
-                            ", ".join(
-                                [
-                                    f"{round(h.length)} m ⋅ {h.id}"
-                                    for h in hedge_data.hedges_to_plant_pac()
-                                ]
-                            )
-                            if hedge_data.hedges_to_plant_pac
-                            else ""
-                        ),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Ratio de replantation",
-                        (
-                            round(
-                                lineaire_to_plant_pac / lineaire_detruit_pac,
-                                2,
-                            )
-                            if lineaire_detruit_pac > 0
-                            else ""
-                        ),
-                        None,
-                        "Linéaire à planter / linéaire à détruire, sur parcelle PAC",
-                    ),
-                ],
-            ),
-        )
-    else:
-        bcae8.details.append(
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Total linéaire à planter sur parcelle PAC",
-                        round(lineaire_to_plant_pac),
-                        "m",
-                        None,
-                    ),
-                ],
-            )
-        )
-
-    return bcae8
-
-
-def build_instructor_informations_ep(petition_project) -> InstructorInformation:
-    """Build Espèces Protégées informations for instructor page view"""
-
-    hedge_data = petition_project.hedge_data
-
-    hedges_to_remove_near_pond = [
-        h for h in hedge_data.hedges_to_remove() if h.proximite_mare
-    ]
-    hedges_to_plant_near_pond = [
-        h for h in hedge_data.hedges_to_plant() if h.proximite_mare
-    ]
-
-    hedges_to_remove_woodland_connection = [
-        h for h in hedge_data.hedges_to_remove() if h.connexion_boisement
-    ]
-    hedges_to_plant_woodland_connection = [
-        h for h in hedge_data.hedges_to_plant() if h.connexion_boisement
-    ]
-
-    hedges_to_plant_under_power_line = [
-        h for h in hedge_data.hedges_to_plant() if h.sous_ligne_electrique
-    ]
-    ep = InstructorInformation(
-        slug="ep",
-        label="Espèces protégées",
-        items=[
-            "onagre_number",
-            Item(
-                "Présence d'une mare à moins de 200 m",
-                ItemDetails(
-                    result=len(hedges_to_remove_near_pond) > 0
-                    or len(hedges_to_plant_near_pond) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_near_pond])}"
-                                if hedges_to_remove_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_near_pond])}"
-                                if hedges_to_plant_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Connexion à un boisement ou une haie",
-                ItemDetails(
-                    result=len(hedges_to_remove_woodland_connection) > 0
-                    or len(hedges_to_plant_woodland_connection) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_woodland_connection])}"
-                                if hedges_to_remove_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_woodland_connection])}"
-                                if hedges_to_plant_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Proximité ligne électrique",
-                ItemDetails(
-                    result=len(hedges_to_plant_under_power_line) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_under_power_line))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_under_power_line])}"
-                                if hedges_to_plant_under_power_line
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-        ],
-        details=[],
-    )
-
-    return ep
 
 
 def build_project_summary(petition_project, moulinette) -> InstructorInformation:
@@ -526,11 +274,15 @@ def compute_instructor_informations(
         details=None,
     )
 
-    # Build BCAE8
-    bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
+    regulations_information = [notes_instruction]
 
-    # Build Espèces Protégées
-    ep = build_instructor_informations_ep(petition_project)
+    for regulation in moulinette.regulations:
+        for criterion in regulation.criteria.all():
+            regulations_information.append(
+                get_instructors_information(
+                    criterion._evaluator, petition_project, moulinette
+                )
+            )
 
     # Get ds details
     config = moulinette.config
@@ -540,7 +292,6 @@ def compute_instructor_informations(
 
     city = None
     pacage = None
-    applicant_name = None
     ds_details = None
 
     if dossier:
@@ -594,14 +345,19 @@ def compute_instructor_informations(
 
         if ds_details:
             if ds_details.pacage:
-                bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+                bcae8 = next(
+                    (reg for reg in regulations_information if reg.slug == "bcae8"),
+                    None,
+                )
+                if bcae8:
+                    bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
         summary=project_summary,
-        details=[notes_instruction, bcae8, ep],
+        details=regulations_information,
         ds_data=ds_details,
     )
 
