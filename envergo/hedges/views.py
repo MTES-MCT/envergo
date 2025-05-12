@@ -11,7 +11,7 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
-from envergo.hedges.services import HedgeEvaluator, PlantationEvaluator
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
@@ -97,13 +97,9 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         if self.object and "moulinette" in context:
             moulinette = context["moulinette"]
             plantation_evaluator = PlantationEvaluator(moulinette, self.object)
-            context["minimum_length_to_plant"] = (
-                plantation_evaluator.minimum_length_to_plant()
-            )
-            context["is_removing_pac"] = len(self.object.hedges_to_remove_pac()) > 0
+            context.update(plantation_evaluator.get_context())
         else:
             context["minimum_length_to_plant"] = 0
-            context["is_removing_pac"] = False
 
         # TODO Refactor removal and plantation to be different views
         if self.object:
@@ -142,7 +138,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         return
 
 
-class HedgeQualityView(MoulinetteMixin, FormView):
+class HedgeConditionsView(MoulinetteMixin, FormView):
     def get_form_kwargs(self):
         """Return the moulinette form args.
 
@@ -166,10 +162,9 @@ class HedgeQualityView(MoulinetteMixin, FormView):
                 moulinette and moulinette.requires_hedge_density
             )
             hedge_data = HedgeData(data=data)
-            plantation_evaluator = PlantationEvaluator(moulinette, hedge_data)
-            evaluator = HedgeEvaluator(plantation_evaluator)
-            evaluation = evaluator.evaluate()
-            return JsonResponse(evaluation, status=200, safe=False)
+            evaluator = PlantationEvaluator(moulinette, hedge_data)
+            evaluator.evaluate()
+            return JsonResponse(evaluator.to_json(), status=200, safe=False)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:

@@ -1916,7 +1916,6 @@ class MoulinetteHaie(Moulinette):
         context["triage_url"] = update_qs(
             reverse("triage"), {**form_data.dict(), "edit": "true"}
         )
-
         triage_form = TriageFormHaie(data=form_data)
         if triage_form.is_valid():
             context["triage_form"] = triage_form
@@ -2049,19 +2048,6 @@ class MoulinetteHaie(Moulinette):
             Q(map_id=OuterRef("activation_map_id")) & query
         ).values("id")
         return zone_subquery
-
-    def must_check_acceptability_conditions(self):
-        """Some conditions must only be evaluated when a ep criterion exists."""
-
-        ep = self.ep
-        ep_criterion = ep.criteria.first()
-        return ep.is_activated() and ep_criterion
-
-    def must_check_pac_condition(self):
-        """The pac condition must only be evaluated when a bcea8 criterion exists."""
-        bcae8 = self.conditionnalite_pac
-        bcae8_criterion = bcae8.criteria.first()
-        return bcae8.is_activated() and bcae8_criterion
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""

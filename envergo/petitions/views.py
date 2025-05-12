@@ -12,6 +12,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView, UpdateView
@@ -51,6 +52,24 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         .order_by("-created_at")
     )
     paginate_by = 30
+
+    def get_queryset(self):
+        """Override queryset filtering projects from user departments
+
+        Returns
+        - all objects if user is superuser
+        - filtered objects on department if user is instructor
+        - none object if user is not instructor or not superuser
+        """
+        current_user = self.request.user
+        if current_user.is_superuser:
+            queryset = self.queryset
+        elif current_user.is_instructor:
+            user_departments = current_user.departments.defer("geometry").all()
+            queryset = self.queryset.filter(department__in=user_departments)
+        else:
+            queryset = self.queryset.none()
+        return queryset
 
 
 class PetitionProjectCreate(FormView):
@@ -484,16 +503,29 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
+        """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
+        user = request.user
+        department = self.object.department
 
-        log_event(
-            "projet",
-            self.matomo_tag,
-            self.request,
-            **self.object.get_log_event_data(),
-            **get_matomo_tags(self.request),
-        )
-        return result
+        # check if user is authorize, else returns 403 error
+        if user.is_superuser or all(
+            (user.is_instructor, department in user.departments.defer("geometry").all())
+        ):
+
+            log_event(
+                "projet",
+                self.matomo_tag,
+                self.request,
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+            return result
+
+        else:
+            return TemplateResponse(
+                request, template="haie/petitions/403.html", status=403
+            )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -587,6 +619,8 @@ class PetitionProjectInstructorDossierDSView(
 
 
 class PetitionProjectHedgeDataExport(DetailView):
+    """Export Hedge data in geopackage"""
+
     model = PetitionProject
     slug_field = "reference"
     slug_url_kwarg = "reference"
@@ -634,7 +668,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")
                 response["Content-Disposition"] = (
-                    f'attachment; filename="haies_dossier_{export_filename}.gpkg"'
+                    f'attachment; filename="{export_filename}"'
                 )
 
         return response
