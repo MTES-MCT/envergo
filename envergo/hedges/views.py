@@ -12,7 +12,7 @@ from django.views.generic.edit import FormMixin, FormView
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
-from envergo.moulinette.models import ConfigHaie
+from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.moulinette.views import MoulinetteMixin
 
 
@@ -115,8 +115,15 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         try:
-            context = super().get_context_data(**kwargs)
-            moulinette = context["moulinette"]
+            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+            form = self.get_form_class()(self.get_initial())
+            moulinette = None
+            if form.is_valid():
+                moulinette = MoulinetteClass(
+                    form.cleaned_data,
+                    form.data,
+                    self.should_activate_optional_criteria(),
+                )
 
             data = json.loads(request.body)
             try:
@@ -171,10 +178,7 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
 
         try:
             data = json.loads(request.body)
-            should_compute_density = moulinette and moulinette.requires_hedge_density
-            hedge_data = HedgeData(
-                data=data, should_compute_density=should_compute_density
-            )
+            hedge_data = HedgeData(data=data)
             evaluator = PlantationEvaluator(moulinette, hedge_data)
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
