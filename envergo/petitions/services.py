@@ -399,8 +399,7 @@ def compute_instructor_informations_ds(
             demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
             demarche_simplifiee_number=config.demarche_simplifiee_number,
             usager="",
-            summary=None,
-            details=[project_summary],
+            sections=[project_summary],
             ds_data=None,
         )
 
@@ -442,8 +441,7 @@ def compute_instructor_informations_ds(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        summary=None,
-        details=[project_summary],
+        sections=[project_summary],
         ds_data=ds_details,
     )
 
