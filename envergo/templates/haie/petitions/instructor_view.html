@@ -12,7 +12,7 @@
 
     <div id="fr-sidemenu-item-0">
       <ul class="fr-sidemenu__list">
-        {% for information in project_details.details %}
+        {% for information in project_details.sections %}
           {% if information.slug %}
             <li class="fr-sidemenu__item">
               <a class="fr-sidemenu__link"
@@ -55,6 +55,10 @@
           {% if information.simulation_data %}
             <h3 class="fr-mt-4w">Données de la simulation</h3>
             {% include "haie/petitions/_items.html" with items=information.simulation_data %}
+          {% endif %}
+
+          {% if information.other_items %}
+            {% include "haie/petitions/_items.html" with items=information.other_items %}
           {% endif %}
         </section>
       {% endfor %}

@@ -88,6 +88,7 @@ class InstructorInformation:
     label: str | None
     key_elements: list[ItemType | "GroupedItems"] | None
     simulation_data: list[ItemType | "GroupedItems"] | None
+    other_items: list[ItemType | "GroupedItems"] | None = None
     comment: str | None = None
 
 
@@ -282,8 +283,9 @@ def compute_instructor_informations(
     notes_instruction = InstructorInformation(
         slug="instructor_free_mention",
         label="Note libre pour l'instruction",
-        key_elements=["instructor_free_mention"],
+        key_elements=None,
         simulation_data=None,
+        other_items=["instructor_free_mention"],
     )
 
     regulations_information = []
