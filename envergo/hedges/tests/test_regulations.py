@@ -14,7 +14,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_minimum_length_condition():
-    """Length to plant deponds on the replantation coefficient."""
+    """Length to plant depends on the replantation coefficient."""
 
     hedge_data = Mock()
     hedge_data.hedges_to_remove.return_value = []

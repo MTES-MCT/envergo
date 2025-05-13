@@ -61,6 +61,10 @@ class Hedge:
         length = geod.geometry_length(self.geometry)
         return length
 
+    def prop(self, property_name):
+        """Get the value of a specific property."""
+        return self.additionalData.get(property_name, None)
+
     @property
     def is_on_pac(self):
         return self.additionalData.get("sur_parcelle_pac", False)
@@ -72,6 +76,10 @@ class Hedge:
     @property
     def mode_destruction(self):
         return self.additionalData.get("mode_destruction", None)
+
+    @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
 
     @property
     def position(self):
@@ -196,7 +204,9 @@ class HedgeData(models.Model):
         return [
             h
             for h in self.hedges_to_plant()
-            if h.is_on_pac and h.hedge_type != "alignement"
+            if h.is_on_pac
+            and h.hedge_type != "alignement"
+            and (h.mode_plantation is None or h.mode_plantation == "plantation")
         ]
 
     def length_to_plant_pac(self):
