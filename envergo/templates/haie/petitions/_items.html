@@ -11,6 +11,12 @@
           Enregistrer
         </button>
       </div>
+    {% elif item == "protected_species" %}
+      {% if moulinette.catalog.protected_species %}
+        {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+      {% else %}
+        <p>Pas de liste d’espèces associée à cette simulation</p>
+      {% endif %}
     {% elif item|is_type:"Title" %}
       <h3 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h3>
     {% elif item|is_type:"Item" %}

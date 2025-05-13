@@ -25,7 +25,9 @@ def get_human_readable_value(field, key):
 
 
 @register_instructors_information(EspecesProtegeesAisne)
-def ep_aisne_get_instructors_info(evaluator, petition_project, moulinette):
+def ep_aisne_get_instructors_info(
+    evaluator, petition_project, moulinette
+) -> InstructorInformation:
     hedges_properties_items = reduce_hedges_properties_to_displayable_items(
         moulinette, petition_project
     )
@@ -45,6 +47,7 @@ def ep_aisne_get_instructors_info(evaluator, petition_project, moulinette):
             *hedges_properties_items,
             Title("Liste des espèces"),
             "onagre_number",
+            "protected_species",
         ],
         details=[],
     )
@@ -52,7 +55,9 @@ def ep_aisne_get_instructors_info(evaluator, petition_project, moulinette):
     return ep
 
 
-def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
+def reduce_hedges_properties_to_displayable_items(
+    moulinette, petition_project
+) -> list[Item]:
 
     # First create an intermediate data structure to aggregate the hedges properties
     hedges_properties = {}

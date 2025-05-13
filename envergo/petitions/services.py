@@ -72,7 +72,11 @@ class InstructorInformation:
 
     slug: str | None
     label: str | None
-    items: list[Item | Title | Literal["instructor_free_mention", "onagre_number"]]
+    items: list[
+        Item
+        | Title
+        | Literal["instructor_free_mention", "onagre_number", "protected_species"]
+    ]
     details: list[InstructorInformationDetails]
     comment: str | None = None
 

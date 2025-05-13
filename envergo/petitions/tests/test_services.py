@@ -453,7 +453,8 @@ def test_ep_aisne_get_instructors_info(france_map):  # noqa
     {
       "label": "Liste des esp\\u00e8ces"
     },
-    "onagre_number"
+    "onagre_number",
+    "protected_species"
   ],
   "details": [
 
