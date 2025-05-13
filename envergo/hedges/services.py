@@ -217,7 +217,9 @@ class PlantationEvaluator:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
-                        criterion._evaluator.plantation_evaluate(self.hedge_data, R)
+                        criterion._evaluator.plantation_evaluate(
+                            self.hedge_data, R, self.moulinette.catalog
+                        )
                     )
 
         self._conditions = sorted(conditions, key=attrgetter("order"))
