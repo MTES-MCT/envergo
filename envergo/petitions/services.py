@@ -12,7 +12,6 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.petitions.regulations import get_instructors_information
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -58,12 +57,26 @@ class Title:
     label: str
 
 
+ItemType = (
+    Item
+    | Title
+    | Literal[
+        "instructor_free_mention",
+        "onagre_number",
+        "protected_species",
+        "moulinette_fields",
+        "display_hedges_cta",
+        "open_simulation_cta",
+    ]
+)
+
+
 @dataclass
-class InstructorInformationDetails:
+class GroupedItems:
     """Instructor information details class formatted to be displayed in templates"""
 
     label: str
-    items: list[Item]
+    items: list[ItemType | "GroupedItems"]
 
 
 @dataclass
@@ -72,12 +85,8 @@ class InstructorInformation:
 
     slug: str | None
     label: str | None
-    items: list[
-        Item
-        | Title
-        | Literal["instructor_free_mention", "onagre_number", "protected_species"]
-    ]
-    details: list[InstructorInformationDetails]
+    key_elements: list[ItemType | "GroupedItems"] | None
+    simulation_data: list[ItemType | "GroupedItems"] | None
     comment: str | None = None
 
 
@@ -98,8 +107,7 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
-    summary: InstructorInformation | None
-    details: list[InstructorInformation]
+    sections: list[InstructorInformation]
     ds_data: DemarchesSimplifieesDetails | None
 
 
@@ -205,11 +213,9 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
     project_summary = InstructorInformation(
         slug=None,
         label=None,
-        items=[
+        key_elements=[
             Item("Référence interne", petition_project.reference, None, None),
-        ],
-        details=[
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Destruction",
                 items=[
                     Item(
@@ -241,7 +247,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                     ),
                 ],
             ),
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Plantation",
                 items=[
                     Item(
@@ -253,7 +259,11 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                     *plantation_details,
                 ],
             ),
+            "display_hedges_cta",
+            "open_simulation_cta",
         ],
+        simulation_data=["moulinette_fields"],
+        comment=None,
     )
 
     return project_summary
@@ -268,24 +278,24 @@ def compute_instructor_informations(
     project_summary = build_project_summary(petition_project, moulinette)
 
     # Build notes instruction
-    notes_instruction = InstructorInformation(
-        slug=None,
-        label=None,
-        items=[
-            "instructor_free_mention",
-        ],
-        details=None,
-    )
+    # notes_instruction = InstructorInformation(
+    #     slug=None,
+    #     label=None,
+    #     items=[
+    #         "instructor_free_mention",
+    #     ],
+    #     details=None,
+    # )
 
-    regulations_information = [notes_instruction]
-
-    for regulation in moulinette.regulations:
-        for criterion in regulation.criteria.all():
-            regulations_information.append(
-                get_instructors_information(
-                    criterion._evaluator, petition_project, moulinette
-                )
-            )
+    # regulations_information = [notes_instruction]
+    #
+    # for regulation in moulinette.regulations:
+    #     for criterion in regulation.criteria.all():
+    #         regulations_information.append(
+    #             get_instructors_information(
+    #                 criterion._evaluator, petition_project, moulinette
+    #             )
+    #         )
 
     # Get ds details
     config = moulinette.config
@@ -338,29 +348,28 @@ def compute_instructor_informations(
         # Add info to project summary and BCAE8
         if ds_details:
             if ds_details.city:
-                project_summary.items.append(
-                    Item("Commune principale", ds_details.city, None, None)
+                project_summary.key_elements.insert(
+                    1, Item("Commune principale", ds_details.city, None, None)
                 )
             if ds_details.applicant_name:
-                project_summary.items.append(
-                    Item("Nom du demandeur", ds_details.applicant_name, None, None)
+                project_summary.key_elements.insert(
+                    2, Item("Nom du demandeur", ds_details.applicant_name, None, None)
                 )
 
-        if ds_details:
-            if ds_details.pacage:
-                bcae8 = next(
-                    (reg for reg in regulations_information if reg.slug == "bcae8"),
-                    None,
-                )
-                if bcae8:
-                    bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+        # if ds_details:
+        #     if ds_details.pacage:
+        #         bcae8 = next(
+        #             (reg for reg in regulations_information if reg.slug == "bcae8"),
+        #             None,
+        #         )
+        #         if bcae8:
+        #             bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        summary=project_summary,
-        details=regulations_information,
+        sections=[project_summary],  # regulations_information,
         ds_data=ds_details,
     )
 

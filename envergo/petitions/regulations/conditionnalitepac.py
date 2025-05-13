@@ -1,11 +1,7 @@
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8
 from envergo.petitions.regulations import register_instructors_information
-from envergo.petitions.services import (
-    InstructorInformation,
-    InstructorInformationDetails,
-    Item,
-)
+from envergo.petitions.services import GroupedItems, InstructorInformation, Item
 
 
 @register_instructors_information(Bcae8)
@@ -39,7 +35,7 @@ def bcae8_get_instructors_info(
 
     if lineaire_detruit_pac:
         bcae8.details.append(
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Destruction",
                 items=[
                     Item(
@@ -78,7 +74,7 @@ def bcae8_get_instructors_info(
         )
     else:
         bcae8.details.append(
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Destruction",
                 items=[
                     Item(
@@ -93,7 +89,7 @@ def bcae8_get_instructors_info(
 
     if lineaire_to_plant_pac:
         bcae8.details.append(
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Plantation",
                 items=[
                     Item(
@@ -135,7 +131,7 @@ def bcae8_get_instructors_info(
         )
     else:
         bcae8.details.append(
-            InstructorInformationDetails(
+            GroupedItems(
                 label="Plantation",
                 items=[
                     Item(
