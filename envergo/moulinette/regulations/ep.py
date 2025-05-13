@@ -10,6 +10,7 @@ from envergo.hedges.regulations import (
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
+    StrenghteningCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 from envergo.utils.fields import get_human_readable_value
@@ -113,7 +114,7 @@ class EspecesProtegeesNormandie(
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition]
+    plantation_conditions = [SafetyCondition, StrenghteningCondition]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
