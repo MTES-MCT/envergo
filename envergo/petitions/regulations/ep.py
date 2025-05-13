@@ -13,7 +13,6 @@ from envergo.petitions.services import (
     InstructorInformation,
     Item,
     ItemDetails,
-    Title,
 )
 
 
@@ -28,31 +27,31 @@ def get_human_readable_value(field, key):
 def ep_aisne_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
-    hedges_properties_items = reduce_hedges_properties_to_displayable_items(
-        moulinette, petition_project
-    )
+    # hedges_properties_items = reduce_hedges_properties_to_displayable_items(
+    #     moulinette, petition_project
+    # )
 
-    ep = InstructorInformation(
-        slug="ep",
-        label="Espèces protégées",
-        items=[
-            Title("Calcul de la compensation attendue"),
-            Item(
-                "Coefficient compensation",
-                float(evaluator.get_replantation_coefficient()),
-                None,
-                None,
-            ),
-            Title("Situation des haies"),
-            *hedges_properties_items,
-            Title("Liste des espèces"),
-            "onagre_number",
-            "protected_species",
-        ],
-        details=[],
-    )
+    # ep = InstructorInformation(
+    #     slug="ep",
+    #     label="Espèces protégées",
+    #     items=[
+    #         Title("Calcul de la compensation attendue"),
+    #         Item(
+    #             "Coefficient compensation",
+    #             float(evaluator.get_replantation_coefficient()),
+    #             None,
+    #             None,
+    #         ),
+    #         Title("Situation des haies"),
+    #         *hedges_properties_items,
+    #         Title("Liste des espèces"),
+    #         "onagre_number",
+    #         "protected_species",
+    #     ],
+    #     details=[],
+    # )
 
-    return ep
+    return None
 
 
 def reduce_hedges_properties_to_displayable_items(

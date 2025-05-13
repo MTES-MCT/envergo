@@ -8,5 +8,5 @@ def n2000_haie_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
     return InstructorInformation(
-        slug="n2000", label="Natura 2000", items=[], details=[]
+        slug="n2000", label="Natura 2000", key_elements=None, simulation_data=None
     )

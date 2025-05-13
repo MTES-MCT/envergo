@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
+from envergo.petitions.regulations import get_instructors_information
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -278,24 +279,23 @@ def compute_instructor_informations(
     project_summary = build_project_summary(petition_project, moulinette)
 
     # Build notes instruction
-    # notes_instruction = InstructorInformation(
-    #     slug=None,
-    #     label=None,
-    #     items=[
-    #         "instructor_free_mention",
-    #     ],
-    #     details=None,
-    # )
+    notes_instruction = InstructorInformation(
+        slug="instructor_free_mention",
+        label="Note libre pour l'instruction",
+        key_elements=["instructor_free_mention"],
+        simulation_data=None,
+    )
 
-    # regulations_information = [notes_instruction]
-    #
-    # for regulation in moulinette.regulations:
-    #     for criterion in regulation.criteria.all():
-    #         regulations_information.append(
-    #             get_instructors_information(
-    #                 criterion._evaluator, petition_project, moulinette
-    #             )
-    #         )
+    regulations_information = []
+    for regulation in moulinette.regulations:
+        for criterion in regulation.criteria.all():
+            regulations_information.append(
+                get_instructors_information(
+                    criterion._evaluator, petition_project, moulinette
+                )
+            )
+
+    regulations_information.append(notes_instruction)
 
     # Get ds details
     config = moulinette.config
@@ -356,20 +356,22 @@ def compute_instructor_informations(
                     2, Item("Nom du demandeur", ds_details.applicant_name, None, None)
                 )
 
-        # if ds_details:
-        #     if ds_details.pacage:
-        #         bcae8 = next(
-        #             (reg for reg in regulations_information if reg.slug == "bcae8"),
-        #             None,
-        #         )
-        #         if bcae8:
-        #             bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
+        if ds_details:
+            if ds_details.pacage:
+                bcae8 = next(
+                    (reg for reg in regulations_information if reg.slug == "bcae8"),
+                    None,
+                )
+                if bcae8:
+                    bcae8.key_elements.insert(
+                        0, Item("N° PACAGE", ds_details.pacage, None, None)
+                    )
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        sections=[project_summary],  # regulations_information,
+        sections=[project_summary, *regulations_information],
         ds_data=ds_details,
     )
 

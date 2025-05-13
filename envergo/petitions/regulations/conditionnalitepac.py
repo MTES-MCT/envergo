@@ -1,5 +1,8 @@
+from django.utils.module_loading import import_string
+
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8
+from envergo.moulinette.forms.fields import DisplayFieldMixin
+from envergo.moulinette.regulations.conditionnalitepac import Bcae8, Bcae8Form
 from envergo.petitions.regulations import register_instructors_information
 from envergo.petitions.services import GroupedItems, InstructorInformation, Item
 
@@ -16,31 +19,66 @@ def bcae8_get_instructors_info(
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
     motif = moulinette.catalog.get("motif", "")
 
+    hedge_to_plant_properties_form = import_string(
+        moulinette.config.hedge_to_plant_properties_form
+    )
+
+    has_mode_replantation = (
+        "mode_replantation" in hedge_to_plant_properties_form.base_fields
+    )
+
     bcae8 = InstructorInformation(
         slug="bcae8",
         comment="Les décomptes de cette section n'incluent que les haies déclarées "
         "sur parcelle PAC. Les alignements d’arbres sont également exclus.",
         label="BCAE 8",
-        items=[
-            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
+        key_elements=[
             Item(
                 "Motif",
                 next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
                 None,
                 None,
             ),
+            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
+            Item(
+                "Total linéaire détruit",
+                round(lineaire_detruit_pac),
+                "m",
+                None,
+            ),
+            Item(
+                "Total linéaire planté",
+                round(lineaire_to_plant_pac),
+                "m",
+                None,
+            ),
         ],
-        details=[],
+        simulation_data=[
+            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
+        ],
     )
 
+    for key in Bcae8Form.base_fields:
+        if key in moulinette.catalog and key != "lineaire_total":
+            field = Bcae8Form.base_fields[key]
+            label = (
+                field.display_label
+                if isinstance(field, DisplayFieldMixin)
+                else field.label
+            )
+            unit = field.display_unit if isinstance(field, DisplayFieldMixin) else None
+            bcae8.simulation_data.append(
+                Item(label, moulinette.catalog[key], unit, None)
+            )
+
     if lineaire_detruit_pac:
-        bcae8.details.append(
+        bcae8.simulation_data.append(
             GroupedItems(
                 label="Destruction",
                 items=[
                     Item(
                         "Total linéaire à détruire sur parcelle PAC",
-                        round(hedge_data.lineaire_detruit_pac()),
+                        round(lineaire_detruit_pac),
                         "m",
                         None,
                     ),
@@ -72,23 +110,9 @@ def bcae8_get_instructors_info(
                 ],
             )
         )
-    else:
-        bcae8.details.append(
-            GroupedItems(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Total linéaire détruit sur parcelle PAC",
-                        round(hedge_data.lineaire_detruit_pac()),
-                        "m",
-                        None,
-                    ),
-                ],
-            )
-        )
 
     if lineaire_to_plant_pac:
-        bcae8.details.append(
+        bcae8.simulation_data.append(
             GroupedItems(
                 label="Plantation",
                 items=[
@@ -124,24 +148,14 @@ def bcae8_get_instructors_info(
                             else ""
                         ),
                         None,
-                        "Linéaire à planter / linéaire à détruire, sur parcelle PAC",
+                        (
+                            "Linéaire plantation nouvelle ou remplacement / linéaire à détruire, sur parcelle PAC"
+                            if has_mode_replantation
+                            else "Linéaire à planter / linéaire à détruire, sur parcelle PAC"
+                        ),
                     ),
                 ],
             ),
-        )
-    else:
-        bcae8.details.append(
-            GroupedItems(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Total linéaire à planter sur parcelle PAC",
-                        round(lineaire_to_plant_pac),
-                        "m",
-                        None,
-                    ),
-                ],
-            )
         )
 
     return bcae8
