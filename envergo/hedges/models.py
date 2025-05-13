@@ -61,6 +61,10 @@ class Hedge:
         length = geod.geometry_length(self.geometry)
         return length
 
+    def prop(self, property_name):
+        """Get the value of a specific property."""
+        return self.additionalData.get(property_name, None)
+
     @property
     def is_on_pac(self):
         return self.additionalData.get("sur_parcelle_pac", False)
