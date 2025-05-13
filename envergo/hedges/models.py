@@ -74,6 +74,10 @@ class Hedge:
         return self.additionalData.get("mode_destruction", None)
 
     @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
+
+    @property
     def position(self):
         return self.additionalData.get("position", None)
 
@@ -196,7 +200,9 @@ class HedgeData(models.Model):
         return [
             h
             for h in self.hedges_to_plant()
-            if h.is_on_pac and h.hedge_type != "alignement"
+            if h.is_on_pac
+            and h.hedge_type != "alignement"
+            and (h.mode_plantation is None or h.mode_plantation == "plantation")
         ]
 
     def length_to_plant_pac(self):
