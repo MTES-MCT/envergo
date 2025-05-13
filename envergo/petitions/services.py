@@ -68,6 +68,7 @@ ItemType = (
         "moulinette_fields",
         "display_hedges_cta",
         "open_simulation_cta",
+        "hedges_compensation_details",
     ]
 )
 
