@@ -5,6 +5,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
+from envergo.moulinette.forms.fields import DisplayBooleanField
 from envergo.utils.fields import AllowDisabledSelect
 
 
@@ -110,12 +111,13 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
 
 
 class EssencesNonBocageresMixin(forms.Form):
-    essences_non_bocageres = forms.BooleanField(
+    essences_non_bocageres = DisplayBooleanField(
         label=mark_safe(
             "Composée d'essences non bocagères "
             '<span class="fr-hint-text">Thuya, cyprès, laurier-palme, photinia, eleagnus…</span>'
         ),
         required=False,
+        display_label="Composée d'essences non bocagères",
     )
 
 
@@ -131,11 +133,12 @@ class HedgeToRemovePropertiesCalvadosForm(
 ):
     """Hedge to remove properties form : Calvados specific"""
 
-    recemment_plantee = forms.BooleanField(
+    recemment_plantee = DisplayBooleanField(
         label=mark_safe(
             'Haie récemment plantée <span class="fr-hint-text">Après le 1er janvier 2023</span>'
         ),
         required=False,
+        display_label="Haie récemment plantée",
     )
 
     fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)

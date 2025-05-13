@@ -12,7 +12,7 @@
         </button>
       </div>
     {% elif item|is_type:"Title" %}
-      <h3>{{ item.label }}</h3>
+      <h3 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h3>
     {% elif item|is_type:"Item" %}
       <span><b>{{ item.label }} :</b></span>
 

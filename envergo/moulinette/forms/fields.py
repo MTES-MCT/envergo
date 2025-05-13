@@ -56,6 +56,10 @@ class DisplayCharField(DisplayFieldMixin, forms.CharField):
     pass
 
 
+class DisplayBooleanField(DisplayFieldMixin, forms.BooleanField):
+    pass
+
+
 def extract_choices(choices):
     """Extract form choices from a list of 3 items tuples : code, form label, display label."""
     return [(code, form_label) for code, form_label, _ in choices]

@@ -1,10 +1,20 @@
 import datetime
+import json
+from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
+    CriterionFactory,
+    RegulationFactory,
+)
+from envergo.petitions.regulations.ep import ep_aisne_get_instructors_info
 from envergo.petitions.services import (
     compute_instructor_informations,
     fetch_project_details_from_demarches_simplifiees,
@@ -170,3 +180,284 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     assert "haie" in args[1]
 
     mock_notify.assert_called_once()
+
+
+def test_ep_aisne_get_instructors_info(france_map):  # noqa
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
+    )
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+    regulation = RegulationFactory(regulation="ep")
+    [
+        CriterionFactory(
+            title="Espèces protégées",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+    ConfigHaieFactory(
+        hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
+        hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesAisneForm",
+    )
+
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    info = ep_aisne_get_instructors_info(
+        moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
+    )
+
+    expected_json = """{
+  "slug": "ep",
+  "label": "Esp\\u00e8ces prot\\u00e9g\\u00e9es",
+  "items": [
+    {
+      "label": "Calcul de la compensation attendue"
+    },
+    {
+      "label": "Coefficient compensation",
+      "value": 1.5,
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Situation des haies"
+    },
+    {
+      "label": "Situ\\u00e9e sur une parcelle PAC",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Inter-champ",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Bordure de voirie ouverte \\u00e0 la circulation",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Autre (bord de chemin, b\\u00e2timent\\u2026)",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare \\u00e0 moins de 200\\u00a0m",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Contient un ou plusieurs vieux arbres, fissur\\u00e9s ou avec cavit\\u00e9s",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Connect\\u00e9e \\u00e0 un boisement ou \\u00e0 une autre haie",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare ou ruisseau \\u00e0 moins de 10\\u00a0m",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Sous une ligne \\u00e9lectrique ou t\\u00e9l\\u00e9phonique",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Liste des esp\\u00e8ces"
+    },
+    "onagre_number"
+  ],
+  "details": [
+
+  ],
+  "comment": null
+}"""
+    assert asdict(info) == json.loads(expected_json)

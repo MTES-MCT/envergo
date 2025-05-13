@@ -1,7 +1,6 @@
 import json
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from pathlib import Path
 from textwrap import dedent
 from typing import Any, List, Literal
@@ -49,7 +48,7 @@ class ItemDetails:
 @dataclass
 class Item:
     label: str
-    value: str | int | float | Decimal | ItemDetails
+    value: str | int | float | ItemDetails
     unit: str | None
     comment: str | None
 
