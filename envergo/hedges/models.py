@@ -12,7 +12,7 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
-    compute_density_around_point,
+    compute_hedge_density_around_point,
     get_department_from_coords,
 )
 
@@ -260,8 +260,8 @@ class HedgeData(models.Model):
         centroid_shapely = self.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
 
-        density_200 = compute_density_around_point(centroid_geos, 200)
-        density_5000 = compute_density_around_point(centroid_geos, 5000)
+        density_200 = compute_hedge_density_around_point(centroid_geos, 200)
+        density_5000 = compute_hedge_density_around_point(centroid_geos, 5000)
 
         return density_200, density_5000, centroid_geos
 

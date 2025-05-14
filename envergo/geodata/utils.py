@@ -541,7 +541,7 @@ def trim_imerged_land(geom):
         return trimmed_geom
 
 
-def compute_density_around_point(point_geos, radius):
+def compute_hedge_density_around_point(point_geos, radius):
     """Compute the density of hedges around a point."""
 
     # use specific projection to be able to use meters for buffering

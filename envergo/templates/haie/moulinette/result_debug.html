@@ -106,7 +106,7 @@
                     </tbody>
                   </table>
 
-                  {% include '_map_snippet.html' with map=density_map map_id="map-ep-density" %}
+                  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
                 {% endif %}
               </li>
             {% endfor %}
