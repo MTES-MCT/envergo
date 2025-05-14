@@ -12,7 +12,7 @@ from django.views.generic.edit import FormMixin, FormView
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
-from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
 
@@ -115,30 +115,10 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         try:
-            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-            form = self.get_form_class()(self.get_initial())
-            moulinette = None
-            if form.is_valid():
-                moulinette = MoulinetteClass(
-                    form.cleaned_data,
-                    form.data,
-                    self.should_activate_optional_criteria(),
-                )
-
             data = json.loads(request.body)
-            try:
-                hedge_data = HedgeData.objects.get(id=kwargs.get("id"))
-                hedge_data.data = data
-                created = False
-            except HedgeData.DoesNotExist:
-                hedge_data = HedgeData(id=kwargs.get("id"), data=data)
-                created = True
-
-            if moulinette and moulinette.requires_hedge_density:
-                hedge_data.compute_density()
-
-            hedge_data.save()
-
+            hedge_data, created = HedgeData.objects.update_or_create(
+                id=kwargs.get("id"), defaults={"data": data}
+            )
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),

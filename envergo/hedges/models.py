@@ -137,18 +137,10 @@ class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
-    density = models.JSONField(
-        verbose_name="Densité de haies existantes autour des haies à détruire",
-        default=dict,
-    )
 
     class Meta:
         verbose_name = "Hedge data"
         verbose_name_plural = "Hedge data"
-
-    def __init__(self, *args, **kwargs):
-        self.should_compute_density = kwargs.pop("should_compute_density", False)
-        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return str(self.id)
