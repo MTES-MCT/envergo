@@ -46,7 +46,7 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import MapFactory
+from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -779,10 +779,6 @@ class Criterion(models.Model):
             )
 
         return self._evaluator.result_tag_style
-
-    @property
-    def requires_hedge_density(self):
-        return self._evaluator.requires_hedge_density
 
 
 class Perimeter(models.Model):
@@ -2127,7 +2123,7 @@ class MoulinetteHaie(Moulinette):
     def requires_hedge_density(self):
         """Check if the moulinette requires the hedge density to be evaluated."""
         return any(
-            criterion.requires_hedge_density
+            isinstance(criterion._evaluator, HedgeDensityMixin)
             for regulation in self.regulations
             for criterion in regulation.criteria.all()
         )

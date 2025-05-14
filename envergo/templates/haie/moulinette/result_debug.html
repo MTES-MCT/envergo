@@ -76,7 +76,7 @@
                 {% if criterion.evaluator_settings.replantation_coefficient %}
                   R = {{ criterion.evaluator_settings.replantation_coefficient }}
                 {% endif %}
-                {% if criterion.requires_hedge_density %}
+                {% if criterion|requires_hedge_density %}
                   <br />
                   <h6>Densité de haie</h6>
                   <table>

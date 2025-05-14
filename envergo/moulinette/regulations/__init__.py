@@ -272,9 +272,6 @@ class CriterionEvaluator(ABC):
     # The form class to use to ask the admin for necessary settings
     settings_form_class = None
 
-    # Does this criterion need hedge density for its evaluation?
-    requires_hedge_density = False
-
     def __init__(self, moulinette, distance, settings):
         """Initialize the evaluator.
 
@@ -463,3 +460,9 @@ class SelfDeclarationMixin:
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
         return SELF_DECLARATION_ELIGIBILITY_MATRIX[self._result]
+
+
+class HedgeDensityMixin:
+    """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
+
+    pass
