@@ -134,9 +134,9 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 hedge_data = HedgeData(id=kwargs.get("id"), data=data)
                 created = True
 
-            hedge_data.should_compute_density = (
-                moulinette and moulinette.requires_hedge_density
-            )
+            if moulinette and moulinette.requires_hedge_density:
+                hedge_data.compute_density()
+
             hedge_data.save()
 
             response_data = {

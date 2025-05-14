@@ -80,8 +80,12 @@ class Map(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
-    expected_zones = models.IntegerField(_("Expected zones"), default=0)
-    imported_zones = models.IntegerField(_("Imported zones"), null=True, blank=True)
+    expected_geometries = models.IntegerField(
+        "Nb de formes (zones ou lignes) attendues", default=0
+    )
+    imported_geometries = models.IntegerField(
+        "Nb de formes (zones ou lignes) importées", null=True, blank=True
+    )
     import_status = models.CharField(
         _("Import status"), max_length=32, choices=STATUSES, null=True
     )

@@ -54,16 +54,16 @@ def process_map(task, map_id):
         logger.error(map.import_error_msg)
 
     # Update the map status and metadata
-    nb_imported_zones = max(map.zones.all().count(), map.lines.all().count())
-    if map.expected_zones == nb_imported_zones:
+    nb_imported_geometries = max(map.zones.all().count(), map.lines.all().count())
+    if map.expected_geometries == nb_imported_geometries:
         map.import_status = STATUSES.success
-    elif nb_imported_zones > 0:
+    elif nb_imported_geometries > 0:
         map.import_status = STATUSES.partial_success
     else:
         map.import_status = STATUSES.failure
 
     map.task_id = None
-    map.imported_zones = nb_imported_zones
+    map.imported_geometries = nb_imported_geometries
     map.import_date = timezone.now()
     map.save()
 

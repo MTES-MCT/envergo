@@ -1882,9 +1882,37 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         context = {}
-        if "haies" in self.catalog:
+        if "haies" in self.catalog and self.requires_hedge_density:
             haies = self.catalog["haies"]
-            context.update(haies.compute_density(create_map=True))
+            density_200, density_5000, centroid_geos = (
+                haies.compute_density_with_artifacts()
+            )
+            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+            context.update(
+                {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                }
+            )
+
+            if truncated_circle_200 and truncated_circle_5000:
+                # Create the density map
+                from envergo.hedges.services import create_density_map
+
+                density_map = create_density_map(
+                    centroid_geos,
+                    haies.hedges_to_remove(),
+                    truncated_circle_200,
+                    truncated_circle_5000,
+                )
+                context["density_map"] = density_map
+
         return context
 
     @classmethod

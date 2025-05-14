@@ -1,27 +1,20 @@
 import operator
 import uuid
 from functools import reduce
-from types import SimpleNamespace
 
-from django.contrib.gis.db.models import GeometryField
-from django.contrib.gis.db.models.functions import Intersection, Length
-from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
-from django.contrib.gis.measure import Distance
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Q, Sum
-from django.db.models.functions import Cast
+from django.db.models import Q
 from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString, centroid, union_all
 
-from envergo.geodata.models import MAP_TYPES, Line, Zone
+from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
-    get_best_epsg_for_location,
+    compute_density_around_point,
     get_department_from_coords,
-    trim_imerged_land,
 )
-from envergo.moulinette.regulations import Map, MapPolygon
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -268,145 +261,29 @@ class HedgeData(models.Model):
         local_species_codes = self.get_local_species_codes()
         return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
 
-    def compute_density(self, create_map=False):
-        """Compute the density of hedges around the hedges to remove."""
-        result = {
-            "length_200": None,
-            "length_5000": None,
-            "area_200_ha": None,
-            "area_5000_ha": None,
-            "density_200": None,
-            "density_5000": None,
-        }
+    def compute_density_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
         # get two circles at 200m and 5000m from the centroid of the hedges to remove
         centroid_shapely = self.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
 
-        # use specific projection to be able to use meters for buffering
-        epsg_utm = get_best_epsg_for_location(centroid_geos.x, centroid_geos.y)
-        centroid_meter = centroid_geos.transform(epsg_utm, clone=True)
-        circle_200 = centroid_meter.buffer(200)
-        circle_5000 = centroid_meter.buffer(5000)
+        density_200 = compute_density_around_point(centroid_geos, 200)
+        density_5000 = compute_density_around_point(centroid_geos, 5000)
 
-        circle_200 = circle_200.transform(
-            EPSG_WGS84, clone=True
-        )  # switch back to WGS84
-        circle_5000 = circle_5000.transform(EPSG_WGS84, clone=True)
+        return density_200, density_5000, centroid_geos
 
-        # remove the sea from the circles
-        truncated_circle_200 = trim_imerged_land(circle_200)
-        truncated_circle_5000 = trim_imerged_land(circle_5000)
-
-        if truncated_circle_200 and truncated_circle_5000:
-            # get the area of the circles
-            truncated_circle_200_m = truncated_circle_200.transform(
-                epsg_utm, clone=True
-            )  # use specific projection to compute the area in square meters
-            truncated_circle_5000_m = truncated_circle_5000.transform(
-                epsg_utm, clone=True
-            )
-
-            area_200 = truncated_circle_200_m.area
-            area_5000 = truncated_circle_5000_m.area
-            area_200_ha = area_200 * 0.0001
-            area_5000_ha = area_5000 * 0.0001
-
-            # get the length of the hedges in the circles
-            length_200 = (
-                Line.objects.filter(
-                    geometry__intersects=truncated_circle_200,
-                    map__map_type=MAP_TYPES.haies,
-                )
-                .annotate(clipped=Intersection("geometry", truncated_circle_200))
-                .annotate(length=Length(Cast("clipped", GeometryField())))
-                .aggregate(total=Sum("length"))["total"]
-            )
-            length_200 = length_200 if length_200 else Distance(0)
-            length_5000 = (
-                Line.objects.filter(
-                    geometry__intersects=truncated_circle_5000,
-                    map__map_type=MAP_TYPES.haies,
-                )
-                .annotate(clipped=Intersection("geometry", truncated_circle_5000))
-                .annotate(length=Length(Cast("clipped", GeometryField())))
-                .aggregate(total=Sum("length"))["total"]
-            )
-            length_5000 = length_5000 if length_5000 else Distance(0)
-            result["length_200"] = length_200.standard
-            result["length_5000"] = length_5000.standard
-            result["area_200_ha"] = area_200_ha
-            result["area_5000_ha"] = area_5000_ha
-            result["density_200"] = (
-                length_200.standard / area_200_ha if area_200_ha > 0 else 1000.0
-            )
-            result["density_5000"] = (
-                length_5000.standard / area_5000_ha if area_5000_ha > 0 else 1000.0
-            )
-
-            if create_map:
-                hedges_5000 = Line.objects.filter(
-                    map__name="haies_2024_dpt14_buffer5km",
-                    geometry__intersects=truncated_circle_5000,
-                ).select_related("map")
-
-                polygons = [
-                    MapPolygon(
-                        [SimpleNamespace(geometry=truncated_circle_200)],
-                        "orange",
-                        "200m",
-                    ),
-                    MapPolygon(
-                        [SimpleNamespace(geometry=truncated_circle_5000)],
-                        "blue",
-                        "5km",
-                    ),
-                    MapPolygon(
-                        [
-                            SimpleNamespace(
-                                geometry=MultiLineString(
-                                    [hedge.geometry for hedge in hedges_5000],
-                                    srid=EPSG_WGS84,
-                                )
-                            )
-                        ],
-                        "green",
-                        "Haies existantes",
-                    ),
-                    MapPolygon(
-                        [
-                            SimpleNamespace(
-                                geometry=GEOSGeometry(
-                                    hedge.geometry.wkt, srid=EPSG_WGS84
-                                )
-                            )
-                            for hedge in self.hedges_to_remove()
-                        ],
-                        "red",
-                        "Haies à détruire",
-                        class_name="hedge to-remove",
-                    ),
-                ]
-
-                map = Map(
-                    type="regulation",
-                    center=centroid_geos,
-                    entries=polygons,
-                    truncate=False,
-                    display_marker_at_center=True,
-                    zoom=None,
-                    ratio_classes="ratio-2x1 ratio-sm-4x5",
-                    fixed=False,
-                )
-
-                result["density_map"] = map
-
-        return result
-
-    def save(self, *args, **kwargs):
-        if self.should_compute_density:
-            self.density = self.compute_density()
-        super().save(*args, **kwargs)
+    def compute_density(self):
+        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
+        density_200, density_5000, _ = self.compute_density_with_artifacts()
+        self.density = {
+            "length_200": density_200["artifacts"]["length"],
+            "length_5000": density_5000["artifacts"]["length"],
+            "area_200_ha": density_200["artifacts"]["area_ha"],
+            "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "density_200": density_200["density"],
+            "density_5000": density_5000["density"],
+        }
 
 
 HEDGE_TYPES = (
