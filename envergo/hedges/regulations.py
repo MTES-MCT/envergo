@@ -309,7 +309,7 @@ class StrenghteningCondition(PlantationCondition):
 
     label = "Renforcement"
     valid_text = (
-        "Le renforcement ou regarnissage sur %(strenghtening_length)s m est suffisant."
+        "Le renforcement ou regarnissage sur %(strengthening_length)s m est suffisant."
     )
     invalid_text = """
         Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
@@ -342,6 +342,66 @@ class StrenghteningCondition(PlantationCondition):
             "strengthening_max": round(strengthening_max),
             "strengthening_length": round(strengthening_length),
             "strengthening_excess": round(strengthening_length - strengthening_max),
+        }
+        return self
+
+
+class LineaireInterchamp(PlantationCondition):
+    label = "Maintien des haies inter-champ"
+    valid_text = "Le linéaire de haies plantées en inter-champ est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées en inter-champ doit être supérieur à %(length_to_remove_interchamp)s m.
+        <br>Il manque au moins %(interchamp_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def interchamp_filter(h):
+            return h.prop("position") == "interchamp"
+
+        hedges_to_remove = filter(interchamp_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(interchamp_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0
+        self.context = {
+            "length_to_remove_interchamp": round(length_to_remove),
+            "length_to_plant interchamp": round(length_to_plant),
+            "interchamp_delta": round(max(0, delta)),
+        }
+        return self
+
+
+class LineaireSurTalusCondition(PlantationCondition):
+    label = "Maintien des haies sur talus"
+    valid_text = "Le linéaire de haies plantées sur talus est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées sur talus doit être supérieur à %(length_to_remove_talus)s m.
+        <br>Il manque au moins %(talus_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def talus_filter(h):
+            return h.prop("sur_talus")
+
+        hedges_to_remove = filter(talus_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(talus_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0
+        self.context = {
+            "length_to_remove_talus": round(length_to_remove),
+            "length_to_plant talus": round(length_to_plant),
+            "talus_delta": round(max(0, delta)),
         }
         return self
 
