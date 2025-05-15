@@ -27,14 +27,14 @@ PLANTATION_RESULT_MATRIX = {
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
     (RESULTS.soumis, PlantationResults.Adequate.value): RESULTS.soumis,
+    (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_soumis,
+    (RESULTS.non_soumis, PlantationResults.Inadequate.value): RESULTS.non_soumis,
     # not used for now
     (
         RESULTS.action_requise,
         PlantationResults.Inadequate.value,
     ): RESULTS.non_disponible,
     (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
-    (RESULTS.non_soumis, PlantationResults.Inadequate.value): RESULTS.non_disponible,
-    (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_disponible,
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
