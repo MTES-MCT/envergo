@@ -9,6 +9,7 @@ from envergo.hedges.regulations import (
 )
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
+    HedgeDensityMixin,
     ReplantationCoefficientMixin,
 )
 from envergo.utils.fields import get_human_readable_value
@@ -107,7 +108,9 @@ def get_hedge_details(hedge, r):
     }
 
 
-class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesNormandie(
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
