@@ -46,7 +46,7 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import MapFactory
+from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -1888,7 +1888,39 @@ class MoulinetteHaie(Moulinette):
         return summary
 
     def get_debug_context(self):
-        return {}
+        context = {}
+        if "haies" in self.catalog and self.requires_hedge_density:
+            haies = self.catalog["haies"]
+            density_200, density_5000, centroid_geos = (
+                haies.compute_density_with_artifacts()
+            )
+            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+            context.update(
+                {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                }
+            )
+
+            if truncated_circle_200 and truncated_circle_5000:
+                # Create the density map
+                from envergo.hedges.services import create_density_map
+
+                density_map = create_density_map(
+                    centroid_geos,
+                    haies.hedges_to_remove(),
+                    truncated_circle_200,
+                    truncated_circle_5000,
+                )
+                context["density_map"] = density_map
+
+        return context
 
     @classmethod
     def get_triage_params(cls):
@@ -2097,6 +2129,15 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
+
+    @property
+    def requires_hedge_density(self):
+        """Check if the moulinette requires the hedge density to be evaluated."""
+        return any(
+            isinstance(criterion._evaluator, HedgeDensityMixin)
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+        )
 
 
 def get_moulinette_class_from_site(site):

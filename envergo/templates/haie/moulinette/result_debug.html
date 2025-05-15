@@ -87,6 +87,38 @@
                   <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
+                {% if criterion|requires_hedge_density %}
+                  <br />
+                  <h6>Densité de haie</h6>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Rayon 200 m</th>
+                        <th scope="col">Rayon 5 km</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="row">Linéaire</th>
+                        <td>{{ length_200|floatformat:"0g" }} ml</td>
+                        <td>{{ length_5000|floatformat:"0g" }} ml</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Surface</th>
+                        <td>{{ area_200_ha|floatformat:"g" }} ha</td>
+                        <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Densité</th>
+                        <td>{{ density_200|floatformat:"g" }} ml/ha</td>
+                        <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+                {% endif %}
               </li>
             {% endfor %}
           </ul>

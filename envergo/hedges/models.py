@@ -2,7 +2,7 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
@@ -11,7 +11,10 @@ from pyproj import Geod
 from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
-from envergo.geodata.utils import get_department_from_coords
+from envergo.geodata.utils import (
+    compute_hedge_density_around_point,
+    get_department_from_coords,
+)
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -249,6 +252,30 @@ class HedgeData(models.Model):
         hedge_species_qs = self.get_hedge_species()
         local_species_codes = self.get_local_species_codes()
         return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
+
+    def compute_density_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
+
+        # get two circles at 200m and 5000m from the centroid of the hedges to remove
+        centroid_shapely = self.get_centroid_to_remove()
+        centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
+
+        density_200 = compute_hedge_density_around_point(centroid_geos, 200)
+        density_5000 = compute_hedge_density_around_point(centroid_geos, 5000)
+
+        return density_200, density_5000, centroid_geos
+
+    def compute_density(self):
+        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
+        density_200, density_5000, _ = self.compute_density_with_artifacts()
+        self.density = {
+            "length_200": density_200["artifacts"]["length"],
+            "length_5000": density_5000["artifacts"]["length"],
+            "area_200_ha": density_200["artifacts"]["area_ha"],
+            "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "density_200": density_200["density"],
+            "density_5000": density_5000["density"],
+        }
 
 
 HEDGE_TYPES = (
