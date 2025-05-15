@@ -12,7 +12,7 @@ import requests
 from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Intersection, Length
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
 from django.contrib.gis.measure import Distance
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
@@ -388,6 +388,49 @@ def simplify_map(map):
 
     logger.info("Preview generation is done")
     return polygon
+
+
+def simplify_lines(map):
+    """Generates a simplified MultiLineString for the entire map.
+
+    It uses the sames algorithms as `simplify_map`, but for lines instead of polygons.
+    """
+
+    logger.info("Generating map preview as MultiLineString")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+              ST_AsText(
+                ST_Multi(
+                  ST_CollectionExtract(
+                    ST_MakeValid(
+                      ST_Simplify(
+                        ST_Union(ST_MakeValid(l.geometry::geometry)),
+                        0.0001
+                      ),
+                      'method=structure keepcollapsed=false'
+                    ),
+                  2)
+                )::geography
+              )
+              AS lines
+            FROM geodata_line as l
+            WHERE l.map_id = %s
+            """,
+            [map.id],
+        )
+        row = cursor.fetchone()
+
+    lines = GEOSGeometry(row[0], srid=EPSG_WGS84)
+    if not isinstance(lines, MultiLineString):
+        logger.error(
+            f"The query did not generate the correct geometry type ({type(lines)})"
+        )
+
+    logger.info("Preview generation is done")
+    return lines
 
 
 def fill_polygon_stats():

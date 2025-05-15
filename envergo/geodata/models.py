@@ -68,7 +68,7 @@ class Map(models.Model):
             choices=DEPARTMENT_CHOICES,
         ),
     )
-    geometry = gis_models.MultiPolygonField(
+    geometry = gis_models.GeometryField(
         _("Simplified geometry"),
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,

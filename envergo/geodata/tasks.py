@@ -11,6 +11,7 @@ from envergo.geodata.utils import (
     make_polygons_valid,
     process_lines_file,
     process_zones_file,
+    simplify_lines,
     simplify_map,
 )
 
@@ -44,7 +45,8 @@ def process_map(task, map_id):
                 geom_type = layer.geom_type.name
                 if geom_type == "LineString":
                     process_lines_file(map, map_file, task)
-                elif geom_type == "Polygon":
+                    map.geometry = simplify_lines(map)
+                else:
                     process_zones_file(map, map_file, task)
                     make_polygons_valid(map)
                     map.geometry = simplify_map(map)
@@ -73,5 +75,9 @@ def generate_map_preview(task, map_id):
     logger.info(f"Starting preview generation on map {map_id}")
 
     map = Map.objects.get(pk=map_id)
-    map.geometry = simplify_map(map)
+    if map.zones.count() > 0:
+        map.geometry = simplify_map(map)
+    elif map.lines.count() > 0:
+        map.geometry = simplify_lines(map)
+
     map.save()
