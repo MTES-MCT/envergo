@@ -1,0 +1,34 @@
+{% load moulinette %}
+
+{% if not is_read_only %}
+  <h6>
+    ✅ <strong>La demande de déclaration est prête à être complétée</strong>
+  </h6>
+
+  <p>
+    Le guichet unique vous permet de déposer votre demande à l'administration en un seul dossier.
+    Le dossier est pré-rempli avec les résultats de cette simulation.
+  </p>
+
+  <p>
+    Une fois la demande déposée, les services instructeurs examineront le projet.
+    Ils pourront vous contacter pour obtenir des compléments d’information.
+  </p>
+
+  <p>
+    Prochaine étape :
+    <button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-external-link-line"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="demarches-simplifiees-modal">Déposer une déclaration</button>
+  </p>
+{% else %}
+  <h6>
+    ✅ <strong>La déclaration est en cours.</strong>
+  </h6>
+
+  <p>
+    Une fois la déclaration déposée, les services instructeurs examineront le projet.
+    Ils pourront vous contacter pour obtenir des compléments d’information.
+  </p>
+{% endif %}
