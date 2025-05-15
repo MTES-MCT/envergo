@@ -2,6 +2,8 @@ from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
+    LineaireInterchamp,
+    LineaireSurTalusCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -90,7 +92,12 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition, StrenghteningCondition]
+    plantation_conditions = [
+        SafetyCondition,
+        StrenghteningCondition,
+        LineaireSurTalusCondition,
+        LineaireInterchamp,
+    ]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
