@@ -81,6 +81,9 @@ def calvados_hedge_data():
                     "sur_parcelle_pac": True,
                     "proximite_point_eau": False,
                     "connexion_boisement": False,
+                    "sur_talus": True,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
                 },
             },
             {
@@ -215,3 +218,19 @@ def test_multiple_hedges_combine_their_species():
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
     all_species = hedges.get_all_species()
     assert set(all_species) == set([s2, s3, s4])
+
+
+def test_hedge_to_plant_pac_depends_on_plantation_mode(calvados_hedge_data):
+    # mode_plantation is "plantation", hedges is taken into account for pac min length
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 1
+
+    # hedges with other plantation modes are excluded
+    calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 0
+
+    # We ignore the property altogether if it's not set
+    del calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"]
+    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    assert len(hedges) == 1
