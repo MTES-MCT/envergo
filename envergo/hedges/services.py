@@ -3,14 +3,20 @@ from decimal import Decimal as D
 from enum import Enum
 from itertools import product
 from operator import attrgetter
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Literal
 
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString
+
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeData
+from envergo.geodata.models import MAP_TYPES, Line
+from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.regulations import MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
+from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
+    from envergo.hedges.models import HedgeData
     from envergo.moulinette.models import MoulinetteHaie
 
 
@@ -85,6 +91,62 @@ def get_replantation_coefficient(moulinette):
     return float(R)
 
 
+def create_density_map(
+    centroid_geos, hedges_to_remove, truncated_circle_200, truncated_circle_5000
+):
+    hedges_5000 = Line.objects.filter(
+        map__map_type=MAP_TYPES.haies,
+        geometry__intersects=truncated_circle_5000,
+    )
+
+    polygons = [
+        MapPolygon(
+            [SimpleNamespace(geometry=truncated_circle_200)],
+            "orange",
+            "200m",
+        ),
+        MapPolygon(
+            [SimpleNamespace(geometry=truncated_circle_5000)],
+            "blue",
+            "5km",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=MultiLineString(
+                        [hedge.geometry for hedge in hedges_5000],
+                        srid=EPSG_WGS84,
+                    )
+                )
+            ],
+            "green",
+            "Haies existantes",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                )
+                for hedge in hedges_to_remove
+            ],
+            "red",
+            "Haies à détruire",
+            class_name="hedge to-remove",
+        ),
+    ]
+
+    return Map(
+        type="regulation",
+        center=centroid_geos,
+        entries=polygons,
+        truncate=False,
+        display_marker_at_center=True,
+        zoom=None,
+        ratio_classes="ratio-2x1 ratio-sm-4x5",
+        fixed=False,
+    )
+
+
 @dataclass
 class EvaluationResult:
     result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
@@ -98,7 +160,7 @@ class PlantationEvaluator:
     The plantation evaluator is used to evaluate if a project is compliant with the regulation.
     """
 
-    def __init__(self, moulinette: "MoulinetteHaie", hedge_data: HedgeData):
+    def __init__(self, moulinette: "MoulinetteHaie", hedge_data: "HedgeData"):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
         self.replantation_coefficient = get_replantation_coefficient(moulinette)

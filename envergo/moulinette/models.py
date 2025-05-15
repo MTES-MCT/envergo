@@ -46,7 +46,7 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import MapFactory
+from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -790,10 +790,6 @@ class Criterion(models.Model):
             )
 
         return self._evaluator.result_tag_style
-
-    @property
-    def requires_hedge_density(self):
-        return self._evaluator.requires_hedge_density
 
 
 class Perimeter(models.Model):
@@ -1893,9 +1889,37 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         context = {}
-        if "haies" in self.catalog:
+        if "haies" in self.catalog and self.requires_hedge_density:
             haies = self.catalog["haies"]
-            context.update(haies.compute_density(create_map=True))
+            density_200, density_5000, centroid_geos = (
+                haies.compute_density_with_artifacts()
+            )
+            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+            context.update(
+                {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                }
+            )
+
+            if truncated_circle_200 and truncated_circle_5000:
+                # Create the density map
+                from envergo.hedges.services import create_density_map
+
+                density_map = create_density_map(
+                    centroid_geos,
+                    haies.hedges_to_remove(),
+                    truncated_circle_200,
+                    truncated_circle_5000,
+                )
+                context["density_map"] = density_map
+
         return context
 
     @classmethod
@@ -2106,7 +2130,7 @@ class MoulinetteHaie(Moulinette):
     def requires_hedge_density(self):
         """Check if the moulinette requires the hedge density to be evaluated."""
         return any(
-            criterion.requires_hedge_density
+            isinstance(criterion._evaluator, HedgeDensityMixin)
             for regulation in self.regulations
             for criterion in regulation.criteria.all()
         )

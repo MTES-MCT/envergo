@@ -9,12 +9,16 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 import requests
+from django.contrib.gis.db.models import GeometryField
+from django.contrib.gis.db.models.functions import Intersection, Length
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
+from django.contrib.gis.measure import Distance
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
+from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
@@ -137,7 +141,7 @@ def count_features(map_file):
 
 def process_geographic_file(map, lm, task):
     if task:
-        debug_stream = CeleryDebugStream(task, map.expected_zones)
+        debug_stream = CeleryDebugStream(task, map.expected_geometries)
     else:
         debug_stream = sys.stdout
 
@@ -386,6 +390,49 @@ def simplify_map(map):
     return polygon
 
 
+def simplify_lines(map):
+    """Generates a simplified MultiLineString for the entire map.
+
+    It uses the sames algorithms as `simplify_map`, but for lines instead of polygons.
+    """
+
+    logger.info("Generating map preview as MultiLineString")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+              ST_AsText(
+                ST_Multi(
+                  ST_CollectionExtract(
+                    ST_MakeValid(
+                      ST_Simplify(
+                        ST_Union(ST_MakeValid(l.geometry::geometry)),
+                        0.0001
+                      ),
+                      'method=structure keepcollapsed=false'
+                    ),
+                  2)
+                )::geography
+              )
+              AS lines
+            FROM geodata_line as l
+            WHERE l.map_id = %s
+            """,
+            [map.id],
+        )
+        row = cursor.fetchone()
+
+    lines = GEOSGeometry(row[0], srid=EPSG_WGS84)
+    if not isinstance(lines, MultiLineString):
+        logger.error(
+            f"The query did not generate the correct geometry type ({type(lines)})"
+        )
+
+    logger.info("Preview generation is done")
+    return lines
+
+
 def fill_polygon_stats():
     """Update the main obj with stats from the geometry field.
 
@@ -535,3 +582,53 @@ def trim_imerged_land(geom):
         else:
             trimmed_geom = None
         return trimmed_geom
+
+
+def compute_hedge_density_around_point(point_geos, radius):
+    """Compute the density of hedges around a point."""
+
+    # use specific projection to be able to use meters for buffering
+    epsg_utm = get_best_epsg_for_location(point_geos.x, point_geos.y)
+    centroid_meter = point_geos.transform(epsg_utm, clone=True)
+    circle = centroid_meter.buffer(radius)
+
+    circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
+
+    # remove the sea from the circles
+    truncated_circle = trim_imerged_land(circle)
+
+    if truncated_circle:
+        truncated_circle_m = truncated_circle.transform(
+            epsg_utm, clone=True
+        )  # use specific projection to compute the area in square meters
+
+        area = truncated_circle_m.area
+        area_ha = area * 0.0001
+
+        # get the length of the hedges in the circles
+        length = (
+            Line.objects.filter(
+                geometry__intersects=truncated_circle,
+                map__map_type=MAP_TYPES.haies,
+            )
+            .annotate(clipped=Intersection("geometry", truncated_circle))
+            .annotate(length=Length(Cast("clipped", GeometryField())))
+            .aggregate(total=Sum("length"))["total"]
+        )
+        length = length if length else Distance(0)
+
+        density = length.standard / area_ha if area_ha > 0 else 1000.0
+    else:
+        # there is no land in the circle (e.g. sea or foreign country)
+        length = Distance(0)
+        area_ha = 0.0
+        density = 1000.0
+
+    return {
+        "density": density,
+        "artifacts": {
+            "truncated_circle": truncated_circle,
+            "length": length.standard,
+            "area_ha": area_ha,
+        },
+    }

@@ -87,7 +87,7 @@
                   <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
-                {% if criterion.requires_hedge_density %}
+                {% if criterion|requires_hedge_density %}
                   <br />
                   <h6>Densité de haie</h6>
                   <table>
@@ -117,7 +117,7 @@
                     </tbody>
                   </table>
 
-                  {% include '_map_snippet.html' with map=density_map map_id="map-ep-density" %}
+                  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
                 {% endif %}
               </li>
             {% endfor %}

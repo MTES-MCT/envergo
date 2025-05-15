@@ -76,8 +76,8 @@ class MapAdmin(gis_admin.GISModelAdmin):
     readonly_fields = [
         "created_at",
         "zone_count",
-        "expected_zones",
-        "imported_zones",
+        "expected_geometries",
+        "imported_geometries",
         "import_status",
         "import_date",
         "task_status",
@@ -103,7 +103,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         # So we only can (and need) to extract the file to count the expected features
         # if a new file is uploaded and is currently being processed on the server
         if isinstance(obj.file.file, TemporaryUploadedFile):
-            obj.expected_zones = count_features(obj.file.file)
+            obj.expected_geometries = count_features(obj.file.file)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
@@ -198,12 +198,12 @@ class MapAdmin(gis_admin.GISModelAdmin):
         ),
     )
     def col_zones(self, obj):
-        if obj.imported_zones is None:
+        if obj.imported_geometries is None:
             imported = "ND"
         else:
-            imported = obj.imported_zones
+            imported = obj.imported_geometries
 
-        return f'{imported} / {obj.expected_zones or ""}'
+        return f'{imported} / {obj.expected_geometries or ""}'
 
     @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
