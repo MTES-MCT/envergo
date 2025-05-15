@@ -97,7 +97,7 @@ def create_density_map(
     hedges_5000 = Line.objects.filter(
         map__map_type=MAP_TYPES.haies,
         geometry__intersects=truncated_circle_5000,
-    ).select_related("map")
+    )
 
     polygons = [
         MapPolygon(
