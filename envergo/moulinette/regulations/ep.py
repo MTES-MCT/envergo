@@ -7,6 +7,8 @@ from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
+    LineaireInterchamp,
+    LineaireSurTalusCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -114,7 +116,12 @@ class EspecesProtegeesNormandie(
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition, StrenghteningCondition]
+    plantation_conditions = [
+        SafetyCondition,
+        StrenghteningCondition,
+        LineaireSurTalusCondition,
+        LineaireInterchamp,
+    ]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
