@@ -9,7 +9,7 @@ from typing import Literal
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import GEOSGeometry, Point
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -2010,9 +2010,7 @@ class MoulinetteHaie(Moulinette):
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
         if hedges_to_remove:
             zone_subquery = self.get_zone_subquery(hedges_to_remove)
@@ -2044,9 +2042,7 @@ class MoulinetteHaie(Moulinette):
 
         dept_centroid = self.department.centroid
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
 
         # Filter for department_centroid activation mode
@@ -2077,7 +2073,7 @@ class MoulinetteHaie(Moulinette):
     def get_zone_subquery(self, hedges_to_remove):
         query = Q()
         for hedge in hedges_to_remove:
-            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
+            query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
             Q(map_id=OuterRef("activation_map_id")) & query
