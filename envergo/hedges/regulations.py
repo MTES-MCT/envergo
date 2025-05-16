@@ -305,7 +305,7 @@ class StrenghteningCondition(PlantationCondition):
 
     label = "Renforcement"
     valid_text = (
-        "Le renforcement ou regarnissage sur %(strengthening_length)s m est suffisant."
+        "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
     )
     invalid_text = """
         Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
@@ -320,14 +320,18 @@ class StrenghteningCondition(PlantationCondition):
             self.result = None
             return self
 
-        length_to_plant = self.hedge_data.length_to_plant()
-        length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
-
         strengthening_length = 0.0
         for hedge in self.hedge_data.hedges_to_plant():
             if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
                 strengthening_length += hedge.length
+
+        if strengthening_length == 0.0:
+            self.result = None
+            return self
+
+        length_to_plant = self.hedge_data.length_to_plant()
+        length_to_remove = self.hedge_data.length_to_remove()
+        minimum_length_to_plant = length_to_remove * self.R
 
         strengthening_max = minimum_length_to_plant * self.RATE
         self.result = strengthening_length <= strengthening_max
@@ -337,7 +341,8 @@ class StrenghteningCondition(PlantationCondition):
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "strengthening_max": round(strengthening_max),
             "strengthening_length": round(strengthening_length),
-            "strengthening_excess": round(strengthening_length - strengthening_max),
+            "strengthening_excess": round(strengthening_length)
+            - round(strengthening_max),
         }
         return self
 
