@@ -27,7 +27,7 @@ ALL_HEDGE_PROPERTIES = dict(HEDGE_PROPERTIES).keys()
 def process_species_map_file(task, object_id):
     """Process a single SpeciesMapFile objects.
 
-    This scripts import the file data and associatets Species with Maps.
+    This scripts import the file data and associates Species with Maps.
     """
     logger.info(f"Starting import on species map file {object_id}")
 

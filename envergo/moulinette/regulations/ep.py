@@ -3,9 +3,12 @@ from decimal import Decimal as D
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
+    LineaireInterchamp,
+    LineaireSurTalusCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
+    StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
@@ -115,8 +118,12 @@ class EspecesProtegeesNormandie(
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition]
-    requires_hedge_density = True
+    plantation_conditions = [
+        SafetyCondition,
+        StrenghteningCondition,
+        LineaireSurTalusCondition,
+        LineaireInterchamp,
+    ]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,

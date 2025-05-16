@@ -8,9 +8,110 @@ from envergo.hedges.regulations import (
     MinLengthPacCondition,
     QualityCondition,
     SafetyCondition,
+    StrenghteningCondition,
 )
+from envergo.hedges.tests.factories import HedgeDataFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def calvados_hedge_data():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "degradee",
+                    "position": "interchamp",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694364, "lng": 3.615415},
+                    {"lat": 43.694094, "lng": 3.615085},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "degradee",
+                    "position": "interchamp",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "D3",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694347, "lng": 3.615455},
+                    {"lat": 43.694144, "lng": 3.615210},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "degradee",
+                    "position": "interchamp",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_plantation": "plantation",
+                    "type_haie": "alignement",
+                    "essences_non_bocageres": False,
+                    "sur_parcelle_pac": False,
+                    "position": "interchamp",
+                    "proximite_mare": False,
+                    "sous_ligne_electrique": False,
+                    "sur_talus": False,
+                },
+            },
+            {
+                "id": "P2",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_plantation": "plantation",
+                    "type_haie": "alignement",
+                    "essences_non_bocageres": False,
+                    "sur_parcelle_pac": False,
+                    "position": "interchamp",
+                    "proximite_mare": False,
+                    "sous_ligne_electrique": False,
+                    "sur_talus": False,
+                },
+            },
+        ]
+    )
+    return hedge_data
 
 
 def test_minimum_length_condition():
@@ -170,3 +271,26 @@ def test_hedge_quality_should_not_be_sufficient():
         "buissonante": 5,
         "degradee": 10,
     }
+
+
+def test_strengthening_condition(calvados_hedge_data):
+    hedge_data = calvados_hedge_data
+    catalog = {"reimplantation": "replantation"}
+
+    condition = StrenghteningCondition(hedge_data, 1.0, catalog)
+    condition.evaluate()
+    assert condition.result
+    assert condition.context["strengthening_length"] == 0.0
+    assert condition.context["strengthening_excess"] < 0.0
+
+    hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
+    hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
+
+    condition = StrenghteningCondition(hedge_data, 1.0, catalog)
+    condition.evaluate()
+    assert not condition.result
+    assert condition.context["length_to_plant"] == 100.0
+    assert condition.context["length_to_remove"] == 120.0
+    assert condition.context["strengthening_max"] == 24.0  # 120 * 0.2
+    assert condition.context["strengthening_length"] == 100.0
+    assert condition.context["strengthening_excess"] == 76.0

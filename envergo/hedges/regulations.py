@@ -20,9 +20,14 @@ class PlantationCondition(ABC):
     # prevent the template engine to instanciate the class
     do_not_call_in_templates = True
 
-    def __init__(self, hedge_data, R):
+    # We want to display the raw class in the debug template, so we need to
+    # prevent the template engine to instanciate the class
+    do_not_call_in_templates = True
+
+    def __init__(self, hedge_data, R, catalog=None):
         self.hedge_data = hedge_data
         self.R = R
+        self.catalog = catalog or {}
 
     def must_display(self):
         """Should the condition be displayed?
@@ -303,6 +308,108 @@ class SafetyCondition(PlantationCondition):
         return self
 
 
+class StrenghteningCondition(PlantationCondition):
+    RATE = 0.2
+
+    label = "Renforcement"
+    valid_text = (
+        "Le renforcement ou regarnissage sur %(strengthening_length)s m est suffisant."
+    )
+    invalid_text = """
+        Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
+        <br>Il y a %(strengthening_excess)s m en excès.
+    """
+
+    def evaluate(self):
+        is_remplacement = self.catalog.get("reimplantation") == "remplacement"
+        length_to_plant = self.hedge_data.length_to_plant()
+
+        if length_to_plant == 0 or is_remplacement:
+            self.result = None
+            return self
+
+        length_to_plant = self.hedge_data.length_to_plant()
+        length_to_remove = self.hedge_data.length_to_remove()
+        minimum_length_to_plant = length_to_remove * self.R
+
+        strengthening_length = 0.0
+        for hedge in self.hedge_data.hedges_to_plant():
+            if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
+                strengthening_length += hedge.length
+
+        strengthening_max = minimum_length_to_plant * self.RATE
+        self.result = strengthening_length <= strengthening_max
+        self.context = {
+            "length_to_plant": round(length_to_plant),
+            "length_to_remove": round(length_to_remove),
+            "minimum_length_to_plant": round(minimum_length_to_plant),
+            "strengthening_max": round(strengthening_max),
+            "strengthening_length": round(strengthening_length),
+            "strengthening_excess": round(strengthening_length - strengthening_max),
+        }
+        return self
+
+
+class LineaireInterchamp(PlantationCondition):
+    label = "Maintien des haies inter-champ"
+    valid_text = "Le linéaire de haies plantées en inter-champ est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées en inter-champ doit être supérieur à %(length_to_remove_interchamp)s m.
+        <br>Il manque au moins %(interchamp_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def interchamp_filter(h):
+            return h.prop("position") == "interchamp"
+
+        hedges_to_remove = filter(interchamp_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(interchamp_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0
+        self.context = {
+            "length_to_remove_interchamp": round(length_to_remove),
+            "length_to_plant interchamp": round(length_to_plant),
+            "interchamp_delta": round(max(0, delta)),
+        }
+        return self
+
+
+class LineaireSurTalusCondition(PlantationCondition):
+    label = "Maintien des haies sur talus"
+    valid_text = "Le linéaire de haies plantées sur talus est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées sur talus doit être supérieur à %(length_to_remove_talus)s m.
+        <br>Il manque au moins %(talus_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def talus_filter(h):
+            return h.prop("sur_talus")
+
+        hedges_to_remove = filter(talus_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(talus_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0
+        self.context = {
+            "length_to_remove_talus": round(length_to_remove),
+            "length_to_plant talus": round(length_to_plant),
+            "talus_delta": round(max(0, delta)),
+        }
+        return self
+
+
 class PlantationConditionMixin:
     """A mixin for a criterion evaluator with hedge replantation conditions.
 
@@ -316,9 +423,9 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, hedge_data, R):
+    def plantation_evaluate(self, hedge_data, R, catalog=None):
         results = [
-            condition(hedge_data, R).evaluate()
+            condition(hedge_data, R, catalog or {}).evaluate()
             for condition in self.plantation_conditions
         ]
         return results
