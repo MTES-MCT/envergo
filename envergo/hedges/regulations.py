@@ -8,13 +8,11 @@ class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
-    result: bool
+    result: bool  # if None, the condition will be filtered out
     order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
-    # If set, those values will be displayed in the debug template
-    debug_context: dict = dict()
 
     # We want to display the raw class in the debug template, so we need to
     # prevent the template engine to instanciate the class
@@ -68,13 +66,11 @@ class MinLengthCondition(PlantationCondition):
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
+            "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
-        }
-        self.debug_context = {
-            "R": self.R,
         }
         return self
 
@@ -313,7 +309,7 @@ class StrenghteningCondition(PlantationCondition):
 
     label = "Renforcement"
     valid_text = (
-        "Le renforcement ou regarnissage sur %(strengthening_length)s m est suffisant."
+        "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
     )
     invalid_text = """
         Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
@@ -328,14 +324,18 @@ class StrenghteningCondition(PlantationCondition):
             self.result = None
             return self
 
-        length_to_plant = self.hedge_data.length_to_plant()
-        length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
-
         strengthening_length = 0.0
         for hedge in self.hedge_data.hedges_to_plant():
             if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
                 strengthening_length += hedge.length
+
+        if strengthening_length == 0.0:
+            self.result = None
+            return self
+
+        length_to_plant = self.hedge_data.length_to_plant()
+        length_to_remove = self.hedge_data.length_to_remove()
+        minimum_length_to_plant = length_to_remove * self.R
 
         strengthening_max = minimum_length_to_plant * self.RATE
         self.result = strengthening_length <= strengthening_max
@@ -345,7 +345,8 @@ class StrenghteningCondition(PlantationCondition):
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "strengthening_max": round(strengthening_max),
             "strengthening_length": round(strengthening_length),
-            "strengthening_excess": round(strengthening_length - strengthening_max),
+            "strengthening_excess": round(strengthening_length)
+            - round(strengthening_max),
         }
         return self
 
