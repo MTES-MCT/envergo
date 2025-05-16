@@ -222,6 +222,7 @@ class PlantationEvaluator:
                         )
                     )
 
+        conditions = filter(lambda c: c.result is not None, conditions)
         self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (
             PlantationResults.Adequate.value

@@ -8,7 +8,7 @@ class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
-    result: bool
+    result: bool  # if None, the condition will be filtered out
     order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
