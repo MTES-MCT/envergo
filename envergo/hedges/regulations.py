@@ -13,8 +13,6 @@ class PlantationCondition(ABC):
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
-    # If set, those values will be displayed in the debug template
-    debug_context: dict = dict()
 
     # We want to display the raw class in the debug template, so we need to
     # prevent the template engine to instanciate the class
@@ -64,13 +62,11 @@ class MinLengthCondition(PlantationCondition):
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
+            "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
-        }
-        self.debug_context = {
-            "R": self.R,
         }
         return self
 
