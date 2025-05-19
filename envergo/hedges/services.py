@@ -248,6 +248,7 @@ class PlantationEvaluator:
         data = [
             {
                 "label": condition.label,
+                "hint": condition.hint,
                 "result": condition.result,
                 "text": condition.text,
                 "context": condition.context,
