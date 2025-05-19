@@ -181,6 +181,9 @@
                 </div>
                 <div>
                   <h6>[[ condition.label ]]</h6>
+                  <p v-if="condition.hint">
+                    <span class="fr-hint-text fr-mb-1w" v-html="condition.hint"></span>
+                  </p>
                   <p v-html="condition.text"></p>
                 </div>
               </div>

@@ -13,6 +13,7 @@ class PlantationCondition(ABC):
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
+    hint: str = ""
 
     # We want to display the raw class in the debug template, so we need to
     # prevent the template engine to instanciate the class
@@ -311,23 +312,22 @@ class StrenghteningCondition(PlantationCondition):
         Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
         <br>Il y a %(strengthening_excess)s m en excès.
     """
+    hint = """
+        La compensation peut consister en un renforcement ou regarnissage de haies
+        existantes, dans la limite de 20% du linéaire total à planter.
+    """
 
     def evaluate(self):
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
-        length_to_plant = self.hedge_data.length_to_plant()
-
-        if length_to_plant == 0 or is_remplacement:
+        if is_remplacement:
             self.result = None
             return self
 
+        length_to_plant = self.hedge_data.length_to_plant()
         strengthening_length = 0.0
         for hedge in self.hedge_data.hedges_to_plant():
             if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
                 strengthening_length += hedge.length
-
-        if strengthening_length == 0.0:
-            self.result = None
-            return self
 
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
