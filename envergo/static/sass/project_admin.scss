@@ -64,3 +64,10 @@ fieldset.module.recipients:has(input[type="checkbox"]:checked)
   #no-recipients-message {
   display: none;
 }
+
+/* Users *
+ * */
+
+a#add_id_departments {
+  display: none;
+}

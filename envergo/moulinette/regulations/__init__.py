@@ -439,6 +439,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.derogation_inventaire: False,
     RESULTS.derogation_simplifiee: False,
     RESULTS.dispense: False,
+    RESULTS.dispense_sous_condition: False,
 }
 
 
@@ -460,3 +461,9 @@ class SelfDeclarationMixin:
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
         return SELF_DECLARATION_ELIGIBILITY_MATRIX[self._result]
+
+
+class HedgeDensityMixin:
+    """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
+
+    pass

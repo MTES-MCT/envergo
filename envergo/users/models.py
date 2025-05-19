@@ -52,6 +52,13 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
+    departments = models.ManyToManyField(
+        "geodata.Department",
+        verbose_name=_("Departements"),
+        related_name="members",
+        blank=True,
+    )
+
     username = None  # type: ignore
     first_name = None  # type: ignore
     last_name = None  # type: ignore
@@ -66,3 +73,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    @property
+    def is_instructor(self):
+        """Check if user is instructor.
+
+        Returns True when
+        - user.is_active = True
+        - user.access_haie = True
+        - user.is_confirmed_by_admin = True
+        """
+        return all((self.is_active, self.access_haie, self.is_confirmed_by_admin))
