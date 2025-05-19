@@ -44,7 +44,7 @@
          class="fr-btn fr-btn--secondary"
          rel="noopener external">Voir le résultat de la simulation</a>
     {% elif item|is_type:"Title" %}
-      <h3 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h3>
+      <h4 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h4>
     {% elif item|is_type:"Item" %}
       <span><b>{{ item.label }} :</b></span>
 

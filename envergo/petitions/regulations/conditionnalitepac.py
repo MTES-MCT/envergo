@@ -40,24 +40,6 @@ def bcae8_get_instructors_info(
                 None,
                 None,
             ),
-            Item(
-                "Total linéaire exploitation déclaré",
-                floatformat(lineaire_total, "0g"),
-                "m",
-                None,
-            ),
-            Item(
-                "Total linéaire détruit",
-                floatformat(lineaire_detruit_pac, "0g"),
-                "m",
-                None,
-            ),
-            Item(
-                "Total linéaire planté",
-                floatformat(lineaire_to_plant_pac, "0g"),
-                "m",
-                None,
-            ),
         ],
         simulation_data=[
             Item(
@@ -83,7 +65,7 @@ def bcae8_get_instructors_info(
             )
 
     if lineaire_detruit_pac:
-        bcae8.simulation_data.append(
+        bcae8.key_elements.append(
             GroupedItems(
                 label="Destruction",
                 items=[
@@ -125,7 +107,7 @@ def bcae8_get_instructors_info(
         )
 
     if lineaire_to_plant_pac:
-        bcae8.simulation_data.append(
+        bcae8.key_elements.append(
             GroupedItems(
                 label="Plantation",
                 items=[

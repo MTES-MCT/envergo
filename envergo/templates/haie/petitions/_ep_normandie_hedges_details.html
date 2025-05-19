@@ -20,8 +20,8 @@
                 <td>{{ hedge.id }}</td>
                 <td>{{ hedge.hedge_type }}</td>
                 <td>{{ hedge.properties }}</td>
-                <td>{{ hedge.length|floatformat:"g" }} m</td>
-                <td>{{ hedge.r }}</td>
+                <td>{{ hedge.length|floatformat:"0g" }} m</td>
+                <td>{{ hedge.r|floatformat:"1g" }}</td>
               </tr>
             {% endfor %}
           </tbody>

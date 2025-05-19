@@ -377,7 +377,7 @@ def compute_instructor_informations(
                 )
                 if bcae8:
                     bcae8.key_elements.insert(
-                        0, Item("N° PACAGE", ds_details.pacage, None, None)
+                        1, Item("N° PACAGE", ds_details.pacage, None, None)
                     )
 
     return ProjectDetails(
