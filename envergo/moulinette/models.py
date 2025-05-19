@@ -9,7 +9,7 @@ from typing import Literal
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import GEOSGeometry, Point
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -46,7 +46,7 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import MapFactory
+from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -98,6 +98,7 @@ RESULT_CASCADE = [
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
+    RESULTS.dispense_sous_condition,
     RESULTS.non_soumis,
     RESULTS.dispense,
     RESULTS.non_concerne,
@@ -121,6 +122,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.soumis: RESULTS.soumis,
     RESULTS.derogation_inventaire: RESULTS.soumis,
     RESULTS.derogation_simplifiee: RESULTS.soumis,
+    RESULTS.dispense_sous_condition: RESULTS.soumis,
     RESULTS.action_requise: RESULTS.action_requise,
     RESULTS.a_verifier: RESULTS.action_requise,
     RESULTS.iota_a_verifier: RESULTS.action_requise,
@@ -170,6 +172,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.dispense_sous_condition: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
     RESULTS.dispense: ResultGroupEnum.OtherRegulations,
     RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
@@ -691,6 +694,14 @@ class Criterion(models.Model):
         self.moulinette = moulinette
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
+
+    def get_evaluator(self):
+        """Return the evaluator instance.
+
+        This method is useful because templates cannot access properties starting
+        with an underscore.
+        """
+        return self._evaluator
 
     @property
     def result_code(self):
@@ -1877,7 +1888,39 @@ class MoulinetteHaie(Moulinette):
         return summary
 
     def get_debug_context(self):
-        return {}
+        context = {}
+        if "haies" in self.catalog and self.requires_hedge_density:
+            haies = self.catalog["haies"]
+            density_200, density_5000, centroid_geos = (
+                haies.compute_density_with_artifacts()
+            )
+            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+            context.update(
+                {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                }
+            )
+
+            if truncated_circle_200 and truncated_circle_5000:
+                # Create the density map
+                from envergo.hedges.services import create_density_map
+
+                density_map = create_density_map(
+                    centroid_geos,
+                    haies.hedges_to_remove(),
+                    truncated_circle_200,
+                    truncated_circle_5000,
+                )
+                context["density_map"] = density_map
+
+        return context
 
     @classmethod
     def get_triage_params(cls):
@@ -1967,9 +2010,7 @@ class MoulinetteHaie(Moulinette):
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
         if hedges_to_remove:
             zone_subquery = self.get_zone_subquery(hedges_to_remove)
@@ -2001,9 +2042,7 @@ class MoulinetteHaie(Moulinette):
 
         dept_centroid = self.department.centroid
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
 
         # Filter for department_centroid activation mode
@@ -2034,7 +2073,7 @@ class MoulinetteHaie(Moulinette):
     def get_zone_subquery(self, hedges_to_remove):
         query = Q()
         for hedge in hedges_to_remove:
-            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
+            query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
             Q(map_id=OuterRef("activation_map_id")) & query
@@ -2086,6 +2125,15 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
+
+    @property
+    def requires_hedge_density(self):
+        """Check if the moulinette requires the hedge density to be evaluated."""
+        return any(
+            isinstance(criterion._evaluator, HedgeDensityMixin)
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+        )
 
 
 def get_moulinette_class_from_site(site):

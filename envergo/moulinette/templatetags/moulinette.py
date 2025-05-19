@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.regulations import HedgeDensityMixin
 
 register = template.Library()
 
@@ -286,3 +287,8 @@ def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
         content = ""
 
     return content
+
+
+@register.filter
+def requires_hedge_density(criterion):
+    return isinstance(criterion._evaluator, HedgeDensityMixin)

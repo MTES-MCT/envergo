@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.models import Department, Map, Zone
+from envergo.geodata.models import Department, Line, Map, Zone
 from envergo.geodata.tasks import generate_map_preview, process_map
 from envergo.geodata.utils import count_features, extract_map
 
@@ -76,8 +76,8 @@ class MapAdmin(gis_admin.GISModelAdmin):
     readonly_fields = [
         "created_at",
         "zone_count",
-        "expected_zones",
-        "imported_zones",
+        "expected_geometries",
+        "imported_geometries",
         "import_status",
         "import_date",
         "task_status",
@@ -103,7 +103,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         # So we only can (and need) to extract the file to count the expected features
         # if a new file is uploaded and is currently being processed on the server
         if isinstance(obj.file.file, TemporaryUploadedFile):
-            obj.expected_zones = count_features(obj.file.file)
+            obj.expected_geometries = count_features(obj.file.file)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
@@ -123,11 +123,14 @@ class MapAdmin(gis_admin.GISModelAdmin):
         and would crash the entire server.
         """
         zone_count = Zone.objects.filter(map__in=objs).count()
+        line_count = Line.objects.filter(map__in=objs).count()
         deleted_objects = [str(map) for map in objs]
         deleted_objects.append(f"{zone_count} zones associées")
+        deleted_objects.append(f"{line_count} lignes associées")
         model_count = {
             "Cartes": len(objs),
             "Zones": zone_count,
+            "Lignes": line_count,
         }
         perms_needed = set()
         protected = {}
@@ -195,12 +198,12 @@ class MapAdmin(gis_admin.GISModelAdmin):
         ),
     )
     def col_zones(self, obj):
-        if obj.imported_zones is None:
+        if obj.imported_geometries is None:
             imported = "ND"
         else:
-            imported = obj.imported_zones
+            imported = obj.imported_geometries
 
-        return f'{imported} / {obj.expected_zones or ""}'
+        return f'{imported} / {obj.expected_geometries or ""}'
 
     @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
@@ -278,6 +281,34 @@ class ZoneAdmin(gis_admin.GISModelAdmin):
         "npoints",
     ]
     readonly_fields = ["map", "created_at", "area", "npoints", "attributes"]
+    list_filter = ["map__map_type", "map__data_type"]
+
+    # Prevent an expensive count query
+    show_full_result_count = False
+
+    @admin.display(description=_("Data type"))
+    def map_type(self, obj):
+        return obj.map.get_map_type_display()
+
+    @admin.display(description=_("Data certainty"))
+    def data_type(self, obj):
+        return obj.map.get_data_type_display()
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("map").defer("geometry", "map__geometry")
+
+
+@admin.register(Line)
+class LineAdmin(gis_admin.GISModelAdmin):
+    list_display = [
+        "id",
+        "map",
+        "created_at",
+        "map_type",
+        "data_type",
+    ]
+    readonly_fields = ["map", "created_at", "attributes"]
     list_filter = ["map__map_type", "map__data_type"]
 
     # Prevent an expensive count query
