@@ -26,16 +26,28 @@ class PlantationResults(Enum):
 
 
 PLANTATION_RESULT_MATRIX = {
-    (RESULTS.interdit,   PlantationResults.Inadequate.value): RESULTS.interdit,
-    (RESULTS.interdit,   PlantationResults.Adequate.value): RESULTS.interdit,
-    (RESULTS.soumis,     PlantationResults.Inadequate.value): PlantationResults.Inadequate.value,
-    (RESULTS.soumis,     PlantationResults.Adequate.value): RESULTS.soumis,
+    (RESULTS.interdit, PlantationResults.Inadequate.value): RESULTS.interdit,
+    (RESULTS.interdit, PlantationResults.Adequate.value): RESULTS.interdit,
+    (
+        RESULTS.soumis,
+        PlantationResults.Inadequate.value,
+    ): PlantationResults.Inadequate.value,
+    (RESULTS.soumis, PlantationResults.Adequate.value): RESULTS.soumis,
     (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_soumis,
-    (RESULTS.non_soumis, PlantationResults.Inadequate.value): PlantationResults.Inadequate.value,
+    (
+        RESULTS.non_soumis,
+        PlantationResults.Inadequate.value,
+    ): PlantationResults.Inadequate.value,
     # not used for now:
-    (RESULTS.action_requise,PlantationResults.Inadequate.value): RESULTS.non_disponible,
-    (RESULTS.action_requise,PlantationResults.Adequate.value): RESULTS.non_disponible,
-    (RESULTS.non_disponible,PlantationResults.Inadequate.value): RESULTS.non_disponible,
+    (
+        RESULTS.action_requise,
+        PlantationResults.Inadequate.value,
+    ): RESULTS.non_disponible,
+    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    (
+        RESULTS.non_disponible,
+        PlantationResults.Inadequate.value,
+    ): RESULTS.non_disponible,
     (RESULTS.non_disponible, PlantationResults.Adequate.value): RESULTS.non_disponible,
 }
 
