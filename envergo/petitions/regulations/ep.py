@@ -1,4 +1,5 @@
 from django.forms import ChoiceField
+from django.template.defaultfilters import floatformat
 from django.utils.module_loading import import_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
@@ -28,14 +29,14 @@ def ep_normandie_get_instructors_info(
         Title("Calcul de la compensation attendue"),
         Item(
             "Coefficient compensation primaire",
-            float(evaluator.get_replantation_coefficient()),
+            floatformat(evaluator.get_replantation_coefficient(), "1g"),
             None,
             None,
         ),
         "hedges_compensation_details",
         Item(
             "Coefficient compensation réduit grâce au projet de plantation",
-            float(evaluator.get_replantation_coefficient()),
+            floatformat(evaluator.get_replantation_coefficient(), "1g"),
             None,
             None,
         ),
@@ -53,7 +54,7 @@ def ep_aisne_get_instructors_info(
         1,
         Item(
             "Coefficient compensation",
-            float(evaluator.get_replantation_coefficient()),
+            floatformat(evaluator.get_replantation_coefficient(), "1g"),
             None,
             None,
         ),
@@ -204,6 +205,6 @@ def reduce_hedges_properties_to_displayable_items(
 
 
 def get_hedges_length_and_names(hedges):
-    return f"{round(sum(h.length for h in hedges))} m " + (
+    return f"{floatformat(sum(h.length for h in hedges), "0g")} m " + (
         f" • {', '.join([h.id for h in hedges])}" if hedges else ""
     )
