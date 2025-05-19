@@ -22,7 +22,7 @@ test('User can request an evaluation', async ({ page }) => {
   await page.getByLabel('Adresse(s) e-mail Pé').fill('test@porteur.fr');
   await page.getByRole('button', { name: 'Poursuivre votre demande d\'' }).click();
   await page.getByRole('button', { name: 'Envoyer votre demande d\'avis' }).click();
-  await expect(page).toHaveTitle("Votre demande d'avis réglementaire a été enregistrée — EnvErgo");
+  await expect(page).toHaveTitle("Votre demande d'avis réglementaire a été enregistrée — Envergo");
   await expect(page.getByText('Nous avons bien reçu votre demande d\'avis réglementaire.')).toBeVisible();
 
 });

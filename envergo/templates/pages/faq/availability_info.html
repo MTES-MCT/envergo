@@ -7,12 +7,12 @@
 {% block faq_content %}
   <h1>Départements disponibles</h1>
   <p class="fr-text--lead">
-    EnvErgo a vocation à être disponible sur l’ensemble du territoire français, mais se déploie progressivement, en coordination avec les DDT(M) et DREAL de chaque territoire.
+    Envergo a vocation à être disponible sur l’ensemble du territoire français, mais se déploie progressivement, en coordination avec les DDT(M) et DREAL de chaque territoire.
   </p>
 
   {% include "_department_opt_in.html" %}
 
-  <h2>Départements où EnvErgo est disponible</h2>
+  <h2>Départements où Envergo est disponible</h2>
 
   <ul>
     {% for config in configs_available %}<li>{{ config.department }}</li>{% endfor %}
