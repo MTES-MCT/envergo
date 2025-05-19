@@ -7,6 +7,7 @@ from typing import Any, List, Literal
 
 import requests
 from django.conf import settings
+from django.template.defaultfilters import floatformat
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
@@ -128,21 +129,22 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
     for hedge in hedge_data.hedges_to_remove():
         hedge_to_remove_by_destruction_mode[hedge.mode_destruction].append(hedge)
 
-    hedge_to_plant_by_plantation_mode = {
-        key: [] for key, _, _ in MODE_PLANTATION_CHOICES
-    }
-
-    for hedge in hedge_data.hedges_to_plant():
-        hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
-
     hedge_to_plant_properties_form = import_string(
         moulinette.config.hedge_to_plant_properties_form
     )
     if "mode_plantation" in hedge_to_plant_properties_form.base_fields:
+        hedge_to_plant_by_plantation_mode = {
+            key: [] for key, _, _ in MODE_PLANTATION_CHOICES
+        }
+
+        for hedge in hedge_data.hedges_to_plant():
+            if hedge.mode_plantation is not None:
+                hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
+
         plantation_details = [
             Item(
                 "Total linéaire à planter, renforcer ou reconnecter",
-                round(length_to_plant),
+                floatformat(length_to_plant, "0g"),
                 "m",
                 None,
             ),
@@ -155,7 +157,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                             label={
                                 key: value for key, _, value in MODE_PLANTATION_CHOICES
                             }.get(mode, "Inconnue"),
-                            value=f"{round(sum(h.length for h in hedges_by_mode))} m "
+                            value=f"{floatformat(sum(h.length for h in hedges_by_mode), "0g")} m "
                             + (
                                 f" • {', '.join([h.id for h in hedges_by_mode])}"
                                 if hedges_by_mode
@@ -173,7 +175,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
             Item(
                 "Ratio de replantation, renforcement ou reconnexion",
                 (
-                    round(length_to_plant / length_to_remove, 2)
+                    floatformat(length_to_plant / length_to_remove, "2g")
                     if length_to_remove
                     else ""
                 ),
@@ -183,13 +185,13 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
             Item(
                 "Ratio de replantation uniquement",
                 (
-                    round(
+                    floatformat(
                         sum(
                             h.length
                             for h in hedge_to_plant_by_plantation_mode["plantation"]
                         )
                         / length_to_remove,
-                        2,
+                        "2g",
                     )
                     if length_to_remove
                     else ""
@@ -200,11 +202,16 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
         ]
     else:
         plantation_details = [
-            Item("Total linéaire à planter", round(length_to_plant), "m", None),
+            Item(
+                "Total linéaire à planter",
+                floatformat(length_to_plant, "0g"),
+                "m",
+                None,
+            ),
             Item(
                 "Ratio de replantation",
                 (
-                    round(length_to_plant / length_to_remove, 2)
+                    floatformat(length_to_plant / length_to_remove, "2g")
                     if length_to_remove
                     else ""
                 ),
@@ -222,7 +229,10 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                 label="Destruction",
                 items=[
                     Item(
-                        "Total linéaire à détruire", round(length_to_remove), "m", None
+                        "Total linéaire à détruire",
+                        floatformat(length_to_remove, "0g"),
+                        "m",
+                        None,
                     ),
                     Item(
                         "Mode de destruction",
@@ -233,7 +243,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                                     label=dict(MODE_DESTRUCTION_CHOICES).get(
                                         mode, "Inconnue"
                                     ),
-                                    value=f"{round(sum(h.length for h in hedges_by_mode))} m "
+                                    value=f"{floatformat(sum(h.length for h in hedges_by_mode), "0g")} m "
                                     + (
                                         f" • {', '.join([h.id for h in hedges_by_mode])}"
                                         if hedges_by_mode
@@ -255,7 +265,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
                 items=[
                     Item(
                         "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
+                        floatformat(len(hedge_data.hedges_to_plant()), "0g"),
                         None,
                         None,
                     ),
@@ -283,7 +293,7 @@ def compute_instructor_informations(
     # Build notes instruction
     notes_instruction = InstructorInformation(
         slug="instructor_free_mention",
-        label="Note libre pour l'instruction",
+        label="Notes libres pour l'instruction",
         key_elements=None,
         simulation_data=None,
         other_items=["instructor_free_mention"],
@@ -367,7 +377,7 @@ def compute_instructor_informations(
                 )
                 if bcae8:
                     bcae8.key_elements.insert(
-                        0, Item("N° PACAGE", ds_details.pacage, None, None)
+                        1, Item("N° PACAGE", ds_details.pacage, None, None)
                     )
 
     return ProjectDetails(

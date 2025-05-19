@@ -101,6 +101,25 @@ def calvados_hedge_data():
                     "connexion_boisement": True,
                 },
             },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 49.187352065574956, "lng": -0.3704711099047931},
+                    {"lat": 49.18668239258037, "lng": -0.3712706187247817},
+                ],
+                "additionalData": {
+                    "mode_plantation": "plantation",
+                    "type_haie": "mixte",
+                    "vieil_arbre": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": True,
+                    "sur_talus": True,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                    "sous_ligne_electrique": False,
+                },
+            },
         ]
     )
     return hedge_data

@@ -254,112 +254,192 @@ def test_ep_aisne_get_instructors_info(france_map):  # noqa
         moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
     )
 
-    expected_json = """{"comment": null,
- "key_elements": ["onagre_number"],
- "label": "Espèces protégées",
- "other_items": null,
- "simulation_data": [{"label": "Calcul de la compensation attendue"},
-                     {"comment": null,
-                      "label": "Coefficient compensation",
-                      "unit": null,
-                      "value": 1.5},
-                     {"label": "Situation des haies"},
-                     {"comment": null,
-                      "label": "Située sur une parcelle PAC",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "28\xa0m  • D1"},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "28\xa0m  • P1"}],
-                                "display_result": true,
-                                "result": true}},
-                     {"comment": null,
-                      "label": "Inter-champ",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "28\xa0m  • D1"},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "28\xa0m  • P1"}],
-                                "display_result": true,
-                                "result": true}},
-                     {"comment": null,
-                      "label": "Bordure de voirie ouverte à la circulation",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "0\xa0m "},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "0\xa0m "}],
-                                "display_result": true,
-                                "result": false}},
-                     {"comment": null,
-                      "label": "Autre (bord de chemin, bâtiment…)",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "0\xa0m "},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "0\xa0m "}],
-                                "display_result": true,
-                                "result": false}},
-                     {"comment": null,
-                      "label": "Mare à moins de 200\xa0m",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "0\xa0m "},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "0\xa0m "}],
-                                "display_result": true,
-                                "result": false}},
-                     {"comment": null,
-                      "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "28\xa0m  • D1"}],
-                                "display_result": true,
-                                "result": true}},
-                     {"comment": null,
-                      "label": "Connectée à un boisement ou à une autre haie",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "0\xa0m "},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "28\xa0m  • P1"}],
-                                "display_result": true,
-                                "result": true}},
-                     {"comment": null,
-                      "label": "Mare ou ruisseau à moins de 10\xa0m",
-                      "unit": null,
-                      "value": {"details": [{"label": "Destruction",
-                                             "unit": null,
-                                             "value": "0\xa0m "},
-                                            {"label": "Plantation",
-                                             "unit": null,
-                                             "value": "28\xa0m  • P1"}],
-                                "display_result": true,
-                                "result": true}},
-                     {"comment": null,
-                      "label": "Sous une ligne électrique ou téléphonique",
-                      "unit": null,
-                      "value": {"details": [{"label": "Plantation",
-                                             "unit": null,
-                                             "value": "0\xa0m "}],
-                                "display_result": true,
-                                "result": false}},
-                     {"label": "Liste des espèces"},
-                     "protected_species"],
- "slug": "ep"}"""
+    expected_json = """{
+  "slug": "ep",
+  "label": "Esp\\u00e8ces prot\\u00e9g\\u00e9es",
+  "key_elements": [
+
+  ],
+  "simulation_data": [
+    {
+      "label": "Caract\\u00e9ristiques des haies"
+    },
+    {
+      "label": "Inter-champ",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Bordure de voirie ouverte \\u00e0 la circulation",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Autre (bord de chemin, b\\u00e2timent\\u2026)",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare \\u00e0 moins de 200\\u00a0m",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Contient un ou plusieurs vieux arbres, fissur\\u00e9s ou avec cavit\\u00e9s",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Connect\\u00e9e \\u00e0 un boisement ou \\u00e0 une autre haie",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare ou ruisseau \\u00e0 moins de 10\\u00a0m",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Sous une ligne \\u00e9lectrique ou t\\u00e9l\\u00e9phonique",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Calcul de la compensation attendue"
+    },
+    {
+      "label": "Coefficient compensation",
+      "value": "1,5",
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Liste des esp\\u00e8ces"
+    },
+    "onagre_number",
+    "protected_species"
+  ],
+  "other_items": null,
+  "comment": null
+}"""
     assert asdict(info) == json.loads(expected_json)
 
 
@@ -438,41 +518,11 @@ def test_ep_normandie_get_instructors_info(france_map):  # noqa
   "slug": "ep",
   "label": "Esp\\u00e8ces prot\\u00e9g\\u00e9es",
   "key_elements": [
-    "onagre_number"
+
   ],
   "simulation_data": [
     {
-      "label": "Calcul de la compensation attendue"
-    },
-    {
-      "label": "Coefficient compensation",
-      "value": 2.0,
-      "unit": null,
-      "comment": null
-    },
-    {
-      "label": "Situation des haies"
-    },
-    {
-      "label": "Situ\\u00e9e sur une parcelle PAC",
-      "value": {
-        "result": true,
-        "details": [
-          {
-            "label": "Destruction",
-            "value": "28\\u00a0m  \\u2022 D1",
-            "unit": null
-          },
-          {
-            "label": "Plantation",
-            "value": "28\\u00a0m  \\u2022 P1",
-            "unit": null
-          }
-        ],
-        "display_result": true
-      },
-      "unit": null,
-      "comment": null
+      "label": "Caract\\u00e9ristiques des haies"
     },
     {
       "label": "Inter-champ",
@@ -649,8 +699,18 @@ def test_ep_normandie_get_instructors_info(france_map):  # noqa
       "comment": null
     },
     {
+      "label": "Calcul de la compensation attendue"
+    },
+    {
+      "label": "Coefficient compensation",
+      "value": "2,0",
+      "unit": null,
+      "comment": null
+    },
+    {
       "label": "Liste des esp\\u00e8ces"
     },
+    "onagre_number",
     "protected_species"
   ],
   "other_items": null,
@@ -738,37 +798,11 @@ def test_bcae8_get_instructors_info(france_map):  # noqa
       "comment": null
     },
     {
-      "label": "Total lin\\u00e9aire exploitation d\\u00e9clar\\u00e9",
-      "value": "",
-      "unit": "m",
-      "comment": null
-    },
-    {
-      "label": "Total lin\\u00e9aire d\\u00e9truit",
-      "value": 28,
-      "unit": "m",
-      "comment": null
-    },
-    {
-      "label": "Total lin\\u00e9aire plant\\u00e9",
-      "value": 28,
-      "unit": "m",
-      "comment": null
-    }
-  ],
-  "simulation_data": [
-    {
-      "label": "Total lin\\u00e9aire exploitation d\\u00e9clar\\u00e9",
-      "value": "",
-      "unit": "m",
-      "comment": null
-    },
-    {
       "label": "Destruction",
       "items": [
         {
           "label": "Total lin\\u00e9aire \\u00e0 d\\u00e9truire sur parcelle PAC",
-          "value": 28,
+          "value": "28",
           "unit": "m",
           "comment": null
         },
@@ -791,7 +825,7 @@ def test_bcae8_get_instructors_info(france_map):  # noqa
       "items": [
         {
           "label": "Total lin\\u00e9aire \\u00e0 planter sur parcelle PAC",
-          "value": 28,
+          "value": "28",
           "unit": "m",
           "comment": null
         },
@@ -803,11 +837,19 @@ def test_bcae8_get_instructors_info(france_map):  # noqa
         },
         {
           "label": "Ratio de replantation",
-          "value": 1.0,
+          "value": "1,00",
           "unit": null,
           "comment": "Lin\\u00e9aire \\u00e0 planter / lin\\u00e9aire \\u00e0 d\\u00e9truire, sur parcelle PAC"
         }
       ]
+    }
+  ],
+  "simulation_data": [
+    {
+      "label": "Total lin\\u00e9aire exploitation d\\u00e9clar\\u00e9",
+      "value": "",
+      "unit": "m",
+      "comment": null
     }
   ],
   "other_items": null,

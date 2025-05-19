@@ -36,7 +36,7 @@
                 aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
       </div>
     {% elif item == "hedges_compensation_details" %}
-      {% include 'haie/petitions/_ep_normandie_hedges_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
+      {% include 'haie/petitions/_hedges_compensation_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
     {% elif item == "open_simulation_cta" %}
       <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
          href="{{ project_url }}"
@@ -44,7 +44,7 @@
          class="fr-btn fr-btn--secondary"
          rel="noopener external">Voir le résultat de la simulation</a>
     {% elif item|is_type:"Title" %}
-      <h3 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h3>
+      <h4 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h4>
     {% elif item|is_type:"Item" %}
       <span><b>{{ item.label }} :</b></span>
 

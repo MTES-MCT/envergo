@@ -1,4 +1,5 @@
 from django.forms import ChoiceField
+from django.template.defaultfilters import floatformat
 from django.utils.module_loading import import_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
@@ -8,7 +9,7 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesNormandie,
     EspecesProtegeesSimple,
 )
-from envergo.petitions.regulations import register_instructors_information
+from envergo.petitions.regulations import evaluator_instructors_information_getter
 from envergo.petitions.services import (
     AdditionalInfo,
     InstructorInformation,
@@ -19,50 +20,57 @@ from envergo.petitions.services import (
 from envergo.utils.fields import get_human_readable_value
 
 
-@register_instructors_information(EspecesProtegeesNormandie)
+@evaluator_instructors_information_getter(EspecesProtegeesNormandie)
 def ep_normandie_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
     ep = ep_base_get_instructors_info(evaluator, petition_project, moulinette)
-    ep.simulation_data = [
-        Title("Calcul de la compensation attendue"),
-        Item(
-            "Coefficient compensation primaire",
-            float(evaluator.get_replantation_coefficient()),
-            None,
-            None,
-        ),
-        "hedges_compensation_details",
-        Item(
-            "Coefficient compensation réduit grâce au projet de plantation",
-            float(evaluator.get_replantation_coefficient()),
-            None,
-            None,
-        ),
-    ] + ep.simulation_data
+    ep.simulation_data = (
+        ep.simulation_data[:-3]
+        + [
+            Title("Calcul de la compensation attendue"),
+            Item(
+                "Coefficient compensation primaire",
+                floatformat(evaluator.get_replantation_coefficient(), "1g"),
+                None,
+                "C'est-à-dire hors réduction permise par le projet de plantation",
+            ),
+            "hedges_compensation_details",
+            Item(
+                "Coefficient compensation réduit grâce au projet de plantation",
+                floatformat(evaluator.get_replantation_coefficient(), "1g"),
+                None,
+                None,
+            ),
+        ]
+        + ep.simulation_data[-3:]
+    )
     return ep
 
 
-@register_instructors_information(EspecesProtegeesAisne)
+@evaluator_instructors_information_getter(EspecesProtegeesAisne)
 def ep_aisne_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
     ep = ep_base_get_instructors_info(evaluator, petition_project, moulinette)
-    ep.simulation_data.insert(0, Title("Calcul de la compensation attendue"))
-    ep.simulation_data.insert(
-        1,
-        Item(
-            "Coefficient compensation",
-            float(evaluator.get_replantation_coefficient()),
-            None,
-            None,
-        ),
+    ep.simulation_data = (
+        ep.simulation_data[:-3]
+        + [
+            Title("Calcul de la compensation attendue"),
+            Item(
+                "Coefficient compensation",
+                floatformat(evaluator.get_replantation_coefficient(), "1g"),
+                None,
+                None,
+            ),
+        ]
+        + ep.simulation_data[-3:]
     )
 
     return ep
 
 
-@register_instructors_information(EspecesProtegeesSimple)
+@evaluator_instructors_information_getter(EspecesProtegeesSimple)
 def ep_simple_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
@@ -80,11 +88,12 @@ def ep_base_get_instructors_info(
     ep = InstructorInformation(
         slug="ep",
         label="Espèces protégées",
-        key_elements=["onagre_number"],
+        key_elements=[],
         simulation_data=[
-            Title("Situation des haies"),
+            Title("Caractéristiques des haies"),
             *hedges_properties_items,
             Title("Liste des espèces"),
+            "onagre_number",
             "protected_species",
         ],
     )
@@ -98,7 +107,12 @@ def reduce_hedges_properties_to_displayable_items(
 
     # First create an intermediate data structure to aggregate the hedges properties
     hedges_properties = {}
-    black_list = ["mode_plantation", "mode_destruction", "type_haie"]
+    black_list = [
+        "mode_plantation",
+        "mode_destruction",
+        "type_haie",
+        "sur_parcelle_pac",
+    ]
     hedge_to_plant_properties_form = import_string(
         moulinette.config.hedge_to_plant_properties_form
     )
@@ -204,6 +218,6 @@ def reduce_hedges_properties_to_displayable_items(
 
 
 def get_hedges_length_and_names(hedges):
-    return f"{round(sum(h.length for h in hedges))} m " + (
+    return f"{floatformat(sum(h.length for h in hedges), "0g")} m " + (
         f" • {', '.join([h.id for h in hedges])}" if hedges else ""
     )

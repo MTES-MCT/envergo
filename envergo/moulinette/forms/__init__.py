@@ -1,4 +1,5 @@
 from django import forms
+from django.template.defaultfilters import floatformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -233,7 +234,8 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
     def get_display_value(self, value):
         data = self.clean(value)
         display_value = (
-            f"{round(data.length_to_remove())} m / {round(data.length_to_plant())} m"
+            f"{floatformat(data.length_to_remove(), "0g")} m / "
+            f"{floatformat(data.length_to_plant(), "0g")} m"
         )
         return display_value
 

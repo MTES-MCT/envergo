@@ -1,13 +1,14 @@
+from django.template.defaultfilters import floatformat
 from django.utils.module_loading import import_string
 
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8, Bcae8Form
-from envergo.petitions.regulations import register_instructors_information
+from envergo.petitions.regulations import evaluator_instructors_information_getter
 from envergo.petitions.services import GroupedItems, InstructorInformation, Item
 
 
-@register_instructors_information(Bcae8)
+@evaluator_instructors_information_getter(Bcae8)
 def bcae8_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
@@ -39,22 +40,14 @@ def bcae8_get_instructors_info(
                 None,
                 None,
             ),
-            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
-            Item(
-                "Total linéaire détruit",
-                round(lineaire_detruit_pac),
-                "m",
-                None,
-            ),
-            Item(
-                "Total linéaire planté",
-                round(lineaire_to_plant_pac),
-                "m",
-                None,
-            ),
         ],
         simulation_data=[
-            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
+            Item(
+                "Total linéaire exploitation déclaré",
+                floatformat(lineaire_total, "0g"),
+                "m",
+                None,
+            ),
         ],
     )
 
@@ -72,13 +65,13 @@ def bcae8_get_instructors_info(
             )
 
     if lineaire_detruit_pac:
-        bcae8.simulation_data.append(
+        bcae8.key_elements.append(
             GroupedItems(
                 label="Destruction",
                 items=[
                     Item(
                         "Total linéaire à détruire sur parcelle PAC",
-                        round(lineaire_detruit_pac),
+                        floatformat(lineaire_detruit_pac, "0g"),
                         "m",
                         None,
                     ),
@@ -87,7 +80,7 @@ def bcae8_get_instructors_info(
                         (
                             ", ".join(
                                 [
-                                    f"{round(h.length)} m ⋅ {h.id}"
+                                    f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
                                     for h in hedge_data.hedges_to_remove_pac()
                                 ]
                             )
@@ -100,7 +93,9 @@ def bcae8_get_instructors_info(
                     Item(
                         "Pourcentage linéaire à détruire / total linéaire exploitation",
                         (
-                            round(lineaire_detruit_pac / lineaire_total * 100, 2)
+                            floatformat(
+                                lineaire_detruit_pac / lineaire_total * 100, "2g"
+                            )
                             if lineaire_total
                             else ""
                         ),
@@ -112,13 +107,13 @@ def bcae8_get_instructors_info(
         )
 
     if lineaire_to_plant_pac:
-        bcae8.simulation_data.append(
+        bcae8.key_elements.append(
             GroupedItems(
                 label="Plantation",
                 items=[
                     Item(
                         "Total linéaire à planter sur parcelle PAC",
-                        round(lineaire_to_plant_pac),
+                        floatformat(lineaire_to_plant_pac, "0g"),
                         "m",
                         None,
                     ),
@@ -127,7 +122,7 @@ def bcae8_get_instructors_info(
                         (
                             ", ".join(
                                 [
-                                    f"{round(h.length)} m ⋅ {h.id}"
+                                    f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
                                     for h in hedge_data.hedges_to_plant_pac()
                                 ]
                             )
@@ -140,9 +135,9 @@ def bcae8_get_instructors_info(
                     Item(
                         "Ratio de replantation",
                         (
-                            round(
+                            floatformat(
                                 lineaire_to_plant_pac / lineaire_detruit_pac,
-                                2,
+                                "2g",
                             )
                             if lineaire_detruit_pac > 0
                             else ""
