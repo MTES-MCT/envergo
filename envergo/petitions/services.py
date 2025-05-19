@@ -127,17 +127,18 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
     for hedge in hedge_data.hedges_to_remove():
         hedge_to_remove_by_destruction_mode[hedge.mode_destruction].append(hedge)
 
-    hedge_to_plant_by_plantation_mode = {
-        key: [] for key, _, _ in MODE_PLANTATION_CHOICES
-    }
-
-    for hedge in hedge_data.hedges_to_plant():
-        hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
-
     hedge_to_plant_properties_form = import_string(
         moulinette.config.hedge_to_plant_properties_form
     )
     if "mode_plantation" in hedge_to_plant_properties_form.base_fields:
+        hedge_to_plant_by_plantation_mode = {
+            key: [] for key, _, _ in MODE_PLANTATION_CHOICES
+        }
+
+        for hedge in hedge_data.hedges_to_plant():
+            if hedge.mode_plantation is not None:
+                hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
+
         plantation_details = [
             Item(
                 "Total linéaire à planter, renforcer ou reconnecter",
