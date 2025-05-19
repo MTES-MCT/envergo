@@ -37,7 +37,7 @@ class PetitionProjectInstructorForm(forms.ModelForm):
                 },
             ),
         }
-        labels = {"instructor_free_mention": "Notes libres pour l'instructeur"}
+        labels = {"instructor_free_mention": ""}
         help_texts = {
             "instructor_free_mention": "Partagez ici tout ce qui est utile à votre suivi de la demande, "
             "ou à la collaboration entre services instructeurs. "
