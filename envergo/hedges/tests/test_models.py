@@ -7,7 +7,6 @@ from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
-    SpeciesFactory,
     SpeciesMapFactory,
 )
 
