@@ -383,7 +383,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
     def get_replantation_coefficient(self):
         R = self.R_MATRIX.get(self._result_code, D("1"))
         haies = self.catalog["haies"]
-        minimum_length_to_plant = D(str(haies.lineaire_detruit_pac())) * R
+        minimum_length_to_plant = D(haies.lineaire_detruit_pac()) * R
         if haies.length_to_remove() > 0:
-            R = minimum_length_to_plant / D(str(haies.length_to_remove()))
+            R = minimum_length_to_plant / D(haies.length_to_remove())
         return R
