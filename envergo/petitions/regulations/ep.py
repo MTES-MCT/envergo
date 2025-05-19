@@ -9,7 +9,7 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesNormandie,
     EspecesProtegeesSimple,
 )
-from envergo.petitions.regulations import register_instructors_information
+from envergo.petitions.regulations import evaluator_instructors_information_getter
 from envergo.petitions.services import (
     AdditionalInfo,
     InstructorInformation,
@@ -20,7 +20,7 @@ from envergo.petitions.services import (
 from envergo.utils.fields import get_human_readable_value
 
 
-@register_instructors_information(EspecesProtegeesNormandie)
+@evaluator_instructors_information_getter(EspecesProtegeesNormandie)
 def ep_normandie_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
@@ -48,7 +48,7 @@ def ep_normandie_get_instructors_info(
     return ep
 
 
-@register_instructors_information(EspecesProtegeesAisne)
+@evaluator_instructors_information_getter(EspecesProtegeesAisne)
 def ep_aisne_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
@@ -70,7 +70,7 @@ def ep_aisne_get_instructors_info(
     return ep
 
 
-@register_instructors_information(EspecesProtegeesSimple)
+@evaluator_instructors_information_getter(EspecesProtegeesSimple)
 def ep_simple_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
