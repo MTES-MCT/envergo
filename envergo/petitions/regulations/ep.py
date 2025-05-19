@@ -5,6 +5,7 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
+    EspecesProtegeesNormandie,
     EspecesProtegeesSimple,
 )
 from envergo.petitions.regulations import register_instructors_information
@@ -15,17 +16,61 @@ from envergo.petitions.services import (
     ItemDetails,
     Title,
 )
+from envergo.utils.fields import get_human_readable_value
 
 
-def get_human_readable_value(field, key):
-    for choice_key, human_readable in field.choices:
-        if choice_key == key:
-            return human_readable
-    return None
+@register_instructors_information(EspecesProtegeesNormandie)
+def ep_normandie_get_instructors_info(
+    evaluator, petition_project, moulinette
+) -> InstructorInformation:
+    ep = ep_base_get_instructors_info(evaluator, petition_project, moulinette)
+    ep.simulation_data = [
+        Title("Calcul de la compensation attendue"),
+        Item(
+            "Coefficient compensation primaire",
+            float(evaluator.get_replantation_coefficient()),
+            None,
+            None,
+        ),
+        "hedges_compensation_details",
+        Item(
+            "Coefficient compensation réduit grâce au projet de plantation",
+            float(evaluator.get_replantation_coefficient()),
+            None,
+            None,
+        ),
+    ] + ep.simulation_data
+    return ep
 
 
 @register_instructors_information(EspecesProtegeesAisne)
 def ep_aisne_get_instructors_info(
+    evaluator, petition_project, moulinette
+) -> InstructorInformation:
+    ep = ep_base_get_instructors_info(evaluator, petition_project, moulinette)
+    ep.simulation_data.insert(0, Title("Calcul de la compensation attendue"))
+    ep.simulation_data.insert(
+        1,
+        Item(
+            "Coefficient compensation",
+            float(evaluator.get_replantation_coefficient()),
+            None,
+            None,
+        ),
+    )
+
+    return ep
+
+
+@register_instructors_information(EspecesProtegeesSimple)
+def ep_simple_get_instructors_info(
+    evaluator, petition_project, moulinette
+) -> InstructorInformation:
+    """Build Espèces Protégées informations for instructor page view"""
+    return ep_base_get_instructors_info(evaluator, petition_project, moulinette)
+
+
+def ep_base_get_instructors_info(
     evaluator, petition_project, moulinette
 ) -> InstructorInformation:
     hedges_properties_items = reduce_hedges_properties_to_displayable_items(
@@ -37,13 +82,6 @@ def ep_aisne_get_instructors_info(
         label="Espèces protégées",
         key_elements=["onagre_number"],
         simulation_data=[
-            Title("Calcul de la compensation attendue"),
-            Item(
-                "Coefficient compensation",
-                float(evaluator.get_replantation_coefficient()),
-                None,
-                None,
-            ),
             Title("Situation des haies"),
             *hedges_properties_items,
             Title("Liste des espèces"),
@@ -127,7 +165,7 @@ def reduce_hedges_properties_to_displayable_items(
             else (
                 field.label
                 if choice is None
-                else get_human_readable_value(field, choice)
+                else get_human_readable_value(field.choices, choice)
             )
         )
 
@@ -169,123 +207,3 @@ def get_hedges_length_and_names(hedges):
     return f"{round(sum(h.length for h in hedges))} m " + (
         f" • {', '.join([h.id for h in hedges])}" if hedges else ""
     )
-
-
-@register_instructors_information(EspecesProtegeesSimple)
-def ep_simple_get_instructors_info(
-    evaluator, petition_project, moulinette
-) -> InstructorInformation:
-    """Build Espèces Protégées informations for instructor page view"""
-
-    hedge_data = petition_project.hedge_data
-
-    hedges_to_remove_near_pond = [
-        h for h in hedge_data.hedges_to_remove() if h.proximite_mare
-    ]
-    hedges_to_plant_near_pond = [
-        h for h in hedge_data.hedges_to_plant() if h.proximite_mare
-    ]
-
-    hedges_to_remove_woodland_connection = [
-        h for h in hedge_data.hedges_to_remove() if h.connexion_boisement
-    ]
-    hedges_to_plant_woodland_connection = [
-        h for h in hedge_data.hedges_to_plant() if h.connexion_boisement
-    ]
-
-    hedges_to_plant_under_power_line = [
-        h for h in hedge_data.hedges_to_plant() if h.sous_ligne_electrique
-    ]
-
-    ep = InstructorInformation(
-        slug="ep",
-        label="Espèces protégées",
-        items=[
-            "onagre_number",
-            Item(
-                "Présence d'une mare à moins de 200 m",
-                ItemDetails(
-                    result=len(hedges_to_remove_near_pond) > 0
-                    or len(hedges_to_plant_near_pond) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_near_pond])}"
-                                if hedges_to_remove_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_near_pond])}"
-                                if hedges_to_plant_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Connexion à un boisement ou une haie",
-                ItemDetails(
-                    result=len(hedges_to_remove_woodland_connection) > 0
-                    or len(hedges_to_plant_woodland_connection) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_woodland_connection])}"
-                                if hedges_to_remove_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_woodland_connection])}"
-                                if hedges_to_plant_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Proximité ligne électrique",
-                ItemDetails(
-                    result=len(hedges_to_plant_under_power_line) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_under_power_line))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_under_power_line])}"
-                                if hedges_to_plant_under_power_line
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-        ],
-        details=[],
-    )
-
-    return ep

@@ -35,6 +35,8 @@
                 data-fr-opened="false"
                 aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
       </div>
+    {% elif item == "hedges_compensation_details" %}
+      {% include 'haie/petitions/_ep_normandie_hedges_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
     {% elif item == "open_simulation_cta" %}
       <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
          href="{{ project_url }}"

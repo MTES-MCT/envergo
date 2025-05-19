@@ -1,12 +1,14 @@
 from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.utils.fields import get_human_readable_value
 
 
 class EPMixin:
@@ -84,6 +86,22 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         return D("1.5")
 
 
+def get_hedge_details(hedge, r):
+    hedge_properties = []
+    if hedge.prop("essences_non_bocageres"):
+        hedge_properties.append("essences non bocagères")
+    if hedge.prop("recemment_plantee"):
+        hedge_properties.append("récemment plantée")
+
+    return {
+        "id": hedge.id,
+        "hedge_type": get_human_readable_value(HEDGE_TYPES, hedge.hedge_type),
+        "properties": ", ".join(hedge_properties) if hedge_properties else "-",
+        "length": hedge.length,
+        "r": r,
+    }
+
+
 class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEvaluator):
     """Check for protected species living in hedges."""
 
@@ -125,6 +143,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         all_r = []
+        hedges_details = []
         coupe_a_blanc_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = 0.0
@@ -148,6 +167,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
                     r = 2
                 all_r.append(r)
                 minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
+                hedges_details.append(get_hedge_details(hedge, r))
 
             if haies.length_to_remove() > 0:
                 aggregated_r = minimum_length_to_plant / haies.length_to_remove()
@@ -156,6 +176,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["aggregated_r"] = aggregated_r
+        catalog["hedges_compensation_details"] = hedges_details
         return catalog
 
     def get_result_data(self):
