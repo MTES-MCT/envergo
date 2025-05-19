@@ -21,6 +21,8 @@ MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
     ("species", _("Espèces protégées")),
+    ("haies", "Haies"),
+    ("terres_emergees", "Délimitation terres + France"),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -66,7 +68,7 @@ class Map(models.Model):
             choices=DEPARTMENT_CHOICES,
         ),
     )
-    geometry = gis_models.MultiPolygonField(
+    geometry = gis_models.GeometryField(
         _("Simplified geometry"),
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
@@ -78,8 +80,12 @@ class Map(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
-    expected_zones = models.IntegerField(_("Expected zones"), default=0)
-    imported_zones = models.IntegerField(_("Imported zones"), null=True, blank=True)
+    expected_geometries = models.IntegerField(
+        "Nb de formes (zones ou lignes) attendues", default=0
+    )
+    imported_geometries = models.IntegerField(
+        "Nb de formes (zones ou lignes) importées", null=True, blank=True
+    )
     import_status = models.CharField(
         _("Import status"), max_length=32, choices=STATUSES, null=True
     )
@@ -96,6 +102,9 @@ class Map(models.Model):
         verbose_name = _("Map")
         verbose_name_plural = _("Maps")
         ordering = ["name"]
+        indexes = [
+            models.Index(fields=["map_type"]),
+        ]
 
     def __str__(self):
         return self.name
@@ -125,6 +134,22 @@ class Zone(gis_models.Model):
             models.Index(fields=["-area"]),
             models.Index(fields=["-npoints"]),
         ]
+
+
+class Line(gis_models.Model):
+    """Stores an annotated geographic Line(s)."""
+
+    map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
+    geometry = gis_models.LineStringField(
+        geography=True,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+            but if you use it, you will break EnvErgo.
+            """
+        ),
+    )
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
 
 
 class Department(models.Model):
