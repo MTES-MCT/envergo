@@ -280,6 +280,31 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
+class CalvadosQualityCondition(QualityCondition):
+    def get_minimum_lengths_to_plant(self):
+        is_remplacement = self.catalog.get("reimplantation") == "remplacement"
+        lengths_by_type = defaultdict(int)
+        for hedge in self.hedge_data.hedges_to_remove():
+            if hedge.length <= 10:
+                r = 0
+            elif hedge.length <= 20:
+                r = 1
+            elif is_remplacement and hedge.mode_destruction == "coupe_a_blanc":
+                r = 1
+            else:
+                r = 2
+
+            lengths_by_type[hedge.hedge_type] += hedge.length * r
+
+        return {
+            "degradee": lengths_by_type["degradee"],
+            "buissonnante": lengths_by_type["buissonnante"],
+            "arbustive": lengths_by_type["arbustive"],
+            "mixte": lengths_by_type["mixte"],
+            "alignement": lengths_by_type["alignement"],
+        }
+
+
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
     order = 4
