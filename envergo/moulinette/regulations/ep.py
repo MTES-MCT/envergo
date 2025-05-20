@@ -279,11 +279,6 @@ class EspecesProtegeesNormandie(
 
         zone_id = zonage.attributes.get("indentifiant_zone", None) if zonage else None
 
-        if zone_id is None:
-            # the centroid of the hedges to remove is not in an identified zone. This should not happen.
-            # The evaluator should return a "non disponible" result.
-            catalog["is_available"] = False
-
         density_ratio = density_200 / density_5000 if density_5000 != 0 else 1000
         if density_ratio > 1.6:
             density_ratio_range = "gt_1.6"
@@ -311,6 +306,11 @@ class EspecesProtegeesNormandie(
                 ):
                     r = D(1)
                 else:
+                    if zone_id is None:
+                        # the centroid of the hedges to remove is not in an identified zone, and we need it to define R
+                        # The evaluator should return a "non disponible" result.
+                        catalog["is_available"] = False
+
                     r = self.COEFFICIENT_MATRIX.get(
                         (hedge.hedge_type, density_ratio_range, zone_id)
                     )
