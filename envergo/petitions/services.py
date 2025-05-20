@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
+from envergo.moulinette.forms import MoulinetteFormHaie
 from envergo.petitions.regulations import get_instructors_information
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
@@ -52,6 +53,23 @@ class Item:
     value: str | int | float | ItemDetails
     unit: str | None
     comment: str | None
+
+    @classmethod
+    def from_field(cls, field, field_value):
+        """Fill the item from a field"""
+        label = field.display_label if hasattr(field, "display_label") else field.label
+        unit = field.display_unit if hasattr(field, "display_unit") else None
+        if hasattr(field, "get_display_value"):
+            value = field.get_display_value(field_value)
+        elif hasattr(field, "choices"):
+            value = dict(field.choices).get(field_value, field_value)
+        else:
+            value = field_value
+
+        comment = (
+            field.display_help_text if hasattr(field, "display_help_text") else None
+        )
+        return cls(label, value, unit, comment)
 
 
 @dataclass
@@ -263,21 +281,22 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
             GroupedItems(
                 label="Plantation",
                 items=[
-                    Item(
-                        "Nombre de tracés",
-                        floatformat(len(hedge_data.hedges_to_plant()), "0g"),
-                        None,
-                        None,
-                    ),
                     *plantation_details,
                 ],
             ),
             "display_hedges_cta",
             "open_simulation_cta",
         ],
-        simulation_data=["moulinette_fields"],
+        simulation_data=[],
         comment=None,
     )
+
+    for key in MoulinetteFormHaie.base_fields:
+        if key in moulinette.catalog:
+            field = MoulinetteFormHaie.base_fields[key]
+            project_summary.simulation_data.append(
+                Item.from_field(field, moulinette.catalog[key])
+            )
 
     return project_summary
 

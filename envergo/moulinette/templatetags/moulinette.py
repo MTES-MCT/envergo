@@ -130,6 +130,7 @@ def perimeter_detail(regulation):
     return mark_safe(detail)
 
 
+@register.filter
 def ends_with_punctuation(sentence):
     trimmed_sentence = sentence.strip() if sentence else sentence
     return trimmed_sentence[-1] in string.punctuation if trimmed_sentence else False

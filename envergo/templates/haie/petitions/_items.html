@@ -21,13 +21,6 @@
       {% else %}
         <p>Pas de liste d’espèces associée à cette simulation</p>
       {% endif %}
-    {% elif item == "moulinette_fields" %}
-      <ul id="moulinette_fields">
-        {% for field in moulinette.main_form %}
-          <li>{% field_summary field %}</li>
-        {% endfor %}
-        {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
-      </ul>
     {% elif item == "display_hedges_cta" %}
       <div class="fr-my-2w">
         <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
@@ -46,7 +39,9 @@
     {% elif item|is_type:"Title" %}
       <h4 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h4>
     {% elif item|is_type:"Item" %}
-      <span><b>{{ item.label }} :</b></span>
+      <span><b>{{ item.label }}
+        {% if not item.label|ends_with_punctuation %}:{% endif %}
+      </b></span>
 
       {% if item.value|is_type:"ItemDetails" %}
         {% if item.value.display_result %}<span>{{ item.value.result|yesno }}</span>{% endif %}
