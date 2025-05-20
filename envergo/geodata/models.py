@@ -126,6 +126,12 @@ class Zone(gis_models.Model):
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
+    species_taxrefs = ArrayField(
+        verbose_name=_("Species taxrefs"),
+        null=True,
+        blank=True,
+        base_field=models.IntegerField(),
+    )
 
     class Meta:
         verbose_name = _("Zone")
