@@ -2,7 +2,6 @@ from django.template.defaultfilters import floatformat
 from django.utils.module_loading import import_string
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8, Bcae8Form
 from envergo.petitions.regulations import evaluator_instructors_information_getter
 from envergo.petitions.services import GroupedItems, InstructorInformation, Item
@@ -54,14 +53,8 @@ def bcae8_get_instructors_info(
     for key in Bcae8Form.base_fields:
         if key in moulinette.catalog and key != "lineaire_total":
             field = Bcae8Form.base_fields[key]
-            label = (
-                field.display_label
-                if isinstance(field, DisplayFieldMixin)
-                else field.label
-            )
-            unit = field.display_unit if isinstance(field, DisplayFieldMixin) else None
             bcae8.simulation_data.append(
-                Item(label, moulinette.catalog[key], unit, None)
+                Item.from_field(field, moulinette.catalog[key])
             )
 
     if lineaire_detruit_pac:
