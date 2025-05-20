@@ -30,6 +30,11 @@ EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
 
 
+ATTRIBUTES = {
+    "especes": "species_taxrefs",
+}
+
+
 class CeleryDebugStream:
     """A sys.stdout proxy that also updates the celery task states.
 
@@ -73,6 +78,11 @@ class CustomMapping(LayerMapping):
         fields = feat.fields
         attributes = {f: self.get_attribute(feat, f) for f in fields}
         kwargs["attributes"] = attributes
+
+        for field in fields:
+            if field in ATTRIBUTES:
+                kwargs[ATTRIBUTES[field]] = self.get_attribute(feat, field)
+
         return kwargs
 
     def get_attribute(self, feat, field):
@@ -88,7 +98,7 @@ class CustomMapping(LayerMapping):
 
     def get_attribute_especes(self, feat):
         raw_especes = feat.get("especes")
-        especes = list(map(int, raw_especes.split(",")))
+        especes = list(map(int, filter(None, raw_especes.split(","))))
         return especes
 
 
