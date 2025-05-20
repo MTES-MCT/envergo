@@ -617,12 +617,12 @@ def compute_hedge_density_around_point(point_geos, radius):
         )
         length = length if length else Distance(0)
 
-        density = length.standard / area_ha if area_ha > 0 else 1000.0
+        density = length.standard / area_ha if area_ha > 0 else 0.0
     else:
         # there is no land in the circle (e.g. sea or foreign country)
         length = Distance(0)
         area_ha = 0.0
-        density = 1000.0
+        density = 0.0
 
     return {
         "density": density,

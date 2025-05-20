@@ -23,6 +23,7 @@ MAP_TYPES = Choices(
     ("species", _("Espèces protégées")),
     ("haies", "Haies"),
     ("terres_emergees", "Délimitation terres + France"),
+    ("zonage", "Identifiant zonage"),
 )
 
 # Sometimes, there are map with different certainty values.
