@@ -1891,6 +1891,18 @@ class MoulinetteHaie(Moulinette):
         context = {}
         if "haies" in self.catalog and self.requires_hedge_density:
             haies = self.catalog["haies"]
+
+            pre_computed_density = haies.density
+            if pre_computed_density:
+                context.update(
+                    {
+                        "pre_computed_density_200": pre_computed_density["density_200"],
+                        "pre_computed_density_5000": pre_computed_density[
+                            "density_5000"
+                        ],
+                    }
+                )
+
             density_200, density_5000, centroid_geos = (
                 haies.compute_density_with_artifacts()
             )

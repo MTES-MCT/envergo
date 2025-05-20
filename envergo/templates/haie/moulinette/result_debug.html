@@ -74,7 +74,7 @@
                 <small>({{ criterion.result_code }})</small>
                 {% if criterion.get_evaluator.plantation_conditions %}
                   <br />
-                  R = {{ criterion.get_evaluator.get_replantation_coefficient }}
+                  R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"1g" }}
                   <br />
                   Conditions d'acceptabilité =
                   {% for condition in criterion.get_evaluator.plantation_conditions %}
@@ -114,6 +114,17 @@
                         <td>{{ density_200|floatformat:"g" }} ml/ha</td>
                         <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
                       </tr>
+                      {% if pre_computed_density_200 or pre_computed_density_5000 %}
+                        <tr>
+                          <th scope="row">
+                            Densité persistée en base
+                            <br />
+                            <span class="fr-hint-text">Peut ne pas être à jour</span>
+                          </th>
+                          <td>{{ pre_computed_density_200|floatformat:"g" }} ml/ha</td>
+                          <td>{{ pre_computed_density_5000|floatformat:"g" }} ml/ha</td>
+                        </tr>
+                      {% endif %}
                     </tbody>
                   </table>
 

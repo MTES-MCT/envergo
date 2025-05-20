@@ -276,23 +276,20 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
-    def compute_density(self):
-        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
-        density_200, density_5000, _ = self.compute_density_with_artifacts()
-        self.density = {
-            "length_200": density_200["artifacts"]["length"],
-            "length_5000": density_5000["artifacts"]["length"],
-            "area_200_ha": density_200["artifacts"]["area_ha"],
-            "area_5000_ha": density_5000["artifacts"]["area_ha"],
-            "density_200": density_200["density"],
-            "density_5000": density_5000["density"],
-        }
-
     def get_or_compute_density(self):
         """Returns pre-computed density of hedges if it exists, otherwise compute it."""
         if not self.density:
-            self.compute_density()
+            density_200, density_5000, _ = self.compute_density_with_artifacts()
+            self.density = {
+                "length_200": density_200["artifacts"]["length"],
+                "length_5000": density_5000["artifacts"]["length"],
+                "area_200_ha": density_200["artifacts"]["area_ha"],
+                "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                "density_200": density_200["density"],
+                "density_5000": density_5000["density"],
+            }
             self.save()
+
         return self.density
 
 

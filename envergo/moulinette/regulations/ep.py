@@ -10,7 +10,7 @@ from envergo.hedges.regulations import (
     QualityCondition,
     SafetyCondition,
 )
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 
 
 class EPMixin:
@@ -88,7 +88,9 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         return D("1.5")
 
 
-class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesNormandie(
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
