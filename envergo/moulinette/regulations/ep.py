@@ -1,6 +1,10 @@
 from decimal import Decimal as D
 
+from django.contrib.gis.geos import GEOSGeometry
+
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.models import MAP_TYPES, Zone
+from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     QualityCondition,
@@ -121,14 +125,174 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         ("gt_1", True, "replantation"): "derogation_simplifiee",
     }
 
+    COEFFICIENT_MATRIX = {
+        ("degradee", "gt_1.6", "groupe_normandie_1"): D("1.2"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_1"): D("1.4"),
+        ("arbustive", "gt_1.6", "groupe_normandie_1"): D("1.6"),
+        ("alignement", "gt_1.6", "groupe_normandie_1"): D("1.6"),
+        ("mixte", "gt_1.6", "groupe_normandie_1"): D("1.8"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_1"): D("1.4"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_1"): D("1.6"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_1"): D("1.8"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_1"): D("1.8"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_1"): D("2"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_1"): D("1.6"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_1"): D("1.8"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_1"): D("2"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_1"): D("2"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_1"): D("2.2"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_1"): D("1.8"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_1"): D("2"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_1"): D("2.5"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_1"): D("2.5"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_1"): D("3"),
+        ("degradee", "lt_0.5", "groupe_normandie_1"): D("2.2"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_1"): D("2.6"),
+        ("arbustive", "lt_0.5", "groupe_normandie_1"): D("3.2"),
+        ("alignement", "lt_0.5", "groupe_normandie_1"): D("3.2"),
+        ("mixte", "lt_0.5", "groupe_normandie_1"): D("3.5"),
+        ("degradee", "gt_1.6", "groupe_normandie_2"): D("1"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_2"): D("1"),
+        ("arbustive", "gt_1.6", "groupe_normandie_2"): D("1.4"),
+        ("alignement", "gt_1.6", "groupe_normandie_2"): D("1.4"),
+        ("mixte", "gt_1.6", "groupe_normandie_2"): D("1.6"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_2"): D("1.2"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_2"): D("1.4"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_2"): D("1.6"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_2"): D("1.6"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_2"): D("1.8"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_2"): D("1.4"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_2"): D("1.6"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_2"): D("1.8"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_2"): D("1.8"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_2"): D("2"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_2"): D("1.6"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_2"): D("1.8"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_2"): D("2"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_2"): D("2"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_2"): D("2.6"),
+        ("degradee", "lt_0.5", "groupe_normandie_2"): D("2"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_2"): D("2.2"),
+        ("arbustive", "lt_0.5", "groupe_normandie_2"): D("2.6"),
+        ("alignement", "lt_0.5", "groupe_normandie_2"): D("2.6"),
+        ("mixte", "lt_0.5", "groupe_normandie_2"): D("3.2"),
+        ("degradee", "gt_1.6", "groupe_normandie_3"): D("1"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_3"): D("1"),
+        ("arbustive", "gt_1.6", "groupe_normandie_3"): D("1"),
+        ("alignement", "gt_1.6", "groupe_normandie_3"): D("1"),
+        ("mixte", "gt_1.6", "groupe_normandie_3"): D("1.2"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_3"): D("1"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_3"): D("1"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_3"): D("1.2"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_3"): D("1.2"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_3"): D("1.4"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_3"): D("1"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_3"): D("1.2"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_3"): D("1.4"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_3"): D("1.4"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_3"): D("1.6"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_3"): D("1.4"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_3"): D("1.6"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_3"): D("1.8"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_3"): D("1.8"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_3"): D("2.2"),
+        ("degradee", "lt_0.5", "groupe_normandie_3"): D("1.8"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_3"): D("2"),
+        ("arbustive", "lt_0.5", "groupe_normandie_3"): D("2.2"),
+        ("alignement", "lt_0.5", "groupe_normandie_3"): D("2.2"),
+        ("mixte", "lt_0.5", "groupe_normandie_3"): D("2.6"),
+        ("degradee", "gt_1.6", "groupe_normandie_4"): D("1"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_4"): D("1"),
+        ("arbustive", "gt_1.6", "groupe_normandie_4"): D("1"),
+        ("alignement", "gt_1.6", "groupe_normandie_4"): D("1"),
+        ("mixte", "gt_1.6", "groupe_normandie_4"): D("1"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_4"): D("1"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_4"): D("1"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_4"): D("1"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_4"): D("1"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_4"): D("1.2"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_4"): D("1"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_4"): D("1"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_4"): D("1.2"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_4"): D("1.2"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_4"): D("1.4"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_4"): D("1.2"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_4"): D("1.4"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_4"): D("1.6"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_4"): D("1.6"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_4"): D("1.8"),
+        ("degradee", "lt_0.5", "groupe_normandie_4"): D("1.6"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_4"): D("1.8"),
+        ("arbustive", "lt_0.5", "groupe_normandie_4"): D("2"),
+        ("alignement", "lt_0.5", "groupe_normandie_4"): D("2"),
+        ("mixte", "lt_0.5", "groupe_normandie_4"): D("2.2"),
+        ("degradee", "gt_1.6", "groupe_normandie_5"): D("1"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_5"): D("1"),
+        ("arbustive", "gt_1.6", "groupe_normandie_5"): D("1"),
+        ("alignement", "gt_1.6", "groupe_normandie_5"): D("1"),
+        ("mixte", "gt_1.6", "groupe_normandie_5"): D("1"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_5"): D("1"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_5"): D("1"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_5"): D("1"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_5"): D("1"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_5"): D("1"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_5"): D("1"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_5"): D("1"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_5"): D("1"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_5"): D("1"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_5"): D("1.2"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_5"): D("1"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_5"): D("1.2"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_5"): D("1.4"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_5"): D("1.4"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_5"): D("1.6"),
+        ("degradee", "lt_0.5", "groupe_normandie_5"): D("1.4"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_5"): D("1.6"),
+        ("arbustive", "lt_0.5", "groupe_normandie_5"): D("1.8"),
+        ("alignement", "lt_0.5", "groupe_normandie_5"): D("1.8"),
+        ("mixte", "lt_0.5", "groupe_normandie_5"): D("2"),
+    }
+
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
+        catalog["is_available"] = True
         haies = self.catalog.get("haies")
         all_r = []
         coupe_a_blanc_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
-        minimum_length_to_plant = 0.0
+        minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
+
+        density = haies.get_or_compute_density()
+        density_200 = density.get("density_200")
+        density_5000 = density.get("density_5000")
+
+        centroid_shapely = haies.get_centroid_to_remove()
+        centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
+
+        zonage = Zone.objects.filter(
+            geometry__contains=centroid_geos,
+            map__map_type=MAP_TYPES.zonage,
+        ).first()
+
+        zone_id = zonage.attributes.get("indentifiant_zone", None) if zonage else None
+
+        if zone_id is None:
+            # the centroid of the hedges to remove is not in an identified zone. This should not happen.
+            # The evaluator should return a "non disponible" result.
+            catalog["is_available"] = False
+
+        density_ratio = density_200 / density_5000 if density_5000 != 0 else 1000
+        if density_ratio > 1.6:
+            density_ratio_range = "gt_1.6"
+        elif density_ratio > 1.2:
+            density_ratio_range = "gt_1.2_lte_1.6"
+        elif density_ratio >= 0.8:
+            density_ratio_range = "gte_0.8_lte_1.2"
+        elif density_ratio >= 0.5:
+            density_ratio_range = "gte_0.5_lt_0.8"
+        else:
+            density_ratio_range = "lt_0.5"
 
         if haies:
             for hedge in haies.hedges_to_remove():
@@ -136,23 +300,29 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
                     coupe_a_blanc_every_hedge = False
 
                 if hedge.length <= 10:
-                    r = 0
+                    r = D(0)
                 elif hedge.length <= 20:
-                    r = 1
+                    r = D(1)
                 elif (
                     reimplantation == "remplacement"
                     and hedge.mode_destruction == "coupe_a_blanc"
                 ):
-                    r = 1
+                    r = D(1)
                 else:
-                    r = 2
-                all_r.append(r)
-                minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
+                    r = self.COEFFICIENT_MATRIX.get(
+                        (hedge.hedge_type, density_ratio_range, zone_id)
+                    )
+
+                if r is not None:
+                    all_r.append(r)
+                    minimum_length_to_plant = (
+                        D(minimum_length_to_plant) + D(hedge.length) * r
+                    )
 
             if haies.length_to_remove() > 0:
-                aggregated_r = minimum_length_to_plant / haies.length_to_remove()
+                aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
 
-        r_max = max(all_r) if all_r else self.get_replantation_coefficient()
+        r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["aggregated_r"] = aggregated_r
@@ -165,6 +335,14 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         r_max_value = "0" if r_max == 0 else "lte_1" if r_max <= 1 else "gt_1"
 
         return r_max_value, coupe_a_blanc_every_hedge, reimplantation
+
+    def get_result_code(self, result_data):
+        """Compute a unique result code from criterion data."""
+        is_available = self.catalog.get("is_available")
+        if not is_available:
+            return RESULTS.non_disponible
+
+        return super().get_result_code(result_data)
 
     def get_replantation_coefficient(self):
         return self.catalog.get("aggregated_r")

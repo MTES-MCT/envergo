@@ -154,6 +154,7 @@ class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
+    density = models.JSONField(null=True, default=None)
 
     class Meta:
         verbose_name = "Hedge data"
@@ -286,6 +287,13 @@ class HedgeData(models.Model):
             "density_200": density_200["density"],
             "density_5000": density_5000["density"],
         }
+
+    def get_or_compute_density(self):
+        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
+        if not self.density:
+            self.compute_density()
+            self.save()
+        return self.density
 
 
 HEDGE_TYPES = (
