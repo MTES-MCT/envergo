@@ -292,7 +292,7 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
     )
 
     for key in MoulinetteFormHaie.base_fields:
-        if key in moulinette.catalog:
+        if key in moulinette.catalog and key != "haies":
             field = MoulinetteFormHaie.base_fields[key]
             project_summary.simulation_data.append(
                 Item.from_field(field, moulinette.catalog[key])

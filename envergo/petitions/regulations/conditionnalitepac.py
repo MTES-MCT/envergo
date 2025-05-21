@@ -57,93 +57,99 @@ def bcae8_get_instructors_info(
                 Item.from_field(field, moulinette.catalog[key])
             )
 
+    destruction = GroupedItems(
+        label="Destruction",
+        items=[
+            Item(
+                "Total linéaire à détruire sur parcelle PAC",
+                floatformat(lineaire_detruit_pac, "0g"),
+                "m",
+                None,
+            ),
+        ],
+    )
+
     if lineaire_detruit_pac:
-        bcae8.key_elements.append(
-            GroupedItems(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Total linéaire à détruire sur parcelle PAC",
-                        floatformat(lineaire_detruit_pac, "0g"),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Détail",
-                        (
-                            ", ".join(
-                                [
-                                    f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
-                                    for h in hedge_data.hedges_to_remove_pac()
-                                ]
-                            )
-                            if hedge_data.hedges_to_remove_pac
-                            else ""
-                        ),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Pourcentage linéaire à détruire / total linéaire exploitation",
-                        (
-                            floatformat(
-                                lineaire_detruit_pac / lineaire_total * 100, "2g"
-                            )
-                            if lineaire_total
-                            else ""
-                        ),
-                        "%",
-                        None,
-                    ),
-                ],
+        destruction.items.append(
+            Item(
+                "Détail",
+                (
+                    ", ".join(
+                        [
+                            f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
+                            for h in hedge_data.hedges_to_remove_pac()
+                        ]
+                    )
+                    if hedge_data.hedges_to_remove_pac
+                    else ""
+                ),
+                None,
+                None,
+            )
+        )
+        destruction.items.append(
+            Item(
+                "Pourcentage linéaire à détruire / total linéaire exploitation",
+                (
+                    floatformat(lineaire_detruit_pac / lineaire_total * 100, "2g")
+                    if lineaire_total
+                    else ""
+                ),
+                "%",
+                None,
+            ),
+        )
+    bcae8.key_elements.append(destruction)
+
+    plantation = GroupedItems(
+        label="Plantation",
+        items=[
+            Item(
+                "Total linéaire à planter sur parcelle PAC",
+                floatformat(lineaire_to_plant_pac, "0g"),
+                "m",
+                None,
+            )
+        ],
+    )
+    if lineaire_to_plant_pac:
+        plantation.items.append(
+            Item(
+                "Détail",
+                (
+                    ", ".join(
+                        [
+                            f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
+                            for h in hedge_data.hedges_to_plant_pac()
+                        ]
+                    )
+                    if hedge_data.hedges_to_plant_pac
+                    else ""
+                ),
+                None,
+                None,
+            )
+        )
+        plantation.items.append(
+            Item(
+                "Ratio de replantation",
+                (
+                    floatformat(
+                        lineaire_to_plant_pac / lineaire_detruit_pac,
+                        "2g",
+                    )
+                    if lineaire_detruit_pac > 0
+                    else ""
+                ),
+                None,
+                (
+                    "Linéaire plantation nouvelle ou remplacement / linéaire à détruire, sur parcelle PAC"
+                    if has_mode_replantation
+                    else "Linéaire à planter / linéaire à détruire, sur parcelle PAC"
+                ),
             )
         )
 
-    if lineaire_to_plant_pac:
-        bcae8.key_elements.append(
-            GroupedItems(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Total linéaire à planter sur parcelle PAC",
-                        floatformat(lineaire_to_plant_pac, "0g"),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Détail",
-                        (
-                            ", ".join(
-                                [
-                                    f"{floatformat(h.length, "0g")} m ⋅ {h.id}"
-                                    for h in hedge_data.hedges_to_plant_pac()
-                                ]
-                            )
-                            if hedge_data.hedges_to_plant_pac
-                            else ""
-                        ),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Ratio de replantation",
-                        (
-                            floatformat(
-                                lineaire_to_plant_pac / lineaire_detruit_pac,
-                                "2g",
-                            )
-                            if lineaire_detruit_pac > 0
-                            else ""
-                        ),
-                        None,
-                        (
-                            "Linéaire plantation nouvelle ou remplacement / linéaire à détruire, sur parcelle PAC"
-                            if has_mode_replantation
-                            else "Linéaire à planter / linéaire à détruire, sur parcelle PAC"
-                        ),
-                    ),
-                ],
-            ),
-        )
+    bcae8.key_elements.append(plantation)
 
     return bcae8
