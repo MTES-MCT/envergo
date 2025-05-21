@@ -21,8 +21,12 @@ def get_instructors_information(
 
     This function uses a registry pattern to delegate the logic for retrieving
     instructor information to an external function, based on the evaluator's class.
-    Each evaluator class must have a corresponding function registered via the
+    Each evaluator class can have a corresponding function registered via the
     `@register_instructors_information(SomeEvaluatorClass)` decorator.
+
+    It allows for cleaner code organization and separation of concerns, as the
+    logic for each evaluator's instructor information can be defined in a dedicated App,
+     rather than being mixed into a single large function.
 
     Args:
         evaluator (CriterionEvaluator): An instance of an evaluator class.
@@ -40,4 +44,6 @@ def get_instructors_information(
         return _evaluator_instructors_information_registry[cls](
             evaluator, petition_project, moulinette
         )
-    raise NotImplementedError(f"No info registered for evaluator {cls.__name__}")
+    raise NotImplementedError(
+        f"No instructors_information_getter registered for evaluator {cls.__name__}"
+    )
