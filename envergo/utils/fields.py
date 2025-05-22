@@ -26,3 +26,11 @@ class AllowDisabledSelect(Select):
         if not value:
             option_dict["attrs"]["disabled"] = "disabled"
         return option_dict
+
+
+def get_human_readable_value(choices, key):
+    """Get the human-readable value of a choice field."""
+    for choice_key, human_readable in choices:
+        if choice_key == key:
+            return human_readable
+    return None

@@ -91,6 +91,10 @@ class Hedge:
         return self.additionalData.get("mode_destruction", None)
 
     @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
+
+    @property
     def position(self):
         return self.additionalData.get("position", None)
 
@@ -249,10 +253,14 @@ class HedgeData(models.Model):
 
     def get_all_species(self):
         """Return the local list of protected species."""
-
-        zone_subquery = Zone.objects.filter(
-            Q(geometry__intersects=self.get_bounding_box(self.hedges()))
-        ).filter(Q(map_id=OuterRef("map_id")))
+        zone_subquery = (
+            Zone.objects.filter(
+                Q(geometry__intersects=self.get_bounding_box(self.hedges()))
+            )
+            .filter(map__map_type="species")
+            .filter(Q(map_id=OuterRef("map_id")))
+            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
+        )
 
         filters = [h.get_species_filter() for h in self.hedges_to_remove()]
         union = reduce(operator.or_, filters)

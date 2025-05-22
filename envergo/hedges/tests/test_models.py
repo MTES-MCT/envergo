@@ -144,8 +144,14 @@ def test_hedge_data_species_are_filtered_by_geography(
     aisne_species = SpeciesMapFactory(map=aisne_map).species
     calvados_species = SpeciesMapFactory(map=calvados_map).species
 
-    assert set(calvados_hedge_data.get_all_species()) == set([calvados_species])
     assert set(aisne_hedge_data.get_all_species()) == set([aisne_species])
+    assert set(calvados_hedge_data.get_all_species()) == set([calvados_species])
+
+    aisne_map.zones.all().update(species_taxrefs=[])
+    calvados_map.zones.all().update(species_taxrefs=[])
+
+    assert set(aisne_hedge_data.get_all_species()) == set()
+    assert set(calvados_hedge_data.get_all_species()) == set()
 
 
 def test_species_are_filtered_by_hedge_type():

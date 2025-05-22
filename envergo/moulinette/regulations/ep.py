@@ -5,12 +5,14 @@ from django.contrib.gis.geos import GEOSGeometry
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
+from envergo.utils.fields import get_human_readable_value
 
 
 class EPMixin:
@@ -86,6 +88,22 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
 
     def get_replantation_coefficient(self):
         return D("1.5")
+
+
+def get_hedge_compensation_details(hedge, r):
+    hedge_properties = []
+    if hedge.prop("essences_non_bocageres"):
+        hedge_properties.append("essences non bocagères")
+    if hedge.prop("recemment_plantee"):
+        hedge_properties.append("récemment plantée")
+
+    return {
+        "id": hedge.id,
+        "hedge_type": get_human_readable_value(HEDGE_TYPES, hedge.hedge_type),
+        "properties": ", ".join(hedge_properties) if hedge_properties else "-",
+        "length": hedge.length,
+        "r": r,
+    }
 
 
 class EspecesProtegeesNormandie(
@@ -284,6 +302,7 @@ class EspecesProtegeesNormandie(
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         all_r = []
+        hedges_details = []
         coupe_a_blanc_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = D(0.0)
@@ -346,6 +365,7 @@ class EspecesProtegeesNormandie(
                     minimum_length_to_plant = (
                         D(minimum_length_to_plant) + D(hedge.length) * r
                     )
+                hedges_details.append(get_hedge_compensation_details(hedge, r))
 
             if haies.length_to_remove() > 0:
                 aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
@@ -356,6 +376,7 @@ class EspecesProtegeesNormandie(
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
         catalog["density_zone"] = zone_id
+        catalog["hedges_compensation_details"] = hedges_details
         return catalog
 
     def get_result_data(self):

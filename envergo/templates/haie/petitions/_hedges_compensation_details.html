@@ -1,0 +1,32 @@
+<span><b>Détail :</b></span>
+
+<div class="fr-table">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <thead>
+            <tr>
+              <th>Haie</th>
+              <th>Type</th>
+              <th>Caractéristiques</th>
+              <th>Longueur</th>
+              <th>Coefficient de compensation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hedge in hedges_compensation_details %}
+              <tr>
+                <td>{{ hedge.id }}</td>
+                <td>{{ hedge.hedge_type }}</td>
+                <td>{{ hedge.properties }}</td>
+                <td>{{ hedge.length|floatformat:"0g" }} m</td>
+                <td>{{ hedge.r|floatformat:"1g" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
