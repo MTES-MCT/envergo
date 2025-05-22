@@ -91,6 +91,10 @@ class Hedge:
         return self.additionalData.get("mode_destruction", None)
 
     @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
+
+    @property
     def position(self):
         return self.additionalData.get("position", None)
 

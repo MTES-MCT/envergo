@@ -1,10 +1,21 @@
 import datetime
+import json
+from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
+    CriterionFactory,
+    RegulationFactory,
+)
+from envergo.petitions.regulations.conditionnalitepac import bcae8_get_instructors_info
+from envergo.petitions.regulations.ep import ep_aisne_get_instructors_info
 from envergo.petitions.services import (
     compute_instructor_informations,
     fetch_project_details_from_demarches_simplifiees,
@@ -170,3 +181,678 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     assert "haie" in args[1]
 
     mock_notify.assert_called_once()
+
+
+def test_ep_aisne_get_instructors_info(france_map):  # noqa
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
+    )
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+    regulation = RegulationFactory(regulation="ep")
+    CriterionFactory(
+        title="Espèces protégées",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+    ConfigHaieFactory(
+        hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
+        hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesAisneForm",
+    )
+
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    info = ep_aisne_get_instructors_info(
+        moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
+    )
+
+    expected_json = """{
+  "slug": "ep",
+  "label": "Esp\\u00e8ces prot\\u00e9g\\u00e9es",
+  "key_elements": [
+
+  ],
+  "simulation_data": [
+    {
+      "label": "Caract\\u00e9ristiques des haies"
+    },
+    {
+      "label": "Inter-champ",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Bordure de voirie ouverte \\u00e0 la circulation",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Autre (bord de chemin, b\\u00e2timent\\u2026)",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare \\u00e0 moins de 200\\u00a0m",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Contient un ou plusieurs vieux arbres, fissur\\u00e9s ou avec cavit\\u00e9s",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Connect\\u00e9e \\u00e0 un boisement ou \\u00e0 une autre haie",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare ou ruisseau \\u00e0 moins de 10\\u00a0m",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Sous une ligne \\u00e9lectrique ou t\\u00e9l\\u00e9phonique",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Calcul de la compensation attendue"
+    },
+    {
+      "label": "Coefficient compensation",
+      "value": "1,5",
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Liste des esp\\u00e8ces"
+    },
+    "onagre_number",
+    "protected_species"
+  ],
+  "other_items": null,
+  "comment": null
+}"""
+    assert asdict(info) == json.loads(expected_json)
+
+
+def test_ep_normandie_get_instructors_info(france_map):  # noqa
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
+    )
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+    regulation = RegulationFactory(regulation="ep")
+    CriterionFactory(
+        title="Espèces protégées",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesNormandie",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+    ConfigHaieFactory(
+        hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
+        hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
+    )
+
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    info = ep_aisne_get_instructors_info(
+        moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
+    )
+
+    expected_json = """{
+  "slug": "ep",
+  "label": "Esp\\u00e8ces prot\\u00e9g\\u00e9es",
+  "key_elements": [
+
+  ],
+  "simulation_data": [
+    {
+      "label": "Caract\\u00e9ristiques des haies"
+    },
+    {
+      "label": "Inter-champ",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "28\\u00a0m  \\u2022 P1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Bordure de voirie ouverte \\u00e0 la circulation",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Autre (bord de chemin, b\\u00e2timent\\u2026)",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Mare \\u00e0 moins de 200\\u00a0m",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Contient un ou plusieurs vieux arbres, fissur\\u00e9s ou avec cavit\\u00e9s",
+      "value": {
+        "result": true,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "28\\u00a0m  \\u2022 D1",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Haie sur talus",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Compos\\u00e9e d\'essences non bocag\\u00e8res",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          },
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Haie r\\u00e9cemment plant\\u00e9e",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Destruction",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Sous une ligne \\u00e9lectrique ou t\\u00e9l\\u00e9phonique",
+      "value": {
+        "result": false,
+        "details": [
+          {
+            "label": "Plantation",
+            "value": "0\\u00a0m ",
+            "unit": null
+          }
+        ],
+        "display_result": true
+      },
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Calcul de la compensation attendue"
+    },
+    {
+      "label": "Coefficient compensation",
+      "value": "2,0",
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Liste des esp\\u00e8ces"
+    },
+    "onagre_number",
+    "protected_species"
+  ],
+  "other_items": null,
+  "comment": null
+}"""
+    assert asdict(info) == json.loads(expected_json)
+
+
+def test_bcae8_get_instructors_info(france_map):  # noqa
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
+    )
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    CriterionFactory(
+        title="Bonnes conditions agricoles et environnementales - Fiche VIII",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+    ConfigHaieFactory()
+
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    info = bcae8_get_instructors_info(
+        moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
+    )
+    # noqa: E501
+    expected_json = """{
+  "slug": "bcae8",
+  "label": "BCAE 8",
+  "key_elements": [
+    {
+      "label": "Motif",
+      "value": "\\n            Cr\\u00e9ation d\\u2019un acc\\u00e8s \\u00e0 la parcelle<br/>\\n            <span class=\\"fr-hint-text\\">\\n                Br\\u00e8che dans une haie pour cr\\u00e9er un chemin, permettre le passage d\\u2019engins\\u2026\\n            </span>\\n            ",
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Destruction",
+      "items": [
+        {
+          "label": "Total lin\\u00e9aire \\u00e0 d\\u00e9truire sur parcelle PAC",
+          "value": "28",
+          "unit": "m",
+          "comment": null
+        },
+        {
+          "label": "D\\u00e9tail",
+          "value": "28 m \\u22c5 D1",
+          "unit": null,
+          "comment": null
+        },
+        {
+          "label": "Pourcentage lin\\u00e9aire \\u00e0 d\\u00e9truire / total lin\\u00e9aire exploitation",
+          "value": "",
+          "unit": "%",
+          "comment": null
+        }
+      ]
+    },
+    {
+      "label": "Plantation",
+      "items": [
+        {
+          "label": "Total lin\\u00e9aire \\u00e0 planter sur parcelle PAC",
+          "value": "28",
+          "unit": "m",
+          "comment": null
+        },
+        {
+          "label": "D\\u00e9tail",
+          "value": "28 m \\u22c5 P1",
+          "unit": null,
+          "comment": null
+        },
+        {
+          "label": "Ratio de replantation",
+          "value": "1,00",
+          "unit": null,
+          "comment": "Lin\\u00e9aire \\u00e0 planter / lin\\u00e9aire \\u00e0 d\\u00e9truire, sur parcelle PAC"
+        }
+      ]
+    }
+  ],
+  "simulation_data": [
+    {
+      "label": "Total lin\\u00e9aire exploitation d\\u00e9clar\\u00e9",
+      "value": "",
+      "unit": "m",
+      "comment": null
+    }
+  ],
+  "other_items": null,
+  "comment": "Les d\\u00e9comptes de cette section n\'incluent que les haies d\\u00e9clar\\u00e9es sur parcelle PAC. Les alignements d\\u2019arbres sont \\u00e9galement exclus."
+}"""  # noqa
+    assert asdict(info) == json.loads(expected_json)
