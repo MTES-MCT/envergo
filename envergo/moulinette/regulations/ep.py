@@ -86,7 +86,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         return D("1.5")
 
 
-def get_hedge_details(hedge, r):
+def get_hedge_compensation_details(hedge, r):
     hedge_properties = []
     if hedge.prop("essences_non_bocageres"):
         hedge_properties.append("essences non bocagères")
@@ -167,7 +167,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
                     r = 2
                 all_r.append(r)
                 minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
-                hedges_details.append(get_hedge_details(hedge, r))
+                hedges_details.append(get_hedge_compensation_details(hedge, r))
 
             if haies.length_to_remove() > 0:
                 aggregated_r = minimum_length_to_plant / haies.length_to_remove()
