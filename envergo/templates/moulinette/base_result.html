@@ -9,7 +9,10 @@
 {% block container %}
 
   <div id="project-result" class="fr-col">
-    <section class="fr-py-4w fr-px-2w">
+    <section id="project-result-section" class="fr-py-4w fr-px-2w">
+      {% block messages_in_result %}
+        {% include '_messages.html' %}
+      {% endblock %}
       {% block result %}{% endblock %}
     </section>
   </div>

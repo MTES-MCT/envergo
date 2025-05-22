@@ -27,14 +27,22 @@
 
             </p>
             <p>Souhaitez-vous continuer ?</p>
-            <div id="demarches-simplifiees-modal-btns">
-              <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
-                      aria-controls="demarches-simplifiees-modal">Revenir à ma simulation</button>
-              <button class=" fr-ml-2w fr-btn demarche-simplifiee-btn fr-btn--icon-right  fr-icon-external-link-line">
-                Poursuivre vers la demande
-              </button>
-            </div>
-
+            <form id="demarche-simplifiee-form"
+                  action="{% url 'petition_project_create' %}"
+                  method="post">
+              {% csrf_token %}
+              <input type="hidden"
+                     name="moulinette_url"
+                     value="{{ request.build_absolute_uri }}" />
+              <div id="demarches-simplifiees-modal-btns">
+                <button type="button"
+                        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
+                        aria-controls="demarches-simplifiees-modal">Revenir à ma simulation</button>
+                <input type="submit"
+                       class=" fr-ml-2w fr-btn demarche-simplifiee-btn fr-btn--icon-right  fr-icon-external-link-line"
+                       value="Poursuivre vers la demande" />
+              </div>
+            </form>
           </div>
         </div>
       </div>

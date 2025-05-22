@@ -2,7 +2,6 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from envergo.petitions.views import (
-    PetitionProjectAutoRedirection,
     PetitionProjectCreate,
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
@@ -30,12 +29,6 @@ urlpatterns = [
         "+ref_proj+/instruction/haies/",
         RedirectView.as_view(pattern_name="home"),
         name="instructor_view_hedges",
-    ),
-    # a path that redirects to the petition project detail page without logging the event
-    path(
-        "<slug:reference>/auto-redirection/",
-        PetitionProjectAutoRedirection.as_view(),
-        name="petition_project_auto_redirection",
     ),
     path(
         "<slug:reference>/instruction/",
