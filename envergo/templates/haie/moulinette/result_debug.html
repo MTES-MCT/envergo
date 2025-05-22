@@ -90,6 +90,12 @@
                 {% if criterion|requires_hedge_density %}
                   <br />
                   <h6>Densité de haie</h6>
+
+                  <ul>
+                    <li>Ratio densité proche / densité environnante : {{ density_ratio }}</li>
+                    <li>Identifiant de la zone : {{ density_zone }}</li>
+                  </ul>
+
                   <table>
                     <thead>
                       <tr>
