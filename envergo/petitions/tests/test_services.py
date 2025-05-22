@@ -15,7 +15,10 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
 )
 from envergo.petitions.regulations.conditionnalitepac import bcae8_get_instructors_info
-from envergo.petitions.regulations.ep import ep_aisne_get_instructors_info
+from envergo.petitions.regulations.ep import (
+    ep_aisne_get_instructors_info,
+    ep_normandie_get_instructors_info,
+)
 from envergo.petitions.services import (
     compute_instructor_informations,
     fetch_project_details_from_demarches_simplifiees,
@@ -510,7 +513,7 @@ def test_ep_normandie_get_instructors_info(france_map):  # noqa
     )
 
     moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    info = ep_aisne_get_instructors_info(
+    info = ep_normandie_get_instructors_info(
         moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
     )
 
@@ -702,8 +705,39 @@ def test_ep_normandie_get_instructors_info(france_map):  # noqa
       "label": "Calcul de la compensation attendue"
     },
     {
-      "label": "Coefficient compensation",
-      "value": "2,0",
+      "label": "Coefficient compensation primaire",
+      "value": "1,4",
+      "unit": null,
+      "comment": "C\'est-\\u00e0-dire hors r\\u00e9duction permise par le projet de plantation"
+    },
+    {
+      "label": "Identifiant zone",
+      "value": "groupe_normandie_absent",
+      "unit": null,
+      "comment": null
+    },
+    {
+      "label": "Densit\\u00e9 haies \\u2013 rayon 200\\u00a0m",
+      "value": "0",
+      "unit": "ml/ha",
+      "comment": null
+    },
+    {
+      "label": "Densit\\u00e9 haies \\u2013 rayon 5\\u00a0km",
+      "value": "0",
+      "unit": "ml/ha",
+      "comment": null
+    },
+    {
+      "label": "Rapport de densit\\u00e9 200\\u00a0m / 5\\u00a0km",
+      "value": "1,00",
+      "unit": null,
+      "comment": null
+    },
+    "hedges_compensation_details",
+    {
+      "label": "Coefficient compensation r\\u00e9duit gr\\u00e2ce au projet de plantation",
+      "value": "1,4",
       "unit": null,
       "comment": null
     },

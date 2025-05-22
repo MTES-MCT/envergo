@@ -375,6 +375,8 @@ class EspecesProtegeesNormandie(
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
+        catalog["density_200"] = density_200
+        catalog["density_5000"] = density_5000
         catalog["density_zone"] = zone_id
         catalog["hedges_compensation_details"] = hedges_details
         return catalog
