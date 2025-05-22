@@ -59,4 +59,32 @@
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "consultation";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  {% if demarche_simplifiee_url %}
+    <script>
+      function displayMessage(title, message, type) {
+        const projectResult = document.getElementById('project-result-section');
+        const notification = `
+                          <div id="demarche_simplifiee_message" class="messages fr-mb-4w">
+                            <div class="fr-alert fr-alert--${type} fr-alert--sm">
+                              <h3 class="fr-alert__title">${title}</h3>
+                              <p>${message}</p>
+                            </div>
+                          </div>
+                        `;
+        projectResult.insertAdjacentHTML('afterbegin', notification);
+        // Scroll smoothly to the message
+        projectResult.scrollIntoView({behavior: 'smooth'});
+      }
+
+      window.addEventListener('load', function () {
+        const newTab = window.open("{{demarche_simplifiee_url}}", '_blank');
+        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+          // if the new tab was blocked by the browser, display the link in the current tab
+          displayMessage("Votre navigateur empêche l'ouverture d'un nouvel onglet.",
+            `Veuillez cliquer sur <a href="{{demarche_simplifiee_url}}">ce lien</a> pour commencer votre démarche.`,
+            "info");
+        }
+      });
+    </script>
+  {% endif %}
 {% endblock %}

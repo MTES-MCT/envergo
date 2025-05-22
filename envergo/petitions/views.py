@@ -10,11 +10,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
-from django.views import View
 from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
@@ -93,7 +91,7 @@ class PetitionProjectCreate(FormView):
         with transaction.atomic():
             petition_project = form.save()
             read_only_url = reverse(
-                "petition_project_auto_redirection",
+                "petition_project",
                 kwargs={"reference": petition_project.reference},
             )
 
@@ -119,12 +117,11 @@ class PetitionProjectCreate(FormView):
 
                 self.request.alerts.petition_project = petition_project
 
-                res = JsonResponse(
-                    {
-                        "demarche_simplifiee_url": demarche_simplifiee_url,
-                        "read_only_url": read_only_url,
-                    }
+                self.request.session["auto_redirection"] = True
+                self.request.session["demarche_simplifiee_url"] = (
+                    demarche_simplifiee_url
                 )
+                res = HttpResponseRedirect(read_only_url)
 
         return res
 
@@ -387,22 +384,17 @@ class PetitionProjectCreate(FormView):
             self.request.alerts.append(
                 PetitionProjectCreationProblem("unknown_error", is_fatal=True)
             )
-
-        return JsonResponse(
-            {
-                "error_title": "Un problème technique empêche la création de votre dossier.",
-                "error_body": f"""
-                Nous avons été notifiés et travaillons à la résolution de cette erreur.
-                <br/>
-                Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
-                <br/>
-                Merci de vous faire connaître en nous transmettant cet identifiant en nous écrivant à \
-                contact@haie.beta.gouv.fr
-                <br/>
-                Nous vous accompagnerons pour vous permettre de déposer votre demande sans encombres.""",
-            },
-            status=400,
-        )
+        error = f""" <h4>Un problème technique empêche la création de votre dossier.</h3>
+                        Nous avons été notifiés et travaillons à la résolution de cette erreur.
+                        <br/>
+                        Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
+                        <br/>
+                        Merci de vous faire connaître en nous transmettant cet identifiant en nous écrivant à \
+                        contact@haie.beta.gouv.fr
+                        <br/>
+                        Nous vous accompagnerons pour vous permettre de déposer votre demande sans encombres."""
+        messages.error(self.request, error)
+        return HttpResponseRedirect(form.data["moulinette_url"])
 
 
 class PetitionProjectDetail(DetailView):
@@ -428,6 +420,11 @@ class PetitionProjectDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        demarche_simplifiee_url = self.request.session.pop(
+            "demarche_simplifiee_url", None
+        )
+        if demarche_simplifiee_url:
+            context["demarche_simplifiee_url"] = demarche_simplifiee_url
 
         moulinette = self.object.get_moulinette()
 
@@ -483,14 +480,6 @@ class PetitionProjectDetail(DetailView):
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
         return context
-
-
-class PetitionProjectAutoRedirection(View):
-    def get(self, request, *args, **kwargs):
-        # Set a flag in the session
-        request.session["auto_redirection"] = True
-        # Redirect to the petition_project view
-        return redirect(reverse("petition_project", kwargs=kwargs))
 
 
 class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
