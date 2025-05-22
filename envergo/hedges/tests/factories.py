@@ -48,6 +48,10 @@ class SpeciesFactory(DjangoModelFactory):
     common_name = factory.Sequence(lambda n: f"Trucmuche {n}")
     scientific_name = factory.Sequence(lambda n: f"Machinchose {n}")
 
+    @factory.sequence
+    def taxref_ids(n):
+        return [n]
+
 
 class SpeciesMapFactory(DjangoModelFactory):
     class Meta:
@@ -57,3 +61,10 @@ class SpeciesMapFactory(DjangoModelFactory):
     map = factory.SubFactory(MapFactory)
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
     hedge_properties = []
+
+    @factory.post_generation
+    def post(obj, create, extracted, **kwargs):
+        # Make sure that the species are linked to the map polygons
+        obj.map.zones.all().update(species_taxrefs=obj.species.taxref_ids)
+        obj.map.map_type = "species"
+        obj.map.save()

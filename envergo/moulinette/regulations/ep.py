@@ -99,7 +99,7 @@ class EspecesProtegeesAisne(
         return D("1.5")
 
 
-def get_hedge_details(hedge, r):
+def get_hedge_compensation_details(hedge, r):
     hedge_properties = []
     if hedge.prop("essences_non_bocageres"):
         hedge_properties.append("essences non bocagères")
@@ -285,6 +285,31 @@ class EspecesProtegeesNormandie(
         ("arbustive", "lt_0.5", "groupe_normandie_5"): D("1.8"),
         ("alignement", "lt_0.5", "groupe_normandie_5"): D("1.8"),
         ("mixte", "lt_0.5", "groupe_normandie_5"): D("2"),
+        ("degradee", "gt_1.6", "groupe_normandie_absent"): D("1"),
+        ("buissonnante", "gt_1.6", "groupe_normandie_absent"): D("1"),
+        ("arbustive", "gt_1.6", "groupe_normandie_absent"): D("1"),
+        ("alignement", "gt_1.6", "groupe_normandie_absent"): D("1"),
+        ("mixte", "gt_1.6", "groupe_normandie_absent"): D("1.2"),
+        ("degradee", "gt_1.2_lte_1.6", "groupe_normandie_absent"): D("1"),
+        ("buissonnante", "gt_1.2_lte_1.6", "groupe_normandie_absent"): D("1"),
+        ("arbustive", "gt_1.2_lte_1.6", "groupe_normandie_absent"): D("1.2"),
+        ("alignement", "gt_1.2_lte_1.6", "groupe_normandie_absent"): D("1.2"),
+        ("mixte", "gt_1.2_lte_1.6", "groupe_normandie_absent"): D("1.4"),
+        ("degradee", "gte_0.8_lte_1.2", "groupe_normandie_absent"): D("1"),
+        ("buissonnante", "gte_0.8_lte_1.2", "groupe_normandie_absent"): D("1.2"),
+        ("arbustive", "gte_0.8_lte_1.2", "groupe_normandie_absent"): D("1.4"),
+        ("alignement", "gte_0.8_lte_1.2", "groupe_normandie_absent"): D("1.4"),
+        ("mixte", "gte_0.8_lte_1.2", "groupe_normandie_absent"): D("1.6"),
+        ("degradee", "gte_0.5_lt_0.8", "groupe_normandie_absent"): D("1.4"),
+        ("buissonnante", "gte_0.5_lt_0.8", "groupe_normandie_absent"): D("1.6"),
+        ("arbustive", "gte_0.5_lt_0.8", "groupe_normandie_absent"): D("1.8"),
+        ("alignement", "gte_0.5_lt_0.8", "groupe_normandie_absent"): D("1.8"),
+        ("mixte", "gte_0.5_lt_0.8", "groupe_normandie_absent"): D("2.2"),
+        ("degradee", "lt_0.5", "groupe_normandie_absent"): D("1.8"),
+        ("buissonnante", "lt_0.5", "groupe_normandie_absent"): D("2"),
+        ("arbustive", "lt_0.5", "groupe_normandie_absent"): D("2.2"),
+        ("alignement", "lt_0.5", "groupe_normandie_absent"): D("2.2"),
+        ("mixte", "lt_0.5", "groupe_normandie_absent"): D("2.6"),
     }
 
     def get_catalog_data(self):
@@ -310,9 +335,16 @@ class EspecesProtegeesNormandie(
             map__map_type=MAP_TYPES.zonage,
         ).first()
 
-        zone_id = zonage.attributes.get("indentifiant_zone", None) if zonage else None
+        zone_id = (
+            zonage.attributes.get("indentifiant_zone", "groupe_normandie_absent")
+            if zonage
+            else "groupe_normandie_absent"
+        )
 
-        density_ratio = density_200 / density_5000 if density_5000 != 0 else 1000
+        # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
+        # We then pick a coefficient corresponding to the Normandie average : 1
+        density_ratio = density_200 / density_5000 if density_5000 != 0 else 1
+
         if density_ratio > 1.6:
             density_ratio_range = "gt_1.6"
         elif density_ratio > 1.2:
@@ -339,21 +371,16 @@ class EspecesProtegeesNormandie(
                 ):
                     r = D(1)
                 else:
-                    if zone_id is None:
-                        # the centroid of the hedges to remove is not in an identified zone, and we need it to define R
-                        # The evaluator should return a "non disponible" result.
-                        catalog["is_available"] = False
-
                     r = self.COEFFICIENT_MATRIX.get(
                         (hedge.hedge_type, density_ratio_range, zone_id)
                     )
 
-                hedges_details.append(get_hedge_details(hedge, r))
                 if r is not None:
                     all_r.append(r)
                     minimum_length_to_plant = (
                         D(minimum_length_to_plant) + D(hedge.length) * r
                     )
+                hedges_details.append(get_hedge_compensation_details(hedge, r))
 
             if haies.length_to_remove() > 0:
                 aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
@@ -362,6 +389,10 @@ class EspecesProtegeesNormandie(
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["aggregated_r"] = aggregated_r
+        catalog["density_ratio"] = density_ratio
+        catalog["density_200"] = density_200
+        catalog["density_5000"] = density_5000
+        catalog["density_zone"] = zone_id
         catalog["hedges_compensation_details"] = hedges_details
         return catalog
 

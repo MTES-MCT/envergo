@@ -1920,17 +1920,16 @@ class MoulinetteHaie(Moulinette):
                 }
             )
 
-            if truncated_circle_200 and truncated_circle_5000:
-                # Create the density map
-                from envergo.hedges.services import create_density_map
+            # Create the density map
+            from envergo.hedges.services import create_density_map
 
-                density_map = create_density_map(
-                    centroid_geos,
-                    haies.hedges_to_remove(),
-                    truncated_circle_200,
-                    truncated_circle_5000,
-                )
-                context["density_map"] = density_map
+            density_map = create_density_map(
+                centroid_geos,
+                haies.hedges_to_remove(),
+                truncated_circle_200,
+                truncated_circle_5000,
+            )
+            context["density_map"] = density_map
 
         return context
 
