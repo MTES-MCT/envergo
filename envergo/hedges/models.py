@@ -248,7 +248,6 @@ class HedgeData(models.Model):
 
     def get_all_species(self):
         """Return the local list of protected species."""
-
         zone_subquery = (
             Zone.objects.filter(
                 Q(geometry__intersects=self.get_bounding_box(self.hedges()))
