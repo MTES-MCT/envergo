@@ -122,7 +122,7 @@ class EspecesProtegeesNormandie(
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
-        "dispense": RESULTS.dispense,
+        "dispense": RESULTS.dispense_sous_condition,
     }
 
     CODE_MATRIX = {
