@@ -712,7 +712,7 @@ def test_ep_normandie_get_instructors_info(france_map):  # noqa
     },
     {
       "label": "Identifiant zone",
-      "value": "groupe_normandie_absent",
+      "value": "normandie_groupe_absent",
       "unit": null,
       "comment": null
     },
