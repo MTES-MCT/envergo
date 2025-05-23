@@ -117,7 +117,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
     assert moulinette.result == "interdit"
 
 
-def test_ep_normandie_dispense(ep_normandie_criterion, zonage_normandie):  # noqa
+def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -333,6 +333,40 @@ def test_ep_normandie_derogation_simplifiee(
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
+
+
+def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
+    MapFactory(
+        name="Zonage Normandie",
+        map_type=MAP_TYPES.zonage,
+        zones=[
+            ZoneFactory(
+                geometry=MultiPolygon([france_polygon]),
+                attributes={"identifiant_zone": "normandie_groupe_5"},
+            )
+        ],
+    )
+    ConfigHaieFactory()
+
+    hedge_gt20m = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_gt20m])
+
+    data = {
+        "profil": "autre",
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "department": "44",
+        "haies": hedges,
+    }
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.ep.ep_normandie.result_code == "dispense"
 
 
 def test_min_length_condition_normandie(
