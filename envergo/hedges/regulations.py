@@ -13,7 +13,7 @@ class PlantationCondition(ABC):
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
-    hint: str = ""
+    hint_text: str = ""
 
     # We want to display the raw class in the debug template, so we need to
     # prevent the template engine to instanciate the class
@@ -42,6 +42,10 @@ class PlantationCondition(ABC):
     def text(self):
         t = self.valid_text if self.result else self.invalid_text
         return mark_safe(t % self.context)
+
+    @property
+    def hint(self):
+        return mark_safe(self.hint_text % self.context)
 
 
 class MinLengthCondition(PlantationCondition):
@@ -299,12 +303,21 @@ class CalvadosQualityCondition(PlantationCondition):
         "buissonnante": ["buissonnante", "arbustive", "mixte"],
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
+    hint_text = """
+        Linéaire attendu en compensation : %(lpm)s m.
+        La compensation peut être réduite à %(reduced_lpm)s m en proposant de planter
+        des haies mixtes plutôt que de type identiqe aux haies à détruire.
+    """
 
     def evaluate(self):
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
         LD = defaultdict(int)  # linéaire à détruire
         LC = defaultdict(int)  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
+
+        # Les haies à planter
+        for hedge in self.hedge_data.hedges_to_plant():
+            LP[hedge.hedge_type] += hedge.length
 
         # On calcule les longueurs à compenser, le r dépend de chaque haie
         for hedge in self.hedge_data.hedges_to_remove():
@@ -324,8 +337,15 @@ class CalvadosQualityCondition(PlantationCondition):
         for hedge_type in HEDGE_TYPES:
             LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
 
-        for hedge in self.hedge_data.hedges_to_plant():
-            LP[hedge.hedge_type] += hedge.length
+        # On calcule le linéaire total à compenser pour l'affichage
+        lpm = sum(LC.values())
+        reduced_lpm = 0
+        for t, l in LC.items():
+            reduced_lpm += l * 0.8 if t != "mixte" else l
+        self.context = {
+            "lpm": round(lpm),
+            "reduced_lpm": round(reduced_lpm),
+        }
 
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
@@ -351,9 +371,7 @@ class CalvadosQualityCondition(PlantationCondition):
         # À la fin, le linéaire à compenser doit être nul
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
-        self.context = {
-            "LC": LC,
-        }
+        self.context.update({"LC": LC})
 
         return self
 
@@ -405,9 +423,9 @@ class StrenghteningCondition(PlantationCondition):
         Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
         <br>Il y a %(strengthening_excess)s m en excès.
     """
-    hint = """
+    hint_text = """
         La compensation peut consister en un renforcement ou regarnissage de haies
-        existantes, dans la limite de 20% du linéaire total à planter.
+        existantes, dans la limite de 20%% du linéaire total à planter.
     """
 
     def evaluate(self):
