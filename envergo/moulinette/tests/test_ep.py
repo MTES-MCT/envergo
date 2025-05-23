@@ -55,7 +55,7 @@ def zonage_normandie(france_map):  # noqa
         zones=[
             ZoneFactory(
                 geometry=MultiPolygon([france_polygon]),
-                attributes={"indentifiant_zone": "groupe_normandie_1"},
+                attributes={"identifiant_zone": "normandie_groupe_1"},
             )
         ],
     )
@@ -404,7 +404,7 @@ def test_replantation_coefficient_normandie(
         zones=[
             ZoneFactory(
                 geometry=MultiPolygon([france_polygon]),
-                attributes={"indentifiant_zone": "groupe_normandie_1"},
+                attributes={"identifiant_zone": "normandie_groupe_1"},
             )
         ],
     )
