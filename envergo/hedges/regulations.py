@@ -280,10 +280,33 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
-class CalvadosQualityCondition(QualityCondition):
-    def get_minimum_lengths_to_plant(self):
+HEDGE_TYPES = ["mixte", "alignement", "arbustive", "buissonnante", "degradee"]
+
+
+class CalvadosQualityCondition(PlantationCondition):
+    label = "Type de haie plantée"
+    order = 2
+    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    invalid_text = """
+      Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
+    """
+
+    # Hedge of type on the left can be replaced by the types on the right
+    compensations = {
+        "mixte": ["mixte"],
+        "alignement": ["alignement", "mixte"],
+        "arbustive": ["arbustive", "mixte"],
+        "buissonnante": ["buissonnante", "arbustive", "mixte"],
+        "degradee": ["buissonnante", "arbustive", "mixte"],
+    }
+
+    def evaluate(self):
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
-        lengths_by_type = defaultdict(int)
+        LD = defaultdict(int)  # linéaire à détruire
+        LC = defaultdict(int)  # linéaire à compenser
+        LP = defaultdict(int)  # linéaire à planter
+
+        # On calcule les longueurs à compenser, le r dépend de chaque haie
         for hedge in self.hedge_data.hedges_to_remove():
             if hedge.length <= 10:
                 r = 0
@@ -294,15 +317,60 @@ class CalvadosQualityCondition(QualityCondition):
             else:
                 r = 2
 
-            lengths_by_type[hedge.hedge_type] += hedge.length * r
+            LD[hedge.hedge_type] += hedge.length
+            LC[hedge.hedge_type] += hedge.length * r
 
-        return {
-            "degradee": lengths_by_type["degradee"],
-            "buissonnante": lengths_by_type["buissonnante"],
-            "arbustive": lengths_by_type["arbustive"],
-            "mixte": lengths_by_type["mixte"],
-            "alignement": lengths_by_type["alignement"],
+        # Le taux de compensation ne peut pas descendre sous 1:1
+        for hedge_type in HEDGE_TYPES:
+            LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
+
+        for hedge in self.hedge_data.hedges_to_plant():
+            LP[hedge.hedge_type] += hedge.length
+
+        # On calcule l'application des compensations
+        # Pour chaque linéaire à compenser, on réparti les linéaires à planter
+        # en fonction des substitutions possibles.
+        for hedge_type in HEDGE_TYPES:
+            for compensation_type in self.compensations[hedge_type]:
+
+                # Si on compense avec un type de qualité supérieur, le taux
+                # de compensation est réduit de 20%
+                rate = 1.0 if compensation_type == hedge_type else 0.8
+
+                # Note: planter de la buissonnante n'est pas considéré comme une
+                # amélioration de la dégradée, car il n'est pas possible de planter
+                # de la dégradée.
+                if hedge_type == "degradee" and compensation_type == "buissonnante":
+                    rate = 1.0
+
+                # Le linéaire planté vient réduire le linéaire à compenser
+                compensation = min(LC[hedge_type], LP[compensation_type] / rate)
+                LC[hedge_type] -= compensation
+                LP[compensation_type] -= compensation * rate
+
+        # À la fin, le linéaire à compenser doit être nul
+        remaining_lc = sum(LC.values())
+        self.result = remaining_lc == 0
+        self.context = {
+            "LC": LC,
         }
+
+        return self
+
+    @property
+    def text(self):
+        if self.result:
+            t = self.valid_text
+        else:
+            lines = [self.invalid_text]
+            for hedge_type, length in self.context["LC"].items():
+                if length > 0.0:
+                    lines.append(
+                        f"Il manque au moins {round(length)} m de haie {hedge_type}."
+                    )
+            t = "<br />\n".join(lines)
+
+        return mark_safe(t % self.context)
 
 
 class SafetyCondition(PlantationCondition):

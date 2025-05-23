@@ -2,6 +2,7 @@ from decimal import Decimal as D
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
+    CalvadosQualityCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
     PlantationConditionMixin,
@@ -97,6 +98,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         StrenghteningCondition,
         LineaireSurTalusCondition,
         LineaireInterchamp,
+        CalvadosQualityCondition,
     ]
 
     RESULT_MATRIX = {
