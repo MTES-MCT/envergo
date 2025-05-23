@@ -384,7 +384,10 @@ class CalvadosQualityCondition(PlantationCondition):
             for hedge_type, length in self.context["LC"].items():
                 if length > 0.0:
                     lines.append(
-                        f"Il manque au moins {round(length)} m de haie {hedge_type}."
+                        f"""
+                        Il manque au moins {round(length)} m de haie
+                        {", ".join(self.compensations[hedge_type])}.
+                        """
                     )
             t = "<br />\n".join(lines)
 
