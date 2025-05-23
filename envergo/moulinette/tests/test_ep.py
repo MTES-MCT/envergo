@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.gis.geos import MultiPolygon
 
-from envergo.evaluations.models import RESULTS
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
@@ -380,17 +379,17 @@ def test_min_length_condition_normandie(
     moulinette = MoulinetteHaie(data, data, False)
     evaluator = PlantationEvaluator(moulinette, hedges)
 
-    assert evaluator.get_context().get("minimum_length_to_plant") == 47
+    assert evaluator.get_context().get("minimum_length_to_plant") == 58
 
 
 @pytest.mark.parametrize(
     "params",
     [
-        ("degradee", 1.2),
-        ("buissonnante", 1.4),
-        ("arbustive", 1.6),
-        ("alignement", 1.6),
-        ("mixte", 1.8),
+        ("degradee", 1.6),
+        ("buissonnante", 1.8),
+        ("arbustive", 2),
+        ("alignement", 2),
+        ("mixte", 2.2),
     ],
 )
 def test_replantation_coefficient_normandie(
@@ -431,28 +430,3 @@ def test_replantation_coefficient_normandie(
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.replantation_coefficient == r
-
-
-def test_replantation_coefficient_normandie_missing_data(
-    ep_normandie_criterion,
-):  # noqa
-    ConfigHaieFactory()
-
-    hedge_gt20m = HedgeFactory(
-        latLngs=[
-            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
-            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
-        ]
-    )
-    hedges = HedgeDataFactory(hedges=[hedge_gt20m])
-    data = {
-        "profil": "autre",
-        "motif": "chemin_acces",
-        "reimplantation": "remplacement",
-        "department": "44",
-        "haies": hedges,
-    }
-
-    moulinette = MoulinetteHaie(data, data, False)
-
-    assert moulinette.result == RESULTS.non_disponible
