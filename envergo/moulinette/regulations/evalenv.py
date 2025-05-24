@@ -240,15 +240,14 @@ class RoutesForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_06"
 
     activate = forms.BooleanField(
-        label="Rubrique 6 : routes",
+        label="Aménagement de voirie",
         required=True,
         widget=forms.CheckboxInput,
     )
     route_publique = DisplayChoiceField(
         label="Route publique",
         help_text="""
-            Construite, élargie, ou rétrocédée au domaine public.
-            Cumul autorisé depuis le 16 mai 2017
+            Construction ou élargissement d'une route publique, ou rétrocession d’une voie privée au domaine public
         """,
         choices=extract_choices(ROUTE_PUBLIQUE_CHOICES),
         widget=forms.RadioSelect,
@@ -350,12 +349,12 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_30"
 
     activate = forms.BooleanField(
-        label="Rubrique 30 : photovoltaïque",
+        label="Installation photovoltaïque",
         required=True,
         widget=forms.CheckboxInput,
     )
     puissance = DisplayChoiceField(
-        label="Puissance",
+        label="Puissance totale des panneaux installés",
         help_text="Cumul autorisé depuis le 16 mai 2017",
         choices=extract_choices(PUISSANCE_CHOICES),
         widget=forms.RadioSelect,
@@ -444,15 +443,13 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_41"
 
     activate = forms.BooleanField(
-        label="Rubrique 41 : aires de stationnement",
+        label="Aire de stationnement",
         required=True,
         widget=forms.CheckboxInput,
     )
     type_stationnement = DisplayChoiceField(
         label="Type de stationnement",
         help_text="""
-            Privé : attaché à des logements ou réservé à des employés.
-            Mixte : si au moins une place est ouverte au public
         """,
         required=True,
         widget=forms.RadioSelect,
@@ -464,7 +461,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     nb_emplacements = DisplayChoiceField(
         label="Nombre total d'emplacements",
         help_text="""
-            Somme des places privées et publiques.
+            Somme des emplacements privés et publics.
             Cumul autorisé après le 16 mai 2017
         """,
         required=True,
@@ -508,12 +505,12 @@ class CampingForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_42"
 
     activate = forms.BooleanField(
-        label="Rubrique 42 : camping",
+        label="Camping",
         required=True,
         widget=forms.CheckboxInput,
     )
     nb_emplacements = DisplayChoiceField(
-        label="Nombre d'emplacements",
+        label="Nombre total d'emplacements",
         help_text="""
             De tentes, caravanes, résidences mobiles ou habitations légères de loisirs.
             Cumul autorisé après le 16 mai 2017.
@@ -556,7 +553,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
 
     activate = forms.BooleanField(
-        label="Rubrique 44 : sport / loisirs / culture",
+        label="Équipement de sport, de loisirs ou culturel",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -612,15 +609,17 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_47"
 
     activate = forms.BooleanField(
-        label="Rubrique 47 : défrichement / boisement",
+        label="Défrichement, déboisement ou boisement",
         required=True,
         widget=forms.CheckboxInput,
     )
     defrichement_deboisement = DisplayChoiceField(
         label="Défrichement ou déboisement",
         help_text="""
-            Uniquement en cas de changement de destination du terrain.
-            Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
+            Toute opération volontaire (coupe rase, dessouchage…) ayant pour effet de détruire l’état boisé d’un terrain
+            (qu’il soit à usage forestier ou non), et qui en change la destination : mise en culture, habitation, activité tertiaire…
+            Voir <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf" target="_blank" rel="noopener">
+            guide de la nomenclature p. 56</a>.
         """,
         required=True,
         widget=forms.RadioSelect,
@@ -639,8 +638,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     premier_boisement = DisplayChoiceField(
         label="Premier boisement",
         help_text="""
-            Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.
-             Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
+            Ne concerne pas le reboisement de terrains qui étaient antérieurement à l'état boisé.
         """,
         required=True,
         widget=forms.RadioSelect,
