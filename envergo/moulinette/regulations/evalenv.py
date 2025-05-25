@@ -554,11 +554,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=TYPE_EQUIPEMENT_CHOICES,
-        get_display_value=lambda value: (
-            "Ni sportif, ni de loisirs, ni culturel"
-            if value == "autre"
-            else dict(TYPE_EQUIPEMENT_CHOICES).get(value, value)
-        ),
+        get_display_value=extract_display_function(TYPE_EQUIPEMENT_CHOICES),
     )
     capacite_accueil = forms.ChoiceField(
         label="Capacité d'accueil",
