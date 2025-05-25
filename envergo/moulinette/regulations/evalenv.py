@@ -39,7 +39,7 @@ class EmpriseForm(forms.Form):
         required=True,
         display_label="Zonage du projet :",
         get_display_value=lambda value: (
-            "Zone urbaine du PLU" if value == "oui" else "Hors zone Urbaine du PLU"
+            "Zone urbaine du PLU" if value == "oui" else "Hors zone urbaine du PLU"
         ),
     )
 
@@ -252,7 +252,6 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         choices=extract_choices(ROUTE_PUBLIQUE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_label="Tronçon de route publique :",
         display_help_text="Construit, élargi ou rétrocédé au domaine public",
         get_display_value=extract_display_function(ROUTE_PUBLIQUE_CHOICES),
     )
@@ -358,7 +357,6 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         required=True,
         display_help_text="",
-        display_label="Puissance photovoltaïque :",
         get_display_value=extract_display_function(PUISSANCE_CHOICES),
     )
     localisation = DisplayChoiceField(
@@ -366,7 +364,6 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
         choices=LOCALISATION_CHOICES,
         widget=forms.RadioSelect,
         required=True,
-        display_label="Localisation des panneaux photovoltaïques :",
         get_display_value=lambda value: (
             "Au sol" if value == "sol" else dict(LOCALISATION_CHOICES).get(value, value)
         ),
@@ -457,7 +454,6 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         choices=extract_choices(TYPE_STATIONNEMENT_CHOICES),
         display_help_text="",
-        display_label="Aire de stationnement :",
         get_display_value=extract_display_function(TYPE_STATIONNEMENT_CHOICES),
     )
     nb_emplacements = DisplayChoiceField(
@@ -470,7 +466,6 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         choices=extract_choices(NB_EMPLACEMENTS_CHOICES),
         display_help_text="Somme des places privées et publiques",
-        display_label="Nombre total d'emplacements de stationnement :",
         get_display_value=extract_display_function(NB_EMPLACEMENTS_CHOICES),
     )
 
@@ -521,7 +516,6 @@ class CampingForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         choices=extract_choices(NB_EMPLACEMENTS_CAMPING_CHOICES),
         display_help_text="Tentes, caravanes, résidences mobiles ou habitations légères de loisirs",
-        display_label="Terrain de camping :",
         get_display_value=extract_display_function(NB_EMPLACEMENTS_CAMPING_CHOICES),
     )
 
@@ -651,7 +645,6 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
             ("lt_05ha", "Moins de 0,5 ha"),
             ("gte_05ha", "0,5 ha ou plus"),
         ),
-        display_label="Superficie totale du premier boisement (même fragmentée) :",
         display_help_text="Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.",
         get_display_value=lambda value: (
             "Moins de 0,5 ha" if value == "lt_05ha" else "0,5 ha ou plus"
