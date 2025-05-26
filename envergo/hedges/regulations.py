@@ -508,10 +508,22 @@ class LineaireInterchamp(PlantationCondition):
         self.result = delta <= 0
         self.context = {
             "length_to_remove_interchamp": round(length_to_remove),
-            "length_to_plant interchamp": round(length_to_plant),
+            "length_to_plant_interchamp": round(length_to_plant),
             "interchamp_delta": round(max(0, delta)),
         }
         return self
+
+    @property
+    def text(self):
+        length = self.context.get("length_to_plant_interchamp")
+        valid_text = (
+            "Le linéaire de haies plantées en inter-champ est suffisant."
+            if length > 0
+            else "Pas de plantation en inter-champ."
+        )
+
+        t = valid_text if self.result else self.invalid_text
+        return mark_safe(t % self.context)
 
 
 class LineaireSurTalusCondition(PlantationCondition):
@@ -539,10 +551,22 @@ class LineaireSurTalusCondition(PlantationCondition):
         self.result = delta <= 0
         self.context = {
             "length_to_remove_talus": round(length_to_remove),
-            "length_to_plant talus": round(length_to_plant),
+            "length_to_plant_talus": round(length_to_plant),
             "talus_delta": round(max(0, delta)),
         }
         return self
+
+    @property
+    def text(self):
+        length = self.context.get("length_to_plant_talus")
+        valid_text = (
+            "Le linéaire de haies plantées sur talus est suffisant."
+            if length > 0
+            else "Pas de plantation sur talus."
+        )
+
+        t = valid_text if self.result else self.invalid_text
+        return mark_safe(t % self.context)
 
 
 class PlantationConditionMixin:
