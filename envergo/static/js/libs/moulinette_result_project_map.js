@@ -29,18 +29,36 @@ function initializeMarker(mapData, map) {
       setFieldValue(latLng);
       toggleButtons();
     });
+
+  return marker;
 }
 
 window.addEventListener('mapInitialized', function (event) {
-
   const mapId = event.detail.id;
-
-
 
   if (mapId === PROJECT_MAP_ID) {
     const map = event.detail.map;
     const mapData = event.detail.data;
 
-    initializeMarker(mapData, map);
+    const marker = initializeMarker(mapData, map);
+
+    const moulinetteForm = document.getElementById("moulinette-form");
+    moulinetteForm.addEventListener('submit', function (event) {
+      // disable the marker dragging, and the edition buttons when the form is submitted
+
+      marker.dragging.disable();
+
+      const editButtons = document.querySelectorAll('.moulinette-edit-button');
+      editButtons.forEach(button => {
+        if(button.tagName.toLowerCase() === 'a')
+        {
+          button.removeAttribute('href');
+        }
+        else{
+          button.disabled = true;
+        }
+      });
+    });
+
   }
 });

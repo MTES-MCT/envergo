@@ -34,24 +34,22 @@
            class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
         <div class="ratio-content">
           <div class="leaflet-container">
-            <div id="map">
-              <a id="map-edit-button"
-                 href="{{ edit_url }}"
-                 class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-                 data-event-category="Content"
-                 data-event-action="Edit"
-                 data-event-name="Map">Modifier le
-                projet
-              </a>
-              <input id="map-refresh-button"
-                     type="submit"
-                     class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-                     value="Renouveler la simulation"
-                     hidden />
-            </div>
+            <div id="map"></div>
           </div>
         </div>
       </div>
+
+      <a id="map-edit-button"
+         href="{{ edit_url }}"
+         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button"
+         data-event-category="Content"
+         data-event-action="Edit"
+         data-event-name="Map">Modifier le
+        projet
+      </a>
+      <button id="map-refresh-button"
+              type="submit"
+              class="fr-btn fr-btn--secondary">Renouveler la simulation</button>
     </figure>
   </form>
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
@@ -145,6 +143,7 @@
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
     var PROJECT_MAP_ID = 'map';
+    var SIMULATION_FORM_ID = "moulinette-form";
     window.MAPS = window.MAPS || {};
     window.MAPS[PROJECT_MAP_ID] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
@@ -171,6 +170,7 @@
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_project_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
   <script defer
           src="{% static 'js/libs/amenagement_result_actions_banner.js' %}"></script>
 {% endblock %}

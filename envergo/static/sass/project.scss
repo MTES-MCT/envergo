@@ -1122,20 +1122,19 @@ $content-max-width: 40rem;
       pointer-events: none;
       z-index: 1000;
       position: absolute;
-      right: 1.5em;
-      bottom: 2em;
+      right: 3em;
+      bottom: 9em;
       background-color: var(--grey-1000-50);
-      color: var(--text-action-high-blue-france);
     }
 
-    #map:hover > #map-edit-button:not(.hidden),
+    #moulinette-form:hover #map-edit-button:not(.hidden),
     #map-refresh-button.display {
       opacity: 1;
       pointer-events: auto;
     }
 
-    #map-edit-button:hover,
-    #map-refresh-button:hover {
+    #map-edit-button:hover:not(:disabled),
+    #map-refresh-button:hover:not(:disabled) {
       background-color: var(--background-default-grey-hover);
     }
   }
