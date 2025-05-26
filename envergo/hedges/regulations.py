@@ -396,7 +396,7 @@ class CalvadosQualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    order = 4
+    order = 10
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
         Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
@@ -417,6 +417,7 @@ class SafetyCondition(PlantationCondition):
 
 class StrenghteningCondition(PlantationCondition):
     RATE = 0.2
+    order = 3
 
     label = "Renforcement"
     valid_text = (
@@ -463,6 +464,7 @@ class StrenghteningCondition(PlantationCondition):
 
 class LineaireInterchamp(PlantationCondition):
     label = "Maintien des haies inter-champ"
+    order = 5
     valid_text = "Le linéaire de haies plantées en inter-champ est suffisant."
     invalid_text = """
         Le linéaire de haies plantées en inter-champ doit être supérieur à %(length_to_remove_interchamp)s m.
@@ -493,6 +495,7 @@ class LineaireInterchamp(PlantationCondition):
 
 class LineaireSurTalusCondition(PlantationCondition):
     label = "Maintien des haies sur talus"
+    order = 4
     valid_text = "Le linéaire de haies plantées sur talus est suffisant."
     invalid_text = """
         Le linéaire de haies plantées sur talus doit être supérieur à %(length_to_remove_talus)s m.
