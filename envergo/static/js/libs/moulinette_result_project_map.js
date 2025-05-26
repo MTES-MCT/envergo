@@ -25,6 +25,7 @@ function initializeMarker(mapData, map) {
   marker.addTo(map);
 
   marker.on('moveend', function (event) {
+      _paq.push(['trackEvent', 'Content', 'MapMoveCursor']);
       const latLng = marker.getLatLng();
       setFieldValue(latLng);
       toggleButtons();
@@ -42,10 +43,18 @@ window.addEventListener('mapInitialized', function (event) {
 
     const marker = initializeMarker(mapData, map);
 
+    map.on('dblclick', function(e) {
+      _paq.push(['trackEvent', 'Content', 'MapDblClick']);
+      marker.setLatLng(e.latlng);
+      setFieldValue(e.latlng);
+      toggleButtons();
+    });
+
     const moulinetteForm = document.getElementById("moulinette-form");
     moulinetteForm.addEventListener('submit', function (event) {
-      // disable the marker dragging, and the edition buttons when the form is submitted
+      _paq.push(['trackEvent', 'Content', 'Update', 'Map']);
 
+      // disable the marker dragging, and the edition buttons when the form is submitted
       marker.dragging.disable();
 
       const editButtons = document.querySelectorAll('.moulinette-edit-button');
