@@ -5,9 +5,7 @@ function setFieldValue (latLng) {
     lngField.value = latLng.lng.toFixed(5);
 }
 
-function toggleButtons () {
-  const editButton = document.getElementById("map-edit-button");
-  editButton.classList.add("hidden");
+function displayButton () {
   const refreshButton = document.getElementById("map-refresh-button");
   refreshButton.classList.add("display");
 }
@@ -28,7 +26,7 @@ function initializeMarker(mapData, map) {
       _paq.push(['trackEvent', 'Content', 'MapMoveCursor']);
       const latLng = marker.getLatLng();
       setFieldValue(latLng);
-      toggleButtons();
+      displayButton();
     });
 
   return marker;
@@ -47,7 +45,7 @@ window.addEventListener('mapInitialized', function (event) {
       _paq.push(['trackEvent', 'Content', 'MapDblClick']);
       marker.setLatLng(e.latlng);
       setFieldValue(e.latlng);
-      toggleButtons();
+      displayButton();
     });
 
     const moulinetteForm = document.getElementById("moulinette-form");
