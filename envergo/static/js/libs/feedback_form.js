@@ -30,8 +30,11 @@
     }
   };
 
-  FeedbackModal.prototype.onFeedbackSubmit = function (button) {
+  FeedbackModal.prototype.onFeedbackSubmit = function (event) {
     _paq.push(['trackEvent', 'FeedbackDialog', 'FormSubmit']);
+    if (event.submitter) {
+      event.submitter.disabled = true; // Disable the submit button to prevent multiple submissions
+    }
   };
 
 })(this, window._paq);
