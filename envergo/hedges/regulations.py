@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 from django.utils.safestring import mark_safe
 
@@ -288,7 +288,15 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
-HEDGE_TYPES = ["mixte", "alignement", "arbustive", "buissonnante", "degradee"]
+HEDGE_TYPES = OrderedDict(
+    [
+        ("mixte", "mixte"),
+        ("alignement", "alignement"),
+        ("arbustive", "arbustive"),
+        ("buissonnante", "buissonnante"),
+        ("degradee", "dégradée"),
+    ]
+)
 
 
 class CalvadosQualityCondition(PlantationCondition):
@@ -338,7 +346,8 @@ class CalvadosQualityCondition(PlantationCondition):
             LC[hedge.hedge_type] += hedge.length * r
 
         # Le taux de compensation ne peut pas descendre sous 1:1
-        for hedge_type in HEDGE_TYPES:
+        hedge_keys = HEDGE_TYPES.keys()
+        for hedge_type in hedge_keys:
             LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
 
         # On calcule le linéaire total à compenser pour l'affichage
@@ -354,7 +363,7 @@ class CalvadosQualityCondition(PlantationCondition):
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
-        for hedge_type in HEDGE_TYPES:
+        for hedge_type in hedge_keys:
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux
@@ -390,7 +399,7 @@ class CalvadosQualityCondition(PlantationCondition):
                     lines.append(
                         f"""
                         Il reste à compenser au moins {round(length)} m de haie
-                        {hedge_type}.
+                        {HEDGE_TYPES[hedge_type]}.
                         """
                     )
             t = "<br />\n".join(lines)
@@ -400,7 +409,7 @@ class CalvadosQualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    order = 4
+    order = 10
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
         Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
@@ -421,6 +430,7 @@ class SafetyCondition(PlantationCondition):
 
 class StrenghteningCondition(PlantationCondition):
     RATE = 0.2
+    order = 3
 
     label = "Renforcement"
     valid_text = (
@@ -467,6 +477,7 @@ class StrenghteningCondition(PlantationCondition):
 
 class LineaireInterchamp(PlantationCondition):
     label = "Maintien des haies inter-champ"
+    order = 5
     valid_text = "Le linéaire de haies plantées en inter-champ est suffisant."
     invalid_text = """
         Le linéaire de haies plantées en inter-champ doit être supérieur à %(length_to_remove_interchamp)s m.
@@ -497,6 +508,7 @@ class LineaireInterchamp(PlantationCondition):
 
 class LineaireSurTalusCondition(PlantationCondition):
     label = "Maintien des haies sur talus"
+    order = 4
     valid_text = "Le linéaire de haies plantées sur talus est suffisant."
     invalid_text = """
         Le linéaire de haies plantées sur talus doit être supérieur à %(length_to_remove_talus)s m.
