@@ -1119,7 +1119,6 @@ $content-max-width: 40rem;
       position: relative;
     }
 
-    #map-edit-button,
     #map-refresh-button {
       transition: opacity 0.4s ease-in-out 0s;
       opacity: 0;
@@ -1127,17 +1126,15 @@ $content-max-width: 40rem;
       z-index: 1000;
       position: absolute;
       right: 1.5em;
-      bottom: 3em;
+      top: 13em;
       background-color: var(--grey-1000-50);
     }
 
-    #moulinette-form:hover #map-edit-button:not(.hidden),
     #map-refresh-button.display {
       opacity: 1;
       pointer-events: auto;
     }
 
-    #map-edit-button:hover:not(:disabled),
     #map-refresh-button:hover:not(:disabled) {
       background-color: var(--background-default-grey-hover);
     }
