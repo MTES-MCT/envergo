@@ -133,5 +133,5 @@ def get_item(dictionary, key):
 
 @register.filter
 def as_hidden(field):
-    field.field.widget = HiddenInput()
-    return field
+    """Render the field as a hidden input without modifying the original widget."""
+    return field.as_widget(widget=HiddenInput())
