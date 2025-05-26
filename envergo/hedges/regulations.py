@@ -470,6 +470,18 @@ class StrenghteningCondition(PlantationCondition):
         }
         return self
 
+    @property
+    def text(self):
+        length = self.context.get("strengthening_length")
+        valid_text = (
+            "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
+            if length > 0
+            else "Pas de renforcement ou regarnissage."
+        )
+
+        t = valid_text if self.result else self.invalid_text
+        return mark_safe(t % self.context)
+
 
 class LineaireInterchamp(PlantationCondition):
     label = "Maintien des haies inter-champ"
