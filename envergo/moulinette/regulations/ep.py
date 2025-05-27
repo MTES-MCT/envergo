@@ -377,6 +377,7 @@ class EspecesProtegeesNormandie(
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
         if haies:
+            hedges_to_remove_with_r = []
             for hedge in haies.hedges_to_remove():
                 if hedge.mode_destruction != "coupe_a_blanc":
                     coupe_a_blanc_every_hedge = False
@@ -394,15 +395,15 @@ class EspecesProtegeesNormandie(
                 ):
                     r = D(1)
                 else:
-                    r = self.COEFFICIENT_MATRIX.get(
+                    r = self.COEFFICIENT_MATRIX[
                         (hedge.hedge_type, density_ratio_range, zone_id)
-                    )
+                    ]
 
-                if r is not None:
-                    all_r.append(r)
-                    minimum_length_to_plant = (
-                        D(minimum_length_to_plant) + D(hedge.length) * r
-                    )
+                hedges_to_remove_with_r.append((hedge, float(r)))
+                all_r.append(r)
+                minimum_length_to_plant = (
+                    D(minimum_length_to_plant) + D(hedge.length) * r
+                )
                 hedges_details.append(get_hedge_compensation_details(hedge, r))
 
             # Aggregate the R of each hedge to compute the global replantation coefficient.
@@ -411,6 +412,7 @@ class EspecesProtegeesNormandie(
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
+        catalog["hedges_to_remove_with_r"] = hedges_to_remove_with_r
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["aggregated_r"] = aggregated_r

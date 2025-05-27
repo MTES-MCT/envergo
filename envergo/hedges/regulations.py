@@ -318,7 +318,6 @@ class CalvadosQualityCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        is_remplacement = self.catalog.get("reimplantation") == "remplacement"
         LD = defaultdict(int)  # linéaire à détruire
         LC = defaultdict(int)  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
@@ -328,16 +327,7 @@ class CalvadosQualityCondition(PlantationCondition):
             LP[hedge.hedge_type] += hedge.length
 
         # On calcule les longueurs à compenser, le r dépend de chaque haie
-        for hedge in self.hedge_data.hedges_to_remove():
-            if hedge.length <= 10:
-                r = 0
-            elif hedge.length <= 20:
-                r = 1
-            elif is_remplacement and hedge.mode_destruction == "coupe_a_blanc":
-                r = 1
-            else:
-                r = 2
-
+        for hedge, r in self.catalog.get("hedges_to_remove_with_r", []):
             LD[hedge.hedge_type] += hedge.length
             LC[hedge.hedge_type] += hedge.length * r
 
