@@ -122,27 +122,46 @@ class EspecesProtegeesNormandie(
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
+        "dispense": RESULTS.dispense_sous_condition,
     }
 
     CODE_MATRIX = {
-        ("0", False, "non"): "dispense_10m",
-        ("0", False, "remplacement"): "dispense_10m",
-        ("0", False, "replantation"): "dispense_10m",
-        ("lte_1", False, "non"): "interdit",
-        ("lte_1", False, "remplacement"): "dispense_20m",
-        ("lte_1", False, "replantation"): "dispense_20m",
-        ("gt_1", False, "non"): "interdit",
-        ("gt_1", False, "remplacement"): "interdit_remplacement",
-        ("gt_1", False, "replantation"): "derogation_simplifiee",
-        ("0", True, "non"): "dispense_10m",
-        ("0", True, "remplacement"): "dispense_10m",
-        ("0", True, "replantation"): "dispense_10m",
-        ("lte_1", True, "non"): "interdit",
-        ("lte_1", True, "remplacement"): "dispense_coupe_a_blanc",
-        ("lte_1", True, "replantation"): "dispense_20m",
-        ("gt_1", True, "non"): "interdit",
-        ("gt_1", True, "remplacement"): "dispense_coupe_a_blanc",
-        ("gt_1", True, "replantation"): "derogation_simplifiee",
+        ("0", True, False, "non"): "dispense_10m",
+        ("0", True, False, "remplacement"): "dispense_10m",
+        ("0", True, False, "replantation"): "dispense_10m",
+        ("lte_1", True, False, "non"): "interdit",
+        ("lte_1", True, False, "remplacement"): "dispense_20m",
+        ("lte_1", True, False, "replantation"): "dispense_20m",
+        ("gt_1", True, False, "non"): "interdit",
+        ("gt_1", True, False, "remplacement"): "interdit_remplacement",
+        ("gt_1", True, False, "replantation"): "derogation_simplifiee",
+        ("0", True, True, "non"): "dispense_10m",
+        ("0", True, True, "remplacement"): "dispense_10m",
+        ("0", True, True, "replantation"): "dispense_10m",
+        ("lte_1", True, True, "non"): "interdit",
+        ("lte_1", True, True, "remplacement"): "dispense_coupe_a_blanc",
+        ("lte_1", True, True, "replantation"): "dispense_20m",
+        ("gt_1", True, True, "non"): "interdit",
+        ("gt_1", True, True, "remplacement"): "dispense_coupe_a_blanc",
+        ("gt_1", True, True, "replantation"): "derogation_simplifiee",
+        ("0", False, False, "non"): "dispense_10m",
+        ("0", False, False, "remplacement"): "dispense_10m",
+        ("0", False, False, "replantation"): "dispense_10m",
+        ("lte_1", False, False, "non"): "interdit",
+        ("lte_1", False, False, "remplacement"): "dispense",
+        ("lte_1", False, False, "replantation"): "dispense",
+        ("gt_1", False, False, "non"): "interdit",
+        ("gt_1", False, False, "remplacement"): "interdit_remplacement",
+        ("gt_1", False, False, "replantation"): "derogation_simplifiee",
+        ("0", False, True, "non"): "dispense_10m",
+        ("0", False, True, "remplacement"): "dispense_10m",
+        ("0", False, True, "replantation"): "dispense_10m",
+        ("lte_1", False, True, "non"): "interdit",
+        ("lte_1", False, True, "remplacement"): "dispense_coupe_a_blanc",
+        ("lte_1", False, True, "replantation"): "dispense",
+        ("gt_1", False, True, "non"): "interdit",
+        ("gt_1", False, True, "remplacement"): "dispense_coupe_a_blanc",
+        ("gt_1", False, True, "replantation"): "derogation_simplifiee",
     }
 
     COEFFICIENT_MATRIX = {
@@ -305,6 +324,7 @@ class EspecesProtegeesNormandie(
         all_r = []
         hedges_details = []
         coupe_a_blanc_every_hedge = True
+        lte_20m_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
@@ -351,6 +371,9 @@ class EspecesProtegeesNormandie(
                 if hedge.mode_destruction != "coupe_a_blanc":
                     coupe_a_blanc_every_hedge = False
 
+                if hedge.length > 20:
+                    lte_20m_every_hedge = False
+
                 if hedge.length <= 10:
                     r = D(0)
                 elif hedge.length <= 20:
@@ -379,6 +402,7 @@ class EspecesProtegeesNormandie(
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
+        catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
         catalog["density_200"] = density_200
@@ -391,9 +415,15 @@ class EspecesProtegeesNormandie(
         reimplantation = self.catalog.get("reimplantation")
         r_max = self.catalog.get("r_max")
         coupe_a_blanc_every_hedge = self.catalog.get("coupe_a_blanc_every_hedge")
+        lte_20m_every_hedge = self.catalog.get("lte_20m_every_hedge")
         r_max_value = "0" if r_max == 0 else "lte_1" if r_max <= 1 else "gt_1"
 
-        return r_max_value, coupe_a_blanc_every_hedge, reimplantation
+        return (
+            r_max_value,
+            lte_20m_every_hedge,
+            coupe_a_blanc_every_hedge,
+            reimplantation,
+        )
 
     def get_replantation_coefficient(self):
         return self.catalog.get("aggregated_r")
