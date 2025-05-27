@@ -42,7 +42,7 @@ class AlignementsArbres(CriterionEvaluator):
         if haies:
             has_alignement_bord_voie = any(
                 hedge
-                for hedge in haies.hedges
+                for hedge in haies.hedges_to_remove()
                 if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
             )
 

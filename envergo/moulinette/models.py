@@ -84,6 +84,7 @@ REGULATIONS = Choices(
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
+    ("alignement_arbres", "Alignements d'arbres (L350-3)"),
 )
 
 
@@ -1272,6 +1273,7 @@ class Moulinette(ABC):
         "sage",
         "conditionnalite_pac",
         "ep",
+        "alignement_arbres",
     ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
@@ -1861,7 +1863,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie", "alignement_arbres"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result_debug.html"
