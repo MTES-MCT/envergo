@@ -311,6 +311,7 @@ class PlantationConditionMixin:
 
     plantation_conditions: list[PlantationCondition]
 
+    @abstractmethod
     def get_replantation_coefficient(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."

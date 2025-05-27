@@ -1,12 +1,14 @@
 import logging
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import CriterionEvaluator
 
 logger = logging.getLogger(__name__)
 
 
-class AlignementsArbres(CriterionEvaluator):
+class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
+
     choice_label = "Alignements d'arbres  > L350-3"
     slug = "alignement_arbres"
     plantation_conditions = []
@@ -47,3 +49,29 @@ class AlignementsArbres(CriterionEvaluator):
             )
 
         return has_alignement_bord_voie, motif
+
+    def get_replantation_coefficient(self):
+        haies = self.catalog.get("haies")
+        minimum_length_to_plant = 0.0
+        aggregated_r = 0.0
+
+        if haies:
+            for hedge in haies.hedges_to_remove():
+                if hedge.hedge_type == "alignement":
+                    if self.result_code == "soumis_autorisation":
+                        r = 2.0
+                    elif self.result_code == "soumis_esthetique":
+                        r = 1.0
+                    elif self.result_code == "soumis_securite":
+                        r = 1.0
+                    else:  # non_soumis
+                        r = 0.0
+                else:
+                    r = 0.0
+
+                minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
+
+            if haies.length_to_remove() > 0:
+                aggregated_r = minimum_length_to_plant / haies.length_to_remove()
+
+        return aggregated_r
