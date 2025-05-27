@@ -116,6 +116,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
+        "dispense_L350": RESULTS.dispense,
     }
 
     CODE_MATRIX = {
@@ -145,6 +146,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         all_r = []
         hedges_details = []
         coupe_a_blanc_every_hedge = True
+        alignement_bord_voie_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
@@ -153,6 +155,8 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
             for hedge in haies.hedges_to_remove():
                 if hedge.mode_destruction != "coupe_a_blanc":
                     coupe_a_blanc_every_hedge = False
+                if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
+                    alignement_bord_voie_every_hedge = False
 
                 if hedge.length <= 10:
                     r = 0
@@ -175,6 +179,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         r_max = max(all_r) if all_r else self.get_replantation_coefficient()
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
+        catalog["alignement_bord_voie_every_hedge"] = alignement_bord_voie_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["hedges_compensation_details"] = hedges_details
         return catalog
@@ -187,5 +192,26 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
 
         return r_max_value, coupe_a_blanc_every_hedge, reimplantation
 
+    def get_result_code(self, result_data):
+        # this evaluator needs the result of the alignement_arbres criterion to get its own result
+        # the regulation weight should be configurated to fetch the alignement_arbres before this one
+        # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
+        if (
+            self.catalog.get("alignement_bord_voie_every_hedge", False)
+            and self.moulinette.alignement_arbres.is_activated
+            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
+            and self.moulinette.alignement_arbres.alignement_arbres.result_code
+            == "soumis_securite"
+        ):
+            result = "dispense_L350"
+        else:
+            result = super().get_result_code(result_data)
+
+        return result
+
     def get_replantation_coefficient(self):
+        if self.result_code == "dispense_L350":
+            # If the result is "dispense_L350", the replantation coefficient is 1.0
+            return 1.0
+
         return self.catalog.get("aggregated_r")
