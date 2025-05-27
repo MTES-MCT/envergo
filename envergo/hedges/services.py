@@ -217,9 +217,12 @@ class PlantationEvaluator:
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
-                        criterion._evaluator.plantation_evaluate(self.hedge_data, R)
+                        criterion._evaluator.plantation_evaluate(
+                            self.hedge_data, R, self.moulinette.catalog
+                        )
                     )
 
+        conditions = filter(lambda c: c.result is not None, conditions)
         self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (
             PlantationResults.Adequate.value
@@ -245,6 +248,7 @@ class PlantationEvaluator:
         data = [
             {
                 "label": condition.label,
+                "hint": condition.hint,
                 "result": condition.result,
                 "text": condition.text,
                 "context": condition.context,
