@@ -1,6 +1,9 @@
 import pytest
+from django.contrib.gis.geos import MultiPolygon
 
 from envergo.geodata.conftest import france_map  # noqa
+from envergo.geodata.models import MAP_TYPES
+from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
@@ -43,6 +46,21 @@ def ep_normandie_criterion(france_map):  # noqa
     return criteria
 
 
+@pytest.fixture
+def zonage_normandie(france_map):  # noqa
+    zonage_normandie = MapFactory(
+        name="Zonage Normandie",
+        map_type=MAP_TYPES.zonage,
+        zones=[
+            ZoneFactory(
+                geometry=MultiPolygon([france_polygon]),
+                attributes={"identifiant_zone": "normandie_groupe_1"},
+            )
+        ],
+    )
+    return zonage_normandie
+
+
 def test_ep_is_soumis(ep_criteria):  # noqa
     ConfigHaieFactory()
     data = {
@@ -69,7 +87,7 @@ def test_ep_is_soumis(ep_criteria):  # noqa
             )
 
 
-def test_ep_normandie_interdit(ep_normandie_criterion):  # noqa
+def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -99,7 +117,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion):  # noqa
     assert moulinette.result == "interdit"
 
 
-def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
+def test_ep_normandie_dispense(ep_normandie_criterion, zonage_normandie):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -129,7 +147,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "dispense_10m"
 
 
-def test_ep_normandie_dispense_20m(ep_normandie_criterion):  # noqa
+def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -173,7 +191,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "dispense_20m"
 
 
-def test_ep_normandie_interdit_20m(ep_normandie_criterion):  # noqa
+def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -217,7 +235,9 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "interdit"
 
 
-def test_ep_normandie_dispense_coupe_a_blanc(ep_normandie_criterion):  # noqa
+def test_ep_normandie_dispense_coupe_a_blanc(
+    ep_normandie_criterion, zonage_normandie
+):  # noqa
     ConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
@@ -249,7 +269,9 @@ def test_ep_normandie_dispense_coupe_a_blanc(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "dispense_coupe_a_blanc"
 
 
-def test_ep_normandie_interdit_remplacement(ep_normandie_criterion):  # noqa
+def test_ep_normandie_interdit_remplacement(
+    ep_normandie_criterion, zonage_normandie
+):  # noqa
     ConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
@@ -280,7 +302,9 @@ def test_ep_normandie_interdit_remplacement(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "interdit_remplacement"
 
 
-def test_ep_normandie_derogation_simplifiee(ep_normandie_criterion):  # noqa
+def test_ep_normandie_derogation_simplifiee(
+    ep_normandie_criterion, zonage_normandie
+):  # noqa
     ConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
@@ -311,7 +335,9 @@ def test_ep_normandie_derogation_simplifiee(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
 
 
-def test_min_length_condition_normandie(ep_normandie_criterion):  # noqa
+def test_min_length_condition_normandie(
+    ep_normandie_criterion, zonage_normandie
+):  # noqa
     ConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
@@ -353,4 +379,54 @@ def test_min_length_condition_normandie(ep_normandie_criterion):  # noqa
     moulinette = MoulinetteHaie(data, data, False)
     evaluator = PlantationEvaluator(moulinette, hedges)
 
-    assert evaluator.get_context().get("minimum_length_to_plant") == 69
+    assert evaluator.get_context().get("minimum_length_to_plant") == 58
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        ("degradee", 1.6),
+        ("buissonnante", 1.8),
+        ("arbustive", 2),
+        ("alignement", 2),
+        ("mixte", 2.2),
+    ],
+)
+def test_replantation_coefficient_normandie(
+    ep_normandie_criterion, params: tuple[str, float]
+):  # noqa
+    ConfigHaieFactory()
+    hedge_type, r = params
+    MapFactory(
+        name="Zonage Normandie",
+        map_type=MAP_TYPES.zonage,
+        zones=[
+            ZoneFactory(
+                geometry=MultiPolygon([france_polygon]),
+                attributes={"identifiant_zone": "normandie_groupe_1"},
+            )
+        ],
+    )
+
+    hedge_gt20m = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData__type_haie=hedge_type,
+    )
+    hedges = HedgeDataFactory(
+        hedges=[hedge_gt20m],
+    )
+    data = {
+        "profil": "autre",
+        "motif": "chemin_acces",
+        "reimplantation": "remplacement",
+        "department": "44",
+        "haies": hedges,
+    }
+
+    moulinette = MoulinetteHaie(data, data, False)
+    evaluator = PlantationEvaluator(moulinette, hedges)
+
+    assert evaluator.replantation_coefficient == r
