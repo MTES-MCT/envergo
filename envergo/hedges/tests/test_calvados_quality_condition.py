@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
@@ -164,7 +162,18 @@ def hedge_data():
 def test_calvados_quality_condition(hedge_data):
     """Lengths to plant depends on R."""
 
-    catalog = {"reimplantation": "remplacement"}
+    hedges = hedge_data.hedges_to_remove()
+    catalog = {
+        "reimplantation": "remplacement",
+        "hedges_to_remove_with_r": [
+            (hedges[0], 2.0),
+            (hedges[1], 2.0),
+            (hedges[2], 2.0),
+            (hedges[3], 2.0),
+            (hedges[4], 2.0),
+            (hedges[5], 1.0),
+        ],
+    }
     R = 0.0  # Ignored for calvados
     condition = CalvadosQualityCondition(hedge_data, R, catalog)
     condition.evaluate()
@@ -172,6 +181,6 @@ def test_calvados_quality_condition(hedge_data):
 
     assert round(LC["mixte"]) == 0
     assert round(LC["alignement"]) == 0
-    assert round(LC["arbustive"]) == 0
-    assert round(LC["buissonnante"]) == 17
+    assert round(LC["arbustive"]) == 60
+    assert round(LC["buissonnante"]) == 40
     assert round(LC["degradee"]) == 10
