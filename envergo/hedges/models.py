@@ -91,6 +91,10 @@ class Hedge:
         return self.additionalData.get("mode_destruction", None)
 
     @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
+
+    @property
     def position(self):
         return self.additionalData.get("position", None)
 
@@ -154,6 +158,7 @@ class HedgeData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
+    _density = models.JSONField(null=True, default=None)
 
     class Meta:
         verbose_name = "Hedge data"
@@ -248,7 +253,6 @@ class HedgeData(models.Model):
 
     def get_all_species(self):
         """Return the local list of protected species."""
-
         zone_subquery = (
             Zone.objects.filter(
                 Q(geometry__intersects=self.get_bounding_box(self.hedges()))
@@ -280,17 +284,22 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
-    def compute_density(self):
-        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
-        density_200, density_5000, _ = self.compute_density_with_artifacts()
-        self.density = {
-            "length_200": density_200["artifacts"]["length"],
-            "length_5000": density_5000["artifacts"]["length"],
-            "area_200_ha": density_200["artifacts"]["area_ha"],
-            "area_5000_ha": density_5000["artifacts"]["area_ha"],
-            "density_200": density_200["density"],
-            "density_5000": density_5000["density"],
-        }
+    @property
+    def density(self):
+        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
+        if not self._density:
+            density_200, density_5000, _ = self.compute_density_with_artifacts()
+            self._density = {
+                "length_200": density_200["artifacts"]["length"],
+                "length_5000": density_5000["artifacts"]["length"],
+                "area_200_ha": density_200["artifacts"]["area_ha"],
+                "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                "density_200": density_200["density"],
+                "density_5000": density_5000["density"],
+            }
+            self.save()
+
+        return self._density
 
 
 HEDGE_TYPES = (

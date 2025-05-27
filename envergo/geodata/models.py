@@ -23,6 +23,7 @@ MAP_TYPES = Choices(
     ("species", _("Espèces protégées")),
     ("haies", "Haies"),
     ("terres_emergees", "Délimitation terres + France"),
+    ("zonage", "Identifiant zonage"),
 )
 
 # Sometimes, there are map with different certainty values.
@@ -126,6 +127,11 @@ class Zone(gis_models.Model):
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
+
+    # Note: this values was initialy stored in an array in the `attributes` json field
+    # As it turns out, it's almost impossible to get the equivalent of an `overlap`
+    # lookup in a json field. So after much trial and error, I had to resolve myself
+    # to store this specific field in an array instead.
     species_taxrefs = ArrayField(
         verbose_name=_("Species taxrefs"),
         null=True,

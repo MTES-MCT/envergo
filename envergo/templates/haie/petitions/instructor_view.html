@@ -12,7 +12,7 @@
 
     <div id="fr-sidemenu-item-0">
       <ul class="fr-sidemenu__list">
-        {% for information in project_details.details %}
+        {% for information in project_details.sections %}
           {% if information.slug %}
             <li class="fr-sidemenu__item">
               <a class="fr-sidemenu__link"
@@ -35,60 +35,30 @@
 
   <h2>Informations générales</h2>
 
-  <section class="fr-py-3w"
-           {% if project_details.summary.slug %}id="{{ project_details.summary.slug }}"{% endif %}>
-    {% with summary=project_details.summary %}
-      {% if summary.label %}<h2>{{ summary.label }}</h2>{% endif %}
-      {% if summary.comment %}<p class="fr-callout fr-icon-information-line">{{ summary.comment }}</p>{% endif %}
-
-      {% include "haie/petitions/_items.html" with items=summary.items %}
-
-      {% if summary.details %}
-        {% for summary_details in summary.details %}
-          <h3 class="fr-h4 fr-mt-4w fr-mb-2w">{{ summary_details.label }}</h3>
-
-          {% include "haie/petitions/_items.html" with items=summary_details.items %}
-
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </section>
-
-  <div class="fr-my-2w">
-    <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
-            type="button"
-            data-fr-opened="false"
-            aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
-  </div>
-
-  <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-     href="{{ project_url }}"
-     target="_blank"
-     class="fr-btn fr-btn--secondary"
-     rel="noopener external">Voir le résultat de la simulation</a>
-
   <div class="project-inner-content">
 
     <form method="post"
           action="{% url 'petition_project_instructor_view' petition_project.reference %}">
       {% csrf_token %}
-      {% for information in project_details.details %}
-
+      {% for information in project_details.sections %}
         <section class="fr-py-3w"
                  {% if information.slug %}id="{{ information.slug }}"{% endif %}>
 
           {% if information.label %}<h2>{{ information.label }}</h2>{% endif %}
           {% if information.comment %}<p class="fr-callout fr-icon-information-line">{{ information.comment }}</p>{% endif %}
 
-          {% include "haie/petitions/_items.html" with items=information.items %}
+          {% if information.key_elements %}
+            <h3>Éléments clés</h3>
+            {% include "haie/petitions/_items.html" with items=information.key_elements %}
+          {% endif %}
 
-          {% if information.details %}
-            {% for information_details in information.details %}
-              <h3 class="fr-h4 fr-mt-4w fr-mb-2w">{{ information_details.label }}</h3>
+          {% if information.simulation_data %}
+            <h3 class="fr-mt-4w">Données de la simulation</h3>
+            {% include "haie/petitions/_items.html" with items=information.simulation_data %}
+          {% endif %}
 
-              {% include "haie/petitions/_items.html" with items=information_details.items %}
-
-            {% endfor %}
+          {% if information.other_items %}
+            {% include "haie/petitions/_items.html" with items=information.other_items %}
           {% endif %}
         </section>
       {% endfor %}

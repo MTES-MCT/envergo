@@ -38,6 +38,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
         "hedges_to_remove",
         "length_to_remove",
         "all_species",
+        "_density",
     ]
 
     def get_urls(self):

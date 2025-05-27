@@ -1,8 +1,12 @@
+{% load moulinette %}
 {% load utils %}
 
 {% for item in items %}
   <div>
-    {% if item == "instructor_free_mention" or item == "onagre_number" %}
+    {% if item|is_type:"GroupedItems" %}
+      <h4 class="fr-h4 fr-mt-4w fr-mb-2w">{{ item.label }}</h4>
+      {% include "haie/petitions/_items.html" with items=item.items %}
+    {% elif item == "instructor_free_mention" or item == "onagre_number" %}
       <div id="field-{{ item }}" class="fr-my-2w">
         {% include '_field_snippet.html' with field=form|get_item:item %}
         <button type="submit"
@@ -11,15 +15,40 @@
           Enregistrer
         </button>
       </div>
-    {% else %}
-      <span><b>{{ item.label }} :</b></span>
+    {% elif item == "protected_species" %}
+      {% if moulinette.catalog.protected_species %}
+        {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+      {% else %}
+        <p>Pas de liste d’espèces associée à cette simulation</p>
+      {% endif %}
+    {% elif item == "display_hedges_cta" %}
+      <div class="fr-my-2w">
+        <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+                type="button"
+                data-fr-opened="false"
+                aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+      </div>
+    {% elif item == "hedges_compensation_details" %}
+      {% include 'haie/petitions/_hedges_compensation_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
+    {% elif item == "open_simulation_cta" %}
+      <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
+         href="{{ project_url }}"
+         target="_blank"
+         class="fr-btn fr-btn--secondary"
+         rel="noopener external">Voir le résultat de la simulation</a>
+    {% elif item|is_type:"Title" %}
+      <h4 {% if not forloop.first %}class="fr-mt-3w"{% endif %}>{{ item.label }}</h4>
+    {% elif item|is_type:"Item" %}
+      <span><b>{{ item.label }}
+        {% if not item.label|ends_with_punctuation %}:{% endif %}
+      </b></span>
 
       {% if item.value|is_type:"ItemDetails" %}
-        <span>{{ item.value.result|yesno }}</span>
+        {% if item.value.display_result %}<span>{{ item.value.result|yesno }}</span>{% endif %}
         {% if item.value.result %}
           {% for details in item.value.details %}
             <br />
-            <span>{{ details.label }} : <span>
+            <span class="fr-pl-4w">{{ details.label }} : <span>
               {{ details.value }}
               {% if details.unit %}{{ details.unit }}{% endif %}
             </span>

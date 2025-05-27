@@ -97,9 +97,13 @@ def get_replantation_coefficient(moulinette):
 def create_density_map(
     centroid_geos, hedges_to_remove, truncated_circle_200, truncated_circle_5000
 ):
-    hedges_5000 = Line.objects.filter(
-        map__map_type=MAP_TYPES.haies,
-        geometry__intersects=truncated_circle_5000,
+    hedges_5000 = (
+        Line.objects.filter(
+            map__map_type=MAP_TYPES.haies,
+            geometry__intersects=truncated_circle_5000,
+        )
+        if truncated_circle_5000
+        else []
     )
 
     polygons = [
