@@ -198,6 +198,7 @@ class EspecesProtegeesNormandie(PlantationConditionMixin, EPMixin, CriterionEval
         # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
         if (
             self.catalog.get("alignement_bord_voie_every_hedge", False)
+            and hasattr(self.moulinette, "alignement_arbres")
             and self.moulinette.alignement_arbres.is_activated
             and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
             and self.moulinette.alignement_arbres.alignement_arbres.result_code
