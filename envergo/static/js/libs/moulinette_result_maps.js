@@ -175,6 +175,9 @@
       _paq.push(['trackEvent', 'Content', action, "CadastreOff"]);
     }.bind(this));
 
+    const event = new CustomEvent('mapInitialized', { detail: {id: mapId, map: map, data: mapData}});
+    window.dispatchEvent(event);
+
     return map;
   };
 
