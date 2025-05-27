@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="hedgedata",
-            name="density",
+            name="_density",
             field=models.JSONField(default=None, null=True),
         ),
     ]

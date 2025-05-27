@@ -335,7 +335,7 @@ class EspecesProtegeesNormandie(
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        catalog["is_available"] = True
+
         haies = self.catalog.get("haies")
         all_r = []
         hedges_details = []
@@ -345,18 +345,20 @@ class EspecesProtegeesNormandie(
         minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
 
-        density = haies.get_or_compute_density()
-        density_200 = density.get("density_200")
-        density_5000 = density.get("density_5000")
+        density_200 = haies.density.get("density_200")
+        density_5000 = haies.density.get("density_5000")
 
         centroid_shapely = haies.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
 
+        # Normandie is divided into natural areas with a certain homogeneity of biodiversity.
+        # We use the centroid of the hedges to find the zone in which the hedges are located.
         zonage = Zone.objects.filter(
             geometry__contains=centroid_geos,
             map__map_type=MAP_TYPES.zonage,
         ).first()
 
+        # If the zone is not found, we use a default value for the zone_id.
         zone_id = (
             zonage.attributes.get("identifiant_zone", "normandie_groupe_absent")
             if zonage
@@ -367,6 +369,7 @@ class EspecesProtegeesNormandie(
         # We then pick a coefficient corresponding to the Normandie average : 1
         density_ratio = density_200 / density_5000 if density_5000 != 0 else 1
 
+        # Determine the density ratio range for coefficient lookup
         if density_ratio > 1.6:
             density_ratio_range = "gt_1.6"
         elif density_ratio > 1.2:
@@ -378,6 +381,7 @@ class EspecesProtegeesNormandie(
         else:
             density_ratio_range = "lt_0.5"
 
+        # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
         if haies:
             for hedge in haies.hedges_to_remove():
                 if hedge.mode_destruction != "coupe_a_blanc":
@@ -407,6 +411,7 @@ class EspecesProtegeesNormandie(
                     )
                 hedges_details.append(get_hedge_compensation_details(hedge, r))
 
+            # Aggregate the R of each hedge to compute the global replantation coefficient.
             if haies.length_to_remove() > 0:
                 aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
 
@@ -435,14 +440,6 @@ class EspecesProtegeesNormandie(
             coupe_a_blanc_every_hedge,
             reimplantation,
         )
-
-    def get_result_code(self, result_data):
-        """Compute a unique result code from criterion data."""
-        is_available = self.catalog.get("is_available")
-        if not is_available:
-            return RESULTS.non_disponible
-
-        return super().get_result_code(result_data)
 
     def get_replantation_coefficient(self):
         return self.catalog.get("aggregated_r")
