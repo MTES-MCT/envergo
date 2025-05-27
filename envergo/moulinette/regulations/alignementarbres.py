@@ -1,7 +1,7 @@
 import logging
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.regulations import PlantationConditionMixin
+from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
 from envergo.moulinette.regulations import CriterionEvaluator
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
 
     choice_label = "Alignements d'arbres  > L350-3"
     slug = "alignement_arbres"
-    plantation_conditions = []
+    plantation_conditions = [TreeAlignmentsCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -55,17 +55,19 @@ class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
 
+        if self.result_code == "soumis_autorisation":
+            r_aa = 2.0
+        elif self.result_code == "soumis_esthetique":
+            r_aa = 1.0
+        elif self.result_code == "soumis_securite":
+            r_aa = 1.0
+        else:  # non_soumis
+            r_aa = 0.0
+
         if haies:
             for hedge in haies.hedges_to_remove():
                 if hedge.hedge_type == "alignement":
-                    if self.result_code == "soumis_autorisation":
-                        r = 2.0
-                    elif self.result_code == "soumis_esthetique":
-                        r = 1.0
-                    elif self.result_code == "soumis_securite":
-                        r = 1.0
-                    else:  # non_soumis
-                        r = 0.0
+                    r = r_aa
                 else:
                     r = 0.0
 

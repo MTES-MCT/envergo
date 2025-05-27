@@ -284,7 +284,7 @@ class QualityCondition(PlantationCondition):
 
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    order = 4
+    order = 10
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
         Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
@@ -323,3 +323,14 @@ class PlantationConditionMixin:
             for condition in self.plantation_conditions
         ]
         return results
+
+
+class TreeAlignmentsCondition(PlantationCondition):
+    label = "Alignements d’arbres (L350-3)"
+    order = 5
+    valid_text = "Le linéaire d’alignements d’arbres plantés en bord de voie ouvertes au public est suffisant."
+    invalid_text = "TO BE DONE"
+
+    def evaluate(self):
+        self.result = False
+        return self
