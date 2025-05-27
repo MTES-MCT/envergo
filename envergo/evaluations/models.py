@@ -103,6 +103,8 @@ RESULTS = Choices(
     ("dispense", "Dispense"),
     ("dispense_sous_condition", "Dispense sous condition"),
     ("soumis_ou_pac", "Soumis"),
+    ("soumis_declaration", "Déclaration"),
+    ("soumis_autorisation", "Autorisation"),
 )
 
 
@@ -142,6 +144,8 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.derogation_simplifiee: TagStyleEnum.LightRed,
     RESULTS.dispense: TagStyleEnum.Green,
     RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
+    RESULTS.soumis_declaration: TagStyleEnum.LightRed,
+    RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
