@@ -103,6 +103,6 @@ def test_moulinette_evaluation(
         == expected_result_code
     )
     assert (
-        moulinette.alignement_arbres.alignement_arbres._evaluator.get_replantation_coefficient()
+        moulinette.alignement_arbres.alignement_arbres.get_evaluator().get_replantation_coefficient()
         == expected_r
     )
