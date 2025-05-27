@@ -2,14 +2,16 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import MultiLineString as mls
+from django.contrib.gis.geos import Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod
-from shapely import LineString, centroid, union_all
+from shapely import LineString, MultiLineString, centroid, union_all
 
 from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
@@ -183,6 +185,12 @@ class HedgeData(models.Model):
         box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
         return box
 
+    def get_hedges_geometry(self, hedges):
+        """Return the MultiLine with the hedge geometry."""
+        lines = [hedge.geometry for hedge in hedges]
+        multiline = MultiLineString(lines)
+        return GEOSGeometry(multiline.wkb_hex)
+
     def hedges(self):
         return [Hedge(**h) for h in self.data]
 
@@ -255,7 +263,7 @@ class HedgeData(models.Model):
         """Return the local list of protected species."""
         zone_subquery = (
             Zone.objects.filter(
-                Q(geometry__intersects=self.get_bounding_box(self.hedges()))
+                Q(geometry__intersects=self.get_hedges_geometry(self.hedges()))
             )
             .filter(map__map_type="species")
             .filter(Q(map_id=OuterRef("map_id")))
