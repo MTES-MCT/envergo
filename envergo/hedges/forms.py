@@ -27,6 +27,15 @@ class HedgePropertiesBaseForm(forms.Form):
         label="Située sur une parcelle PAC",
         required=False,
     )
+    position = forms.ChoiceField(
+        choices=[
+            ("interchamp", "Inter-champ"),
+            ("bord_route", "Bordure de voirie ouverte à la circulation"),
+            ("autre", "Autre (bord de chemin, bâtiment…)"),
+        ],
+        label="Localisation de la haie",
+        widget=forms.RadioSelect,
+    )
     proximite_mare = forms.BooleanField(
         label="Mare à moins de 200 m",
         required=False,
@@ -54,15 +63,10 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
         required=False,
     )
 
-    bord_voie = forms.BooleanField(
-        label="Bord de route, voie ou chemin ouvert au public",
-        required=False,
-    )
-
     fieldsets = {
         "Mode de destruction": ["mode_destruction"],
         "Caractéristiques de la haie": ["type_haie", "vieil_arbre"],
-        "Situation de la haie": ["sur_parcelle_pac", "proximite_mare", "bord_voie"],
+        "Situation de la haie": ["sur_parcelle_pac", "position", "proximite_mare"],
     }
 
     @classmethod
@@ -85,6 +89,7 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
         ],
         "Situation de la haie": [
             "sur_parcelle_pac",
+            "position",
             "proximite_mare",
             "sous_ligne_electrique",
         ],
@@ -123,18 +128,8 @@ class SurTalusMixin(forms.Form):
     )
 
 
-class InterchampMixin(forms.Form):
-    interchamp = forms.BooleanField(
-        label="Haie inter-champ",
-        required=False,
-    )
-
-
 class HedgeToRemovePropertiesCalvadosForm(
-    EssencesNonBocageresMixin,
-    SurTalusMixin,
-    InterchampMixin,
-    HedgeToRemovePropertiesForm,
+    EssencesNonBocageresMixin, SurTalusMixin, HedgeToRemovePropertiesForm
 ):
     """Hedge to remove properties form : Calvados specific"""
 
@@ -150,7 +145,7 @@ class HedgeToRemovePropertiesCalvadosForm(
     fieldsets["Caractéristiques de la haie"].extend(
         ["essences_non_bocageres", "recemment_plantee"]
     )
-    fieldsets["Situation de la haie"].extend(["interchamp", "sur_talus"])
+    fieldsets["Situation de la haie"].extend(["sur_talus"])
 
     @classmethod
     def human_readable_name(cls):
@@ -186,10 +181,7 @@ MODE_PLANTATION_CHOICES = (
 
 
 class HedgeToPlantPropertiesCalvadosForm(
-    EssencesNonBocageresMixin,
-    SurTalusMixin,
-    InterchampMixin,
-    HedgeToPlantPropertiesForm,
+    EssencesNonBocageresMixin, SurTalusMixin, HedgeToPlantPropertiesForm
 ):
     """Hedge to plant properties form : Calvados specific"""
 
@@ -205,7 +197,7 @@ class HedgeToPlantPropertiesCalvadosForm(
         **copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets),
     }
     fieldsets["Caractéristiques de la haie"].extend(["essences_non_bocageres"])
-    fieldsets["Situation de la haie"].extend(["interchamp", "sur_talus"])
+    fieldsets["Situation de la haie"].extend(["sur_talus"])
 
     @classmethod
     def human_readable_name(cls):

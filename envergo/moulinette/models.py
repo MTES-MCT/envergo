@@ -84,7 +84,6 @@ REGULATIONS = Choices(
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
-    ("alignement_arbres", "Alignements d'arbres (L350-3)"),
 )
 
 
@@ -93,9 +92,7 @@ RESULT_CASCADE = [
     RESULTS.systematique,
     RESULTS.cas_par_cas,
     RESULTS.soumis_ou_pac,
-    RESULTS.soumis_declaration,
     RESULTS.soumis,
-    RESULTS.soumis_autorisation,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
     RESULTS.action_requise,
@@ -123,8 +120,6 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.cas_par_cas: RESULTS.soumis,
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
-    RESULTS.soumis_declaration: RESULTS.soumis,
-    RESULTS.soumis_autorisation: RESULTS.soumis,
     RESULTS.derogation_inventaire: RESULTS.soumis,
     RESULTS.derogation_simplifiee: RESULTS.soumis,
     RESULTS.dispense_sous_condition: RESULTS.soumis,
@@ -172,8 +167,6 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.soumis_autorisation: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
@@ -1273,7 +1266,6 @@ class Moulinette(ABC):
         "sage",
         "conditionnalite_pac",
         "ep",
-        "alignement_arbres",
     ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
@@ -1863,7 +1855,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie", "alignement_arbres"]
+    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result_debug.html"

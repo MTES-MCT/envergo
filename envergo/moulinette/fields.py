@@ -5,7 +5,6 @@ from django.utils.module_loading import import_string
 from envergo.moulinette.forms.fields import NoInstanciateChoiceField
 from envergo.moulinette.regulations import (  # noqa
     CriterionEvaluator,
-    alignementarbres,
     conditionnalitepac,
     ep,
     evalenv,

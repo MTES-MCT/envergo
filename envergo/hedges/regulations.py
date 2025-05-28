@@ -571,7 +571,6 @@ class PlantationConditionMixin:
 
     plantation_conditions: list[PlantationCondition]
 
-    @abstractmethod
     def get_replantation_coefficient(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
@@ -583,14 +582,3 @@ class PlantationConditionMixin:
             for condition in self.plantation_conditions
         ]
         return results
-
-
-class TreeAlignmentsCondition(PlantationCondition):
-    label = "Alignements d’arbres (L350-3)"
-    order = 5
-    valid_text = "Le linéaire d’alignements d’arbres plantés en bord de voie ouvertes au public est suffisant."
-    invalid_text = "TO BE DONE"
-
-    def evaluate(self):
-        self.result = False
-        return self

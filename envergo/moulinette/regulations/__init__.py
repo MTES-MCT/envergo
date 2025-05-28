@@ -440,8 +440,6 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.derogation_simplifiee: False,
     RESULTS.dispense: False,
     RESULTS.dispense_sous_condition: False,
-    RESULTS.soumis_declaration: False,
-    RESULTS.soumis_autorisation: False,
 }
 
 
