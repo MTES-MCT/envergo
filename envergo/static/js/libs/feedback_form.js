@@ -30,8 +30,38 @@
     }
   };
 
-  FeedbackModal.prototype.onFeedbackSubmit = function (button) {
+  FeedbackModal.prototype.onFeedbackSubmit = function (event) {
     _paq.push(['trackEvent', 'FeedbackDialog', 'FormSubmit']);
+    if (event.submitter) {
+      event.submitter.disabled = true; // Disable the submit button to prevent multiple submissions
+       let textElt = document.createElement('span');
+      textElt.innerHTML = 'Envoi en cours…';
+      textElt.classList.add("fr-hint-text");
+      textElt.classList.add("fr-mt-2w");
+      event.submitter.insertAdjacentElement("afterend", textElt);
+    }
+
+    const closeButton = this.dialogElt.querySelector('.fr-link--close');
+    if(closeButton) {
+      closeButton.disabled = true; // Disable the close button to prevent closing while submitting
+    }
+    // Escape key prevention
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+
+    // Prevent clicks outside the modal from closing it
+    this.dialogElt.addEventListener('click', (e) => {
+      const body = this.dialogElt.querySelector('.fr-modal__body');
+      if (!body.contains(e.target)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+
   };
 
 })(this, window._paq);
