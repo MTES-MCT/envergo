@@ -2,6 +2,7 @@ import random
 
 import factory
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.db.models.signals import post_save
 from factory import Faker as factory_Faker
 from factory import fuzzy
 from factory.django import DjangoModelFactory
@@ -72,6 +73,29 @@ calvados_polygon = Polygon(
     ]
 )
 
+acy_polygon = Polygon(
+    [
+        (3.415440158691405, 49.369194107413875),
+        (3.386000232543945, 49.338667914674176),
+        (3.4286580847167962, 49.31931367054088),
+        (3.4495149420166005, 49.35521926418238),
+        (3.415440158691405, 49.369194107413875),
+    ]
+)
+
+limé_polygon = Polygon(
+    [
+        (3.549842492004394, 49.33552931554917),
+        (3.5300156029663086, 49.3152226495269),
+        (3.5619017037353515, 49.31217312946501),
+        (3.584561005493163, 49.32162882442222),
+        (3.5807415398559566, 49.329488538022105),
+        (3.5576530846557617, 49.33754274332614),
+        (3.549842492004394, 49.33552931554917),
+    ]
+)
+
+
 france_multipolygon = MultiPolygon([france_polygon])
 loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
 herault_multipolygon = MultiPolygon([herault_polygon])
@@ -125,24 +149,18 @@ class MapFactory(DjangoModelFactory):
     name = factory_Faker("name")
     map_type = ""
     description = "Lorem ipsum"
-
-    @factory.post_generation
-    def zones(obj, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            obj.zones.add(*extracted)
-        else:
-            ZoneFactory(map=obj)
+    zones = factory.RelatedFactoryList(
+        "envergo.geodata.tests.factories.ZoneFactory", factory_related_name="map"
+    )
 
 
 class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
 
-    map = factory.SubFactory(MapFactory, zones=[])
+    map = factory.SubFactory(MapFactory, zones=None)
     geometry = france_multipolygon
+    species_taxrefs = []
 
 
 class DepartmentFactory(DjangoModelFactory):
