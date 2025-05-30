@@ -218,6 +218,12 @@ def test_zone_filters_are_not_mixed():  # noqa
     species = acy_limé_hedges.get_all_species()
     assert set(species) == set([huppe])
 
+    acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "mixte"
+    acy_limé_hedges.data[0]["additionalData"]["type_haie"] = "degradee"
+    acy_limé_hedges.save()
+    species = acy_limé_hedges.get_all_species()
+    assert set(species) == set([hypolais])
+
 
 def test_hedge_data_species_are_filtered_by_geography(
     aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
