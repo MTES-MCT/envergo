@@ -7,7 +7,7 @@
          class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
          data-event-category="Content"
          data-event-action="Edit"
-         data-event-name="Main">Modifier le projet de plantation</a>
+         data-event-name="Main">Modifier les haies à planter</a>
     </div>
   {% else %}
     <div class="banner-item">
@@ -16,11 +16,7 @@
          data-event-category="Content"
          data-event-action="Edit"
          data-event-name="Main">
-        {% if moulinette.result == "soumis" %}
-          Modifier le projet de destruction
-        {% else %}
           Modifier le projet
-        {% endif %}
       </a>
     </div>
   {% endif %}
@@ -50,7 +46,7 @@
         <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
                 type="button"
                 data-fr-opened="false"
-                aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
+                aria-controls="hedge-input-modal">Localiser les haies à planter</button>
       {% endif %}
     </div>
   {% endif %}
