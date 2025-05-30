@@ -2,7 +2,6 @@ import random
 
 import factory
 from django.contrib.gis.geos import MultiPolygon, Polygon
-from django.db.models.signals import post_save
 from factory import Faker as factory_Faker
 from factory import fuzzy
 from factory.django import DjangoModelFactory

@@ -4,7 +4,6 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 from envergo.geodata.tests.factories import (
     DepartmentFactory,
     MapFactory,
-    ZoneFactory,
     aisne_polygon,
     calvados_polygon,
     france_polygon,

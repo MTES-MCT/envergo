@@ -2,9 +2,7 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.geos import MultiLineString as mls
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
