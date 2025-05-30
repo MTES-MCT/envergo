@@ -1,12 +1,21 @@
 import pytest
+from django.contrib.gis.geos import MultiPolygon
 from shapely import centroid
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
-from envergo.geodata.tests.factories import DepartmentFactory, herault_multipolygon
+from envergo.geodata.tests.factories import (
+    DepartmentFactory,
+    MapFactory,
+    ZoneFactory,
+    acy_polygon,
+    herault_multipolygon,
+    limé_polygon,
+)
 from envergo.hedges.models import Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
+    SpeciesFactory,
     SpeciesMapFactory,
 )
 
@@ -136,6 +145,78 @@ def test_hedge_species_are_filtered_by_geography(
 
     hedge = calvados_hedge_data.hedges()[0]
     assert set(hedge.get_species()) == set([calvados_species])
+
+
+def test_zone_filters_are_not_mixed():  # noqa
+    acy_limé_map = MapFactory(map_type="species", zones=None)
+    ZoneFactory(
+        map=acy_limé_map, geometry=MultiPolygon([acy_polygon]), species_taxrefs=[1]
+    )
+    ZoneFactory(
+        map=acy_limé_map, geometry=MultiPolygon([limé_polygon]), species_taxrefs=[2]
+    )
+    hypolais = SpeciesFactory(common_name="Hypolaïs ictérine", taxref_ids=[1])
+    SpeciesMapFactory(
+        map=acy_limé_map,
+        species=hypolais,
+        hedge_types=["mixte"],
+    )
+    huppe = SpeciesFactory(common_name="Huppe fasciée", taxref_ids=[2])
+    SpeciesMapFactory(
+        map=acy_limé_map,
+        species=huppe,
+        hedge_types=["mixte"],
+    )
+    acy_limé_hedges = HedgeDataFactory(
+        data=[
+            # Hedge in limé
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.323565543884314, "lng": 3.543156223144537},
+                    {"lat": 49.32032072635238, "lng": 3.556141575691475},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "type_haie": "mixte",
+                    "vieil_arbre": True,
+                    "proximite_mare": True,
+                    "mode_destruction": "arrachage",
+                    "sur_parcelle_pac": True,
+                    "connexion_boisement": True,
+                    "proximite_point_eau": True,
+                },
+            },
+            # Hedge in Asy
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 49.35080401731072, "lng": 3.410785365407426},
+                    {"lat": 49.35021667499731, "lng": 3.4120515874961255},
+                ],
+                "additionalData": {
+                    "position": "interchamp",
+                    "type_haie": "mixte",
+                    "vieil_arbre": True,
+                    "proximite_mare": True,
+                    "mode_destruction": "arrachage",
+                    "sur_parcelle_pac": True,
+                    "connexion_boisement": True,
+                    "proximite_point_eau": True,
+                },
+            },
+        ]
+    )
+    species = acy_limé_hedges.get_all_species()
+    assert set(species) == set([huppe, hypolais])
+
+    # The second hedge in Acy should not return the Hypolaïs Ictérine anymore
+    acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "degradee"
+    acy_limé_hedges.save()
+    species = acy_limé_hedges.get_all_species()
+    assert set(species) == set([huppe])
 
 
 def test_hedge_data_species_are_filtered_by_geography(
