@@ -47,11 +47,11 @@
                     </p>
                     {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
                       <p>
-                        dont {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur des
+                        {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
                         parcelles PAC
                       </p>
                     {% else %}
-                      <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
+                      <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
                     {% endif %}
                   </div>
                 </div>
@@ -97,7 +97,7 @@
     <p>
       Linéaire total : <span id="length-to-remove">0</span> m
     </p>
-    <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
+    <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
   </div>
 </template>
 
@@ -146,7 +146,7 @@
           let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
           let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
           lengthToRemove.textContent = Math.round(event.data.length_to_remove).toLocaleString('fr-FR');
-          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur des parcelles PAC" : `dont ${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur des parcelles PAC`;
+          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur parcelle PAC" : `${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur parcelles PAC`;
           hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove.toLocaleString('fr-FR')} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
           statisticsContainer.innerHTML = "";
           statisticsContainer.appendChild(statsContent);
