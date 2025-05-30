@@ -34,52 +34,54 @@
 
           <div id="form-group-haies"
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
-            <label for="id_haies">Localisation des haies à détruire</label>
-            {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
-              {% if hedges_to_remove|length > 0 %}
-                <div id="statistics-container" class="fr-mb-3w">
-                  <div id="statistics" class="fr-mb-3w">
-                    <p>
-                      {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
-                    </p>
-                    <p>
-                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
-                    </p>
-                    {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+            <div id="group-haies-content">
+              <label for="id_haies">Localisation des haies à détruire</label>
+              {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
+                {% if hedges_to_remove|length > 0 %}
+                  <div id="statistics-container" class="fr-mb-3w">
+                    <div id="statistics" class="fr-mb-3w">
                       <p>
-                        {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
-                        parcelles PAC
+                        {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                       </p>
-                    {% else %}
-                      <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
-                    {% endif %}
+                      <p>
+                        Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
+                      </p>
+                      {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+                        <p>
+                          {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
+                          parcelles PAC
+                        </p>
+                      {% else %}
+                        <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
+                      {% endif %}
+                    </div>
                   </div>
-                </div>
-                <button id="hedge-input-open-btn"
-                        class="fr-btn fr-btn--secondary"
-                        type="button"
-                        data-fr-opened="false"
-                        aria-controls="hedge-input-modal">Modifier les haies</button>
-              {% else %}
-                <div id="statistics-container" class="fr-mb-3w">
-                  <p>
-                    <i>Aucune haie renseignée</i>
-                  </p>
-                </div>
-                <button id="hedge-input-open-btn"
-                        class="fr-btn fr-btn--primary"
-                        type="button"
-                        data-fr-opened="false"
-                        aria-controls="hedge-input-modal">Localiser les haies</button>
+                  <button id="hedge-input-open-btn"
+                          class="fr-btn fr-btn--secondary"
+                          type="button"
+                          data-fr-opened="false"
+                          aria-controls="hedge-input-modal">Modifier les haies</button>
+                {% else %}
+                  <div id="statistics-container" class="fr-mb-3w">
+                    <p>
+                      <i>Aucune haie renseignée</i>
+                    </p>
+                  </div>
+                  <button id="hedge-input-open-btn"
+                          class="fr-btn fr-btn--primary"
+                          type="button"
+                          data-fr-opened="false"
+                          aria-controls="hedge-input-modal">Localiser les haies</button>
+                {% endif %}
+              {% endwith %}
+              {% if form.haies.errors %}
+                <p class="fr-error-text">
+                  ↑
+                  {{ form.haies.errors.0 }}
+                  ↑
+                </p>
               {% endif %}
-            {% endwith %}
-            {% if form.haies.errors %}
-              <p class="fr-error-text">
-                ↑
-                {{ form.haies.errors.0 }}
-                ↑
-              </p>
-            {% endif %}
+            </div>
           </div>
 
           {% include 'haie/moulinette/_form_footer.html' %}
