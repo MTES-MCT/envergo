@@ -144,13 +144,14 @@ class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
-        skip_postgeneration_save = True
 
     name = factory_Faker("name")
     map_type = ""
     description = "Lorem ipsum"
     zones = factory.RelatedFactoryList(
-        "envergo.geodata.tests.factories.ZoneFactory", factory_related_name="map"
+        "envergo.geodata.tests.factories.ZoneFactory",
+        factory_related_name="map",
+        size=1,
     )
 
 
@@ -158,7 +159,7 @@ class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
 
-    map = factory.SubFactory(MapFactory, zones=None)
+    map = factory.SubFactory(MapFactory)
     geometry = france_multipolygon
     species_taxrefs = []
 
