@@ -20,7 +20,7 @@ def france_map():
     map = MapFactory(
         name="France map",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([france_polygon]))],
+        zones__geometry=MultiPolygon([france_polygon]),
     )
     return map
 
@@ -30,7 +30,7 @@ def france_zh():
     map = MapFactory(
         name="France map ZH",
         map_type="zone_humide",
-        zones=[ZoneFactory(geometry=MultiPolygon([france_polygon]))],
+        zones__geometry=MultiPolygon([france_polygon]),
     )
     return map
 
@@ -51,7 +51,7 @@ def bizous_town_center():
     map = MapFactory(
         name="Bizou town center",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([polygon]))],
+        zones__geometry=MultiPolygon([polygon]),
     )
     return map
 
@@ -61,7 +61,7 @@ def loire_atlantique_map():
     map = MapFactory(
         name="Loire Atlantique",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([loire_atlantique_polygon]))],
+        zones__geometry=MultiPolygon([loire_atlantique_polygon]),
     )
     return map
 
@@ -71,7 +71,7 @@ def herault_map():
     map = MapFactory(
         name="Hérault",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([herault_polygon]))],
+        zones__geometry=MultiPolygon([herault_polygon]),
     )
     return map
 
@@ -81,7 +81,7 @@ def aisne_map():
     map = MapFactory(
         name="Aisne",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([aisne_polygon]))],
+        zones__geometry=MultiPolygon([aisne_polygon]),
     )
     return map
 
@@ -91,7 +91,7 @@ def calvados_map():
     map = MapFactory(
         name="Calvados",
         map_type="",
-        zones=[ZoneFactory(geometry=MultiPolygon([calvados_polygon]))],
+        zones__geometry=MultiPolygon([calvados_polygon]),
     )
     return map
 

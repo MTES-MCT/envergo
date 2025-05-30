@@ -150,7 +150,6 @@ class Hedge:
             .filter(map_id=OuterRef("species_maps__map_id"))
             .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
         )
-
         filter = filter & Q(Exists(zone_subquery))
         return filter
 

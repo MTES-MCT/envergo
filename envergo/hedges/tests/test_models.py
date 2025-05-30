@@ -77,10 +77,8 @@ def calvados_hedge_data():
                 "id": "D1",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 49.187457248991315, "lng": -0.3704281832567369},
-                    {"lat": 49.18726791868085, "lng": -0.3697896493669539},
-                    {"lat": 49.18677355278797, "lng": -0.36971989356386026},
-                    {"lat": 49.18668940491001, "lng": -0.3697842835359544},
+                    {"lat": 49.18748081945032, "lng": -0.3705271743228811},
+                    {"lat": 49.18672325114213, "lng": -0.37134275747315654},
                 ],
                 "additionalData": {
                     "type_haie": "degradee",
@@ -98,8 +96,8 @@ def calvados_hedge_data():
                 "id": "D2",
                 "type": "TO_REMOVE",
                 "latLngs": [
-                    {"lat": 49.187352065574956, "lng": -0.3704711099047931},
-                    {"lat": 49.18668239258037, "lng": -0.3712706187247817},
+                    {"lat": 49.18748081945032, "lng": -0.3705271743228811},
+                    {"lat": 49.18672325114213, "lng": -0.37134275747315654},
                 ],
                 "additionalData": {
                     "type_haie": "alignement",
@@ -114,8 +112,8 @@ def calvados_hedge_data():
                 "id": "P1",
                 "type": "TO_PLANT",
                 "latLngs": [
-                    {"lat": 49.187352065574956, "lng": -0.3704711099047931},
-                    {"lat": 49.18668239258037, "lng": -0.3712706187247817},
+                    {"lat": 49.18748081945032, "lng": -0.3705271743228811},
+                    {"lat": 49.18672325114213, "lng": -0.37134275747315654},
                 ],
                 "additionalData": {
                     "mode_plantation": "plantation",
@@ -138,7 +136,10 @@ def test_hedge_species_are_filtered_by_geography(
     aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
 ):
     aisne_species = SpeciesMapFactory(map=aisne_map).species
+    aisne_map.zones.update(species_taxrefs=aisne_species.taxref_ids)
+
     calvados_species = SpeciesMapFactory(map=calvados_map).species
+    calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
 
     hedge = aisne_hedge_data.hedges()[0]
     assert set(hedge.get_species()) == set([aisne_species])
@@ -229,7 +230,10 @@ def test_hedge_data_species_are_filtered_by_geography(
     aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
 ):
     aisne_species = SpeciesMapFactory(map=aisne_map).species
+    aisne_map.zones.update(species_taxrefs=aisne_species.taxref_ids)
+
     calvados_species = SpeciesMapFactory(map=calvados_map).species
+    calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
 
     assert set(aisne_hedge_data.get_all_species()) == set([aisne_species])
     assert set(calvados_hedge_data.get_all_species()) == set([calvados_species])
