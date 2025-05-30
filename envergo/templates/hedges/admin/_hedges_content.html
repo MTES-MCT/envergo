@@ -1,16 +1,30 @@
 {% for hedge in hedges %}
   <div class="hedge">
-
     <ul>
       <li>ID : {{ hedge.id }}</li>
       <li>Type: {{ hedge.type }}</li>
       {% for k, v in hedge.additionalData.items %}<li>{{ k }} : {{ v }}</li>{% endfor %}
       <li>
+        Espèces
         <ul>
           {% for species in hedge.get_species %}
-            <li>{{ species }}</li>
+            <li>
+              <a href="{% url 'admin:hedges_species_change' species.id %}">{{ species }}</a>
+            </li>
           {% empty %}
             <li>Aucune espèce trouvée</li>
+          {% endfor %}
+        </ul>
+      </li>
+      <li>
+        Zones
+        <ul>
+          {% for zone in hedge.get_zones %}
+            <li>
+              <a href="{% url 'admin:geodata_zone_change' zone.id %}">{{ zone }}</a>
+            </li>
+          {% empty %}
+            <li>Aucune zone intersectée</li>
           {% endfor %}
         </ul>
       </li>

@@ -51,12 +51,8 @@ def zonage_normandie(france_map):  # noqa
     zonage_normandie = MapFactory(
         name="Zonage Normandie",
         map_type=MAP_TYPES.zonage,
-        zones=[
-            ZoneFactory(
-                geometry=MultiPolygon([france_polygon]),
-                attributes={"identifiant_zone": "normandie_groupe_1"},
-            )
-        ],
+        zones__geometry=MultiPolygon([france_polygon]),
+        zones__attributes={"identifiant_zone": "normandie_groupe_1"},
     )
     return zonage_normandie
 
@@ -434,12 +430,8 @@ def test_replantation_coefficient_normandie(
     MapFactory(
         name="Zonage Normandie",
         map_type=MAP_TYPES.zonage,
-        zones=[
-            ZoneFactory(
-                geometry=MultiPolygon([france_polygon]),
-                attributes={"identifiant_zone": "normandie_groupe_1"},
-            )
-        ],
+        zones__geometry=MultiPolygon([france_polygon]),
+        zones__attributes={"identifiant_zone": "normandie_groupe_1"},
     )
 
     hedge_gt20m = HedgeFactory(

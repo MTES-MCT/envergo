@@ -136,6 +136,12 @@ class SpeciesMapAdmin(admin.ModelAdmin):
         "hedge_types",
         "hedge_properties",
     ]
+    search_fields = [
+        "species__common_name",
+        "species__scientific_name",
+        "species__taxref_ids",
+        "map__name",
+    ]
     autocomplete_fields = ["species", "map"]
 
 
