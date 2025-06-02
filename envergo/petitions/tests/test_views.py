@@ -8,6 +8,8 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
+from envergo.hedges.models import TO_PLANT
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
@@ -66,7 +68,17 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    ConfigHaieFactory()
+    config = ConfigHaieFactory()
+    config.demarche_simplifiee_pre_fill_config.append(
+        {"id": "abc", "value": "plantation_adequate"}
+    )
+    config.demarche_simplifiee_pre_fill_config.append(
+        {"id": "def", "value": "sur_talus_d"}
+    )
+    config.demarche_simplifiee_pre_fill_config.append(
+        {"id": "ghi", "value": "sur_talus_p"}
+    )
+    config.save()
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -74,7 +86,11 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     view.request = request
     request.alerts = PetitionProjectCreationAlert(request)
 
-    petition_project = PetitionProjectFactory()
+    hedge_to_plant = HedgeFactory(type=TO_PLANT, additionalData__sur_talus=True)
+    hedge_data = HedgeDataFactory()
+    hedge_data.data = [hedge_to_plant.toDict()]
+
+    petition_project = PetitionProjectFactory(hedge_data=hedge_data)
     demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
         petition_project
     )
@@ -91,6 +107,9 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "champ_654": "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
         "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=44&travaux=destruction&element=haie",
         "champ_789": "http://haie.local:3000/projet/ABC123",
+        "champ_abc": "true",
+        "champ_def": "false",
+        "champ_ghi": "true",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body

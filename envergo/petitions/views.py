@@ -23,7 +23,7 @@ from shapely.ops import transform
 
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
-from envergo.hedges.services import PlantationEvaluator
+from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import DOSSIER_STATES, PetitionProject
@@ -257,10 +257,32 @@ class PetitionProjectCreate(FormView):
             )
         elif source == "ref_projet":
             value = petition_project.reference
+        elif source == "plantation_adequate":
+            haies = moulinette.catalog.get("haies")
+            value = (
+                PlantationEvaluator(moulinette, haies).result
+                == PlantationResults.Adequate.value
+                if haies
+                else False
+            )
         elif source == "vieil_arbre":
             haies = moulinette.catalog.get("haies")
             if haies:
                 value = haies.is_removing_old_tree()
+        elif source == "sur_talus_d":
+            haies = moulinette.catalog.get("haies")
+            value = (
+                any(h.prop("sur_talus") for h in haies.hedges_to_remove())
+                if haies
+                else False
+            )
+        elif source == "sur_talus_p":
+            haies = moulinette.catalog.get("haies")
+            value = (
+                any(h.prop("sur_talus") for h in haies.hedges_to_plant())
+                if haies
+                else False
+            )
         elif source == "proximite_mare":
             haies = moulinette.catalog.get("haies")
             if haies:
