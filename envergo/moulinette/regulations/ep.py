@@ -12,6 +12,7 @@ from envergo.hedges.regulations import (
     CalvadosQualityCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
+    MinLengthCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -120,6 +121,7 @@ class EspecesProtegeesNormandie(
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
     plantation_conditions = [
+        MinLengthCondition,
         SafetyCondition,
         StrenghteningCondition,
         LineaireSurTalusCondition,
