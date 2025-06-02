@@ -13,14 +13,19 @@
                     aria-controls="haie-modal-department-doctrine">Fermer</button>
           </div>
           <div class="fr-modal__content">
-            <h1 id="haie-modal-title-department-doctrine" class="fr-modal__title">
+            <h2 id="haie-modal-title-department-doctrine" class="fr-modal__title">
               <span class="fr-icon-scales-3-line fr-icon--lg"></span>
               En savoir plus sur la réglementation
-            </h1>
+            </h2>
             {% if config and config.department_doctrine_html %}
               {{ config.department_doctrine_html|safe }}
 
             {% else %}
+              <p>
+                Voici le détail de la réglementation qui s'applique dans le département.
+                <em>Courte introduction pour dire que la doctrine est propre à chaque territoire…</em>
+              </p>
+              <h3>Sous-titre</h3>
               <p>
                 Lorem ipsum dolor, sit amet consectetur adipisicing elit.
                 Placeat ex harum deleniti adipisci cumque molestiae incidunt saepe quaerat laudantium exercitationem,
