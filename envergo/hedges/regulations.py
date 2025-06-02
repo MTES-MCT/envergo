@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from math import isclose
 
 from django.utils.safestring import mark_safe
 
@@ -318,11 +319,6 @@ class CalvadosQualityCondition(PlantationCondition):
         "buissonnante": ["buissonnante", "arbustive", "mixte"],
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
-    hint_text = """
-        Linéaire attendu en compensation : %(lpm)s m.
-        La compensation peut être réduite à %(reduced_lpm)s m en proposant de planter
-        des haies mixtes plutôt que de type identiqe aux haies à détruire.
-    """
 
     def evaluate(self):
         LC = self.catalog["LC"]  # linéaire à compenser
@@ -396,6 +392,21 @@ class CalvadosQualityCondition(PlantationCondition):
             t = "<br />\n".join(lines)
 
         return mark_safe(t % self.context)
+
+    @property
+    def hint(self):
+        lines = [f"Linéaire attendu en compensation : {self.context["lpm"]} m."]
+
+        if not isclose(self.context["lpm"], self.context["reduced_lpm"]):
+            lines.append(
+                f"""
+                La compensation peut être réduite à {self.context["reduced_lpm"]} m en
+                proposant de planter des haies mixtes plutôt que de type identiqe aux
+                haies à détruire.
+                """
+            )
+
+        return mark_safe(" ".join(lines))
 
 
 class SafetyCondition(PlantationCondition):
