@@ -20,6 +20,7 @@
 
           {% csrf_token %}
           {{ form.department.as_hidden }}
+
           {% include '_radio_snippet.html' with field=form.element %}
           {% include '_radio_snippet.html' with field=form.travaux %}
 
@@ -32,4 +33,8 @@
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' %}
 {% endblock %}
