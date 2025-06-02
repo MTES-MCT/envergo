@@ -7,14 +7,12 @@ from typing import Any, List, Literal
 
 import requests
 from django.conf import settings
-from django.template.defaultfilters import floatformat
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.moulinette.forms import MoulinetteFormHaie
-from envergo.petitions.regulations import get_instructors_information
+from envergo.hedges.models import Hedge
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -133,15 +131,29 @@ class ProjectDetails:
     ds_data: DemarchesSimplifieesDetails | None
 
 
-def build_project_summary(petition_project, moulinette) -> InstructorInformation:
-    """Build project details from petition project data"""
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+
+def get_project_context(petition_project, moulinette) -> dict:
+    """Build context for petition project instructor page view"""
 
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
     length_to_plant = hedge_data.length_to_plant()
 
     hedge_to_remove_by_destruction_mode = {
-        key: [] for key, _ in MODE_DESTRUCTION_CHOICES
+        mode: HedgeList(label=label) for mode, label in MODE_DESTRUCTION_CHOICES
     }
 
     for hedge in hedge_data.hedges_to_remove():
@@ -150,184 +162,46 @@ def build_project_summary(petition_project, moulinette) -> InstructorInformation
     hedge_to_plant_properties_form = import_string(
         moulinette.config.hedge_to_plant_properties_form
     )
+    plantation_details = {}
     if "mode_plantation" in hedge_to_plant_properties_form.base_fields:
         hedge_to_plant_by_plantation_mode = {
-            key: [] for key, _, _ in MODE_PLANTATION_CHOICES
+            key: HedgeList(label=label) for key, _, label in MODE_PLANTATION_CHOICES
         }
 
         for hedge in hedge_data.hedges_to_plant():
             if hedge.mode_plantation is not None:
                 hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
 
-        plantation_details = [
-            Item(
-                "Total linéaire à planter, renforcer ou reconnecter",
-                floatformat(length_to_plant, "0g"),
-                "m",
-                None,
+        plantation_details = {
+            "plantation_only_ratio": (
+                hedge_to_plant_by_plantation_mode["plantation"].length
+                / length_to_remove
+                if length_to_remove
+                else ""
             ),
-            Item(
-                "Mode de plantation",
-                ItemDetails(
-                    result=True,
-                    details=[
-                        AdditionalInfo(
-                            label={
-                                key: value for key, _, value in MODE_PLANTATION_CHOICES
-                            }.get(mode, "Inconnue"),
-                            value=f"{floatformat(sum(h.length for h in hedges_by_mode), "0g")} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_by_mode])}"
-                                if hedges_by_mode
-                                else ""
-                            ),
-                            unit=None,
-                        )
-                        for mode, hedges_by_mode in hedge_to_plant_by_plantation_mode.items()
-                    ],
-                    display_result=False,
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Ratio de replantation, renforcement ou reconnexion",
-                (
-                    floatformat(length_to_plant / length_to_remove, "2g")
-                    if length_to_remove
-                    else ""
-                ),
-                None,
-                "Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire",
-            ),
-            Item(
-                "Ratio de replantation uniquement",
-                (
-                    floatformat(
-                        sum(
-                            h.length
-                            for h in hedge_to_plant_by_plantation_mode["plantation"]
-                        )
-                        / length_to_remove,
-                        "2g",
-                    )
-                    if length_to_remove
-                    else ""
-                ),
-                None,
-                "Linéaire plantation nouvelle ou remplacement / linéaire à détruire",
-            ),
-        ]
-    else:
-        plantation_details = [
-            Item(
-                "Total linéaire à planter",
-                floatformat(length_to_plant, "0g"),
-                "m",
-                None,
-            ),
-            Item(
-                "Ratio de replantation",
-                (
-                    floatformat(length_to_plant / length_to_remove, "2g")
-                    if length_to_remove
-                    else ""
-                ),
-                None,
-                "Linéaire à planter / linéaire à détruire",
-            ),
-        ]
+            "hedge_to_plant_by_plantation_mode": hedge_to_plant_by_plantation_mode,
+        }
 
-    project_summary = InstructorInformation(
-        slug=None,
-        label=None,
-        key_elements=[
-            Item("Référence interne", petition_project.reference, None, None),
-            GroupedItems(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Total linéaire à détruire",
-                        floatformat(length_to_remove, "0g"),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Mode de destruction",
-                        ItemDetails(
-                            result=True,
-                            details=[
-                                AdditionalInfo(
-                                    label=dict(MODE_DESTRUCTION_CHOICES).get(
-                                        mode, "Inconnue"
-                                    ),
-                                    value=f"{floatformat(sum(h.length for h in hedges_by_mode), "0g")} m "
-                                    + (
-                                        f" • {', '.join([h.id for h in hedges_by_mode])}"
-                                        if hedges_by_mode
-                                        else ""
-                                    ),
-                                    unit=None,
-                                )
-                                for mode, hedges_by_mode in hedge_to_remove_by_destruction_mode.items()
-                            ],
-                            display_result=False,
-                        ),
-                        None,
-                        None,
-                    ),
-                ],
-            ),
-            GroupedItems(
-                label="Plantation",
-                items=[
-                    *plantation_details,
-                ],
-            ),
-            "display_hedges_cta",
-            "open_simulation_cta",
-        ],
-        simulation_data=[],
-        comment=None,
-    )
+    context = {
+        "length_to_remove": length_to_remove,
+        "hedge_to_remove_by_destruction_mode": hedge_to_remove_by_destruction_mode,
+        "length_to_plant": length_to_plant,
+        "plantation_ratio": (
+            length_to_plant / length_to_remove if length_to_remove else ""
+        ),
+    }
+    context.update(plantation_details)
 
-    for key in MoulinetteFormHaie.base_fields:
-        if key in moulinette.catalog and key != "haies":
-            field = MoulinetteFormHaie.base_fields[key]
-            project_summary.simulation_data.append(
-                Item.from_field(field, moulinette.catalog[key])
-            )
-
-    return project_summary
+    return context
 
 
-def compute_instructor_informations(
+def get_instructor_view_context(
     petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    """Compute ProjectDetails with instructor informations"""
+) -> dict:
+    """Build context for ProjectDetails instructor page view"""
 
     # Build project details
-    project_summary = build_project_summary(petition_project, moulinette)
-
-    # Build notes instruction
-    notes_instruction = InstructorInformation(
-        slug="instructor_free_mention",
-        label="Notes libres pour l'instruction",
-        key_elements=None,
-        simulation_data=None,
-        other_items=["instructor_free_mention"],
-    )
-
-    regulations_information = []
-    for regulation in moulinette.regulations:
-        for criterion in regulation.criteria.all():
-            regulations_information.append(
-                get_instructors_information(
-                    criterion._evaluator, petition_project, moulinette
-                )
-            )
-
-    regulations_information.append(notes_instruction)
+    project_summary = get_project_context(petition_project, moulinette)
 
     # Get ds details
     config = moulinette.config
@@ -377,35 +251,15 @@ def compute_instructor_informations(
             applicant_name, city, pacage, usager, None, None
         )
 
-        # Add info to project summary and BCAE8
-        if ds_details:
-            if ds_details.city:
-                project_summary.key_elements.insert(
-                    1, Item("Commune principale", ds_details.city, None, None)
-                )
-            if ds_details.applicant_name:
-                project_summary.key_elements.insert(
-                    2, Item("Nom du demandeur", ds_details.applicant_name, None, None)
-                )
+    context = {
+        "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
+        "demarche_simplifiee_number": config.demarche_simplifiee_number,
+        "usager": ds_details.usager if ds_details else "",
+        "ds_data": ds_details,
+    }
+    context.update(project_summary)
 
-        if ds_details:
-            if ds_details.pacage:
-                bcae8 = next(
-                    (reg for reg in regulations_information if reg.slug == "bcae8"),
-                    None,
-                )
-                if bcae8:
-                    bcae8.key_elements.insert(
-                        1, Item("N° PACAGE", ds_details.pacage, None, None)
-                    )
-
-    return ProjectDetails(
-        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-        demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager if ds_details else "",
-        sections=[project_summary, *regulations_information],
-        ds_data=ds_details,
-    )
+    return context
 
 
 def compute_instructor_informations_ds(
@@ -414,7 +268,7 @@ def compute_instructor_informations_ds(
     """Compute ProjectDetails with instructor informations"""
 
     # Build project details
-    project_summary = build_project_summary(petition_project, moulinette)
+    project_summary = get_project_context(petition_project, moulinette)
 
     # Get ds details
     config = moulinette.config

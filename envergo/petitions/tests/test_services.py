@@ -20,8 +20,8 @@ from envergo.petitions.regulations.ep import (
     ep_normandie_get_instructors_info,
 )
 from envergo.petitions.services import (
-    compute_instructor_informations,
     fetch_project_details_from_demarches_simplifiees,
+    get_instructor_view_context,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
@@ -55,7 +55,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
     assert dossier is not None
 
-    project_details = compute_instructor_informations(
+    project_details = get_instructor_view_context(
         petition_project, moulinette, site, "", haie_user
     )
     ds_data = project_details.ds_data

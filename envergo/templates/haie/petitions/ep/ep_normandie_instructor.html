@@ -1,0 +1,17 @@
+{% extends 'haie/petitions/ep/ep_instructor_base.html' %}
+
+{% block after_hedge_properties %}
+  <h4>Calcul de la compensation attendue</h4>
+
+  <ul class="instructor-view-list">
+    {% include 'haie/petitions/_item.html' with label="Coefficient compensation primaire" value=replantation_coefficient|floatformat:"1g" comment="C’est-à-dire hors réduction permise par le projet de plantation" %}
+    {% include 'haie/petitions/_item.html' with label="Identifiant zone" value=moulinette.catalog.density_zone %}
+    {% include 'haie/petitions/_item.html' with label="Densité haies – rayon 200 m" value=moulinette.catalog.density_200|floatformat:"0g" unit="ml/ha" %}
+    {% include 'haie/petitions/_item.html' with label="Densité haies – rayon 5 km" value=moulinette.catalog.density_5000|floatformat:"0g" unit="ml/ha" %}
+    {% include 'haie/petitions/_item.html' with label="Rapport de densité 200 m / 5 km" value=moulinette.catalog.density_ratio|floatformat:"2g" %}
+    <li>
+      {% include 'haie/petitions/_hedges_compensation_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
+    </li>
+    {% include 'haie/petitions/_item.html' with label="Coefficient compensation réduit grâce au projet de plantation" value=replantation_coefficient|floatformat:"1g" %}
+  </ul>
+{% endblock %}

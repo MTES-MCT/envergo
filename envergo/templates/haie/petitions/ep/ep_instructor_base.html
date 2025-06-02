@@ -1,0 +1,49 @@
+{% load petitions %}
+
+<h2>Espèces protégées</h2>
+
+{% block key_elements %}{% endblock %}
+
+<h3 class="fr-mt-4w">Données de la simulation</h3>
+
+<h4>Caractéristiques des haies</h4>
+<ul class="instructor-view-list">
+  {% for key, value in hedges_properties.items %}
+    {% include "haie/petitions/_item.html" with label=value.label value=value|display_property|yesno %}
+    {% if value|display_property %}
+      {% if value.TO_REMOVE %}
+        <li class="fr-pl-4w">
+          <span>Destruction :</span>
+          <span>{{ value.TO_REMOVE.length|floatformat:"0g" }}m
+            {% if value.TO_REMOVE %}• {{ value.TO_REMOVE.names }}{% endif %}
+          </span>
+        </li>
+      {% endif %}
+      {% if value.TO_PLANT %}
+        <li class="fr-pl-4w">
+          <span>Plantation :</span>
+          <span>{{ value.TO_PLANT.length|floatformat:"0g" }}m
+            {% if value.TO_PLANT %}• {{ value.TO_PLANT.names }}{% endif %}
+          </span>
+        </li>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+</ul>
+
+{% block after_hedge_properties %}{% endblock %}
+
+<h4>Liste des espèces</h4>
+<div id="field-onagre_number" class="fr-my-2w">
+  {% include '_field_snippet.html' with field=form.onagre_number %}
+  <button type="submit"
+          class="fr-btn fr-btn--secondary"
+          formaction="{% url 'petition_project_instructor_view' petition_project.reference %}#field-onagre_number">
+    Enregistrer
+  </button>
+</div>
+{% if moulinette.catalog.protected_species %}
+  {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+{% else %}
+  <p>Pas de liste d’espèces associée à cette simulation</p>
+{% endif %}

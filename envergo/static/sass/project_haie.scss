@@ -519,6 +519,11 @@ div#project-specifications-instructor {
   height: 64px;
 }
 
+ul.instructor-view-list {
+  list-style-type: none;
+  padding: 0;
+}
+
 .section-ds {
   border-top: 1px solid var(--border-default-grey);
 }
