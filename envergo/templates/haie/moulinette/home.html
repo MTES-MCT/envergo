@@ -2,6 +2,10 @@
 
 {% load static %}
 
+{% block extra_body %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' %}
+{% endblock %}
+
 {% block extra_js %}
   <script>var SIMULATION_FORM_ID = "moulinette-form";</script>
   <script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
