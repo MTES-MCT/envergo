@@ -68,12 +68,9 @@ class MinLengthCondition(PlantationCondition):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
 
-        if "reduced_lpm" in self.catalog:
+        minimum_length_to_plant = length_to_remove * self.R
+        if isclose(self.R, self.catalog.get("aggregated_r", 0.0)):
             minimum_length_to_plant = self.catalog["reduced_lpm"]
-        elif "lpm" in self.catalog:
-            minimum_length_to_plant = self.catalog["lpm"]
-        else:
-            minimum_length_to_plant = length_to_remove * self.R
 
         self.result = length_to_plant >= minimum_length_to_plant
 
@@ -307,7 +304,7 @@ HEDGE_KEYS = OrderedDict(
 )
 
 
-class CalvadosQualityCondition(PlantationCondition):
+class NormandieQualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
     valid_text = "La qualité écologique du linéaire planté est suffisante."
@@ -401,7 +398,9 @@ class CalvadosQualityCondition(PlantationCondition):
     def hint(self):
         lines = [f"Linéaire attendu en compensation : {self.context["lpm"]} m."]
 
-        if not isclose(self.context["lpm"], self.context["reduced_lpm"]):
+        if isclose(self.R, self.catalog["aggregated_r"]) and not isclose(
+            self.context["lpm"], self.context["reduced_lpm"]
+        ):
             lines.append(
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
