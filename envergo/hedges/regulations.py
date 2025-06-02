@@ -62,7 +62,14 @@ class MinLengthCondition(PlantationCondition):
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
+
+        if "reduced_lpm" in self.catalog:
+            minimum_length_to_plant = self.catalog["reduced_lpm"]
+        elif "lpm" in self.catalog:
+            minimum_length_to_plant = self.catalog["lpm"]
+        else:
+            minimum_length_to_plant = length_to_remove * self.R
+
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
