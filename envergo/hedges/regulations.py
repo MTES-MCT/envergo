@@ -284,7 +284,7 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
-HEDGE_TYPES = OrderedDict(
+HEDGE_KEYS = OrderedDict(
     [
         ("mixte", "mixte"),
         ("alignement", "alignement"),
@@ -318,37 +318,17 @@ class CalvadosQualityCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        LD = defaultdict(int)  # linéaire à détruire
-        LC = defaultdict(int)  # linéaire à compenser
+        LC = self.catalog["LC"]  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
         # Les haies à planter
         for hedge in self.hedge_data.hedges_to_plant():
             LP[hedge.hedge_type] += hedge.length
 
-        # On calcule les longueurs à compenser, le r dépend de chaque haie
-        for hedge, r in self.catalog.get("hedges_to_remove_with_r", []):
-            LD[hedge.hedge_type] += hedge.length
-            LC[hedge.hedge_type] += hedge.length * r
-        lpm = sum(LC.values())
-
-        # On calcule la longueur à compenser réduite
-        # Le taux de compensation ne peut pas descendre sous 1:1
-        hedge_keys = HEDGE_TYPES.keys()
-        for hedge_type in hedge_keys:
-            LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
-            LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
-        reduced_lpm = sum(LC.values())
-
-        self.context = {
-            "lpm": round(lpm),
-            "reduced_lpm": round(reduced_lpm),
-        }
-
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
-        for hedge_type in hedge_keys:
+        for hedge_type in HEDGE_KEYS.keys():
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux
@@ -369,7 +349,9 @@ class CalvadosQualityCondition(PlantationCondition):
         # À la fin, le linéaire à compenser doit être nul
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
-        self.context.update({"LC": LC})
+
+        self.context["lpm"] = self.catalog["lpm"]
+        self.context["reduced_lpm"] = self.catalog["reduced_lpm"]
 
         return self
 
@@ -379,12 +361,12 @@ class CalvadosQualityCondition(PlantationCondition):
             t = self.valid_text
         else:
             lines = [self.invalid_text]
-            for hedge_type, length in self.context["LC"].items():
+            for hedge_type, length in self.catalog["LC"].items():
                 if length > 0.0:
                     lines.append(
                         f"""
                         Il reste à compenser au moins {round(length)} m de haie
-                        {HEDGE_TYPES[hedge_type]}.
+                        {HEDGE_KEYS[hedge_type]}.
                         """
                     )
             t = "<br />\n".join(lines)
