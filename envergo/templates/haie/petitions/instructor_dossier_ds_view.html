@@ -62,7 +62,7 @@
             {% elif item.value|is_type:"ItemFiles" %}
               <div class="ds-files fr-grid-row fr-grid-row--gutters">
                 {% for file in item.value.files %}
-                  {% if file.content_type == "image/jpeg" %}
+                  {% if "image" in file.content_type %}
                     <div class="fr-col fr-col-md-6">
                       <figure role="group"
                               class="fr-content-media"
