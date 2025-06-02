@@ -44,6 +44,8 @@
 
   <div class="project-inner-content">
 
+    {% include 'haie/moulinette/_department_doctrine_button.html' %}
+
     <form method="post"
           action="{% url 'petition_project_instructor_view' petition_project.reference %}">
       {% csrf_token %}
@@ -148,6 +150,7 @@
 
 {% block extra_body %}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
 {% endblock %}
 
 {% block extra_js %}
