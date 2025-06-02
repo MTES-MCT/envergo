@@ -330,17 +330,16 @@ class CalvadosQualityCondition(PlantationCondition):
         for hedge, r in self.catalog.get("hedges_to_remove_with_r", []):
             LD[hedge.hedge_type] += hedge.length
             LC[hedge.hedge_type] += hedge.length * r
+        lpm = sum(LC.values())
 
+        # On calcule la longueur à compenser réduite
         # Le taux de compensation ne peut pas descendre sous 1:1
         hedge_keys = HEDGE_TYPES.keys()
         for hedge_type in hedge_keys:
+            LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
             LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
+        reduced_lpm = sum(LC.values())
 
-        # On calcule le linéaire total à compenser pour l'affichage
-        lpm = sum(LC.values())
-        reduced_lpm = 0
-        for t, l in LC.items():
-            reduced_lpm += l * 0.8 if t != "mixte" else l
         self.context = {
             "lpm": round(lpm),
             "reduced_lpm": round(reduced_lpm),
