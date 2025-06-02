@@ -380,38 +380,37 @@ class EspecesProtegeesNormandie(
             density_ratio_range = "lt_0.5"
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
-        if haies:
-            LD = defaultdict(int)  # linéaire à détruire
-            LC = defaultdict(int)  # linéaire à compenser
+        LD = defaultdict(int)  # linéaire à détruire
+        LC = defaultdict(int)  # linéaire à compenser
 
-            for hedge in haies.hedges_to_remove():
-                if hedge.mode_destruction != "coupe_a_blanc":
-                    coupe_a_blanc_every_hedge = False
+        for hedge in haies.hedges_to_remove():
+            if hedge.mode_destruction != "coupe_a_blanc":
+                coupe_a_blanc_every_hedge = False
 
-                if hedge.length > 20:
-                    lte_20m_every_hedge = False
+            if hedge.length > 20:
+                lte_20m_every_hedge = False
 
-                if hedge.length <= 10:
-                    r = D(0)
-                elif hedge.length <= 20:
-                    r = D(1)
-                elif (
-                    reimplantation == "remplacement"
-                    and hedge.mode_destruction == "coupe_a_blanc"
-                ):
-                    r = D(1)
-                else:
-                    r = self.COEFFICIENT_MATRIX[
-                        (hedge.hedge_type, density_ratio_range, zone_id)
-                    ]
+            if hedge.length <= 10:
+                r = D(0)
+            elif hedge.length <= 20:
+                r = D(1)
+            elif (
+                reimplantation == "remplacement"
+                and hedge.mode_destruction == "coupe_a_blanc"
+            ):
+                r = D(1)
+            else:
+                r = self.COEFFICIENT_MATRIX[
+                    (hedge.hedge_type, density_ratio_range, zone_id)
+                ]
 
-                all_r.append(r)
-                minimum_length_to_plant = (
-                    D(minimum_length_to_plant) + D(hedge.length) * r
-                )
-                LD[hedge.hedge_type] += hedge.length
-                LC[hedge.hedge_type] += hedge.length * float(r)
-                hedges_details.append(get_hedge_compensation_details(hedge, r))
+            all_r.append(r)
+            minimum_length_to_plant = (
+                D(minimum_length_to_plant) + D(hedge.length) * r
+            )
+            LD[hedge.hedge_type] += hedge.length
+            LC[hedge.hedge_type] += hedge.length * float(r)
+            hedges_details.append(get_hedge_compensation_details(hedge, r))
 
             # Total compensation length before compensation reductions
             lpm = sum(LC.values())
