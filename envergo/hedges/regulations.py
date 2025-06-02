@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from math import isclose
 
 from django.utils.safestring import mark_safe
 
@@ -66,7 +67,14 @@ class MinLengthCondition(PlantationCondition):
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
+
+        if "reduced_lpm" in self.catalog:
+            minimum_length_to_plant = self.catalog["reduced_lpm"]
+        elif "lpm" in self.catalog:
+            minimum_length_to_plant = self.catalog["lpm"]
+        else:
+            minimum_length_to_plant = length_to_remove * self.R
+
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -288,7 +296,7 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
-HEDGE_TYPES = OrderedDict(
+HEDGE_KEYS = OrderedDict(
     [
         ("mixte", "mixte"),
         ("alignement", "alignement"),
@@ -315,45 +323,19 @@ class CalvadosQualityCondition(PlantationCondition):
         "buissonnante": ["buissonnante", "arbustive", "mixte"],
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
-    hint_text = """
-        Linéaire attendu en compensation : %(lpm)s m.
-        La compensation peut être réduite à %(reduced_lpm)s m en proposant de planter
-        des haies mixtes plutôt que de type identiqe aux haies à détruire.
-    """
 
     def evaluate(self):
-        LD = defaultdict(int)  # linéaire à détruire
-        LC = defaultdict(int)  # linéaire à compenser
+        LC = self.catalog["LC"]  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
         # Les haies à planter
         for hedge in self.hedge_data.hedges_to_plant():
             LP[hedge.hedge_type] += hedge.length
 
-        # On calcule les longueurs à compenser, le r dépend de chaque haie
-        for hedge, r in self.catalog.get("hedges_to_remove_with_r", []):
-            LD[hedge.hedge_type] += hedge.length
-            LC[hedge.hedge_type] += hedge.length * r
-
-        # Le taux de compensation ne peut pas descendre sous 1:1
-        hedge_keys = HEDGE_TYPES.keys()
-        for hedge_type in hedge_keys:
-            LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
-
-        # On calcule le linéaire total à compenser pour l'affichage
-        lpm = sum(LC.values())
-        reduced_lpm = 0
-        for t, l in LC.items():
-            reduced_lpm += l * 0.8 if t != "mixte" else l
-        self.context = {
-            "lpm": round(lpm),
-            "reduced_lpm": round(reduced_lpm),
-        }
-
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
-        for hedge_type in hedge_keys:
+        for hedge_type in HEDGE_KEYS.keys():
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux
@@ -374,7 +356,10 @@ class CalvadosQualityCondition(PlantationCondition):
         # À la fin, le linéaire à compenser doit être nul
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
-        self.context.update({"LC": LC})
+
+        self.context["lpm"] = self.catalog["lpm"]
+        self.context["reduced_lpm"] = self.catalog["reduced_lpm"]
+        self.context["LC"] = LC
 
         return self
 
@@ -384,17 +369,48 @@ class CalvadosQualityCondition(PlantationCondition):
             t = self.valid_text
         else:
             lines = [self.invalid_text]
-            for hedge_type, length in self.context["LC"].items():
-                if length > 0.0:
-                    lines.append(
-                        f"""
-                        Il reste à compenser au moins {round(length)} m de haie
-                        {HEDGE_TYPES[hedge_type]}.
-                        """
-                    )
+
+            LC = self.context["LC"]
+
+            if LC["mixte"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["mixte"])} m de haie mixte."
+                )
+
+            if LC["alignement"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
+                )
+
+            if LC["arbustive"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["arbustive"])} m de haie arbustive ou mixte."
+                )
+
+            t1_t2 = LC["degradee"] + LC["buissonnante"]
+            if t1_t2 > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(t1_t2)} m de haie buissonnante, arbustive ou mixte."
+                )
+
             t = "<br />\n".join(lines)
 
         return mark_safe(t % self.context)
+
+    @property
+    def hint(self):
+        lines = [f"Linéaire attendu en compensation : {self.context["lpm"]} m."]
+
+        if not isclose(self.context["lpm"], self.context["reduced_lpm"]):
+            lines.append(
+                f"""
+                La compensation peut être réduite à {self.context["reduced_lpm"]} m en
+                proposant de planter des haies mixtes plutôt que de type identiqe aux
+                haies à détruire.
+                """
+            )
+
+        return mark_safe(" ".join(lines))
 
 
 class SafetyCondition(PlantationCondition):
