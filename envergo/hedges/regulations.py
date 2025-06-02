@@ -303,7 +303,7 @@ HEDGE_KEYS = OrderedDict(
 )
 
 
-class CalvadosQualityCondition(PlantationCondition):
+class NormandieQualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
     valid_text = "La qualité écologique du linéaire planté est suffisante."

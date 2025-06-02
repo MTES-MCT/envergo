@@ -1,7 +1,7 @@
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.hedges.regulations import CalvadosQualityCondition
+from envergo.hedges.regulations import NormandieQualityCondition
 from envergo.hedges.tests.factories import HedgeDataFactory
 
 pytestmark = pytest.mark.django_db
@@ -175,7 +175,7 @@ def test_calvados_quality_condition(hedge_data):
         ],
     }
     R = 0.0  # Ignored for calvados
-    condition = CalvadosQualityCondition(hedge_data, R, catalog)
+    condition = NormandieQualityCondition(hedge_data, R, catalog)
     condition.evaluate()
     LC = condition.context["LC"]
 

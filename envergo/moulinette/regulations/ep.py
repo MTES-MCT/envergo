@@ -9,10 +9,10 @@ from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
-    CalvadosQualityCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
     MinLengthCondition,
+    NormandieQualityCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
@@ -126,7 +126,7 @@ class EspecesProtegeesNormandie(
         StrenghteningCondition,
         LineaireSurTalusCondition,
         LineaireInterchamp,
-        CalvadosQualityCondition,
+        NormandieQualityCondition,
     ]
 
     RESULT_MATRIX = {
