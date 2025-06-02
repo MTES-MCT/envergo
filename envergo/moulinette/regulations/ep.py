@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal as D
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -7,6 +8,7 @@ from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
+    HEDGE_KEYS,
     CalvadosQualityCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
@@ -377,7 +379,9 @@ class EspecesProtegeesNormandie(
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
         if haies:
-            hedges_to_remove_with_r = []
+            LD = defaultdict(int)  # linéaire à détruire
+            LC = defaultdict(int)  # linéaire à compenser
+
             for hedge in haies.hedges_to_remove():
                 if hedge.mode_destruction != "coupe_a_blanc":
                     coupe_a_blanc_every_hedge = False
@@ -399,12 +403,32 @@ class EspecesProtegeesNormandie(
                         (hedge.hedge_type, density_ratio_range, zone_id)
                     ]
 
-                hedges_to_remove_with_r.append((hedge, float(r)))
                 all_r.append(r)
                 minimum_length_to_plant = (
                     D(minimum_length_to_plant) + D(hedge.length) * r
                 )
+                LD[hedge.hedge_type] += hedge.length
+                LC[hedge.hedge_type] += hedge.length * float(r)
                 hedges_details.append(get_hedge_compensation_details(hedge, r))
+
+            # Total compensation length before compensation reductions
+            lpm = sum(LC.values())
+
+            # Compensation can be reduced when planting a better type
+            # Compensation rate cannot go below 1:1 though
+            hedge_keys = HEDGE_KEYS.keys()
+            for hedge_type in hedge_keys:
+                LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
+                LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
+            reduced_lpm = sum(LC.values())
+
+            catalog.update(
+                {
+                    "LC": LC,
+                    "lpm": round(lpm),
+                    "reduced_lpm": round(reduced_lpm),
+                }
+            )
 
             # Aggregate the R of each hedge to compute the global replantation coefficient.
             if haies.length_to_remove() > 0:
@@ -412,7 +436,6 @@ class EspecesProtegeesNormandie(
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
-        catalog["hedges_to_remove_with_r"] = hedges_to_remove_with_r
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["aggregated_r"] = aggregated_r
