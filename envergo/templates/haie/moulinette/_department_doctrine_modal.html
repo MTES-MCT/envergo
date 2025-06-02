@@ -1,0 +1,37 @@
+<dialog aria-labelledby="haie-modal-title-department-doctrine"
+        role="dialog"
+        id="haie-modal-department-doctrine"
+        data-shorten-url="{{ shorten_url|yesno:"true,false,false" }}"
+        class="fr-modal">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale de partage"
+                    aria-controls="haie-modal-department-doctrine">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h1 id="haie-modal-title-department-doctrine" class="fr-modal__title">
+              <span class="fr-icon-scales-3-line fr-icon--lg"></span>
+              En savoir plus sur la réglementation
+            </h1>
+
+            {% if config and config.department_doctrine_html %}
+              {{ config.department_doctrine_html|safe }}
+
+            {% else %}
+              <p>
+                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+                Placeat ex harum deleniti adipisci cumque molestiae incidunt saepe quaerat laudantium exercitationem,
+                autem obcaecati tenetur ipsam ullam ipsa necessitatibus cupiditate accusamus nihil?
+              </p>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
