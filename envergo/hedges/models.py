@@ -158,6 +158,7 @@ class Hedge:
             Species.objects.filter(self.get_species_filter())
             .annotate(map_id=F("species_maps__map_id"))
             .order_by("group", "common_name")
+            .distinct("group", "common_name")
         )
         return qs
 
@@ -280,6 +281,7 @@ class HedgeData(models.Model):
             Species.objects.filter(union)
             .annotate(map_id=F("species_maps__map_id"))
             .order_by("group", "common_name")
+            .distinct("group", "common_name")
         )
         return species
 
