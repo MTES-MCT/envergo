@@ -1998,6 +1998,7 @@ class MoulinetteHaie(Moulinette):
         context["department"] = department
 
         if hasattr(department, "confighaie") and department.confighaie:
+            context["config"] = department.confighaie
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
