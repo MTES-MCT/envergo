@@ -359,6 +359,7 @@ class CalvadosQualityCondition(PlantationCondition):
 
         self.context["lpm"] = self.catalog["lpm"]
         self.context["reduced_lpm"] = self.catalog["reduced_lpm"]
+        self.context["LC"] = LC
 
         return self
 
@@ -368,14 +369,30 @@ class CalvadosQualityCondition(PlantationCondition):
             t = self.valid_text
         else:
             lines = [self.invalid_text]
-            for hedge_type, length in self.catalog["LC"].items():
-                if length > 0.0:
-                    lines.append(
-                        f"""
-                        Il reste à compenser au moins {round(length)} m de haie
-                        {HEDGE_KEYS[hedge_type]}.
-                        """
-                    )
+
+            LC = self.context["LC"]
+
+            if LC["mixte"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["mixte"])} m de haie mixte."
+                )
+
+            if LC["alignement"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
+                )
+
+            if LC["arbustive"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["arbustive"])} m de haie arbustive ou mixte."
+                )
+
+            t1_t2 = LC["degradee"] + LC["buissonnante"]
+            if t1_t2 > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(t1_t2)} m de haie buissonnante, arbustive ou mixte."
+                )
+
             t = "<br />\n".join(lines)
 
         return mark_safe(t % self.context)
