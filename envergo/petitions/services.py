@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, List, Literal
+from typing import Any, List
 
 import requests
 from django.conf import settings
@@ -20,13 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class AdditionalInfo:
-    label: str
-    value: str | int | float
-    unit: str | None
-
-
-@dataclass
 class FileInfo:
     filename: str
     content_type: str
@@ -39,75 +32,11 @@ class ItemFiles:
 
 
 @dataclass
-class ItemDetails:
-    result: bool
-    details: list[AdditionalInfo]
-    display_result: bool = True
-
-
-@dataclass
 class Item:
     label: str
-    value: str | int | float | ItemDetails
+    value: str | int | float
     unit: str | None
     comment: str | None
-
-    @classmethod
-    def from_field(cls, field, field_value):
-        """Fill the item from a field"""
-        label = field.display_label if hasattr(field, "display_label") else field.label
-        unit = field.display_unit if hasattr(field, "display_unit") else None
-        if hasattr(field, "get_display_value"):
-            value = field.get_display_value(field_value)
-        elif hasattr(field, "choices"):
-            value = dict(field.choices).get(field_value, field_value)
-        else:
-            value = field_value
-
-        comment = (
-            field.display_help_text if hasattr(field, "display_help_text") else None
-        )
-        return cls(label, value, unit, comment)
-
-
-@dataclass
-class Title:
-    label: str
-
-
-ItemType = (
-    Item
-    | Title
-    | Literal[
-        "instructor_free_mention",
-        "onagre_number",
-        "protected_species",
-        "moulinette_fields",
-        "display_hedges_cta",
-        "open_simulation_cta",
-        "hedges_compensation_details",
-    ]
-)
-
-
-@dataclass
-class GroupedItems:
-    """Instructor information details class formatted to be displayed in templates"""
-
-    label: str
-    items: list[ItemType | "GroupedItems"]
-
-
-@dataclass
-class InstructorInformation:
-    """Instructor information class formatted to be displayed in templates"""
-
-    slug: str | None
-    label: str | None
-    key_elements: list[ItemType | "GroupedItems"] | None
-    simulation_data: list[ItemType | "GroupedItems"] | None
-    other_items: list[ItemType | "GroupedItems"] | None = None
-    comment: str | None = None
 
 
 @dataclass
@@ -127,7 +56,6 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
-    sections: list[InstructorInformation]
     ds_data: DemarchesSimplifieesDetails | None
 
 
@@ -266,10 +194,6 @@ def compute_instructor_informations_ds(
     petition_project, moulinette, site, visitor_id, user
 ) -> ProjectDetails:
     """Compute ProjectDetails with instructor informations"""
-
-    # Build project details
-    project_summary = get_project_context(petition_project, moulinette)
-
     # Get ds details
     config = moulinette.config
 
@@ -282,7 +206,6 @@ def compute_instructor_informations_ds(
             demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
             demarche_simplifiee_number=config.demarche_simplifiee_number,
             usager="",
-            sections=[project_summary],
             ds_data=None,
         )
 
@@ -324,7 +247,6 @@ def compute_instructor_informations_ds(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
         usager=ds_details.usager if ds_details else "",
-        sections=[project_summary],
         ds_data=ds_details,
     )
 
