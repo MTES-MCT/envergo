@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -494,11 +494,14 @@ class PetitionProjectDetail(DetailView):
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
+        hedge_conditions_params = QueryDict("", mutable=True)
+        hedge_conditions_params.update(moulinette_params)
         moulinette_params["edit"] = ["true"]
         result_url = reverse("moulinette_result")
         edit_url = update_qs(result_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
+        context["hedge_conditions_params"] = hedge_conditions_params
         context["edit_url"] = edit_url
         context["ds_url"] = (
             f"https://www.demarches-simplifiees.fr/dossiers/"

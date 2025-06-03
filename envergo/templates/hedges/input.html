@@ -9,11 +9,12 @@
 {% block header %}{% endblock %}
 
 {% block main %}
+
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
-       data-conditions-url="{% url 'hedge_conditions' %}?{{ request.GET.urlencode|safe }}"
+       data-conditions-url="{% url 'hedge_conditions' %}?{{ hedge_conditions_params.urlencode|safe }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
 
@@ -169,7 +170,7 @@
           </div>
         </div>
         <div id="hedge-conditions"
-             v-if="conditions.length > 0 && mode === 'plantation'">
+             v-if="conditions.length > 0 && (mode === 'plantation' || mode === 'read_only')">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
