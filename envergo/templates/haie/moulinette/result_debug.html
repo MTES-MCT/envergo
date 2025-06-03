@@ -43,14 +43,10 @@
       {% for condition in plantation_evaluation.conditions %}
         <li>
           {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
-          {% if condition.debug_context %}
-            <br />
-            (
-            {% for k, v in condition.debug_context.items %}
-              {{ k }} = {{ v }}
-              {% if not forloop.last %},{% endif %}
-            {% endfor %}
-            )
+          {% if condition.context %}
+            <ul>
+              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+            </ul>
           {% endif %}
         </li>
       {% endfor %}
