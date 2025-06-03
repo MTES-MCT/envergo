@@ -428,8 +428,8 @@ class EspecesProtegeesNormandie(
         catalog.update(
             {
                 "LC": LC,
-                "lpm": round(lpm),
-                "reduced_lpm": round(reduced_lpm),
+                "lpm": lpm,
+                "reduced_lpm": reduced_lpm,
             }
         )
 

@@ -56,7 +56,7 @@ class MinLengthCondition(PlantationCondition):
     order = 0
     valid_text = "Le linéaire total planté est suffisant."
     invalid_text = """
-    Le linéaire total planté doit être supérieur à %(minimum_length_to_plant)s m.<br />
+    Le linéaire total planté doit être supérieur à %(length_to_check)s m.<br />
     Il manque au moins %(left_to_plant)s m.
     """
 
@@ -64,24 +64,31 @@ class MinLengthCondition(PlantationCondition):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
 
+        # Depending on the cases, we want to use the "classic" minimum length to
+        # plant, or the "reduced" version (for Normandie rules)
         minimum_length_to_plant = length_to_remove * self.R
+        length_to_check = minimum_length_to_plant
         if isclose(self.R, self.catalog.get("aggregated_r", 0.0)):
-            minimum_length_to_plant = self.catalog["reduced_lpm"]
+            length_to_check = self.catalog["reduced_lpm"]
 
-        self.result = length_to_plant >= minimum_length_to_plant
+        self.result = length_to_plant >= length_to_check
 
-        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
+        left_to_plant = max(0, length_to_check - length_to_plant)
         self.context = {
             "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
+            "length_to_check": round(length_to_check),
         }
+
+        if round(length_to_check) < round(minimum_length_to_plant):
+            self.context["reduced_minimum_length_to_plant"] = length_to_check
         return self
 
     def must_display(self):
-        return self.context["minimum_length_to_plant"] > 0
+        return self.context["length_to_check"] > 0
 
 
 class MinLengthPacCondition(PlantationCondition):
@@ -350,8 +357,8 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
-        self.context["lpm"] = self.catalog["lpm"]
-        self.context["reduced_lpm"] = self.catalog["reduced_lpm"]
+        self.context["lpm"] = round(self.catalog["lpm"])
+        self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
 
         return self
