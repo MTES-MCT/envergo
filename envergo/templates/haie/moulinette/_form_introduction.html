@@ -1,3 +1,4 @@
-<p>Département : {{ department|default_if_none:"Inconnu" }}</p>
-
-{% include 'haie/moulinette/_department_doctrine_button.html' %}
+<div class="form-introduction">
+  <p>Département : {{ department|default_if_none:"Inconnu" }}</p>
+  {% include 'haie/moulinette/_department_doctrine_button.html' %}
+</div>
