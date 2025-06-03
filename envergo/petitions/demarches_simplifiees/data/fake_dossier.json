@@ -194,6 +194,15 @@
               "byteSize": "200167",
               "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/North_York_Moors.jpg/640px-North_York_Moors.jpg",
               "createdAt": "2025-03-21T11:05:14+01:00"
+            },
+            {
+              "__typename": "File",
+              "filename": "Gout-Rossignol zone humide D2 NW bourg (1).jpg",
+              "contentType": "image/jpg",
+              "checksum": "dtlH1MSoc9ATYEW7GY/6nQ==",
+              "byteSize": "200167",
+              "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Gout-Rossignol_zone_humide_D2_NW_bourg_%281%29.jpg/960px-Gout-Rossignol_zone_humide_D2_NW_bourg_%281%29.jpg",
+              "createdAt": "2025-03-21T11:05:14+01:00"
             }
           ]
         },
