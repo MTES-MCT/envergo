@@ -2,8 +2,8 @@
 
 <p>Il est autorisable car il dispose d’une attestation de meilleur emplacement environnemental.</p>
 
-{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
-<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
   <p>Les pièces justificatives suivantes seront demandées :</p>
 
   <ul>
