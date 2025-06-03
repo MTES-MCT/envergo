@@ -1,5 +1,7 @@
-<p class="department-doctrine-cta fr-mb-6w fr-icon-bookmark-line">
-  <a href="#"
-     data-fr-opened="false"
-     aria-controls="haie-modal-department-doctrine">À propos de la réglementation applicable</a>
-</p>
+{% if config and config.department_doctrine_html %}
+  <p class="department-doctrine-cta fr-mb-6w fr-icon-bookmark-line">
+    <a href="#"
+       data-fr-opened="false"
+       aria-controls="haie-modal-department-doctrine">À propos de la réglementation applicable</a>
+  </p>
+{% endif %}
