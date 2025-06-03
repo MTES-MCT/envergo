@@ -335,6 +335,7 @@ class NormandieQualityCondition(PlantationCondition):
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
+
         for hedge_type in HEDGE_KEYS.keys():
             for compensation_type in self.compensations[hedge_type]:
 

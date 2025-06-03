@@ -419,11 +419,13 @@ class EspecesProtegeesNormandie(
 
         # Compensation can be reduced when planting a better type
         # Compensation rate cannot go below 1:1 though
+        reduced_lpm = 0
         hedge_keys = HEDGE_KEYS.keys()
         for hedge_type in hedge_keys:
-            LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
-            LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
-        reduced_lpm = sum(LC.values())
+            lc_type = LC[hedge_type]
+            lc_type *= 0.8 if hedge_type != "mixte" else 1.0
+            lc_type = max(lc_type, LD[hedge_type])
+            reduced_lpm += lc_type
 
         catalog.update(
             {
