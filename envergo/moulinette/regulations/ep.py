@@ -405,12 +405,14 @@ class EspecesProtegeesNormandie(
                 ]
 
             all_r.append(r)
-            minimum_length_to_plant = (
-                D(minimum_length_to_plant) + D(hedge.length) * r
-            )
-            LD[hedge.hedge_type] += hedge.length
-            LC[hedge.hedge_type] += hedge.length * float(r)
+            minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
             hedges_details.append(get_hedge_compensation_details(hedge, r))
+
+            # Note: if r == 0.0, the hedge does not need to be compensated, so it's
+            # not added to the list of destroyed hedges
+            if r > 0.0:
+                LD[hedge.hedge_type] += hedge.length
+                LC[hedge.hedge_type] += hedge.length * float(r)
 
             # Total compensation length before compensation reductions
             lpm = sum(LC.values())
