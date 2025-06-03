@@ -27,6 +27,7 @@ const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
 
+  window.location.hash = 'modal';
   const isReadonly = (hedgeType !== TO_PLANT || mode !== PLANTATION_MODE) && (hedgeType !== TO_REMOVE || mode !== REMOVAL_MODE);
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
 
@@ -69,9 +70,8 @@ const showHedgeModal = (hedge, hedgeType) => {
         }
       }
     }
-  } else {
-    form.reset();
   }
+
   hedgeName.textContent = hedge.id;
   hedgeLength.textContent = hedge.length.toFixed(0);
 
