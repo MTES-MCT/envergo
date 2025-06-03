@@ -414,28 +414,28 @@ class EspecesProtegeesNormandie(
                 LD[hedge.hedge_type] += hedge.length
                 LC[hedge.hedge_type] += hedge.length * float(r)
 
-            # Total compensation length before compensation reductions
-            lpm = sum(LC.values())
+        # Total compensation length before compensation reductions
+        lpm = sum(LC.values())
 
-            # Compensation can be reduced when planting a better type
-            # Compensation rate cannot go below 1:1 though
-            hedge_keys = HEDGE_KEYS.keys()
-            for hedge_type in hedge_keys:
-                LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
-                LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
-            reduced_lpm = sum(LC.values())
+        # Compensation can be reduced when planting a better type
+        # Compensation rate cannot go below 1:1 though
+        hedge_keys = HEDGE_KEYS.keys()
+        for hedge_type in hedge_keys:
+            LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
+            LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
+        reduced_lpm = sum(LC.values())
 
-            catalog.update(
-                {
-                    "LC": LC,
-                    "lpm": round(lpm),
-                    "reduced_lpm": round(reduced_lpm),
-                }
-            )
+        catalog.update(
+            {
+                "LC": LC,
+                "lpm": round(lpm),
+                "reduced_lpm": round(reduced_lpm),
+            }
+        )
 
-            # Aggregate the R of each hedge to compute the global replantation coefficient.
-            if haies.length_to_remove() > 0:
-                aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
+        # Aggregate the R of each hedge to compute the global replantation coefficient.
+        if haies.length_to_remove() > 0:
+            aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
