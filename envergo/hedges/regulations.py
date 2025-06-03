@@ -510,7 +510,7 @@ class LineaireInterchamp(PlantationCondition):
 
         delta = length_to_remove - length_to_plant
 
-        self.result = delta <= 0
+        self.result = delta <= 0 or self.R == 0.0
         self.context = {
             "length_to_remove_interchamp": round(length_to_remove),
             "length_to_plant_interchamp": round(length_to_plant),
@@ -541,7 +541,7 @@ class LineaireSurTalusCondition(PlantationCondition):
 
         delta = length_to_remove - length_to_plant
 
-        self.result = delta <= 0
+        self.result = delta <= 0 or self.R == 0.0
         self.context = {
             "length_to_remove_talus": round(length_to_remove),
             "length_to_plant_talus": round(length_to_plant),
