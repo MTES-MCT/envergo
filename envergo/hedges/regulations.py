@@ -470,7 +470,7 @@ class StrenghteningCondition(PlantationCondition):
         minimum_length_to_plant = length_to_remove * self.R
 
         strengthening_max = minimum_length_to_plant * self.RATE
-        self.result = strengthening_length <= strengthening_max
+        self.result = strengthening_length <= strengthening_max or self.R == 0.0
         self.context = {
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
