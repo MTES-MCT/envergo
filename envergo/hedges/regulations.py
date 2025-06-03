@@ -407,7 +407,7 @@ class NormandieQualityCondition(PlantationCondition):
             lines.append(
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
-                proposant de planter des haies mixtes plutôt que de type identiqe aux
+                proposant de planter des haies mixtes plutôt que de type identique aux
                 haies à détruire.
                 """
             )
