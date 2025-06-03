@@ -35,6 +35,30 @@ def ep_normandie_get_instructors_info(
                 None,
                 "C'est-à-dire hors réduction permise par le projet de plantation",
             ),
+            Item(
+                "Identifiant zone",
+                moulinette.catalog.get("density_zone", ""),
+                None,
+                None,
+            ),
+            Item(
+                "Densité haies – rayon 200 m",
+                floatformat(moulinette.catalog.get("density_200", ""), "0g"),
+                "ml/ha",
+                None,
+            ),
+            Item(
+                "Densité haies – rayon 5 km",
+                floatformat(moulinette.catalog.get("density_5000", ""), "0g"),
+                "ml/ha",
+                None,
+            ),
+            Item(
+                "Rapport de densité 200 m / 5 km",
+                floatformat(moulinette.catalog.get("density_ratio", ""), "2g"),
+                None,
+                None,
+            ),
             "hedges_compensation_details",
             Item(
                 "Coefficient compensation réduit grâce au projet de plantation",

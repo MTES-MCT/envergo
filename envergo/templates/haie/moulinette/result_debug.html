@@ -93,6 +93,12 @@
                 {% if criterion|requires_hedge_density %}
                   <br />
                   <h6>Densité de haie</h6>
+
+                  <ul>
+                    <li>Rapport de densité 200 m / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
+                    <li>Identifiant zone : {{ density_zone }}</li>
+                  </ul>
+
                   <table>
                     <thead>
                       <tr>
@@ -117,6 +123,17 @@
                         <td>{{ density_200|floatformat:"g" }} ml/ha</td>
                         <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
                       </tr>
+                      {% if pre_computed_density_200 or pre_computed_density_5000 %}
+                        <tr>
+                          <th scope="row">
+                            Densité persistée en base
+                            <br />
+                            <span class="fr-hint-text">Peut ne pas être à jour</span>
+                          </th>
+                          <td>{{ pre_computed_density_200|floatformat:"g" }} ml/ha</td>
+                          <td>{{ pre_computed_density_5000|floatformat:"g" }} ml/ha</td>
+                        </tr>
+                      {% endif %}
                     </tbody>
                   </table>
 
