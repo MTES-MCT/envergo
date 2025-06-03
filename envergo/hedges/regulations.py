@@ -442,7 +442,7 @@ class StrenghteningCondition(PlantationCondition):
         <br>Il y a %(strengthening_excess)s m en excès.
     """
     hint_text = """
-        La compensation peut consister en un renforcement ou regarnissage de haies
+        La compensation peut consister en un renforcement ou reconnexion de haies
         existantes, dans la limite de 20%% du linéaire total à planter.
     """
 
@@ -479,9 +479,9 @@ class StrenghteningCondition(PlantationCondition):
     def text(self):
         length = self.context.get("strengthening_length")
         valid_text = (
-            "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
+            "Le renforcement ou la reconnexion sur %(strengthening_length)s m convient."
             if length > 0
-            else "Pas de renforcement ou regarnissage."
+            else "Pas de renforcement ni reconnexion de haies."
         )
 
         t = valid_text if self.result else self.invalid_text
@@ -518,18 +518,6 @@ class LineaireInterchamp(PlantationCondition):
         }
         return self
 
-    @property
-    def text(self):
-        length = self.context.get("length_to_plant_interchamp")
-        valid_text = (
-            "Le linéaire de haies plantées en inter-champ est suffisant."
-            if length > 0
-            else "Pas de plantation en inter-champ."
-        )
-
-        t = valid_text if self.result else self.invalid_text
-        return mark_safe(t % self.context)
-
 
 class LineaireSurTalusCondition(PlantationCondition):
     label = "Maintien des haies sur talus"
@@ -560,18 +548,6 @@ class LineaireSurTalusCondition(PlantationCondition):
             "talus_delta": round(max(0, delta)),
         }
         return self
-
-    @property
-    def text(self):
-        length = self.context.get("length_to_plant_talus")
-        valid_text = (
-            "Le linéaire de haies plantées sur talus est suffisant."
-            if length > 0
-            else "Pas de plantation sur talus."
-        )
-
-        t = valid_text if self.result else self.invalid_text
-        return mark_safe(t % self.context)
 
 
 class PlantationConditionMixin:
