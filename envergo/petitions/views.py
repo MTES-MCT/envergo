@@ -30,8 +30,8 @@ from envergo.petitions.models import DOSSIER_STATES, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
-    compute_instructor_informations,
     compute_instructor_informations_ds,
+    get_instructor_view_context,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -581,7 +581,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_details"] = compute_instructor_informations(
+        context["project_details"] = get_instructor_view_context(
             self.object,
             context["moulinette"],
             self.request.site,
