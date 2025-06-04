@@ -1,0 +1,21 @@
+{% load utils %}
+{% load moulinette %}
+
+<li>
+  <span><b>{{ label }}
+    {% if not label|ends_with_punctuation %}:{% endif %}
+  </b></span>
+  <span>
+    {% if value|is_type:"int" or value|is_type:"float" %}
+      {{ value|floatformat:"g" }}
+    {% else %}
+      {{ value }}
+    {% endif %}
+    {% if unit and value is not None and value != "" %}{{ unit }}{% endif %}
+  </span>
+
+  {% if comment %}
+    <br />
+    <span class="fr-hint-text">{{ comment }}</span>
+  {% endif %}
+</li>

@@ -1,0 +1,55 @@
+{% load moulinette %}
+
+<h2>BCAE 8</h2>
+
+<p class="fr-callout fr-icon-information-line">
+  Les décomptes de cette section n'incluent que les haies déclarées
+  "sur parcelle PAC. Les alignements d’arbres sont également exclus.
+</p>
+
+<h3>Éléments clés</h3>
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
+  {% if project_details.ds_data.pacage %}
+    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=project_details.ds_data.pacage %}
+  {% endif %}
+</ul>
+<h4 class="fr-mt-3w">Destruction</h4>
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}
+
+  {% if lineaire_detruit_pac %}
+    <li>
+      <span><b>Détail : </b></span>
+      <span>
+        {{ pac_destruction_detail.length|floatformat:"0g" }} m
+        {% if pac_destruction_detail %}• {{ pac_destruction_detail.names }}{% endif %}
+      </span>
+    </li>
+    {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
+  {% endif %}
+</ul>
+
+<h4 class="fr-mt-3w">Plantation</h4>
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Total linéaire à planter sur parcelle PAC" value=lineaire_to_plant_pac|floatformat:"0g" unit="m" %}
+
+  {% if lineaire_to_plant_pac %}
+    <li>
+      <span><b>Détail : </b></span>
+      <span>
+        {{ pac_plantation_detail.length|floatformat:"0g" }} m
+        {% if pac_plantation_detail %}• {{ pac_plantation_detail.names }}{% endif %}
+      </span>
+    </li>
+    {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=replanting_ratio|floatformat:"2g" comment=replanting_ratio_comment %}
+  {% endif %}
+</ul>
+
+<h3 class="fr-mt-4w">Données de la simulation</h3>
+
+<ul class="instructor-view-list">
+  {% for field in bcae8_form %}
+    <li>{% field_summary field %}</li>
+  {% endfor %}
+</ul>

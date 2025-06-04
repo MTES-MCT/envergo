@@ -161,7 +161,6 @@ def hedge_data():
 
 def test_calvados_quality_condition(hedge_data):
     """Lengths to plant depends on R."""
-
     catalog = {
         "reimplantation": "remplacement",
         "LD": {

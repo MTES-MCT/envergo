@@ -1,10 +1,12 @@
 import json
 import logging
 import string
+from decimal import Decimal
 
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.template import Context, Template
+from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
@@ -157,7 +159,9 @@ def field_summary(field):
         value = ""
 
     # try to add thousands separator
-    if value.isdigit():
+    if isinstance(value, (int, float, Decimal)):
+        value = floatformat(value, "g")
+    elif isinstance(value, str) and value.isdigit():
         try:
             value = intcomma(value)
         except (TypeError, ValueError):
