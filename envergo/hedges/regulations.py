@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
+from math import isclose
 
 from django.utils.safestring import mark_safe
 
@@ -8,21 +9,21 @@ class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
-    result: bool
+    result: bool  # if None, the condition will be filtered out
     order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
-    # If set, those values will be displayed in the debug template
-    debug_context: dict = dict()
+    hint_text: str = ""
 
     # We want to display the raw class in the debug template, so we need to
     # prevent the template engine to instanciate the class
     do_not_call_in_templates = True
 
-    def __init__(self, hedge_data, R):
+    def __init__(self, hedge_data, R, catalog=None):
         self.hedge_data = hedge_data
         self.R = R
+        self.catalog = catalog or {}
 
     def must_display(self):
         """Should the condition be displayed?
@@ -43,6 +44,10 @@ class PlantationCondition(ABC):
         t = self.valid_text if self.result else self.invalid_text
         return mark_safe(t % self.context)
 
+    @property
+    def hint(self):
+        return mark_safe(self.hint_text % self.context)
+
 
 class MinLengthCondition(PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
@@ -51,30 +56,40 @@ class MinLengthCondition(PlantationCondition):
     order = 0
     valid_text = "Le linéaire total planté est suffisant."
     invalid_text = """
-    Le linéaire total planté doit être supérieur à %(minimum_length_to_plant)s m.<br />
+    Le linéaire total planté doit être supérieur à %(length_to_check)s m.<br />
     Il manque au moins %(left_to_plant)s m.
     """
 
     def evaluate(self):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
-        self.result = length_to_plant >= minimum_length_to_plant
 
-        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
+        # Depending on the cases, we want to use the "classic" minimum length to
+        # plant, or the "reduced" version (for Normandie rules)
+        minimum_length_to_plant = length_to_remove * self.R
+        length_to_check = minimum_length_to_plant
+        if "reduced_lpm" in self.catalog and "aggregated_r" in self.catalog:
+            if isclose(self.R, self.catalog["aggregated_r"]):
+                length_to_check = self.catalog["reduced_lpm"]
+
+        self.result = length_to_plant >= length_to_check
+
+        left_to_plant = max(0, length_to_check - length_to_plant)
         self.context = {
+            "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
+            "length_to_check": round(length_to_check),
         }
-        self.debug_context = {
-            "R": self.R,
-        }
+
+        if round(length_to_check) < round(minimum_length_to_plant):
+            self.context["reduced_minimum_length_to_plant"] = length_to_check
         return self
 
     def must_display(self):
-        return self.context["minimum_length_to_plant"] > 0
+        return self.context["length_to_check"] > 0
 
 
 class MinLengthPacCondition(PlantationCondition):
@@ -282,9 +297,129 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
+HEDGE_KEYS = OrderedDict(
+    [
+        ("mixte", "mixte"),
+        ("alignement", "alignement"),
+        ("arbustive", "arbustive"),
+        ("buissonnante", "buissonnante"),
+        ("degradee", "dégradée"),
+    ]
+)
+
+
+class NormandieQualityCondition(PlantationCondition):
+    label = "Type de haie plantée"
+    order = 2
+    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    invalid_text = """
+      Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
+    """
+
+    # Hedge of type on the left can be replaced by the types on the right
+    compensations = {
+        "mixte": ["mixte"],
+        "alignement": ["alignement", "mixte"],
+        "arbustive": ["arbustive", "mixte"],
+        "buissonnante": ["buissonnante", "arbustive", "mixte"],
+        "degradee": ["buissonnante", "arbustive", "mixte"],
+    }
+
+    def evaluate(self):
+        LC = self.catalog["LC"]  # linéaire à compenser
+        LP = defaultdict(int)  # linéaire à planter
+
+        # Les haies à planter
+        for hedge in self.hedge_data.hedges_to_plant():
+            LP[hedge.hedge_type] += hedge.length
+
+        # On calcule l'application des compensations
+        # Pour chaque linéaire à compenser, on réparti les linéaires à planter
+        # en fonction des substitutions possibles.
+
+        for hedge_type in HEDGE_KEYS.keys():
+            for compensation_type in self.compensations[hedge_type]:
+
+                # Si on compense avec un type de qualité supérieur, le taux
+                # de compensation est réduit de 20%
+                rate = 1.0 if compensation_type == hedge_type else 0.8
+
+                # Note: planter de la buissonnante n'est pas considéré comme une
+                # amélioration de la dégradée, car il n'est pas possible de planter
+                # de la dégradée.
+                if hedge_type == "degradee" and compensation_type == "buissonnante":
+                    rate = 1.0
+
+                # Le linéaire planté vient réduire le linéaire à compenser
+                compensation = min(LC[hedge_type], LP[compensation_type] / rate)
+                LC[hedge_type] -= compensation
+                LP[compensation_type] -= compensation * rate
+
+        # À la fin, le linéaire à compenser doit être nul
+        remaining_lc = sum(LC.values())
+        self.result = remaining_lc == 0
+
+        self.context["lpm"] = round(self.catalog["lpm"])
+        self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
+        self.context["LC"] = LC
+
+        return self
+
+    @property
+    def text(self):
+        if self.result:
+            t = self.valid_text
+        else:
+            lines = [self.invalid_text]
+
+            LC = self.context["LC"]
+
+            if LC["mixte"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["mixte"])} m de haie mixte."
+                )
+
+            if LC["alignement"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
+                )
+
+            if LC["arbustive"] > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(LC["arbustive"])} m de haie arbustive ou mixte."
+                )
+
+            t1_t2 = LC["degradee"] + LC["buissonnante"]
+            if t1_t2 > 0.0:
+                lines.append(
+                    f"Il manque au moins {round(t1_t2)} m de haie buissonnante, arbustive ou mixte."
+                )
+
+            t = "<br />\n".join(lines)
+
+        return mark_safe(t % self.context)
+
+    @property
+    def hint(self):
+        lines = [f"Linéaire attendu en compensation : {self.context["lpm"]} m."]
+
+        if isclose(self.R, self.catalog["aggregated_r"]) and not isclose(
+            self.context["lpm"], self.context["reduced_lpm"]
+        ):
+            lines.append(
+                f"""
+                La compensation peut être réduite à {self.context["reduced_lpm"]} m en
+                proposant de planter des haies mixtes plutôt que de type identique aux
+                haies à détruire.
+                """
+            )
+
+        return mark_safe(" ".join(lines))
+
+
 class SafetyCondition(PlantationCondition):
     label = "Sécurité"
-    order = 4
+    order = 10
     valid_text = "Aucune haie haute sous une ligne électrique ou téléphonique."
     invalid_text = """
         Au moins une haie haute est plantée sous une ligne électrique ou téléphonique.
@@ -303,6 +438,127 @@ class SafetyCondition(PlantationCondition):
         return self
 
 
+class StrenghteningCondition(PlantationCondition):
+    RATE = 0.2
+    order = 3
+
+    label = "Renforcement"
+    valid_text = (
+        "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
+    )
+    invalid_text = """
+        Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
+        <br>Il y a %(strengthening_excess)s m en excès.
+    """
+    hint_text = """
+        La compensation peut consister en un renforcement ou reconnexion de haies
+        existantes, dans la limite de 20%% du linéaire total à planter.
+    """
+
+    def evaluate(self):
+        is_remplacement = self.catalog.get("reimplantation") == "remplacement"
+        if is_remplacement:
+            self.result = None
+            return self
+
+        length_to_plant = self.hedge_data.length_to_plant()
+        strengthening_length = 0.0
+        for hedge in self.hedge_data.hedges_to_plant():
+            if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
+                strengthening_length += hedge.length
+
+        length_to_plant = self.hedge_data.length_to_plant()
+        length_to_remove = self.hedge_data.length_to_remove()
+        minimum_length_to_plant = length_to_remove * self.R
+
+        strengthening_max = minimum_length_to_plant * self.RATE
+        self.result = strengthening_length <= strengthening_max or self.R == 0.0
+        self.context = {
+            "length_to_plant": round(length_to_plant),
+            "length_to_remove": round(length_to_remove),
+            "minimum_length_to_plant": round(minimum_length_to_plant),
+            "strengthening_max": round(strengthening_max),
+            "strengthening_length": round(strengthening_length),
+            "strengthening_excess": round(strengthening_length)
+            - round(strengthening_max),
+        }
+        return self
+
+    @property
+    def text(self):
+        length = self.context.get("strengthening_length")
+        valid_text = (
+            "Le renforcement ou la reconnexion sur %(strengthening_length)s m convient."
+            if length > 0
+            else "Pas de renforcement ni reconnexion de haies."
+        )
+
+        t = valid_text if self.result else self.invalid_text
+        return mark_safe(t % self.context)
+
+
+class LineaireInterchamp(PlantationCondition):
+    label = "Maintien des haies inter-champ"
+    order = 5
+    valid_text = "Le linéaire de haies plantées en inter-champ est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées en inter-champ doit être supérieur à %(length_to_remove_interchamp)s m.
+        <br>Il manque au moins %(interchamp_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def interchamp_filter(h):
+            return h.prop("position") == "interchamp"
+
+        hedges_to_remove = filter(interchamp_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(interchamp_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0 or self.R == 0.0
+        self.context = {
+            "length_to_remove_interchamp": round(length_to_remove),
+            "length_to_plant_interchamp": round(length_to_plant),
+            "interchamp_delta": round(max(0, delta)),
+        }
+        return self
+
+
+class LineaireSurTalusCondition(PlantationCondition):
+    label = "Maintien des haies sur talus"
+    order = 4
+    valid_text = "Le linéaire de haies plantées sur talus est suffisant."
+    invalid_text = """
+        Le linéaire de haies plantées sur talus doit être supérieur à %(length_to_remove_talus)s m.
+        <br>Il manque au moins %(talus_delta)s m.
+    """
+
+    def evaluate(self):
+
+        def talus_filter(h):
+            return h.prop("sur_talus")
+
+        hedges_to_remove = filter(talus_filter, self.hedge_data.hedges_to_remove())
+        length_to_remove = sum(h.length for h in hedges_to_remove)
+
+        hedges_to_plant = filter(talus_filter, self.hedge_data.hedges_to_plant())
+        length_to_plant = sum(h.length for h in hedges_to_plant)
+
+        delta = length_to_remove - length_to_plant
+
+        self.result = delta <= 0 or self.R == 0.0
+        self.context = {
+            "length_to_remove_talus": round(length_to_remove),
+            "length_to_plant_talus": round(length_to_plant),
+            "talus_delta": round(max(0, delta)),
+        }
+        return self
+
+
 class PlantationConditionMixin:
     """A mixin for a criterion evaluator with hedge replantation conditions.
 
@@ -316,9 +572,9 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, hedge_data, R):
+    def plantation_evaluate(self, hedge_data, R, catalog=None):
         results = [
-            condition(hedge_data, R).evaluate()
+            condition(hedge_data, R, catalog or {}).evaluate()
             for condition in self.plantation_conditions
         ]
         return results
