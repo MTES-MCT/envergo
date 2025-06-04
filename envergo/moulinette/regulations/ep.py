@@ -382,6 +382,7 @@ class EspecesProtegeesNormandie(
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
         LD = defaultdict(int)  # linéaire à détruire
         LC = defaultdict(int)  # linéaire à compenser
+        LPm_r = defaultdict(int)  # linéaire minimum attendu réduit
 
         for hedge in haies.hedges_to_remove():
             if hedge.mode_destruction != "coupe_a_blanc":
@@ -425,6 +426,7 @@ class EspecesProtegeesNormandie(
             lc_type = LC[hedge_type]
             lc_type *= 0.8 if hedge_type != "mixte" else 1.0
             lc_type = max(lc_type, LD[hedge_type])
+            LPm_r[hedge_type] = lc_type
             reduced_lpm += lc_type
 
         catalog.update(
@@ -432,6 +434,7 @@ class EspecesProtegeesNormandie(
                 "LC": LC,
                 "lpm": lpm,
                 "reduced_lpm": reduced_lpm,
+                "LPm_r": LPm_r,
             }
         )
 

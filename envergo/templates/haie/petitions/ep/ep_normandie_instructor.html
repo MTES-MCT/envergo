@@ -1,5 +1,7 @@
 {% extends 'haie/petitions/ep/ep_instructor_base.html' %}
 
+{% load utils %}
+
 {% block after_hedge_properties %}
   <h4>Calcul de la compensation attendue</h4>
 
@@ -14,4 +16,57 @@
     </li>
     {% include 'haie/petitions/_item.html' with label="Coefficient compensation réduit grâce au projet de plantation" value=replantation_coefficient|floatformat:"1g" %}
   </ul>
+
+  <h4>Plantation proposée</h4>
+  <div class="fr-table">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Minimum attendu</th>
+                <th scope="col">Minimum attendu réduit de 20%</th>
+                <th scope="col">Plantation proposée</th>
+                <th scope="col">
+                  Manque
+                  <br>
+                  <small>sans passer sous 1:1</small>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for key, label in HEDGE_KEYS.items %}
+                <tr>
+                  <th scope="row">{{ label }}</th>
+                  <td>{{ quality_condition.LPm|get_item:key|floatformat:"0g" }} m</td>
+                  <td>{{ moulinette.catalog.LPm_r|get_item:key|floatformat:"0g" }} m</td>
+                  <td>
+                    {% if forloop.last %}
+                      Non applicable
+                    {% else %}
+                      {{ quality_condition.LP|get_item:key|floatformat:"0g" }} m
+                    {% endif %}
+
+                  </td>
+                  <td>{{ quality_condition.LC|get_item:key|floatformat:"0g" }} m</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td>{{ moulinette.catalog.lpm|floatformat:"0g" }} m</td>
+                <td>{{ moulinette.catalog.reduced_lpm|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {% endblock %}

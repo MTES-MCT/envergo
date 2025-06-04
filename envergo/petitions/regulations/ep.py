@@ -2,6 +2,7 @@ from django.forms import ChoiceField
 from django.utils.module_loading import import_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.regulations import HEDGE_KEYS, NormandieQualityCondition
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
@@ -19,7 +20,15 @@ def ep_normandie_get_instructor_view_context(
     context = ep_base_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
-    context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
+    R = evaluator.get_replantation_coefficient()
+    hedge_data = moulinette.catalog.get("haies")
+    context["quality_condition"] = (
+        NormandieQualityCondition(hedge_data, R, catalog=moulinette.catalog)
+        .evaluate()
+        .context
+    )
+    context["replantation_coefficient"] = R
+    context["HEDGE_KEYS"] = HEDGE_KEYS
     return context
 
 

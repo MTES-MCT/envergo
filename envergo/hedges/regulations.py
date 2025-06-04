@@ -298,11 +298,11 @@ class QualityCondition(PlantationCondition):
 
 HEDGE_KEYS = OrderedDict(
     [
-        ("mixte", "mixte"),
-        ("alignement", "alignement"),
-        ("arbustive", "arbustive"),
-        ("buissonnante", "buissonnante"),
-        ("degradee", "dégradée"),
+        ("mixte", "Type 5 (mixte)"),
+        ("alignement", "Type 4 (alignement)"),
+        ("arbustive", "Type 3 (arbustive)"),
+        ("buissonnante", "Type 2 (buissonnante)"),
+        ("degradee", "Type 1 (dégradée)"),
     ]
 )
 
@@ -328,9 +328,13 @@ class NormandieQualityCondition(PlantationCondition):
         LC = self.catalog["LC"]  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
+        LPm = LC.copy()
+
         # Les haies à planter
         for hedge in self.hedge_data.hedges_to_plant():
             LP[hedge.hedge_type] += hedge.length
+
+        LP_origin = LP.copy()
 
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
@@ -361,6 +365,10 @@ class NormandieQualityCondition(PlantationCondition):
         self.context["lpm"] = round(self.catalog["lpm"])
         self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
+        self.context["LP"] = LP_origin
+        self.context["LPm"] = LPm
+        self.context["lm"] = remaining_lc
+        self.context["lp"] = sum(LP_origin.values())
 
         return self
 
