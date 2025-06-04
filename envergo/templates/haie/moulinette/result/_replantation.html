@@ -1,7 +1,39 @@
-{% if replantation_coefficient > 0 %}
+{% if reduced_minimum_length_to_plant %}
+  <h6>
+    🌳 <strong>Plantation requise : {{ reduced_minimum_length_to_plant|floatformat:0 }} m</strong>
+  </h6>
+
+  <p>Pour que le projet puisse être autorisé, la plantation proposée doit respecter certaines conditions.</p>
+
+  <p>Le linéaire à planter dépend du type de haies :</p>
+
+  <ul>
+    <li>
+      {{ minimum_length_to_plant|floatformat:0 }} m pour une plantation de haies de type identique à celles détruites ;
+    </li>
+    <li>
+      {{ reduced_minimum_length_to_plant|floatformat:0 }} m pour une plantation faite uniquement de haies mixtes, qui sont plus favorables pour la biodiversité.
+    </li>
+  </ul>
+
+  <p>D’autres conditions sont également à remplir : type de haie, maintien de certaines caractéristiques…</p>
+
+  <p>
+    Ce simulateur accompagne la saisie des haies à planter et indique si la plantation respecte les critères attendus.
+  </p>
+
+  <p>
+    Prochaine étape :
+    <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
+  </p>
+{% elif replantation_coefficient > 0 %}
   <h6>
     🌳 <strong>Plantation requise : {{ minimum_length_to_plant|floatformat:0 }} m</strong>
   </h6>
+
   <p>
     Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
     {{ minimum_length_to_plant|floatformat:0 }} m sera exigée pour que le projet puisse être autorisé.

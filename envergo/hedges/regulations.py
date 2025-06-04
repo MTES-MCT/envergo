@@ -56,7 +56,7 @@ class MinLengthCondition(PlantationCondition):
     order = 0
     valid_text = "Le linéaire total planté est suffisant."
     invalid_text = """
-    Le linéaire total planté doit être supérieur à %(minimum_length_to_plant)s m.<br />
+    Le linéaire total planté doit être supérieur à %(length_to_check)s m.<br />
     Il manque au moins %(left_to_plant)s m.
     """
 
@@ -64,24 +64,31 @@ class MinLengthCondition(PlantationCondition):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
 
+        # Depending on the cases, we want to use the "classic" minimum length to
+        # plant, or the "reduced" version (for Normandie rules)
         minimum_length_to_plant = length_to_remove * self.R
+        length_to_check = minimum_length_to_plant
         if isclose(self.R, self.catalog.get("aggregated_r", 0.0)):
-            minimum_length_to_plant = self.catalog["reduced_lpm"]
+            length_to_check = self.catalog["reduced_lpm"]
 
-        self.result = length_to_plant >= minimum_length_to_plant
+        self.result = length_to_plant >= length_to_check
 
-        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
+        left_to_plant = max(0, length_to_check - length_to_plant)
         self.context = {
             "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": round(minimum_length_to_plant),
             "left_to_plant": round(left_to_plant),
+            "length_to_check": round(length_to_check),
         }
+
+        if round(length_to_check) < round(minimum_length_to_plant):
+            self.context["reduced_minimum_length_to_plant"] = length_to_check
         return self
 
     def must_display(self):
-        return self.context["minimum_length_to_plant"] > 0
+        return self.context["length_to_check"] > 0
 
 
 class MinLengthPacCondition(PlantationCondition):
@@ -328,6 +335,7 @@ class NormandieQualityCondition(PlantationCondition):
         # On calcule l'application des compensations
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
+
         for hedge_type in HEDGE_KEYS.keys():
             for compensation_type in self.compensations[hedge_type]:
 
@@ -350,8 +358,8 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
-        self.context["lpm"] = self.catalog["lpm"]
-        self.context["reduced_lpm"] = self.catalog["reduced_lpm"]
+        self.context["lpm"] = round(self.catalog["lpm"])
+        self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
 
         return self
@@ -400,7 +408,7 @@ class NormandieQualityCondition(PlantationCondition):
             lines.append(
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
-                proposant de planter des haies mixtes plutôt que de type identiqe aux
+                proposant de planter des haies mixtes plutôt que de type identique aux
                 haies à détruire.
                 """
             )
@@ -442,7 +450,7 @@ class StrenghteningCondition(PlantationCondition):
         <br>Il y a %(strengthening_excess)s m en excès.
     """
     hint_text = """
-        La compensation peut consister en un renforcement ou regarnissage de haies
+        La compensation peut consister en un renforcement ou reconnexion de haies
         existantes, dans la limite de 20%% du linéaire total à planter.
     """
 
@@ -463,7 +471,7 @@ class StrenghteningCondition(PlantationCondition):
         minimum_length_to_plant = length_to_remove * self.R
 
         strengthening_max = minimum_length_to_plant * self.RATE
-        self.result = strengthening_length <= strengthening_max
+        self.result = strengthening_length <= strengthening_max or self.R == 0.0
         self.context = {
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
@@ -479,9 +487,9 @@ class StrenghteningCondition(PlantationCondition):
     def text(self):
         length = self.context.get("strengthening_length")
         valid_text = (
-            "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
+            "Le renforcement ou la reconnexion sur %(strengthening_length)s m convient."
             if length > 0
-            else "Pas de renforcement ou regarnissage."
+            else "Pas de renforcement ni reconnexion de haies."
         )
 
         t = valid_text if self.result else self.invalid_text
@@ -510,25 +518,13 @@ class LineaireInterchamp(PlantationCondition):
 
         delta = length_to_remove - length_to_plant
 
-        self.result = delta <= 0
+        self.result = delta <= 0 or self.R == 0.0
         self.context = {
             "length_to_remove_interchamp": round(length_to_remove),
             "length_to_plant_interchamp": round(length_to_plant),
             "interchamp_delta": round(max(0, delta)),
         }
         return self
-
-    @property
-    def text(self):
-        length = self.context.get("length_to_plant_interchamp")
-        valid_text = (
-            "Le linéaire de haies plantées en inter-champ est suffisant."
-            if length > 0
-            else "Pas de plantation en inter-champ."
-        )
-
-        t = valid_text if self.result else self.invalid_text
-        return mark_safe(t % self.context)
 
 
 class LineaireSurTalusCondition(PlantationCondition):
@@ -553,25 +549,13 @@ class LineaireSurTalusCondition(PlantationCondition):
 
         delta = length_to_remove - length_to_plant
 
-        self.result = delta <= 0
+        self.result = delta <= 0 or self.R == 0.0
         self.context = {
             "length_to_remove_talus": round(length_to_remove),
             "length_to_plant_talus": round(length_to_plant),
             "talus_delta": round(max(0, delta)),
         }
         return self
-
-    @property
-    def text(self):
-        length = self.context.get("length_to_plant_talus")
-        valid_text = (
-            "Le linéaire de haies plantées sur talus est suffisant."
-            if length > 0
-            else "Pas de plantation sur talus."
-        )
-
-        t = valid_text if self.result else self.invalid_text
-        return mark_safe(t % self.context)
 
 
 class PlantationConditionMixin:

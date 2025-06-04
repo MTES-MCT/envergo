@@ -405,35 +405,39 @@ class EspecesProtegeesNormandie(
                 ]
 
             all_r.append(r)
-            minimum_length_to_plant = (
-                D(minimum_length_to_plant) + D(hedge.length) * r
-            )
-            LD[hedge.hedge_type] += hedge.length
-            LC[hedge.hedge_type] += hedge.length * float(r)
+            minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
             hedges_details.append(get_hedge_compensation_details(hedge, r))
 
-            # Total compensation length before compensation reductions
-            lpm = sum(LC.values())
+            # Note: if r == 0.0, the hedge does not need to be compensated, so it's
+            # not added to the list of destroyed hedges
+            if r > 0.0:
+                LD[hedge.hedge_type] += hedge.length
+                LC[hedge.hedge_type] += hedge.length * float(r)
 
-            # Compensation can be reduced when planting a better type
-            # Compensation rate cannot go below 1:1 though
-            hedge_keys = HEDGE_KEYS.keys()
-            for hedge_type in hedge_keys:
-                LC[hedge_type] *= 0.8 if hedge_type != "mixte" else 1.0
-                LC[hedge_type] = max(LC[hedge_type], LD[hedge_type])
-            reduced_lpm = sum(LC.values())
+        # Total compensation length before compensation reductions
+        lpm = sum(LC.values())
 
-            catalog.update(
-                {
-                    "LC": LC,
-                    "lpm": round(lpm),
-                    "reduced_lpm": round(reduced_lpm),
-                }
-            )
+        # Compensation can be reduced when planting a better type
+        # Compensation rate cannot go below 1:1 though
+        reduced_lpm = 0
+        hedge_keys = HEDGE_KEYS.keys()
+        for hedge_type in hedge_keys:
+            lc_type = LC[hedge_type]
+            lc_type *= 0.8 if hedge_type != "mixte" else 1.0
+            lc_type = max(lc_type, LD[hedge_type])
+            reduced_lpm += lc_type
 
-            # Aggregate the R of each hedge to compute the global replantation coefficient.
-            if haies.length_to_remove() > 0:
-                aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
+        catalog.update(
+            {
+                "LC": LC,
+                "lpm": lpm,
+                "reduced_lpm": reduced_lpm,
+            }
+        )
+
+        # Aggregate the R of each hedge to compute the global replantation coefficient.
+        if haies.length_to_remove() > 0:
+            aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
