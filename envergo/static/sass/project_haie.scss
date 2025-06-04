@@ -381,8 +381,8 @@ dialog.hedge-data-dialog {
   }
 }
 
-div#statistics {
-  background-color: var(--grey-975-100);
+div#group-haies-content {
+  background-color: var(--grey-1000-100);
   padding: 16px;
 
   table {
@@ -508,6 +508,41 @@ div#project-specifications-instructor {
   line-height: 2rem;
 }
 
+#normandie_plantation_table {
+  .fr-table__content table tfoot {
+    th {
+      background-color: var(--background-alt-grey);
+      font-weight: 700;
+      background-size:
+        100% 1px,
+        1px 100%;
+      background-repeat: no-repeat, no-repeat;
+      background-position:
+        0 100%,
+        100% 0;
+
+      --idle: transparent;
+      --hover: var(--background-alt-grey-hover);
+      --active: var(--background-alt-grey-active);
+
+      background-image: linear-gradient(
+          0deg,
+          var(--border-contrast-grey),
+          var(--border-contrast-grey)
+        ),
+        linear-gradient(
+          0deg,
+          var(--border-plain-grey),
+          var(--border-plain-grey)
+        );
+    }
+
+    td {
+      font-weight: 700;
+    }
+  }
+}
+
 .ds-item > .fr-sidemenu__link::after {
   content: "";
   background-image: url("/static/images/logo_demarches_simplifiees.png");
@@ -519,12 +554,28 @@ div#project-specifications-instructor {
   height: 64px;
 }
 
+ul.instructor-view-list {
+  list-style-type: none;
+  padding: 0;
+}
+
 .section-ds {
   border-top: 1px solid var(--border-default-grey);
 }
 
 div#project-dossier-no {
   border-bottom: solid 1px var(--border-default-grey);
+}
+
+.ds-files {
+  .fr-content-media {
+    margin: 1rem 0;
+  }
+
+  .fr-content-media__caption {
+    align-items: start;
+    margin-top: 0;
+  }
 }
 
 @media (width >= 48em) {
