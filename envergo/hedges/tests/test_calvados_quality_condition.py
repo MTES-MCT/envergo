@@ -162,17 +162,24 @@ def hedge_data():
 def test_calvados_quality_condition(hedge_data):
     """Lengths to plant depends on R."""
 
-    hedges = hedge_data.hedges_to_remove()
     catalog = {
         "reimplantation": "remplacement",
-        "hedges_to_remove_with_r": [
-            (hedges[0], 2.0),
-            (hedges[1], 2.0),
-            (hedges[2], 2.0),
-            (hedges[3], 2.0),
-            (hedges[4], 2.0),
-            (hedges[5], 1.0),
-        ],
+        "LD": {
+            "mixte": 100.0,
+            "alignement": 40.0,
+            "arbustive": 30.0,
+            "buissonnante": 20.0,
+            "degradee": 10.0,
+        },
+        "LC": {
+            "mixte": 200.0,
+            "alignement": 80.0,
+            "arbustive": 60.0,
+            "buissonnante": 40.0,
+            "degradee": 10.0,
+        },
+        "lpm": 390.0,
+        "reduced_lpm": 352.0,
     }
     R = 0.0  # Ignored for calvados
     condition = NormandieQualityCondition(hedge_data, R, catalog)
