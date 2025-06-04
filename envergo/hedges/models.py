@@ -9,7 +9,7 @@ from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod
-from shapely import LineString, centroid, union_all
+from shapely import LineString, MultiLineString, centroid, union_all
 
 from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
@@ -119,11 +119,17 @@ class Hedge:
         return self.additionalData.get("sous_ligne_electrique", None)
 
     def get_species_filter(self):
-        """Build the filter to get possible protected species.
+        """Build the filter to get species possibly living in a single hedge.
 
         Species have requirements. For example, a "Pipistrelle commune" bat
         MAY live in an "alignement arboré" or "haie multistrate" and
         requires old trees (vieil_arbre is checked).
+
+        Also, there is a two way mechanism to filter species geographically.
+
+        Species are linked to a map through a "SpeciesMap" object. But each Zone
+        linked to the map has an additional field that links the species living in the
+        specific zone
         """
         q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
 
@@ -137,21 +143,30 @@ class Hedge:
             q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
             filter &= ~q_exclude
 
+        zone_subquery = (
+            Zone.objects.filter(geometry__intersects=self.geos_geometry)
+            .filter(map_id=OuterRef("species_maps__map_id"))
+            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
+        )
+        filter = filter & Q(Exists(zone_subquery))
         return filter
 
     def get_species(self):
         """Return known species that may be related to this hedge."""
 
-        zone_subquery = Zone.objects.filter(
-            Q(geometry__intersects=self.geos_geometry)
-        ).filter(Q(map_id=OuterRef("map_id")))
-
         qs = (
-            Species.objects.annotate(map_id=F("species_maps__map_id"))
-            .filter(self.get_species_filter())
-            .filter(Exists(zone_subquery))
+            Species.objects.filter(self.get_species_filter())
+            .annotate(map_id=F("species_maps__map_id"))
+            .order_by("group", "common_name")
+            .distinct("group", "common_name")
         )
         return qs
+
+    def get_zones(self):
+        zones = Zone.objects.filter(geometry__intersects=self.geos_geometry).filter(
+            map__map_type="species"
+        )
+        return zones
 
 
 class HedgeData(models.Model):
@@ -182,6 +197,12 @@ class HedgeData(models.Model):
             max_y = max(max_y, y1)
         box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
         return box
+
+    def get_hedges_geometry(self, hedges):
+        """Return the MultiLine with the hedge geometry."""
+        lines = [hedge.geometry for hedge in hedges]
+        multiline = MultiLineString(lines)
+        return GEOSGeometry(multiline.wkb_hex)
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
@@ -253,14 +274,6 @@ class HedgeData(models.Model):
 
     def get_all_species(self):
         """Return the local list of protected species."""
-        zone_subquery = (
-            Zone.objects.filter(
-                Q(geometry__intersects=self.get_bounding_box(self.hedges()))
-            )
-            .filter(map__map_type="species")
-            .filter(Q(map_id=OuterRef("map_id")))
-            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
-        )
 
         filters = [h.get_species_filter() for h in self.hedges_to_remove()]
         union = reduce(operator.or_, filters)
@@ -268,7 +281,7 @@ class HedgeData(models.Model):
             Species.objects.filter(union)
             .annotate(map_id=F("species_maps__map_id"))
             .order_by("group", "common_name")
-            .filter(Exists(zone_subquery))
+            .distinct("group", "common_name")
         )
         return species
 
