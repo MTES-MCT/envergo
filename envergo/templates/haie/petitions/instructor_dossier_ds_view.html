@@ -60,17 +60,26 @@
                 <i>Non renseigné</i>
               </div>
             {% elif item.value|is_type:"ItemFiles" %}
-              <div class="fr-grid-row fr-grid-row--gutters">
+              <div class="ds-files fr-grid-row fr-grid-row--gutters">
                 {% for file in item.value.files %}
-                  {% if file.content_type == "image/jpeg" %}
-                    <div class="fr-col-12 fr-col-lg-4">
-                      <img class="fr-responsive-img"
-                           src="{{ file.url }}"
-                           alt="{{ file.filename }}" />
+                  {% if "image" in file.content_type %}
+                    <div class="fr-col fr-col-md-6">
+                      <figure role="group"
+                              class="fr-content-media"
+                              aria-label="Description / Source">
+                        <div class="fr-content-media__img fr-enlarge-link">
+                          <img class="fr-responsive-img"
+                               src="{{ file.url }}"
+                               alt="{{ file.filename }}" />
+                          <figcaption class="fr-content-media__caption">
+                            <a href="{{ file.url }}" target="_blank" rel="noopener external">{{ file.filename }}</a>
+                          </figcaption>
+                        </div>
+                      </figure>
                     </div>
                   {% else %}
                     <div class="fr-col-12">
-                      <a href="{{ file.url }}">{{ file.filename }}</a>
+                      <a href="{{ file.url }}" target="_blank"  rel="noopener external">{{ file.filename }}</a>
                     </div>
                   {% endif %}
                 {% empty %}

@@ -68,8 +68,9 @@ class MinLengthCondition(PlantationCondition):
         # plant, or the "reduced" version (for Normandie rules)
         minimum_length_to_plant = length_to_remove * self.R
         length_to_check = minimum_length_to_plant
-        if isclose(self.R, self.catalog.get("aggregated_r", 0.0)):
-            length_to_check = self.catalog["reduced_lpm"]
+        if "reduced_lpm" in self.catalog and "aggregated_r" in self.catalog:
+            if isclose(self.R, self.catalog["aggregated_r"]):
+                length_to_check = self.catalog["reduced_lpm"]
 
         self.result = length_to_plant >= length_to_check
 
