@@ -24,7 +24,7 @@
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
           <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
-          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
         </div>
       </div>
       {% comment %}
@@ -171,7 +171,7 @@
         <div id="hedge-conditions"
              v-if="conditions.length > 0 && mode === 'plantation'">
           <div class="alt fr-m-2w" id="tile-16">
-            <h3 class="fr-p-1w">Plantation minimum attendue</h3>
+            <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
 
               <div v-for="condition in conditions">
@@ -241,16 +241,21 @@
     </div>
 
     <footer>
-      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line fr-ml-13w"
+      <button v-if="mode == 'read_only'"
+              class="fr-btn fr-btn--secondary fr-ml-13w fr-btn--icon-left fr-icon-arrow-left-s-line"
               @click="cancel">Retour</button>
       <button v-if="mode !== 'read_only'"
-              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line fr-mr-13w"
-              @click="saveData">Enregistrer et poursuivre</button>
+              class="fr-btn fr-btn--secondary fr-ml-13w"
+              @click="cancel">Quitter sans enregistrer</button>
+      <button v-if="mode !== 'read_only'"
+              class="fr-btn fr-btn--primary fr-mr-13w fr-btn--icon-right fr-icon-arrow-right-s-line"
+              @click="saveData">Enregistrer</button>
     </footer>
   </div>
 {% endblock %}
 
 {% block extra_body %}{% endblock %}
+
 {% block footer %}{% endblock %}
 
 {% block bottom_js %}
