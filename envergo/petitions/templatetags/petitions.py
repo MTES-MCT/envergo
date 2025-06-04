@@ -23,4 +23,10 @@ def criterion_instructor_view(context, regulation, criterion, project, moulinett
 
 @register.filter
 def display_property(hedge_property):
-    return hedge_property[TO_REMOVE] or hedge_property[TO_PLANT]
+    return bool(hedge_property[TO_REMOVE] or hedge_property[TO_PLANT])
+
+
+@register.filter
+def sum_degradee_and_buissonnante(dict_by_type):
+    """Sum the values of 'degradee' and 'buissonnante' types in a dictionary."""
+    return dict_by_type.get("degradee", 0) + dict_by_type.get("buissonnante", 0)

@@ -1,9 +1,9 @@
 {% extends 'haie/petitions/ep/ep_instructor_base.html' %}
 
-{% load utils %}
+{% load utils petitions %}
 
 {% block after_hedge_properties %}
-  <h4>Calcul de la compensation attendue</h4>
+  <h4 class="fr-mt-3w">Calcul de la compensation attendue</h4>
 
   <ul class="instructor-view-list">
     {% include 'haie/petitions/_item.html' with label="Coefficient compensation primaire" value=replantation_coefficient|floatformat:"1g" comment="C’est-à-dire hors réduction permise par le projet de plantation" %}
@@ -17,8 +17,8 @@
     {% include 'haie/petitions/_item.html' with label="Coefficient compensation réduit grâce au projet de plantation" value=replantation_coefficient|floatformat:"1g" %}
   </ul>
 
-  <h4>Plantation proposée</h4>
-  <div class="fr-table">
+  <h4 class="fr-mt-3w">Plantation proposée</h4>
+  <div id="normandie_plantation_table" class="fr-table">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
         <div class="fr-table__content">
@@ -26,32 +26,31 @@
             <thead>
               <tr>
                 <th scope="col">Type</th>
-                <th scope="col">Minimum attendu</th>
-                <th scope="col">Minimum attendu réduit de 20%</th>
+                <th scope="col">Minimum attendu primaire</th>
+                <th scope="col">Minimum attendu réduit de 20% sans passer sous 1:1</th>
                 <th scope="col">Plantation proposée</th>
-                <th scope="col">
-                  Manque
-                  <br>
-                  <small>sans passer sous 1:1</small>
-                </th>
+                <th scope="col">Manque</th>
               </tr>
             </thead>
             <tbody>
               {% for key, label in HEDGE_KEYS.items %}
-                <tr>
-                  <th scope="row">{{ label }}</th>
-                  <td>{{ quality_condition.LPm|get_item:key|floatformat:"0g" }} m</td>
-                  <td>{{ moulinette.catalog.LPm_r|get_item:key|floatformat:"0g" }} m</td>
-                  <td>
-                    {% if forloop.last %}
-                      Non applicable
-                    {% else %}
-                      {{ quality_condition.LP|get_item:key|floatformat:"0g" }} m
-                    {% endif %}
-
-                  </td>
-                  <td>{{ quality_condition.LC|get_item:key|floatformat:"0g" }} m</td>
-                </tr>
+                {% if not forloop.last and key != "buissonnante" %}
+                  <tr>
+                    <th scope="row">{{ label }}</th>
+                    <td>{{ quality_condition.LPm|get_item:key|floatformat:"0g" }} m</td>
+                    <td>{{ moulinette.catalog.LPm_r|get_item:key|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LP|get_item:key|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LC|get_item:key|floatformat:"0g" }} m</td>
+                  </tr>
+                {% elif key == "buissonnante" %}
+                  <tr>
+                    <th scope="row">{{ label }}</th>
+                    <td>{{ quality_condition.LPm|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ moulinette.catalog.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LP|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LC|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                  </tr>
+                {% endif %}
               {% endfor %}
             </tbody>
             <tfoot>
