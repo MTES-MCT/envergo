@@ -142,8 +142,8 @@ class EspecesProtegeesNormandie(
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
-        "dispense": RESULTS.dispense_sous_condition,
         "dispense_L350": RESULTS.dispense,
+        "dispense": RESULTS.dispense_sous_condition,
     }
 
     CODE_MATRIX = {
@@ -345,6 +345,7 @@ class EspecesProtegeesNormandie(
         all_r = []
         hedges_details = []
         coupe_a_blanc_every_hedge = True
+        alignement_bord_voie_every_hedge = True
         lte_20m_every_hedge = True
         alignement_bord_voie_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
@@ -459,6 +460,7 @@ class EspecesProtegeesNormandie(
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
+        catalog["alignement_bord_voie_every_hedge"] = alignement_bord_voie_every_hedge
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["alignement_bord_voie_every_hedge"] = alignement_bord_voie_every_hedge
         catalog["aggregated_r"] = aggregated_r
@@ -489,6 +491,7 @@ class EspecesProtegeesNormandie(
         # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
         if (
             self.catalog.get("alignement_bord_voie_every_hedge", False)
+            and hasattr(self.moulinette, "alignement_arbres")
             and self.moulinette.alignement_arbres.is_activated
             and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
             and self.moulinette.alignement_arbres.alignement_arbres.result_code
