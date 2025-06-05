@@ -62,7 +62,7 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
     fieldsets = {
         "Mode de destruction": ["mode_destruction"],
         "Caractéristiques de la haie": ["type_haie", "vieil_arbre"],
-        "Situation de la haie": ["sur_parcelle_pac", "proximite_mare", "bord_voie"],
+        "Situation de la haie": ["sur_parcelle_pac", "bord_voie", "proximite_mare"],
     }
 
     @classmethod
@@ -147,10 +147,11 @@ class HedgeToRemovePropertiesCalvadosForm(
     )
 
     fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
-    fieldsets["Caractéristiques de la haie"].extend(
-        ["essences_non_bocageres", "recemment_plantee"]
-    )
-    fieldsets["Situation de la haie"].extend(["interchamp", "sur_talus"])
+
+    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
+    fieldsets["Caractéristiques de la haie"].insert(1, "recemment_plantee")
+    fieldsets["Situation de la haie"].insert(1, "interchamp")
+    fieldsets["Situation de la haie"].insert(2, "sur_talus")
 
     @classmethod
     def human_readable_name(cls):
@@ -204,12 +205,13 @@ class HedgeToPlantPropertiesCalvadosForm(
         "Type de plantation": ["mode_plantation"],
         **copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets),
     }
-    fieldsets["Caractéristiques de la haie"].extend(["essences_non_bocageres"])
-    fieldsets["Situation de la haie"].extend(["interchamp", "sur_talus"])
+    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
+    fieldsets["Situation de la haie"].insert(1, "interchamp")
+    fieldsets["Situation de la haie"].insert(2, "sur_talus")
 
     @classmethod
     def human_readable_name(cls):
-        return "Caractéristiques du Calvados ( + talus, essences non bocagères, type de plantation)"
+        return "Caractéristiques du Calvados ( + interchamp, talus, essences non bocagères, type de plantation)"
 
 
 class ProximitePointEauMixin(forms.Form):
@@ -232,9 +234,8 @@ class HedgeToRemovePropertiesAisneForm(
     """Hedge to remove properties form : Aisne specific"""
 
     fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
-    fieldsets["Situation de la haie"].extend(
-        ["proximite_point_eau", "connexion_boisement"]
-    )
+    fieldsets["Situation de la haie"].append("connexion_boisement")
+    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
 
     @classmethod
     def human_readable_name(cls):
@@ -247,9 +248,8 @@ class HedgeToPlantPropertiesAisneForm(
     """Hedge to plant properties form : Aisne specific"""
 
     fieldsets = copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets)
-    fieldsets["Situation de la haie"].extend(
-        ["proximite_point_eau", "connexion_boisement"]
-    )
+    fieldsets["Situation de la haie"].append("connexion_boisement")
+    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
 
     @classmethod
     def human_readable_name(cls):
