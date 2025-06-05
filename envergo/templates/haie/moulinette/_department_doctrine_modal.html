@@ -9,7 +9,7 @@
         <div class="fr-modal__body">
           <div class="fr-modal__header">
             <button class="fr-link--close fr-link"
-                    title="Fermer la modale de partage"
+                    title="Fermer la modale"
                     aria-controls="haie-modal-department-doctrine">Fermer</button>
           </div>
           <div class="fr-modal__content">
@@ -21,16 +21,7 @@
               {{ config.department_doctrine_html|safe }}
 
             {% else %}
-              <p>
-                Voici le détail de la réglementation qui s'applique dans le département.
-                <em>Courte introduction pour dire que la doctrine est propre à chaque territoire…</em>
-              </p>
-              <h3>Sous-titre</h3>
-              <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                Placeat ex harum deleniti adipisci cumque molestiae incidunt saepe quaerat laudantium exercitationem,
-                autem obcaecati tenetur ipsam ullam ipsa necessitatibus cupiditate accusamus nihil?
-              </p>
+              <p>Voici le détail de la réglementation qui s'applique dans le département.</p>
             {% endif %}
 
           </div>
