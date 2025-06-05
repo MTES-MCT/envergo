@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -66,3 +67,17 @@ def test_hedge_input_with_config_should_have_set_hedge_properties_form(client):
         '<input type="checkbox" name="removal-essences_non_bocageres" id="id_removal-essences_non_bocageres">'
         in res.content.decode()
     )
+
+
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.urls("config.urls_haie")
+def test_hedge_input_conditions_url(client):
+    """Test url to get condition."""
+    ConfigHaieFactory(
+        hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
+        hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
+    )
+    project = PetitionProjectFactory()
+    url = reverse("input_hedges", args=["44", "read_only", project.hedge_data.id])
+    res = client.get(url)
+    assert "Conditions à respecter pour la plantation" in res.content.decode()
