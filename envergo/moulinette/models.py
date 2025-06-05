@@ -966,6 +966,10 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
+    department_doctrine_html = models.TextField(
+        "Champ html doctrine département", blank=True
+    )
+
     contacts_and_links = models.TextField(
         "Champ html d’information fléchage", blank=True
     )
@@ -1994,6 +1998,7 @@ class MoulinetteHaie(Moulinette):
         context["department"] = department
 
         if hasattr(department, "confighaie") and department.confighaie:
+            context["config"] = department.confighaie
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )

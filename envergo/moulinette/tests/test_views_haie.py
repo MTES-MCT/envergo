@@ -40,9 +40,29 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
+def test_triage(client):
+    ConfigHaieFactory(department_doctrine_html="<h2>Doctrine du département</h2>")
+
+    url = reverse("triage")
+    params = "department=44"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<h2>Doctrine du département</h2>" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_triage_result(client):
 
-    ConfigHaieFactory(hedge_maintenance_html="<h2>kikoo</h2>")
+    ConfigHaieFactory(
+        department_doctrine_html="<h2>Doctrine du département</h2>",
+        hedge_maintenance_html="<h2>kikoo</h2>",
+    )
 
     url = reverse("moulinette_result")
     params = "department=44&element=haie&travaux=entretien"
@@ -62,6 +82,14 @@ def test_triage_result(client):
     content = res.content.decode()
     assert "Votre projet n'est pas encore pris en compte par le simulateur" in content
     assert "<h2>kikoo</h2>" not in content
+
+    params = "department=44&element=haie&travaux=destruction"
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<h2>Doctrine du département</h2>" in content
 
 
 @pytest.mark.urls("config.urls_haie")

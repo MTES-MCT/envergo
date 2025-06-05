@@ -20,7 +20,11 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import MoulinetteHaie, get_moulinette_class_from_site
+from envergo.moulinette.models import (
+    ConfigHaie,
+    MoulinetteHaie,
+    get_moulinette_class_from_site,
+)
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import (
     extract_mtm_params,
@@ -666,7 +670,10 @@ class Triage(FormView):
             if department_code
             else None
         )
+        config = ConfigHaie.objects.filter(department=department).first()
+
         context["department"] = department
+        context["config"] = config
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context
