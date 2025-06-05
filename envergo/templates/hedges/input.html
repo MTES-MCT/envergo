@@ -182,13 +182,13 @@
                  :class="conditions.status"
                  class="fr-px-1w fr-pb-2w "
                  v-if="conditions.conditions.length > 0">
-                 <div v-for="condition in conditions">
+                 <div class="condition-hint" v-for="condition in conditions.conditions">
                   <p v-if="condition.hint">
                     <span class="fr-hint-text fr-mb-1w" v-html="condition.hint"></span>
                   </p>
               </div>
 
-              <div v-for="condition in conditions.conditions">
+              <div class="condition-content" v-for="condition in conditions.conditions">
                 <div>
                   <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
