@@ -249,7 +249,7 @@ class HedgeToPlantPropertiesAisneForm(
 
     fieldsets = copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets)
     fieldsets["Situation de la haie"].append("connexion_boisement")
-    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
+    fieldsets["Situation de la haie"].insert(2, "proximite_point_eau")
 
     @classmethod
     def human_readable_name(cls):
