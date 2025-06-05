@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal as D
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -7,9 +8,15 @@ from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
+    HEDGE_KEYS,
+    LineaireInterchamp,
+    LineaireSurTalusCondition,
+    MinLengthCondition,
+    NormandieQualityCondition,
     PlantationConditionMixin,
     QualityCondition,
     SafetyCondition,
+    StrenghteningCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 from envergo.utils.fields import get_human_readable_value
@@ -113,7 +120,14 @@ class EspecesProtegeesNormandie(
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
-    plantation_conditions = [SafetyCondition]
+    plantation_conditions = [
+        MinLengthCondition,
+        SafetyCondition,
+        StrenghteningCondition,
+        LineaireSurTalusCondition,
+        LineaireInterchamp,
+        NormandieQualityCondition,
+    ]
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
@@ -368,40 +382,69 @@ class EspecesProtegeesNormandie(
             density_ratio_range = "lt_0.5"
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
-        if haies:
-            for hedge in haies.hedges_to_remove():
-                if hedge.mode_destruction != "coupe_a_blanc":
-                    coupe_a_blanc_every_hedge = False
-                if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
-                    alignement_bord_voie_every_hedge = False
+        LD = defaultdict(int)  # linéaire à détruire
+        LC = defaultdict(int)  # linéaire à compenser
+        LPm_r = defaultdict(int)  # linéaire minimum attendu réduit
 
-                if hedge.length > 20:
-                    lte_20m_every_hedge = False
+        for hedge in haies.hedges_to_remove():
+            if hedge.mode_destruction != "coupe_a_blanc":
+                coupe_a_blanc_every_hedge = False
+            if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
+                alignement_bord_voie_every_hedge = False
 
-                if hedge.length <= 10:
-                    r = D(0)
-                elif hedge.length <= 20:
-                    r = D(1)
-                elif (
-                    reimplantation == "remplacement"
-                    and hedge.mode_destruction == "coupe_a_blanc"
-                ):
-                    r = D(1)
-                else:
-                    r = self.COEFFICIENT_MATRIX.get(
-                        (hedge.hedge_type, density_ratio_range, zone_id)
-                    )
+            if hedge.length > 20:
+                lte_20m_every_hedge = False
 
-                if r is not None:
-                    all_r.append(r)
-                    minimum_length_to_plant = (
-                        D(minimum_length_to_plant) + D(hedge.length) * r
-                    )
-                hedges_details.append(get_hedge_compensation_details(hedge, r))
+            if hedge.length <= 10:
+                r = D(0)
+            elif hedge.length <= 20:
+                r = D(1)
+            elif (
+                reimplantation == "remplacement"
+                and hedge.mode_destruction == "coupe_a_blanc"
+            ):
+                r = D(1)
+            else:
+                r = self.COEFFICIENT_MATRIX[
+                    (hedge.hedge_type, density_ratio_range, zone_id)
+                ]
 
-            # Aggregate the R of each hedge to compute the global replantation coefficient.
-            if haies.length_to_remove() > 0:
-                aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
+            all_r.append(r)
+            minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
+            hedges_details.append(get_hedge_compensation_details(hedge, r))
+
+            # Note: if r == 0.0, the hedge does not need to be compensated, so it's
+            # not added to the list of destroyed hedges
+            if r > 0.0:
+                LD[hedge.hedge_type] += hedge.length
+                LC[hedge.hedge_type] += hedge.length * float(r)
+
+        # Total compensation length before compensation reductions
+        lpm = sum(LC.values())
+
+        # Compensation can be reduced when planting a better type
+        # Compensation rate cannot go below 1:1 though
+        reduced_lpm = 0
+        hedge_keys = HEDGE_KEYS.keys()
+        for hedge_type in hedge_keys:
+            lc_type = LC[hedge_type]
+            lc_type *= 0.8 if hedge_type != "mixte" else 1.0
+            lc_type = max(lc_type, LD[hedge_type])
+            LPm_r[hedge_type] = lc_type
+            reduced_lpm += lc_type
+
+        catalog.update(
+            {
+                "LC": LC,
+                "lpm": lpm,
+                "reduced_lpm": reduced_lpm,
+                "LPm_r": LPm_r,
+            }
+        )
+
+        # Aggregate the R of each hedge to compute the global replantation coefficient.
+        if haies.length_to_remove() > 0:
+            aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max

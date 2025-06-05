@@ -58,13 +58,9 @@ class SpeciesMapFactory(DjangoModelFactory):
         model = SpeciesMap
 
     species = factory.SubFactory(SpeciesFactory)
-    map = factory.SubFactory(MapFactory)
+    map = factory.SubFactory(
+        MapFactory,
+        zones__species_taxrefs=factory.SelfAttribute("...species.taxref_ids"),
+    )
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
     hedge_properties = []
-
-    @factory.post_generation
-    def post(obj, create, extracted, **kwargs):
-        # Make sure that the species are linked to the map polygons
-        obj.map.zones.all().update(species_taxrefs=obj.species.taxref_ids)
-        obj.map.map_type = "species"
-        obj.map.save()

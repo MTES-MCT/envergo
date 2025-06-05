@@ -3,7 +3,7 @@ from envergo.moulinette.regulations import CriterionEvaluator
 _evaluator_instructors_information_registry = {}
 
 
-def evaluator_instructors_information_getter(cls):
+def evaluator_instructor_view_context_getter(cls):
     """Decorator to register a function that retrieves instructor information for a specific evaluator class."""
 
     def decorator(func):
@@ -13,9 +13,9 @@ def evaluator_instructors_information_getter(cls):
     return decorator
 
 
-def get_instructors_information(
+def get_instructor_view_context(
     evaluator: CriterionEvaluator, petition_project, moulinette
-):
+) -> tuple[str, dict]:
     """
     Retrieve instructor information for a given evaluator using a Class-based Dispatch Registry.
 
@@ -34,7 +34,7 @@ def get_instructors_information(
         moulinette: The moulinette instance used to compute evaluation data.
 
     Returns:
-        Any: The result of the registered function associated with the evaluator class.
+        tuple[str, dict]: A couple template/context to display evaluator's instructors info.
 
     Raises:
         NotImplementedError: If no function is registered for the evaluator's class.

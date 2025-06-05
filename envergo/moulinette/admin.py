@@ -406,6 +406,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             "Contenus",
             {
                 "fields": [
+                    "department_doctrine_html",
                     "contacts_and_links",
                     "hedge_maintenance_html",
                     "natura2000_coordinators_list_url",

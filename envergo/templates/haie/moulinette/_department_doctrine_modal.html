@@ -1,0 +1,32 @@
+<dialog aria-labelledby="haie-modal-title-department-doctrine"
+        role="dialog"
+        id="haie-modal-department-doctrine"
+        data-shorten-url="{{ shorten_url|yesno:"true,false,false" }}"
+        class="fr-modal">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="haie-modal-department-doctrine">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="haie-modal-title-department-doctrine" class="fr-modal__title">
+              <span class="fr-icon-bookmark-line fr-icon--lg"></span>
+              À propos de la réglementation applicable
+            </h2>
+            {% if config and config.department_doctrine_html %}
+              {{ config.department_doctrine_html|safe }}
+
+            {% else %}
+              <p>Voici le détail de la réglementation qui s'applique dans le département.</p>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>

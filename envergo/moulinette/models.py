@@ -973,6 +973,10 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
+    department_doctrine_html = models.TextField(
+        "Champ html doctrine département", blank=True
+    )
+
     contacts_and_links = models.TextField(
         "Champ html d’information fléchage", blank=True
     )
@@ -1108,8 +1112,20 @@ class ConfigHaie(ConfigBase):
             ("url_moulinette", "Url de la simulation"),
             ("url_projet", "Url du projet de dossier"),
             ("ref_projet", "Référence du projet de dossier"),
+            (
+                "plantation_adequate",
+                "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
+            ),
             ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
             ("proximite_mare", "Proximité d'une mare (booléen)"),
+            (
+                "sur_talus_d",
+                "Au moins une haie à détruire est marquée “sur_talus” (booléen)",
+            ),
+            (
+                "sur_talus_p",
+                "Au moins une haie à planter est marquée “sur_talus” (booléen)",
+            ),
         }
 
         available_sources = {
@@ -1990,6 +2006,7 @@ class MoulinetteHaie(Moulinette):
         context["department"] = department
 
         if hasattr(department, "confighaie") and department.confighaie:
+            context["config"] = department.confighaie
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
