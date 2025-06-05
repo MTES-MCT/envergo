@@ -36,6 +36,7 @@ class Bcae8Form(forms.Form):
 
     transfert_parcelles = forms.ChoiceField(
         label="Le projet est-il réalisé à l'occasion d'un transfert de parcelles ?",
+        help_text="Transfert dans le cas d’un agrandissement d’exploitation, de l'installation d’un nouvel exploitant, d'échange de parcelles…",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
