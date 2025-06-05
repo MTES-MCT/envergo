@@ -17,7 +17,6 @@ class HedgeFactory(factory.Factory):
     ]
     additionalData = factory.Dict(
         {
-            "position": "autre",
             "mode_destruction": "autre",
             "type_haie": "degradee",
             "sur_parcelle_pac": True,

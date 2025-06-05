@@ -6,6 +6,7 @@ class PetitionsConfig(AppConfig):
     name = "envergo.petitions"
 
     def ready(self):
+        import envergo.petitions.regulations.alignementarbres  # noqa
         import envergo.petitions.regulations.conditionnalitepac  # noqa
         import envergo.petitions.regulations.ep  # noqa
         import envergo.petitions.regulations.natura2000_haie  # noqa

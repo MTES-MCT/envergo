@@ -167,10 +167,10 @@ MOTIF_CHOICES = (
         "securite",
         mark_safe(
             """
-            Mise en sécurité<br/>
+            Mise en sécurité, risque sanitaire<br/>
             <span class="fr-hint-text">
-                Sécurité des riverains, de la voirie, d’une installation attenante,
-                réparation suite à un effondrement…
+                Sécurité des riverains, de la circulation, d’une installation attenante ; maladie transmissible à
+                d’autres arbres…
             </span>
             """
         ),
@@ -202,10 +202,10 @@ MOTIF_CHOICES = (
         "embellissement",
         mark_safe(
             """
-            Embellissement ou agrément<br/>
+            Raison esthétique<br/>
             <span class="fr-hint-text">
-                Amélioration de l’ensoleillement d’une habitation, dégagement d’une vue
-                depuis un jardin…
+                Embellissement, amélioration de l’ensoleillement d’une habitation, intervention pour garantir
+                l'esthétique d'un alignement d'arbres…
             </span>
             """
         ),
