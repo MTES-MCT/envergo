@@ -35,11 +35,17 @@
                      name="moulinette_url"
                      value="{{ request.build_absolute_uri }}" />
               <div id="demarches-simplifiees-modal-btns">
-                <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
-                        aria-controls="demarches-simplifiees-modal">Revenir à ma simulation</button>
-                <input type="submit"
-                       class=" fr-ml-2w fr-btn demarche-simplifiee-btn fr-btn--icon-right  fr-icon-external-link-line"
-                       value="Poursuivre vers la demande" />
+                <div>
+                  <input type="button"
+                         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
+                         aria-controls="demarches-simplifiees-modal"
+                         value="Revenir à ma simulation" />
+                </div>
+                <div class="fr-ml-2w">
+                  <input type="submit"
+                         class="fr-btn demarche-simplifiee-btn fr-btn--icon-right  fr-icon-external-link-line"
+                         value="Poursuivre vers la demande" />
+                </div>
               </div>
             </form>
           </div>
