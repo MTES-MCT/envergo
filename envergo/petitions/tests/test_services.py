@@ -199,7 +199,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
@@ -218,7 +218,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
                     "proximite_point_eau": True,
@@ -266,20 +266,10 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                 "TO_REMOVE": [],
                 "label": "Connectée à un " "boisement ou à une " "autre haie",
             },
-            "position.autre": {
-                "TO_PLANT": [],
+            "bord_voie": {
+                "TO_PLANT": None,
                 "TO_REMOVE": [],
-                "label": "Autre (bord de chemin, " "bâtiment…)",
-            },
-            "position.bord_route": {
-                "TO_PLANT": [],
-                "TO_REMOVE": [],
-                "label": "Bordure de voirie " "ouverte à la " "circulation",
-            },
-            "position.interchamp": {
-                "TO_PLANT": [ANY],
-                "TO_REMOVE": [ANY],
-                "label": "Inter-champ",
+                "label": "Bord de route, voie ou chemin " "ouvert au public",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
@@ -320,7 +310,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
@@ -339,7 +329,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
                     "proximite_point_eau": True,
@@ -396,20 +386,15 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "TO_REMOVE": [],
                 "label": "Composée " "d'essences non " "bocagères",
             },
-            "position.autre": {
-                "TO_PLANT": [],
+            "bord_voie": {
+                "TO_PLANT": None,
                 "TO_REMOVE": [],
-                "label": "Autre (bord de chemin, " "bâtiment…)",
+                "label": "Bord de route, voie ou chemin " "ouvert au public",
             },
-            "position.bord_route": {
-                "TO_PLANT": [],
-                "TO_REMOVE": [],
-                "label": "Bordure de voirie " "ouverte à la " "circulation",
-            },
-            "position.interchamp": {
+            "interchamp": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [ANY],
-                "label": "Inter-champ",
+                "label": "Haie inter-champ",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
@@ -472,7 +457,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
@@ -491,7 +476,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     {"lat": 43.0691, "lng": 0.4423},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
                     "proximite_point_eau": True,

@@ -179,7 +179,7 @@ def test_zone_filters_are_not_mixed():  # noqa
                     {"lat": 49.32032072635238, "lng": 3.556141575691475},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "type_haie": "mixte",
                     "vieil_arbre": True,
                     "proximite_mare": True,
@@ -198,7 +198,7 @@ def test_zone_filters_are_not_mixed():  # noqa
                     {"lat": 49.35021667499731, "lng": 3.4120515874961255},
                 ],
                 "additionalData": {
-                    "position": "interchamp",
+                    "interchamp": True,
                     "type_haie": "mixte",
                     "vieil_arbre": True,
                     "proximite_mare": True,
