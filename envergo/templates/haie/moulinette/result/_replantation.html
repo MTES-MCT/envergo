@@ -1,6 +1,6 @@
 {% if reduced_minimum_length_to_plant %}
   <h6>
-    🌳 <strong>Plantation requise : {{ reduced_minimum_length_to_plant|floatformat:0 }} m</strong>
+    🌳 <strong>Plantation requise : {{ reduced_minimum_length_to_plant }} m</strong>
   </h6>
 
   <p>Pour que le projet puisse être autorisé, la plantation proposée doit respecter certaines conditions.</p>
@@ -8,11 +8,9 @@
   <p>Le linéaire à planter dépend du type de haies :</p>
 
   <ul>
+    <li>{{ minimum_length_to_plant }} m pour une plantation de haies de type identique à celles détruites ;</li>
     <li>
-      {{ minimum_length_to_plant|floatformat:0 }} m pour une plantation de haies de type identique à celles détruites ;
-    </li>
-    <li>
-      {{ reduced_minimum_length_to_plant|floatformat:0 }} m pour une plantation faite uniquement de haies mixtes, qui sont plus favorables pour la biodiversité.
+      {{ reduced_minimum_length_to_plant }} m pour une plantation faite uniquement de haies mixtes, qui sont plus favorables pour la biodiversité.
     </li>
   </ul>
 
@@ -31,12 +29,12 @@
   </p>
 {% elif replantation_coefficient > 0 %}
   <h6>
-    🌳 <strong>Plantation requise : {{ minimum_length_to_plant|floatformat:0 }} m</strong>
+    🌳 <strong>Plantation requise : {{ minimum_length_to_plant }} m</strong>
   </h6>
 
   <p>
     Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
-    {{ minimum_length_to_plant|floatformat:0 }} m sera exigée pour que le projet puisse être autorisé.
+    {{ minimum_length_to_plant }} m sera exigée pour que le projet puisse être autorisé.
     D’autres conditions sont également à remplir : type de haie, maintien de certaines caractéristiques…
   </p>
   <p>
