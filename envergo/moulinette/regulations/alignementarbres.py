@@ -55,14 +55,7 @@ class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
 
-        if self.result_code == "soumis_autorisation":
-            r_aa = 2.0
-        elif self.result_code == "soumis_esthetique":
-            r_aa = 1.0
-        elif self.result_code == "soumis_securite":
-            r_aa = 1.0
-        else:  # non_soumis
-            r_aa = 0.0
+        r_aa = self.get_result_based_replantation_coefficient(self.result_code)
 
         if haies:
             for hedge in haies.hedges_to_remove():
@@ -77,3 +70,15 @@ class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
                 aggregated_r = minimum_length_to_plant / haies.length_to_remove()
 
         return aggregated_r
+
+    @classmethod
+    def get_result_based_replantation_coefficient(cls, result_code):
+        if result_code == "soumis_autorisation":
+            r_aa = 2.0
+        elif result_code == "soumis_esthetique":
+            r_aa = 1.0
+        elif result_code == "soumis_securite":
+            r_aa = 1.0
+        else:  # non_soumis
+            r_aa = 0.0
+        return r_aa
