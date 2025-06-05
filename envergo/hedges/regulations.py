@@ -20,10 +20,11 @@ class PlantationCondition(ABC):
     # prevent the template engine to instanciate the class
     do_not_call_in_templates = True
 
-    def __init__(self, hedge_data, R, catalog=None):
+    def __init__(self, hedge_data, R, catalog=None, moulinette=None):
         self.hedge_data = hedge_data
         self.R = R
         self.catalog = catalog or {}
+        self.moulinette = moulinette
 
     def must_display(self):
         """Should the condition be displayed?
@@ -363,6 +364,18 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
+        if (
+            self.moulinette
+            and hasattr(self.moulinette, "ep")
+            and self.moulinette.ep.is_activated
+            and hasattr(self.moulinette.ep, "ep_normandie")
+            and self.moulinette.ep.ep_normandie.result_code
+            and self.moulinette.ep.ep_normandie.result_code == "dispense_L350"
+        ):
+            # If the EP Normandie is activated and the result code is "dispense_L350",
+            # we consider that the condition is always valid.
+            self.result = True
+
         self.context["lpm"] = round(self.catalog["lpm"])
         self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
@@ -581,9 +594,9 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, hedge_data, R, catalog=None):
+    def plantation_evaluate(self, hedge_data, R, catalog=None, moulinette=None):
         results = [
-            condition(hedge_data, R, catalog or {}).evaluate()
+            condition(hedge_data, R, catalog or {}, moulinette).evaluate()
             for condition in self.plantation_conditions
         ]
         return results
@@ -592,21 +605,63 @@ class PlantationConditionMixin:
 class TreeAlignmentsCondition(PlantationCondition):
     label = "Alignements d’arbres (L350-3)"
     order = 5
-    valid_text = "Bientôt disponible"
-    invalid_text = "Bientôt disponible"
+    valid_text = "Le linéaire d’alignements d’arbres plantés en bord de voie ouverte au public est suffisant."
+    invalid_text = """
+        Le linéaire d’alignements d’arbres plantés en bord de voie ouverte au public doit être supérieur
+        à %(minimum_length_to_plant_aa_bord_voie)s m.
+        <br>Il manque au moins %(aa_bord_voie_delta)s m.
+    """
 
     def evaluate(self):
-        # haies = self.catalog.get("haies")
-        # alignement_bord_voie_to_remove = [
-        #     hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
-        #     for hedge in haies.hedges_to_remove()
-        # ]
-        # alignement_bord_voie_to_plant = [
-        #     hedge.hedge_type == "alignement"
-        #     and hedge.prop("bord_voie")
-        #     and hedge.prop("mode_plantation") == "plantation"
-        #     for hedge in haies.hedges_to_plant()
-        # ]
+        haies = self.catalog.get("haies")
+        length_to_remove_aa_bord_voie = sum(
+            hedge.length
+            for hedge in haies.hedges_to_remove()
+            if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
+        )
+        length_to_plant_aa_bord_voie = sum(
+            hedge.length
+            for hedge in haies.hedges_to_plant()
+            if hedge.hedge_type == "alignement"
+            and hedge.prop("bord_voie")
+            and hedge.prop("mode_plantation") == "plantation"
+        )
 
-        self.result = True
+        r_aa = None
+        if (
+            self.moulinette
+            and hasattr(self.moulinette, "alignement_arbres")
+            and self.moulinette.alignement_arbres.is_activated
+            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
+            and self.moulinette.alignement_arbres.alignement_arbres.result_code
+        ):
+            from envergo.moulinette.regulations.alignementarbres import (
+                AlignementsArbres,
+            )
+
+            r_aa = AlignementsArbres.get_result_based_replantation_coefficient(
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+            )
+        else:
+            # should not happen
+            pass
+
+        minimum_length_to_plant_aa_bord_voie = (
+            length_to_remove_aa_bord_voie * r_aa if r_aa is not None else None
+        )
+        aa_bord_voie_delta = (
+            minimum_length_to_plant_aa_bord_voie - length_to_plant_aa_bord_voie
+        )
+
+        self.context = {
+            "minimum_length_to_plant_aa_bord_voie": round(
+                minimum_length_to_plant_aa_bord_voie
+            ),
+            "aa_bord_voie_delta": round(max(0, aa_bord_voie_delta)),
+        }
+        self.result = (
+            length_to_plant_aa_bord_voie >= minimum_length_to_plant_aa_bord_voie
+            if minimum_length_to_plant_aa_bord_voie is not None
+            else None
+        )
         return self
