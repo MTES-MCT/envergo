@@ -85,7 +85,7 @@ class MinLengthCondition(PlantationCondition):
         }
 
         if round(length_to_check) < round(minimum_length_to_plant):
-            self.context["reduced_minimum_length_to_plant"] = length_to_check
+            self.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
         return self
 
     def must_display(self):
