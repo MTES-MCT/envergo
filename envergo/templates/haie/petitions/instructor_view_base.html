@@ -22,6 +22,13 @@
                          href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
                          aria-current="page">Informations générales</a>
                     </li>
+                    {% for regulation in regulations %}
+                      <li class="fr-sidemenu__item fr-sidemenu__item">
+                        <a class="fr-sidemenu__link"
+                           href="{% url 'petition_project_instructor_regulation_view' petition_project.reference %}#project-specifications-instructor"
+                           aria-current="page">Informations générales</a>
+                      </li>
+                    {% endfor %}
                     <li class="fr-sidemenu__item">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor">Formulaire rempli sur Démarches simplifiées</a>
