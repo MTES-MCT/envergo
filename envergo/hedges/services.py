@@ -218,7 +218,7 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
                         criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, self.moulinette.catalog
+                            self.hedge_data, R, self.moulinette.catalog, self.moulinette
                         )
                     )
 

@@ -5,8 +5,8 @@
 </p>
 
 {% if lineaire_type_4_sur_parcelle_pac > 0 %}
-  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
-  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+  <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
     <p>
       À noter : Les alignements d’arbres ne sont pas concernés par les règles de conditionnalité PAC. Ce simulateur tient compte de cet aspect de la réglementation.
     </p>
