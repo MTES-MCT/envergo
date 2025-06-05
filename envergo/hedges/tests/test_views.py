@@ -80,4 +80,4 @@ def test_hedge_input_conditions_url(client):
     project = PetitionProjectFactory()
     url = reverse("input_hedges", args=["44", "read_only", project.hedge_data.id])
     res = client.get(url)
-    assert "type to plant" in res.content
+    assert "Conditions à respecter pour la plantation" in res.content.decode()

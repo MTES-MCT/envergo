@@ -60,7 +60,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         conditions_url = ""
         if mode == "removal" or mode == "plantation":
             conditions_url = (
-                f'{reverse("hedge_conditions")}?{self.request.GET.urlencode}'
+                f'{reverse("hedge_conditions")}?{self.request.GET.urlencode()}'
             )
 
         if mode == "read_only":
