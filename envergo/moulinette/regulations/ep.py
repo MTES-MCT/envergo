@@ -143,6 +143,7 @@ class EspecesProtegeesNormandie(
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
         "dispense": RESULTS.dispense_sous_condition,
+        "dispense_L350": RESULTS.dispense,
     }
 
     CODE_MATRIX = {
@@ -345,6 +346,7 @@ class EspecesProtegeesNormandie(
         hedges_details = []
         coupe_a_blanc_every_hedge = True
         lte_20m_every_hedge = True
+        alignement_bord_voie_every_hedge = True
         reimplantation = self.catalog.get("reimplantation")
         minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
@@ -397,6 +399,8 @@ class EspecesProtegeesNormandie(
         for hedge in haies.hedges_to_remove():
             if hedge.mode_destruction != "coupe_a_blanc":
                 coupe_a_blanc_every_hedge = False
+            if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
+                alignement_bord_voie_every_hedge = False
 
             if hedge.length > 20:
                 lte_20m_every_hedge = False
@@ -456,6 +460,7 @@ class EspecesProtegeesNormandie(
         catalog["r_max"] = r_max
         catalog["coupe_a_blanc_every_hedge"] = coupe_a_blanc_every_hedge
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
+        catalog["alignement_bord_voie_every_hedge"] = alignement_bord_voie_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
         catalog["density_200"] = density_200
@@ -478,5 +483,26 @@ class EspecesProtegeesNormandie(
             reimplantation,
         )
 
+    def get_result_code(self, result_data):
+        # this evaluator needs the result of the alignement_arbres criterion to get its own result
+        # the regulation weight should be configurated to fetch the alignement_arbres before this one
+        # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
+        if (
+            self.catalog.get("alignement_bord_voie_every_hedge", False)
+            and self.moulinette.alignement_arbres.is_activated
+            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
+            and self.moulinette.alignement_arbres.alignement_arbres.result_code
+            == "soumis_securite"
+        ):
+            result = "dispense_L350"
+        else:
+            result = super().get_result_code(result_data)
+
+        return result
+
     def get_replantation_coefficient(self):
+        if self.result_code == "dispense_L350":
+            # If the result is "dispense_L350", the replantation coefficient is 1.0
+            return 1.0
+
         return self.catalog.get("aggregated_r")
