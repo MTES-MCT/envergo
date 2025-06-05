@@ -579,6 +579,11 @@ createApp({
     });
 
     const onHedgesToPlantChange = () => {
+
+      // We don't need to update plantation conditions while an hedge is being
+      // drawn, it's way too costly anyway
+      if (hedgeBeingDrawn.value) return;
+
       conditions.status = "loading";
 
       // Prepare the hedge data to be sent in the request body
