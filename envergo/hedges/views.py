@@ -1,6 +1,7 @@
 import json
+from urllib.parse import urlparse
 
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.module_loading import import_string
@@ -19,7 +20,7 @@ from envergo.moulinette.views import MoulinetteMixin
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
-    """Create or update a hedge input."""
+    """Create, update or display a hedge input."""
 
     template_name = "hedges/input.html"
     model = HedgeData
@@ -53,6 +54,23 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
             )
 
         return data_form
+
+    def get_conditions_url(self, mode="plantation"):
+        """Return conditions url to display plantation conditions"""
+        conditions_url = ""
+        if mode == "removal" or mode == "plantation":
+            conditions_url = (
+                f'{reverse("hedge_conditions")}?{self.request.GET.urlencode}'
+            )
+
+        if mode == "read_only":
+            # params are in petition project
+            if self.object:
+                petition_project = self.object.petitionproject_set.first()
+                query_string = urlparse(petition_project.moulinette_url)
+                query = QueryDict(query_string.query)
+                conditions_url = reverse("hedge_conditions") + "?" + query.urlencode()
+        return conditions_url
 
     def get_matomo_custom_url(self, mode="removal"):
         """Return matomo custom url depending on mode"""
@@ -110,6 +128,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode
         context["matomo_custom_url"] = self.get_matomo_custom_url(mode)
+        context["hedge_conditions_url"] = self.get_conditions_url(mode)
 
         return context
 

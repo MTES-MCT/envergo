@@ -50,7 +50,6 @@
   <button id="project-summary-hedge-input-open-btn"
           class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
           type="button"
-          onclick="onHedgesInputOpen"
           data-fr-opened="false"
           aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
 {% endblock %}
@@ -58,15 +57,6 @@
 {% block extra_js %}
   {{ block.super }}
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
-  <script>
-    function onHedgesInputOpen() {
-      const currentUrl = new URL(window.location.href);
-      const params = new URLSearchParams(currentUrl.search);
-      params.set('new_param_name', 'value');
-      // Update the browser URL without reloading the page
-      window.history.pushState({}, '', currentUrl);
-    }
-  </script>
   <script>var SOURCE_PAGE = "consultation";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
 {% endblock %}

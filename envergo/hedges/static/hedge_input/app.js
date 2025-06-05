@@ -23,9 +23,6 @@ const fitBoundsOptions = { padding: [10, 10] };
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
-if (mode === READ_ONLY_MODE) {
-  const conditionsUrl = "";
-}
 
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
