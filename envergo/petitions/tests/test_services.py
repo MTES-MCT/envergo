@@ -1,4 +1,5 @@
 import datetime
+from collections import OrderedDict
 from decimal import Decimal
 from unittest.mock import ANY, Mock, patch
 
@@ -380,6 +381,15 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     )
 
     expected_result = {
+        "HEDGE_KEYS": OrderedDict(
+            [
+                ("mixte", "Type 5 (mixte)"),
+                ("alignement", "Type 4 (alignement)"),
+                ("arbustive", "Type 3 (arbustive)"),
+                ("buissonnante", "Type 2 (buissonnante)"),
+                ("degradee", "Type 1 (dégradée)"),
+            ]
+        ),
         "hedges_properties": {
             "essences_non_bocageres": {
                 "TO_PLANT": [],
@@ -424,6 +434,27 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "vieux arbres, fissurés ou "
                 "avec cavités",
             },
+        },
+        "quality_condition": {
+            "LC": {
+                "alignement": 0,
+                "arbustive": 11.020243366815471,
+                "buissonnante": 0,
+                "degradee": 0,
+                "mixte": 0,
+            },
+            "LP": {"arbustive": 27.55060841703869},
+            "LPm": {
+                "alignement": 0,
+                "arbustive": 38.57085178385416,
+                "buissonnante": 0,
+                "degradee": 0,
+                "mixte": 0,
+            },
+            "lm": 11.020243366815471,
+            "lp": 27.55060841703869,
+            "lpm": 39,
+            "reduced_lpm": 31,
         },
         "replantation_coefficient": Decimal("1.40"),
     }
