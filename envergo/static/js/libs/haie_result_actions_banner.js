@@ -13,13 +13,6 @@ function displayMessage(title, message, type) {
   projectResult.scrollIntoView({behavior: 'smooth'});
 }
 
-
-function openDemarchesSimplifeesModal(event) {
-  if (event.type === 'click' || event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault();
-    event.target.setAttribute('data-fr-opened', true);
-  }
-}
 // a script to add actions on the moulinette result banner
 window.addEventListener('load', function () {
   (function (exports) {
@@ -47,6 +40,7 @@ window.addEventListener('load', function () {
         }
         const form = event.target;
         const formData = new FormData(form);
+        const newTab = window.open("", '_blank');
 
         fetch(form.action, {
           method: 'POST',
@@ -59,13 +53,13 @@ window.addEventListener('load', function () {
           .then(data => {
             if (data.demarche_simplifiee_url && data.read_only_url) {
               // open démarche simplifiée in a new tab and display the read only version of the simuation result
-              const newTab = window.open(data.demarche_simplifiee_url, '_blank');
               if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
                 // if the new tab was blocked by the browser, display the link in the current tab
                 displayMessage("Votre navigateur empêche l'ouverture d'un nouvel onglet.",
                   `Veuillez cliquer sur <a href="${data.demarche_simplifiee_url}">ce lien</a> pour commencer votre démarche.`,
                   "info");
               } else {
+                newTab.location = data.demarche_simplifiee_url;
                 window.location.href = data.read_only_url;
               }
             } else {
@@ -84,22 +78,6 @@ window.addEventListener('load', function () {
             }
           });
       });
-
-      // There is multiples buttons that can submit the form across the result page
-      const submitButtons = document.querySelectorAll('.demarche-simplifiee-btn');
-      submitButtons.forEach(function (button) {
-        button.addEventListener('click', function (event) {
-          event.preventDefault();
-          var submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-          demarcheForm.dispatchEvent(submitEvent);
-        });
-      });
     }
-
-    const inlineButton = document.querySelector('.demarches-simplifiees-modal-btn');
-    if (inlineButton) {
-      inlineButton.addEventListener('keydown', openDemarchesSimplifeesModal);
-    }
-
   })(this);
 });
