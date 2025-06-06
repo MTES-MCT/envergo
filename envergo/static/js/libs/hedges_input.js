@@ -1,8 +1,7 @@
 window.addEventListener("load", function () {
+  let hedgeIframe;
   let buttons = document.querySelectorAll(".hedge-input-open-btn");
   let modal = document.getElementById("hedge-input-modal");
-
-  let hedgeIframe;
 
   const openModal = function () {
     let saveUrl = new URL(HEDGES_PLANTATION_URL);
@@ -10,8 +9,19 @@ window.addEventListener("load", function () {
       saveUrl.searchParams.set("source_page", SOURCE_PAGE);
     }
 
-    hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
     modal.showModal();
+
+    hedgeIframe = document.createElement("iframe");
+    hedgeIframe.id = "hedge-input-iframe";
+    hedgeIframe.width = "100%";
+    hedgeIframe.height = "100%";
+    hedgeIframe.allowFullscreen = true;
+    hedgeIframe.src = saveUrl;
+    hedgeIframe.addEventListener("load", function () {
+      modal.classList.add("loaded");
+    });
+    // Start iframe loading
+    modal.appendChild(hedgeIframe);
   }
 
   if (window.location.hash === '#plantation') {
@@ -32,8 +42,9 @@ window.addEventListener("load", function () {
     }
 
     if (event.data.action === "cancel") {
-      hedgeIframe.close();
       modal.close();
+      hedgeIframe.remove();
+      modal.classList.remove("loaded");
     }
 
     if (event.data.input_id) {
@@ -42,6 +53,4 @@ window.addEventListener("load", function () {
       window.location.href = `${RESULT_P_URL}?${query.toString()}`;
     }
   });
-
-
 });
