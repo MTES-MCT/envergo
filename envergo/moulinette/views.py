@@ -628,8 +628,15 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             context["plantation_evaluation"] = evaluator
             context["replantation_coefficient"] = evaluator.replantation_coefficient
 
+            hedge_data_id = self.request.GET.get("haies")
+            plantation_url = reverse(
+                "input_hedges",
+                args=[moulinette.department.department, "plantation", hedge_data_id],
+            )
+            plantation_url = update_qs(plantation_url, self.request.GET)
+            context["plantation_url"] = plantation_url
+
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
-        context["edit_plantation_url"] = update_fragment(result_d_url, "open-modal")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
