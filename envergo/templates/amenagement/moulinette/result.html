@@ -46,7 +46,7 @@
 {% endblock %}
 
 {% block regulations_results %}
-  {% for regulation in moulinette.regulations %}
+  {% for regulation in moulinette.regulations|dictsort:"display_order" %}
     {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 {% endblock %}
