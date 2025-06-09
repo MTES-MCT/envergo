@@ -25,11 +25,14 @@
 
     window.addEventListener("message", this.onMessage.bind(this));
 
-    if (window.location.hash === '#plantation') {
+    if (window.location.hash === '#open-modal') {
       this.open();
     }
   };
 
+  // We need to create the iframe before adding it to the dom
+  // because using an existing iframe messes with the history management,
+  // and make the "back" and "forward" buttons unreliable.
   HedgeInputModal.prototype.createIframe = function () {
     let iframe = document.createElement("iframe");
     iframe.id = "hedge-input-iframe";

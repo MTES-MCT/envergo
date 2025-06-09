@@ -629,7 +629,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             context["replantation_coefficient"] = evaluator.replantation_coefficient
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
-        context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
+        context["edit_plantation_url"] = update_fragment(result_d_url, "open-modal")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
