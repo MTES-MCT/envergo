@@ -231,7 +231,9 @@ class Regulation(models.Model):
         blank=True,
     )
 
-    weight = models.PositiveIntegerField(_("Order"), default=1)
+    weight = models.PositiveIntegerField("Ordre de calcul", default=1)
+
+    display_order = models.PositiveIntegerField("Ordre d'affichage", default=1)
 
     has_perimeters = models.BooleanField(
         "Réglementation liée aux périmètres ?",
@@ -2148,7 +2150,9 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations_by_group(self):
         """Group regulations by their result_group"""
-        regulations_list = list(self.regulations)
+        regulations_list = sorted(
+            self.regulations, key=lambda regulation: regulation.display_order
+        )
 
         regulations_list.sort(key=attrgetter("result_group"))
         grouped = {

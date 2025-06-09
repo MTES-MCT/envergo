@@ -2,7 +2,7 @@
 
 <nav id="evaluation-summary" class="fr-mb-3w">
   <ul>
-    {% for regulation in moulinette.regulations %}
+    {% for regulation in moulinette.regulations|dictsort:"display_order" %}
       <li>
         <a class="summary-link"
            href="#regulation_{{ regulation.slug }}"
