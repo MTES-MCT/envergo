@@ -586,7 +586,7 @@ class MoulinetteHaieResult(
                 args=[moulinette.department.department, "plantation", hedge_data.id],
             )
             plantation_url = update_qs(plantation_url, self.request.GET)
-            context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+            context["plantation_url"] = plantation_url
 
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)

@@ -29,9 +29,9 @@
     var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
 
     window.addEventListener("load", function() {
-      let url = new URL(HEDGES_PLANTATION_URL);
-      let redirectUrl = new URL(RESULT_P_URL);
-      var hedgeModal = new HedgeInputModal(url, redirectUrl);
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = RESULT_P_URL;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
     });
   </script>
 {% endblock %}

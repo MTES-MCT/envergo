@@ -7,12 +7,17 @@
   /**
    * Create and manage the hedge ui modal / iframe.
    */
-  var HedgeInputModal = function (iframeUrl, redirectUrl, onSubmitCallback) {
+  var HedgeInputModal = function (iframeUrl, redirectUrl, submitCallback) {
     this.modal = document.getElementById(modalId);
     this.btns = document.querySelectorAll(btnClass);
     this.iframeUrl = iframeUrl;
     this.redirectUrl = redirectUrl;
-    this.onSubmitCallback = onSubmitCallback.bind(this) || function (hedgeData) { };
+
+    if (submitCallback === undefined) {
+      this.onSubmitCallback = function (data) { };
+    } else {
+      this.onSubmitCallback = submitCallback.bind(this);
+    }
 
     this.btns.forEach(btn => {
       btn.addEventListener("click", this.open.bind(this));
@@ -68,11 +73,10 @@
       this.onSubmitCallback(event.data);
 
       if (this.redirectUrl) {
-        const query = new URLSearchParams(window.location.search);
-        query.set("haies", event.data.input_id);
-        const redirectUrl = URL(this.redirectUrl);
-        redirectUrl.search = query;
-        window.location.href = redirectUrl;
+        const url = new URL(window.location);
+        url.pathname = this.redirectUrl;
+        url.searchParams.set("haies", event.data.input_id);
+        window.location.href = url;
       } else {
         this.close();
       }
