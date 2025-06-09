@@ -57,7 +57,7 @@
                     </div>
                   </div>
                   <button id="hedge-input-open-btn"
-                          class="fr-btn fr-btn--secondary"
+                          class="hedge-input-open-btn fr-btn fr-btn--secondary"
                           type="button"
                           data-fr-opened="false"
                           aria-controls="hedge-input-modal">Modifier les haies</button>
@@ -68,7 +68,7 @@
                     </p>
                   </div>
                   <button id="hedge-input-open-btn"
-                          class="fr-btn fr-btn--primary"
+                          class="hedge-input-open-btn fr-btn fr-btn--primary"
                           type="button"
                           data-fr-opened="false"
                           aria-controls="hedge-input-modal">Localiser les haies</button>
@@ -105,64 +105,47 @@
 
 <script>
   window.addEventListener("load", function () {
-    let modal = document.getElementById("hedge-input-modal");
     let hedgeIdField = document.getElementById("id_haies");
+    let hedgeInputOpenBtn = document.getElementById("hedge-input-open-btn");
     let hedgeDataStatsTpl = document.getElementById("hedge-data-statistics");
     let statisticsContainer = document.getElementById("statistics-container");
-    let hedgeInputOpenBtn = document.getElementById("hedge-input-open-btn");
-    let hedgeIframe;
+    let baseUrl = "{% url 'input_hedges' department=request.GET.department|default:'' mode='removal' %}";
+    let hedgeId = hedgeIdField.value;
+    let iframeUrl = baseUrl;
+    if (hedgeId) {
+      iframeUrl += hedgeId + "/";
+    }
+    let redirectUrl = null;
 
-    // open the hedge input ui in a modal upon the button click
-    hedgeInputOpenBtn.addEventListener("click", function () {
-      let saveUrl = "{% url 'input_hedges' department=request.GET.department|default:'' mode='removal' %}";
-      let hedgeId = hedgeIdField.value;
-      if (hedgeId) {
-        saveUrl += hedgeId + "/";
+    var submitCallback = function(data) {
+      if(data.length_to_remove === 0){
+        statisticsContainer.innerHTML = "<p><i>Aucune haie renseignée</i></p>"
+
+        hedgeInputOpenBtn.textContent = "Localiser les haies";
+        hedgeInputOpenBtn.classList.remove('fr-btn--secondary');
+        hedgeInputOpenBtn.classList.add('fr-btn--primary');
       }
-      hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
-      modal.showModal();
-    });
+      else {
+        let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
+        let lengthToRemove = statsContent.getElementById("length-to-remove");
+        let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
+        let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
+        lengthToRemove.textContent = Math.round(data.length_to_remove).toLocaleString('fr-FR');
+        lineaireDetruitPac.textContent = data.lineaire_detruit_pac === 0 ? "Aucune haie située sur parcelle PAC" : `${Math.round(data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur parcelles PAC`;
+        hedgesToRemoveCount.textContent = `${data.hedges_to_remove === 0 ? "Aucun" : data.hedges_to_remove.toLocaleString('fr-FR')} tracé${data.hedges_to_remove > 1 ? "s" : ""}`;
+        statisticsContainer.innerHTML = "";
+        statisticsContainer.appendChild(statsContent);
 
-    // When the input is saved, close the modal
-    window.addEventListener("message", function (event) {
-      if (event.origin !== window.location.origin) {
-        return;
+        hedgeInputOpenBtn.textContent = "Modifier les haies";
+        hedgeInputOpenBtn.classList.add('fr-btn--secondary');
+        hedgeInputOpenBtn.classList.remove('fr-btn--primary');
       }
 
-      if (event.data.action === "cancel") {
-        hedgeIframe.close();
-        modal.close();
-      }
+      hedgeIdField.value = data.input_id;
+      let iframeUrl = baseUrl + data.input_id + "/";
+      this.iframeUrl = iframeUrl;
+    };
 
-      if (event.data.input_id) {
-        if(event.data.length_to_remove === 0){
-          statisticsContainer.innerHTML = "<p><i>Aucune haie renseignée</i></p>"
-
-          hedgeInputOpenBtn.textContent = "Localiser les haies";
-          hedgeInputOpenBtn.classList.remove('fr-btn--secondary');
-          hedgeInputOpenBtn.classList.add('fr-btn--primary');
-        }
-        else {
-          let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
-          let lengthToRemove = statsContent.getElementById("length-to-remove");
-          let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
-          let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
-          lengthToRemove.textContent = Math.round(event.data.length_to_remove).toLocaleString('fr-FR');
-          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur parcelle PAC" : `${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur parcelles PAC`;
-          hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove.toLocaleString('fr-FR')} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
-          statisticsContainer.innerHTML = "";
-          statisticsContainer.appendChild(statsContent);
-
-          hedgeInputOpenBtn.textContent = "Modifier les haies";
-          hedgeInputOpenBtn.classList.add('fr-btn--secondary');
-          hedgeInputOpenBtn.classList.remove('fr-btn--primary');
-        }
-
-        hedgeIdField.value = event.data.input_id;
-        hedgeIframe.close();
-        modal.close();
-      }
-    });
-
+    var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl, submitCallback);
   });
 </script>
