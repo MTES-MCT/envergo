@@ -267,7 +267,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                 "label": "Connectée à un " "boisement ou à une " "autre haie",
             },
             "bord_voie": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Bord de route, voie ou chemin " "ouvert au public",
             },
@@ -387,7 +387,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "label": "Composée " "d'essences non " "bocagères",
             },
             "bord_voie": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Bord de route, voie ou chemin " "ouvert au public",
             },
