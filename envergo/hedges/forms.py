@@ -27,6 +27,10 @@ class HedgePropertiesBaseForm(forms.Form):
         label="Située sur une parcelle PAC",
         required=False,
     )
+    bord_voie = forms.BooleanField(
+        label="Bord de route, voie ou chemin ouvert au public",
+        required=False,
+    )
     proximite_mare = forms.BooleanField(
         label="Mare à moins de 200 m",
         required=False,
@@ -51,11 +55,6 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
     )
     vieil_arbre = forms.BooleanField(
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
-        required=False,
-    )
-
-    bord_voie = forms.BooleanField(
-        label="Bord de route, voie ou chemin ouvert au public",
         required=False,
     )
 
@@ -85,6 +84,7 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
         ],
         "Situation de la haie": [
             "sur_parcelle_pac",
+            "bord_voie",
             "proximite_mare",
             "sous_ligne_electrique",
         ],
@@ -249,7 +249,7 @@ class HedgeToPlantPropertiesAisneForm(
 
     fieldsets = copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets)
     fieldsets["Situation de la haie"].append("connexion_boisement")
-    fieldsets["Situation de la haie"].insert(2, "proximite_point_eau")
+    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
 
     @classmethod
     def human_readable_name(cls):
