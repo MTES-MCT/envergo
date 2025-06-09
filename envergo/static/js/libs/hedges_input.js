@@ -24,10 +24,6 @@
     });
 
     window.addEventListener("message", this.onMessage.bind(this));
-
-    if (window.location.hash === '#open-modal') {
-      this.open();
-    }
   };
 
   // We need to create the iframe before adding it to the dom
