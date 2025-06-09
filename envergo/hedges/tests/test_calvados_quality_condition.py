@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
@@ -180,11 +182,47 @@ def test_calvados_quality_condition(hedge_data):
         "lpm": 390.0,
         "reduced_lpm": 352.0,
     }
+    evaluator = Mock()
     R = 0.0  # Ignored for calvados
-    condition = NormandieQualityCondition(hedge_data, R, catalog)
+    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
     condition.evaluate()
     LC = condition.context["LC"]
 
+    assert round(LC["mixte"]) == 0
+    assert round(LC["alignement"]) == 0
+    assert round(LC["arbustive"]) == 60
+    assert round(LC["buissonnante"]) == 40
+    assert round(LC["degradee"]) == 10
+
+
+def test_calvados_quality_condition_dispense_l350(hedge_data):
+    """Lengths to plant depends on R."""
+    catalog = {
+        "reimplantation": "remplacement",
+        "LD": {
+            "mixte": 100.0,
+            "alignement": 40.0,
+            "arbustive": 30.0,
+            "buissonnante": 20.0,
+            "degradee": 10.0,
+        },
+        "LC": {
+            "mixte": 200.0,
+            "alignement": 80.0,
+            "arbustive": 60.0,
+            "buissonnante": 40.0,
+            "degradee": 10.0,
+        },
+        "lpm": 390.0,
+        "reduced_lpm": 352.0,
+    }
+    evaluator = Mock(result_code="dispense_L350")
+    R = 0.0  # Ignored for calvados
+    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    condition.evaluate()
+    LC = condition.context["LC"]
+
+    assert condition.result
     assert round(LC["mixte"]) == 0
     assert round(LC["alignement"]) == 0
     assert round(LC["arbustive"]) == 60

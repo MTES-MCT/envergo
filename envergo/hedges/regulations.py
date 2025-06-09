@@ -606,30 +606,26 @@ class TreeAlignmentsCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        haies = self.catalog.get("haies")
         length_to_remove_aa_bord_voie = sum(
             hedge.length
-            for hedge in haies.hedges_to_remove()
+            for hedge in self.hedge_data.hedges_to_remove()
             if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
         )
         length_to_plant_aa_bord_voie = sum(
             hedge.length
-            for hedge in haies.hedges_to_plant()
+            for hedge in self.hedge_data.hedges_to_plant()
             if hedge.hedge_type == "alignement"
             and hedge.prop("bord_voie")
             and hedge.prop("mode_plantation") == "plantation"
         )
 
-        r_aa = None
         from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
 
         r_aa = AlignementsArbres.get_result_based_replantation_coefficient(
             self.criterion_evaluator.result_code
         )
 
-        minimum_length_to_plant_aa_bord_voie = (
-            length_to_remove_aa_bord_voie * r_aa if r_aa is not None else None
-        )
+        minimum_length_to_plant_aa_bord_voie = length_to_remove_aa_bord_voie * r_aa
         aa_bord_voie_delta = (
             minimum_length_to_plant_aa_bord_voie - length_to_plant_aa_bord_voie
         )
@@ -642,7 +638,5 @@ class TreeAlignmentsCondition(PlantationCondition):
         }
         self.result = (
             length_to_plant_aa_bord_voie >= minimum_length_to_plant_aa_bord_voie
-            if minimum_length_to_plant_aa_bord_voie is not None
-            else None
         )
         return self
