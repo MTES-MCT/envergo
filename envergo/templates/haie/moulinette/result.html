@@ -23,7 +23,15 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
-  <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
+    var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
+
+    window.addEventListener("load", function() {
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = RESULT_P_URL;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+    });
+  </script>
 {% endblock %}

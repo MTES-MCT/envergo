@@ -700,7 +700,7 @@ createApp({
         }
       });
 
-      history.pushState({ modalOpen: true }, "", "#modal");
+      history.pushState({ modalOpen: true }, "", "#open-modal");
       window.addEventListener("popstate", cancel);
 
       // Here, we want to restore existing hedges
