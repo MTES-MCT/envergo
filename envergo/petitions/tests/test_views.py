@@ -7,10 +7,15 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
+from envergo.geodata.conftest import loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
+    CriterionFactory,
+    RegulationFactory,
+)
 from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
@@ -51,6 +56,21 @@ def instructor_haie_user_44() -> User:
     department_44 = DepartmentFactory.create()
     instructor_haie_user_44.departments.add(department_44)
     return instructor_haie_user_44
+
+
+@pytest.fixture()
+def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="Bonnes conditions agricoles et environnementales - Fiche VIII",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            activation_map=loire_atlantique_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
@@ -196,14 +216,14 @@ def test_petition_project_instructor_view_requires_authentication(
             "petition_project_instructor_view", kwargs={"reference": project.reference}
         )
     )
+    request.site = site
+    request.session = {}
 
     # Add support  django messaging framework
     request._messages = messages.storage.default_storage(request)
 
     # Simulate an unauthenticated user
     request.user = AnonymousUser()
-    request.site = site
-    request.session = {}
 
     response = PetitionProjectInstructorView.as_view()(
         request, reference=project.reference
@@ -264,6 +284,37 @@ def test_petition_project_instructor_view_requires_authentication(
     )
 
     # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
+def test_petition_project_instructor_view_reglementation_pages(
+    mock_post, instructor_haie_user_44, conditionnalite_pac_criteria, client, site
+):
+    """Test instruction pages reglementation menu and content"""
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory()
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+    )
+
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_url)
+    breakpoint()
     assert response.status_code == 200
 
 
