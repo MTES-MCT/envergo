@@ -314,8 +314,8 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     client.force_login(instructor_haie_user_44)
     response = client.get(instructor_url)
-    breakpoint()
     assert response.status_code == 200
+    assert f"{conditionnalite_pac_criteria[0].regulation}" in response.content.decode()
 
 
 @pytest.mark.urls("config.urls_haie")

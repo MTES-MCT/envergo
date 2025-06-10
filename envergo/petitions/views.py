@@ -613,9 +613,10 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         regulation_slug = self.kwargs.get("regulation")
-        context["current_regulation"] = context["moulinette"].regulations.get(
-            regulation=regulation_slug
-        )
+        if regulation_slug:
+            context["current_regulation"] = context["moulinette"].regulations.get(
+                regulation=regulation_slug
+            )
         return context
 
 

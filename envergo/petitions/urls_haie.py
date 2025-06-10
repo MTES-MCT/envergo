@@ -44,14 +44,14 @@ urlpatterns = [
         name="petition_project_instructor_view",
     ),
     path(
-        "<slug:reference>/instruction/<slug:regulation>/",
-        PetitionProjectInstructorRegulationView.as_view(),
-        name="petition_project_instructor_regulation_view",
-    ),
-    path(
         "<slug:reference>/instruction/dossier-ds/",
         PetitionProjectInstructorDossierDSView.as_view(),
         name="petition_project_instructor_dossier_ds_view",
+    ),
+    path(
+        "<slug:reference>/instruction/<slug:regulation>/",
+        PetitionProjectInstructorRegulationView.as_view(),
+        name="petition_project_instructor_regulation_view",
     ),
     path(
         "<slug:reference>/haies.gpkg",
