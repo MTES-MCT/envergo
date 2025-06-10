@@ -605,6 +605,20 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
+class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_regulation_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        regulation_slug = self.kwargs.get("regulation")
+        context["current_regulation"] = context["moulinette"].regulations.get(
+            regulation=regulation_slug
+        )
+        return context
+
+
 class PetitionProjectInstructorDossierDSView(
     PetitionProjectInstructorMixin, DetailView
 ):

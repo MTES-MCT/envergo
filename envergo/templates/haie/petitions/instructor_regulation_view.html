@@ -1,0 +1,93 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load moulinette %}
+{% load utils %}
+{% load petitions %}
+
+{% load static %}
+
+{% block project_sidemenu %}
+  <li class="fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
+       aria-current="page">Informations générales</a>
+  </li>
+  {% for regulation in moulinette.regulations %}
+    <li class="fr-sidemenu__item {% if regulation.slug == current_regulation %}fr-sidemenu__item--active{% endif %}">
+      <a class="fr-sidemenu__link"
+         href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}#project-specifications-instructor">
+      {{ regulation }}</a>
+    </li>
+  {% endfor %}
+  <li class="fr-sidemenu__item">
+    <a class="fr-sidemenu__link"
+       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor">Formulaire rempli sur Démarches simplifiées</a>
+  </li>
+{% endblock %}
+
+{% block title %}Instruction du dossier – {{ current_regulation }}{% endblock %}
+
+{% block project_content %}
+
+  <div class="project-inner-content">
+
+    {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
+
+    <form method="post"
+          action="{% url 'petition_project_instructor_regulation_view' petition_project.reference current_regulation.slug %}">
+      {% csrf_token %}
+
+      {% with current_regulation as regulation %}
+        <section class="fr-my-3w" id="{{ regulation.slug }}">
+          {% for criterion in regulation.criteria.all %}
+            <section id="{{ regulation.slug }}-{{ criterion.slug }}">
+              {% criterion_instructor_view regulation criterion petition_project moulinette %}
+            </section>
+          {% endfor %}
+        </section>
+      {% endwith %}
+
+    </form>
+
+  </div>
+{% endblock %}
+
+{% block extra_body %}
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
+  <script>var SOURCE_PAGE = "instruction";</script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var forms = document.querySelectorAll('form');
+      var beforeUnloadListenerAdded = false;
+
+      function preventLeaving(e) {
+        e.preventDefault();
+        var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
+        e.returnValue = confirmationMessage; // Standard for most browsers
+        return confirmationMessage; // For some older browsers
+      }
+
+      forms.forEach(function (form) {
+        form.addEventListener('change', function () {
+          if (!beforeUnloadListenerAdded) {
+            window.addEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = true;
+          }
+        });
+
+        form.addEventListener('submit', function () {
+          if(beforeUnloadListenerAdded){
+            window.removeEventListener('beforeunload', preventLeaving);
+            beforeUnloadListenerAdded = false;
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}
