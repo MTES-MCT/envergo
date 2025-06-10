@@ -90,15 +90,6 @@
         </ul>
       </section>
 
-      {% for regulation in moulinette.regulations %}
-        <section class="fr-my-3w" id="{{ regulation.slug }}">
-          {% for criterion in regulation.criteria.all %}
-            <section id="{{ regulation.slug }}-{{ criterion.slug }}">
-              {% criterion_instructor_view regulation criterion petition_project moulinette %}
-            </section>
-          {% endfor %}
-        </section>
-      {% endfor %}
       <section class="fr-my-3w" id="instructor_free_mention">
 
         <h2>Notes libres pour l'instruction</h2>

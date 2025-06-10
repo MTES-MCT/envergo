@@ -535,14 +535,14 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if user.is_superuser or all(
             (user.is_instructor, department in user.departments.defer("geometry").all())
         ):
-
-            log_event(
-                "projet",
-                self.matomo_tag,
-                self.request,
-                **self.object.get_log_event_data(),
-                **get_matomo_tags(self.request),
-            )
+            if self.matomo_tag:
+                log_event(
+                    "projet",
+                    self.matomo_tag,
+                    self.request,
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
             return result
 
         else:
@@ -609,6 +609,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_regulation_view.html"
+    matomo_tag = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

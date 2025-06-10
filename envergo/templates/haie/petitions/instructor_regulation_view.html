@@ -30,8 +30,6 @@
 
   <div class="project-inner-content">
 
-    {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
-
     <form method="post"
           action="{% url 'petition_project_instructor_regulation_view' petition_project.reference current_regulation.slug %}">
       {% csrf_token %}
@@ -39,10 +37,13 @@
       {% for regulation in moulinette.regulations %}
         {% if regulation.slug == current_regulation.slug %}
           <section class="fr-my-3w" id="{{ regulation.slug }}">
+            <h1>{{ regulation.title }}</h1>
             {% for criterion in regulation.criteria.all %}
               <section id="{{ regulation.slug }}-{{ criterion.slug }}">
                 {% criterion_instructor_view regulation criterion petition_project moulinette %}
               </section>
+            {% empty %}
+              <p>Cette réglementation n’est pas disponible pour ce projet.</p>
             {% endfor %}
           </section>
         {% endif %}
