@@ -699,7 +699,7 @@ createApp({
       map.setView([43.6861, 3.5911], 22);
       restoreHedges();
 
-      if (mode === PLANTATION_MODE) {
+      if (mode === PLANTATION_MODE || mode === READ_ONLY_MODE) {
         // We need to call this function once to initialize the quality object
         onHedgesToPlantChange();
       }

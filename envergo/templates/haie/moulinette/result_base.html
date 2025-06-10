@@ -33,7 +33,9 @@
   {% endif %}
 
   {% block before-title-content %}{% endblock %}
-  {% block result_title %}<h1 class="fr-mb-5w">Simulation réglementaire</h1>{% endblock %}
+  {% block result_title %}<h1>Simulation réglementaire</h1>{% endblock %}
+
+  {% include 'haie/moulinette/_department_doctrine_button.html' %}
 
   {% block result_header %}{% endblock %}
 
@@ -56,7 +58,6 @@
       {% block liability_info %}{% endblock %}
     {% endif %}
   {% endfor %}
-  {% include 'haie/moulinette/_demarches_simplifiees_form.html' %}
 
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
 {% endblock %}
@@ -69,6 +70,7 @@
 
 {% block extra_body %}
   {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (réponses au formulaire et dessins de haies) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' %}
 {% endblock %}
 
 {% block extra_css %}
