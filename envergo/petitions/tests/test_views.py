@@ -295,8 +295,7 @@ def test_petition_project_instructor_notes_view(
     site,
 ):
     """
-    Test petition project instructor page requires authentication
-    User must be authenticated, haie user, and project department must be in user departments permissions
+    Test petition project instructor notes view
     """
 
     ConfigHaieFactory()
@@ -345,10 +344,13 @@ def test_petition_project_instructor_view_reglementation_pages(
     )
     project = PetitionProjectFactory()
 
-    # Test not existing regulation url
+    # Test regulation imaginaire url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "lutins_proteges"},
+        kwargs={
+            "reference": project.reference,
+            "regulation": "lutins_elfes_fees_protegees",
+        },
     )
 
     client.force_login(instructor_haie_user_44)
