@@ -57,11 +57,9 @@ window.addEventListener('mapInitialized', function (event) {
 
       const editButtons = document.querySelectorAll('.moulinette-edit-button');
       editButtons.forEach(button => {
-        if(button.tagName.toLowerCase() === 'a')
-        {
+        if (button.tagName.toLowerCase() === 'a') {
           button.removeAttribute('href');
-        }
-        else{
+        } else {
           button.disabled = true;
         }
       });
