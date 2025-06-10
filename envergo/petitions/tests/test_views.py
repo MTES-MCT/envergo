@@ -27,6 +27,7 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
+    PetitionProjectInstructorNotesView,
     PetitionProjectInstructorView,
 )
 from envergo.users.models import User
@@ -289,6 +290,42 @@ def test_petition_project_instructor_view_requires_authentication(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_notes_view(
+    instructor_haie_user_44,
+    site,
+):
+    """
+    Test petition project instructor page requires authentication
+    User must be authenticated, haie user, and project department must be in user departments permissions
+    """
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    factory = RequestFactory()
+    request = factory.get(
+        reverse(
+            "petition_project_instructor_view", kwargs={"reference": project.reference}
+        )
+    )
+    request.site = site
+    request.session = {}
+
+    # Add support  django messaging framework
+    request._messages = messages.storage.default_storage(request)
+
+    # Simulate instructor user with department 44
+    request.user = instructor_haie_user_44
+    response = PetitionProjectInstructorNotesView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 200
+    assert response.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_petition_project_instructor_view_reglementation_pages(
@@ -307,6 +344,18 @@ def test_petition_project_instructor_view_reglementation_pages(
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
     project = PetitionProjectFactory()
+
+    # Test not existing regulation url
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "lutins_proteges"},
+    )
+
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_url)
+    assert response.status_code == 404
+
+    # Test existing regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
