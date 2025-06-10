@@ -38,7 +38,7 @@
   {% include '_field_snippet.html' with field=form.onagre_number %}
   <button type="submit"
           class="fr-btn fr-btn--secondary"
-          formaction="{% url 'petition_project_instructor_view' petition_project.reference %}#field-onagre_number">
+          formaction="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}#field-onagre_number">
     Enregistrer
   </button>
 </div>

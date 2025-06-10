@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from envergo.petitions.views import (
@@ -7,9 +7,35 @@ from envergo.petitions.views import (
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorNotesView,
+    PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
+
+instruction_urlpatterns = [
+    path(
+        "",
+        PetitionProjectInstructorView.as_view(),
+        name="petition_project_instructor_view",
+    ),
+    path(
+        "dossier-ds/",
+        PetitionProjectInstructorDossierDSView.as_view(),
+        name="petition_project_instructor_dossier_ds_view",
+    ),
+    path(
+        "notes/",
+        PetitionProjectInstructorNotesView.as_view(),
+        name="petition_project_instructor_notes_view",
+    ),
+    path(
+        "<slug:regulation>/",
+        PetitionProjectInstructorRegulationView.as_view(),
+        name="petition_project_instructor_regulation_view",
+    ),
+]
+instruction_urlpatterns_custom_matomo = (instruction_urlpatterns, "matomo-custom")
 
 urlpatterns = [
     path("", PetitionProjectCreate.as_view(), name="petition_project_create"),
@@ -21,13 +47,13 @@ urlpatterns = [
     ),
     # This is another "fake" url, only for matomo tracking
     path(
-        "+ref_proj+/consultation/haies/",
+        "+ref_projet+/consultation/haies/",
         RedirectView.as_view(pattern_name="home"),
         name="petition_project_hedges",
     ),
     # This is another "fake" url, only for matomo tracking
     path(
-        "+ref_proj+/instruction/haies/",
+        "+ref_projet+/instruction/haies/",
         RedirectView.as_view(pattern_name="home"),
         name="instructor_view_hedges",
     ),
@@ -37,15 +63,15 @@ urlpatterns = [
         PetitionProjectAutoRedirection.as_view(),
         name="petition_project_auto_redirection",
     ),
+    # Include instruction patterns
     path(
         "<slug:reference>/instruction/",
-        PetitionProjectInstructorView.as_view(),
-        name="petition_project_instructor_view",
+        include(instruction_urlpatterns),
     ),
+    # Fake matomo instruction patterns, using a namespace
     path(
-        "<slug:reference>/instruction/dossier-ds/",
-        PetitionProjectInstructorDossierDSView.as_view(),
-        name="petition_project_instructor_dossier_ds_view",
+        "+ref_projet+/instruction/",
+        include(instruction_urlpatterns_custom_matomo),
     ),
     path(
         "<slug:reference>/haies.gpkg",
