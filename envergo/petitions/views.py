@@ -550,7 +550,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             )
 
     def get_matomo_custom_url(self):
-        """Get matomo custom url, replacing ref project by "+ref-project+"""
+        """Get matomo custom url, replacing project reference by "+ref_projet+"""
         current_path = self.request.path
         matomo_custom_path = current_path.replace(self.object.reference, "+ref_projet+")
         return self.request.build_absolute_uri(matomo_custom_path)
