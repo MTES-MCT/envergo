@@ -7,6 +7,7 @@ from envergo.petitions.views import (
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
@@ -43,8 +44,8 @@ urlpatterns = [
         name="petition_project_instructor_view",
     ),
     path(
-        "<slug:reference>/instruction/<slug:regulation>",
-        PetitionProjectInstructorView.as_view(),
+        "<slug:reference>/instruction/<slug:regulation>/",
+        PetitionProjectInstructorRegulationView.as_view(),
         name="petition_project_instructor_regulation_view",
     ),
     path(
