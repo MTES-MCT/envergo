@@ -19,16 +19,12 @@
         id="moulinette-form">
     {% csrf_token %}
     {% for field in form %}{{ field|as_hidden }}{% endfor %}
-    {% if optional_forms %}
-      {% for optional_form in optional_forms %}
-        {% for field in optional_form %}{{ field|as_hidden }}{% endfor %}
-      {% endfor %}
-    {% endif %}
-    {% if additional_forms %}
-      {% for additional_form in additional_forms %}
-        {% for field in additional_form %}{{ field|as_hidden }}{% endfor %}
-      {% endfor %}
-    {% endif %}
+    {% for optional_form in optional_forms %}
+      {% for field in optional_form %}{{ field|as_hidden }}{% endfor %}
+    {% endfor %}
+    {% for additional_form in additional_forms %}
+      {% for field in additional_form %}{{ field|as_hidden }}{% endfor %}
+    {% endfor %}
     <figure class="fr-content-media">
       <div id="map-container"
            class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
