@@ -174,9 +174,14 @@
              v-if="(mode === 'plantation' || mode === 'read_only')">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
+
+            <div v-if="conditions.status === 'loading'"
+                 class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+
             <div id="conditions"
-                 class="fr-px-1w fr-pb-1w"
-                 v-if="conditions.status === 'ok' && conditions.conditions.length > 0">
+                 :class="conditions.status"
+                 class="fr-px-1w fr-pb-2w"
+                 v-if="conditions.conditions.length > 0">
               <div class="condition-hint" v-for="condition in conditions.conditions">
                 <p v-if="condition.hint">
                   <span class="fr-hint-text fr-mb-1w" v-html="condition.hint"></span>
@@ -193,8 +198,6 @@
                 </div>
               </div>
             </div>
-
-            <div v-else class="fr-px-1w fr-py-2w">Calcul en cours…</div>
 
           </div>
         </div>
