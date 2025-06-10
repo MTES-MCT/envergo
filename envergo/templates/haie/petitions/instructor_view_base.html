@@ -17,22 +17,34 @@
                 <ul class="fr-sidemenu__list">
 
                   {% block project_sidemenu %}
-                    <li class="fr-sidemenu__item fr-sidemenu__item--active">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
-                         aria-current="page">Informations générales</a>
-                    </li>
-                    {% for regulation in moulinette.regulations %}
-                      <li class="fr-sidemenu__item {% if regulation.slug == current_regulation.slug %}fr-sidemenu__item--active{% endif %}">
+                    {% with request.resolver_match.url_name as url_name %}
+                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_view' %} fr-sidemenu__item--active{% endif %}">
                         <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}#project-specifications-instructor">
-                        {{ regulation }}</a>
+                           href="{% url 'petition_project_instructor_view' petition_project.reference %}"
+                           {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
+                        Informations générales</a>
                       </li>
-                    {% endfor %}
-                    <li class="fr-sidemenu__item">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor">Formulaire rempli sur Démarches simplifiées</a>
-                    </li>
+                      {% for regulation in moulinette.regulations %}
+                        <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
+                          <a class="fr-sidemenu__link"
+                             href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
+                             {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
+                          {{ regulation }}</a>
+                        </li>
+                      {% endfor %}
+                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_ds_view' %} fr-sidemenu__item--active{% endif %}">
+                        <a class="fr-sidemenu__link"
+                           href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}"
+                           {% if url_name == 'petition_project_instructor_dossier_ds_view' %}aria-current="page"{% endif %}>
+                        Formulaire rempli sur Démarches simplifiées</a>
+                      </li>
+                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_notes_view' %} fr-sidemenu__item--active{% endif %}">
+                        <a class="fr-sidemenu__link"
+                           href="{% url 'petition_project_instructor_notes_view' petition_project.reference %}"
+                           {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
+                        Notes libres pour l'instruction</a>
+                      </li>
+                    {% endwith %}
                   {% endblock %}
 
                 </ul>
