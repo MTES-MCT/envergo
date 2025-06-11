@@ -407,7 +407,9 @@ class NormandieQualityCondition(PlantationCondition):
 
     @property
     def hint(self):
-        lines = [f"Linéaire attendu en compensation : {self.context["lpm"]} m."]
+        lines = [
+            f"<strong>Linéaire attendu en compensation : {self.context["lpm"]} m.</strong><br>"
+        ]
 
         if isclose(self.R, self.catalog["aggregated_r"]) and not isclose(
             self.context["lpm"], self.context["reduced_lpm"]
