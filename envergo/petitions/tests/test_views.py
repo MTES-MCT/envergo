@@ -11,7 +11,7 @@ from envergo.geodata.tests.factories import Department34Factory, DepartmentFacto
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.models import DOSSIER_STATES
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -371,3 +371,22 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         in response.get("Content-Disposition")
     )
     # TODO: check the features
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_invitation_token(client, haie_user, site):
+    """Test Geopkg download"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    invitation_token_url = reverse(
+        "petition_project_invitation_token",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    token = InvitationToken.objects.get()
+    assert token.created_by == haie_user
+    assert token.petition_project == project
+    assert token.token == response.json()["invitation_token"]

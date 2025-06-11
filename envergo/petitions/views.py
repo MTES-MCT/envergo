@@ -1,5 +1,6 @@
 import logging
 import os
+import secrets
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlparse
@@ -26,7 +27,7 @@ from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
-from envergo.petitions.models import DOSSIER_STATES, PetitionProject
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -694,3 +695,21 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+
+class PetitionProjectInvitationToken(SingleObjectMixin, View):
+    """Create an invitation token for a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+        token = InvitationToken.objects.create(
+            token=secrets.token_urlsafe(32),
+            created_by=request.user,
+            petition_project=project,
+        )
+
+        return JsonResponse({"invitation_token": token.token})
