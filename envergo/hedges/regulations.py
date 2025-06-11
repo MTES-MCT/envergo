@@ -4,6 +4,8 @@ from math import isclose
 
 from django.utils.safestring import mark_safe
 
+from envergo.evaluations.models import RESULTS
+
 
 class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
@@ -604,6 +606,10 @@ class TreeAlignmentsCondition(PlantationCondition):
         à %(minimum_length_to_plant_aa_bord_voie)s m.
         <br>Il manque au moins %(aa_bord_voie_delta)s m.
     """
+
+    def must_display(self):
+        """Should the condition be displayed?"""
+        return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
         length_to_remove_aa_bord_voie = sum(
