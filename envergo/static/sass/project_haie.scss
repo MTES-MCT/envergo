@@ -309,6 +309,11 @@ div#app {
         }
 
         div#conditions {
+          &.loading {
+            --text-title-grey: var(--text-disabled-grey);
+            color: var(--text-disabled-grey);
+          }
+
           .fr-badge {
             margin-top: 0.2em;
 
