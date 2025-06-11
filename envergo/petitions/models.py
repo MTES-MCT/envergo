@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -205,3 +205,46 @@ class PetitionProject(models.Model):
             False,
         )
         return moulinette
+
+
+def one_month_from_now():
+    return timezone.now() + timedelta(days=30)
+
+
+class InvitationToken(models.Model):
+    """A token used to invite a user to join a petition project."""
+
+    token = models.CharField("Jeton", max_length=64, unique=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Compte invitant",
+    )
+    petition_project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        related_name="invitation_tokens",
+        verbose_name="Projet",
+    )
+    valid_until = models.DateTimeField(
+        "Valide jusqu'au",
+        help_text="Date d'expiration du jeton",
+        null=True,
+        blank=True,
+        default=one_month_from_now,
+    )
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="invitation_tokens",
+        verbose_name="Utilisateur invité",
+    )
+
+    # Meta fields
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Jeton d'invitation"
+        verbose_name_plural = "Jetons d'invitation"
