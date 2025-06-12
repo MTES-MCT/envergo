@@ -293,6 +293,7 @@ def test_amenagement_login_on_haie_site(amenagement_user, client):
 def test_haie_login_on_haie_site(haie_user, client):
     assert haie_user.access_haie
     assert not haie_user.is_confirmed_by_admin
+    assert not haie_user.is_instructor
 
     res = client.get("/")
     assert not res.wsgi_request.user.is_authenticated
@@ -304,9 +305,11 @@ def test_haie_login_on_haie_site(haie_user, client):
 
     haie_user.is_confirmed_by_admin = True
     haie_user.save()
+    assert haie_user.is_instructor
     res = client.post(login_url, {"username": haie_user.email, "password": "password"})
     assert res.status_code == 302
     assert res.wsgi_request.user.is_authenticated
+    assert res.url == "/projet/liste"
 
 
 def test_user_access_without_otp(settings, user, client):
