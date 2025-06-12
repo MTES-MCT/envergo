@@ -37,6 +37,7 @@
         {% include '_checkbox_snippet.html' with field=form.activate %}
 
         <fieldset>
+          {% if form.help_text %}<p class="fr-hint-text fr-mb-3w">{{ form.help_text|safe }}</p>{% endif %}
           {% for field in form %}
             {% if field.name != "activate" %}
               {% if field|is_checkbox %}

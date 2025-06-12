@@ -194,6 +194,16 @@ class TerrainAssiette(SelfDeclarationMixin, CriterionEvaluator):
 
 
 class OptionalFormMixin:
+    """Mixin for optional form"""
+
+    help_text = None
+
+    def __init__(self, help_text=None, *args, **kwargs):
+        """Add form help_text to be displayed in optional question fieldset"""
+        super().__init__(*args, **kwargs)
+        if help_text is not None:
+            self.help_text = help_text
+
     @property
     def prefixed_cleaned_data(self):
         """Return cleaned data but use prefixed keys.
@@ -237,12 +247,12 @@ PISTE_CYCLABLE_CHOICES = (
 
 class RoutesForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_06"
+    help_text = """Rubrique 6 de l'évaluation environnementale.<br>
+    Cumul autorisé depuis le 16 mai 2017
+    """
 
     activate = forms.BooleanField(
         label="Aménagement de voirie",
-        help_text="""Rubrique 6 de l'évaluation environnementale.<br>
-        Cumul autorisé depuis le 16 mai 2017
-        """,
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -342,10 +352,10 @@ LOCALISATION_CHOICES = (
 
 class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_30"
+    help_text = "Rubrique 30 de l'évaluation environnementale."
 
     activate = forms.BooleanField(
         label="Installation photovoltaïque",
-        help_text="Rubrique 30 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -434,10 +444,10 @@ NB_EMPLACEMENTS_CHOICES = (
 
 class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_41"
+    help_text = "Rubrique 41 de l'évaluation environnementale."
 
     activate = forms.BooleanField(
         label="Aire de stationnement",
-        help_text="Rubrique 41 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -493,10 +503,10 @@ NB_EMPLACEMENTS_CAMPING_CHOICES = (
 
 class CampingForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_42"
+    help_text = "Rubrique 42 de l'évaluation environnementale."
 
     activate = forms.BooleanField(
         label="Camping",
-        help_text="Rubrique 42 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -549,10 +559,10 @@ CAPACITE_ACCUEIL_CHOICES = (
 
 class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
+    help_text = "Rubrique 44 de l'évaluation environnementale."
 
     activate = forms.BooleanField(
         label="Équipement de sport, de loisirs ou culturel",
-        help_text="Rubrique 44 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -611,10 +621,10 @@ PREMIER_BOISEMENT_CHOICE = DEFRICHEMENT_DEBOISEMENT_CHOICE
 
 class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_47"
+    help_text = "Rubrique 47 de l'évaluation environnementale."
 
     activate = forms.BooleanField(
         label="Défrichement, déboisement ou boisement",
-        help_text="Rubrique 47 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
