@@ -2,6 +2,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from envergo.petitions.views import (
+    PetitionProjectAcceptInvitation,
     PetitionProjectAutoRedirection,
     PetitionProjectCreate,
     PetitionProjectDetail,
@@ -10,6 +11,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorView,
+    PetitionProjectInvitationToken,
     PetitionProjectList,
 )
 
@@ -77,5 +79,15 @@ urlpatterns = [
         "<slug:reference>/haies.gpkg",
         PetitionProjectHedgeDataExport.as_view(),
         name="petition_project_hedge_data_export",
+    ),
+    path(
+        "<slug:reference>/invitations/",
+        PetitionProjectInvitationToken.as_view(),
+        name="petition_project_invitation_token",
+    ),
+    path(
+        "<slug:reference>/invitations/<slug:token>/",
+        PetitionProjectAcceptInvitation.as_view(),
+        name="petition_project_accept_invitation",
     ),
 ]

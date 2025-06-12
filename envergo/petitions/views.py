@@ -26,7 +26,7 @@ from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
-from envergo.petitions.models import DOSSIER_STATES, PetitionProject
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -536,12 +536,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
         user = request.user
-        department = self.object.department
 
         # check if user is authorize, else returns 403 error
-        if user.is_superuser or all(
-            (user.is_instructor, department in user.departments.defer("geometry").all())
-        ):
+        if self.object.is_instructor_authorized(user):
             if self.matomo_tag:
                 log_event(
                     "projet",
@@ -583,6 +580,12 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         context["matomo_custom_url"] = self.request.build_absolute_uri(
             matomo_custom_path
+        )
+        context["invitation_token_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token",
+                kwargs={"reference": self.object.reference},
+            )
         )
 
         return context
@@ -738,3 +741,71 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+
+class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
+    """Create an invitation token for a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+
+        if project.is_instructor_authorized(request.user):
+            token = InvitationToken.objects.create(
+                created_by=request.user,
+                petition_project=project,
+            )
+            invitation_url = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project_accept_invitation",
+                    kwargs={"reference": project.reference, "token": token.token},
+                )
+            )
+            return JsonResponse({"invitation_url": invitation_url})
+        else:
+            return JsonResponse(
+                {
+                    "error": "You are not authorized to create an invitation token for this project."
+                },
+                status=403,
+            )
+
+
+class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
+    """accept an invitation to a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def dispatch(self, request, *args, **kwargs):
+        project = self.get_object()
+        self.request.invitation = InvitationToken.objects.filter(
+            petition_project=project, token=kwargs.get("token")
+        ).first()
+
+        if not self.request.invitation or not self.request.invitation.is_valid():
+            return TemplateResponse(
+                request,
+                template="haie/petitions/invalid_invitation_token.html",
+                status=403,
+            )
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+
+        self.request.invitation.user = request.user
+        self.request.invitation.save()
+
+        return redirect(
+            reverse(
+                "petition_project_instructor_view",
+                kwargs={
+                    "reference": self.request.invitation.petition_project.reference
+                },
+            )
+        )
