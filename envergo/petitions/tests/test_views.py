@@ -384,6 +384,25 @@ def test_petition_project_invitation_token(client, haie_user, site):
         "petition_project_invitation_token",
         kwargs={"reference": project.reference},
     )
+
+    # no user loged in
+    response = client.post(invitation_token_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # user not authorized
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    assert response.status_code == 403
+    assert (
+        "You are not authorized to create an invitation token for this project."
+        == response.json()["error"]
+    )
+
+    # user authorized
+    haie_user.departments.add(project.department)
+    haie_user.is_confirmed_by_admin = True
+    haie_user.save()
     client.force_login(haie_user)
     response = client.post(invitation_token_url)
     token = InvitationToken.objects.get()

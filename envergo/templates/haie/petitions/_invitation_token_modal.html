@@ -1,0 +1,39 @@
+<dialog aria-labelledby="invitation-token-modal-title"
+        role="dialog"
+        id="invitation-token-modal"
+        class="fr-modal fr-modal-lg">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="invitation-token-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="invitation-token-modal-title" class="fr-modal__title">Inviter une personne à consulter le dossier</h2>
+            <div id="invitation-token-modal-loading" class="fr-hint-text">Création de l'invitation en cours…</div>
+            <div id="invitation-token-modal-content">
+              <p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
+              <pre>
+{% include 'haie/petitions/_invitation_token_email_body.txt' %}
+                        </pre>
+              <p>
+                <button class="fr-btn">Copier le message dans le presse-papier</button>
+              </p>
+              <p>
+                Avec le lien contenu dans ce message, le destinataire pourra consulter depuis son compte cette page web
+                présentant les informations permettant l'instruction du dossier.
+              </p>
+            </div>
+            <div id="invitation-token-modal-error" class="fr-alert fr-alert--error">
+              <h3 class="fr-alert__title">Nous n'avons pas pu créer l'invitation.</h3>
+              <p>Veuillez réessayer ultérieurement.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>

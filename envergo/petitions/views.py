@@ -529,13 +529,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
         user = request.user
-        department = self.object.department
 
         # check if user is authorize, else returns 403 error
-        if user.is_superuser or all(
-            (user.is_instructor, department in user.departments.defer("geometry").all())
-        ):
-
+        if self.object.is_instructor_authorized(user):
             log_event(
                 "projet",
                 self.matomo_tag,
@@ -569,6 +565,12 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             ],
         )
         context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+        context["invitation_token_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token",
+                kwargs={"reference": self.object.reference},
+            )
+        )
 
         return context
 
@@ -697,7 +699,7 @@ class PetitionProjectHedgeDataExport(DetailView):
         return response
 
 
-class PetitionProjectInvitationToken(SingleObjectMixin, View):
+class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
     """Create an invitation token for a petition project"""
 
     model = PetitionProject
@@ -706,10 +708,19 @@ class PetitionProjectInvitationToken(SingleObjectMixin, View):
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
-        token = InvitationToken.objects.create(
-            token=secrets.token_urlsafe(32),
-            created_by=request.user,
-            petition_project=project,
-        )
 
-        return JsonResponse({"invitation_token": token.token})
+        if project.is_instructor_authorized(request.user):
+            token = InvitationToken.objects.create(
+                token=secrets.token_urlsafe(32),
+                created_by=request.user,
+                petition_project=project,
+            )
+
+            return JsonResponse({"invitation_token": token.token})
+        else:
+            return JsonResponse(
+                {
+                    "error": "You are not authorized to create an invitation token for this project."
+                },
+                status=403,
+            )

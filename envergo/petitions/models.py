@@ -206,6 +206,12 @@ class PetitionProject(models.Model):
         )
         return moulinette
 
+    def is_instructor_authorized(self, user):
+        department = self.department
+        return user.is_superuser or all(
+            (user.is_instructor, department in user.departments.defer("geometry").all())
+        )
+
 
 def one_month_from_now():
     return timezone.now() + timedelta(days=30)
