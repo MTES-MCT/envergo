@@ -209,8 +209,20 @@ class PetitionProject(models.Model):
 
     def is_instructor_authorized(self, user):
         department = self.department
-        return user.is_superuser or all(
-            (user.is_instructor, department in user.departments.defer("geometry").all())
+        return (
+            user.is_superuser
+            or all(
+                (
+                    user.is_instructor,
+                    department in user.departments.defer("geometry").all(),
+                )
+            )
+            or all(
+                (
+                    user.is_instructor,
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                )
+            )
         )
 
 

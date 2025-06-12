@@ -268,6 +268,17 @@ def test_petition_project_instructor_view_requires_authentication(
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
+    # Simulate instructor user with invitation token, should be authorized
+    request.user = instructor_haie_user
+    InvitationTokenFactory(user=instructor_haie_user, petition_project=project)
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 403
+    assert response.status_code == 200
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
@@ -410,7 +421,7 @@ def test_petition_project_invitation_token(client, haie_user, site):
     token = InvitationToken.objects.get()
     assert token.created_by == haie_user
     assert token.petition_project == project
-    assert token.token == response.json()["invitation_token"]
+    assert token.token in response.json()["invitation_url"]
 
 
 @pytest.mark.urls("config.urls_haie")
