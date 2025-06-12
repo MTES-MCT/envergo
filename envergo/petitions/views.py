@@ -505,6 +505,14 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
+
         return context
 
 
@@ -549,12 +557,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 request, template="haie/petitions/403.html", status=403
             )
 
-    def get_matomo_custom_url(self):
-        """Get matomo custom url, replacing project reference by "+ref_projet+"""
-        current_path = self.request.path
-        matomo_custom_path = current_path.replace(self.object.reference, "+ref_projet+")
-        return self.request.build_absolute_uri(matomo_custom_path)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -575,7 +577,13 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         context["plantation_url"] = plantation_url
-        context["matomo_custom_url"] = self.get_matomo_custom_url()
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
 
         return context
 
