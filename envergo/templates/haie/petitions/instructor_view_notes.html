@@ -12,8 +12,6 @@
 
   <div class="project-inner-content">
 
-    {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
-
     <form method="post"
           action="{% url 'petition_project_instructor_view' petition_project.reference %}">
       {% csrf_token %}
@@ -32,10 +30,6 @@
     </form>
 
   </div>
-{% endblock %}
-
-{% block extra_body %}
-  {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
 {% endblock %}
 
 {% block extra_js %}
