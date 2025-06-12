@@ -122,7 +122,7 @@
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
-  <script defer src="{% static 'js/libs/2150_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/demos_map.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 
 
@@ -135,6 +135,23 @@
     var POLYGONS = {{ polygons|default:"[]"|safe }};
     var ENVELOPE = {{ envelope|default:"{}"|safe }};
     var DEBUG = {{ debug|yesno:'true,false' }};
+    var LEGEND = [];
+
+    window.addEventListener('load', function () {
+      const options = {
+        displayMarker: DISPLAY_MARKER,
+        centerMap: CENTER_MAP,
+        defaultZoom: DEFAULT_ZOOM,
+        latFieldId: LAT_FIELD_ID,
+        lngFieldId: LNG_FIELD_ID,
+        polygons: POLYGONS,
+        envelope: ENVELOPE,
+        legend: LEGEND,
+        debug: DEBUG,
+      }
+      map = new Map(options);
+    });
+
   </script>
 
 {% endblock %}
