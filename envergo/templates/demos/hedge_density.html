@@ -33,31 +33,35 @@
         {% if result_available %}
           <h2 class="fr-h4">Résultat du calcul</h2>
 
-          <table>
+          <table class="fr-mb-3w">
             <caption>Résultat du calcul de densité de haie</caption>
             <thead>
               <tr>
                 <th></th>
                 <th>Rayon 200 m</th>
+                <th>Rayon 400 m</th>
                 <th>Rayon 5 km</th>
               </tr>
             </thead>
 
             <tbody>
               <tr>
-                <th>Linéaire</th>
-                <td></td>
-                <td></td>
+                <th scope="row">Linéaire</th>
+                <td>{{ length_200|floatformat:"0g" }} ml</td>
+                <td>{{ length_400|floatformat:"0g" }} ml</td>
+                <td>{{ length_5000|floatformat:"0g" }} ml</td>
               </tr>
               <tr>
-                <th>Surface</th>
-                <td></td>
-                <td></td>
+                <th scope="row">Surface</th>
+                <td>{{ area_200_ha|floatformat:"g" }} ha</td>
+                <td>{{ area_400_ha|floatformat:"g" }} ha</td>
+                <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
               </tr>
               <tr>
-                <th>Densité</th>
-                <td></td>
-                <td></td>
+                <th scope="row">Densité</th>
+                <td>{{ density_200|floatformat:"g" }} ml/ha</td>
+                <td>{{ density_400|floatformat:"g" }} ml/ha</td>
+                <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
               </tr>
             </tbody>
           </table>

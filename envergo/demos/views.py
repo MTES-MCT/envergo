@@ -8,7 +8,10 @@ from django.views.generic import FormView
 from scipy.interpolate import griddata
 
 from envergo.geodata.forms import LatLngForm
-from envergo.geodata.utils import get_catchment_area_pixel_values
+from envergo.geodata.utils import (
+    compute_hedge_density_around_point,
+    get_catchment_area_pixel_values,
+)
 from envergo.utils.urls import update_qs
 
 EPSG_WGS84 = 4326
@@ -17,6 +20,7 @@ EPSG_LAMB93 = 2154
 
 class LatLngDemoMixin:
     mtm_campaign_tag = "demos"
+    default_lng_lat = [-4.03177, 48.38986]  # Finistère
 
     def get_initial(self):
         return self.request.GET
@@ -58,8 +62,14 @@ class LatLngDemoMixin:
             context["default_zoom"] = 17
         else:
             context["display_marker"] = False
-            context["center_map"] = [-4.03177, 48.38986]  # Somewhere in Finistère
+            context["center_map"] = self.default_lng_lat
             context["default_zoom"] = 8
+
+        form = context["form"]
+        context["result_available"] = False
+        if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
+            lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
+            context.update(self.get_result_data(lng, lat))
 
         return context
 
@@ -68,6 +78,26 @@ class HedgeDensity(LatLngDemoMixin, FormView):
     template_name = "demos/hedge_density.html"
     form_class = LatLngForm
     mtm_campaign_tag = "share-demo-densite-haie"
+    default_lng_lat = [-0.274314, 49.276204]
+
+    def get_result_data(self, lng, lat):
+        lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        density_200 = compute_hedge_density_around_point(lng_lat, 200)
+        density_400 = compute_hedge_density_around_point(lng_lat, 400)
+        density_5000 = compute_hedge_density_around_point(lng_lat, 5000)
+        context = {
+            "result_available": True,
+            "length_200": density_200["artifacts"]["length"],
+            "area_200_ha": density_200["artifacts"]["area_ha"],
+            "density_200": density_200["density"],
+            "length_400": density_400["artifacts"]["length"],
+            "area_400_ha": density_400["artifacts"]["area_ha"],
+            "density_400": density_400["density"],
+            "length_5000": density_5000["artifacts"]["length"],
+            "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "density_5000": density_5000["density"],
+        }
+        return context
 
 
 class CatchmentArea(LatLngDemoMixin, FormView):
@@ -75,70 +105,59 @@ class CatchmentArea(LatLngDemoMixin, FormView):
     form_class = LatLngForm
     mtm_campaign_tag = "share-demo-bv"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_result_data(self, lng, lat):
+        context = {}
+        lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+        lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 
-        form = context["form"]
-        context["result_available"] = False
-        if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
-            lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
+        # Fetch the grid of values to display on the map
+        polygons = self.get_pixel_polygons(lng, lat)
+        context["polygons"] = json.dumps(polygons)
 
-            lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-            lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
+        # Fetch the envelope that is used to clip raster values
+        # (for debug purpose only)
+        envelope = self.get_envelope(lng, lat)
+        context["envelope"] = json.dumps(envelope)
 
-            # Fetch the grid of values to display on the map
-            polygons = self.get_pixel_polygons(lng, lat)
-            context["polygons"] = json.dumps(polygons)
+        pixels = get_catchment_area_pixel_values(lng, lat)
+        if not pixels:
+            return context
 
-            # Fetch the envelope that is used to clip raster values
-            # (for debug purpose only)
-            envelope = self.get_envelope(lng, lat)
-            context["envelope"] = json.dumps(envelope)
+        coords = [(x, y) for x, y, v in pixels]
+        values = [int(v) for x, y, v in pixels]
+        interpolated_area = griddata(coords, values, lamb93_coords, method="linear")[0]
+        # If the interpolation fails because of missing data, we don't display anything
+        # it should not happen so we don't bother display a real error message
+        if np.isnan(interpolated_area):
+            return context
 
-            pixels = get_catchment_area_pixel_values(lng, lat)
-            if not pixels:
-                return context
+        # We get the values as a 1D array, we want to display as a 2D grid
+        # for debug purpose
+        try:
+            values_grid_width = int(sqrt(len(pixels)))
+            context["values"] = np.array(values).reshape(values_grid_width, -1).tolist()
+        except ValueError:
+            # We are missing data so we can't display a nice grid
+            context["flat_values"] = values
 
-            coords = [(x, y) for x, y, v in pixels]
-            values = [int(v) for x, y, v in pixels]
-            interpolated_area = griddata(
-                coords, values, lamb93_coords, method="linear"
-            )[0]
-            # If the interpolation fails because of missing data, we don't display anything
-            # it should not happen so we don't bother display a real error message
-            if np.isnan(interpolated_area):
-                return context
+        # The value we display is actually rounded to the nearest 500m²
+        catchment_area = int(interpolated_area)
+        catchment_area_500 = round(catchment_area / 500) * 500
 
-            # We get the values as a 1D array, we want to display as a 2D grid
-            # for debug purpose
-            try:
-                values_grid_width = int(sqrt(len(pixels)))
-                context["values"] = (
-                    np.array(values).reshape(values_grid_width, -1).tolist()
-                )
-            except ValueError:
-                # We are missing data so we can't display a nice grid
-                context["flat_values"] = values
+        # Compute values relevant to the moulinette result
+        if catchment_area_500 < 9000:
+            value_action_requise = max(0, 9000 - catchment_area_500)
+            value_soumis = 10000
+        else:
+            value_action_requise = 500
+            value_soumis = 10000
 
-            # The value we display is actually rounded to the nearest 500m²
-            catchment_area = int(interpolated_area)
-            catchment_area_500 = round(catchment_area / 500) * 500
-
-            # Compute values relevant to the moulinette result
-            if catchment_area_500 < 9000:
-                value_action_requise = max(0, 9000 - catchment_area_500)
-                value_soumis = 10000
-            else:
-                value_action_requise = 500
-                value_soumis = 10000
-
-            context["result_available"] = True
-            context["catchment_area"] = catchment_area
-            context["catchment_area_500"] = catchment_area_500
-            context["interpolated_area"] = interpolated_area
-            context["value_action_requise"] = value_action_requise
-            context["value_soumis"] = value_soumis
-
+        context["result_available"] = True
+        context["catchment_area"] = catchment_area
+        context["catchment_area_500"] = catchment_area_500
+        context["interpolated_area"] = interpolated_area
+        context["value_action_requise"] = value_action_requise
+        context["value_soumis"] = value_soumis
         return context
 
     def get_pixel_polygons(self, lng, lat):
