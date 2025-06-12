@@ -98,7 +98,6 @@ class SurfacePlancherForm(forms.Form):
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
-        display_help_text="",
     )
 
     def __init__(self, *args, **kwargs):
@@ -241,6 +240,9 @@ class RoutesForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Aménagement de voirie",
+        help_text="""Rubrique 6 de l'évaluation environnementale.<br>
+        Cumul autorisé depuis le 16 mai 2017
+        """,
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -262,7 +264,6 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         choices=extract_choices(VOIE_PRIVEE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
         get_display_value=extract_display_function(VOIE_PRIVEE_CHOICES),
     )
     piste_cyclable = DisplayChoiceField(
@@ -272,7 +273,6 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         choices=extract_choices(PISTE_CYCLABLE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
         get_display_value=extract_display_function(PISTE_CYCLABLE_CHOICES),
     )
 
@@ -347,6 +347,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Installation photovoltaïque",
+        help_text="Rubrique 30 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -356,7 +357,6 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
         choices=extract_choices(PUISSANCE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
         get_display_value=extract_display_function(PUISSANCE_CHOICES),
     )
     localisation = DisplayChoiceField(
@@ -443,6 +443,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Aire de stationnement",
+        help_text="Rubrique 41 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -453,7 +454,6 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=extract_choices(TYPE_STATIONNEMENT_CHOICES),
-        display_help_text="",
         get_display_value=extract_display_function(TYPE_STATIONNEMENT_CHOICES),
     )
     nb_emplacements = DisplayChoiceField(
@@ -503,6 +503,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Camping",
+        help_text="Rubrique 42 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -553,6 +554,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Équipement de sport, de loisirs ou culturel",
+        help_text="Rubrique 44 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -609,6 +611,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Défrichement, déboisement ou boisement",
+        help_text="Rubrique 47 de l'évaluation environnementale.",
         required=True,
         widget=forms.CheckboxInput,
     )
