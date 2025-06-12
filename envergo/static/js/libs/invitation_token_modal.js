@@ -30,8 +30,8 @@
         })
           .then(response => response.json())
           .then(data => {
-            if (data.invitation_token) {
-              this.displayToken(data.invitation_token)
+            if (data.invitation_url) {
+              this.displayToken(data.invitation_url)
             } else {
               throw data;
             }
@@ -42,11 +42,11 @@
           });
       };
 
-      InvitationTokenModal.prototype.displayToken = function (token) {
+      InvitationTokenModal.prototype.displayToken = function (invitation_url) {
         this.modalError.style.display = "none"
         this.modalLoader.style.display = "none"
         this.modalContent.style.display = "inherit"
-        this.urlElt.innerHTML = token
+        this.urlElt.innerHTML = invitation_url
       };
 
       InvitationTokenModal.prototype.displayError = function () {

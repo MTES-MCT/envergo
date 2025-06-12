@@ -1,6 +1,5 @@
 import logging
 import os
-import secrets
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlparse
@@ -711,12 +710,16 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
 
         if project.is_instructor_authorized(request.user):
             token = InvitationToken.objects.create(
-                token=secrets.token_urlsafe(32),
                 created_by=request.user,
                 petition_project=project,
             )
-
-            return JsonResponse({"invitation_token": token.token})
+            invitation_url = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project_accept_invitation",
+                    kwargs={"reference": project.reference, "token": token.token},
+                )
+            )
+            return JsonResponse({"invitation_url": invitation_url})
         else:
             return JsonResponse(
                 {
@@ -724,3 +727,40 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 },
                 status=403,
             )
+
+
+class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
+    """accept an invitation to a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def dispatch(self, request, *args, **kwargs):
+        project = self.get_object()
+        self.request.invitation = InvitationToken.objects.filter(
+            petition_project=project, token=kwargs.get("token")
+        ).first()
+
+        if not self.request.invitation or not self.request.invitation.is_valid():
+            return TemplateResponse(
+                request,
+                template="haie/petitions/invalid_invitation_token.html",
+                status=403,
+            )
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+
+        self.request.invitation.user = request.user
+        self.request.invitation.save()
+
+        return redirect(
+            reverse(
+                "petition_project_instructor_view",
+                kwargs={
+                    "reference": self.request.invitation.petition_project.reference
+                },
+            )
+        )

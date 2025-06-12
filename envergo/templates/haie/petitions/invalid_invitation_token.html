@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Lien non valide{% endblock %}
+
+{% block article %}
+  <h1>Lien non valide</h1>
+
+  <p class="fr-text--lead">
+    Le lien que vous avez utilisé n'est plus valide. Il a peut-être déjà été utilisé ou a expiré.
+    Veuillez contacter la personne qui vous l'a transmis pour obtenir un nouveau lien.
+  </p>
+
+  <p>
+    Vous pouvez également <a href="{% url 'contact_us' %}">contacter l'équipe du Guichet Unique de la Haie</a> pour obtenir de l'aide.
+  </p>
+{% endblock %}

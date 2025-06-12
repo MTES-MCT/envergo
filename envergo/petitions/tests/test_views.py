@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
@@ -16,6 +17,7 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
 )
@@ -376,7 +378,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_invitation_token(client, haie_user, site):
-    """Test Geopkg download"""
+    """Test invitation token creation for petition project"""
 
     ConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -409,3 +411,69 @@ def test_petition_project_invitation_token(client, haie_user, site):
     assert token.created_by == haie_user
     assert token.petition_project == project
     assert token.token == response.json()["invitation_token"]
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_accept_invitation(client, haie_user, site):
+    """Test accepting an invitation token for a petition project"""
+    ConfigHaieFactory()
+    invitation = InvitationTokenFactory()
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+
+    # no user loged in
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 302
+    assert (
+        f"/comptes/connexion/?next=/projet/{invitation.petition_project.reference}/invitations/{invitation.token}/"
+        in response.url
+    )
+
+    # valid token
+    another_user = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+
+    # already used token
+    another_user_again = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user_again)
+    response = client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+    assert response.status_code == 403
+
+    # outdated token
+    invitation = InvitationTokenFactory(
+        petition_project=invitation.petition_project,
+        valid_until=timezone.now() - timezone.timedelta(days=1),
+    )
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403
+
+    # unexpected token
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": "something-farfelue",
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403

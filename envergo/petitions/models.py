@@ -1,4 +1,5 @@
 import logging
+import secrets
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -217,10 +218,16 @@ def one_month_from_now():
     return timezone.now() + timedelta(days=30)
 
 
+def generate_token():
+    return secrets.token_urlsafe(32)
+
+
 class InvitationToken(models.Model):
     """A token used to invite a user to join a petition project."""
 
-    token = models.CharField("Jeton", max_length=64, unique=True)
+    token = models.CharField(
+        "Jeton", max_length=64, unique=True, default=generate_token
+    )
     created_by = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
@@ -254,3 +261,7 @@ class InvitationToken(models.Model):
     class Meta:
         verbose_name = "Jeton d'invitation"
         verbose_name_plural = "Jetons d'invitation"
+
+    def is_valid(self):
+        """Check if the token is still valid."""
+        return self.user_id is None and self.valid_until >= timezone.now()
