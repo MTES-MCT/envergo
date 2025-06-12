@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -24,7 +24,7 @@ from shapely.ops import transform
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
+from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
 from envergo.petitions.models import DOSSIER_STATES, PetitionProject
 from envergo.petitions.services import (
@@ -504,6 +504,14 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
+
         return context
 
 
@@ -518,7 +526,6 @@ class PetitionProjectAutoRedirection(View):
 class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     """Mixin for petition project instructor views"""
 
-    matomo_tag = "consultation_i"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
@@ -534,14 +541,14 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if user.is_superuser or all(
             (user.is_instructor, department in user.departments.defer("geometry").all())
         ):
-
-            log_event(
-                "projet",
-                self.matomo_tag,
-                self.request,
-                **self.object.get_log_event_data(),
-                **get_matomo_tags(self.request),
-            )
+            if self.matomo_tag:
+                log_event(
+                    "projet",
+                    self.matomo_tag,
+                    self.request,
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
             return result
 
         else:
@@ -568,6 +575,13 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             ],
         )
         context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
 
         return context
 
@@ -603,12 +617,33 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
+class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_regulation.html"
+    matomo_tag = ""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        regulation_slug = self.kwargs.get("regulation")
+        if regulation_slug:
+            try:
+                current_regulation = context["moulinette"].regulations.get(
+                    regulation=regulation_slug
+                )
+            except Regulation.DoesNotExist:
+                raise Http404()
+
+            context["current_regulation"] = current_regulation
+        return context
+
+
 class PetitionProjectInstructorDossierDSView(
     PetitionProjectInstructorMixin, DetailView
 ):
     """View for petition project page with demarches simplifiées data"""
 
-    template_name = "haie/petitions/instructor_dossier_ds_view.html"
+    template_name = "haie/petitions/instructor_view_dossier_ds.html"
     matomo_tag = "consultation_i_ds"
 
     def get_context_data(self, **kwargs):
@@ -638,6 +673,13 @@ class PetitionProjectInstructorDossierDSView(
             )
 
         return context
+
+
+class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_notes.html"
+    matomo_tag = ""
 
 
 class PetitionProjectHedgeDataExport(DetailView):
