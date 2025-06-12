@@ -174,15 +174,21 @@
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
             <div id="conditions" class="fr-px-1w fr-pb-1w">
+              <div class="condition-hint" v-for="condition in conditions">
+                <p class="fr-my-1w"
+                   v-if="condition.label === 'Type de haie plantée' && condition.hint">
+                  <span v-html="condition.hint"></span>
+                </p>
+              </div>
 
-              <div v-for="condition in conditions">
+              <div class="condition-content" v-for="condition in conditions">
                 <div>
                   <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
                 </div>
                 <div>
                   <h6>[[ condition.label ]]</h6>
-                  <p v-if="condition.hint">
+                  <p v-if="condition.hint && condition.label !== 'Type de haie plantée'">
                     <span class="fr-hint-text fr-mb-1w" v-html="condition.hint"></span>
                   </p>
                   <p v-html="condition.text"></p>
