@@ -1,5 +1,6 @@
 import json
 from math import sqrt
+from types import SimpleNamespace
 
 import numpy as np
 from django.contrib.gis.geos import Point
@@ -11,7 +12,9 @@ from envergo.geodata.forms import LatLngForm
 from envergo.geodata.utils import (
     compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
+    to_geojson,
 )
+from envergo.moulinette.regulations import MapPolygon
 from envergo.utils.urls import update_qs
 
 EPSG_WGS84 = 4326
@@ -85,17 +88,67 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         density_200 = compute_hedge_density_around_point(lng_lat, 200)
         density_400 = compute_hedge_density_around_point(lng_lat, 400)
         density_5000 = compute_hedge_density_around_point(lng_lat, 5000)
+
+        polygons = []
+        polygons.append(
+            MapPolygon(
+                [
+                    SimpleNamespace(
+                        geometry=density_200["artifacts"]["truncated_circle"]
+                        or density_200["artifacts"]["circle"]
+                    )
+                ],
+                "orange",
+                "200m",
+            )
+        )
+        polygons.append(
+            MapPolygon(
+                [
+                    SimpleNamespace(
+                        geometry=density_400["artifacts"]["truncated_circle"]
+                        or density_400["artifacts"]["circle"]
+                    )
+                ],
+                "green",
+                "400m",
+            )
+        )
+        polygons.append(
+            MapPolygon(
+                [
+                    SimpleNamespace(
+                        geometry=density_5000["artifacts"]["truncated_circle"]
+                        or density_5000["artifacts"]["circle"]
+                    )
+                ],
+                "blue",
+                "5km",
+            )
+        )
+        polygons = [
+            {
+                "polygon": to_geojson(polygon.geometry),
+                "color": polygon.color,
+                "label": polygon.label,
+            }
+            for polygon in polygons
+        ]
         context = {
             "result_available": True,
             "length_200": density_200["artifacts"]["length"],
             "area_200_ha": density_200["artifacts"]["area_ha"],
+            "truncated_circle_200": density_200["artifacts"]["truncated_circle"],
             "density_200": density_200["density"],
             "length_400": density_400["artifacts"]["length"],
             "area_400_ha": density_400["artifacts"]["area_ha"],
+            "truncated_circle_400": density_400["artifacts"]["truncated_circle"],
             "density_400": density_400["density"],
             "length_5000": density_5000["artifacts"]["length"],
             "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "truncated_circle_5000": density_5000["artifacts"]["truncated_circle"],
             "density_5000": density_5000["density"],
+            "polygons": json.dumps(polygons),
         }
         return context
 

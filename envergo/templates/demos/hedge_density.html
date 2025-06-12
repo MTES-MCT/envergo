@@ -149,7 +149,42 @@
         legend: LEGEND,
         debug: DEBUG,
       }
+
+      Map.prototype.drawPolygons = function() {
+        var style = function (polygon) {
+          return {
+            color: polygon.properties.color,
+            fillColor: polygon.properties.color,
+            weight: 2,
+            opacity: 1,
+          };
+        };
+
+        if (this.options.polygons) {
+          var features = this.options.polygons.map(function (polygon) {
+            var polygonJSON = {
+              type: "Feature",
+              geometry: polygon.polygon,
+              properties: {color: polygon.color}
+            };
+            console.log(polygonJSON);
+            return polygonJSON;
+          });
+
+          var geoJSON = L.geoJSON(
+            {
+              type: "FeatureCollection",
+              features: features
+            },
+            {style: style}
+          );
+
+          geoJSON.addTo(this.map);
+
+        }
+      };
       map = new Map(options);
+      map.drawPolygons();
     });
 
   </script>
