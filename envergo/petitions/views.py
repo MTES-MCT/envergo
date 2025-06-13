@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -66,7 +67,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = self.queryset
         elif current_user.is_instructor:
             user_departments = current_user.departments.defer("geometry").all()
-            queryset = self.queryset.filter(department__in=user_departments)
+            queryset = self.queryset.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=current_user.id)
+            ).distinct()
         else:
             queryset = self.queryset.none()
         return queryset
