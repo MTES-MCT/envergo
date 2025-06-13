@@ -251,7 +251,12 @@ class PerimeterAdmin(admin.ModelAdmin):
         "departments",
         "is_activated",
     ]
-    list_filter = ["regulation", "is_activated", MapDepartmentsListFilter]
+    list_filter = [
+        "regulation",
+        "regulations",
+        "is_activated",
+        MapDepartmentsListFilter,
+    ]
     search_fields = ["backend_name", "name", "activation_map__departments"]
     autocomplete_fields = ["activation_map"]
     form = PerimeterAdminForm
