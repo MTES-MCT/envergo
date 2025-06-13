@@ -60,7 +60,6 @@ const showHedgeModal = (hedge, hedgeType) => {
           for (let i = 0; i < field.elements.length; i++) {
             let value = field.elements[i].value;
             if (value === hedge.additionalData[property]) {
-              console.log(value)
               field.elements[i].checked = true
             }
           }
@@ -546,6 +545,9 @@ createApp({
      * Restore hedges for existing inputs.
      */
     const restoreHedges = () => {
+      if(savedHedgesData.length > 0) {
+          helpBubble.value = null;
+      }
       savedHedgesData.forEach(hedgeData => {
         const type = hedgeData.type;
         const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
