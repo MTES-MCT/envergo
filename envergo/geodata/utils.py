@@ -557,7 +557,7 @@ def get_best_epsg_for_location(longitude, latitude) -> int:
     return epsg_code
 
 
-def trim_imerged_land(geom):
+def trim_land(geom):
     """Keep only the part of the geometry that is in France and not in the sea.
 
     Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
@@ -605,7 +605,7 @@ def compute_hedge_density_around_point(point_geos, radius):
     circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
 
     # remove the sea from the circles
-    truncated_circle = trim_imerged_land(circle)
+    truncated_circle = trim_land(circle)
 
     if truncated_circle:
         truncated_circle_m = truncated_circle.transform(
@@ -637,6 +637,7 @@ def compute_hedge_density_around_point(point_geos, radius):
     return {
         "density": density,
         "artifacts": {
+            "circle": circle,
             "truncated_circle": truncated_circle,
             "length": length.standard,
             "area_ha": area_ha,
