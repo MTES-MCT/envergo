@@ -353,10 +353,14 @@ class EspecesProtegeesNormandie(
 
         # Normandie is divided into natural areas with a certain homogeneity of biodiversity.
         # We use the centroid of the hedges to find the zone in which the hedges are located.
-        zonage = Zone.objects.filter(
-            geometry__contains=centroid_geos,
-            map__map_type=MAP_TYPES.zonage,
-        ).first()
+        zonage = (
+            Zone.objects.filter(
+                geometry__contains=centroid_geos,
+                map__map_type=MAP_TYPES.zonage,
+            )
+            .defer("geometry")
+            .first()
+        )
 
         # If the zone is not found, we use a default value for the zone_id.
         zone_id = (

@@ -87,7 +87,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
-              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_REMOVE.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
               <table>
@@ -115,7 +115,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
+                    <td>[[ Math.ceil(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -130,7 +130,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
-              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_PLANT.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.hasCompletedHedge">
               <table>
@@ -159,7 +159,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
+                    <td>[[ Math.ceil(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -169,13 +169,20 @@
             </template>
           </div>
         </div>
+
         <div id="hedge-conditions"
-             v-if="conditions.length > 0 && (mode === 'plantation' || mode === 'read_only')">
+             v-if="mode === 'plantation' || mode === 'read_only'">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
-            <div id="conditions" class="fr-px-1w fr-pb-1w">
 
-              <div v-for="condition in conditions">
+            <div v-if="conditions.status === 'loading'"
+                 class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+
+            <div id="conditions"
+                 :class="conditions.status"
+                 class="fr-px-1w fr-pb-2w "
+                 v-if="conditions.conditions.length > 0">
+              <div v-for="condition in conditions.conditions">
                 <div>
                   <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
@@ -188,10 +195,11 @@
                   <p v-html="condition.text"></p>
                 </div>
               </div>
-
             </div>
+
           </div>
         </div>
+
       </div>
 
       {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}

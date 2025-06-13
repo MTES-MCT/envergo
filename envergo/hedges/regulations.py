@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from math import isclose
+from math import ceil, isclose
 
 from django.utils.safestring import mark_safe
 
@@ -79,13 +79,13 @@ class MinLengthCondition(PlantationCondition):
             "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
-            "minimum_length_to_plant": round(minimum_length_to_plant),
-            "left_to_plant": round(left_to_plant),
-            "length_to_check": round(length_to_check),
+            "minimum_length_to_plant": ceil(minimum_length_to_plant),
+            "left_to_plant": ceil(left_to_plant),
+            "length_to_check": ceil(length_to_check),
         }
 
         if round(length_to_check) < round(minimum_length_to_plant):
-            self.context["reduced_minimum_length_to_plant"] = length_to_check
+            self.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
         return self
 
     def must_display(self):
@@ -112,8 +112,8 @@ class MinLengthPacCondition(PlantationCondition):
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
-            "minimum_length_to_plant_pac": round(minimum_length_to_plant),
-            "left_to_plant_pac": round(left_to_plant),
+            "minimum_length_to_plant_pac": ceil(minimum_length_to_plant),
+            "left_to_plant_pac": ceil(left_to_plant),
         }
         return self
 
@@ -266,7 +266,7 @@ class QualityCondition(PlantationCondition):
             if missing_plantation["alignement"] > 0:
                 t.append(
                     f"""
-                    Il manque au moins {round(missing_plantation['mixte'] + missing_plantation['alignement'])} m
+                    Il manque au moins {ceil(missing_plantation['mixte'] + missing_plantation['alignement'])} m
                     de haie mixte ou alignement d'arbres.
                     """
                 )
@@ -274,7 +274,7 @@ class QualityCondition(PlantationCondition):
             if missing_plantation["mixte"] > 0 or missing_plantation["degradee"] > 0:
                 t.append(
                     f"""
-                    Il manque au moins {round(missing_plantation['mixte'] + missing_plantation['degradee'])} m
+                    Il manque au moins {ceil(missing_plantation['mixte'] + missing_plantation['degradee'])} m
                     de haie mixte.
                 """
                 )
@@ -282,7 +282,7 @@ class QualityCondition(PlantationCondition):
             if missing_plantation["buissonante"] > 0:
                 t.append(
                     f"""
-                    Il manque au moins {round(missing_plantation['buissonante'] + missing_plantation['arbustive'])} m
+                    Il manque au moins {ceil(missing_plantation['buissonante'] + missing_plantation['arbustive'])} m
                     de haie basse ou arbustive.
                 """
                 )
@@ -290,7 +290,7 @@ class QualityCondition(PlantationCondition):
             if missing_plantation["arbustive"] > 0:
                 t.append(
                     f"""
-                    Il manque au moins {round(missing_plantation['arbustive'])} m de haie arbustive.
+                    Il manque au moins {ceil(missing_plantation['arbustive'])} m de haie arbustive.
                 """
                 )
 
@@ -363,8 +363,8 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
-        self.context["lpm"] = round(self.catalog["lpm"])
-        self.context["reduced_lpm"] = round(self.catalog["reduced_lpm"])
+        self.context["lpm"] = ceil(self.catalog["lpm"])
+        self.context["reduced_lpm"] = ceil(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
         self.context["LP"] = LP_origin
         self.context["LPm"] = LPm
@@ -383,24 +383,22 @@ class NormandieQualityCondition(PlantationCondition):
             LC = self.context["LC"]
 
             if LC["mixte"] > 0.0:
-                lines.append(
-                    f"Il manque au moins {round(LC["mixte"])} m de haie mixte."
-                )
+                lines.append(f"Il manque au moins {ceil(LC["mixte"])} m de haie mixte.")
 
             if LC["alignement"] > 0.0:
                 lines.append(
-                    f"Il manque au moins {round(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
+                    f"Il manque au moins {ceil(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
                 )
 
             if LC["arbustive"] > 0.0:
                 lines.append(
-                    f"Il manque au moins {round(LC["arbustive"])} m de haie arbustive ou mixte."
+                    f"Il manque au moins {ceil(LC["arbustive"])} m de haie arbustive ou mixte."
                 )
 
             t1_t2 = LC["degradee"] + LC["buissonnante"]
             if t1_t2 > 0.0:
                 lines.append(
-                    f"Il manque au moins {round(t1_t2)} m de haie buissonnante, arbustive ou mixte."
+                    f"Il manque au moins {ceil(t1_t2)} m de haie buissonnante, arbustive ou mixte."
                 )
 
             t = "<br />\n".join(lines)
@@ -492,8 +490,8 @@ class StrenghteningCondition(PlantationCondition):
             + length_to_plant_by_mode["reconnexion"]
         )
         self.context = {
-            "strengthening_length": round(strengthening_length),
-            "missing_plantation_length": round(
+            "strengthening_length": ceil(strengthening_length),
+            "missing_plantation_length": ceil(
                 0.8 * lpm - length_to_plant_by_mode["plantation"]
             ),
         }
@@ -539,7 +537,7 @@ class LineaireInterchamp(PlantationCondition):
         self.context = {
             "length_to_remove_interchamp": round(length_to_remove),
             "length_to_plant_interchamp": round(length_to_plant),
-            "interchamp_delta": round(max(0, delta)),
+            "interchamp_delta": ceil(max(0, delta)),
         }
         return self
 
@@ -570,7 +568,7 @@ class LineaireSurTalusCondition(PlantationCondition):
         self.context = {
             "length_to_remove_talus": round(length_to_remove),
             "length_to_plant_talus": round(length_to_plant),
-            "talus_delta": round(max(0, delta)),
+            "talus_delta": ceil(max(0, delta)),
         }
         return self
 
