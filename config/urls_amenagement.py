@@ -91,7 +91,12 @@ urlpatterns = [
     path("avis/", include("envergo.evaluations.urls")),
     path(_("moulinette/"), include("envergo.moulinette.urls_amenagement")),
     path(_("geo/"), include("envergo.geodata.urls")),
-    path("demonstrateur-bv/", RedirectView.as_view(pattern_name="demo_catchment_area")),
+    path(
+        "demonstrateur-bv/",
+        RedirectView.as_view(
+            pattern_name="demo_catchment_area", permanent=True, query_string=True
+        ),
+    ),
     path("newsletter/", NewsletterOptIn.as_view(), name="newsletter_opt_in"),
     path(
         "newsletter/confirmation/",

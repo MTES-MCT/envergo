@@ -92,7 +92,6 @@
           geometry: polygon.polygon,
           properties: { color: polygon.color }
         };
-        console.log(polygonJSON);
         return polygonJSON;
       });
 
