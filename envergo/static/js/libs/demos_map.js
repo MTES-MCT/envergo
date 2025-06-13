@@ -9,6 +9,7 @@
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
+    this.drawPolygons();
     if (this.options.debug) {
       this.drawEnvelope();
     }
@@ -78,6 +79,46 @@
 
   Map.prototype.drawPolygons = function () {
 
+    var style = function (polygon) {
+      return {
+        fillColor: getColor(polygon.properties.value),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+      };
+    };
+
+    var onEachFeature = function (feature, layer) {
+      layer.on({
+        mouseover: this.highlightFeature.bind(this),
+        mouseout: this.resetHighlight.bind(this),
+      });
+    };
+
+    if (this.options.polygons) {
+      var features = this.options.polygons.map(function (polygon) {
+        var polygonJSON = {
+          type: "Feature",
+          properties: { value: polygon[2] },
+          geometry: JSON.parse(polygon[3])
+        };
+        return polygonJSON;
+      });
+
+      var geoJSON = L.geoJSON(
+        {
+          type: "FeatureCollection",
+          features: features,
+        },
+        { style: style, onEachFeature: onEachFeature.bind(this) });
+
+      geoJSON.addTo(this.map);
+    }
+  };
+
+  Map.prototype.drawPolygons = function () {
     var style = function (polygon) {
       return {
         fillColor: getColor(polygon.properties.value),
