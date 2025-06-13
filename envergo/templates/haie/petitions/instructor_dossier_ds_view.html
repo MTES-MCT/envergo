@@ -104,6 +104,7 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script>var HEDGE_DATA_ID = "{{ moulinette.catalog.haies.id }}";</script>
   <script>var SOURCE_PAGE = "instruction-ds";</script>
 {% endblock %}

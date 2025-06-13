@@ -4,6 +4,7 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
+from envergo.petitions.models import InvitationToken
 from envergo.users.forms import UserCreationForm
 from envergo.utils.fields import NoIdnEmailField
 
@@ -29,6 +30,13 @@ class UserForm(forms.ModelForm):
             self.fields["departments"].queryset = self.fields[
                 "departments"
             ].queryset.defer("geometry")
+
+
+class InvitationTokenInline(admin.TabularInline):
+    model = InvitationToken
+    extra = 0
+    fk_name = "user"
+    verbose_name_plural = "Droits de consultation"
 
 
 @admin.register(User)
@@ -69,6 +77,7 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ["email", "name", "is_superuser", "is_staff"]
     readonly_fields = ["last_login", "date_joined"]
+    inlines = [InvitationTokenInline]
     search_fields = ["name", "email"]
     ordering = ["email"]
 
