@@ -14,6 +14,26 @@
 
       InvitationTokenModal.prototype.init = function () {
         this.buttonElt.addEventListener('click', this.createToken.bind(this));
+
+        const copyButton = this.modalElt.querySelector("#copy-invitation-token-btn");
+        // The `navigator.clipboard` API is only available on `https` urls
+        if (navigator.clipboard !== undefined) {
+          copyButton.addEventListener('click', () => {
+            let btnText = copyButton.innerText;
+
+            const text = this.modalElt.querySelector("#invitation-token-preformatted-email").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+              copyButton.innerText = "Message copié !";
+            });
+
+            setTimeout(function () {
+              copyButton.innerText = btnText;
+            }, 2000);
+          });
+        } else {
+          copyButton.innerText = "Impossible de copier le message";
+          copyButton.disabled = true;
+        }
       };
 
       InvitationTokenModal.prototype.createToken = function () {
