@@ -9,7 +9,7 @@ class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
-    result: bool  # if None, the condition will be filtered out
+    result: bool
     order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
@@ -450,54 +450,62 @@ class StrenghteningCondition(PlantationCondition):
     RATE = 0.2
     order = 3
 
-    label = "Renforcement"
+    label = "Renforcement de haies existantes"
     valid_text = (
         "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
     )
     invalid_text = """
-        Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
-        <br>Il y a %(strengthening_excess)s m en excès.
+        Le renforcement ou la reconnexion doit porter sur moins de 20%% de la compensation attendue.
+        <br/>Il manque %(missing_plantation_length)s m de plantation nouvelle.
     """
     hint_text = """
-        La compensation peut consister en un renforcement ou reconnexion de haies
-        existantes, dans la limite de 20%% du linéaire total à planter.
+        Jusqu’à 20%% du linéaire de compensation peuvent consister en un renforcement
+        ou une reconnexion de haies existantes.
     """
 
-    def evaluate(self):
+    def must_display(self):
+        """Should the condition be displayed?"""
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
-        if is_remplacement:
-            self.result = None
-            return self
+        return not is_remplacement
 
+    def evaluate(self):
+        lpm = self.catalog["lpm"]
         length_to_plant = self.hedge_data.length_to_plant()
-        strengthening_length = 0.0
+        length_to_plant_by_mode = defaultdict(int)
         for hedge in self.hedge_data.hedges_to_plant():
-            if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
-                strengthening_length += hedge.length
+            length_to_plant_by_mode[hedge.prop("mode_plantation")] += hedge.length
 
-        length_to_plant = self.hedge_data.length_to_plant()
-        length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
+        if self.R == 0.0:
+            self.result = True
+        elif length_to_plant < lpm:
+            # la compensation n’est pas suffisante (approximatif car il y a LPm_r mais on n’en tient pas compte ici)
+            self.result = (
+                length_to_plant_by_mode["plantation"] > 0.8 * length_to_plant
+            )  # le renforcement ne doit pas représenter plus de 20% de la plantation proposée
+        else:  # // compensation suffisante (approximatif mais ok)
+            self.result = (
+                length_to_plant_by_mode["plantation"] > 0.8 * lpm
+            )  # la plantation occupe au moins 80% de la plantation minimale
 
-        strengthening_max = minimum_length_to_plant * self.RATE
-        self.result = strengthening_length <= strengthening_max or self.R == 0.0
+        strengthening_length = (
+            length_to_plant_by_mode["renforcement"]
+            + length_to_plant_by_mode["reconnexion"]
+        )
         self.context = {
-            "length_to_plant": round(length_to_plant),
-            "length_to_remove": round(length_to_remove),
-            "minimum_length_to_plant": round(minimum_length_to_plant),
-            "strengthening_max": round(strengthening_max),
             "strengthening_length": round(strengthening_length),
-            "strengthening_excess": round(strengthening_length)
-            - round(strengthening_max),
+            "missing_plantation_length": round(
+                0.8 * lpm - length_to_plant_by_mode["plantation"]
+            ),
         }
         return self
 
     @property
     def text(self):
-        length = self.context.get("strengthening_length")
+        strengthening_length = self.context.get("strengthening_length")
+
         valid_text = (
             "Le renforcement ou la reconnexion sur %(strengthening_length)s m convient."
-            if length > 0
+            if strengthening_length > 0
             else "Pas de renforcement ni reconnexion de haies."
         )
 
