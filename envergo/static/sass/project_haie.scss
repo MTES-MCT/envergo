@@ -376,6 +376,18 @@ dialog#hedge-input-modal {
   border: none;
   margin: 0;
   padding: 0;
+
+  &.loaded #loading-indicator {
+    display: none;
+  }
+
+  #loading-indicator {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 dialog.hedge-data-dialog {

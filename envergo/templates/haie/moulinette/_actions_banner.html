@@ -3,11 +3,10 @@
 {% block actions %}
   {% if is_result_plantation and moulinette.result == "soumis" %}
     <div class="banner-item">
-      <a href="{{ edit_plantation_url }}"
-         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
-         data-event-category="Content"
-         data-event-action="Edit"
-         data-event-name="Main">Modifier les haies à planter</a>
+      <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-left fr-icon-arrow-left-line"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="hedge-input-modal">Modifier les haies à planter</button>
     </div>
 
   {% else %}
