@@ -59,8 +59,9 @@ class RegulationAdmin(admin.ModelAdmin):
         "regulation_slug",
         "show_map",
         "weight",
+        "display_order",
     ]
-    list_editable = ["weight"]
+    list_editable = ["weight", "display_order"]
     form = RegulationAdminForm
 
     def get_queryset(self, request):

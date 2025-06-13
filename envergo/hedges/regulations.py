@@ -517,7 +517,7 @@ class LineaireInterchamp(PlantationCondition):
     def evaluate(self):
 
         def interchamp_filter(h):
-            return h.prop("position") == "interchamp"
+            return bool(h.prop("interchamp"))
 
         hedges_to_remove = filter(interchamp_filter, self.hedge_data.hedges_to_remove())
         length_to_remove = sum(h.length for h in hedges_to_remove)
@@ -575,6 +575,7 @@ class PlantationConditionMixin:
 
     plantation_conditions: list[PlantationCondition]
 
+    @abstractmethod
     def get_replantation_coefficient(self):
         raise NotImplementedError(
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
@@ -586,3 +587,26 @@ class PlantationConditionMixin:
             for condition in self.plantation_conditions
         ]
         return results
+
+
+class TreeAlignmentsCondition(PlantationCondition):
+    label = "Alignements d’arbres (L350-3)"
+    order = 5
+    valid_text = "Bientôt disponible"
+    invalid_text = "Bientôt disponible"
+
+    def evaluate(self):
+        # haies = self.catalog.get("haies")
+        # alignement_bord_voie_to_remove = [
+        #     hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
+        #     for hedge in haies.hedges_to_remove()
+        # ]
+        # alignement_bord_voie_to_plant = [
+        #     hedge.hedge_type == "alignement"
+        #     and hedge.prop("bord_voie")
+        #     and hedge.prop("mode_plantation") == "plantation"
+        #     for hedge in haies.hedges_to_plant()
+        # ]
+
+        self.result = True
+        return self
