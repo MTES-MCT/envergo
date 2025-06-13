@@ -148,10 +148,10 @@ class HedgeToRemovePropertiesCalvadosForm(
 
     fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
 
-    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
     fieldsets["Caractéristiques de la haie"].insert(1, "recemment_plantee")
+    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
+    fieldsets["Caractéristiques de la haie"].append("sur_talus")
     fieldsets["Situation de la haie"].insert(1, "interchamp")
-    fieldsets["Situation de la haie"].insert(2, "sur_talus")
 
     @classmethod
     def human_readable_name(cls):
@@ -206,8 +206,8 @@ class HedgeToPlantPropertiesCalvadosForm(
         **copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets),
     }
     fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
+    fieldsets["Caractéristiques de la haie"].append("sur_talus")
     fieldsets["Situation de la haie"].insert(1, "interchamp")
-    fieldsets["Situation de la haie"].insert(2, "sur_talus")
 
     @classmethod
     def human_readable_name(cls):
