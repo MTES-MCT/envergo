@@ -827,6 +827,11 @@ class Perimeter(models.Model):
         on_delete=models.PROTECT,
         related_name="perimeters",
     )
+    regulations = models.ManyToManyField(
+        "moulinette.Regulation",
+        verbose_name=_("Regulations"),
+        related_name="perimeters_m2m",
+    )
     activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Map"),
