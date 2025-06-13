@@ -169,13 +169,20 @@
             </template>
           </div>
         </div>
+
         <div id="hedge-conditions"
-             v-if="conditions.length > 0 && (mode === 'plantation' || mode === 'read_only')">
+             v-if="mode === 'plantation' || mode === 'read_only'">
           <div class="alt fr-m-2w" id="tile-16">
             <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
-            <div id="conditions" class="fr-px-1w fr-pb-1w">
 
-              <div v-for="condition in conditions">
+            <div v-if="conditions.status === 'loading'"
+                 class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+
+            <div id="conditions"
+                 :class="conditions.status"
+                 class="fr-px-1w fr-pb-2w "
+                 v-if="conditions.conditions.length > 0">
+              <div v-for="condition in conditions.conditions">
                 <div>
                   <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
@@ -188,10 +195,11 @@
                   <p v-html="condition.text"></p>
                 </div>
               </div>
-
             </div>
+
           </div>
         </div>
+
       </div>
 
       {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}

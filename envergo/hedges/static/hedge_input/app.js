@@ -386,7 +386,7 @@ createApp({
     const hedgeBeingDrawn = ref(null);
 
     // Reactive properties for acceptability conditions
-    const conditions = reactive([]);
+    const conditions = reactive({ status: 'loading', conditions: [] });
 
     // Computed property to track changes in the hedges array
     const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
@@ -579,6 +579,13 @@ createApp({
     });
 
     const onHedgesToPlantChange = () => {
+
+      // We don't need to update plantation conditions while an hedge is being
+      // drawn, it's way too costly anyway
+      if (hedgeBeingDrawn.value) return;
+
+      conditions.status = "loading";
+
       // Prepare the hedge data to be sent in the request body
       const hedgeData = serializeHedgesData();
 
@@ -597,7 +604,8 @@ createApp({
           // and then an admin deactives the bcae8 regulation, the key will
           // not be present in the following requests, but the initial value
           // will remain in the current variable without ever being updated.
-          Object.assign(conditions, data);
+          Object.assign(conditions.conditions, data);
+          conditions.status = "ok";
         })
         .catch(error => console.error('Error:', error));
     }
