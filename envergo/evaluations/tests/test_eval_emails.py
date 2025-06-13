@@ -34,7 +34,7 @@ def moulinette_config(france_map, france_zh, loire_atlantique_department):  # no
     )
     regulation = RegulationFactory()
     perimeter = PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     classes = [
