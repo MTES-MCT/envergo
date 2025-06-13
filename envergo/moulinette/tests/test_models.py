@@ -30,7 +30,7 @@ pytestmark = pytest.mark.django_db
 def moulinette_config(france_map):  # noqa
     regulation = RegulationFactory()
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     classes = [

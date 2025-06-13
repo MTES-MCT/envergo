@@ -25,7 +25,7 @@ def autouse_site(site):
 def sage_criteria(france_map):  # noqa
     regulation = RegulationFactory(regulation="sage", has_perimeters=True)
     perimeter = PerimeterFactory(
-        name="Sage Vie Jaunay", activation_map=france_map, regulation=regulation
+        name="Sage Vie Jaunay", activation_map=france_map, regulations=[regulation]
     )
     criteria = [
         CriterionFactory(
