@@ -246,13 +246,11 @@ class PerimeterAdminForm(forms.ModelForm):
 class PerimeterAdmin(admin.ModelAdmin):
     list_display = [
         "backend_name",
-        "regulation",
         "activation_distance_column",
         "departments",
         "is_activated",
     ]
     list_filter = [
-        "regulation",
         "regulations",
         "is_activated",
         MapDepartmentsListFilter,
