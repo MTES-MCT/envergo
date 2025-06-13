@@ -26,12 +26,7 @@ from envergo.moulinette.models import (
     get_moulinette_class_from_site,
 )
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import (
-    extract_mtm_params,
-    remove_from_qs,
-    update_fragment,
-    update_qs,
-)
+from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
 
 
 class MoulinetteMixin:
