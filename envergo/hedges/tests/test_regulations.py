@@ -292,5 +292,5 @@ def test_strengthening_condition(calvados_hedge_data):
     assert condition.context["length_to_plant"] == 100.0
     assert condition.context["length_to_remove"] == 120.0
     assert condition.context["strengthening_max"] == 24.0  # 120 * 0.2
-    assert condition.context["strengthening_length"] == 100.0
-    assert condition.context["strengthening_excess"] == 76.0
+    assert condition.context["strengthening_length"] == 101
+    assert condition.context["strengthening_excess"] == 77

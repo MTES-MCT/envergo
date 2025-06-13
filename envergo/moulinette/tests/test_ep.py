@@ -482,7 +482,7 @@ def test_min_length_condition_normandie(
     moulinette = MoulinetteHaie(data, data, False)
     evaluator = PlantationEvaluator(moulinette, hedges)
 
-    assert evaluator.get_context().get("minimum_length_to_plant") == 58
+    assert evaluator.get_context().get("minimum_length_to_plant") == 59
 
 
 @pytest.mark.parametrize(

@@ -1,3 +1,5 @@
+import LatLon from '/static/geodesy/latlon-ellipsoidal-vincenty.js';
+
 const { createApp, ref, onMounted, reactive, computed, watch, toRaw } = Vue
 
 const TO_PLANT = 'TO_PLANT';
@@ -206,11 +208,16 @@ class Hedge {
 
   /**
    * What is the length of the hedge (in meters)?
+   *
+   * We use Vincenty's solution on an ellipsoid model, to be as precise as
+   * possible and coherent with the backend's side.
    */
   calculateLength() {
     let length = 0;
     for (let i = 0; i < this.latLngs.length - 1; i++) {
-      length += this.latLngs[i].distanceTo(this.latLngs[i + 1]);
+      const p1 = new LatLon(this.latLngs[i].lat, this.latLngs[i].lng);
+      const p2 = new LatLon(this.latLngs[i + 1].lat, this.latLngs[i + 1].lng);
+      length += p1.distanceTo(p2);
     }
     return length;
   }
