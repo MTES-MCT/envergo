@@ -240,7 +240,7 @@ class RoutesForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Aménagement de voirie",
-        help_text="""Rubrique 6 de l'évaluation environnementale.<br>
+        help_text="""Rubrique 6 de l'évaluation environnementale<br>
         Cumul autorisé depuis le 16 mai 2017
         """,
         required=True,
@@ -334,7 +334,7 @@ LOCALISATION_CHOICES = (
     ("sol", "Au sol"),
     ("aire_arti", "Ombrière sur une aire de stationnement artificialisée"),
     ("aire_non_arti", "Ombrière autre"),
-    ("batiment_clos", "Toiture d’un bâtiment clos sur tous ses côtés"),
+    ("batiment_clos", "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés"),
     ("batiment_ouvert", "Toiture d’un bâtiment partiellement ouvert"),
     ("aucun", "Aucun panneau"),
 )
@@ -345,7 +345,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Installation photovoltaïque",
-        help_text="Rubrique 30 de l'évaluation environnementale.",
+        help_text="Rubrique 30 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -437,7 +437,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Aire de stationnement",
-        help_text="Rubrique 41 de l'évaluation environnementale.",
+        help_text="Rubrique 41 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -496,7 +496,7 @@ class CampingForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Camping",
-        help_text="Rubrique 42 de l'évaluation environnementale.",
+        help_text="Rubrique 42 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -552,7 +552,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Équipement de sport, de loisirs ou culturel",
-        help_text="Rubrique 44 de l'évaluation environnementale.",
+        help_text="Rubrique 44 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -614,7 +614,8 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Défrichement, déboisement ou boisement",
-        help_text="Rubrique 47 de l'évaluation environnementale.",
+        help_text="Rubrique 47 de l'évaluation environnementale<br>
+        Cumul autorisé depuis le 16 mai 2017. Compter la superficie totale, même fragmentée.",
         required=True,
         widget=forms.CheckboxInput,
     )
