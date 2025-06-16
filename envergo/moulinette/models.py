@@ -821,10 +821,9 @@ class Perimeter(models.Model):
         help_text=_("Check if all criteria have been set"),
         default=False,
     )
-    regulation = models.ForeignKey(
+    regulations = models.ManyToManyField(
         "moulinette.Regulation",
-        verbose_name=_("Regulation"),
-        on_delete=models.PROTECT,
+        verbose_name=_("Regulations"),
         related_name="perimeters",
     )
     activation_map = models.ForeignKey(

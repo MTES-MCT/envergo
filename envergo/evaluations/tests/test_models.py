@@ -28,7 +28,7 @@ def moulinette_config(france_map, loire_atlantique_department):  # noqa
     )
     regulation = RegulationFactory(regulation="loi_sur_leau")
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     classes = [
