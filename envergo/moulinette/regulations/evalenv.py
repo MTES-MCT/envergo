@@ -333,8 +333,20 @@ PUISSANCE_CHOICES = (
 LOCALISATION_CHOICES = (
     ("sol", "Au sol"),
     ("aire_arti", "Ombrière sur une aire de stationnement artificialisée"),
-    ("aire_non_arti", "Ombrière autre"),
-    ("batiment_clos", "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés"),
+    (
+        "aire_non_arti",
+        {
+            "label": "Ombrière autre",
+            "help_text": "Sur sol agricole, aire de stationnement non artificialisée…",
+        },
+    ),
+    (
+        "batiment_clos",
+        {
+            "label": "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés",
+            "help_text": "Y compris serre agricole entièrement close, bâtiment sportif ou d’activité",
+        },
+    ),
     ("batiment_ouvert", "Toiture d’un bâtiment partiellement ouvert"),
     ("aucun", "Aucun panneau"),
 )
@@ -417,13 +429,30 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
 
 
 TYPE_STATIONNEMENT_CHOICES = (
-    ("public", "Ouvert au public", "Ouvert au public"),
+    (
+        "public",
+        {
+            "label": "Ouvert au public",
+            "help_text": """Dès lors que les emplacements sont accessibles à tous,
+            y compris s’ils sont payants, ou fermés la nuit, ou réservés aux clients d’un commerce
+            ou d’un établissement recevant du public""",
+        },
+        "Ouvert au public",
+    ),
     (
         "mixed",
         "Mixte (au moins un emplacement ouvert au public)",
         "Mixte public-privé (au moins un emplacement est ouvert au public)",
     ),
-    ("private", "Entièrement privé", "Entièrement privé"),
+    (
+        "private",
+        {
+            "label": "Entièrement privé",
+            "help_text": """Emplacements réservés uniquement aux résidents d’un immeuble
+            ou aux employés d’une entreprise ; en sous-sol ou en extérieur""",
+        },
+        "Entièrement privé",
+    ),
 )
 
 NB_EMPLACEMENTS_CHOICES = (
@@ -614,8 +643,8 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Défrichement, déboisement ou boisement",
-        help_text="Rubrique 47 de l'évaluation environnementale<br>
-        Cumul autorisé depuis le 16 mai 2017. Compter la superficie totale, même fragmentée.",
+        help_text="""Rubrique 47 de l'évaluation environnementale<br>
+            Cumul autorisé depuis le 16 mai 2017. Compter la superficie totale, même fragmentée.""",
         required=True,
         widget=forms.CheckboxInput,
     )
