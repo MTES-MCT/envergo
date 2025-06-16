@@ -21,6 +21,8 @@
     }
 
     this.registerEvents();
+
+    this.map.fitBounds(this.geoJSON.getBounds());
   };
   exports.Map = Map;
 
@@ -79,9 +81,10 @@
     var style = function (polygon) {
       return {
         color: polygon.properties.color,
-        fillColor: polygon.properties.color,
-        weight: 2,
-        opacity: 1,
+        fillColor: "transparent",
+        fillOpacity: polygon.properties.opacity,
+        opacity: polygon.properties.opacity,
+        weight: 3,
       };
     };
 
@@ -90,12 +93,12 @@
         var polygonJSON = {
           type: "Feature",
           geometry: polygon.polygon,
-          properties: { color: polygon.color }
+          properties: { color: polygon.color, opacity: polygon.opacity }
         };
         return polygonJSON;
       });
 
-      var geoJSON = L.geoJSON(
+      this.geoJSON = L.geoJSON(
         {
           type: "FeatureCollection",
           features: features
@@ -103,7 +106,7 @@
         { style: style }
       );
 
-      geoJSON.addTo(this.map);
+      this.geoJSON.addTo(this.map);
 
     }
   };
@@ -150,9 +153,9 @@
     legend.onAdd = function (map) {
       var div = L.DomUtil.create('div', 'info legend');
 
-      this.options.legend.forEach((l) => {
+      this.options.polygons.forEach((p) => {
         div.innerHTML +=
-          '<i style="background:' + l.color + '"></i> ' + l.label;
+          '<i style="background:' + p.color + '"></i> ' + p.legend + '<br />';
       });
 
       return div;
