@@ -149,6 +149,7 @@ class EvaluationDetail(
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
+        context["matomo_custom_url"] = "/avis/+ref_ar+/"
         context["evaluation_content"] = self.get_evaluation_content()
         return context
 
@@ -485,6 +486,8 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         context["max_files"] = settings.MAX_EVALREQ_FILES
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
+        context["matomo_custom_url"] = "/avis/formulaire/etape-3/+ref_ar+/"
+
         return context
 
 
@@ -572,6 +575,11 @@ class RequestSuccess(DetailView):
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = "/avis/formulaire/succès/+ref_ar+/"
+        return context
+
 
 class SelfDeclaration(EvaluationDetailMixin, DetailView):
     template_name = "evaluations/self_declaration.html"
@@ -593,4 +601,6 @@ class SelfDeclaration(EvaluationDetailMixin, DetailView):
         context["address"] = quote_plus(self.object.address, safe="")
         context["application_number"] = self.object.application_number
         context["redirect_url"] = f"{self.object.get_absolute_url()}?tally=ok"
+        context["matomo_custom_url"] = "/avis/+ref_ar+/conformite/"
+
         return context
