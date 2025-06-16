@@ -57,7 +57,6 @@
   };
 
   HedgeInputModal.prototype.onMessage = function (event) {
-    console.log(event.data);
 
     // Ignore messages from other windows
     if (event.origin !== window.location.origin) {

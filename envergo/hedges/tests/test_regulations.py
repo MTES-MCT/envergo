@@ -409,3 +409,8 @@ def test_alignement_arbres_condition():
     assert condition.result
     assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 90
     assert condition.context["aa_bord_voie_delta"] == 0.0
+    assert condition.context["length_to_plant"] == 100.0
+    assert condition.context["length_to_remove"] == 120.0
+    assert condition.context["strengthening_max"] == 24.0  # 120 * 0.2
+    assert condition.context["strengthening_length"] == 101
+    assert condition.context["strengthening_excess"] == 77
