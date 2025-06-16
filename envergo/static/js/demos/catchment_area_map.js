@@ -9,10 +9,10 @@
     this.configureLeaflet();
     this.map = this.initializeMap();
     this.marker = this.initializeMarker();
-    this.drawPolygons();
     if (this.options.debug) {
       this.drawEnvelope();
     }
+    this.drawPolygons();
     this.addLegend();
     this.addControl();
     this.addScaleControl();

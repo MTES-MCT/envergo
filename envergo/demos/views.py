@@ -3,12 +3,13 @@ from math import sqrt
 from types import SimpleNamespace
 
 import numpy as np
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import MultiLineString, Point
 from django.db import connection
 from django.views.generic import FormView
 from scipy.interpolate import griddata
 
 from envergo.geodata.forms import LatLngForm
+from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import (
     compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
@@ -89,51 +90,62 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         density_400 = compute_hedge_density_around_point(lng_lat, 400)
         density_5000 = compute_hedge_density_around_point(lng_lat, 5000)
 
+        circle = (
+            density_5000["artifacts"]["truncated_circle"]
+            or density_5000["artifacts"]["circle"]
+        )
+
+        hedges = Line.objects.filter(
+            map__map_type=MAP_TYPES.haies,
+            geometry__intersects=circle,
+        )
+
         polygons = []
         polygons.append(
-            MapPolygon(
-                [
-                    SimpleNamespace(
-                        geometry=density_200["artifacts"]["truncated_circle"]
-                        or density_200["artifacts"]["circle"]
-                    )
-                ],
-                "orange",
-                "200m",
-            )
-        )
-        polygons.append(
-            MapPolygon(
-                [
-                    SimpleNamespace(
-                        geometry=density_400["artifacts"]["truncated_circle"]
-                        or density_400["artifacts"]["circle"]
-                    )
-                ],
-                "green",
-                "400m",
-            )
-        )
-        polygons.append(
-            MapPolygon(
-                [
-                    SimpleNamespace(
-                        geometry=density_5000["artifacts"]["truncated_circle"]
-                        or density_5000["artifacts"]["circle"]
-                    )
-                ],
-                "blue",
-                "5km",
-            )
-        )
-        polygons = [
             {
-                "polygon": to_geojson(polygon.geometry),
-                "color": polygon.color,
-                "label": polygon.label,
+                "polygon": to_geojson(
+                    MultiLineString(
+                        [hedge.geometry for hedge in hedges], srid=EPSG_WGS84
+                    )
+                ),
+                "color": "#f0f921",
+                "legend": "Haies",
+                "opacity": 1.0,
             }
-            for polygon in polygons
-        ]
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    density_200["artifacts"]["truncated_circle"]
+                    or density_200["artifacts"]["circle"]
+                ),
+                "color": "#f89540",
+                "legend": "200m",
+                "opacity": 1.0,
+            }
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    density_400["artifacts"]["truncated_circle"]
+                    or density_400["artifacts"]["circle"]
+                ),
+                "color": "#cc4778",
+                "legend": "400m",
+                "opacity": 1.0,
+            }
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    density_5000["artifacts"]["truncated_circle"]
+                    or density_5000["artifacts"]["circle"]
+                ),
+                "color": "#7e03a8",
+                "legend": "5km",
+                "opacity": 1.0,
+            }
+        )
         context = {
             "result_available": True,
             "length_200": density_200["artifacts"]["length"],
