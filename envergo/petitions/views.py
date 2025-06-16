@@ -639,6 +639,11 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
             context["current_regulation"] = current_regulation
         return context
 
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_regulation_view", kwargs=self.kwargs
+        )
+
 
 class PetitionProjectInstructorDossierDSView(
     PetitionProjectInstructorMixin, DetailView
@@ -682,6 +687,9 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
 
     template_name = "haie/petitions/instructor_view_notes.html"
     matomo_tag = ""
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
 
 
 class PetitionProjectHedgeDataExport(DetailView):

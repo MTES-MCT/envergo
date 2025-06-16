@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
-from envergo.geodata.conftest import loire_atlantique_map  # noqa
+from envergo.geodata.conftest import france_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
@@ -27,7 +27,6 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorNotesView,
     PetitionProjectInstructorView,
 )
 from envergo.users.models import User
@@ -59,15 +58,15 @@ def instructor_haie_user_44() -> User:
     return instructor_haie_user_44
 
 
-@pytest.fixture()
-def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+@pytest.fixture
+def ep_criteria(france_map):  # noqa
+    regulation = RegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
-            title="Bonnes conditions agricoles et environnementales - Fiche VIII",
+            title="Espèces protégées",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
-            activation_map=loire_atlantique_map,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesSimple",
+            activation_map=france_map,
             activation_mode="department_centroid",
         ),
     ]
@@ -290,37 +289,41 @@ def test_petition_project_instructor_view_requires_authentication(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
 def test_petition_project_instructor_notes_view(
-    instructor_haie_user_44,
-    site,
+    mock_post, instructor_haie_user_44, client, site
 ):
     """
     Test petition project instructor notes view
     """
 
-    ConfigHaieFactory()
-    project = PetitionProjectFactory()
-    factory = RequestFactory()
-    request = factory.get(
-        reverse(
-            "petition_project_instructor_view", kwargs={"reference": project.reference}
-        )
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
-    request.site = site
-    request.session = {}
-
-    # Add support  django messaging framework
-    request._messages = messages.storage.default_storage(request)
-
-    # Simulate instructor user with department 44
-    request.user = instructor_haie_user_44
-    response = PetitionProjectInstructorNotesView.as_view()(
-        request,
-        reference=project.reference,
+    project = PetitionProjectFactory()
+    instructor_notes_url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
     )
 
     # Check that the response status code is 200
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_notes_url)
     assert response.status_code == 200
+
+    # Submit notes
+    response = client.post(
+        instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
+    )
+    assert response.url == instructor_notes_url
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -328,7 +331,7 @@ def test_petition_project_instructor_notes_view(
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_petition_project_instructor_view_reglementation_pages(
-    mock_post, instructor_haie_user_44, conditionnalite_pac_criteria, client, site
+    mock_post, instructor_haie_user_44, ep_criteria, client, site
 ):
     """Test instruction pages reglementation menu and content"""
 
@@ -360,13 +363,22 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Test existing regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
     )
 
     client.force_login(instructor_haie_user_44)
     response = client.get(instructor_url)
     assert response.status_code == 200
-    assert f"{conditionnalite_pac_criteria[0].regulation}" in response.content.decode()
+    assert f"{ep_criteria[0].regulation}" in response.content.decode()
+
+    # Test ep regulation url
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
+    )
+    # Submit onagre
+    response = client.post(instructor_url, {"onagre_number": "1234567"})
+    assert response.url == instructor_url
 
 
 @pytest.mark.urls("config.urls_haie")
