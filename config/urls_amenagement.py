@@ -3,10 +3,10 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 from config.urls import handler500  # noqa
 from envergo.evaluations.views import ShortUrlAdminRedirectView
-from envergo.geodata.views import CatchmentAreaDebug
 from envergo.users.views import NewsletterDoubleOptInConfirmation, NewsletterOptIn
 
 from .urls import urlpatterns as common_urlpatterns
@@ -91,11 +91,17 @@ urlpatterns = [
     path("avis/", include("envergo.evaluations.urls")),
     path(_("moulinette/"), include("envergo.moulinette.urls_amenagement")),
     path(_("geo/"), include("envergo.geodata.urls")),
-    path("demonstrateur-bv/", CatchmentAreaDebug.as_view(), name="2150_debug"),
+    path(
+        "demonstrateur-bv/",
+        RedirectView.as_view(
+            pattern_name="demo_catchment_area", permanent=True, query_string=True
+        ),
+    ),
     path("newsletter/", NewsletterOptIn.as_view(), name="newsletter_opt_in"),
     path(
         "newsletter/confirmation/",
         NewsletterDoubleOptInConfirmation.as_view(),
         name="newsletter_confirmation",
     ),
+    path("demonstrateurs/", include("envergo.demos.urls")),
 ] + common_urlpatterns
