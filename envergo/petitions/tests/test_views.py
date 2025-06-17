@@ -339,6 +339,7 @@ def test_petition_project_instructor_notes_view(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
+    assert project.instructor_free_mention == "Note mineure : Fa dièse"
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -399,6 +400,7 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Submit onagre
     response = client.post(instructor_url, {"onagre_number": "1234567"})
     assert response.url == instructor_url
+    assert project.onagre_number == "1234567"
 
 
 @pytest.mark.urls("config.urls_haie")
