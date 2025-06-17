@@ -1,6 +1,5 @@
 import json
 from math import sqrt
-from types import SimpleNamespace
 
 import numpy as np
 from django.contrib.gis.geos import MultiLineString, Point
@@ -15,7 +14,6 @@ from envergo.geodata.utils import (
     get_catchment_area_pixel_values,
     to_geojson,
 )
-from envergo.moulinette.regulations import MapPolygon
 from envergo.utils.urls import update_qs
 
 EPSG_WGS84 = 4326
