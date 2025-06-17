@@ -57,7 +57,7 @@
       maxZoom: 22,
       maxNativeZoom: 19,
       tileSize: 256,
-      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      attribution: '&copy; <a href="https://geoservices.ign.fr/bdhaie">BD Haie IGN</a>'
     }).addTo(map);
 
     return map;
@@ -84,7 +84,7 @@
         fillColor: "transparent",
         fillOpacity: polygon.properties.opacity,
         opacity: polygon.properties.opacity,
-        weight: 3,
+        weight: 5,
       };
     };
 
