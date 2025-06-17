@@ -640,8 +640,8 @@ createApp({
       let p1 = new LatLon(vertex['lat'], vertex['lng']);
       let p2 = new LatLon(cursor['lat'], cursor['lng']);
       let l = p1.distanceTo(p2);
-      let totalLength = length + l;
-      tooltip.innerHTML = `${totalLength.toFixed()} m`;
+      let totalLength = Math.ceil(length + l);
+      tooltip.innerHTML = `${totalLength} m`;
     }
 
     // Mount the app component and initialize the leaflet map
