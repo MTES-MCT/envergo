@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
-from envergo.geodata.conftest import france_map  # noqa
+from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
@@ -56,6 +56,21 @@ def instructor_haie_user_44() -> User:
     department_44 = DepartmentFactory.create()
     instructor_haie_user_44.departments.add(department_44)
     return instructor_haie_user_44
+
+
+@pytest.fixture()
+def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="Bonnes conditions agricoles et environnementales - Fiche VIII",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            activation_map=loire_atlantique_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
 
 
 @pytest.fixture
@@ -331,7 +346,12 @@ def test_petition_project_instructor_notes_view(
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_petition_project_instructor_view_reglementation_pages(
-    mock_post, instructor_haie_user_44, ep_criteria, client, site
+    mock_post,
+    instructor_haie_user_44,
+    conditionnalite_pac_criteria,
+    ep_criteria,
+    client,
+    site,
 ):
     """Test instruction pages reglementation menu and content"""
 
@@ -363,7 +383,7 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Test existing regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
     client.force_login(instructor_haie_user_44)
@@ -374,7 +394,7 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
+        kwargs={"reference": project.reference, "regulation": "ep"},
     )
     # Submit onagre
     response = client.post(instructor_url, {"onagre_number": "1234567"})
