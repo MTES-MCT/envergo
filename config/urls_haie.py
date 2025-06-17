@@ -13,7 +13,9 @@ from .urls import urlpatterns as common_urlpatterns
 auth_patterns = [
     path(
         _("login/"),
-        auth_views.LoginView.as_view(template_name="haie/registration/login.html"),
+        auth_views.LoginView.as_view(
+            template_name="haie/registration/login.html", next_page="/projet/liste"
+        ),
         name="login",
     ),
     path(
