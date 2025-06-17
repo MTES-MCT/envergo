@@ -377,6 +377,8 @@ createApp({
 
   setup() {
     let map = null;
+    let tooltip = null;
+
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
       TO_REMOVE: new HedgeList(TO_REMOVE),
@@ -409,16 +411,20 @@ createApp({
       helpBubble.value = "initHedgeHelp";
       const newHedge = addHedge(type);
       hedgeBeingDrawn.value = newHedge;
+
       newHedge.polyline.on('editable:vertex:new', (event) => {
         styleDrawGuide();
 
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           helpBubble.value = "drawingHelp";
+
+          if (tooltip.style.display == 'none') {
+            addTooltip();
+          }
         }
       });
 
       newHedge.polyline.on('editable:drawing:end', onDrawingEnd);
-
       window.addEventListener('keyup', cancelDrawingFromEscape);
 
       return newHedge
@@ -433,9 +439,10 @@ createApp({
     };
 
     const stopDrawing = () => {
+      removeTooltip();
+      window.removeEventListener('keyup', cancelDrawingFromEscape);
       hedgeBeingDrawn.value = null;
       helpBubble.value = null;
-      window.removeEventListener('keyup', cancelDrawingFromEscape);
     };
 
     const onDrawingEnd = () => {
@@ -552,8 +559,8 @@ createApp({
      * Restore hedges for existing inputs.
      */
     const restoreHedges = () => {
-      if(savedHedgesData.length > 0) {
-          helpBubble.value = null;
+      if (savedHedgesData.length > 0) {
+        helpBubble.value = null;
       }
       savedHedgesData.forEach(hedgeData => {
         const type = hedgeData.type;
@@ -608,6 +615,33 @@ createApp({
           conditions.status = "ok";
         })
         .catch(error => console.error('Error:', error));
+    }
+
+    const addTooltip = (e) => {
+      hedgeBeingDrawn.value.polyline.on("editable:drawing:move", updateTooltip);
+      tooltip.style.display = 'block';
+    }
+
+    const removeTooltip = (e) => {
+      tooltip.innerHTML = '';
+      tooltip.style.display = 'none';
+      hedgeBeingDrawn.value.polyline.off("editable:drawing:move", updateTooltip);
+
+    }
+
+    const updateTooltip = (e) => {
+      tooltip.style.left = e.originalEvent.clientX + 20 + 'px';
+      tooltip.style.top = e.originalEvent.clientY - 10 + 'px';
+
+      let hedge = hedgeBeingDrawn.value;
+      let length = hedge.length;
+      let vertex = hedge.latLngs[hedge.latLngs.length - 1];
+      let cursor = e.latlng;
+      let p1 = new LatLon(vertex['lat'], vertex['lng']);
+      let p2 = new LatLon(cursor['lat'], cursor['lng']);
+      let l = p1.distanceTo(p2);
+      let totalLength = length + l;
+      tooltip.innerHTML = `${totalLength.toFixed()} m`;
     }
 
     // Mount the app component and initialize the leaflet map
@@ -674,6 +708,7 @@ createApp({
         zoomControl: false,
         layers: [satelliteLayer, pciLayer]
       });
+      tooltip = L.DomUtil.get('tooltip');
 
       L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);
 
