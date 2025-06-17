@@ -281,7 +281,6 @@
   {{ block.super }}
   <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'leaflet-editable/src/Leaflet.Editable.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer
@@ -295,7 +294,6 @@
 {% block css %}
   {{ block.super }}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
-  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
   <link rel="stylesheet"
         href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 
