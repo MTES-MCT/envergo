@@ -269,8 +269,7 @@ nav#evaluation-summary {
 #moulinette-form {
   counter-reset: steps;
 
-  label.step,
-  label[for="id_address"] {
+  label.step {
     &::before {
       counter-increment: steps;
       content: counter(steps) " "; /* stylelint-disable-line */
@@ -286,6 +285,10 @@ nav#evaluation-summary {
 
   .form-section {
     margin-bottom: 1.5rem;
+    background-color: var(--background-default-grey);
+    padding: 1.25rem;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
   }
 
   #form-group-created_surface,
@@ -299,6 +302,14 @@ nav#evaluation-summary {
         color: inherit;
       }
     }
+  }
+
+  #form-section-coords .label-content {
+    font-weight: normal !important;
+  }
+
+  #form-section-map {
+    padding-bottom: 0;
   }
 
   #form-group-address .optional-tag,
@@ -338,8 +349,9 @@ nav#evaluation-summary {
   }
 
   #optional-forms {
-    background-color: var(--background-contrast-grey);
-    padding: 1rem;
+    label small {
+      font-style: italic;
+    }
 
     .optional-form {
       .fr-input-group[id$="activate"] span.label-content {
@@ -1781,9 +1793,6 @@ main.geometricians {
 
   // Single column moulinette form layout
   .fr-input-group-map {
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-
     figure {
       margin-top: 0;
       margin-bottom: 0;

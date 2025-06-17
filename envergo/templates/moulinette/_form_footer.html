@@ -27,10 +27,11 @@
 
 {% if optional_forms %}
   <div id="optional-forms" class="form-section">
-    <p>
-      <strong>Questions optionnelles</strong>
-      <small>(admin uniquement)</small>
-    </p>
+    <div class="fr-mb-3w">
+      <label class="step">
+        Questions optionnelles <small">– facultatif</small>
+      </label>
+    </div>
     {% for form in optional_forms %}
 
       <div class="optional-form">
