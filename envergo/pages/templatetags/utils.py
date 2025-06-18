@@ -3,6 +3,7 @@ from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
     FileInput,
+    HiddenInput,
     RadioSelect,
     Select,
 )
@@ -128,3 +129,9 @@ def is_type(value, type_name):
 @register.filter
 def get_item(dictionary, key):
     return dictionary[key]
+
+
+@register.filter
+def as_hidden(field):
+    """Render the field as a hidden input without modifying the original widget."""
+    return field.as_widget(widget=HiddenInput())

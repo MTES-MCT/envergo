@@ -1,47 +1,85 @@
-window.addEventListener("load", function () {
-  let buttons = document.querySelectorAll(".hedge-input-open-btn");
-  let modal = document.getElementById("hedge-input-modal");
+(function (window) {
+  "use strict";
 
-  let hedgeIframe;
+  let modalId = "hedge-input-modal";
+  let btnClass = ".hedge-input-open-btn";
 
-  const openModal = function () {
-    let saveUrl = new URL(HEDGES_PLANTATION_URL);
-    if (typeof SOURCE_PAGE !== 'undefined') {
-      saveUrl.searchParams.set("source_page", SOURCE_PAGE);
+  /**
+   * Create and manage the hedge ui modal / iframe.
+   */
+  var HedgeInputModal = function (iframeUrl, redirectUrl, submitCallback) {
+    this.modal = document.getElementById(modalId);
+    this.btns = document.querySelectorAll(btnClass);
+    this.iframeUrl = iframeUrl;
+    this.redirectUrl = redirectUrl;
+
+    if (submitCallback === undefined) {
+      this.onSubmitCallback = function (data) { };
+    } else {
+      this.onSubmitCallback = submitCallback.bind(this);
     }
 
-    hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
-    modal.showModal();
-  }
-
-  if (window.location.hash === '#plantation') {
-    openModal();
-  }
-
-  // open the hedge input ui in a modal upon the button click
-  buttons.forEach(button => {
-    button.addEventListener("click", function () {
-      openModal();
+    this.btns.forEach(btn => {
+      btn.addEventListener("click", this.open.bind(this));
     });
-  });
 
-  // When the input is saved, close the modal
-  window.addEventListener("message", function (event) {
+    window.addEventListener("message", this.onMessage.bind(this));
+  };
+
+  // We need to create the iframe before adding it to the dom
+  // because using an existing iframe messes with the history management,
+  // and make the "back" and "forward" buttons unreliable.
+  HedgeInputModal.prototype.createIframe = function () {
+    let iframe = document.createElement("iframe");
+    iframe.id = "hedge-input-iframe";
+    iframe.width = "100%";
+    iframe.height = "100%";
+    iframe.allowFullscreen = true;
+    iframe.src = this.iframeUrl;
+
+    iframe.addEventListener("load", function () {
+      this.modal.classList.add("loaded");
+    }.bind(this));
+
+    this.iframe = iframe;
+  }
+
+  HedgeInputModal.prototype.open = function () {
+    this.createIframe();
+    this.modal.showModal();
+    this.modal.appendChild(this.iframe);
+  };
+
+  HedgeInputModal.prototype.close = function () {
+    this.modal.close();
+    this.iframe.remove();
+    this.modal.classList.remove("loaded");
+  };
+
+  HedgeInputModal.prototype.onMessage = function (event) {
+
+    // Ignore messages from other windows
     if (event.origin !== window.location.origin) {
       return;
     }
 
     if (event.data.action === "cancel") {
-      hedgeIframe.close();
-      modal.close();
+      this.close();
     }
 
     if (event.data.input_id) {
-      const query = new URLSearchParams(window.location.search);
-      query.set("haies", event.data.input_id);
-      window.location.href = `${RESULT_P_URL}?${query.toString()}`;
+      this.onSubmitCallback(event.data);
+
+      if (this.redirectUrl) {
+        const url = new URL(window.location);
+        url.pathname = this.redirectUrl;
+        url.searchParams.set("haies", event.data.input_id);
+        window.location.href = url;
+      } else {
+        this.close();
+      }
     }
-  });
+  };
 
-
-});
+  window.HedgeInputModal = HedgeInputModal;
+}(window));

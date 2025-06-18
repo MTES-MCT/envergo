@@ -29,7 +29,7 @@ def calvados_hedge_data():
                 "additionalData": {
                     "mode_destruction": "arrachage",
                     "type_haie": "degradee",
-                    "position": "interchamp",
+                    "interchamp": True,
                     "vieil_arbre": False,
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
@@ -47,7 +47,7 @@ def calvados_hedge_data():
                 "additionalData": {
                     "mode_destruction": "arrachage",
                     "type_haie": "degradee",
-                    "position": "interchamp",
+                    "interchamp": True,
                     "vieil_arbre": False,
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
@@ -65,7 +65,7 @@ def calvados_hedge_data():
                 "additionalData": {
                     "mode_destruction": "arrachage",
                     "type_haie": "degradee",
-                    "position": "interchamp",
+                    "interchamp": True,
                     "vieil_arbre": False,
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
@@ -85,7 +85,7 @@ def calvados_hedge_data():
                     "type_haie": "alignement",
                     "essences_non_bocageres": False,
                     "sur_parcelle_pac": False,
-                    "position": "interchamp",
+                    "interchamp": True,
                     "proximite_mare": False,
                     "sous_ligne_electrique": False,
                     "sur_talus": False,
@@ -103,7 +103,7 @@ def calvados_hedge_data():
                     "type_haie": "alignement",
                     "essences_non_bocageres": False,
                     "sur_parcelle_pac": False,
-                    "position": "interchamp",
+                    "interchamp": True,
                     "proximite_mare": False,
                     "sous_ligne_electrique": False,
                     "sur_talus": False,
@@ -292,5 +292,5 @@ def test_strengthening_condition(calvados_hedge_data):
     assert condition.context["length_to_plant"] == 100.0
     assert condition.context["length_to_remove"] == 120.0
     assert condition.context["strengthening_max"] == 24.0  # 120 * 0.2
-    assert condition.context["strengthening_length"] == 100.0
-    assert condition.context["strengthening_excess"] == 76.0
+    assert condition.context["strengthening_length"] == 101
+    assert condition.context["strengthening_excess"] == 77

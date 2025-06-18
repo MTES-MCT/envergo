@@ -492,7 +492,8 @@ class PetitionProjectDetail(DetailView):
                 self.object.hedge_data.id,
             ],
         )
-        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+        plantation_url = update_qs(plantation_url, {"source": "consultation"})
+        context["plantation_url"] = plantation_url
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
@@ -567,7 +568,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 self.object.hedge_data.id,
             ],
         )
-        context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+        plantation_url = update_qs(plantation_url, {"source": "instruction"})
+        context["plantation_url"] = plantation_url
         context["invitation_token_url"] = self.request.build_absolute_uri(
             reverse(
                 "petition_project_invitation_token",

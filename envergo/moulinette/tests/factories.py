@@ -54,7 +54,12 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
-    regulations_available = ["conditionnalite_pac", "ep", "natura2000_haie"]
+    regulations_available = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+    ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
         {

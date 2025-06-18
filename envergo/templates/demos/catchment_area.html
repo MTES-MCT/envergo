@@ -4,7 +4,7 @@
 
 {% block title %}Démonstrateur 2150{% endblock %}
 
-{% block main-classes %}demonstrateur_2150{% endblock %}
+{% block main-classes %}demos{% endblock %}
 
 {% block content %}
   <article>
@@ -138,11 +138,20 @@
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
-  <script defer src="{% static 'js/libs/2150_map.js' %}"></script>
+  <script defer src="{% static 'js/demos/catchment_area_map.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 
 
   <script>
+      var getColor = function (d) {
+        // Thanks to ColorBrewer for the color scale
+        // https://colorbrewer2.org/#type=sequential&scheme=RdPu&n=9
+        let scale = ["#00000000", "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a"];
+        let d_clamped = Math.max(0, Math.min(d, 12000));
+        let color_index = Math.floor(d_clamped / 12000 * (scale.length - 1));
+        return scale[color_index];
+      }
+
     var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
     var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
     var DEFAULT_ZOOM = {{ default_zoom }};
@@ -151,6 +160,33 @@
     var POLYGONS = {{ polygons|default:"[]"|safe }};
     var ENVELOPE = {{ envelope|default:"{}"|safe }};
     var DEBUG = {{ debug|yesno:'true,false' }};
+
+    var grades = [0, 2000, 4000, 6000, 8000, 10000, 12000];
+    var LEGEND = [];
+    for (var i = 0; i < grades.length; i++) {
+      LEGEND.push({
+        value: grades[i],
+        label: grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+'),
+        color: getColor(grades[i] + 1)
+      });
+    };
+
+    window.addEventListener('load', function () {
+      const options = {
+        displayMarker: DISPLAY_MARKER,
+        centerMap: CENTER_MAP,
+        defaultZoom: DEFAULT_ZOOM,
+        latFieldId: LAT_FIELD_ID,
+        lngFieldId: LNG_FIELD_ID,
+        polygons: POLYGONS,
+        envelope: ENVELOPE,
+        legend: LEGEND,
+        debug: DEBUG,
+      }
+
+      map = new Map(options);
+    });
+
   </script>
 
 {% endblock %}
