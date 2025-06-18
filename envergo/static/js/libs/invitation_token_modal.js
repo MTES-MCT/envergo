@@ -22,25 +22,12 @@
           copyButton.addEventListener('click', () => {
             let btnText = copyButton.innerText;
 
-            const htmlEmailBody = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
-            const htmlEmail = `
-              <!DOCTYPE html>
-              <html lang="fr">
-                <head>
-                  <meta name="viewport" content="width=device-width">
-                  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-                  <title></title>
-                </head>
-                <body>
-                  ${htmlEmailBody}
-                </body>
-              </html>
-              `;
+            const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
             const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
             navigator.clipboard.write([
               new ClipboardItem({
                 "text/plain": new Blob([textEmail.trim()], { type: "text/plain" }),
-                "text/html": new Blob([htmlEmail], { type: "text/html" })
+                "text/html": new Blob([htmlEmail.trim()], { type: "text/html" })
               })
             ]).then(() => {
               copyButton.innerText = "Message copié !";
