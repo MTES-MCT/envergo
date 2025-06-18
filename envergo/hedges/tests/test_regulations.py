@@ -9,10 +9,16 @@ from envergo.hedges.regulations import (
     QualityCondition,
     SafetyCondition,
     StrenghteningCondition,
+    TreeAlignmentsCondition,
 )
 from envergo.hedges.tests.factories import HedgeDataFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def criterion_evaluator():
+    return Mock
 
 
 @pytest.fixture
@@ -127,11 +133,11 @@ def test_minimum_length_condition():
     hedge_data.lineaire_detruit_pac.return_value = 0
     hedge_data.length_to_plant_pac.return_value = 0
 
-    condition = MinLengthCondition(hedge_data, 2.0)
+    condition = MinLengthCondition(hedge_data, 2.0, criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 200
 
-    condition = MinLengthCondition(hedge_data, 4.0)
+    condition = MinLengthCondition(hedge_data, 4.0, criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 400
 
@@ -149,15 +155,15 @@ def test_minimum_length_pac_condition():
     hedge_data.lineaire_detruit_pac.return_value = 100
     hedge_data.length_to_plant_pac.return_value = 0
 
-    condition = MinLengthPacCondition(hedge_data, 2.0)
+    condition = MinLengthPacCondition(hedge_data, 2.0, criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 4.0)
+    condition = MinLengthPacCondition(hedge_data, 4.0, criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 0.0)
+    condition = MinLengthPacCondition(hedge_data, 0.0, criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 0
 
@@ -165,7 +171,7 @@ def test_minimum_length_pac_condition():
 def test_safety_condition(hedge_data):
     """Planting under power lines is not ok."""
 
-    condition = SafetyCondition(hedge_data, 1.0)
+    condition = SafetyCondition(hedge_data, 1.0, criterion_evaluator)
     condition.evaluate()
     assert condition.result
 
@@ -175,7 +181,7 @@ def test_safety_condition(hedge_data):
             "sous_ligne_electrique": True,
         }
     )
-    condition = SafetyCondition(hedge_data, 1.0)
+    condition = SafetyCondition(hedge_data, 1.0, criterion_evaluator)
     condition.evaluate()
     assert not condition.result
 
@@ -183,7 +189,7 @@ def test_safety_condition(hedge_data):
 def test_quality_condition_lengths_to_plant(hedge_data):
     """Lengths to plant depends on R."""
 
-    condition = QualityCondition(hedge_data, 2.0)
+    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
     minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
     assert round(minimum_lengths_to_plant["degradee"]) == 2 * 50
     assert round(minimum_lengths_to_plant["buissonnante"]) == 2 * 40
@@ -191,7 +197,7 @@ def test_quality_condition_lengths_to_plant(hedge_data):
     assert round(minimum_lengths_to_plant["mixte"]) == 2 * 20
     assert round(minimum_lengths_to_plant["alignement"]) == 2 * 10
 
-    condition = QualityCondition(hedge_data, 4.0)
+    condition = QualityCondition(hedge_data, 4.0, criterion_evaluator)
     minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
     assert round(minimum_lengths_to_plant["degradee"]) == 4 * 50
     assert round(minimum_lengths_to_plant["buissonnante"]) == 4 * 40
@@ -207,7 +213,7 @@ def test_hedge_quality_should_be_sufficient():
     hedge_data.lineaire_detruit_pac.return_value = 10
     hedge_data.length_to_plant_pac.return_value = 5
 
-    condition = QualityCondition(hedge_data, 2.0)
+    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
     condition.get_minimum_lengths_to_plant = Mock(
         return_value={
             "degradee": 12,
@@ -244,7 +250,7 @@ def test_hedge_quality_should_not_be_sufficient():
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
 
-    condition = QualityCondition(hedge_data, 2.0)
+    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
     condition.get_minimum_lengths_to_plant = Mock(
         return_value={
             "degradee": 10,
@@ -280,7 +286,7 @@ def test_strengthening_condition(calvados_hedge_data):
         "lpm": 120,
     }
 
-    condition = StrenghteningCondition(hedge_data, 1.0, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, criterion_evaluator, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
@@ -289,8 +295,117 @@ def test_strengthening_condition(calvados_hedge_data):
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
 
-    condition = StrenghteningCondition(hedge_data, 1.0, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, criterion_evaluator, catalog)
     condition.evaluate()
     assert not condition.result
     assert condition.context["strengthening_length"] == 101.0
     assert condition.context["missing_plantation_length"] == 96.0  # 80% * 120
+
+
+def test_alignement_arbres_condition():
+    hedge_data = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "alignement",
+                    "interchamp": True,
+                    "bord_voie": True,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694364, "lng": 3.615415},
+                    {"lat": 43.694094, "lng": 3.615085},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "alignement",
+                    "interchamp": True,
+                    "bord_voie": True,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "D3",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.694347, "lng": 3.615455},
+                    {"lat": 43.694144, "lng": 3.615210},
+                ],
+                "additionalData": {
+                    "mode_destruction": "arrachage",
+                    "type_haie": "degradee",
+                    "interchamp": True,
+                    "bord_voie": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "essences_non_bocageres": False,
+                    "recemment_plantee": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_plantation": "plantation",
+                    "type_haie": "alignement",
+                    "essences_non_bocageres": False,
+                    "sur_parcelle_pac": False,
+                    "bord_voie": True,
+                    "proximite_mare": False,
+                    "sous_ligne_electrique": False,
+                    "sur_talus": False,
+                },
+            },
+            {
+                "id": "P2",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.694376, "lng": 3.615381},
+                    {"lat": 43.694050, "lng": 3.614952},
+                ],
+                "additionalData": {
+                    "mode_plantation": "plantation",
+                    "type_haie": "alignement",
+                    "essences_non_bocageres": False,
+                    "sur_parcelle_pac": False,
+                    "bord_voie": True,
+                    "proximite_mare": False,
+                    "sous_ligne_electrique": False,
+                    "sur_talus": False,
+                },
+            },
+        ]
+    )
+    criterion_evaluator = Mock(result_code="soumis_autorisation")
+    catalog = {"reimplantation": "replantation"}
+
+    condition = TreeAlignmentsCondition(hedge_data, 2.0, criterion_evaluator, catalog)
+    condition.evaluate()
+    assert not condition.result
+    assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 180
+    assert condition.context["aa_bord_voie_delta"] == 80
+
+    criterion_evaluator = Mock(result_code="soumis_esthetique")
+
+    condition = TreeAlignmentsCondition(hedge_data, 1.0, criterion_evaluator, catalog)
+    condition.evaluate()
+    assert condition.result
+    assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 90
+    assert condition.context["aa_bord_voie_delta"] == 0.0
