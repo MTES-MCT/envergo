@@ -29,9 +29,7 @@
                 <head>
                   <meta name="viewport" content="width=device-width">
                   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-                  <title>
-                    Invitation guichet unique de la haie
-                  </title>
+                  <title></title>
                 </head>
                 <body>
                   ${htmlEmailBody}
