@@ -22,7 +22,22 @@
           copyButton.addEventListener('click', () => {
             let btnText = copyButton.innerText;
 
-            const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerText;
+            const htmlEmailBody = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
+            const htmlEmail = `
+              <!DOCTYPE html>
+              <html lang="fr">
+                <head>
+                  <meta name="viewport" content="width=device-width">
+                  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                  <title>
+                    Invitation guichet unique de la haie
+                  </title>
+                </head>
+                <body>
+                  ${htmlEmailBody}
+                </body>
+              </html>
+              `;
             const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
             navigator.clipboard.write([
               new ClipboardItem({
