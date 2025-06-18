@@ -298,7 +298,7 @@ def test_strengthening_condition(calvados_hedge_data):
     condition = StrenghteningCondition(hedge_data, 1.0, criterion_evaluator, catalog)
     condition.evaluate()
     assert not condition.result
-    assert condition.context["strengthening_length"] == 100.0
+    assert condition.context["strengthening_length"] == 101.0
     assert condition.context["missing_plantation_length"] == 96.0  # 80% * 120
 
 

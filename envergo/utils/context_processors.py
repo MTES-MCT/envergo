@@ -12,7 +12,7 @@ def settings_context(_request):
     # We disable the chatbox on the catchment area page
     # Because it breaks the map, for reasons I just don't understand
     try:
-        catchment_area_page_url = reverse("2150_debug")
+        catchment_area_page_url = reverse("demo_catchment_area")
     except NoReverseMatch:
         catchment_area_page_url = None
 

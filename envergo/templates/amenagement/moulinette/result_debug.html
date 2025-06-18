@@ -28,7 +28,7 @@
       <p>Estimation de bassin versant intercepté : {{ catchment_surface }} m².</p>
 
       <p>
-        <a href="{% url '2150_debug' %}?lat={{ lat|stringformat:"f" }}&lng={{ lng|stringformat:"f" }}">Lien vers le démonstrateur BV.</a>
+        <a href="{% url 'demo_catchment_area' %}?lat={{ lat|stringformat:"f" }}&lng={{ lng|stringformat:"f" }}">Lien vers le démonstrateur BV.</a>
       </p>
     {% endif %}
 
