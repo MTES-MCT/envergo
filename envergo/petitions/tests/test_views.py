@@ -388,7 +388,9 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_invitation_token(client, haie_user, site):
+def test_petition_project_invitation_token(
+    client, haie_user, instructor_haie_user_44, site
+):
     """Test invitation token creation for petition project"""
 
     ConfigHaieFactory()
@@ -413,13 +415,10 @@ def test_petition_project_invitation_token(client, haie_user, site):
     )
 
     # user authorized
-    haie_user.departments.add(project.department)
-    haie_user.is_confirmed_by_admin = True
-    haie_user.save()
-    client.force_login(haie_user)
+    client.force_login(instructor_haie_user_44)
     response = client.post(invitation_token_url)
     token = InvitationToken.objects.get()
-    assert token.created_by == haie_user
+    assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
 
