@@ -1,0 +1,59 @@
+<p>
+  Le projet est soumis à déclaration préalable au titre des opérations sur un ou plusieurs arbres d’alignement situés en bord de voie ouverte à la circulation du public.
+</p>
+<p>
+  L’atteinte à ces arbres est strictement encadrée par la législation : le fait d'abattre, de porter atteinte, de compromettre la conservation ou de modifier radicalement l'aspect d'un ou de plusieurs arbres d'une allée ou d'un alignement d'arbres est interdit (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
+   title="Texte de loi L350-3 du code de l’environnement - ouvre une nouvelle fenêtre"
+   target="_blank"
+   rel="noopener external">art. L350-3 du code de l’environnement</a>). Seules certaines situations, strictement encadrées, autorisent exceptionnellement la coupe ou l'arrachage.
+</p>
+<p>
+  Au vu des informations saisies, le projet est motivé par un danger pour la sécurité des personnes ou des biens, ou par un risque sanitaire pour les autres arbres. À ce titre, il est susceptible d’être autorisé, après examen des justifications et instruction complète de la demande par l’administration.
+</p>
+
+<p>
+  <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b> le dépôt d’une demande est tout de même obligatoire, pour approbation du préfet. La décision peut être assortie de prescriptions complémentaires pour la compensation.
+</p>
+
+{% if config.department.department == "14" %}
+  <p>
+    Dans le Calvados, la compensation exigée au titre de cette réglementation est un linéaire ou un nombre d’arbres, plantés en bord de voie, au moins équivalent à celui détruit.
+  </p>
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>Les pièces justificatives suivantes seront demandées :</p>
+
+  <ul>
+    <li>
+      en cas d’enjeu de sécurité, les éléments permettant d'établir l'existence d'un danger pour la sécurité des personnes et des biens
+    </li>
+    <li>en cas d’enjeu sanitaire, une étude phytosanitaire démontrant le risque</li>
+    <li>
+      une description du projet faisant apparaître la nature des opérations, le ou les arbres concernés, ainsi que le motif justifiant le projet
+    </li>
+    <li>
+      si le projet n’est pas réalisé par le propriétaire des arbres, la preuve que celui-ci a été informé de l’intervention
+    </li>
+    <li>
+      le plan de masse coté dans les trois dimensions faisant notamment apparaître le ou les arbres concernés par les opérations, leur positionnement au sein de l'allée ou de l'alignement ainsi que la distance de leur implantation par rapport à la voie ouverte à la circulation publique
+    </li>
+    <li>des documents tels que photographies ou dessins permettant d'évaluer les effets du projet sur le paysage</li>
+    <li>
+      le descriptif et le calendrier de la compensation envisagée, et si elle ne peut être réalisée à proximité des arbres affectés, une justification
+    </li>
+    <li>
+      si le projet est réalisé par un gestionnaire de voirie, un plan de gestion fixant les principes de conservation et de renouvellement des allées d'arbres et alignements d'arbres bordant les voies dont il a la gestion
+    </li>
+  </ul>
+
+  <p>
+    Pour en savoir plus sur cette réglementation, le Cerema met à disposition <a title="Guide d'instruction alignement d'arbres - ouvre une nouvelle fenêtre"
+    href="https://doc.cerema.fr/Default/doc/SYRACUSE/601129/allees-et-alignements-d-arbres-bordant-une-voie-ouverte-a-la-circulation-publique-appui-a-l-instruct?_lg=fr-FR"
+    target="_blank"
+    rel="noopener external">un guide d’instruction</a>.
+  </p>
+
+</div>

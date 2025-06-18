@@ -230,7 +230,9 @@ class PlantationEvaluator:
                 has_min_length_condition = True
                 break
         if not has_min_length_condition:
-            conditions.append(MinLengthCondition(self.hedge_data, R).evaluate())
+            conditions.append(
+                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+            )
 
         conditions = filter(lambda c: c.result is not None, conditions)
         self._conditions = sorted(conditions, key=attrgetter("order"))

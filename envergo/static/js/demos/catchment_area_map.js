@@ -1,15 +1,6 @@
 (function (exports, L) {
   'use strict';
 
-  var getColor = function (d) {
-    // Thanks to ColorBrewer for the color scale
-    // https://colorbrewer2.org/#type=sequential&scheme=RdPu&n=9
-    let scale = ["#00000000", "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a"];
-    let d_clamped = Math.max(0, Math.min(d, 12000));
-    let color_index = Math.floor(d_clamped / 12000 * (scale.length - 1));
-    return scale[color_index];
-  }
-
   /**
    * Settings and behavior for the moulinette form map widget.
    */
@@ -127,6 +118,46 @@
     }
   };
 
+  Map.prototype.drawPolygons = function () {
+    var style = function (polygon) {
+      return {
+        fillColor: getColor(polygon.properties.value),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+      };
+    };
+
+    var onEachFeature = function (feature, layer) {
+      layer.on({
+        mouseover: this.highlightFeature.bind(this),
+        mouseout: this.resetHighlight.bind(this),
+      });
+    };
+
+    if (this.options.polygons) {
+      var features = this.options.polygons.map(function (polygon) {
+        var polygonJSON = {
+          type: "Feature",
+          properties: { value: polygon[2] },
+          geometry: JSON.parse(polygon[3])
+        };
+        return polygonJSON;
+      });
+
+      var geoJSON = L.geoJSON(
+        {
+          type: "FeatureCollection",
+          features: features,
+        },
+        { style: style, onEachFeature: onEachFeature.bind(this) });
+
+      geoJSON.addTo(this.map);
+    }
+  };
+
   Map.prototype.drawEnvelope = function () {
     if (this.options.envelope) {
       var envelope = JSON.parse(this.options.envelope);
@@ -168,17 +199,14 @@
     var legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
       var div = L.DomUtil.create('div', 'info legend');
-      var grades = [0, 2000, 4000, 6000, 8000, 10000, 12000];
-      var labels = [];
 
-      // loop through our density intervals and generate a label with a colored square for each interval
-      for (var i = 0; i < grades.length; i++) {
+      this.options.legend.forEach((l) => {
         div.innerHTML +=
-          '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-          grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-      }
+          '<i style="background:' + l.color + '"></i> ' + l.label;
+      });
+
       return div;
-    };
+    }.bind(this);
     legend.addTo(this.map);
   };
 
@@ -262,22 +290,3 @@
   };
 
 })(this, L);
-
-
-(function () {
-  let map;
-
-  window.addEventListener('load', function () {
-    const options = {
-      displayMarker: DISPLAY_MARKER,
-      centerMap: CENTER_MAP,
-      defaultZoom: DEFAULT_ZOOM,
-      latFieldId: LAT_FIELD_ID,
-      lngFieldId: LNG_FIELD_ID,
-      polygons: POLYGONS,
-      envelope: ENVELOPE,
-      debug: DEBUG,
-    }
-    map = new Map(options);
-  });
-})();

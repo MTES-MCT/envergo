@@ -1,3 +1,5 @@
+import LatLon from '/static/geodesy/latlon-ellipsoidal-vincenty.js';
+
 const { createApp, ref, onMounted, reactive, computed, watch, toRaw } = Vue
 
 const TO_PLANT = 'TO_PLANT';
@@ -60,7 +62,6 @@ const showHedgeModal = (hedge, hedgeType) => {
           for (let i = 0; i < field.elements.length; i++) {
             let value = field.elements[i].value;
             if (value === hedge.additionalData[property]) {
-              console.log(value)
               field.elements[i].checked = true
             }
           }
@@ -207,11 +208,16 @@ class Hedge {
 
   /**
    * What is the length of the hedge (in meters)?
+   *
+   * We use Vincenty's solution on an ellipsoid model, to be as precise as
+   * possible and coherent with the backend's side.
    */
   calculateLength() {
     let length = 0;
     for (let i = 0; i < this.latLngs.length - 1; i++) {
-      length += this.latLngs[i].distanceTo(this.latLngs[i + 1]);
+      const p1 = new LatLon(this.latLngs[i].lat, this.latLngs[i].lng);
+      const p2 = new LatLon(this.latLngs[i + 1].lat, this.latLngs[i + 1].lng);
+      length += p1.distanceTo(p2);
     }
     return length;
   }
@@ -380,7 +386,7 @@ createApp({
     const hedgeBeingDrawn = ref(null);
 
     // Reactive properties for acceptability conditions
-    const conditions = reactive([]);
+    const conditions = reactive({ status: 'loading', conditions: [] });
 
     // Computed property to track changes in the hedges array
     const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
@@ -546,6 +552,9 @@ createApp({
      * Restore hedges for existing inputs.
      */
     const restoreHedges = () => {
+      if(savedHedgesData.length > 0) {
+          helpBubble.value = null;
+      }
       savedHedgesData.forEach(hedgeData => {
         const type = hedgeData.type;
         const latLngs = hedgeData.latLngs.map((latlng) => L.latLng(latlng));
@@ -570,6 +579,13 @@ createApp({
     });
 
     const onHedgesToPlantChange = () => {
+
+      // We don't need to update plantation conditions while an hedge is being
+      // drawn, it's way too costly anyway
+      if (hedgeBeingDrawn.value) return;
+
+      conditions.status = "loading";
+
       // Prepare the hedge data to be sent in the request body
       const hedgeData = serializeHedgesData();
 
@@ -588,7 +604,8 @@ createApp({
           // and then an admin deactives the bcae8 regulation, the key will
           // not be present in the following requests, but the initial value
           // will remain in the current variable without ever being updated.
-          Object.assign(conditions, data);
+          Object.assign(conditions.conditions, data);
+          conditions.status = "ok";
         })
         .catch(error => console.error('Error:', error));
     }
@@ -683,7 +700,7 @@ createApp({
         }
       });
 
-      history.pushState({ modalOpen: true }, "", "#modal");
+      history.pushState({ modalOpen: true }, "", "#open-modal");
       window.addEventListener("popstate", cancel);
 
       // Here, we want to restore existing hedges
