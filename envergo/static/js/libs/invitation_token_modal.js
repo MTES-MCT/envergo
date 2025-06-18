@@ -39,7 +39,7 @@
             const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
             navigator.clipboard.write([
               new ClipboardItem({
-                "text/plain": new Blob([textEmail], { type: "text/plain" }),
+                "text/plain": new Blob([textEmail.trim()], { type: "text/plain" }),
                 "text/html": new Blob([htmlEmail], { type: "text/html" })
               })
             ]).then(() => {
