@@ -1,16 +1,25 @@
 Bonjour,
-Le guichet unique de la haie de la DDT(M), chargé de l'instruction des projets de destruction de haies, a reçu une demande.
-Nous vous invitons à la consulter et à nous faire part de votre avis par retour d’email :
-- Les haies à détruire sont-elles soumises à la réglementation dont vous avez la charge ?
-- Quelles prescriptions recommandez-vous d’appliquer ?
-Vous pouvez accéder directement au dossier en cliquant sur le lien suivant :
-<span id="invitation-token-modal-url"></span>
 
-ℹ️ Ce lien vous redirigera :
-- soit vers le dossier directement, si vous disposez déjà d’un compte sur le Guichet unique de la haie,
-- soit vers la page de création de compte, si vous n’en avez pas encore. Une fois le compte créé, vous serez automatiquement redirigé vers le dossier.
-En cas de difficulté d’accès ou de problème lié à votre compte, vous pouvez contacter le support.
-N’hésitez pas à revenir directement vers nous pour toute question sur le projet.
-En vous remerciant.
+Le guichet unique de la haie de la DDT(M), en charge de l’instruction des projets de destruction de haies, a reçu une nouvelle demande. Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d’email en répondant aux deux questions suivantes :
+
+- Les haies concernées relèvent-elles de la réglementation dont vous avez la charge ?
+- Quelles prescriptions recommandez-vous le cas échéant ?
+
+🔐 Accès au dossier en deux étapes :
+
+1. Connexion ou création de compte
+    Avant d’accéder au dossier, vous devez créer un compte. Si vous disposez déjà d’un compte, vous pouvez directement passer à l’étape suivante.
+    👉 {{ register_url }}
+2. Ajout des droits d’accès au dossier
+    Une fois connecté, cliquez sur ce lien pour accéder au dossier qui vous est destiné :
+    👉 <span id="accept-invitation-url-text"></span>
+
+En cas de difficulté d’accès ou de problème avec votre compte, n’hésitez pas à contacter notre support.
+
+Pour toute question sur le projet, vous pouvez nous les poser directement par retour d’email.
+
+Merci par avance pour votre retour.
+
 Bien cordialement,
+
 Le guichet unique de la haie de la DDT(M)
