@@ -16,10 +16,11 @@
             <div id="invitation-token-modal-loading" class="fr-hint-text">Création de l'invitation en cours…</div>
             <div id="invitation-token-modal-content">
               <p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
-              <pre id="invitation-token-preformatted-email">
+              <div id="invitation-token-email-html">{% include 'haie/petitions/_invitation_token_email_body.html' %}</div>
+              <pre id="invitation-token-email-text">
 {% include 'haie/petitions/_invitation_token_email_body.txt' %}
               </pre>
-              <p>
+              <p class="fr-mt-2w">
                 <button id="copy-invitation-token-btn" class="fr-btn">Copier le message dans le presse-papier</button>
               </p>
               <p>

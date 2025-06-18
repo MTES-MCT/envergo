@@ -8,7 +8,8 @@
         this.modalError = modalElt.querySelector("#invitation-token-modal-error");
         this.modalLoader = modalElt.querySelector("#invitation-token-modal-loading");
         this.modalContent = modalElt.querySelector("#invitation-token-modal-content");
-        this.urlElt = modalElt.querySelector("#invitation-token-modal-url");
+        this.htmlUrlElt = modalElt.querySelector("#accept-invitation-url");
+        this.textUrlElt = modalElt.querySelector("#accept-invitation-url-text");
       };
       exports.InvitationTokenModal = InvitationTokenModal;
 
@@ -21,8 +22,14 @@
           copyButton.addEventListener('click', () => {
             let btnText = copyButton.innerText;
 
-            const text = this.modalElt.querySelector("#invitation-token-preformatted-email").innerText;
-            navigator.clipboard.writeText(text).then(() => {
+            const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerText;
+            const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
+            navigator.clipboard.write([
+              new ClipboardItem({
+                "text/plain": new Blob([textEmail], { type: "text/plain" }),
+                "text/html": new Blob([htmlEmail], { type: "text/html" })
+              })
+            ]).then(() => {
               copyButton.innerText = "Message copié !";
             });
 
@@ -66,7 +73,8 @@
         this.modalError.style.display = "none"
         this.modalLoader.style.display = "none"
         this.modalContent.style.display = "inherit"
-        this.urlElt.innerHTML = invitation_url
+        this.htmlUrlElt.href = invitation_url
+        this.textUrlElt.innerText = invitation_url;
       };
 
       InvitationTokenModal.prototype.displayError = function () {

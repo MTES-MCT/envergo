@@ -574,6 +574,11 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 kwargs={"reference": self.object.reference},
             )
         )
+        context["register_url"] = self.request.build_absolute_uri(
+            reverse(
+                "register",
+            )
+        )
 
         return context
 

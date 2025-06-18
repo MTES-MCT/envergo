@@ -1,0 +1,49 @@
+{% extends 'emails/_base.html' %}
+
+{% block email_title %}Invitation guichet unique de la haie{% endblock %}
+
+{% block content %}
+
+  <p>Bonjour,</p>
+  <p>
+    Le guichet unique de la haie de la DDT(M), en charge de l’instruction des projets de destruction de haies, a reçu
+    une
+    nouvelle demande.
+    Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d’email en répondant aux deux
+    questions suivantes :
+  </p>
+
+  <ul>
+    <li>Les haies concernées relèvent-elles de la réglementation dont vous avez la charge ?</li>
+    <li>Quelles prescriptions recommandez-vous le cas échéant ?</li>
+  </ul>
+  <p>
+    <b>🔐 Accès au dossier en deux étapes :</b>
+  </p>
+  <ol>
+    <li>
+      <b>Connexion ou création de compte</b>
+      <br />
+      Avant d’accéder au dossier, vous devez créer un compte. Si vous disposez déjà d’un compte, vous pouvez directement
+      passer à l’étape suivante.
+      <br />
+      <a href="{{ register_url }}">👉 Créer un compte</a>
+    </li>
+    <li>
+      <b>Ajout des droits d’accès au dossier</b>
+      <br />
+      Une fois connecté, cliquez sur ce lien pour accéder au dossier qui vous est destiné :
+      <br />
+      <a id="accept-invitation-url">👉 Accéder au dossier</a>
+    </li>
+  </ol>
+  <p>En cas de difficulté d’accès ou de problème avec votre compte, n’hésitez pas à contacter notre support.</p>
+  <p>Pour toute question sur le projet, vous pouvez nous les poser directement par retour d’email.</p>
+
+  <p>Merci par avance pour votre retour.</p>
+  <p>Bien cordialement,</p>
+  <p>
+    <b>Le guichet unique de la haie de la DDT(M)</b>
+  </p>
+
+{% endblock %}

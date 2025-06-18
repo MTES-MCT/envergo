@@ -611,3 +611,11 @@ div#project-dossier-no {
     border-bottom: solid 1px var(--border-default-grey);
   }
 }
+
+div#invitation-token-email-html {
+  all: initial;
+}
+
+pre#invitation-token-email-text {
+  display: none;
+}
