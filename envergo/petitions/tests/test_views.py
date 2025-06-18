@@ -148,6 +148,33 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@patch("requests.post")
+def test_petition_project_detail(mock_post, client, site):
+    """Test consultation view"""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory()
+
+    petition_project_url = reverse(
+        "petition_project",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.get(petition_project_url)
+    assert response.status_code == 200
+    assert "moulinette" in response.context
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     haie_user_44,

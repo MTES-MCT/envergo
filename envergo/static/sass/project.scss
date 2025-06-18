@@ -1115,22 +1115,27 @@ $content-max-width: 40rem;
       padding: 0;
     }
 
-    #map:hover > #map-button {
-      opacity: 1;
+    #moulinette-form figure.fr-content-media {
+      position: relative;
     }
 
-    #map-button {
+    #map-refresh-button {
       transition: opacity 0.4s ease-in-out 0s;
+      opacity: 0;
+      pointer-events: none;
       z-index: 1000;
       position: absolute;
       right: 1.5em;
-      bottom: 2em;
+      top: 13em;
       background-color: var(--grey-1000-50);
-      color: var(--text-action-high-blue-france);
-      opacity: 0;
     }
 
-    #map-button:hover {
+    #map-refresh-button.display {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #map-refresh-button:hover:not(:disabled) {
       background-color: var(--background-default-grey-hover);
     }
   }
@@ -1864,7 +1869,7 @@ main.contrast-bg {
   }
 }
 
-main.demonstrateur_2150 {
+main.demos {
   span.fr-tag.surface {
     font-family: Graduate, monospace;
   }

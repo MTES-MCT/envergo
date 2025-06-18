@@ -26,12 +26,7 @@ from envergo.moulinette.models import (
     get_moulinette_class_from_site,
 )
 from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import (
-    extract_mtm_params,
-    remove_from_qs,
-    update_fragment,
-    update_qs,
-)
+from envergo.utils.urls import extract_mtm_params, remove_from_qs, update_qs
 
 
 class MoulinetteMixin:
@@ -586,7 +581,7 @@ class MoulinetteHaieResult(
                 args=[moulinette.department.department, "plantation", hedge_data.id],
             )
             plantation_url = update_qs(plantation_url, self.request.GET)
-            context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+            context["plantation_url"] = plantation_url
 
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
@@ -628,8 +623,15 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             context["plantation_evaluation"] = evaluator
             context["replantation_coefficient"] = evaluator.replantation_coefficient
 
+            hedge_data_id = self.request.GET.get("haies")
+            plantation_url = reverse(
+                "input_hedges",
+                args=[moulinette.department.department, "plantation", hedge_data_id],
+            )
+            plantation_url = update_qs(plantation_url, self.request.GET)
+            context["plantation_url"] = plantation_url
+
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
-        context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
