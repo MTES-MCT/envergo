@@ -275,13 +275,16 @@ def test_hedge_quality_should_not_be_sufficient():
 
 def test_strengthening_condition(calvados_hedge_data):
     hedge_data = calvados_hedge_data
-    catalog = {"reimplantation": "replantation"}
+    catalog = {
+        "reimplantation": "replantation",
+        "lpm": 120,
+    }
 
     condition = StrenghteningCondition(hedge_data, 1.0, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
-    assert condition.context["strengthening_excess"] < 0.0
+    assert condition.context["missing_plantation_length"] < 0.0
 
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
@@ -289,8 +292,5 @@ def test_strengthening_condition(calvados_hedge_data):
     condition = StrenghteningCondition(hedge_data, 1.0, catalog)
     condition.evaluate()
     assert not condition.result
-    assert condition.context["length_to_plant"] == 100.0
-    assert condition.context["length_to_remove"] == 120.0
-    assert condition.context["strengthening_max"] == 24.0  # 120 * 0.2
-    assert condition.context["strengthening_length"] == 101
-    assert condition.context["strengthening_excess"] == 77
+    assert condition.context["strengthening_length"] == 101.0
+    assert condition.context["missing_plantation_length"] == 96.0  # 80% * 120
