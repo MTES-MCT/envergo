@@ -630,8 +630,8 @@ createApp({
     }
 
     const updateTooltip = (e) => {
-      tooltip.style.left = e.originalEvent.clientX + 20 + 'px';
-      tooltip.style.top = e.originalEvent.clientY - 10 + 'px';
+      tooltip.style.left = e.originalEvent.clientX - 10 + 'px';
+      tooltip.style.top = e.originalEvent.clientY + 20 + 'px';
 
       let hedge = hedgeBeingDrawn.value;
       let length = hedge.length;
