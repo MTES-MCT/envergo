@@ -65,7 +65,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         current_user = self.request.user
         if current_user.is_superuser:
             queryset = self.queryset
-        elif current_user.is_instructor:
+        elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
             queryset = self.queryset.filter(
                 Q(department__in=user_departments)
