@@ -29,15 +29,6 @@ def haie_user() -> User:
 
 
 @pytest.fixture
-def instructor_haie_user() -> User:
-    return UserFactory(
-        access_amenagement=False,
-        access_haie=True,
-        is_confirmed_by_admin=True,
-    )
-
-
-@pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
 
