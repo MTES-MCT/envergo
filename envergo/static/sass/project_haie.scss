@@ -84,10 +84,11 @@ div#app {
       position: absolute;
       background: white;
       color: black;
-      padding: 0.25rem;
+      padding: 10px;
       border: 2px solid black;
       border-radius: 0.75rem;
       z-index: 1000;
+      font-size: 14px;
     }
 
     #controls-container {
