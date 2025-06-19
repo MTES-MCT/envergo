@@ -147,10 +147,14 @@ def field_summary(field):
 
     This tag is used to format a single field from the additional or optional forms.
     """
+    value_help_text = None
     if hasattr(field.field, "get_display_value"):
         value = field.field.get_display_value(field.value())
     elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
+        if isinstance(value, dict):
+            value_help_text = value["help_text"]
+            value = value["label"]
     else:
         value = field.value()
 
@@ -186,6 +190,8 @@ def field_summary(field):
             html += f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
     elif field.help_text:
         html += f' <br /><span class="fr-hint-text">{field.help_text}</span>'
+    if value_help_text:
+        html += f' <br /><span class="fr-hint-text">{value_help_text}</span>'
 
     return mark_safe(html)
 
