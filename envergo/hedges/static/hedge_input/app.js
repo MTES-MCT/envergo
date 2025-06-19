@@ -26,6 +26,23 @@ const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
 
+/**
+ * What is the length of the hedge (in meters)?
+ *
+ * We use Vincenty's solution on an ellipsoid model, to be as precise as
+ * possible and coherent with the backend's side.
+ */
+
+const latLngsLength = (latLngs) => {
+  let length = 0;
+  for (let i = 0; i < latLngs.length - 1; i++) {
+    const p1 = new LatLon(latLngs[i].lat, latLngs[i].lng);
+    const p2 = new LatLon(latLngs[i + 1].lat, latLngs[i + 1].lng);
+    length += p1.distanceTo(p2);
+  }
+  return length;
+};
+
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
 
@@ -206,20 +223,8 @@ class Hedge {
     this.polyline.on('mouseout', this.handleMouseOut.bind(this));
   }
 
-  /**
-   * What is the length of the hedge (in meters)?
-   *
-   * We use Vincenty's solution on an ellipsoid model, to be as precise as
-   * possible and coherent with the backend's side.
-   */
   calculateLength() {
-    let length = 0;
-    for (let i = 0; i < this.latLngs.length - 1; i++) {
-      const p1 = new LatLon(this.latLngs[i].lat, this.latLngs[i].lng);
-      const p2 = new LatLon(this.latLngs[i + 1].lat, this.latLngs[i + 1].lng);
-      length += p1.distanceTo(p2);
-    }
-    return length;
+    return latLngsLength(this.latLngs);
   }
 
   updateLength() {
@@ -417,10 +422,6 @@ createApp({
 
         if (event.vertex.getNext() === undefined) { // do not display tooltip when adding a point to an existing hedge
           helpBubble.value = "drawingHelp";
-
-          if (tooltip.style.display == 'none') {
-            addTooltip();
-          }
         }
       });
 
@@ -618,30 +619,37 @@ createApp({
     }
 
     const addTooltip = (e) => {
-      hedgeBeingDrawn.value.polyline.on("editable:drawing:move", updateTooltip);
-      tooltip.style.display = 'block';
+      if (tooltip.style.display == 'none') {
+        tooltip.style.display = 'block';
+      }
     }
 
     const removeTooltip = (e) => {
       tooltip.innerHTML = '';
       tooltip.style.display = 'none';
-      hedgeBeingDrawn.value.polyline.off("editable:drawing:move", updateTooltip);
-
     }
 
+    // Show the "hedge length" tooltip
+    // There are two cases:
+    //  1. we are drawing a new hedge
+    //  2. we are editing an existing hedge by dragging a marker
     const updateTooltip = (e) => {
-      tooltip.style.left = e.originalEvent.clientX - 10 + 'px';
-      tooltip.style.top = e.originalEvent.clientY + 20 + 'px';
+      let latLngs = null;;
 
-      let hedge = hedgeBeingDrawn.value;
-      let length = hedge.length;
-      let vertex = hedge.latLngs[hedge.latLngs.length - 1];
-      let cursor = e.latlng;
-      let p1 = new LatLon(vertex['lat'], vertex['lng']);
-      let p2 = new LatLon(cursor['lat'], cursor['lng']);
-      let l = p1.distanceTo(p2);
-      let totalLength = Math.ceil(length + l);
-      tooltip.innerHTML = `${totalLength} m`;
+      if (e.vertex) {
+        latLngs = e.vertex.latlngs;
+      } else if (hedgeBeingDrawn.value != null) {
+        latLngs = [...hedgeBeingDrawn.value.polyline.getLatLngs()];
+        latLngs.push(e.latlng);
+      }
+
+      if (latLngs) {
+        tooltip.style.left = e.originalEvent.clientX - 10 + 'px';
+        tooltip.style.top = e.originalEvent.clientY + 20 + 'px';
+        let length = latLngsLength(latLngs);
+        let totalLength = Math.ceil(length);
+        tooltip.innerHTML = `${totalLength} m`;
+      }
     }
 
     // Mount the app component and initialize the leaflet map
@@ -757,6 +765,13 @@ createApp({
       }
       map.setZoom(14);
       zoomOut(false); // remove animation, it is smoother at the beginning, and it eases the helpBubbleMessage display
+
+      map.on('editable:drawing:start', addTooltip);
+      map.on('editable:drawing:end', removeTooltip);
+      map.on('editable:vertex:dragstart', addTooltip);
+      map.on('editable:vertex:dragend', removeTooltip);
+      map.on("editable:drawing:move", updateTooltip);
+
       isSetupDone = true;
     });
 
