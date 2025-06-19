@@ -269,6 +269,7 @@ nav#evaluation-summary {
 #moulinette-form {
   counter-reset: steps;
 
+  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -287,8 +288,6 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
     background-color: var(--background-default-grey);
     padding: 1.25rem;
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
   }
 
   #form-group-created_surface,
@@ -349,6 +348,27 @@ nav#evaluation-summary {
   }
 
   #optional-forms {
+    padding: 0;
+
+    /* Accordion */
+    &.fr-accordion::before {
+      box-shadow: none;
+    }
+
+    .fr-accordion__btn {
+      color: inherit;
+      font-weight: normal;
+      padding: 1.25rem;
+
+      &[aria-expanded="true"] {
+        background-color: var(--background-default-grey);
+      }
+    }
+
+    &.fr-accordion .fr-collapse--expanded {
+      padding: 1.5rem;
+    }
+
     label small {
       font-style: italic;
     }
