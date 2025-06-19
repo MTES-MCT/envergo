@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from math import ceil, floor, isclose
+from math import ceil, isclose
 
 from django.utils.safestring import mark_safe
+
+from envergo.evaluations.models import RESULTS
 
 
 class PlantationCondition(ABC):
     """Evaluator for a single plantation condition."""
 
     label: str
-    result: bool  # if None, the condition will be filtered out
+    result: bool
     order: int = 0
     context: dict = dict()
     valid_text: str = "Condition validée"
@@ -20,10 +22,11 @@ class PlantationCondition(ABC):
     # prevent the template engine to instanciate the class
     do_not_call_in_templates = True
 
-    def __init__(self, hedge_data, R, catalog=None):
+    def __init__(self, hedge_data, R, criterion_evaluator, catalog=None):
         self.hedge_data = hedge_data
         self.R = R
         self.catalog = catalog or {}
+        self.criterion_evaluator = criterion_evaluator
 
     def must_display(self):
         """Should the condition be displayed?
@@ -363,6 +366,11 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
+        if self.criterion_evaluator.result_code == "dispense_L350":
+            # If the EP Normandie result code is "dispense_L350",
+            # we consider that the condition is always valid.
+            self.result = True
+
         self.context["lpm"] = ceil(self.catalog["lpm"])
         self.context["reduced_lpm"] = ceil(self.catalog["reduced_lpm"])
         self.context["LC"] = LC
@@ -450,54 +458,62 @@ class StrenghteningCondition(PlantationCondition):
     RATE = 0.2
     order = 3
 
-    label = "Renforcement"
+    label = "Renforcement de haies existantes"
     valid_text = (
         "Le renforcement ou regarnissage sur %(strengthening_length)s m convient."
     )
     invalid_text = """
-        Le renforcement ou regarnissage doit porter sur moins de %(strengthening_max)s m.
-        <br>Il y a %(strengthening_excess)s m en excès.
+        Le renforcement ou la reconnexion doit porter sur moins de 20%% de la compensation attendue.
+        <br/>Il manque %(missing_plantation_length)s m de plantation nouvelle.
     """
     hint_text = """
-        La compensation peut consister en un renforcement ou reconnexion de haies
-        existantes, dans la limite de 20%% du linéaire total à planter.
+        Jusqu’à 20%% du linéaire de compensation peuvent consister en un renforcement
+        ou une reconnexion de haies existantes.
     """
 
-    def evaluate(self):
+    def must_display(self):
+        """Should the condition be displayed?"""
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
-        if is_remplacement:
-            self.result = None
-            return self
+        return not is_remplacement
 
+    def evaluate(self):
+        lpm = self.catalog["lpm"]
         length_to_plant = self.hedge_data.length_to_plant()
-        strengthening_length = 0.0
+        length_to_plant_by_mode = defaultdict(int)
         for hedge in self.hedge_data.hedges_to_plant():
-            if hedge.prop("mode_plantation") in ("renforcement", "reconnexion"):
-                strengthening_length += hedge.length
+            length_to_plant_by_mode[hedge.prop("mode_plantation")] += hedge.length
 
-        length_to_plant = self.hedge_data.length_to_plant()
-        length_to_remove = self.hedge_data.length_to_remove()
-        minimum_length_to_plant = length_to_remove * self.R
+        if self.R == 0.0:
+            self.result = True
+        elif length_to_plant < lpm:
+            # la compensation n’est pas suffisante (approximatif car il y a LPm_r mais on n’en tient pas compte ici)
+            self.result = (
+                length_to_plant_by_mode["plantation"] > 0.8 * length_to_plant
+            )  # le renforcement ne doit pas représenter plus de 20% de la plantation proposée
+        else:  # // compensation suffisante (approximatif mais ok)
+            self.result = (
+                length_to_plant_by_mode["plantation"] > 0.8 * lpm
+            )  # la plantation occupe au moins 80% de la plantation minimale
 
-        strengthening_max = minimum_length_to_plant * self.RATE
-        self.result = strengthening_length <= strengthening_max or self.R == 0.0
+        strengthening_length = (
+            length_to_plant_by_mode["renforcement"]
+            + length_to_plant_by_mode["reconnexion"]
+        )
         self.context = {
-            "length_to_plant": round(length_to_plant),
-            "length_to_remove": round(length_to_remove),
-            "minimum_length_to_plant": ceil(minimum_length_to_plant),
-            "strengthening_max": floor(strengthening_max),
             "strengthening_length": ceil(strengthening_length),
-            "strengthening_excess": ceil(strengthening_length)
-            - floor(strengthening_max),
+            "missing_plantation_length": ceil(
+                0.8 * lpm - length_to_plant_by_mode["plantation"]
+            ),
         }
         return self
 
     @property
     def text(self):
-        length = self.context.get("strengthening_length")
+        strengthening_length = self.context.get("strengthening_length")
+
         valid_text = (
             "Le renforcement ou la reconnexion sur %(strengthening_length)s m convient."
-            if length > 0
+            if strengthening_length > 0
             else "Pas de renforcement ni reconnexion de haies."
         )
 
@@ -583,7 +599,7 @@ class PlantationConditionMixin:
 
     def plantation_evaluate(self, hedge_data, R, catalog=None):
         results = [
-            condition(hedge_data, R, catalog or {}).evaluate()
+            condition(hedge_data, R, self, catalog or {}).evaluate()
             for condition in self.plantation_conditions
         ]
         return results
@@ -592,21 +608,49 @@ class PlantationConditionMixin:
 class TreeAlignmentsCondition(PlantationCondition):
     label = "Alignements d’arbres (L350-3)"
     order = 5
-    valid_text = "Bientôt disponible"
-    invalid_text = "Bientôt disponible"
+    valid_text = "Le linéaire d’alignements d’arbres plantés en bord de voie ouverte au public est suffisant."
+    invalid_text = """
+        Le linéaire d’alignements d’arbres plantés en bord de voie ouverte au public doit être supérieur
+        à %(minimum_length_to_plant_aa_bord_voie)s m.
+        <br>Il manque au moins %(aa_bord_voie_delta)s m.
+    """
+
+    def must_display(self):
+        """Should the condition be displayed?"""
+        return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
-        # haies = self.catalog.get("haies")
-        # alignement_bord_voie_to_remove = [
-        #     hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
-        #     for hedge in haies.hedges_to_remove()
-        # ]
-        # alignement_bord_voie_to_plant = [
-        #     hedge.hedge_type == "alignement"
-        #     and hedge.prop("bord_voie")
-        #     and hedge.prop("mode_plantation") == "plantation"
-        #     for hedge in haies.hedges_to_plant()
-        # ]
+        length_to_remove_aa_bord_voie = sum(
+            hedge.length
+            for hedge in self.hedge_data.hedges_to_remove()
+            if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
+        )
+        length_to_plant_aa_bord_voie = sum(
+            hedge.length
+            for hedge in self.hedge_data.hedges_to_plant()
+            if hedge.hedge_type == "alignement"
+            and hedge.prop("bord_voie")
+            and hedge.prop("mode_plantation") == "plantation"
+        )
 
-        self.result = True
+        from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
+
+        r_aa = AlignementsArbres.get_result_based_replantation_coefficient(
+            self.criterion_evaluator.result_code
+        )
+
+        minimum_length_to_plant_aa_bord_voie = length_to_remove_aa_bord_voie * r_aa
+        aa_bord_voie_delta = (
+            minimum_length_to_plant_aa_bord_voie - length_to_plant_aa_bord_voie
+        )
+
+        self.context = {
+            "minimum_length_to_plant_aa_bord_voie": round(
+                minimum_length_to_plant_aa_bord_voie
+            ),
+            "aa_bord_voie_delta": round(max(0, aa_bord_voie_delta)),
+        }
+        self.result = (
+            length_to_plant_aa_bord_voie >= minimum_length_to_plant_aa_bord_voie
+        )
         return self
