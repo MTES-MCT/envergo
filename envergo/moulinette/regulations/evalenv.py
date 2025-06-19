@@ -254,7 +254,6 @@ class RoutesForm(OptionalFormMixin, forms.Form):
         choices=extract_choices(ROUTE_PUBLIQUE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="Construit, élargi ou rétrocédé au domaine public",
         get_display_value=extract_display_function(ROUTE_PUBLIQUE_CHOICES),
     )
     voie_privee = DisplayChoiceField(
@@ -488,7 +487,6 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=NB_EMPLACEMENTS_CHOICES,
-        display_help_text="Somme des places privées et publiques",
     )
 
 
@@ -539,7 +537,6 @@ class CampingForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         choices=NB_EMPLACEMENTS_CAMPING_CHOICES,
         display_label="Nombre total d'emplacements camping :",
-        display_help_text="Tentes, caravanes, résidences mobiles ou habitations légères de loisirs",
     )
 
 
@@ -659,10 +656,6 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=DEFRICHEMENT_DEBOISEMENT_CHOICE,
-        display_help_text="""
-            Uniquement en cas de changement de destination du terrain.
-            Superficie totale, même fragmentée.
-        """,
     )
     premier_boisement = DisplayChoiceField(
         label="Premier boisement",
@@ -672,7 +665,6 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=PREMIER_BOISEMENT_CHOICE,
-        display_help_text="Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.",
     )
 
 
