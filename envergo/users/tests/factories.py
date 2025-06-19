@@ -7,7 +7,6 @@ class UserFactory(DjangoModelFactory):
     email = Faker("email")
     name = Faker("name")
     password = Password("password")
-    is_confirmed_by_admin = False
     access_amenagement = True
     access_haie = False
 
