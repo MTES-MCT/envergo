@@ -214,7 +214,7 @@ class PetitionProject(models.Model):
             or all(
                 (
                     user.is_instructor,
-                    department in user.departments.defer("geometry").all(),
+                    user.departments.filter(id=department.id).exists(),
                 )
             )
             or all(

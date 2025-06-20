@@ -631,7 +631,9 @@ div#project-dossier-no {
 }
 
 div#invitation-token-email-html {
-  all: initial;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-mention-grey);
+  padding: 2rem;
 }
 
 pre#invitation-token-email-text {

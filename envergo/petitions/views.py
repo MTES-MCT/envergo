@@ -741,7 +741,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
 
 
 class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
-    """accept an invitation to a petition project"""
+    """Accept an invitation to a petition project"""
 
     model = PetitionProject
     slug_field = "reference"
