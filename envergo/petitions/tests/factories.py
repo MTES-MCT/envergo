@@ -7,7 +7,8 @@ from django.conf import settings
 from factory.django import DjangoModelFactory
 
 from envergo.hedges.tests.factories import HedgeDataFactory
-from envergo.petitions.models import DOSSIER_STATES, PetitionProject
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
+from envergo.users.tests.factories import UserFactory
 
 DEMARCHES_SIMPLIFIEES_FAKE = {
     "ENABLED": True,
@@ -59,3 +60,11 @@ class PetitionProject34Factory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059676
     demarches_simplifiees_state = DOSSIER_STATES.draft
+
+
+class InvitationTokenFactory(DjangoModelFactory):
+    class Meta:
+        model = InvitationToken
+
+    created_by = factory.SubFactory(UserFactory)
+    petition_project = factory.SubFactory(PetitionProjectFactory)
