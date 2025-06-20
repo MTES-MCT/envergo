@@ -621,7 +621,7 @@ class PetitionProjectInstructorView(
 ):
     """View display general information"""
 
-    pass
+    template_name = "haie/petitions/instructor_view.html"
 
 
 class PetitionProjectInstructorRegulationView(
@@ -629,8 +629,8 @@ class PetitionProjectInstructorRegulationView(
 ):
     """View for petition project instructor page"""
 
-    form_class = PetitionProjectInstructorRegulationForm
     template_name = "haie/petitions/instructor_view_regulation.html"
+    form_class = PetitionProjectInstructorRegulationForm
     matomo_tag = ""
 
     def get_context_data(self, **kwargs):
