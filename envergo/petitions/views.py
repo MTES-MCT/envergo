@@ -581,6 +581,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 "register",
             )
         )
+        context["is_department_instructor"] = (
+            self.object.has_user_as_department_instructor(self.request.user)
+        )
 
         return context
 
@@ -619,6 +622,9 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
                 Les données proviennent d'un dossier factice.""",
             )
 
+        if not context["is_department_instructor"]:
+            for field in context["form"].fields.values():
+                field.widget.attrs["disabled"] = "disabled"
         return context
 
     def get_success_url(self):
