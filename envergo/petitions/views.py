@@ -26,7 +26,11 @@ from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
-from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
+from envergo.petitions.forms import (
+    PetitionProjectForm,
+    PetitionProjectInstructorNotesForm,
+    PetitionProjectInstructorRegulationForm,
+)
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
@@ -607,7 +611,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    form_class = PetitionProjectInstructorForm
+    form_class = PetitionProjectInstructorNotesForm
     matomo_tag = "consultation_i"
 
     def post(self, request, *args, **kwargs):
@@ -650,6 +654,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    form_class = PetitionProjectInstructorRegulationForm
     matomo_tag = ""
 
     def get_context_data(self, **kwargs):

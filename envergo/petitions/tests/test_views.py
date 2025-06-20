@@ -8,7 +8,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from envergo.geodata.conftest import france_map  # noqa
+from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
@@ -61,6 +61,21 @@ def instructor_haie_user_44() -> User:
     department_44 = DepartmentFactory.create()
     instructor_haie_user_44.departments.add(department_44)
     return instructor_haie_user_44
+
+
+@pytest.fixture()
+def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="Bonnes conditions agricoles et environnementales - Fiche VIII",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            activation_map=loire_atlantique_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
 
 
 @pytest.fixture
@@ -336,7 +351,7 @@ def test_petition_project_instructor_notes_view(
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_petition_project_instructor_view_reglementation_pages(
-    mock_post, instructor_haie_user_44, ep_criteria, client, site
+    mock_post, instructor_haie_user_44, conditionnalite_pac, ep_criteria, client, site
 ):
     """Test instruction pages reglementation menu and content"""
 
@@ -368,18 +383,18 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Test existing regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
     client.force_login(instructor_haie_user_44)
     response = client.get(instructor_url)
     assert response.status_code == 200
-    assert f"{ep_criteria[0].regulation}" in response.content.decode()
+    assert f"{conditionnalite_pac_criteria[0].regulation}" in response.content.decode()
 
     # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
-        kwargs={"reference": project.reference, "regulation": "ep_criteria"},
+        kwargs={"reference": project.reference, "regulation": "ep"},
     )
     # Submit onagre
     response = client.post(instructor_url, {"onagre_number": "1234567"})
@@ -628,16 +643,19 @@ def test_petition_project_instructor_form(
     # GIVEN a petition project
     ConfigHaieFactory()
     project = PetitionProjectFactory()
-    instructor_form_url = reverse(
-        "petition_project_instructor_view",
+    instructor_notes_form_url = reverse(
+        "petition_project_instructor_notes_view",
         kwargs={"reference": project.reference},
+    )
+    instructor_ep_form_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
     )
 
     # WHEN I post some instructor data without being logged in
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -648,9 +666,8 @@ def test_petition_project_instructor_form(
     # WHEN I post some instructor data without being authorized
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -662,9 +679,8 @@ def test_petition_project_instructor_form(
     InvitationTokenFactory(user=haie_user, petition_project=project)
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -673,18 +689,35 @@ def test_petition_project_instructor_form(
     assert response.status_code == 403
     assert project.onagre_number == ""
     assert project.instructor_free_mention == ""
+
     # WHEN I post some instructor data with a department instructor
     client.force_login(instructor_haie_user_44)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
     # THEN it should update the project
     assert response.status_code == 302
-    assert "/projet/ABC123/instruction/" in response.url
+    assert "/projet/ABC123/instruction/notes" in response.url
+    project.refresh_from_db()
+    assert (
+        project.instructor_free_mention
+        == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
+    )
+
+    # WHEN I post onagre data number a department instructor on ep page
+    client.force_login(instructor_haie_user_44)
+    response = client.post(
+        instructor_ep_form_url,
+        {
+            "onagre_number": "organe",
+        },
+    )
+    # THEN it should update the project whith this
+    assert response.status_code == 302
+    assert "/projet/ABC123/instruction/ep" in response.url
     project.refresh_from_db()
     assert project.onagre_number == "organe"
     assert (
