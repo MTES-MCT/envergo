@@ -535,7 +535,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         user = request.user
 
         # check if user is authorize, else returns 403 error
-        if self.object.is_instructor_authorized(user):
+        if self.object.has_user_as_instructor(user):
             log_event(
                 "projet",
                 self.matomo_tag,
@@ -591,6 +591,15 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     template_name = "haie/petitions/instructor_view.html"
     form_class = PetitionProjectInstructorForm
     matomo_tag = "consultation_i"
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+        if not project.has_user_as_department_instructor(request.user):
+            return TemplateResponse(
+                request, template="haie/petitions/403.html", status=403
+            )
+
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -719,7 +728,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
     def post(self, request, *args, **kwargs):
         project = self.get_object()
 
-        if project.is_instructor_authorized(request.user):
+        if project.has_user_as_instructor(request.user):
             token = InvitationToken.objects.create(
                 created_by=request.user,
                 petition_project=project,

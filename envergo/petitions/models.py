@@ -207,25 +207,29 @@ class PetitionProject(models.Model):
         )
         return moulinette
 
-    def is_instructor_authorized(self, user):
+    def has_user_as_department_instructor(self, user):
         department = self.department
-        return (
-            user.is_superuser
-            or all(
-                (
-                    user.is_active,
-                    user.access_haie,
-                    department in user.departments.defer("geometry").all(),
-                )
-            )
-            or all(
-                (
-                    user.is_active,
-                    user.access_haie,
-                    user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
-                )
+        return user.is_superuser or all(
+            (
+                user.is_active,
+                user.access_haie,
+                user.departments.filter(id=department.id).exists(),
             )
         )
+
+    def has_user_as_invited_instructor(self, user):
+        return user.is_superuser or all(
+            (
+                user.is_active,
+                user.access_haie,
+                user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+            )
+        )
+
+    def has_user_as_instructor(self, user):
+        return self.has_user_as_invited_instructor(
+            user
+        ) or self.has_user_as_department_instructor(user)
 
 
 def one_month_from_now():

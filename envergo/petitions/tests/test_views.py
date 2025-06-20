@@ -489,3 +489,78 @@ def test_petition_project_accept_invitation(client, haie_user, site):
     client.force_login(haie_user)
     response = client.get(accept_invitation_url)
     assert response.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_form(
+    client, haie_user, instructor_haie_user_44, site
+):
+    """Post onagre and instruction note"""
+
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    instructor_form_url = reverse(
+        "petition_project_instructor_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN I post some instructor data without being logged in
+    response = client.post(
+        instructor_form_url,
+        {
+            "onagre_number": "organe",
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+    # THEN i should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN I post some instructor data without being authorized
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_form_url,
+        {
+            "onagre_number": "organe",
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+
+    # WHEN I post some instructor data with as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_form_url,
+        {
+            "onagre_number": "organe",
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+    assert project.onagre_number == ""
+    assert project.instructor_free_mention == ""
+    # WHEN I post some instructor data with a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.post(
+        instructor_form_url,
+        {
+            "onagre_number": "organe",
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+    # THEN it should update the project
+    assert response.status_code == 302
+    assert "/projet/ABC123/instruction/" in response.url
+    project.refresh_from_db()
+    assert project.onagre_number == "organe"
+    assert (
+        project.instructor_free_mention
+        == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
+    )
