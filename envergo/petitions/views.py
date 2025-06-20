@@ -592,8 +592,12 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         return context
 
 
-class PetitionProjectInstructorContextBaseMixin(PetitionProjectInstructorMixin):
-    """Mixin to get general infos for petition project instructor pages"""
+class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view.html"
+    form_class = PetitionProjectInstructorNotesForm
+    matomo_tag = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -615,18 +619,11 @@ class PetitionProjectInstructorContextBaseMixin(PetitionProjectInstructorMixin):
 
         return context
 
-
-class PetitionProjectInstructorView(
-    PetitionProjectInstructorContextBaseMixin, DetailView
-):
-    """View display general information"""
-
-    template_name = "haie/petitions/instructor_view.html"
+    def get_success_url(self):
+        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorRegulationView(
-    PetitionProjectInstructorContextBaseMixin, UpdateView
-):
+class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
@@ -690,13 +687,10 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorNotesView(
-    PetitionProjectInstructorContextBaseMixin, UpdateView
-):
-    """View for petition project instructor page / notes"""
+class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    form_class = PetitionProjectInstructorNotesForm
     matomo_tag = ""
 
     def get_success_url(self):
