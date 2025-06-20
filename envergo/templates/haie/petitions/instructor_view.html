@@ -90,6 +90,7 @@
 {% endblock %}
 
 {% block extra_body %}
+  {{ block.super }}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
   {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
 {% endblock %}

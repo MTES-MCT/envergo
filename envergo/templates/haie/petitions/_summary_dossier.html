@@ -25,18 +25,19 @@
                title="Dossier dans Démarches Simplifiées"
                href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger le tracé des haies</a>
           </li>
-          <li>
-            <button class="fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-upload-2-line"
-                    id="invitation-token-modal-button"
-                    data-event-category="projet"
-                    data-event-action="invitation"
-                    data-event-name="{{ petition_project.reference }}"
-                    data-fr-opened="false"
-                    aria-controls="invitation-token-modal">Inviter une personne à consulter le dossier</button>
-          </li>
+          {% if is_department_instructor %}
+            <li>
+              <button class="fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-upload-2-line"
+                      id="invitation-token-modal-button"
+                      data-event-category="projet"
+                      data-event-action="invitation"
+                      data-event-name="{{ petition_project.reference }}"
+                      data-fr-opened="false"
+                      aria-controls="invitation-token-modal">Inviter une personne à consulter le dossier</button>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
   </div>
 </div>
-{% include 'haie/petitions/_invitation_token_modal.html' %}
