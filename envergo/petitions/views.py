@@ -25,7 +25,11 @@ from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
-from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
+from envergo.petitions.forms import (
+    PetitionProjectForm,
+    PetitionProjectInstructorNotesForm,
+    PetitionProjectInstructorRegulationForm,
+)
 from envergo.petitions.models import DOSSIER_STATES, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
@@ -588,12 +592,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         return context
 
 
-class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
-    """View for petition project instructor page"""
-
-    template_name = "haie/petitions/instructor_view.html"
-    form_class = PetitionProjectInstructorForm
-    matomo_tag = "consultation_i"
+class PetitionProjectInstructorContextBaseMixin(PetitionProjectInstructorMixin):
+    """Mixin to get general infos for petition project instructor pages"""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -615,13 +615,21 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
         return context
 
-    def get_success_url(self):
-        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+
+class PetitionProjectInstructorView(
+    PetitionProjectInstructorContextBaseMixin, DetailView
+):
+    """View display general information"""
+
+    pass
 
 
-class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
+class PetitionProjectInstructorRegulationView(
+    PetitionProjectInstructorContextBaseMixin, UpdateView
+):
     """View for petition project instructor page"""
 
+    form_class = PetitionProjectInstructorRegulationForm
     template_name = "haie/petitions/instructor_view_regulation.html"
     matomo_tag = ""
 
@@ -682,10 +690,13 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
-    """View for petition project instructor page"""
+class PetitionProjectInstructorNotesView(
+    PetitionProjectInstructorContextBaseMixin, UpdateView
+):
+    """View for petition project instructor page / notes"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
+    form_class = PetitionProjectInstructorNotesForm
     matomo_tag = ""
 
     def get_success_url(self):
