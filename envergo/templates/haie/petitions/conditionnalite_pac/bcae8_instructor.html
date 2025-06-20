@@ -1,7 +1,5 @@
 {% load moulinette %}
 
-<h2>BCAE 8</h2>
-
 <p class="fr-callout fr-icon-information-line">
   Les décomptes de cette section n'incluent que les haies déclarées
   "sur parcelle PAC. Les alignements d’arbres sont également exclus.
@@ -48,8 +46,14 @@
 
 <h3 class="fr-mt-4w">Données de la simulation</h3>
 
-<ul class="instructor-view-list">
-  {% for field in bcae8_form %}
-    <li>{% field_summary field %}</li>
-  {% endfor %}
-</ul>
+{% if lineaire_detruit_pac %}
+  <ul class="instructor-view-list">
+    {% for field in bcae8_form %}
+      <li>{% field_summary field %}</li>
+    {% endfor %}
+  </ul>
+
+{% else %}
+  <p>Il n’y a pas de données de simulation associées à cette réglementation.</p>
+
+{% endif %}

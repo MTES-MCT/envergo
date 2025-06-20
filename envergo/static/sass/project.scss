@@ -57,6 +57,10 @@ hr.separator {
   background: none;
   border: none;
   border-top: 1px solid var(--border-action-high-blue-france);
+
+  &--lignt {
+    border-top: 1px solid var(--border-default-grey);
+  }
 }
 
 /**
