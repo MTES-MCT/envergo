@@ -416,10 +416,23 @@ def test_petition_project_invitation_token(
         == response.json()["error"]
     )
 
-    # user authorized
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    # THEN creation is not authorized
+    assert response.status_code == 403
+    assert (
+        "You are not authorized to create an invitation token for this project."
+        == response.json()["error"]
+    )
+
+    # WHEN the user is a department instructor
     client.force_login(instructor_haie_user_44)
     response = client.post(invitation_token_url)
-    token = InvitationToken.objects.get()
+
+    # THEN an invitation token is created
+    token = InvitationToken.objects.get(created_by=instructor_haie_user_44)
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]

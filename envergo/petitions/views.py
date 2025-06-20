@@ -727,8 +727,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
-
-        if project.has_user_as_instructor(request.user):
+        if project.has_user_as_department_instructor(request.user):
             token = InvitationToken.objects.create(
                 created_by=request.user,
                 petition_project=project,
