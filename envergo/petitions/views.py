@@ -534,7 +534,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         result = super().get(request, *args, **kwargs)
         user = request.user
 
-        # check if user is authorize, else returns 403 error
+        # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
             log_event(
                 "projet",
