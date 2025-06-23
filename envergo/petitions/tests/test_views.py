@@ -351,7 +351,12 @@ def test_petition_project_instructor_notes_view(
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 def test_petition_project_instructor_view_reglementation_pages(
-    mock_post, instructor_haie_user_44, conditionnalite_pac, ep_criteria, client, site
+    mock_post,
+    instructor_haie_user_44,
+    conditionnalite_pac_criteria,
+    ep_criteria,
+    client,
+    site,
 ):
     """Test instruction pages reglementation menu and content"""
 
