@@ -28,8 +28,8 @@ from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import (
     PetitionProjectForm,
+    PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorNotesForm,
-    PetitionProjectInstructorRegulationForm,
 )
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
@@ -654,10 +654,10 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    form_class = PetitionProjectInstructorRegulationForm
     matomo_tag = ""
 
     def get_context_data(self, **kwargs):
+        """Insert current regulation in context dict"""
         context = super().get_context_data(**kwargs)
         regulation_slug = self.kwargs.get("regulation")
         if regulation_slug:
@@ -670,6 +670,14 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
 
             context["current_regulation"] = current_regulation
         return context
+
+    def get_form_class(self):
+        """Return the form class to use in this view."""
+        regulation_slug = self.kwargs.get("regulation")
+        if regulation_slug == "ep":
+            return PetitionProjectInstructorEspecesProtegeesForm
+        else:
+            return self.form_class
 
     def get_success_url(self):
         return reverse(
