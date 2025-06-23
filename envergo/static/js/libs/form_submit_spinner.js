@@ -28,7 +28,7 @@
     this.buttonElt.classList.add("icon-spinner");
 
     let textElt = document.createElement('span');
-    textElt.innerHTML = 'Simulation en cours…';
+    textElt.innerHTML = 'Chargement en cours…';
     textElt.classList.add("fr-hint-text");
     textElt.classList.add("submit-feedback-hint-text");
     this.buttonElt.insertAdjacentElement("afterend", textElt);
