@@ -78,7 +78,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # GIVEN a new dossier in Draft status
     petition_project = PetitionProjectFactory(reference="DEF456")
 
-    # WHEN i synchronize it with DS for the first time even as a staff user
+    # WHEN I synchronize it with DS for the first time even as a staff user
     staff_user = UserFactory(access_amenagement=False, access_haie=True, is_staff=True)
     fetch_project_details_from_demarches_simplifiees(
         petition_project, config, site, "staff", staff_user
