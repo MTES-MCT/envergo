@@ -17,7 +17,7 @@ class PetitionProjectForm(forms.ModelForm):
         ]
 
 
-class PetitionProjectInstructorRegulationForm(forms.ModelForm):
+class PetitionProjectInstructorEspecesProtegeesForm(forms.ModelForm):
     """Form for adding instructor fields to a petition project."""
 
     class Meta:
