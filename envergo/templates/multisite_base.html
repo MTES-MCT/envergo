@@ -51,6 +51,8 @@
               type="text/javascript"
               nomodule
               src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}"></script>
+      <script defer src="{% static 'js/libs/spinner.js' %}"></script>
+
       <script>
         var EVENTS_URL = "{% url 'events' %}";
         var CSRF_TOKEN = '{{ csrf_token }}';
@@ -58,7 +60,20 @@
         {% if matomo_custom_url %}
           var MATOMO_CUSTOM_URL = "{{ matomo_custom_url }}";
         {% endif %}
+
+        window.addEventListener("load", function() {
+          let links = document.querySelectorAll(".spinner-link");
+          links.forEach((link) => {
+            new SpinnerLink(link);
+          });
+
+          let forms = document.querySelectorAll(".spinner-form");
+          forms.forEach((form) => {
+            new SpinnerForm(form);
+          });
+        });
       </script>
+
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
       {% include '_chatbox.html' %}

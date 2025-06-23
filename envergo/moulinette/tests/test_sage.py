@@ -147,7 +147,7 @@ def test_several_perimeter_maps_display(
     PerimeterFactory(
         name="Sage Test",
         activation_map=france_map,
-        regulation=sage_criteria[0].regulation,
+        regulations=[sage_criteria[0].regulation],
     )
 
     url = reverse("moulinette_result")
@@ -177,14 +177,14 @@ def test_several_perimeter_may_have_different_results(
     sage_non_disponible = PerimeterFactory(
         name="Sage Non Disponible",
         activation_map=france_map,
-        regulation=sage_criteria[0].regulation,
+        regulations=[sage_criteria[0].regulation],
         is_activated=False,
     )
 
     sage_test = PerimeterFactory(
         name="Sage Test",
         activation_map=france_map,
-        regulation=sage_criteria[0].regulation,
+        regulations=[sage_criteria[0].regulation],
     )
 
     CriterionFactory(
