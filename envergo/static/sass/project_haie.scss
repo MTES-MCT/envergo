@@ -642,18 +642,3 @@ div#project-dossier-no {
     border-bottom: solid 1px var(--border-default-grey);
   }
 }
-
-.icon-spinner {
-  &::before,
-  &::after {
-    animation: rotateSpinner 1200ms linear infinite;
-    -webkit-mask-image: url("../icons/sun.svg");
-    mask-image: url("../icons/sun.svg");
-
-    @keyframes rotateSpinner {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  }
-}
