@@ -5,7 +5,7 @@
   const SpinnerForm = function (formElt) {
     this.formElt = formElt;
     this.formElt.addEventListener('submit', this.deactivate.bind(this));
-    this.buttonElt = formElt.querySelector('button[type=submit]');
+    this.buttonElt = formElt.querySelector('[type=submit]');
 
     exports.addEventListener("pageshow", this.onPageShow.bind(this));
   };
