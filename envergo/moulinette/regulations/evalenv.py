@@ -39,7 +39,7 @@ class EmpriseForm(forms.Form):
         required=True,
         display_label="Zonage du projet :",
         get_display_value=lambda value: (
-            "Zone urbaine du PLU" if value == "oui" else "Hors zone Urbaine du PLU"
+            "Zone urbaine du PLU" if value == "oui" else "Hors zone urbaine du PLU"
         ),
     )
 
@@ -98,7 +98,6 @@ class SurfacePlancherForm(forms.Form):
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
-        display_help_text="",
     )
 
     def __init__(self, *args, **kwargs):
@@ -220,19 +219,19 @@ class OptionalFormMixin:
 
 
 ROUTE_PUBLIQUE_CHOICES = (
-    ("aucune", "Aucune", "Aucun"),
-    ("lt_10km", "< 10 km (dès le premier mètre)", "Inférieur à 10 km"),
-    ("gte_10km", "≥ 10 km", "Supérieur à 10 km"),
+    ("aucune", "Aucune", "Aucune"),
+    ("lt_10km", "De 0 (dès le premier mètre) à 10 km", "Moins de 10 km"),
+    ("gte_10km", "10 km ou plus", "10 km ou plus"),
 )
 
 VOIE_PRIVEE_CHOICES = (
-    ("lt_3km", "Aucune ou < 3 km", "Aucune ou de longueur inférieure à 3 km"),
-    ("gte_3km", "≥ 3 km", "Longueur supérieure à 3 km"),
+    ("lt_3km", "Aucune ou moins de 3 km"),
+    ("gte_3km", "3 km ou plus"),
 )
 
 PISTE_CYCLABLE_CHOICES = (
-    ("lt_10km", "Aucune ou < 10 km", "Aucune ou de longueur inférieure à 10 km"),
-    ("gte_10km", "≥ 10 km", "Longueur supérieure à 10 km"),
+    ("lt_10km", "Aucune ou moins de 10 km"),
+    ("gte_10km", "10 km ou plus"),
 )
 
 
@@ -240,44 +239,38 @@ class RoutesForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_06"
 
     activate = forms.BooleanField(
-        label="Rubrique 6 : routes",
+        label="Aménagement de voirie",
+        help_text="""Rubrique 6 de l'évaluation environnementale<br>
+        Cumul autorisé depuis le 16 mai 2017
+        """,
         required=True,
         widget=forms.CheckboxInput,
     )
     route_publique = DisplayChoiceField(
         label="Route publique",
         help_text="""
-            Construite, élargie, ou rétrocédée au domaine public.
-            Cumul autorisé depuis le 16 mai 2017
+            Construction ou élargissement d'une route publique, ou rétrocession d’une voie privée au domaine public
         """,
         choices=extract_choices(ROUTE_PUBLIQUE_CHOICES),
         widget=forms.RadioSelect,
         required=True,
-        display_label="Tronçon de route publique :",
-        display_help_text="Construit, élargi ou rétrocédé au domaine public",
         get_display_value=extract_display_function(ROUTE_PUBLIQUE_CHOICES),
     )
     voie_privee = DisplayChoiceField(
         label="Voie privée",
         help_text="""
-            Cumul autorisé depuis le 16 mai 2017
         """,
-        choices=extract_choices(VOIE_PRIVEE_CHOICES),
+        choices=VOIE_PRIVEE_CHOICES,
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
-        get_display_value=extract_display_function(VOIE_PRIVEE_CHOICES),
     )
     piste_cyclable = DisplayChoiceField(
         label="Piste cyclable ou voie verte",
         help_text="""
-        Cumul autorisé depuis le 16 mai 2017
         """,
-        choices=extract_choices(PISTE_CYCLABLE_CHOICES),
+        choices=PISTE_CYCLABLE_CHOICES,
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
-        get_display_value=extract_display_function(PISTE_CYCLABLE_CHOICES),
     )
 
 
@@ -331,17 +324,29 @@ class PisteCyclable(SelfDeclarationMixin, CriterionEvaluator):
 
 
 PUISSANCE_CHOICES = (
-    ("lt_300kWc", "< 300 kWc", "Inférieure à 300 kWc"),
-    ("300_1000kWc", "300 à 1000 kWc", "Entre 300 kWc et 1 000 kWc"),
-    ("gte_1000kWc", "≥ 1000 kWc", "Supérieure à 1 000 kWc"),
+    ("lt_300kWc", "Moins de 300 kWc"),
+    ("300_1000kWc", "Entre 300 et 1 000 kWc"),
+    ("gte_1000kWc", "1 000 kWc ou plus"),
 )
 
 LOCALISATION_CHOICES = (
-    ("sol", "Au sol, y compris agrivoltaïsme"),
-    ("aire_arti", "Sur aire de stationnement artificialisée"),
-    ("aire_non_arti", "Sur aire de stationnement non artificialisée ou autre ombrière"),
-    ("batiment_clos", "Sur bâtiment 4 murs clos ou serre ou hangar"),
-    ("batiment_ouvert", "Sur bâtiment en partie ouvert"),
+    ("sol", "Au sol"),
+    ("aire_arti", "Ombrière sur une aire de stationnement artificialisée"),
+    (
+        "aire_non_arti",
+        {
+            "label": "Ombrière autre",
+            "help_text": "Sur sol agricole, aire de stationnement non artificialisée…",
+        },
+    ),
+    (
+        "batiment_clos",
+        {
+            "label": "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés",
+            "help_text": "Y compris serre agricole entièrement close, bâtiment sportif ou d’activité",
+        },
+    ),
+    ("batiment_ouvert", "Toiture d’un bâtiment partiellement ouvert"),
     ("aucun", "Aucun panneau"),
 )
 
@@ -350,29 +355,23 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_30"
 
     activate = forms.BooleanField(
-        label="Rubrique 30 : photovoltaïque",
+        label="Installation photovoltaïque",
+        help_text="Rubrique 30 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
     puissance = DisplayChoiceField(
-        label="Puissance",
+        label="Puissance totale des panneaux installés",
         help_text="Cumul autorisé depuis le 16 mai 2017",
-        choices=extract_choices(PUISSANCE_CHOICES),
+        choices=PUISSANCE_CHOICES,
         widget=forms.RadioSelect,
         required=True,
-        display_help_text="",
-        display_label="Puissance photovoltaïque :",
-        get_display_value=extract_display_function(PUISSANCE_CHOICES),
     )
     localisation = DisplayChoiceField(
         label="Localisation des panneaux",
         choices=LOCALISATION_CHOICES,
         widget=forms.RadioSelect,
         required=True,
-        display_label="Localisation des panneaux photovoltaïques :",
-        get_display_value=lambda value: (
-            "Au sol" if value == "sol" else dict(LOCALISATION_CHOICES).get(value, value)
-        ),
     )
 
 
@@ -429,14 +428,35 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
 
 
 TYPE_STATIONNEMENT_CHOICES = (
-    ("public", "Ouvert au public", "Ouverte au public"),
-    ("private", "Privé", "Privée"),
-    ("mixed", "Mixte", "Mixte public-privé (au moins une place est ouverte au public)"),
+    (
+        "public",
+        {
+            "label": "Ouvert au public",
+            "help_text": """Dès lors que les emplacements sont accessibles à tous,
+            y compris s’ils sont payants, ou fermés la nuit, ou réservés aux clients d’un commerce
+            ou d’un établissement recevant du public""",
+        },
+        "Ouvert au public",
+    ),
+    (
+        "mixed",
+        "Mixte (au moins un emplacement ouvert au public)",
+        "Mixte public-privé (au moins un emplacement est ouvert au public)",
+    ),
+    (
+        "private",
+        {
+            "label": "Entièrement privé",
+            "help_text": """Emplacements réservés uniquement aux résidents d’un immeuble
+            ou aux employés d’une entreprise ; en sous-sol ou en extérieur""",
+        },
+        "Entièrement privé",
+    ),
 )
 
 NB_EMPLACEMENTS_CHOICES = (
-    ("0_49", "De 0 à 49", "0 à 49"),
-    ("gte_50", "50 et plus", "50 ou plus"),
+    ("0_49", "0 à 49"),
+    ("gte_50", "50 ou plus"),
 )
 
 
@@ -444,35 +464,29 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_41"
 
     activate = forms.BooleanField(
-        label="Rubrique 41 : aires de stationnement",
+        label="Aire de stationnement",
+        help_text="Rubrique 41 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
     type_stationnement = DisplayChoiceField(
         label="Type de stationnement",
         help_text="""
-            Privé : attaché à des logements ou réservé à des employés.
-            Mixte : si au moins une place est ouverte au public
         """,
         required=True,
         widget=forms.RadioSelect,
         choices=extract_choices(TYPE_STATIONNEMENT_CHOICES),
-        display_help_text="",
-        display_label="Aire de stationnement :",
         get_display_value=extract_display_function(TYPE_STATIONNEMENT_CHOICES),
     )
     nb_emplacements = DisplayChoiceField(
         label="Nombre total d'emplacements",
         help_text="""
-            Somme des places privées et publiques.
+            Somme des emplacements privés et publics.
             Cumul autorisé après le 16 mai 2017
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=extract_choices(NB_EMPLACEMENTS_CHOICES),
-        display_help_text="Somme des places privées et publiques",
-        display_label="Nombre total d'emplacements de stationnement :",
-        get_display_value=extract_display_function(NB_EMPLACEMENTS_CHOICES),
+        choices=NB_EMPLACEMENTS_CHOICES,
     )
 
 
@@ -498,9 +512,9 @@ class AireDeStationnement(SelfDeclarationMixin, CriterionEvaluator):
 
 
 NB_EMPLACEMENTS_CAMPING_CHOICES = (
-    ("0_6", "De 0 à 6", "De 0 à 6 emplacements"),
-    ("7_199", "De 7 à 199", "De 7 à 199 emplacements"),
-    ("gte_200", "200 et plus", "200 emplacements ou plus"),
+    ("0_6", "0 à 6"),
+    ("7_199", "7 à 199"),
+    ("gte_200", "200 ou plus"),
 )
 
 
@@ -508,22 +522,21 @@ class CampingForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_42"
 
     activate = forms.BooleanField(
-        label="Rubrique 42 : camping",
+        label="Camping",
+        help_text="Rubrique 42 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
     nb_emplacements = DisplayChoiceField(
-        label="Nombre d'emplacements",
+        label="Nombre total d'emplacements",
         help_text="""
             De tentes, caravanes, résidences mobiles ou habitations légères de loisirs.
             Cumul autorisé après le 16 mai 2017.
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=extract_choices(NB_EMPLACEMENTS_CAMPING_CHOICES),
-        display_help_text="Tentes, caravanes, résidences mobiles ou habitations légères de loisirs",
-        display_label="Terrain de camping :",
-        get_display_value=extract_display_function(NB_EMPLACEMENTS_CAMPING_CHOICES),
+        choices=NB_EMPLACEMENTS_CAMPING_CHOICES,
+        display_label="Nombre total d'emplacements camping :",
     )
 
 
@@ -548,7 +561,15 @@ TYPE_EQUIPEMENT_CHOICES = (
     ("sport", "Équipement sportif"),
     ("loisir", "Parc de loisirs"),
     ("culture", "Équipement culturel"),
-    ("autre", "Autre (hors nomenclature)"),
+    (
+        "autre",
+        "Aucun de ces types",
+    ),
+)
+
+CAPACITE_ACCUEIL_CHOICES = (
+    ("lt_1000", "0 à 999 personnes"),
+    ("gte_1000", "1 000 personnes ou plus"),
 )
 
 
@@ -556,7 +577,8 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_44"
 
     activate = forms.BooleanField(
-        label="Rubrique 44 : sport / loisirs / culture",
+        label="Équipement de sport, de loisirs ou culturel",
+        help_text="Rubrique 44 de l'évaluation environnementale",
         required=True,
         widget=forms.CheckboxInput,
     )
@@ -566,7 +588,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         widget=forms.RadioSelect,
         choices=TYPE_EQUIPEMENT_CHOICES,
         get_display_value=lambda value: (
-            "Ni sportif, ni de loisirs, ni culturel"
+            "Ni parc de loisirs, ni équipement sportif ou culturel"
             if value == "autre"
             else dict(TYPE_EQUIPEMENT_CHOICES).get(value, value)
         ),
@@ -575,10 +597,7 @@ class EquipementSportifForm(OptionalFormMixin, forms.Form):
         label="Capacité d'accueil",
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("lt_1000", "0 à 999 personnes"),
-            ("gte_1000", "1000 personnes ou plus"),
-        ),
+        choices=CAPACITE_ACCUEIL_CHOICES,
     )
 
 
@@ -608,53 +627,44 @@ class EquipementSportif(SelfDeclarationMixin, CriterionEvaluator):
         return capacite_accueil, type
 
 
+DEFRICHEMENT_DEBOISEMENT_CHOICE = (
+    ("lt_05ha", "Moins de 0,5 ha"),
+    ("gte_05ha", "0,5 ha ou plus"),
+)
+
+PREMIER_BOISEMENT_CHOICE = DEFRICHEMENT_DEBOISEMENT_CHOICE
+
+
 class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_rubrique_47"
 
     activate = forms.BooleanField(
-        label="Rubrique 47 : défrichement / boisement",
+        label="Défrichement, déboisement ou boisement",
+        help_text="""Rubrique 47 de l'évaluation environnementale<br>
+            Cumul autorisé depuis le 16 mai 2017. Compter la superficie totale, même fragmentée.""",
         required=True,
         widget=forms.CheckboxInput,
     )
     defrichement_deboisement = DisplayChoiceField(
         label="Défrichement ou déboisement",
         help_text="""
-            Uniquement en cas de changement de destination du terrain.
-            Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
-        """,
+            Toute opération volontaire (coupe rase, dessouchage…) ayant pour effet de détruire l’état boisé d’un terrain
+            (qu’il soit à usage forestier ou non), et qui en change la destination : mise en culture, habitation, activité tertiaire…
+            Voir <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf" target="_blank" rel="noopener">
+            guide de la nomenclature p. 56</a>.
+        """,  # noqa
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("lt_05ha", "< 0,5 ha"),
-            ("gte_05ha", "≥ 0,5 ha"),
-        ),
-        display_help_text="""
-            Uniquement en cas de changement de destination du terrain.
-            Superficie totale, même fragmentée.
-        """,
-        get_display_value=lambda value: (
-            "Inférieur à 0,5 ha" if value == "lt_05ha" else "Supérieur à 0,5 ha"
-        ),
+        choices=DEFRICHEMENT_DEBOISEMENT_CHOICE,
     )
     premier_boisement = DisplayChoiceField(
         label="Premier boisement",
         help_text="""
-            Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.
-             Superficie totale, même fragmentée. Cumul autorisé après le 16 mai 2017.
+            Ne concerne pas le reboisement de terrains qui étaient antérieurement à l'état boisé.
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=(
-            ("lt_05ha", "< 0,5 ha"),
-            ("gte_05ha", "≥ 0,5 ha"),
-        ),
-        display_label="Superficie totale du premier boisement (même fragmentée) :",
-        display_help_text="Ne concerne pas le reboisement d'une parcelle antérieurement à l'état boisé.",
-        get_display_value=lambda value: (
-            " Inférieure au seuil de 0,5 ha"
-            if value == "lt_05ha"
-            else "Supérieure ou égale au seuil de 0,5 ha"
-        ),
+        choices=PREMIER_BOISEMENT_CHOICE,
     )
 
 

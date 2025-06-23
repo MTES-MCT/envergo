@@ -63,10 +63,7 @@ def test_edition_redirection_from_result_admin_see_optional_criterion_additional
     assertTemplateUsed(res, "moulinette/home.html")
 
     # The question exists in the sidebar
-    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
-
-    # The criterion is not activated
-    assert "Aire de stationnement" not in res.content.decode()
+    assert "Aire de stationnement" in res.content.decode()
 
     # The form is not validated, no error message is shown
     assert "error-text-evalenv_rubrique_41-soumis" not in res.content.decode()
@@ -81,7 +78,7 @@ def test_optional_questions_appear_on_moulinette_home(admin_client):
     assertTemplateUsed(res, "moulinette/home.html")
 
     # The question exists in the sidebar
-    assert "Rubrique 41 : aires de stationnement" in res.content.decode()
+    assert "Aire de stationnement" in res.content.decode()
 
 
 # ETQ User, je ne peux pas voir l'option d'activer un critère optionnel
@@ -95,9 +92,6 @@ def test_users_cannot_see_optional_criterion_additional_question(client):
     assertTemplateUsed(res, "moulinette/result.html")
 
     # The question does not exist in the sidebar
-    assert "Rubrique 41 : aires de stationnement" not in res.content.decode()
-
-    # The criterion is  not activated
     assert "Aire de stationnement" not in res.content.decode()
 
 

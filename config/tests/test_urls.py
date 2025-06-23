@@ -24,6 +24,8 @@ COMMON_URLS = [
     "legal_mentions",
     "moulinette_home",
     "moulinette_result",
+    "demo_catchment_area",
+    "demo_density",
 ]
 
 HAIE_URLS = [
@@ -35,7 +37,6 @@ AMENAGEMENT_URLS = [
     "privacy",
     "terms_of_service",
     "zone_map",
-    "2150_debug",
     "faq",
     "news_feed",
     "geometricians",
