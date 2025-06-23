@@ -265,6 +265,7 @@ nav#evaluation-summary {
 #moulinette-form {
   counter-reset: steps;
 
+  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -283,8 +284,6 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
     background-color: var(--background-default-grey);
     padding: 1.25rem;
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
   }
 
   #form-group-created_surface,
