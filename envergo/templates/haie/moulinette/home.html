@@ -7,7 +7,15 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script>var SIMULATION_FORM_ID = "moulinette-form";</script>
-  <script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
+  <script defer src="{% static 'js/libs/form_submit_spinner.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+
+  <script>
+    window.addEventListener('load', function() {
+      let form = document.getElementById("moulinette-form");
+      let spinner = new SpinnerForm(form);
+    });
+  </script>
 {% endblock %}
