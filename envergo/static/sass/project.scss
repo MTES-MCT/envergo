@@ -1993,11 +1993,13 @@ main.demos {
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image: url("/static/images/marker-icon.png"),
+  background-image:
+    url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png");
 
   /* normal[, Retina] */
-  cursor: url("/static/images/marker-icon.png"),
+  cursor:
+    url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png"), auto;
 
   /* normal[, Retina], auto for compliance with cursor syntax */
@@ -2256,4 +2258,19 @@ main.demos {
 
 article#evaluation {
   max-width: 38rem;
+}
+
+.icon-spinner {
+  &::before,
+  &::after {
+    animation: rotateSpinner 1200ms linear infinite;
+    -webkit-mask-image: url("../icons/sun.svg");
+    mask-image: url("../icons/sun.svg");
+
+    @keyframes rotateSpinner {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
 }
