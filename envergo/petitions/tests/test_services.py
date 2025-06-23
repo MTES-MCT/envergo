@@ -6,6 +6,7 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 from django.test import override_settings
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
@@ -31,6 +32,7 @@ from envergo.petitions.tests.factories import (
     GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
+from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -53,9 +55,10 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     moulinette = petition_project.get_moulinette()
 
     dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site, "test", haie_user
     )
     assert dossier is not None
+    assert Event.objects.get(category="dossier", event="depot", session_key="test")
 
     project_details = get_instructor_view_context(
         petition_project, moulinette, site, "", haie_user
@@ -71,6 +74,18 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         2025, 3, 21, 10, 8, 34, tzinfo=datetime.timezone.utc
     )
     assert petition_project.demarches_simplifiees_last_sync is not None
+
+    # GIVEN a new dossier in Draft status
+    petition_project = PetitionProjectFactory(reference="DEF456")
+
+    # WHEN i synchronize it with DS for the first time even as a staff user
+    staff_user = UserFactory(access_amenagement=False, access_haie=True, is_staff=True)
+    fetch_project_details_from_demarches_simplifiees(
+        petition_project, config, site, "staff", staff_user
+    )
+
+    # THEN an event is created
+    assert Event.objects.get(category="dossier", event="depot", session_key="staff")
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)

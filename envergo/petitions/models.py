@@ -182,6 +182,7 @@ class PetitionProject(models.Model):
                 visitor_id,
                 user,
                 site,
+                log_staff_user=True,
                 **self.get_log_event_data(),
             )
 
