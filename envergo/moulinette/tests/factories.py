@@ -44,8 +44,16 @@ class PerimeterFactory(DjangoModelFactory):
 
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
-    regulation = factory.SubFactory(RegulationFactory)
     is_activated = True
+
+    @factory.post_generation
+    def regulations(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            # Simple build, or nothing to add, do nothing.
+            return
+
+        # Add the iterable of groups using bulk addition
+        self.regulations.add(*extracted)
 
 
 class ConfigHaieFactory(DjangoModelFactory):
