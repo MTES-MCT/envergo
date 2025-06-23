@@ -37,6 +37,20 @@
                            href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}"
                            {% if url_name == 'petition_project_instructor_dossier_ds_view' %}aria-current="page"{% endif %}>
                         Formulaire rempli sur Démarches simplifiées</a>
+
+                        {% if url_name == 'petition_project_instructor_dossier_ds_view' and project_details.ds_data.header_sections %}
+                          <div id="fr-sidemenu-item-1">
+                            <ul class="fr-sidemenu__list">
+                              {% for item in project_details.ds_data.header_sections %}
+                                <li class="fr-sidemenu__item">
+                                  <a class="fr-sidemenu__link"
+                                     href="#section-{{ item|slugify }}"
+                                     target="_self">{{ item }}</a>
+                                </li>
+                              {% endfor %}
+                            </ul>
+                          </div>
+                        {% endif %}
                       </li>
                       <hr class="separator--lignt">
                       <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_notes_view' %} fr-sidemenu__item--active{% endif %}">
