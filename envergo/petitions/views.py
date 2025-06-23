@@ -27,8 +27,8 @@ from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import (
     PetitionProjectForm,
+    PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorNotesForm,
-    PetitionProjectInstructorRegulationForm,
 )
 from envergo.petitions.models import DOSSIER_STATES, PetitionProject
 from envergo.petitions.services import (
@@ -627,7 +627,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    form_class = PetitionProjectInstructorRegulationForm
+    form_class = PetitionProjectInstructorEspecesProtegeesForm
     matomo_tag = ""
 
     def get_context_data(self, **kwargs):
