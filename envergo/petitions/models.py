@@ -15,6 +15,7 @@ from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
+from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
@@ -193,11 +194,7 @@ class PetitionProject(models.Model):
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        parsed_url = urlparse(self.moulinette_url)
-        query_string = parsed_url.query
-        # We need to convert the query string to a flat dict
-        raw_data = QueryDict(query_string)
-        moulinette_data = raw_data.dict()
+        moulinette_data = self._parse_moulinette_data()
         moulinette_data["haies"] = self.hedge_data
         moulinette = MoulinetteHaie(
             moulinette_data,
@@ -205,3 +202,16 @@ class PetitionProject(models.Model):
             False,
         )
         return moulinette
+
+    def get_triage_form(self):
+        """Recreate triage form from moulinette url"""
+        moulinette_data = self._parse_moulinette_data()
+        return TriageFormHaie(data=moulinette_data)
+
+    def _parse_moulinette_data(self):
+        parsed_url = urlparse(self.moulinette_url)
+        query_string = parsed_url.query
+        # We need to convert the query string to a flat dict
+        raw_data = QueryDict(query_string)
+        moulinette_data = raw_data.dict()
+        return moulinette_data
