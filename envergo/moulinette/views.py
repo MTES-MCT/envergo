@@ -762,6 +762,6 @@ class Triage(FormView):
 
         # We want to preserve existing querystring params when validating the form
         qs = self.request.GET.urlencode()
-        qs = update_qs(qs, query_params)
         url_with_params = f"{url}?{qs}"
+        url_with_params = update_qs(url_with_params, query_params)
         return HttpResponseRedirect(url_with_params)
