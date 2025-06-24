@@ -269,6 +269,7 @@ nav#evaluation-summary {
 #moulinette-form {
   counter-reset: steps;
 
+  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -287,8 +288,7 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
     background-color: var(--background-default-grey);
     padding: 1.25rem;
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
+    border-radius: 5px;
   }
 
   #form-group-created_surface,
@@ -318,7 +318,7 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
-    background-color: var(--background-alt-green-tilleul-verveine);
+    background-color: var(--blue-france-925-125-hover);
     padding: 1rem;
 
     .fr-input-group--error {
