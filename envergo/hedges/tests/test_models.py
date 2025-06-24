@@ -249,7 +249,7 @@ def test_species_are_filtered_by_hedge_type():
     s1 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s2 = SpeciesMapFactory(hedge_types=["degradee"]).species
     s3 = SpeciesMapFactory(hedge_types=["arbustive"]).species
-    hedge = HedgeFactory(additionalData__typeHaie="degradee")
+    hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
     hedges_species = hedges.get_all_species()
@@ -257,12 +257,25 @@ def test_species_are_filtered_by_hedge_type():
     assert s2 in hedges_species
     assert s3 not in hedges_species
 
-    hedge = HedgeFactory(additionalData__type_haie="arbustive")
+    hedge = HedgeFactory(
+        additionalData__type_haie="arbustive", additionalData__recemment_plantee=False
+    )
     hedges = HedgeDataFactory(hedges=[hedge])
     hedges_species = hedges.get_all_species()
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
+
+    # recently planted hedge are considered as "degradee"
+    hedge = HedgeFactory(
+        additionalData__recemment_plantee=True, additionalData__type_haie="arbustive"
+    )
+    hedges = HedgeDataFactory(hedges=[hedge])
+
+    hedges_species = hedges.get_all_species()
+    assert s1 in hedges_species
+    assert s2 in hedges_species
+    assert s3 not in hedges_species
 
 
 def test_hedges_has_centroid_and_department():

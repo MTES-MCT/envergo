@@ -28,6 +28,10 @@ class NoInstanciateChoiceField(forms.TypedChoiceField):
 
 
 class DisplayFieldMixin:
+    """Mixin for display fields.
+
+    Used to get specific fields label and help texte displayed in results"""
+
     def __init__(self, *args, **kwargs):
         display_label = kwargs.pop("display_label", None)
         display_unit = kwargs.pop("display_unit", None)
