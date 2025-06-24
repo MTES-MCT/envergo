@@ -1,5 +1,5 @@
 import json
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, QueryDict
@@ -755,7 +755,7 @@ class Triage(FormView):
         if (
             query_params["element"] == "haie"
             and query_params["travaux"] == "destruction"
-        ):
+        ) and not "edit" in self.request.GET:
             url = reverse("moulinette_home")
         else:
             url = reverse("moulinette_result")
