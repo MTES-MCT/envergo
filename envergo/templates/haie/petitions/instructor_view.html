@@ -8,66 +8,44 @@
 
 {% block title %}Instruction du dossier – Informations générales{% endblock %}
 
-{% block project_sidemenu %}
-  <li class="fr-sidemenu__item fr-sidemenu__item--active">
-    <a class="fr-sidemenu__link"
-       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor"
-       aria-current="page">Informations générales</a>
-
-    <div id="fr-sidemenu-item-0">
-      <ul class="fr-sidemenu__list">
-        {% for regulation in moulinette.regulations %}
-          {% for criterion in regulation.criteria.all %}
-            <li class="fr-sidemenu__item">
-              <a class="fr-sidemenu__link"
-                 href="#{{ regulation.slug }}-{{ criterion.slug }}"
-                 target="_self">{{ criterion.title }}</a>
-            </li>
-          {% endfor %}
-        {% endfor %}
-        <li class="fr-sidemenu__item">
-          <a class="fr-sidemenu__link"
-             href="#instructor_free_mention"
-             target="_self">Notes libres pour l'instruction</a>
-        </li>
-      </ul>
-    </div>
-  </li>
-  <li class="fr-sidemenu__item ds-item">
-    <a class="fr-sidemenu__link"
-       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor">
-    Formulaire rempli sur Démarches simplifiées</a>
-  </li>
-{% endblock %}
-
 {% block project_content %}
 
   <div class="project-inner-content">
 
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
 
-    <form method="post"
-          action="{% url 'petition_project_instructor_view' petition_project.reference %}">
-      {% csrf_token %}
+    <section class="fr-my-3w">
+      <h2>Informations générales</h2>
 
-      <section class="fr-my-3w">
-        <h2>Informations générales</h2>
+      <h3>Éléments clés</h3>
+      <ul class="instructor-view-list">
+        {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
+        {% if project_details.ds_data.city %}
+          {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.ds_data.city %}
+        {% endif %}
+        {% if project_details.ds_data.applicant_name %}
+          {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.ds_data.applicant_name %}
+        {% endif %}
+      </ul>
+      <h4 class="fr-mt-3w">Destruction</h4>
+      <ul class="instructor-view-list">
+        {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
+        {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
+        {% for mode, hedges_by_mode in project_details.hedge_to_remove_by_destruction_mode.items %}
+          <li class="fr-pl-4w">
+            <span>{{ hedges_by_mode.label }} :</span>
+            <span>{{ hedges_by_mode.length|floatformat:"0g" }} m
+              {% if hedges_by_mode %}• {{ hedges_by_mode.names }}{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
 
-        <h3>Éléments clés</h3>
+      <h4 class="fr-mt-3w">Plantation</h4>
+      {% if project_details.hedge_to_plant_by_plantation_mode %}
         <ul class="instructor-view-list">
-          {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
-          {% if project_details.ds_data.city %}
-            {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.ds_data.city %}
-          {% endif %}
-          {% if project_details.ds_data.applicant_name %}
-            {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.ds_data.applicant_name %}
-          {% endif %}
-        </ul>
-        <h4 class="fr-mt-3w">Destruction</h4>
-        <ul class="instructor-view-list">
-          {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
-          {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
-          {% for mode, hedges_by_mode in project_details.hedge_to_remove_by_destruction_mode.items %}
+          {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
+          {% for mode, hedges_by_mode in project_details.hedge_to_plant_by_plantation_mode.items %}
             <li class="fr-pl-4w">
               <span>{{ hedges_by_mode.label }} :</span>
               <span>{{ hedges_by_mode.length|floatformat:"0g" }} m
@@ -75,75 +53,38 @@
               </span>
             </li>
           {% endfor %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation, renforcement ou reconnexion" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire" %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation uniquement" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire plantation nouvelle ou remplacement / linéaire à détruire" %}
         </ul>
-
-        <h4 class="fr-mt-3w">Plantation</h4>
-        {% if project_details.hedge_to_plant_by_plantation_mode %}
-          <ul class="instructor-view-list">
-            {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
-            {% for mode, hedges_by_mode in project_details.hedge_to_plant_by_plantation_mode.items %}
-              <li class="fr-pl-4w">
-                <span>{{ hedges_by_mode.label }} :</span>
-                <span>{{ hedges_by_mode.length|floatformat:"0g" }} m
-                  {% if hedges_by_mode %}• {{ hedges_by_mode.names }}{% endif %}
-                </span>
-              </li>
-            {% endfor %}
-            {% include "haie/petitions/_item.html" with label="Ratio de replantation, renforcement ou reconnexion" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire" %}
-            {% include "haie/petitions/_item.html" with label="Ratio de replantation uniquement" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire plantation nouvelle ou remplacement / linéaire à détruire" %}
-          </ul>
-        {% else %}
-          {{ hedge_to_plant_by_plantation_mode }}
-          <ul class="instructor-view-list">
-            {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
-            {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=project_details.plantation_ratio|floatformat:"2g" %}
-          </ul>
-        {% endif %}
-        <div class="fr-my-2w">
-          <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
-                  type="button"
-                  data-fr-opened="false"
-                  aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
-        </div>
-        <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-           href="{{ project_url }}"
-           target="_blank"
-           class="fr-btn fr-btn--secondary"
-           rel="noopener external">Voir le résultat de la simulation</a>
-
-        <h3 class="fr-mt-4w">Données de la simulation</h3>
-
+      {% else %}
+        {{ hedge_to_plant_by_plantation_mode }}
         <ul class="instructor-view-list">
-          {% for field in moulinette.main_form %}
-            {% if field.name != "haies" %}
-              <li>{% field_summary field %}</li>
-            {% endif %}
-          {% endfor %}
+          {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=project_details.plantation_ratio|floatformat:"2g" %}
         </ul>
-      </section>
+      {% endif %}
+      <div class="fr-my-2w">
+        <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+                type="button"
+                data-fr-opened="false"
+                aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+      </div>
+      <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
+         href="{{ project_url }}"
+         target="_blank"
+         class="fr-btn fr-btn--secondary"
+         rel="noopener external">Voir le résultat de la simulation</a>
 
-      {% for regulation in moulinette.regulations %}
-        <section class="fr-my-3w" id="{{ regulation.slug }}">
-          {% for criterion in regulation.criteria.all %}
-            <section id="{{ regulation.slug }}-{{ criterion.slug }}">
-              {% criterion_instructor_view regulation criterion petition_project moulinette %}
-            </section>
-          {% endfor %}
-        </section>
-      {% endfor %}
-      <section class="fr-my-3w" id="instructor_free_mention">
+      <h3 class="fr-mt-4w">Données de la simulation</h3>
 
-        <h2>Notes libres pour l'instruction</h2>
-        <div id="field-instructor_free_mention" class="fr-my-2w">
-          {% include '_field_snippet.html' with field=form.instructor_free_mention %}
-          <button type="submit"
-                  class="fr-btn fr-btn--secondary"
-                  formaction="{% url 'petition_project_instructor_view' petition_project.reference %}#field-instructor_free_mention">
-            Enregistrer
-          </button>
-        </div>
-      </section>
-    </form>
+      <ul class="instructor-view-list">
+        {% for field in moulinette.main_form %}
+          {% if field.name != "haies" %}
+            <li>{% field_summary field %}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </section>
 
   </div>
 {% endblock %}
@@ -164,34 +105,5 @@
       var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
     });
   </script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var forms = document.querySelectorAll('form');
-      var beforeUnloadListenerAdded = false;
-
-      function preventLeaving(e) {
-        e.preventDefault();
-        var confirmationMessage = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter la page ?';
-        e.returnValue = confirmationMessage; // Standard for most browsers
-        return confirmationMessage; // For some older browsers
-      }
-
-      forms.forEach(function (form) {
-        form.addEventListener('change', function () {
-          if (!beforeUnloadListenerAdded) {
-            window.addEventListener('beforeunload', preventLeaving);
-            beforeUnloadListenerAdded = true;
-          }
-        });
-
-        form.addEventListener('submit', function () {
-          if(beforeUnloadListenerAdded){
-            window.removeEventListener('beforeunload', preventLeaving);
-            beforeUnloadListenerAdded = false;
-          }
-        });
-      });
-    });
-  </script>
+  <script defer src="{% static 'js/libs/form_project_instruction.js' %}"></script>
 {% endblock %}
