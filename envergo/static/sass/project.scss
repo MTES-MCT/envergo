@@ -288,6 +288,7 @@ nav#evaluation-summary {
     margin-bottom: 1.5rem;
     background-color: var(--background-default-grey);
     padding: 1.25rem;
+    border-radius: 5px;
   }
 
   #form-group-created_surface,
@@ -317,7 +318,7 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
-    background-color: var(--background-alt-green-tilleul-verveine);
+    background-color: var(--blue-france-925-125-hover);
     padding: 1rem;
 
     .fr-input-group--error {
@@ -363,6 +364,11 @@ nav#evaluation-summary {
       &[aria-expanded="true"] {
         background-color: var(--background-default-grey);
       }
+
+      &::after {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
     }
 
     &.fr-accordion .fr-collapse--expanded {
@@ -371,6 +377,7 @@ nav#evaluation-summary {
 
     label small {
       font-style: italic;
+      color: var(--text-mention-grey);
     }
 
     .optional-form {
@@ -2214,4 +2221,18 @@ main.demos {
 
 article#evaluation {
   max-width: 38rem;
+}
+
+.icon-spinner {
+  &::before,
+  &::after {
+    animation: rotate-spinner 1200ms linear infinite;
+    mask-image: url("../icons/sun.svg");
+
+    @keyframes rotate-spinner {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
 }
