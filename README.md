@@ -361,6 +361,13 @@ Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement,
 
 Le déploiement se lancera automatiquement si les actions github sont au vert.
 
+Le workflow à suivre :
+
+1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
+2. Si la CI est ok sur la branche main, fusionner main dans prod et pusher prod
+3. Quand le déploiement est terminé, vérifier que le site est bien accessible
+4. Prévenir sur le canal de la finalisation de la mise en prod
+
 Le point d'entrée se trouve dans le fichier `Procfile`.
 
 Les scripts utilisés sont dans le répertoire `bin`.
