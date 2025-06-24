@@ -35,11 +35,6 @@
   </div>
 {% endblock %}
 
-{% block extra_body %}
-  {% include 'haie/moulinette/_hedge_input_modal.html' %}
-  {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
-{% endblock %}
-
 {% block extra_js %}
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "instruction";</script>
