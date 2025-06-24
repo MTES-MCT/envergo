@@ -303,3 +303,12 @@ def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
 @register.filter
 def requires_hedge_density(criterion):
     return isinstance(criterion._evaluator, HedgeDensityMixin)
+
+
+@register.filter
+def display_remove_only_haies_field(field):
+    """Display the haies field value as read only with only the hedges to remove."""
+    hedge_data = field.field.clean(field.value())
+    value = floatformat(hedge_data.length_to_remove(), "0g")
+    html = f"<strong>Linéaire de haies à détruire :</strong> {value} m"
+    return mark_safe(html)
