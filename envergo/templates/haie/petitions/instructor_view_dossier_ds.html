@@ -4,32 +4,6 @@
 
 {% block title %}Instruction du dossier – Formulaire rempli sur Démarches simplifiées{% endblock %}
 
-{% block project_sidemenu %}
-  <li class="fr-sidemenu__item">
-    <a class="fr-sidemenu__link"
-       href="{% url 'petition_project_instructor_view' petition_project.reference %}#project-specifications-instructor">
-      Informations générales
-    </a>
-  </li>
-  <li class="fr-sidemenu__item fr-sidemenu__item ds-item">
-    <a class="fr-sidemenu__link"
-       href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}#project-specifications-instructor"
-       aria-current="page">Formulaire rempli sur Démarches simplifiées</a>
-
-    <div id="fr-sidemenu-item-1">
-      <ul class="fr-sidemenu__list">
-        {% for item in project_details.ds_data.header_sections %}
-          <li class="fr-sidemenu__item">
-            <a class="fr-sidemenu__link"
-               href="#section-{{ item|slugify }}"
-               target="_self">{{ item }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  </li>
-{% endblock %}
-
 {% block project_content %}
 
   <h2>Formulaire rempli sur Démarches simplifiées</h2>
