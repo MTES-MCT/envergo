@@ -579,6 +579,12 @@ def test_petition_project_accept_invitation(client, haie_user, site):
         in response.url
     )
 
+    # valid token used by its creator should not be consumed
+    client.force_login(invitation.created_by)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user is None
+
     # valid token
     another_user = UserFactory(access_amenagement=False, access_haie=True)
     client.force_login(another_user)

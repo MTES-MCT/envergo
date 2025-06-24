@@ -827,9 +827,12 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+        """Accept the invitation and redirect to the instructor view of the petition project"""
 
-        self.request.invitation.user = request.user
-        self.request.invitation.save()
+        # the token should not be consumed by its own creator
+        if self.request.invitation.created_by != request.user:
+            self.request.invitation.user = request.user
+            self.request.invitation.save()
 
         return redirect(
             reverse(
