@@ -8,9 +8,14 @@
               aria-expanded="false"
               aria-controls="accordion-optional-forms">
         <label class="step">
-          Caractéristiques du projet <small">– facultatif</small>
+          Caractéristiques du projet <small>– facultatif</small>
         </label>
       </button>
+      <span id="option-count-wrapper">
+        <span class="fr-block fr-badge fr-badge--blue-ecume">
+          <span id="option-count"></span>&nbsp;option(s) activée(s)
+        </span>
+      </span>
     </h4>
     <div class="fr-collapse" id="accordion-optional-forms">
       {% for form in optional_forms %}

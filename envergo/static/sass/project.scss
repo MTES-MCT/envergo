@@ -364,6 +364,16 @@ nav#evaluation-summary {
       &[aria-expanded="true"] {
         background-color: var(--background-default-grey);
       }
+
+      &::after {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    #option-count-wrapper {
+      padding: 0 1.25rem 1.25rem;
+      display: block;
     }
 
     &.fr-accordion .fr-collapse--expanded {
@@ -372,6 +382,7 @@ nav#evaluation-summary {
 
     label small {
       font-style: italic;
+      color: var(--text-mention-grey);
     }
 
     .optional-form {
@@ -1975,13 +1986,11 @@ main.demos {
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image:
-    url("/static/images/marker-icon.png"),
+  background-image: url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png");
 
   /* normal[, Retina] */
-  cursor:
-    url("/static/images/marker-icon.png"),
+  cursor: url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png"), auto;
 
   /* normal[, Retina], auto for compliance with cursor syntax */
@@ -2245,11 +2254,10 @@ article#evaluation {
 .icon-spinner {
   &::before,
   &::after {
-    animation: rotateSpinner 1200ms linear infinite;
-    -webkit-mask-image: url("../icons/sun.svg");
+    animation: rotate-spinner 1200ms linear infinite;
     mask-image: url("../icons/sun.svg");
 
-    @keyframes rotateSpinner {
+    @keyframes rotate-spinner {
       to {
         transform: rotate(360deg);
       }
