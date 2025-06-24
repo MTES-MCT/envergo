@@ -371,6 +371,11 @@ nav#evaluation-summary {
       }
     }
 
+    #option-count-wrapper {
+      padding: 0 1.25rem 1.25rem;
+      display: block;
+    }
+
     &.fr-accordion .fr-collapse--expanded {
       padding: 1.5rem;
     }

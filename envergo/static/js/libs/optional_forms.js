@@ -19,6 +19,17 @@
     } else {
       this.divElt.classList.remove("active");
     }
+
+    const optionalBadgeWrapper = document.querySelector('#option-count-wrapper');
+    const optionalBadge = document.querySelector('#option-count');
+    const activeOptionsLenght = document.querySelectorAll('.optional-form.active').length;
+    optionalBadge.textContent = activeOptionsLenght
+    if (activeOptionsLenght === 0) {
+      optionalBadgeWrapper.classList.add("fr-hidden");
+    } else {
+      optionalBadgeWrapper.classList.remove("fr-hidden");
+    }
+
   };
 })(this);
 
