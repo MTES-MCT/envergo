@@ -11,11 +11,13 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
+from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
 
@@ -147,7 +149,7 @@ class PetitionProject(models.Model):
         )
 
     def synchronize_with_demarches_simplifiees(
-        self, dossier, site, demarche_label, ds_url, visitor_id, user
+        self, dossier, site, demarche_label, ds_url
     ):
         """Update the petition project with the latest data from demarches-simplifiees.fr
 
@@ -175,13 +177,35 @@ class PetitionProject(models.Model):
             )
             notify(message_body, "haie")
 
+            creation_event = (
+                Event.objects.order_by("-date_created")
+                .filter(
+                    metadata__reference=self.reference,
+                    category="dossier",
+                    event="creation",
+                )
+                .first()
+            )
+            if not creation_event:
+                logger.warning(
+                    f"Unable to find creation event for project {self.reference}. "
+                    f"The submission event will be logged with a mocked session key.",
+                    extra={
+                        "project": self,
+                        "session_key": SESSION_KEY,
+                    },
+                )
+
+            visitor_id = creation_event.session_key if creation_event else SESSION_KEY
+
+            user = User(is_staff=False)
+
             log_event_raw(
                 "dossier",
                 "depot",
                 visitor_id,
                 user,
                 site,
-                log_staff_user=True,
                 **self.get_log_event_data(),
             )
 

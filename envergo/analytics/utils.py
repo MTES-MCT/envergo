@@ -53,10 +53,8 @@ def log_event(category, event, request, **kwargs):
     log_event_raw(category, event, visitor_id, request.user, request.site, **kwargs)
 
 
-def log_event_raw(
-    category, event, visitor_id, user, site, log_staff_user=False, **kwargs
-):
-    if visitor_id and (log_staff_user or not user.is_staff):
+def log_event_raw(category, event, visitor_id, user, site, **kwargs):
+    if visitor_id and not user.is_staff:
         Event.objects.create(
             category=category,
             event=event,
