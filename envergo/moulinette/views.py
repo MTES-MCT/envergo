@@ -756,6 +756,8 @@ class Triage(FormView):
         else:
             url = reverse("moulinette_result")
 
-        query_string = urlencode(query_params)
-        url_with_params = f"{url}?{query_string}"
+        # We want to preserve existing querystring params when validating the form
+        qs = self.request.GET.urlencode()
+        qs = update_qs(qs, query_params)
+        url_with_params = f"{url}?{qs}"
         return HttpResponseRedirect(url_with_params)
