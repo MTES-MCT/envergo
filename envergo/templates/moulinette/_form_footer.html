@@ -1,42 +1,17 @@
 {% load utils %}
 
-{% if additional_forms %}
-  <hr />
-  <div id="additional-forms"
-       class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
-    <h4>
-      <strong>Questions complémentaires</strong>
-    </h4>
-    <p>
-      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
-    </p>
-
-    {% for field_name, field in additional_fields.items %}
-      {% if field|is_checkbox %}
-        {% include '_checkbox_snippet.html' with field=field %}
-      {% elif field|is_radio %}
-        {% include '_radio_snippet.html' with field=field %}
-      {% elif field|is_input_file %}
-        {% include '_input_file_snippet.html' with field=field %}
-      {% else %}
-        {% include '_field_snippet.html' with field=field %}
-      {% endif %}
-    {% endfor %}
-  </div>
-{% endif %}
-
 {% if optional_forms %}
   <section id="optional-forms" class="fr-accordion form-section">
-    <h3 class="fr-accordion__title">
+    <h4 class="fr-accordion__title">
       <button class="fr-accordion__btn"
               type="button"
               aria-expanded="false"
               aria-controls="accordion-optional-forms">
         <label class="step">
-          Caractéristiques du projet <small">– facultatif</small>
+          Caractéristiques du projet <small>– facultatif</small>
         </label>
       </button>
-    </h3>
+    </h4>
     <div class="fr-collapse" id="accordion-optional-forms">
       {% for form in optional_forms %}
 
@@ -65,6 +40,32 @@
     </div>
   </section>
 {% endif %}
+
+{% if additional_forms %}
+  <hr />
+  <section id="additional-forms"
+           class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
+    <h4>
+      <strong>Questions complémentaires</strong>
+    </h4>
+    <p>
+      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+    </p>
+
+    {% for field_name, field in additional_fields.items %}
+      {% if field|is_checkbox %}
+        {% include '_checkbox_snippet.html' with field=field %}
+      {% elif field|is_radio %}
+        {% include '_radio_snippet.html' with field=field %}
+      {% elif field|is_input_file %}
+        {% include '_input_file_snippet.html' with field=field %}
+      {% else %}
+        {% include '_field_snippet.html' with field=field %}
+      {% endif %}
+    {% endfor %}
+  </section>
+{% endif %}
+
 {% block submit-section %}
   <div class="hide-print submit-section">
     {% if not moulinette %}
