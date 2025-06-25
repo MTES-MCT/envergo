@@ -39,3 +39,12 @@ window.addEventListener('load', function () {
     new OptionalForm(div).init();
   });
 });
+
+// Log an event when optionnal questions are expanded or collapsed
+window.addEventListener('dsfr.disclose', function (evt) {
+  _paq.push(['trackEvent', 'Form', 'OptQuestionsExpand']);
+}, { once: true });
+
+window.addEventListener('dsfr.conceal', function (evt) {
+  _paq.push(['trackEvent', 'Form', 'OptQuestionsCollapse']);
+}, { once: true });
