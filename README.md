@@ -361,6 +361,10 @@ Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement,
 
 Le déploiement se lancera automatiquement si les actions github sont au vert.
 
+Le point d'entrée se trouve dans le fichier `Procfile`.
+
+Les scripts utilisés sont dans le répertoire `bin`.
+
 Le workflow à suivre :
 
 1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
@@ -368,9 +372,7 @@ Le workflow à suivre :
 3. Quand le déploiement est terminé, vérifier que le site est bien accessible
 4. Prévenir sur le canal de la finalisation de la mise en prod
 
-Le point d'entrée se trouve dans le fichier `Procfile`.
-
-Les scripts utilisés sont dans le répertoire `bin`.
+Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
 
 ### Installation des dépendances Géo sur Scalingo
