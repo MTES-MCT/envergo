@@ -215,7 +215,7 @@ class PetitionProject(models.Model):
                 (
                     user.is_active,
                     user.access_haie,
-                    department in user.departments.defer("geometry").all(),
+                    user.departments.filter(id=department.id).exists(),
                 )
             )
             or all(

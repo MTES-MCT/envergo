@@ -23,7 +23,7 @@ def n2000_criteria(bizous_town_center):  # noqa
     regulation = RegulationFactory(regulation="natura2000_haie", has_perimeters=True)
 
     perimeter = PerimeterFactory(
-        name="N2000 Bizous", activation_map=bizous_town_center, regulation=regulation
+        name="N2000 Bizous", activation_map=bizous_town_center, regulations=[regulation]
     )
 
     criteria = [

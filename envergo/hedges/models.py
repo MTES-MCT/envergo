@@ -127,7 +127,10 @@ class Hedge:
         linked to the map has an additional field that links the species living in the
         specific zone
         """
-        q_hedge_type = Q(species_maps__hedge_types__contains=[self.hedge_type])
+        # if the hedge is recently planted, we consider it as a degradee hedge in a biodiversity point of view
+        hedge_type = "degradee" if self.prop("recemment_plantee") else self.hedge_type
+
+        q_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
 
         properties_to_exclude = []
         for p, _ in HEDGE_PROPERTIES:

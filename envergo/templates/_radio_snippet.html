@@ -20,9 +20,14 @@
         <div class="fr-radio-group">
           {{ radio.tag }}
           <label class="fr-label" for="{{ radio.id_for_label }}">
-            {{ radio.choice_label }}
-
-            {% if radio.help_text %}<span class="fr-hint-text">{{ radio.help_text }}</span>{% endif %}
+            {% if radio.choice_label.label %}
+              {{ radio.choice_label.label }}
+              {% if radio.choice_label.help_text %}
+                <span class="fr-hint-text">{{ radio.choice_label.help_text|safe }}</span>
+              {% endif %}
+            {% else %}
+              {{ radio.choice_label }}
+            {% endif %}
           </label>
         </div>
       {% endfor %}

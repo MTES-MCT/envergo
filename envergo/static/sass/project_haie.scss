@@ -79,6 +79,18 @@ div#app {
       }
     }
 
+    #tooltip {
+      display: none;
+      position: absolute;
+      background: white;
+      color: black;
+      padding: 10px;
+      border: 2px solid black;
+      border-radius: 0.75rem;
+      z-index: 1000;
+      font-size: 14px;
+    }
+
     #controls-container {
       display: flex;
       flex-wrap: wrap;
@@ -631,7 +643,9 @@ div#project-dossier-no {
 }
 
 div#invitation-token-email-html {
-  all: initial;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-mention-grey);
+  padding: 2rem;
 }
 
 pre#invitation-token-email-text {
