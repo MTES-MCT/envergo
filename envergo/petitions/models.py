@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -205,3 +206,74 @@ class PetitionProject(models.Model):
             False,
         )
         return moulinette
+
+    def is_instructor_authorized(self, user):
+        department = self.department
+        return (
+            user.is_superuser
+            or all(
+                (
+                    user.is_instructor,
+                    user.departments.filter(id=department.id).exists(),
+                )
+            )
+            or all(
+                (
+                    user.is_instructor,
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                )
+            )
+        )
+
+
+def one_month_from_now():
+    return timezone.now() + timedelta(days=30)
+
+
+def generate_token():
+    return secrets.token_urlsafe(32)
+
+
+class InvitationToken(models.Model):
+    """A token used to invite a user to join a petition project."""
+
+    token = models.CharField(
+        "Jeton", max_length=64, unique=True, default=generate_token
+    )
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Compte invitant",
+    )
+    petition_project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        related_name="invitation_tokens",
+        verbose_name="Projet",
+    )
+    valid_until = models.DateTimeField(
+        "Valide jusqu'au",
+        help_text="Date d'expiration du jeton",
+        null=True,
+        blank=True,
+        default=one_month_from_now,
+    )
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="invitation_tokens",
+        verbose_name="Utilisateur invité",
+    )
+
+    # Meta fields
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Jeton d'invitation"
+        verbose_name_plural = "Jetons d'invitation"
+
+    def is_valid(self):
+        """Check if the token is still valid."""
+        return self.user_id is None and self.valid_until >= timezone.now()

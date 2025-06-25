@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
@@ -16,11 +17,12 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.petitions.models import DOSSIER_STATES
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
 )
@@ -301,6 +303,17 @@ def test_petition_project_instructor_view_requires_authentication(
     # Check that the response status code is 200 (OK)
     assert response.status_code == 200
 
+    # Simulate instructor user with invitation token, should be authorized
+    request.user = instructor_haie_user
+    InvitationTokenFactory(user=instructor_haie_user, petition_project=project)
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 403
+    assert response.status_code == 200
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
@@ -505,3 +518,112 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         in response.get("Content-Disposition")
     )
     # TODO: check the features
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_invitation_token(
+    client, haie_user, instructor_haie_user_44, site
+):
+    """Test invitation token creation for petition project"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    invitation_token_url = reverse(
+        "petition_project_invitation_token",
+        kwargs={"reference": project.reference},
+    )
+
+    # no user loged in
+    response = client.post(invitation_token_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # user not authorized
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    assert response.status_code == 403
+    assert (
+        "You are not authorized to create an invitation token for this project."
+        == response.json()["error"]
+    )
+
+    # user authorized
+    client.force_login(instructor_haie_user_44)
+    response = client.post(invitation_token_url)
+    token = InvitationToken.objects.get()
+    assert token.created_by == instructor_haie_user_44
+    assert token.petition_project == project
+    assert token.token in response.json()["invitation_url"]
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_accept_invitation(client, haie_user, site):
+    """Test accepting an invitation token for a petition project"""
+    ConfigHaieFactory()
+    invitation = InvitationTokenFactory()
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+
+    # no user loged in
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 302
+    assert (
+        f"/comptes/connexion/?next=/projet/{invitation.petition_project.reference}/invitations/{invitation.token}/"
+        in response.url
+    )
+
+    # valid token used by its creator should not be consumed
+    client.force_login(invitation.created_by)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user is None
+
+    # valid token
+    another_user = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+
+    # already used token
+    another_user_again = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user_again)
+    response = client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+    assert response.status_code == 403
+
+    # outdated token
+    invitation = InvitationTokenFactory(
+        petition_project=invitation.petition_project,
+        valid_until=timezone.now() - timezone.timedelta(days=1),
+    )
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403
+
+    # unexpected token
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": "something-farfelue",
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403

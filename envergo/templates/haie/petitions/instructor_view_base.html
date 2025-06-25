@@ -9,7 +9,7 @@
   <section class="fr-py-8w">
     <div class="fr-container">
       <div class="fr-grid-row">
-        <div class="fr-col fr-col-sm-3">
+        <div class="fr-col fr-col-12 fr-col-md-3">
           <nav class="fr-sidemenu fr-sidemenu--sticky"
                aria-labelledby="fr-sidemenu-title">
             <div class="fr-sidemenu__inner">
@@ -67,7 +67,8 @@
             </div>
           </nav>
         </div>
-        <div id="project-specifications-instructor" class="fr-col fr-pl-10w">
+        <div id="project-specifications-instructor"
+             class="fr-col fr-col-12 fr-col-md-9 fr-pl-10w">
 
           {% include 'haie/petitions/_summary_dossier.html' with project_details=project_details petition_project=petition_project %}
 
@@ -79,4 +80,10 @@
 
   </section>
 
+{% endblock %}
+
+{% block extra_js %}
+  <script>const INVITATION_TOKEN_URL = '{{ invitation_token_url }}';</script>
+  <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
 {% endblock %}
