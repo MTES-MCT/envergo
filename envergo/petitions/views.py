@@ -555,7 +555,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                     **self.object.get_log_event_data(),
                     **get_matomo_tags(self.request),
                 )
-                return result
+            return result
 
         else:
             return TemplateResponse(
