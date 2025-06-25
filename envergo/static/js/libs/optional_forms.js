@@ -25,9 +25,9 @@
     const activeOptionsLenght = document.querySelectorAll('.optional-form.active').length;
     optionalBadge.textContent = activeOptionsLenght
     if (activeOptionsLenght === 0) {
-      optionalBadgeWrapper.classList.add("fr-hidden");
+      optionalBadgeWrapper.classList.add("no-options");
     } else {
-      optionalBadgeWrapper.classList.remove("fr-hidden");
+      optionalBadgeWrapper.classList.remove("no-options");
     }
 
   };
