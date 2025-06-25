@@ -142,7 +142,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "backend_title",
         "is_optional",
         "regulation",
-        "perimeter",
+        "perimeter_list",
         "activation_map_column",
         "activation_distance_column",
         "evaluator_column",
@@ -221,6 +221,12 @@ class CriterionAdmin(admin.ModelAdmin):
             }
         )
         return super().render_delete_form(request, context)
+
+    def perimeter_list(self, obj):
+        perimeter = obj.perimeter
+        return perimeter.backend_name if perimeter else ""
+
+    perimeter_list.short_description = _("Perimeter")
 
 
 class PerimeterAdminForm(forms.ModelForm):
