@@ -73,12 +73,18 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
+class PerimeterChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.backend_name
+
+
 class CriterionAdminForm(forms.ModelForm):
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
+    perimeter = PerimeterChoiceField(queryset=Perimeter.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,7 +142,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "backend_title",
         "is_optional",
         "regulation",
-        "perimeter",
+        "perimeter_list",
         "activation_map_column",
         "activation_distance_column",
         "evaluator_column",
@@ -215,6 +221,12 @@ class CriterionAdmin(admin.ModelAdmin):
             }
         )
         return super().render_delete_form(request, context)
+
+    def perimeter_list(self, obj):
+        perimeter = obj.perimeter
+        return perimeter.backend_name if perimeter else ""
+
+    perimeter_list.short_description = _("Perimeter")
 
 
 class PerimeterAdminForm(forms.ModelForm):
