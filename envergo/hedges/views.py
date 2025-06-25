@@ -84,7 +84,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 reverse("moulinette_saisie_p")
             )
         elif mode == "read_only":
-            source_page = self.request.GET.get("source_page")
+            source_page = self.request.GET.get("source")
             if source_page == "consultation":
                 matomo_custom_url = self.request.build_absolute_uri(
                     reverse("petition_project_hedges")

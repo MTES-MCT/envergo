@@ -30,7 +30,7 @@ pytestmark = pytest.mark.django_db
 def moulinette_config(france_map):  # noqa
     regulation = RegulationFactory()
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     classes = [
@@ -225,11 +225,11 @@ def test_regulation_with_map_factory_can_create_a_location_centric_map(
         get_map_center=MagicMock(return_value=(47.0, -1.0))
     )
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     assert regulation.map
@@ -264,11 +264,11 @@ def test_regulation_with_map_factory_can_create_a_hedge_to_remove_map(
         },
     )
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     PerimeterFactory(
-        regulation=regulation,
+        regulations=[regulation],
         activation_map=france_map,
     )
     assert regulation.map

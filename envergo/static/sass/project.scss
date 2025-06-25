@@ -57,6 +57,10 @@ hr.separator {
   background: none;
   border: none;
   border-top: 1px solid var(--border-action-high-blue-france);
+
+  &--lignt {
+    border-top: 1px solid var(--border-default-grey);
+  }
 }
 
 /**
@@ -1107,7 +1111,8 @@ $content-max-width: 40rem;
     }
 
     .button-container {
-      text-align: center;
+      text-align: left;
+      margin-left: -1rem;
     }
 
     ul {
