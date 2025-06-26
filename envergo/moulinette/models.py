@@ -340,14 +340,6 @@ class Regulation(models.Model):
         if self.result != "non_soumis":
             return None
 
-        optional_criteria = [
-            c
-            for c in self.criteria.all()
-            if c.is_optional and c.result != "non_disponible"
-        ]
-        subtitle = "(rubrique 39)" if not optional_criteria else None
-        return subtitle
-
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
 
