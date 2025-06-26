@@ -50,15 +50,14 @@ class MoulinetteMixin:
 
         moulinette_data = None
         GET = self.clean_request_get_parameters()
-        if self.request.method == "GET" and GET:
-            moulinette_data = GET
-        elif self.request.method in ("POST", "PUT"):
-            moulinette_data = self.request.POST
+        moulinette_data = GET
 
-        if moulinette_data:
-            mutable_data = moulinette_data.copy()
-            mutable_data.update(compute_surfaces(moulinette_data))
-            kwargs.update({"data": mutable_data})
+        if self.request.method in ("POST", "PUT"):
+            moulinette_data.update(self.request.POST)
+
+        mutable_data = moulinette_data.copy()
+        mutable_data.update(compute_surfaces(moulinette_data))
+        kwargs.update({"data": mutable_data})
 
         return kwargs
 
