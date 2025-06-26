@@ -273,7 +273,7 @@ class MoulinetteMixin:
 
 
 @method_decorator(xframe_options_sameorigin, name="dispatch")
-class MoulinetteHome(MoulinetteMixin, FormView):
+class MoulinetteForm(MoulinetteMixin, FormView):
     def get_template_names(self):
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
         return MoulinetteClass.get_home_template()
@@ -420,7 +420,7 @@ class MoulinetteResultMixin:
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")
         )
-        form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
+        form_url = self.request.build_absolute_uri(reverse("moulinette_form"))
         form_url_with_edit = update_qs(form_url, {"edit": "true"})
         out_of_scope_result_url = self.request.build_absolute_uri(
             reverse("moulinette_result_out_of_scope")
@@ -592,7 +592,7 @@ class BaseMoulinetteResult(FormView):
             )
             return res
         else:
-            return HttpResponseRedirect(reverse("moulinette_home"))
+            return HttpResponseRedirect(reverse("moulinette_form"))
 
 
 class MoulinetteAmenagementResult(
@@ -751,8 +751,8 @@ class Triage(FormView):
         if (
             query_params["element"] == "haie"
             and query_params["travaux"] == "destruction"
-        ) and not "edit" in self.request.GET:
-            url = reverse("moulinette_home")
+        ) and "edit" not in self.request.GET:
+            url = reverse("moulinette_form")
         else:
             url = reverse("moulinette_result")
 
