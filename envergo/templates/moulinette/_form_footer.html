@@ -1,9 +1,55 @@
 {% load utils %}
 
+{% if optional_forms %}
+  <section id="optional-forms" class="fr-accordion form-section">
+    <h4 class="fr-accordion__title">
+      <button class="fr-accordion__btn"
+              type="button"
+              aria-expanded="false"
+              aria-controls="accordion-optional-forms">
+        <label class="step">
+          Caractéristiques du projet <small>– facultatif</small>
+        </label>
+      </button>
+      <div id="option-count-wrapper" class="no-options">
+        <span class="fr-badge fr-badge--blue-ecume">
+          <span id="option-count"></span>
+        </span>
+      </div>
+    </h4>
+    <div class="fr-collapse" id="accordion-optional-forms">
+      {% for form in optional_forms %}
+
+        <div class="optional-form">
+
+          {% include '_checkbox_snippet.html' with field=form.activate %}
+
+          <fieldset>
+            {% for field in form %}
+              {% if field.name != "activate" %}
+                {% if field|is_checkbox %}
+                  {% include '_checkbox_snippet.html' with field=field %}
+                {% elif field|is_radio %}
+                  {% include '_radio_snippet.html' with field=field %}
+                {% elif field|is_input_file %}
+                  {% include '_input_file_snippet.html' with field=field %}
+                {% else %}
+                  {% include '_field_snippet.html' with field=field %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </fieldset>
+        </div>
+      {% endfor %}
+
+    </div>
+  </section>
+{% endif %}
+
 {% if additional_forms %}
   <hr />
-  <div id="additional-forms"
-       class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
+  <section id="additional-forms"
+           class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
     <h4>
       <strong>Questions complémentaires</strong>
     </h4>
@@ -22,39 +68,9 @@
         {% include '_field_snippet.html' with field=field %}
       {% endif %}
     {% endfor %}
-  </div>
+  </section>
 {% endif %}
 
-{% if optional_forms %}
-  <div id="optional-forms" class="form-section">
-    <p>
-      <strong>Questions optionnelles</strong>
-      <small>(admin uniquement)</small>
-    </p>
-    {% for form in optional_forms %}
-
-      <div class="optional-form">
-        {% include '_checkbox_snippet.html' with field=form.activate %}
-
-        <fieldset>
-          {% for field in form %}
-            {% if field.name != "activate" %}
-              {% if field|is_checkbox %}
-                {% include '_checkbox_snippet.html' with field=field %}
-              {% elif field|is_radio %}
-                {% include '_radio_snippet.html' with field=field %}
-              {% elif field|is_input_file %}
-                {% include '_input_file_snippet.html' with field=field %}
-              {% else %}
-                {% include '_field_snippet.html' with field=field %}
-              {% endif %}
-            {% endif %}
-          {% endfor %}
-        </fieldset>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
 {% block submit-section %}
   <div class="hide-print submit-section">
     {% if not moulinette %}
