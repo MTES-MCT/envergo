@@ -54,7 +54,7 @@ def moulinette_data(footprint):
 def test_edition_redirection_from_result_user_see_optional_criterion_additional_question(
     client,
 ):
-    url = reverse("moulinette_result")
+    url = reverse("moulinette_form")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&edit=true"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
