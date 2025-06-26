@@ -21,11 +21,7 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import (
-    ConfigHaie,
-    MoulinetteHaie,
-    get_moulinette_class_from_site,
-)
+from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
@@ -289,7 +285,9 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
-        elif self.moulinette and not context.get("is_alternative", False):
+        elif (
+            self.moulinette and self.moulinette.is_valid() and "edit" not in request.GET
+        ):
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
@@ -301,7 +299,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
         # We don't want to redirect to the result url if the form is not
         # absolutely valid, i.e we can actually display the result
-        if moulinette and not moulinette.has_missing_data():
+        if moulinette and moulinette.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
@@ -357,25 +355,20 @@ class MoulinetteResultMixin:
         """Check which template to use depending on the moulinette result."""
 
         moulinette = self.moulinette
-        triage_form = self.triage_form
         is_debug = bool(self.request.GET.get("debug", False))
         is_admin = self.request.user.is_staff
 
         # We want to display the moulinette result template, but must check all
         # previous cases where we cannot do it
-
-        if moulinette is None and triage_form is None:
-            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-            template_name = MoulinetteClass.get_home_template()
-        elif moulinette is None:
-            template_name = MoulinetteHaie.get_triage_template(triage_form)
-        elif is_debug:
+        if is_debug:
             template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
             template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = moulinette.get_result_available_soon_template()
         elif moulinette.has_missing_data():
+            # This case should not happen, because we redirect to the form view
+            # earlier
             template_name = moulinette.get_home_template()
         else:
             template_name = moulinette.get_result_template()
@@ -539,14 +532,33 @@ class MoulinetteResultMixin:
 class BaseMoulinetteResult(FormView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        moulinette = context.get("moulinette", None)
+        triage_form = context.get("triage_form", None)
+        redirect_url = context.get("redirect_url", None)
+
+        # Moulinette is invalid and there is no triage to do (amenagement)
+        # so just redirect to the form
+        if moulinette is None and triage_form is None:
+            redirect_url = reverse("moulinette_form")
+            redirect_url = update_qs(redirect_url, request.GET)
+
+        # Moulinette form is invalid
+        elif moulinette is not None and moulinette.has_missing_data():
+            redirect_url = reverse("moulinette_form")
+            redirect_url = update_qs(redirect_url, request.GET)
+
+        # Moulinette is invalid and a triage form exists (haie), redirects to the
+        # first step
+        elif moulinette is None and triage_form is not None:
+            redirect_url = reverse("triage")
+            redirect_url = update_qs(redirect_url, request.GET)
+
+        if redirect_url:
+            return HttpResponseRedirect(redirect_url)
+
         res = self.render_to_response(context)
-        moulinette = self.moulinette
-        triage_form = self.triage_form
 
-        if "redirect_url" in context:
-            return HttpResponseRedirect(context["redirect_url"])
-
-        elif moulinette:
+        if moulinette:
             if "debug" not in self.request.GET and not self.validate_results_url(
                 request, context
             ):
