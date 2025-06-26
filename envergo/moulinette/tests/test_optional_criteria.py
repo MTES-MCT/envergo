@@ -70,8 +70,8 @@ def test_edition_redirection_from_result_admin_see_optional_criterion_additional
 
 
 # ETQ admin, je peux voir les questions optionnelles dès l'accueil du simulateur
-def test_optional_questions_appear_on_moulinette_home(admin_client):
-    url = reverse("moulinette_home")
+def test_optional_questions_appear_on_moulinette_form(admin_client):
+    url = reverse("moulinette_form")
     res = admin_client.get(url)
 
     assert res.status_code == 200
