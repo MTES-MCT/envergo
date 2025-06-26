@@ -290,6 +290,18 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         else:
             return res
 
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        context = self.get_context_data(form=form)
+        moulinette = context.get("moulinette", None)
+
+        # We don't want to redirect to the result url if the form is not
+        # absolutely valid, i.e we can actually display the result
+        if moulinette and not moulinette.has_missing_data():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
