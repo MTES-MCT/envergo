@@ -132,10 +132,9 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
-        if self.should_activate_optional_criteria():
-            context["optional_forms"] = self.get_optional_forms(
-                context.get("moulinette", None)
-            )
+        context["optional_forms"] = self.get_optional_forms(
+            context.get("moulinette", None)
+        )
 
         context = {**context, **MoulinetteClass.get_extra_context(self.request)}
 
@@ -223,13 +222,12 @@ class MoulinetteMixin:
                 if value:
                     get[field.html_name] = value
 
-        if self.should_activate_optional_criteria():
-            optional_forms = self.get_optional_forms(moulinette)
-            for optional_form in optional_forms:
-                for field in optional_form:
-                    value = optional_form.data.get(field.html_name, None)
-                    if value:
-                        get[field.html_name] = value
+        optional_forms = self.get_optional_forms(moulinette)
+        for optional_form in optional_forms:
+            for field in optional_form:
+                value = optional_form.data.get(field.html_name, None)
+                if value:
+                    get[field.html_name] = value
 
         triage_params = moulinette.get_triage_params()
         if triage_params:
@@ -247,7 +245,7 @@ class MoulinetteMixin:
         return url_with_params
 
     def should_activate_optional_criteria(self):
-        return self.request.user.is_staff
+        return True
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
