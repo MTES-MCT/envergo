@@ -1522,6 +1522,9 @@ class Moulinette(ABC):
 
         return form_errors
 
+    def is_valid(self):
+        return not bool(self.form_errors())
+
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
 
