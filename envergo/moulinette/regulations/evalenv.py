@@ -21,7 +21,8 @@ ZONE_U_THRESHOLD = 40000
 class EmpriseForm(forms.Form):
     emprise = DisplayIntegerField(
         label="Emprise au sol totale",
-        help_text="Projection verticale du volume de la construction. Inclure l'existant autorisé depuis le 16 mai 2017.",
+        help_text="Projection verticale du volume de la construction."
+        "Inclure l'existant autorisé depuis le 16 mai 2017.",
         widget=forms.TextInput(
             attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
         ),
@@ -98,7 +99,7 @@ class SurfacePlancherForm(forms.Form):
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
-        display_help_text="Cumul autorisé depuis le 16 mai 2017."
+        display_help_text="Cumul autorisé depuis le 16 mai 2017.",
     )
 
     def __init__(self, *args, **kwargs):
