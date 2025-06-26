@@ -128,5 +128,5 @@ def test_optional_criterion_activation(admin_client):
     full_url = f"{url}?{params}"
     res = admin_client.get(full_url)
 
-    assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/home.html")
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
