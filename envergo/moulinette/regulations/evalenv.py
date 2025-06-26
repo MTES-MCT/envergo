@@ -21,7 +21,7 @@ ZONE_U_THRESHOLD = 40000
 class EmpriseForm(forms.Form):
     emprise = DisplayIntegerField(
         label="Emprise au sol totale",
-        help_text="Projection verticale du volume de la construction."
+        help_text="Projection verticale du volume de la construction. "
         "Inclure l'existant autorisé depuis le 16 mai 2017.",
         widget=forms.TextInput(
             attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
