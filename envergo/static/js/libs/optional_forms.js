@@ -22,11 +22,16 @@
 
     const optionalBadgeWrapper = document.querySelector('#option-count-wrapper');
     const optionalBadge = document.querySelector('#option-count');
-    const activeOptionsLenght = document.querySelectorAll('.optional-form.active').length;
-    optionalBadge.textContent = activeOptionsLenght
-    if (activeOptionsLenght === 0) {
+    const activeOptionsLength = document.querySelectorAll('.optional-form.active').length;
+    if (activeOptionsLength === 0) {
+      optionalBadge.textContent = "";
       optionalBadgeWrapper.classList.add("no-options");
     } else {
+      if (activeOptionsLength === 1) {
+        optionalBadge.textContent = "1 option activée";
+      } else if (activeOptionsLength > 1) {
+        optionalBadge.textContent = activeOptionsLength + " options activées";
+      }
       optionalBadgeWrapper.classList.remove("no-options");
     }
 
