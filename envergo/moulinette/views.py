@@ -48,10 +48,12 @@ class MoulinetteMixin:
             "prefix": self.get_prefix(),
         }
 
-        moulinette_data = None
-        GET = self.clean_request_get_parameters()
-        moulinette_data = GET
-
+        # We always want to submit data present in url, event if they don't belong
+        # to an actual form.
+        # This is because sometimes, when the form value change, we can add or remove
+        # some additional questions, and we don't want the user to lose those values
+        # in between submissions
+        moulinette_data = self.clean_request_get_parameters()
         if self.request.method in ("POST", "PUT"):
             moulinette_data.update(self.request.POST)
 
