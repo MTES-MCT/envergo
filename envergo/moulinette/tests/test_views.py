@@ -28,7 +28,7 @@ ADMIN_MSG = "Le simulateur n'est pas activé dans ce département"
 
 
 def test_moulinette_home(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     res = client.get(url)
 
     assert res.status_code == 200
@@ -38,7 +38,7 @@ def test_moulinette_home(client):
 
 
 def test_moulinette_home_with_params_redirects_to_results_page(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -152,7 +152,7 @@ def test_moulinette_result_debug_page(client):
 
 
 def test_moulinette_home_form_error(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "bad_param=true"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -242,7 +242,7 @@ def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
 
 
 def test_moulinette_utm_param(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "utm_campaign=test"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
