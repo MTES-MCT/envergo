@@ -17,14 +17,6 @@ from envergo.utils.mattermost import notify
 logger = logging.getLogger(__name__)
 
 
-class DemarchesSimplifieesError(Exception):
-    def __init__(self, query: str, variables: dict, message: str = None):
-        super().__init__()
-        self.message = message
-        self.query = query
-        self.variables = variables
-
-
 class DemarchesSimplifieesClient:
     def __init__(self):
         self.transport = RequestsHTTPTransport(
@@ -101,7 +93,8 @@ class DemarchesSimplifieesClient:
                 "r",
             ) as file:
                 response = json.load(file)
-                dossier = Dossier.from_dict(response["data"]["dossier"])
+                data = response["data"]
+                dossier = Dossier.from_dict(data["dossier"])
         else:
             try:
                 data = self.execute(query, variables)
@@ -109,7 +102,9 @@ class DemarchesSimplifieesClient:
                 if any(
                     error["extensions"]["code"] == "not_found"
                     and any(path == "dossier" for path in error["path"])
-                    for error in e.__cause__.errors or []
+                    for error in (
+                        e.__cause__.errors if hasattr(e.__cause__, "errors") else []
+                    )
                 ):
                     logger.info(
                         "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
@@ -218,3 +213,11 @@ class DemarchesSimplifieesClient:
             "hasNextPage": has_next_page,
             "endCursor": cursor,
         }
+
+
+class DemarchesSimplifieesError(Exception):
+    def __init__(self, query: str, variables: dict, message: str = None):
+        super().__init__()
+        self.message = message
+        self.query = query
+        self.variables = variables
