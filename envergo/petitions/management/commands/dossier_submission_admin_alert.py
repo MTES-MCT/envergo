@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-import requests
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
@@ -9,6 +8,7 @@ from django.template.loader import render_to_string
 
 from envergo.analytics.models import Event
 from envergo.moulinette.models import ConfigHaie
+from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 
@@ -30,13 +30,11 @@ class Command(BaseCommand):
             logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
             return None
 
-        api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
         # The cron job is run every hour.
         # We fetch the updates from the last 2 hours to be sure as we may have some delay in the cron job execution
         two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
-        iso8601_two_hours_ago = two_hours_ago_utc.isoformat()
 
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
@@ -48,187 +46,63 @@ class Command(BaseCommand):
             if demarche_number in handled_demarches:
                 continue
 
-            has_next_page = True
-            cursor = None
-            while has_next_page:
+            ds_client = DemarchesSimplifieesClient()
 
-                variables = f"""{{
-                      "demarcheNumber":{demarche_number},
-                      "updatedSince": "{iso8601_two_hours_ago}",
-                      "after":{f'"{cursor}"' if cursor else "null"}
-                    }}"""
+            demarche = ds_client.get_dossiers_for_demarche(
+                demarche_number, two_hours_ago_utc
+            )
 
-                query = """
-                query getDemarche(
-                    $demarcheNumber: Int!,
-                    $updatedSince: ISO8601DateTime,
-                    $after: String
+            if not demarche:
+                continue
+
+            demarche_name = demarche.title or "Nom inconnu"
+            demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+            for dossier in demarche.dossiers:
+                dossier_number = dossier.number
+                project = PetitionProject.objects.filter(
+                    demarches_simplifiees_dossier_number=dossier_number
+                ).first()
+
+                ds_url = (
+                    f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
+                    f"{dossier_number}"
+                )
+                if project is None:
+                    self.handle_unlinked_dossier(
+                        dossier,
+                        demarche_number,
+                        demarche_name,
+                        ds_url,
+                        activated_department.demarches_simplifiees_project_url_id,
                     )
-                 {
-                    demarche(number: $demarcheNumber)
-                    {
-                        title
-                        number
-                        dossiers(
-                            updatedSince: $updatedSince
-                            after: $after
-                            )
-                            {
-                                pageInfo {
-                                    hasNextPage
-                                    endCursor
-                                }
-                                nodes {
-                                    number
-                                    state
-                                    dateDepot
-                                    usager {
-                                        email
-                                        }
-                                    champs{
-                                        id
-                                        stringValue
-                                    }
-                                }
-                            }
-                    }
-                }"""
-                body = {
-                    "query": query,
-                    "variables": variables,
-                }
+                    continue
 
-                response = requests.post(
-                    api_url,
-                    json=body,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-                    },
+                creation_event = (
+                    Event.objects.order_by("-date_created")
+                    .filter(
+                        metadata__reference=project.reference,
+                        category="dossier",
+                        event="creation",
+                    )
+                    .first()
                 )
-
-                logger.info(
-                    f"""
-                    Demarches simplifiees API request status: {response.status_code}"
-                    * response.text: {response.text},
-                    * response.status_code: {response.status_code},
-                    * request.url: {api_url},
-                    * request.body: {body},
-                    """,
-                )
-
-                if response.status_code >= 400:
-                    logger.error(
-                        "Demarches simplifiees API request failed",
+                if not creation_event:
+                    logger.warning(
+                        f"Unable to find creation event for project {project.reference}. "
+                        f"The submission event will be logged with a mocked session key.",
                         extra={
-                            "response.text": response.text,
-                            "response.status_code": response.status_code,
-                            "request.url": api_url,
-                            "request.body": body,
+                            "project": self,
+                            "session_key": SESSION_KEY,
                         },
                     )
 
-                    message_body = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
-                        context={
-                            "demarche_number": demarche_number,
-                            "status_code": response.status_code,
-                            "response": response.text,
-                            "api_url": api_url,
-                            "body": body,
-                        },
-                    )
-                    notify(message_body, "haie")
-                    break
-
-                data = response.json() or {}
-
-                dossiers = (
-                    ((data.get("data") or {}).get("demarche") or {}).get("dossiers")
-                    or {}
-                ).get("nodes", None)
-
-                if dossiers is None:
-                    logger.error(
-                        "Demarches simplifiees API response is not well formated",
-                        extra={
-                            "response.json": data,
-                            "response.status_code": response.status_code,
-                            "request.url": api_url,
-                            "request.body": body,
-                        },
-                    )
-                    message_body = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
-                        context={
-                            "status_code": response.status_code,
-                            "response": response.text,
-                            "api_url": api_url,
-                            "body": body,
-                            "command": "dossier_submission_admin_alert",
-                        },
-                    )
-                    notify(message_body, "haie")
-                    break
-
-                has_next_page = (
-                    data["data"]["demarche"]["dossiers"]
-                    .get("pageInfo", {})
-                    .get("hasNextPage", False)
+                visitor_id = (
+                    creation_event.session_key if creation_event else SESSION_KEY
                 )
-                cursor = (
-                    data["data"]["demarche"]["dossiers"]
-                    .get("pageInfo", {})
-                    .get("endCursor", None)
+                user = type("User", (object,), {"is_staff": False})()
+                project.synchronize_with_demarches_simplifiees(
+                    dossier, current_site, demarche_label, ds_url, visitor_id, user
                 )
-                demarche_name = data["data"]["demarche"].get("title", "Nom inconnu")
-                demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
-                for dossier in dossiers:
-                    dossier_number = dossier["number"]
-                    project = PetitionProject.objects.filter(
-                        demarches_simplifiees_dossier_number=dossier_number
-                    ).first()
-
-                    ds_url = (
-                        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-                        f"{dossier_number}"
-                    )
-                    if project is None:
-                        self.handle_unlinked_dossier(
-                            dossier,
-                            demarche_number,
-                            demarche_name,
-                            ds_url,
-                            activated_department.demarches_simplifiees_project_url_id,
-                        )
-                        continue
-
-                    creation_event = (
-                        Event.objects.order_by("-date_created")
-                        .filter(
-                            metadata__reference=project.reference,
-                            category="dossier",
-                            event="creation",
-                        )
-                        .first()
-                    )
-                    if not creation_event:
-                        logger.warning(
-                            f"Unable to find creation event for project {project.reference}. "
-                            f"The submission event will be logged with a mocked session key.",
-                            extra={
-                                "project": self,
-                                "session_key": SESSION_KEY,
-                            },
-                        )
-
-                    visitor_id = (
-                        creation_event.session_key if creation_event else SESSION_KEY
-                    )
-                    user = type("User", (object,), {"is_staff": False})()
-                    project.synchronize_with_demarches_simplifiees(
-                        dossier, current_site, demarche_label, ds_url, visitor_id, user
-                    )
 
             handled_demarches.append(demarche_number)
 
@@ -245,9 +119,9 @@ class Command(BaseCommand):
         """
         project_url = next(
             (
-                champ["stringValue"]
-                for champ in dossier["champs"]
-                if champ["id"] == project_url_id
+                champ.stringValue
+                for champ in dossier.champs
+                if champ.id == project_url_id
             ),
             "",
         )
@@ -258,7 +132,7 @@ class Command(BaseCommand):
                 "A demarches simplifiees dossier has no corresponding project, it was probably "
                 "created on another environment",
                 extra={
-                    "dossier_number": dossier["number"],
+                    "dossier_number": dossier.number,
                     "demarche_number": demarche_number,
                     "project_url": project_url,
                 },
@@ -270,7 +144,7 @@ class Command(BaseCommand):
                 "A demarches simplifiees dossier has no corresponding project, it may have been "
                 "created without the guh",
                 extra={
-                    "dossier_number": dossier["number"],
+                    "dossier_number": dossier.number,
                     "demarche_number": demarche_number,
                     "project_url": project_url,
                 },
@@ -280,7 +154,7 @@ class Command(BaseCommand):
                 context={
                     "demarche_name": demarche_name,
                     "ds_url": ds_url,
-                    "dossier_number": dossier["number"],
+                    "dossier_number": dossier.number,
                 },
             )
             notify(message_body, "haie")

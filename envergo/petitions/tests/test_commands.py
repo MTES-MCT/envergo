@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
@@ -38,14 +38,14 @@ def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_dossier_submission_admin_alert(
     mock_post, mock_notify_command, mock_notify_model
 ):
     # Define the first mock response
-    mock_response_1 = Mock()
-    mock_response_1.status_code = 200
-    mock_response_1.json.return_value = {
+    mock_response_1 = {
         "data": {
             "demarche": {
                 "title": "(test) Guichet unique de la haie / Demande d'autorisation",
@@ -80,9 +80,7 @@ def test_dossier_submission_admin_alert(
     }
 
     # Define the second mock response
-    mock_response_2 = Mock()
-    mock_response_2.status_code = 200
-    mock_response_2.json.return_value = {
+    mock_response_2 = {
         "data": {
             "demarche": {
                 "title": "(test) Guichet unique de la haie / Demande d'autorisation",
@@ -118,3 +116,4 @@ def test_dossier_submission_admin_alert(
         2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
     )
     assert project.demarches_simplifiees_last_sync is not None
+    assert mock_post.call_count == 2

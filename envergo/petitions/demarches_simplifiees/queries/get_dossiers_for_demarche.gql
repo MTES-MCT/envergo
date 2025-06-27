@@ -1,0 +1,34 @@
+query getDemarche(
+   $demarcheNumber: Int!,
+   $updatedSince: ISO8601DateTime,
+   $after: String
+   )
+{
+   demarche(number: $demarcheNumber)
+    {
+        title
+        number
+        dossiers(
+            updatedSince: $updatedSince
+            after: $after
+            )
+            {
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+                nodes {
+                    number
+                    state
+                    dateDepot
+                    usager {
+                        email
+                        }
+                    champs{
+                        id
+                        stringValue
+                    }
+                }
+            }
+    }
+}

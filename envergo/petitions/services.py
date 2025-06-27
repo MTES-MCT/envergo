@@ -327,7 +327,7 @@ def fetch_project_details_from_demarches_simplifiees(
 
     ds_client = DemarchesSimplifieesClient()
 
-    dossier = ds_client.fetch_project_details(dossier_number)
+    dossier = ds_client.get_dossier(dossier_number)
 
     if dossier is not None:
         # we have got a dossier from DS for this petition project,

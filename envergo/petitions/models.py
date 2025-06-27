@@ -161,7 +161,11 @@ class PetitionProject(models.Model):
                 args=[self.pk],
             )
 
-            usager_email = (dossier.get("usager") or {}).get("email", "non renseigné")
+            usager_email = (
+                dossier.usager.email
+                if dossier.usager and dossier.usager.email
+                else "non renseigné"
+            )
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={

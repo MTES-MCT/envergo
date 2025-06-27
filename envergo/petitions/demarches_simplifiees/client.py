@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -10,7 +11,7 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarches_simplifiees.models import Demarche, Dossier
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,26 @@ class DemarchesSimplifieesClient:
                 "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}"
             },
         )
-        self.client = Client(transport=self.transport, fetch_schema_from_transport=True)
+        self.client = Client(
+            transport=self.transport, fetch_schema_from_transport=False
+        )
 
     def execute(self, query_str: str, variables: dict = None):
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            raise NotImplementedError("Demaches simplifiées is not enabled")
+
         query = gql(query_str)
         try:
             result = self.client.execute(query, variable_values=variables or {})
+            logger.info(
+                "Demarches simplifiees API request succeed",
+                extra={
+                    "result": result,
+                    "query": query_str,
+                    "variables": variables,
+                },
+            )
+
         except (TransportError, GraphQLError) as e:
             logger.error(
                 "Demarches simplifiees API request failed",
@@ -54,7 +69,7 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def fetch_project_details(self, dossier_number) -> Dossier | None:
+    def get_dossier(self, dossier_number) -> Dossier | None:
         variables = {"dossierNumber": dossier_number}
         with open(
             Path(
@@ -142,3 +157,64 @@ class DemarchesSimplifieesClient:
             return None
 
         return dossier
+
+    def get_dossiers_for_demarche(
+        self, demarche_number, dossiers_updated_since: datetime
+    ) -> Demarche | None:
+        first_page = self._fetch_dossiers_page(demarche_number, dossiers_updated_since)
+        demarche = Demarche.from_dict(first_page["demarche"])
+        demarche.set_dossier_iterator(
+            lambda cursor: self._fetch_dossiers_page(
+                demarche_number, dossiers_updated_since, cursor
+            ),
+            first_page["dossiers"],
+            first_page["hasNextPage"],
+            first_page["endCursor"],
+        )
+        return demarche
+
+    def _fetch_dossiers_page(
+        self, demarche_number: str, dossiers_updated_since: datetime, cursor: str = None
+    ) -> dict:
+        with open(
+            Path(
+                settings.APPS_DIR
+                / "petitions"
+                / "demarches_simplifiees"
+                / "queries"
+                / "get_dossiers_for_demarche.gql"
+            ),
+            "r",
+        ) as file:
+            query = file.read()
+
+        variables = {
+            "demarcheNumber": demarche_number,
+            "updatedSince": dossiers_updated_since.isoformat(),
+            "after": cursor,
+        }
+        try:
+            data = self.execute(query, variables)
+        except DemarchesSimplifieesError as e:
+            message_body = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
+                context={
+                    "demarche_number": demarche_number,
+                    "error": e.__cause__ if e.__cause__ else e.message,
+                    "query": e.query,
+                    "variables": e.variables,
+                },
+            )
+            notify(message_body, "haie")
+            raise e
+
+        dossiers = data["demarche"]["dossiers"]
+        has_next_page = dossiers.get("pageInfo", {}).get("hasNextPage", False)
+        cursor = dossiers.get("pageInfo", {}).get("endCursor", None)
+
+        return {
+            "demarche": data["demarche"],
+            "dossiers": dossiers["nodes"],
+            "hasNextPage": has_next_page,
+            "endCursor": cursor,
+        }

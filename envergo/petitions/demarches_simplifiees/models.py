@@ -695,6 +695,45 @@ class DeletedDossierEdge:
     typename__: Optional[Literal["DeletedDossierEdge"]] = "DeletedDossierEdge"
 
 
+class DossierIterator:
+    def __init__(
+        self,
+        demarche_id: str,
+        fetch_page_func,
+        first_page: list[dict] = list,
+        has_more: bool = True,
+        cursor: Optional[str] = None,
+    ):
+        """Un itérateur pour parcourir les dossiers d'une démarche.
+
+        As the first page may have been fetched with the demarche metadata, we can pass it and its cursor as args
+        """
+        self.demarche_id = demarche_id
+        self.fetch_page = fetch_page_func
+        self.buffer = first_page
+        self.has_more = has_more
+        self.cursor = cursor
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if not self.buffer and self.has_more:
+            page_data = self.fetch_page(self.cursor)
+
+            self.buffer = page_data["dossiers"]
+            self.cursor = page_data["endCursor"]
+            self.has_more = page_data["hasNextPage"]
+
+            if not self.buffer:
+                raise StopIteration
+
+        if not self.buffer:
+            raise StopIteration
+
+        return Dossier.from_dict(self.buffer.pop(0))
+
+
 @dataclass(kw_only=True)
 class Demarche:
     """
@@ -709,7 +748,7 @@ class Demarche:
     dateDerniereModification: ISO8601DateTime = None
     deletedDossiers: DeletedDossierConnection = None
     description: String = None
-    dossiers: DossierConnection = None
+    dossiers: DossierConnection | DossierIterator = None
     draftRevision: Revision = None
     groupeInstructeurs: list[GroupeInstructeur] = None
     id: ID = None
@@ -727,6 +766,21 @@ class Demarche:
     publishedRevision: Optional[Revision] = None
     service: Optional[Service] = None
     typename__: Optional[Literal["Demarche"]] = "Demarche"
+
+    @classmethod
+    def from_dict(cls, dict) -> Demarche:
+        return from_dict(data_class=Demarche, data=dict, config=PARSER_CONFIG)
+
+    def set_dossier_iterator(
+        self,
+        fetch_page_func,
+        first_page: list[Dossier] = list,
+        has_more: bool = True,
+        cursor: Optional[str] = None,
+    ):
+        self.dossiers = DossierIterator(
+            self.id, fetch_page_func, first_page, has_more, cursor
+        )
 
 
 @dataclass(kw_only=True)
@@ -916,7 +970,7 @@ class Dossier:
     typename__: Optional[Literal["Dossier"]] = "Dossier"
 
     @classmethod
-    def from_dict(cls, dict):
+    def from_dict(cls, dict) -> Dossier:
         TYPE_MAP = {
             "PersonnePhysique": PersonnePhysique,
             "PersonneMorale": PersonneMorale,
@@ -957,7 +1011,7 @@ class Dossier:
                     data_class=output_type, data=demandeur_data, config=PARSER_CONFIG
                 )
         parsed_champs = []
-        for champ in dict.get("champs"):
+        for champ in dict.get("champs") or []:
             if champ and "__typename" in champ:
                 type_name = champ["__typename"]
                 output_type = TYPE_MAP.get(type_name)
@@ -2063,7 +2117,7 @@ class Revision:
     typename__: Optional[Literal["Revision"]] = "Revision"
 
     @classmethod
-    def from_dict(cls, dict):
+    def from_dict(cls, dict) -> Revision:
 
         TYPE_MAP = {
             "AddressChampDescriptor": AddressChampDescriptor,

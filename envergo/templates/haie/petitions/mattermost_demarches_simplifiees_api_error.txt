@@ -2,16 +2,19 @@
 
 L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de la démarche n°{{demarche_number}}.
 
-Réponse de Démarches Simplifiées : {{ status_code }}
+Réponse de Démarches Simplifiées :
 ```
-{{ response|safe }}
+{{ error|safe }}
 ```
 
 Requête envoyée :
-* Url: {{ api_url }}
-* Body:
+* Query:
 ```
-{{ body|safe }}
+{{ query|safe }}
+```
+* Variables:
+```
+{{ variables|safe }}
 ```
 
 *Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*
