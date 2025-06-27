@@ -184,9 +184,9 @@ class PetitionProject(models.Model):
                 **self.get_log_event_data(),
             )
 
-        self.demarches_simplifiees_state = dossier["state"]
-        if "dateDepot" in dossier:
-            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
+        self.demarches_simplifiees_state = dossier.state.value
+        if dossier.dateDepot:
+            self.demarches_simplifiees_date_depot = dossier.dateDepot
 
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
