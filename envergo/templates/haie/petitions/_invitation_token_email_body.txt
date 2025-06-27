@@ -9,12 +9,12 @@ Le guichet unique de la haie de la DDT(M), en charge de l’instruction des proj
 
 1. Connexion ou création de compte
     Avant d’accéder au dossier, vous devez créer un compte. Si vous disposez déjà d’un compte, vous pouvez directement passer à l’étape suivante.
-    👉 Créer un compte : {{ register_url }}
+    👉 Créer un compte : {{ invitation_register_url }}
 2. Ajout des droits d’accès au dossier
     Une fois connecté, cliquez sur ce lien pour accéder au dossier qui vous est destiné :
     👉 Accéder au dossier : <span id="accept-invitation-url-text"></span>
 
-En cas de difficulté d’accès ou de problème avec votre compte, n’hésitez pas à contacter notre support.
+En cas de difficulté d’accès ou de problème avec votre compte, n’hésitez pas à contacter notre support : {{invitation_contact_url}}
 
 Pour toute question sur le projet, vous pouvez nous les poser directement par retour d’email.
 

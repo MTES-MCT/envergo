@@ -34,7 +34,6 @@ class AuthBackend(ModelBackend):
                     (
                         getattr(user, "access_haie", True),
                         getattr(user, "is_active", True),
-                        getattr(user, "is_confirmed_by_admin", True),
                     )
                 )
         else:
