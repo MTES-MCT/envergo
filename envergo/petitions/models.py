@@ -162,7 +162,11 @@ class PetitionProject(models.Model):
                 args=[self.pk],
             )
 
-            usager_email = (dossier.get("usager") or {}).get("email", "non renseigné")
+            usager_email = (
+                dossier.usager.email
+                if dossier.usager and dossier.usager.email
+                else "non renseigné"
+            )
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={
@@ -185,9 +189,9 @@ class PetitionProject(models.Model):
                 **self.get_log_event_data(),
             )
 
-        self.demarches_simplifiees_state = dossier["state"]
-        if "dateDepot" in dossier:
-            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
+        self.demarches_simplifiees_state = dossier.state.value
+        if dossier.dateDepot:
+            self.demarches_simplifiees_date_depot = dossier.dateDepot
 
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()

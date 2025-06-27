@@ -2,16 +2,17 @@
 
 La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu. Le statut des dossiers concernés n'a pas pu être récupéré.
 
-Réponse de Démarches Simplifiées : {{ status_code }}
+Réponse de Démarches Simplifiées :
 ```
 {{ response|safe }}
 ```
 
 Requête envoyée :
-* Url: {{ api_url }}
-* Body:
+* Query:
 ```
-{{ body|safe }}
+{{ query|safe }}
 ```
-
-*Cette requête est lancée automatiquement par la commande `{{ command }}`.*
+* Variables:
+```
+{{ variables|safe }}
+```
