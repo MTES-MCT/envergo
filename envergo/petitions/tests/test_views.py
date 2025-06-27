@@ -1,3 +1,4 @@
+import copy
 from unittest.mock import Mock, patch
 
 import factory
@@ -305,19 +306,16 @@ def test_petition_project_instructor_view_requires_authentication(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_notes_view(
     mock_post, instructor_haie_user_44, client, site
 ):
     """
     Test petition project instructor notes view
     """
-
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-
-    mock_post.return_value = mock_response
+    mock_post.return_value = copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"])
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -344,7 +342,9 @@ def test_petition_project_instructor_notes_view(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     instructor_haie_user_44,
@@ -355,11 +355,11 @@ def test_petition_project_instructor_view_reglementation_pages(
 ):
     """Test instruction pages reglementation menu and content"""
 
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-
-    mock_post.return_value = mock_response
+    mock_post.side_effect = [
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+    ]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -404,16 +404,14 @@ def test_petition_project_instructor_view_reglementation_pages(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_display_dossier_ds_info(
     mock_post, instructor_haie_user_44, client, site
 ):
     """Test if dossier data is in template"""
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-
-    mock_post.return_value = mock_response
+    mock_post.return_value = copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"])
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",

@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 from datetime import datetime
@@ -93,15 +94,15 @@ class DemarchesSimplifieesClient:
                 "r",
             ) as file:
                 response = json.load(file)
-                data = response["data"]
+                data = copy.deepcopy(response["data"])
                 dossier = Dossier.from_dict(data["dossier"])
         else:
             try:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 if any(
-                    error["extensions"]["code"] == "not_found"
-                    and any(path == "dossier" for path in error["path"])
+                    error.get("extensions", {}).get("code") == "not_found"
+                    and any(path == "dossier" for path in error.get("path", []))
                     for error in (
                         e.__cause__.errors if hasattr(e.__cause__, "errors") else []
                     )

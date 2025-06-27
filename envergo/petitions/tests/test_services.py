@@ -1,10 +1,12 @@
+import copy
 import datetime
 from collections import OrderedDict
 from decimal import Decimal
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, patch
 
 import pytest
 from django.test import override_settings
+from gql.transport.exceptions import TransportQueryError
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
@@ -14,6 +16,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
+from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.petitions.regulations.conditionnalitepac import (
     bcae8_get_instructor_view_context,
 )
@@ -36,13 +39,15 @@ pytestmark = pytest.mark.django_db
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     """Test fetch project details from démarches simplifiées"""
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-    mock_post.return_value = mock_response
+    mock_post.side_effect = [
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+    ]
 
     config = ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -74,9 +79,8 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-@patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
-    mock_post, caplog, haie_user, site
+    caplog, haie_user, site
 ):
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
@@ -98,7 +102,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         > 0
     )
     fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
-    assert details == fake_dossier
+    assert details == Dossier.from_dict(fake_dossier)
 
 
 @patch("envergo.petitions.services.notify")
@@ -125,16 +129,15 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
-@patch("requests.post")
+@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@patch("gql.client.Client.execute")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
     mock_post, mock_notify, haie_user, site
 ):
-    mock_response = Mock()
-    mock_response.status_code = 400
-    mock_response.json.return_value = {"an error": "occurred"}
+    mock_post.side_effect = TransportQueryError(
+        "Mocked transport error", errors=[{"message": "Mocked error"}]
+    )
 
-    mock_post.return_value = mock_response
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
@@ -157,16 +160,14 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
-@patch("requests.post")
+@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user, site
 ):
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"data": {"weirdely_formatted": "response"}}
-
-    mock_post.return_value = mock_response
+    mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="

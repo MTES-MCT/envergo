@@ -16,10 +16,7 @@ pytestmark = pytest.mark.django_db
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-@patch("requests.post")
-def test_dossier_submission_admin_alert_ds_not_enabled(mock_post, caplog):
-
-    mock_post.side_effect = []
+def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     PetitionProjectFactory()
     ConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
@@ -46,50 +43,46 @@ def test_dossier_submission_admin_alert(
 ):
     # Define the first mock response
     mock_response_1 = {
-        "data": {
-            "demarche": {
-                "title": "(test) Guichet unique de la haie / Demande d'autorisation",
-                "number": 103363,
-                "dossiers": {
-                    "pageInfo": {
-                        "hasNextPage": True,
-                        "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
-                    },
-                    "nodes": [
-                        {
-                            "number": 21059675,
-                            "state": "en_construction",
-                            "dateDepot": "2025-01-29T16:25:03+01:00",
-                        },
-                        {
-                            "number": 123,
-                            "state": "en_construction",
-                            "dateDepot": "2025-01-29T16:25:03+01:00",
-                            "champs": [
-                                {
-                                    "id": "ABC123",
-                                    "label": "Url du simulateur",
-                                    "stringValue": "",
-                                },
-                            ],
-                        },
-                    ],
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {
+                    "hasNextPage": True,
+                    "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
                 },
-            }
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "state": "en_construction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                    },
+                    {
+                        "number": 123,
+                        "state": "en_construction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "champs": [
+                            {
+                                "id": "ABC123",
+                                "label": "Url du simulateur",
+                                "stringValue": "",
+                            },
+                        ],
+                    },
+                ],
+            },
         }
     }
 
     # Define the second mock response
     mock_response_2 = {
-        "data": {
-            "demarche": {
-                "title": "(test) Guichet unique de la haie / Demande d'autorisation",
-                "number": 103363,
-                "dossiers": {
-                    "pageInfo": {"hasNextPage": False, "endCursor": None},
-                    "nodes": [],
-                },
-            }
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {"hasNextPage": False, "endCursor": None},
+                "nodes": [],
+            },
         }
     }
 
