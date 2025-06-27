@@ -14,6 +14,10 @@
       exports.InvitationTokenModal = InvitationTokenModal;
 
       InvitationTokenModal.prototype.init = function () {
+        this.modalError.style.display = "none"
+        this.modalLoader.style.display = "none"
+        this.modalContent.style.display = "none"
+
         this.buttonElt.addEventListener('click', this.createToken.bind(this));
 
         const copyButton = this.modalElt.querySelector("#copy-invitation-token-btn");
