@@ -6,6 +6,7 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 from django.test import override_settings
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
@@ -14,6 +15,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
+from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.conditionnalitepac import (
     bcae8_get_instructor_view_context,
 )
@@ -53,13 +55,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     moulinette = petition_project.get_moulinette()
 
     dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site
     )
     assert dossier is not None
+    assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
-    project_details = get_instructor_view_context(
-        petition_project, moulinette, site, "", haie_user
-    )
+    project_details = get_instructor_view_context(petition_project, moulinette, site)
     ds_data = project_details["ds_data"]
 
     assert ds_data.applicant_name == "Mme Hedy Lamarr"
@@ -71,6 +72,24 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         2025, 3, 21, 10, 8, 34, tzinfo=datetime.timezone.utc
     )
     assert petition_project.demarches_simplifiees_last_sync is not None
+
+    # GIVEN a new dossier in Draft status With an existing creation event
+    petition_project = PetitionProjectFactory(reference="DEF456")
+    Event.objects.create(
+        category="dossier",
+        event="creation",
+        session_key="a given user",
+        metadata={"reference": "DEF456"},
+        site_id=site.id,
+    )
+
+    # WHEN I synchronize it with DS for the first time
+    fetch_project_details_from_demarches_simplifiees(petition_project, config, site)
+
+    # THEN an event is created with the same session key as the creation event
+    assert Event.objects.get(
+        category="dossier", event="depot", session_key="a given user"
+    )
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
@@ -84,7 +103,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
     details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site
     )
 
     assert (
@@ -109,7 +128,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
     config = ConfigHaieFactory()
 
     details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site
     )
 
     assert details is None
@@ -141,7 +160,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
     details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site
     )
 
     assert details is None
@@ -173,7 +192,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
     details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, "", haie_user
+        petition_project, config, site
     )
 
     assert details is None

@@ -617,8 +617,6 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
@@ -684,8 +682,6 @@ class PetitionProjectInstructorDossierDSView(
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
