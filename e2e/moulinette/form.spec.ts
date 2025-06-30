@@ -1,9 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-test('Display a result with the available regulations', async ({ page }) => {
+test('Display result if department not available', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('simulateur_nav_btn').click();
   await page.dblclick('#map', { position: { x: 300, y: 215 } });
+  await page.getByLabel('Nouveaux impacts').fill('500');
+  await page.getByLabel('État final').fill('500');
+  await page.getByRole('button', { name: 'Démarrer la simulation' }).click();
+  await expect(page).toHaveTitle("Simulation réglementaire du projet — EnvErgo");
+  await expect(page.getByText("Le simulateur EnvErgo n'est pas encore déployé dans votre département.")).toBeVisible();
+});
+
+test('Display a result with the available regulations', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('simulateur_nav_btn').click();
+  await page.dblclick('#map', { position: { x: 270, y: 185 } });
   await page.getByLabel('Nouveaux impacts').fill('500');
   await page.getByLabel('État final').fill('500');
   await page.getByRole('button', { name: 'Démarrer la simulation' }).click();

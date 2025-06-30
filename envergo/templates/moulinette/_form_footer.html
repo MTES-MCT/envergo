@@ -7,15 +7,18 @@
               type="button"
               aria-expanded="false"
               aria-controls="accordion-optional-forms">
-        <label class="step">
-          Caractéristiques du projet <small>– facultatif</small>
-        </label>
-      </button>
-      <div id="option-count-wrapper" class="no-options">
-        <span class="fr-badge fr-badge--blue-ecume">
-          <span id="option-count"></span>
+        <span class="label-wrapper">
+          <label class="step">
+            Caractéristiques du projet <small>– facultatif</small>
+          </label>
+          <br>
+          <span id="option-count-wrapper" class="no-options">
+            <span class="fr-badge fr-badge--blue-ecume">
+              <span id="option-count"></span>
+            </span>
+          </span>
         </span>
-      </div>
+      </button>
     </h4>
     <div class="fr-collapse" id="accordion-optional-forms">
       {% for form in optional_forms %}
@@ -24,7 +27,7 @@
 
           {% include '_checkbox_snippet.html' with field=form.activate %}
 
-          <fieldset>
+          <fieldset class="fr-fieldset">
             {% for field in form %}
               {% if field.name != "activate" %}
                 {% if field|is_checkbox %}
@@ -49,13 +52,16 @@
 {% if additional_forms %}
   <hr />
   <section id="additional-forms"
-           class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
+           class="form-section {{ additional_forms_bound|yesno:"bound,unbound" }}">
     <h4>
       <strong>Questions complémentaires</strong>
     </h4>
-    <p>
-      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
-    </p>
+
+    {% if not request.GET.edit %}
+      <p>
+        Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+      </p>
+    {% endif %}
 
     {% for field_name, field in additional_fields.items %}
       {% if field|is_checkbox %}

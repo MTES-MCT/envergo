@@ -289,6 +289,10 @@ nav#evaluation-summary {
     background-color: var(--background-default-grey);
     padding: 1.25rem;
     border-radius: 5px;
+
+    .fr-fieldset:last-child {
+      margin-bottom: 0;
+    }
   }
 
   #form-group-created_surface,
@@ -318,7 +322,7 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
-    background-color: var(--blue-france-925-125-hover);
+    background-color: var(--blue-france-950-100-hover);
     padding: 1rem;
 
     .fr-input-group--error {
@@ -372,14 +376,16 @@ nav#evaluation-summary {
     }
 
     #option-count-wrapper {
-      padding: 0 1.25rem;
-      margin-bottom: 0.25rem;
+      padding: 0.5rem 1.25rem;
       display: block;
 
       &.no-options {
+        padding-bottom: 0.25rem;
+
         .fr-badge--blue-ecume {
           color: transparent;
           background-color: transparent;
+          font-size: 0;
         }
       }
     }
@@ -398,13 +404,23 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
-      & > fieldset {
+      & > .fr-fieldset {
         display: none;
+        margin-left: 0;
         padding-left: 2rem;
-        margin-bottom: 1rem;
 
         .fr-input-group:not(:last-child) {
           border-bottom: 1px solid var(--border-default-grey);
+
+          & > .fr-fieldset {
+            margin-bottom: 1rem;
+          }
+        }
+      }
+
+      &:not(:last-child) {
+        & > .fr-fieldset {
+          margin-bottom: 1rem;
         }
       }
 
