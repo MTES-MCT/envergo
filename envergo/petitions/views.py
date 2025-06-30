@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -30,7 +31,7 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorNotesForm,
 )
-from envergo.petitions.models import DOSSIER_STATES, PetitionProject
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -70,7 +71,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = self.queryset
         elif current_user.is_instructor:
             user_departments = current_user.departments.defer("geometry").all()
-            queryset = self.queryset.filter(department__in=user_departments)
+            queryset = self.queryset.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=current_user.id)
+            ).distinct()
         else:
             queryset = self.queryset.none()
         return queryset
@@ -509,6 +513,7 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+        context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -540,12 +545,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
         user = request.user
-        department = self.object.department
 
         # check if user is authorize, else returns 403 error
-        if user.is_superuser or all(
-            (user.is_instructor, department in user.departments.defer("geometry").all())
-        ):
+        if self.object.is_instructor_authorized(user):
             if self.matomo_tag:
                 log_event(
                     "projet",
@@ -581,6 +583,17 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         context["plantation_url"] = plantation_url
+        context["invitation_token_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token",
+                kwargs={"reference": self.object.reference},
+            )
+        )
+        context["register_url"] = self.request.build_absolute_uri(
+            reverse(
+                "register",
+            )
+        )
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -605,8 +618,6 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
@@ -672,8 +683,6 @@ class PetitionProjectInstructorDossierDSView(
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
@@ -759,3 +768,74 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+
+class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
+    """Create an invitation token for a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+
+        if project.is_instructor_authorized(request.user):
+            token = InvitationToken.objects.create(
+                created_by=request.user,
+                petition_project=project,
+            )
+            invitation_url = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project_accept_invitation",
+                    kwargs={"reference": project.reference, "token": token.token},
+                )
+            )
+            return JsonResponse({"invitation_url": invitation_url})
+        else:
+            return JsonResponse(
+                {
+                    "error": "You are not authorized to create an invitation token for this project."
+                },
+                status=403,
+            )
+
+
+class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
+    """Accept an invitation to a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def dispatch(self, request, *args, **kwargs):
+        project = self.get_object()
+        self.request.invitation = InvitationToken.objects.filter(
+            petition_project=project, token=kwargs.get("token")
+        ).first()
+
+        if not self.request.invitation or not self.request.invitation.is_valid():
+            return TemplateResponse(
+                request,
+                template="haie/petitions/invalid_invitation_token.html",
+                status=403,
+            )
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Accept the invitation and redirect to the instructor view of the petition project"""
+
+        # the token should not be consumed by its own creator
+        if self.request.invitation.created_by != request.user:
+            self.request.invitation.user = request.user
+            self.request.invitation.save()
+
+        return redirect(
+            reverse(
+                "petition_project_instructor_view",
+                kwargs={
+                    "reference": self.request.invitation.petition_project.reference
+                },
+            )
+        )
