@@ -10,7 +10,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.db.models import Q
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -24,9 +25,13 @@ from shapely.ops import transform
 from envergo.analytics.utils import get_matomo_tags, log_event
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
-from envergo.petitions.forms import PetitionProjectForm, PetitionProjectInstructorForm
-from envergo.petitions.models import DOSSIER_STATES, PetitionProject
+from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.petitions.forms import (
+    PetitionProjectForm,
+    PetitionProjectInstructorEspecesProtegeesForm,
+    PetitionProjectInstructorNotesForm,
+)
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -66,7 +71,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = self.queryset
         elif current_user.is_instructor:
             user_departments = current_user.departments.defer("geometry").all()
-            queryset = self.queryset.filter(department__in=user_departments)
+            queryset = self.queryset.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=current_user.id)
+            ).distinct()
         else:
             queryset = self.queryset.none()
         return queryset
@@ -505,8 +513,14 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
-
         context["triage_form"] = self.object.get_triage_form()
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
 
         return context
 
@@ -522,7 +536,6 @@ class PetitionProjectAutoRedirection(View):
 class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     """Mixin for petition project instructor views"""
 
-    matomo_tag = "consultation_i"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
@@ -532,20 +545,17 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
         user = request.user
-        department = self.object.department
 
         # check if user is authorize, else returns 403 error
-        if user.is_superuser or all(
-            (user.is_instructor, department in user.departments.defer("geometry").all())
-        ):
-
-            log_event(
-                "projet",
-                self.matomo_tag,
-                self.request,
-                **self.object.get_log_event_data(),
-                **get_matomo_tags(self.request),
-            )
+        if self.object.is_instructor_authorized(user):
+            if self.matomo_tag:
+                log_event(
+                    "projet",
+                    self.matomo_tag,
+                    self.request,
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
             return result
 
         else:
@@ -573,6 +583,24 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         context["plantation_url"] = plantation_url
+        context["invitation_token_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token",
+                kwargs={"reference": self.object.reference},
+            )
+        )
+        context["register_url"] = self.request.build_absolute_uri(
+            reverse(
+                "register",
+            )
+        )
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        )
+        context["matomo_custom_url"] = self.request.build_absolute_uri(
+            matomo_custom_path
+        )
 
         return context
 
@@ -581,7 +609,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    form_class = PetitionProjectInstructorForm
+    form_class = PetitionProjectInstructorNotesForm
     matomo_tag = "consultation_i"
 
     def get_context_data(self, **kwargs):
@@ -608,12 +636,47 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
+class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_regulation.html"
+    matomo_tag = ""
+
+    def get_context_data(self, **kwargs):
+        """Insert current regulation in context dict"""
+        context = super().get_context_data(**kwargs)
+        regulation_slug = self.kwargs.get("regulation")
+        if regulation_slug:
+            try:
+                current_regulation = context["moulinette"].regulations.get(
+                    regulation=regulation_slug
+                )
+            except Regulation.DoesNotExist:
+                raise Http404()
+
+            context["current_regulation"] = current_regulation
+        return context
+
+    def get_form_class(self):
+        """Return the form class to use in this view."""
+        regulation_slug = self.kwargs.get("regulation")
+        if regulation_slug == "ep":
+            return PetitionProjectInstructorEspecesProtegeesForm
+        else:
+            return self.form_class
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_regulation_view", kwargs=self.kwargs
+        )
+
+
 class PetitionProjectInstructorDossierDSView(
     PetitionProjectInstructorMixin, DetailView
 ):
     """View for petition project page with demarches simplifiées data"""
 
-    template_name = "haie/petitions/instructor_dossier_ds_view.html"
+    template_name = "haie/petitions/instructor_view_dossier_ds.html"
     matomo_tag = "consultation_i_ds"
 
     def get_context_data(self, **kwargs):
@@ -643,6 +706,16 @@ class PetitionProjectInstructorDossierDSView(
             )
 
         return context
+
+
+class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_notes.html"
+    matomo_tag = ""
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
 
 
 class PetitionProjectHedgeDataExport(DetailView):
@@ -699,3 +772,74 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+
+class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
+    """Create an invitation token for a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+
+        if project.is_instructor_authorized(request.user):
+            token = InvitationToken.objects.create(
+                created_by=request.user,
+                petition_project=project,
+            )
+            invitation_url = self.request.build_absolute_uri(
+                reverse(
+                    "petition_project_accept_invitation",
+                    kwargs={"reference": project.reference, "token": token.token},
+                )
+            )
+            return JsonResponse({"invitation_url": invitation_url})
+        else:
+            return JsonResponse(
+                {
+                    "error": "You are not authorized to create an invitation token for this project."
+                },
+                status=403,
+            )
+
+
+class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
+    """Accept an invitation to a petition project"""
+
+    model = PetitionProject
+    slug_field = "reference"
+    slug_url_kwarg = "reference"
+
+    def dispatch(self, request, *args, **kwargs):
+        project = self.get_object()
+        self.request.invitation = InvitationToken.objects.filter(
+            petition_project=project, token=kwargs.get("token")
+        ).first()
+
+        if not self.request.invitation or not self.request.invitation.is_valid():
+            return TemplateResponse(
+                request,
+                template="haie/petitions/invalid_invitation_token.html",
+                status=403,
+            )
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Accept the invitation and redirect to the instructor view of the petition project"""
+
+        # the token should not be consumed by its own creator
+        if self.request.invitation.created_by != request.user:
+            self.request.invitation.user = request.user
+            self.request.invitation.save()
+
+        return redirect(
+            reverse(
+                "petition_project_instructor_view",
+                kwargs={
+                    "reference": self.request.invitation.petition_project.reference
+                },
+            )
+        )
