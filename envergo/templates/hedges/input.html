@@ -176,7 +176,7 @@
           <div class="alt fr-m-2w" id="tile-16">
             <div class="tile-header fr-p-1w">
               <h3>Conditions à respecter pour la plantation</h3>
-              <div v-if="conditions.status === 'ok'">
+              <div v-if="conditions.status === 'ok' && hedges.TO_PLANT.count > 0">
                 <span :class="{ 'fr-badge--success': conditions.result, 'fr-badge--warning': !conditions.result }"
                       class="fr-badge">
                   <span v-if="conditions.result">Plantation adéquate</span>
