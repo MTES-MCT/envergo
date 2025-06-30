@@ -206,7 +206,7 @@ class MoulinetteMixin:
         by the moulinette forms.
         """
 
-        get = QueryDict("", mutable=True)
+        get = self.request.GET.copy()
         form_data = form.cleaned_data
         get_data = form_data.copy()  # keep the computed values in the catalog
         get_data.pop("address", None)
