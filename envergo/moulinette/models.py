@@ -2044,7 +2044,7 @@ class MoulinetteHaie(Moulinette):
         return set(TriageFormHaie.base_fields.keys())
 
     @classmethod
-    def get_triage_template(cls, triage_form):
+    def get_triage_result_template(cls, triage_form):
         """Return the template to display the triage out of scope result."""
         if (
             triage_form["element"].value() == "haie"
