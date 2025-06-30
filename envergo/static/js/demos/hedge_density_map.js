@@ -24,7 +24,7 @@
 
     this.map.fitBounds(this.geoJSON.getBounds());
   };
-  exports.Map = Map;
+  exports.DemoMap = Map;
 
 
   /**
