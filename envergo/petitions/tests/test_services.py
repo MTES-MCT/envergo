@@ -101,7 +101,9 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
-    fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
+    fake_dossier = (
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE).get("data", {}).get("dossier")
+    )
     assert details == Dossier.from_dict(fake_dossier)
 
 

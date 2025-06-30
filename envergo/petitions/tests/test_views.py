@@ -189,7 +189,7 @@ def test_petition_project_detail(mock_post, client, site):
     """Test consultation view"""
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+    mock_response.json.return_value = copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE)
 
     mock_post.return_value = mock_response
 
