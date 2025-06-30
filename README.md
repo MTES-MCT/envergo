@@ -367,13 +367,13 @@ Les scripts utilisés sont dans le répertoire `bin`.
 
 Le workflow à suivre :
 
-0. (facultatif) fusionner et tester les mises à jour de dépendance proposées par Snyk
 1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
 2. S'assurer du bon fonctionnement de main en local (notamment les nouvelles fonctionnalités)
-3. Si la CI est ok sur la branche main, fusionner main dans prod et pusher prod
+3. Si la CI est ok sur la branche main, fusionner main dans prod et pousser la branche prod
 4. Quand le déploiement est terminé, vérifier que le site est bien accessible
 5. Prévenir sur le canal de la finalisation de la mise en prod
-6. Fusionner main dans staging et pusher staging
+6. Fusionner la branche main dans staging et pousser la branche staging
+7. (facultatif) fusionner et tester les mises à jour de dépendance proposées par Snyk
 
 Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
