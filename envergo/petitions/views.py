@@ -548,8 +548,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         result = super().get(request, *args, **kwargs)
         user = request.user
 
-        # check if user is authorize, else returns 403 error
-        if self.object.is_instructor_authorized(user):
+        # check if user is authorized, else returns 403 error
+        if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
                     "projet",
@@ -607,6 +607,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
+        context["is_department_instructor"] = (
+            self.object.has_user_as_department_instructor(self.request.user)
+        )
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -625,6 +628,15 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     form_class = PetitionProjectInstructorNotesForm
     matomo_tag = "consultation_i"
 
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+        if not project.has_user_as_department_instructor(request.user):
+            return TemplateResponse(
+                request, template="haie/petitions/403.html", status=403
+            )
+
+        return super().post(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["project_details"] = get_instructor_view_context(
@@ -641,6 +653,9 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
                 Les données proviennent d'un dossier factice.""",
             )
 
+        if not context["is_department_instructor"]:
+            for field in context["form"].fields.values():
+                field.widget.attrs["disabled"] = "disabled"
         return context
 
     def get_success_url(self):
@@ -792,8 +807,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
-
-        if project.is_instructor_authorized(request.user):
+        if project.has_user_as_department_instructor(request.user):
             token = InvitationToken.objects.create(
                 created_by=request.user,
                 petition_project=project,
