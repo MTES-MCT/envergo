@@ -289,6 +289,10 @@ nav#evaluation-summary {
     background-color: var(--background-default-grey);
     padding: 1.25rem;
     border-radius: 5px;
+
+    .fr-fieldset:last-child {
+      margin-bottom: 0;
+    }
   }
 
   #form-group-created_surface,
@@ -318,9 +322,6 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
-    background-color: var(--blue-france-950-125-hover);
-    padding: 1rem;
-
     .fr-input-group--error {
       &::before {
         background-image: none;
@@ -398,13 +399,23 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
-      & > fieldset {
+      & > .fr-fieldset {
         display: none;
+        margin-left: 0;
         padding-left: 2rem;
-        margin-bottom: 1rem;
 
         .fr-input-group:not(:last-child) {
           border-bottom: 1px solid var(--border-default-grey);
+
+          & > .fr-fieldset {
+            margin-bottom: 1rem;
+          }
+        }
+      }
+
+      &:not(:last-child) {
+        & > .fr-fieldset {
+          margin-bottom: 1rem;
         }
       }
 

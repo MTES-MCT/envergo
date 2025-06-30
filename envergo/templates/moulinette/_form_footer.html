@@ -24,7 +24,7 @@
 
           {% include '_checkbox_snippet.html' with field=form.activate %}
 
-          <fieldset>
+          <fieldset class="fr-fieldset">
             {% for field in form %}
               {% if field.name != "activate" %}
                 {% if field|is_checkbox %}
@@ -49,13 +49,16 @@
 {% if additional_forms %}
   <hr />
   <section id="additional-forms"
-           class="{{ additional_forms_bound|yesno:"bound,unbound" }} form-section">
+           class="{{ additional_forms_bound|yesno:"bound,unbound" }}">
     <h4>
       <strong>Questions complémentaires</strong>
     </h4>
-    <p>
-      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
-    </p>
+
+    {% if not request.GET.edit %}
+      <p>
+        Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+      </p>
+    {% endif %}
 
     {% for field_name, field in additional_fields.items %}
       {% if field|is_checkbox %}
