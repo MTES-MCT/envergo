@@ -42,11 +42,6 @@ class User(AbstractUser):
 
     email = models.EmailField(_("Email address"), unique=True)
     name = CharField(_("Name of User"), blank=True, max_length=255)
-    is_confirmed_by_admin = models.BooleanField(
-        _("Confirmed by an admin"),
-        default=False,
-        help_text="Uniquement pour l'accès au GuH",
-    )
     access_amenagement = models.BooleanField(
         _("Access amenagement site"), default=False
     )
@@ -73,14 +68,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
-
-    @property
-    def is_instructor(self):
-        """Check if user is instructor.
-
-        Returns True when
-        - user.is_active = True
-        - user.access_haie = True
-        - user.is_confirmed_by_admin = True
-        """
-        return all((self.is_active, self.access_haie, self.is_confirmed_by_admin))

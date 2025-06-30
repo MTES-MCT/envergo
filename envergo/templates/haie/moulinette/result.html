@@ -17,6 +17,14 @@
   </ul>
 {% endblock %}
 
+{% block main_form_field %}
+  {% if field.name == "haies" %}
+    <li>{{ field|display_remove_only_haies_field }}</li>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
 {% block liability_info %}
   {% show_haie_moulinette_liability_info moulinette.result %}
 {% endblock %}

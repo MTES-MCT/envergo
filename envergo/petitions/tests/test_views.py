@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
@@ -16,11 +17,12 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.petitions.models import DOSSIER_STATES
+from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
 )
@@ -36,9 +38,13 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def haie_user_44() -> User:
+def inactive_haie_user_44() -> User:
     """Haie user with dept 44"""
-    haie_user_44 = UserFactory(access_amenagement=False, access_haie=True)
+    haie_user_44 = UserFactory(
+        access_amenagement=False,
+        access_haie=True,
+        is_active=False,
+    )
     department_44 = DepartmentFactory.create()
     haie_user_44.departments.add(department_44)
     return haie_user_44
@@ -51,7 +57,6 @@ def instructor_haie_user_44() -> User:
         is_active=True,
         access_amenagement=False,
         access_haie=True,
-        is_confirmed_by_admin=True,
     )
     department_44 = DepartmentFactory.create()
     instructor_haie_user_44.departments.add(department_44)
@@ -212,8 +217,7 @@ def test_petition_project_detail(mock_post, client, site):
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
-    haie_user_44,
-    instructor_haie_user,
+    inactive_haie_user_44,
     instructor_haie_user_44,
     admin_user,
     site,
@@ -260,18 +264,8 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.template_name == "haie/petitions/403.html"
 
     # Simulate an authenticated user, with department 44, same as project, but not instructor
-    request.user = haie_user_44
+    request.user = inactive_haie_user_44
 
-    response = PetitionProjectInstructorView.as_view()(
-        request,
-        reference=project.reference,
-    )
-
-    # Check that the response status code is 403
-    assert response.status_code == 403
-
-    # Simulate instructor user without department
-    request.user = instructor_haie_user
     response = PetitionProjectInstructorView.as_view()(
         request,
         reference=project.reference,
@@ -299,6 +293,17 @@ def test_petition_project_instructor_view_requires_authentication(
     )
 
     # Check that the response status code is 200 (OK)
+    assert response.status_code == 200
+
+    # Simulate instructor user with invitation token, should be authorized
+    request.user = haie_user
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 403
     assert response.status_code == 200
 
 
@@ -348,6 +353,7 @@ def test_petition_project_instructor_notes_view(
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     instructor_haie_user_44,
+    haie_user,
     conditionnalite_pac_criteria,
     ep_criteria,
     client,
@@ -399,6 +405,23 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Submit onagre
     response = client.post(instructor_url, {"onagre_number": "1234567"})
     assert response.url == instructor_url
+    project.refresh_from_db()
+    assert project.onagre_number == "1234567"
+
+    # WHEN I post some instructor data as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_url,
+        {
+            "onagre_number": "7654321",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+    project.refresh_from_db()
+    assert project.onagre_number == "1234567"
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -438,7 +461,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_list(
-    haie_user_44, instructor_haie_user_44, admin_user, client, site
+    inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
 
     ConfigHaieFactory()
@@ -456,15 +479,12 @@ def test_petition_project_list(
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated user
-    client.force_login(haie_user_44)
+    # Simulate an authenticated inactive user
+    client.force_login(inactive_haie_user_44)
     response = client.get(reverse("petition_project_list"))
 
-    # Check that the response status code is 200 but no project in content, because user is not instructor
-    assert response.status_code == 200
-    content = response.content.decode()
-    assert project_34.reference not in content
-    assert project_44.reference not in content
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
 
     # Simulate an authenticated user instructor
     client.force_login(instructor_haie_user_44)
@@ -484,6 +504,19 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
+
+    # GIVEN a user with access to haie, no departments but an invitation token
+    InvitationTokenFactory(user=haie_user, petition_project=project_34)
+    client.force_login(haie_user)
+
+    # WHEN the user accesses the petition project list
+    response = client.get(reverse("petition_project_list"))
+
+    # THEN the user should see the project associated with the invitation token
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert project_34.reference in content
+    assert project_44.reference not in content
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -505,3 +538,196 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         in response.get("Content-Disposition")
     )
     # TODO: check the features
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_invitation_token(
+    client, haie_user, instructor_haie_user_44, site
+):
+    """Test invitation token creation for petition project"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    invitation_token_url = reverse(
+        "petition_project_invitation_token",
+        kwargs={"reference": project.reference},
+    )
+
+    # no user loged in
+    response = client.post(invitation_token_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # user not authorized
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    assert response.status_code == 403
+    assert (
+        "You are not authorized to create an invitation token for this project."
+        == response.json()["error"]
+    )
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(invitation_token_url)
+    # THEN creation is not authorized
+    assert response.status_code == 403
+    assert (
+        "You are not authorized to create an invitation token for this project."
+        == response.json()["error"]
+    )
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.post(invitation_token_url)
+
+    # THEN an invitation token is created
+    token = InvitationToken.objects.get(created_by=instructor_haie_user_44)
+    assert token.created_by == instructor_haie_user_44
+    assert token.petition_project == project
+    assert token.token in response.json()["invitation_url"]
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_accept_invitation(client, haie_user, site):
+    """Test accepting an invitation token for a petition project"""
+    ConfigHaieFactory()
+    invitation = InvitationTokenFactory()
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+
+    # no user loged in
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 302
+    assert (
+        f"/comptes/connexion/?next=/projet/{invitation.petition_project.reference}/invitations/{invitation.token}/"
+        in response.url
+    )
+
+    # valid token used by its creator should not be consumed
+    client.force_login(invitation.created_by)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user is None
+
+    # valid token
+    another_user = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user)
+    client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+
+    # already used token
+    another_user_again = UserFactory(access_amenagement=False, access_haie=True)
+    client.force_login(another_user_again)
+    response = client.get(accept_invitation_url)
+    invitation.refresh_from_db()
+    assert invitation.user == another_user
+    assert response.status_code == 403
+
+    # outdated token
+    invitation = InvitationTokenFactory(
+        petition_project=invitation.petition_project,
+        valid_until=timezone.now() - timezone.timedelta(days=1),
+    )
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": invitation.token,
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403
+
+    # unexpected token
+    accept_invitation_url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={
+            "reference": invitation.petition_project.reference,
+            "token": "something-farfelue",
+        },
+    )
+    client.force_login(haie_user)
+    response = client.get(accept_invitation_url)
+    assert response.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_instructor_form(
+    client, haie_user, instructor_haie_user_44, site
+):
+    """Post onagre and instruction note"""
+
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    instructor_form_url = reverse(
+        "petition_project_instructor_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN I post some instructor data without being logged in
+    response = client.post(
+        instructor_form_url,
+        {
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+    # THEN i should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN I post some instructor data without being authorized
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_form_url,
+        {
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+
+    # WHEN I post some instructor data with as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_form_url,
+        {
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+    assert project.onagre_number == ""
+    assert project.instructor_free_mention == ""
+
+    # WHEN I post some instructor data with a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.post(
+        instructor_form_url,
+        {
+            "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
+        },
+    )
+    # THEN it should update the project
+    assert response.status_code == 302
+    assert "/projet/ABC123/instruction/" in response.url
+    project.refresh_from_db()
+    assert (
+        project.instructor_free_mention
+        == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
+    )

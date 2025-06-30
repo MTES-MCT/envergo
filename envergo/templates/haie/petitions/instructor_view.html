@@ -90,11 +90,13 @@
 {% endblock %}
 
 {% block extra_body %}
+  {{ block.super }}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
   {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
 {% endblock %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";

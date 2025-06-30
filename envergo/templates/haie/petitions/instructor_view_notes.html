@@ -20,11 +20,13 @@
         <h2>Notes libres pour l'instruction</h2>
         <div id="field-instructor_free_mention" class="fr-my-2w">
           {% include '_field_snippet.html' with field=form.instructor_free_mention %}
-          <button type="submit"
-                  class="fr-btn fr-btn--secondary"
-                  formaction="{% url 'petition_project_instructor_notes_view' petition_project.reference %}#field-instructor_free_mention">
-            Enregistrer
-          </button>
+          {% if is_department_instructor %}
+            <button type="submit"
+                    class="fr-btn fr-btn--secondary"
+                    formaction="{% url 'petition_project_instructor_notes_view' petition_project.reference %}#field-instructor_free_mention">
+              Enregistrer
+            </button>
+          {% endif %}
         </div>
       </section>
     </form>
@@ -33,6 +35,7 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "instruction";</script>
   <script defer src="{% static 'js/libs/form_project_instruction.js' %}"></script>
