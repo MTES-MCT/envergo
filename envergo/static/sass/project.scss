@@ -322,6 +322,9 @@ nav#evaluation-summary {
   }
 
   #additional-forms.unbound {
+    background-color: var(--blue-france-950-100-hover);
+    padding: 1rem;
+
     .fr-input-group--error {
       &::before {
         background-image: none;
