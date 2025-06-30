@@ -21,7 +21,11 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.moulinette.models import (
+    ConfigHaie,
+    MoulinetteHaie,
+    get_moulinette_class_from_site,
+)
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
@@ -351,12 +355,15 @@ class MoulinetteResultMixin:
         """Check which template to use depending on the moulinette result."""
 
         moulinette = self.moulinette
+        triage_form = self.triage_form
         is_debug = bool(self.request.GET.get("debug", False))
         is_admin = self.request.user.is_staff
 
         # We want to display the moulinette result template, but must check all
         # previous cases where we cannot do it
-        if is_debug:
+        if moulinette is None and triage_form is not None:
+            template_name = MoulinetteHaie.get_triage_result_template(triage_form)
+        elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
             template_name = moulinette.get_result_non_disponible_template()
@@ -545,7 +552,11 @@ class BaseMoulinetteResult(FormView):
 
         # Moulinette is invalid and a triage form exists (haie), redirects to the
         # first step
-        elif moulinette is None and triage_form is not None:
+        elif (
+            moulinette is None
+            and triage_form is not None
+            and not triage_form.is_valid()
+        ):
             redirect_url = reverse("triage")
             redirect_url = update_qs(redirect_url, request.GET)
 
