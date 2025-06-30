@@ -315,6 +315,12 @@ div#app {
         .tile-header {
           background-color: var(--blue-france-925-125);
           color: var(--blue-france-sun-113-625);
+
+          .fr-badge::before {
+            background: none;
+            width: 0;
+            height: 0;
+          }
         }
 
         h3 {
