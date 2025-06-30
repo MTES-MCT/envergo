@@ -44,6 +44,8 @@ from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
+INVITATION_TOKEN_MATOMO_TAG = "invitation_dossier"
+
 
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
@@ -513,6 +515,7 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+        context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -588,10 +591,21 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 kwargs={"reference": self.object.reference},
             )
         )
-        context["register_url"] = self.request.build_absolute_uri(
-            reverse(
-                "register",
-            )
+        context["invitation_register_url"] = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "register",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+        )
+        context["invitation_contact_url"] = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "contact_us",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
         context["is_department_instructor"] = (
             self.object.has_user_as_department_instructor(self.request.user)
@@ -629,8 +643,6 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
@@ -699,8 +711,6 @@ class PetitionProjectInstructorDossierDSView(
             self.object,
             context["moulinette"],
             self.request.site,
-            self.request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
-            self.request.user,
         )
 
         # Send message if info from DS is not in project details
@@ -802,11 +812,14 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 created_by=request.user,
                 petition_project=project,
             )
-            invitation_url = self.request.build_absolute_uri(
-                reverse(
-                    "petition_project_accept_invitation",
-                    kwargs={"reference": project.reference, "token": token.token},
-                )
+            invitation_url = update_qs(
+                self.request.build_absolute_uri(
+                    reverse(
+                        "petition_project_accept_invitation",
+                        kwargs={"reference": project.reference, "token": token.token},
+                    )
+                ),
+                {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
             )
             return JsonResponse({"invitation_url": invitation_url})
         else:
