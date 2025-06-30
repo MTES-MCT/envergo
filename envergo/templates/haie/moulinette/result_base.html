@@ -18,7 +18,9 @@
   <hr class="separator fr-mb-3w" />
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
-      <li>{% field_summary field %}</li>
+      {% block main_form_field %}
+        <li>{% field_summary field %}</li>
+      {% endblock %}
     {% endfor %}
     {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
   </ul>

@@ -6,16 +6,12 @@ from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
-from envergo.analytics.models import Event
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
-
-# This session key is used when we are not able to find the real user session key.
-SESSION_KEY = "untracked_dossier_submission"
 
 DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
 
@@ -77,31 +73,8 @@ class Command(BaseCommand):
                     )
                     continue
 
-                creation_event = (
-                    Event.objects.order_by("-date_created")
-                    .filter(
-                        metadata__reference=project.reference,
-                        category="dossier",
-                        event="creation",
-                    )
-                    .first()
-                )
-                if not creation_event:
-                    logger.warning(
-                        f"Unable to find creation event for project {project.reference}. "
-                        f"The submission event will be logged with a mocked session key.",
-                        extra={
-                            "project": self,
-                            "session_key": SESSION_KEY,
-                        },
-                    )
-
-                visitor_id = (
-                    creation_event.session_key if creation_event else SESSION_KEY
-                )
-                user = type("User", (object,), {"is_staff": False})()
                 project.synchronize_with_demarches_simplifiees(
-                    dossier, current_site, demarche_label, ds_url, visitor_id, user
+                    dossier, current_site, demarche_label, ds_url
                 )
 
             handled_demarches.append(demarche_number)

@@ -21,14 +21,15 @@ ZONE_U_THRESHOLD = 40000
 class EmpriseForm(forms.Form):
     emprise = DisplayIntegerField(
         label="Emprise au sol totale",
-        help_text="Projection verticale du volume de la construction, en comptant l'existant",
+        help_text="Projection verticale du volume de la construction. "
+        "Inclure l'existant autorisé depuis le 16 mai 2017.",
         widget=forms.TextInput(
             attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
         ),
         required=True,
         display_unit="m²",
         display_label="Emprise totale au sol, y compris l'existant :",
-        display_help_text="Projection verticale du volume de la construction",
+        display_help_text="Projection verticale du volume de la construction. Cumul autorisé depuis le 16 mai 2017.",
     )
     zone_u = DisplayChoiceField(
         label=mark_safe(
@@ -90,7 +91,7 @@ SURFACE_PLANCHER_THRESHOLD = 3000
 class SurfacePlancherForm(forms.Form):
     surface_plancher_sup_thld = DisplayChoiceField(
         label="Surface de plancher totale",
-        help_text="En comptant l'existant. Cumul autorisé depuis le 16 mai 2017",
+        help_text="Inclure l'existant autorisé depuis le 16 mai 2017.",
         widget=forms.RadioSelect,
         choices=(
             ("oui", "Supérieure ou égale à 10 000 m²"),
@@ -98,6 +99,7 @@ class SurfacePlancherForm(forms.Form):
         ),
         required=True,
         display_label="Surface de plancher totale, y compris l'existant :",
+        display_help_text="Cumul autorisé depuis le 16 mai 2017.",
     )
 
     def __init__(self, *args, **kwargs):
