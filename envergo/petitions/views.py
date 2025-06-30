@@ -515,6 +515,7 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+        context["triage_form"] = self.object.get_triage_form()
 
         context["triage_form"] = self.object.get_triage_form()
 
@@ -549,7 +550,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         result = super().get(request, *args, **kwargs)
         user = request.user
 
-        # check if user is authorize, else returns 403 error
+        # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
@@ -607,6 +608,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 )
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+        )
+        context["is_department_instructor"] = (
+            self.object.has_user_as_department_instructor(self.request.user)
         )
 
         matomo_custom_path = self.request.path.replace(
