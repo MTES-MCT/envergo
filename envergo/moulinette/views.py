@@ -54,9 +54,8 @@ class MoulinetteMixin:
             moulinette_data.update(self.request.POST)
 
         if moulinette_data:
-            mutable_data = moulinette_data.copy()
-            mutable_data.update(compute_surfaces(moulinette_data))
-            kwargs.update({"data": mutable_data})
+            moulinette_data.update(compute_surfaces(moulinette_data))
+            kwargs.update({"data": moulinette_data})
 
         return kwargs
 
