@@ -123,9 +123,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     return context
 
 
-def get_instructor_view_context(
-    petition_project, moulinette, site, visitor_id, user
-) -> dict:
+def get_instructor_view_context(petition_project, moulinette, site) -> dict:
     """Build context for ProjectDetails instructor page view"""
 
     # Build project details
@@ -134,7 +132,7 @@ def get_instructor_view_context(
     # Get ds details
     config = moulinette.config
     dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
+        petition_project, config, site
     )
 
     city = None
@@ -191,14 +189,14 @@ def get_instructor_view_context(
 
 
 def compute_instructor_informations_ds(
-    petition_project, moulinette, site, visitor_id, user
+    petition_project, moulinette, site
 ) -> ProjectDetails:
     """Compute ProjectDetails with instructor informations"""
     # Get ds details
     config = moulinette.config
 
     dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
+        petition_project, config, site
     )
 
     if not dossier:
@@ -306,7 +304,7 @@ def get_header_explanation_from_ds_demarche(demarche):
 
 
 def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config, site, visitor_id, user
+    petition_project, config, site
 ) -> dict | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
@@ -485,7 +483,7 @@ def fetch_project_details_from_demarches_simplifiees(
         f"{dossier_number}"
     )
     petition_project.synchronize_with_demarches_simplifiees(
-        dossier, site, demarche_label, ds_url, visitor_id, user
+        dossier, site, demarche_label, ds_url
     )
 
     return dossier
