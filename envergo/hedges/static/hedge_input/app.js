@@ -614,6 +614,7 @@ createApp({
           // will remain in the current variable without ever being updated.
           Object.assign(conditions.conditions, data);
           conditions.status = "ok";
+          conditions.result = conditions.conditions.every(element => element.result);
         })
         .catch(error => console.error('Error:', error));
     }
