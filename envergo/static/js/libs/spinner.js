@@ -13,6 +13,7 @@
 
   SpinnerForm.prototype.activate = function () {
     this.buttonElt.disabled = false;
+    this.buttonElt.classList.remove("icon-spinner");
     let textElt = this.formElt.querySelector('.submit-feedback-hint-text');
     if (textElt) {
       textElt.remove();
