@@ -44,6 +44,8 @@ from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
+INVITATION_TOKEN_MATOMO_TAG = "invitation_dossier"
+
 
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
@@ -69,7 +71,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         current_user = self.request.user
         if current_user.is_superuser:
             queryset = self.queryset
-        elif current_user.is_instructor:
+        elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
             queryset = self.queryset.filter(
                 Q(department__in=user_departments)
@@ -589,10 +591,21 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 kwargs={"reference": self.object.reference},
             )
         )
-        context["register_url"] = self.request.build_absolute_uri(
-            reverse(
-                "register",
-            )
+        context["invitation_register_url"] = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "register",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+        )
+        context["invitation_contact_url"] = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "contact_us",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
 
         matomo_custom_path = self.request.path.replace(
@@ -785,11 +798,14 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 created_by=request.user,
                 petition_project=project,
             )
-            invitation_url = self.request.build_absolute_uri(
-                reverse(
-                    "petition_project_accept_invitation",
-                    kwargs={"reference": project.reference, "token": token.token},
-                )
+            invitation_url = update_qs(
+                self.request.build_absolute_uri(
+                    reverse(
+                        "petition_project_accept_invitation",
+                        kwargs={"reference": project.reference, "token": token.token},
+                    )
+                ),
+                {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
             )
             return JsonResponse({"invitation_url": invitation_url})
         else:

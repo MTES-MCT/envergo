@@ -248,13 +248,15 @@ class PetitionProject(models.Model):
             user.is_superuser
             or all(
                 (
-                    user.is_instructor,
+                    user.is_active,
+                    user.access_haie,
                     user.departments.filter(id=department.id).exists(),
                 )
             )
             or all(
                 (
-                    user.is_instructor,
+                    user.is_active,
+                    user.access_haie,
                     user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
                 )
             )
