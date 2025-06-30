@@ -324,10 +324,9 @@ class Evaluation(models.Model):
             )  # there is only Amenagement evaluations
             form.is_valid()
             params = form.cleaned_data
-            activate_optional_criteria = True
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations
-                    params, raw_params, activate_optional_criteria
+                    params, raw_params
                 )
             )
 
