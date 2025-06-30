@@ -513,6 +513,7 @@ class PetitionProjectDetail(DetailView):
             f"https://www.demarches-simplifiees.fr/dossiers/"
             f"{self.object.demarches_simplifiees_dossier_number}"
         )
+        context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
