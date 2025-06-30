@@ -342,9 +342,8 @@ def fetch_project_details_from_demarches_simplifiees(
         )
         demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
 
-        ds_url = (
-            f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-            f"{dossier_number}"
+        ds_url = petition_project.get_demarches_simplifiees_instructor_url(
+            demarche_number
         )
         petition_project.synchronize_with_demarches_simplifiees(
             dossier, site, demarche_label, ds_url
@@ -434,12 +433,12 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
-            dossier_url = None
+            dossier_url = self._petition_project.demarches_simplifiees_petitioner_url
             if self.config:
                 dossier_url = (
-                    f"https://www.demarches-simplifiees.fr/procedures/"
-                    f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self._petition_project.demarches_simplifiees_dossier_number}"
+                    self._petition_project.get_demarches_simplifiees_instructor_url(
+                        self.config.demarche_simplifiee_number
+                    )
                 )
 
             message = render_to_string(

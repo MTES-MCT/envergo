@@ -511,10 +511,7 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
-        context["ds_url"] = (
-            f"https://www.demarches-simplifiees.fr/dossiers/"
-            f"{self.object.demarches_simplifiees_dossier_number}"
-        )
+        context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
@@ -616,6 +613,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         )
         context["matomo_custom_url"] = self.request.build_absolute_uri(
             matomo_custom_path
+        )
+        context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
+            moulinette.config.demarche_simplifiee_number
         )
 
         return context

@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import QueryDict
@@ -269,6 +270,29 @@ class PetitionProject(models.Model):
         return self.has_user_as_invited_instructor(
             user
         ) or self.has_user_as_department_instructor(user)
+
+    @property
+    def demarches_simplifiees_petitioner_url(self) -> str | None:
+        """
+        Returns the URL of the dossier for the petitioner.
+        """
+        if self.demarches_simplifiees_dossier_number:
+            return (
+                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/dossiers/"
+                f"{self.demarches_simplifiees_dossier_number}/"
+            )
+        return None
+
+    def get_demarches_simplifiees_instructor_url(self, demarche_number) -> str | None:
+        """
+        Returns the URL of the dossier for the instructor.
+        """
+        if self.demarches_simplifiees_dossier_number:
+            return (
+                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
+                f"{self.demarches_simplifiees_dossier_number}/"
+            )
+        return None
 
 
 def one_month_from_now():

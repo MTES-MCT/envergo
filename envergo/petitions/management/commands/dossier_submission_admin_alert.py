@@ -59,9 +59,8 @@ class Command(BaseCommand):
                     demarches_simplifiees_dossier_number=dossier_number
                 ).first()
 
-                ds_url = (
-                    f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-                    f"{dossier_number}"
+                ds_url = project.get_demarches_simplifiees_instructor_url(
+                    demarche_number
                 )
                 if project is None:
                     self.handle_unlinked_dossier(
