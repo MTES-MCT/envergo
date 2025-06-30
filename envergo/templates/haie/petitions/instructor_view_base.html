@@ -81,6 +81,9 @@
   </section>
 
 {% endblock %}
+{% block extra_body %}
+  {% include 'haie/petitions/_invitation_token_modal.html' %}
+{% endblock %}
 
 {% block extra_js %}
   <script>const INVITATION_TOKEN_URL = '{{ invitation_token_url }}';</script>
