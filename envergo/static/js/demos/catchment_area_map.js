@@ -23,7 +23,7 @@
 
     this.registerEvents();
   };
-  exports.Map = Map;
+  exports.DemoMap = Map;
 
 
   /**
