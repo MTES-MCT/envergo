@@ -27,7 +27,7 @@ from envergo.petitions.regulations.ep import (
     ep_normandie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
-    fetch_project_details_from_demarches_simplifiees,
+    get_demarches_simplifiees_dossier,
     get_instructor_view_context,
 )
 from envergo.petitions.tests.factories import (
@@ -52,7 +52,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
     ]
 
-    config = ConfigHaieFactory(
+    ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -60,7 +60,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     petition_project = PetitionProjectFactory()
     moulinette = petition_project.get_moulinette()
 
-    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier is not None
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
@@ -88,7 +88,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     # WHEN I synchronize it with DS for the first time
-    fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    get_demarches_simplifiees_dossier(petition_project)
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
@@ -105,7 +105,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert (
         len(
@@ -128,9 +128,9 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
     mock_notify, haie_user
 ):
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
+    ConfigHaieFactory()
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert details is None
 
@@ -159,7 +159,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert details is None
 
@@ -187,7 +187,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert details is None
 

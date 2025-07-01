@@ -138,11 +138,36 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
 
     # Get ds details
     config = moulinette.config
-    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    dossier = get_demarches_simplifiees_dossier(petition_project)
 
     city = None
     pacage = None
     ds_details = None
+
+    if (
+        not config.demarches_simplifiees_pacage_id
+        or not config.demarches_simplifiees_city_id
+    ):
+        logger.error(
+            "Missing Demarches Simplifiees ids in Haie Config",
+            extra={
+                "config.id": config.id,
+            },
+        )
+        admin_url = reverse(
+            "admin:moulinette_confighaie_change",
+            args=[config.id],
+        )
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        message = render_to_string(
+            "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
+            context={
+                "department": config.department.department,
+                "domain": current_site.domain,
+                "admin_url": admin_url,
+            },
+        )
+        notify(dedent(message), "haie")
 
     if dossier:
         champs = dossier.champs
@@ -193,7 +218,7 @@ def compute_instructor_informations_ds(
     # Get ds details
     config = moulinette.config
 
-    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
+    dossier = get_demarches_simplifiees_dossier(petition_project, include_champs=True)
 
     if not dossier:
         return ProjectDetails(
@@ -291,40 +316,23 @@ def get_header_explanation_from_ds_demarche(demarche):
     return header_sections, explication_champs
 
 
-def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config
+def get_demarches_simplifiees_dossier(
+    petition_project, include_champs: bool = True
 ) -> Dossier | None:
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    """Get dossier from Demarches Simplifiees either from DB if it is up to date, or from Demarches Simplifiees API.
 
-    if (
-        not config.demarches_simplifiees_pacage_id
-        or not config.demarches_simplifiees_city_id
-    ):
-        logger.error(
-            "Missing Demarches Simplifiees ids in Haie Config",
-            extra={
-                "config.id": config.id,
-            },
-        )
-        admin_url = reverse(
-            "admin:moulinette_confighaie_change",
-            args=[config.id],
-        )
-        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
-            context={
-                "department": config.department.department,
-                "domain": current_site.domain,
-                "admin_url": admin_url,
-            },
-        )
-        notify(dedent(message), "haie")
-        return None
+    args:
+        petition_project: The petition project to update with the fetched details.
+        config: The ConfigHaie object related to the project.
+        include_champs: Whether to include champs in the fetched dossier.
+    returns:
+        Dossier object if found, None otherwise.
+    """
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
 
     ds_client = DemarchesSimplifieesClient()
 
-    dossier = ds_client.get_dossier(dossier_number)
+    dossier = ds_client.get_dossier(dossier_number, include_champs=include_champs)
 
     if dossier is not None:
         # we have got a dossier from DS for this petition project,
