@@ -2,96 +2,66 @@
 (function (exports) {
   'use strict';
 
-  const SpinnerForm = function (formElt) {
-    this.formElt = formElt;
-    this.formElt.addEventListener('submit', this.deactivate.bind(this));
-    this.buttonElt = formElt.querySelector('[type=submit]');
+  class SpinnerElement {
+    constructor(elt) {
 
-    exports.addEventListener("pageshow", this.onPageShow.bind(this));
-  };
-  exports.SpinnerForm = SpinnerForm;
+      // The main node (form, link, button)
+      this.elt = elt;
+      // The element with the spinner icon
+      this.spinnerElt = elt;
 
-  SpinnerForm.prototype.activate = function () {
-    this.buttonElt.disabled = false;
-    this.buttonElt.classList.remove("icon-spinner");
-    let textElt = this.formElt.querySelector('.submit-feedback-hint-text');
-    if (textElt) {
-      textElt.remove();
+      switch (elt.nodeName) {
+        case "FORM":
+          elt.addEventListener('submit', this.deactivate.bind(this));
+          this.spinnerElt = elt.querySelector('[type=submit]');
+          break;
+        case "A":
+        case "BUTTON":
+          elt.addEventListener('click', this.deactivate.bind(this));
+          break;
+      }
+
+      exports.addEventListener("pageshow", this.onPageShow.bind(this));
     }
-  };
 
-  SpinnerForm.prototype.deactivate = function (evt) {
-    this.buttonElt.disabled = true;
-    this.buttonElt.classList.add("icon-spinner");
-
-    let textElt = document.createElement('span');
-    textElt.innerHTML = 'Chargement en cours…';
-    textElt.classList.add("fr-hint-text");
-    textElt.classList.add("submit-feedback-hint-text");
-    this.buttonElt.insertAdjacentElement("afterend", textElt);
-  };
-
-  SpinnerForm.prototype.onPageShow = function (event) {
-    // When the form is submitted, we disable the submission button with a
-    // message to make sure the user understands that the form is being
-    // submitted.
-    // When the user navigates back, and the page is rendered from cache,
-    // the button is re-rendered deactivated.
-    // In that case, we need to make sure the form can be submitted again.
-    if (event.persisted) {
-      this.activate();
+    activate() {
+      this.elt.disabled = false;
+      this.spinnerElt.classList.remove("icon-spinner");
+      let textElt = this.spinnerElt.parentNode.querySelector('.submit-feedback-hint-text');
+      if (textElt) {
+        textElt.remove();
+      }
     }
-  };
 
-})(this);
+    deactivate() {
+      this.elt.disabled = true;
+      this.spinnerElt.classList.add("icon-spinner");
 
-// Show a spinner on a link
-(function (exports) {
-  'use strict';
-
-  const SpinnerLink = function (linkElt) {
-    this.linkElt = linkElt;
-    this.linkElt.addEventListener('click', this.deactivate.bind(this));
-
-    exports.addEventListener("pageshow", this.onPageShow.bind(this));
-  };
-  exports.SpinnerLink = SpinnerLink;
-
-  SpinnerLink.prototype.activate = function () {
-    this.linkElt.classList.remove("icon-spinner");
-    let textElt = this.linkElt.parentNode.querySelector('.submit-feedback-hint-text');
-    if (textElt) {
-      textElt.remove();
+      let textElt = document.createElement('span');
+      textElt.innerHTML = 'Chargement en cours…';
+      textElt.classList.add("fr-hint-text");
+      textElt.classList.add("submit-feedback-hint-text");
+      this.spinnerElt.insertAdjacentElement("afterend", textElt);
     }
-  };
 
-  SpinnerLink.prototype.deactivate = function (evt) {
-    this.linkElt.classList.add("icon-spinner");
-
-    let textElt = document.createElement('span');
-    textElt.innerHTML = 'Chargement en cours…';
-    textElt.classList.add("fr-hint-text");
-    textElt.classList.add("submit-feedback-hint-text");
-    this.linkElt.insertAdjacentElement("afterend", textElt);
-  };
-
-  SpinnerLink.prototype.onPageShow = function (event) {
-    // Make sure the link is reactivated on page return
-    if (event.persisted) {
-      this.activate();
+    onPageShow(event) {
+      if (event.persisted) {
+        this.activate();
+      }
     }
-  };
+  }
 
+  exports.SpinnerElement = SpinnerElement;
 })(this);
 
 window.addEventListener("load", function () {
   let links = document.querySelectorAll(".spinner-link");
   links.forEach((link) => {
-    new SpinnerLink(link);
+    new SpinnerElement(link);
   });
 
   let forms = document.querySelectorAll(".spinner-form");
   forms.forEach((form) => {
-    new SpinnerForm(form);
+    new SpinnerElement(form);
   });
 });
