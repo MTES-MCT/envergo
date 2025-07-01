@@ -49,6 +49,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.side_effect = [
         copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
         copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
     ]
 
     config = ConfigHaieFactory(
