@@ -353,6 +353,7 @@ def test_petition_project_instructor_notes_view(
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     instructor_haie_user_44,
+    haie_user,
     conditionnalite_pac_criteria,
     ep_criteria,
     client,
@@ -404,6 +405,23 @@ def test_petition_project_instructor_view_reglementation_pages(
     # Submit onagre
     response = client.post(instructor_url, {"onagre_number": "1234567"})
     assert response.url == instructor_url
+    project.refresh_from_db()
+    assert project.onagre_number == "1234567"
+
+    # WHEN I post some instructor data as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(
+        instructor_url,
+        {
+            "onagre_number": "7654321",
+        },
+    )
+
+    # THEN i should get a 403 forbidden response
+    assert response.status_code == 403
+    project.refresh_from_db()
+    assert project.onagre_number == "1234567"
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -661,7 +679,6 @@ def test_petition_project_instructor_form(
     response = client.post(
         instructor_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -674,7 +691,6 @@ def test_petition_project_instructor_form(
     response = client.post(
         instructor_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -688,7 +704,6 @@ def test_petition_project_instructor_form(
     response = client.post(
         instructor_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -697,12 +712,12 @@ def test_petition_project_instructor_form(
     assert response.status_code == 403
     assert project.onagre_number == ""
     assert project.instructor_free_mention == ""
+
     # WHEN I post some instructor data with a department instructor
     client.force_login(instructor_haie_user_44)
     response = client.post(
         instructor_form_url,
         {
-            "onagre_number": "organe",
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
@@ -710,7 +725,6 @@ def test_petition_project_instructor_form(
     assert response.status_code == 302
     assert "/projet/ABC123/instruction/" in response.url
     project.refresh_from_db()
-    assert project.onagre_number == "organe"
     assert (
         project.instructor_free_mention
         == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
