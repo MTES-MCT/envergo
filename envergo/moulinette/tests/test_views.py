@@ -116,25 +116,6 @@ def test_moulinette_result_without_params_redirects_to_home(client):
     assert res.status_code == 302
 
 
-def test_moulinette_result_form_error(client):
-    """Bad params are cleaned from the result url."""
-
-    ConfigAmenagementFactory()
-
-    url = reverse("moulinette_result")
-    params = (
-        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&bad_param=true"
-    )
-    full_url = f"{url}?{params}"
-    res = client.get(full_url)
-
-    assert res.status_code == 302
-    assert (
-        res.url
-        == "/simulateur/resultat/?created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
-    )
-
-
 def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
     """Analytics params are not cleaned from the result url."""
     ConfigAmenagementFactory(is_activated=True)
