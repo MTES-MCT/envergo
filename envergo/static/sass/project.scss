@@ -2257,17 +2257,3 @@ main.demos {
 article#evaluation {
   max-width: 38rem;
 }
-
-.icon-spinner {
-  &::before,
-  &::after {
-    animation: rotate-spinner 1200ms linear infinite;
-    mask-image: url("../icons/sun.svg");
-
-    @keyframes rotate-spinner {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  }
-}
