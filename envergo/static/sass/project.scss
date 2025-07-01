@@ -2266,7 +2266,6 @@ article#evaluation {
   &::after {
     animation: rotate-spinner 1200ms linear infinite;
     mask-image: url("../icons/sun.svg");
-    mask-image: url("../icons/sun.svg");
 
     @keyframes rotate-spinner {
       to {
