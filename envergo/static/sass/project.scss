@@ -2264,11 +2264,11 @@ article#evaluation {
 .icon-spinner {
   &::before,
   &::after {
-    animation: rotateSpinner 1200ms linear infinite;
-    -webkit-mask-image: url("../icons/sun.svg");
+    animation: rotate-spinner 1200ms linear infinite;
+    mask-image: url("../icons/sun.svg");
     mask-image: url("../icons/sun.svg");
 
-    @keyframes rotateSpinner {
+    @keyframes rotate-spinner {
       to {
         transform: rotate(360deg);
       }
