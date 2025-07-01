@@ -382,21 +382,6 @@ class MoulinetteResultMixin:
 
         return [template_name]
 
-    def validate_results_url(self, request, context):
-        """Check that the url parameter does not contain any unexpected parameter.
-
-        This is useful for cleaning urls from optional criteria parameters.
-        """
-        expected_url = self.get_results_url(context["form"])
-        expected_qs = parse_qs(urlparse(expected_url).query)
-        expected_params = set(expected_qs.keys())
-        moulinette_data = self.get_moulinette_data()
-        current_params = set(moulinette_data.keys())
-
-        # We don't want to take analytics params into account, so they stay in the url
-        current_params = set([p for p in current_params if not p.startswith("mtm_")])
-        return expected_params == current_params
-
     def get_moulinette_data(self):
         current_url = self.request.get_full_path()
         current_qs = (
