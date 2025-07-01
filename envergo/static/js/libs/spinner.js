@@ -83,3 +83,15 @@
   };
 
 })(this);
+
+window.addEventListener("load", function () {
+  let links = document.querySelectorAll(".spinner-link");
+  links.forEach((link) => {
+    new SpinnerLink(link);
+  });
+
+  let forms = document.querySelectorAll(".spinner-form");
+  forms.forEach((form) => {
+    new SpinnerForm(form);
+  });
+});
