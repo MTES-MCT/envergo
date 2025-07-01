@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import QueryDict
@@ -151,15 +152,28 @@ class PetitionProject(models.Model):
             and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
         )
 
-    def synchronize_with_demarches_simplifiees(
-        self, dossier, site, demarche_label, ds_url
-    ):
+    def synchronize_with_demarches_simplifiees(self, dossier):
         """Update the petition project with the latest data from demarches-simplifiees.fr
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
+
+            demarche_name = (
+                dossier.demarche.title
+                if dossier.demarche is not None
+                else "Nom inconnu"
+            )
+            demarche_number = (
+                dossier.demarche.number
+                if dossier.demarche is not None
+                else "Numéro inconnu"
+            )
+            demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+
+            ds_url = self.get_demarches_simplifiees_instructor_url(demarche_number)
+
             department = extract_param_from_url(self.moulinette_url, "department")
             admin_url = reverse(
                 "admin:petitions_petitionproject_change",
@@ -171,13 +185,16 @@ class PetitionProject(models.Model):
                 if dossier.usager and dossier.usager.email
                 else "non renseigné"
             )
+
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
                     "demarche_label": demarche_label,
                     "ds_url": ds_url,
-                    "admin_url": f"https://{site.domain}{admin_url}",
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
                 },
@@ -212,7 +229,7 @@ class PetitionProject(models.Model):
                 "depot",
                 visitor_id,
                 user,
-                site,
+                haie_site,
                 **self.get_log_event_data(),
             )
 

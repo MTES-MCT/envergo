@@ -49,6 +49,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.side_effect = [
         copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
         copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
     ]
 
     config = ConfigHaieFactory(
@@ -59,13 +60,11 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     petition_project = PetitionProjectFactory()
     moulinette = petition_project.get_moulinette()
 
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
     assert dossier is not None
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
-    project_details = get_instructor_view_context(petition_project, moulinette, site)
+    project_details = get_instructor_view_context(petition_project, moulinette)
     ds_data = project_details["ds_data"]
 
     assert ds_data.applicant_name == "Mme Hedy Lamarr"
@@ -89,7 +88,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     # WHEN I synchronize it with DS for the first time
-    fetch_project_details_from_demarches_simplifiees(petition_project, config, site)
+    fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
@@ -99,16 +98,14 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
-    caplog, haie_user, site
+    caplog, haie_user
 ):
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert (
         len(
@@ -128,14 +125,12 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
 
 @patch("envergo.petitions.services.notify")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
-    mock_notify, haie_user, site
+    mock_notify, haie_user
 ):
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 
@@ -153,7 +148,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 @patch("envergo.petitions.demarches_simplifiees.client.notify")
 @patch("gql.client.Client.execute")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
-    mock_post, mock_notify, haie_user, site
+    mock_post, mock_notify, haie_user
 ):
     mock_post.side_effect = TransportQueryError(
         "Mocked transport error", errors=[{"message": "Mocked error"}]
@@ -164,9 +159,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 
@@ -186,7 +179,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
-    mock_post, mock_notify, haie_user, site
+    mock_post, mock_notify, haie_user
 ):
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
@@ -194,9 +187,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     assert details is None
 

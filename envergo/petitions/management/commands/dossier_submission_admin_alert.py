@@ -2,7 +2,6 @@ import datetime
 import logging
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
@@ -31,8 +30,6 @@ class Command(BaseCommand):
         # The cron job is run every hour.
         # We fetch the updates from the last 2 hours to be sure as we may have some delay in the cron job execution
         two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
-
-        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
 
         for activated_department in ConfigHaie.objects.filter(
@@ -51,36 +48,23 @@ class Command(BaseCommand):
             if not demarche:
                 continue
 
-            demarche_name = demarche.title or "Nom inconnu"
-            demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
             for dossier in demarche.dossiers:
                 dossier_number = dossier.number
                 project = PetitionProject.objects.filter(
                     demarches_simplifiees_dossier_number=dossier_number
                 ).first()
-
-                ds_url = project.get_demarches_simplifiees_instructor_url(
-                    demarche_number
-                )
                 if project is None:
                     self.handle_unlinked_dossier(
                         dossier,
-                        demarche_number,
-                        demarche_name,
-                        ds_url,
-                        activated_department.demarches_simplifiees_project_url_id,
+                        activated_department,
                     )
                     continue
 
-                project.synchronize_with_demarches_simplifiees(
-                    dossier, current_site, demarche_label, ds_url
-                )
+                project.synchronize_with_demarches_simplifiees(dossier)
 
             handled_demarches.append(demarche_number)
 
-    def handle_unlinked_dossier(
-        self, dossier, demarche_number, demarche_name, ds_url, project_url_id
-    ):
+    def handle_unlinked_dossier(self, dossier, config):
         """Handle a dossier that is not linked to any project in the database
 
         This dossier is not linked to any project on this environment
@@ -93,9 +77,22 @@ class Command(BaseCommand):
             (
                 champ.stringValue
                 for champ in dossier.champs
-                if champ.id == project_url_id
+                if champ.id == config.demarches_simplifiees_project_url_id
             ),
             "",
+        )
+
+        demarche_name = (
+            dossier.demarche.title if dossier.demarche is not None else "Nom inconnu"
+        )
+        demarche_number = (
+            dossier.demarche.number
+            if dossier.demarche is not None
+            else "Numéro inconnu"
+        )
+        ds_url = (
+            f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
+            f"dossiers/{dossier.number}/"
         )
 
         if any(domain in project_url for domain in DOMAIN_BLACK_LIST):

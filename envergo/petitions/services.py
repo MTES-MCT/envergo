@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, List
 
+from django.conf import settings
+from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
@@ -128,7 +130,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     return context
 
 
-def get_instructor_view_context(petition_project, moulinette, site) -> dict:
+def get_instructor_view_context(petition_project, moulinette) -> dict:
     """Build context for ProjectDetails instructor page view"""
 
     # Build project details
@@ -136,9 +138,7 @@ def get_instructor_view_context(petition_project, moulinette, site) -> dict:
 
     # Get ds details
     config = moulinette.config
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     city = None
     pacage = None
@@ -193,9 +193,7 @@ def compute_instructor_informations_ds(
     # Get ds details
     config = moulinette.config
 
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    dossier = fetch_project_details_from_demarches_simplifiees(petition_project, config)
 
     if not dossier:
         return ProjectDetails(
@@ -294,7 +292,7 @@ def get_header_explanation_from_ds_demarche(demarche):
 
 
 def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config, site
+    petition_project, config
 ) -> Dossier | None:
     dossier_number = petition_project.demarches_simplifiees_dossier_number
 
@@ -312,11 +310,12 @@ def fetch_project_details_from_demarches_simplifiees(
             "admin:moulinette_confighaie_change",
             args=[config.id],
         )
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
             "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
             context={
                 "department": config.department.department,
-                "domain": site.domain,
+                "domain": current_site.domain,
                 "admin_url": admin_url,
             },
         )
@@ -330,24 +329,7 @@ def fetch_project_details_from_demarches_simplifiees(
     if dossier is not None:
         # we have got a dossier from DS for this petition project,
         # let's synchronize project
-        dossier_number = petition_project.demarches_simplifiees_dossier_number
-
-        demarche_name = (
-            dossier.demarche.title if dossier.demarche is not None else "Nom inconnu"
-        )
-        demarche_number = (
-            dossier.demarche.number
-            if dossier.demarche is not None
-            else "Numéro inconnu"
-        )
-        demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
-
-        ds_url = petition_project.get_demarches_simplifiees_instructor_url(
-            demarche_number
-        )
-        petition_project.synchronize_with_demarches_simplifiees(
-            dossier, site, demarche_label, ds_url
-        )
+        petition_project.synchronize_with_demarches_simplifiees(dossier)
 
     return dossier
 

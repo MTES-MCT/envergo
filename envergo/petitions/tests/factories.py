@@ -12,6 +12,7 @@ from envergo.users.tests.factories import UserFactory
 
 DEMARCHES_SIMPLIFIEES_FAKE = {
     "ENABLED": True,
+    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.example.com/",
     "PRE_FILL_API_URL": "https://www.demarches-simplifiees.example.com/api/public/v1/",
     "GRAPHQL_API_URL": "https://www.demarches-simplifiees.example.com/api/v2/graphql",
     "GRAPHQL_API_BEARER_TOKEN": None,

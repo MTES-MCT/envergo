@@ -640,9 +640,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["project_details"] = get_instructor_view_context(
-            self.object,
-            context["moulinette"],
-            self.request.site,
+            self.object, context["moulinette"]
         )
 
         # Send message if info from DS is not in project details
