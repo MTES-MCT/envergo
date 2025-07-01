@@ -1994,13 +1994,11 @@ main.demos {
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image:
-    url("/static/images/marker-icon.png"),
+  background-image: url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png");
 
   /* normal[, Retina] */
-  cursor:
-    url("/static/images/marker-icon.png"),
+  cursor: url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png"), auto;
 
   /* normal[, Retina], auto for compliance with cursor syntax */
