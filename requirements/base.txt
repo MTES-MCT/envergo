@@ -8,7 +8,7 @@ amqp==5.3.1
     # via kombu
 anyio==4.9.0
     # via gql
-argon2-cffi==23.1.0
+argon2-cffi==25.1.0
     # via -r base.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
@@ -16,11 +16,11 @@ asgiref==3.8.1
     # via
     #   django
     #   django-allauth
-attrs==25.1.0
+attrs==25.3.0
     # via fiona
 backoff==2.2.1
     # via gql
-beautifulsoup4==4.13.3
+beautifulsoup4==4.13.4
     # via bs4
 billiard==4.2.1
     # via celery
@@ -28,18 +28,18 @@ bs4==0.0.2
     # via -r base.in
 build==1.2.2.post1
     # via pip-tools
-celery==5.4.0
+celery==5.5.3
     # via -r base.in
-certifi==2025.1.31
+certifi==2025.6.15
     # via
     #   fiona
     #   pyproj
     #   requests
 cffi==1.17.1
     # via argon2-cffi-bindings
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via requests
-click==8.1.8
+click==8.2.1
     # via
     #   celery
     #   click-didyoumean
@@ -50,7 +50,7 @@ click==8.1.8
     #   pip-tools
 click-didyoumean==0.3.1
     # via celery
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via
     #   celery
     #   fiona
@@ -60,7 +60,7 @@ cligj==0.7.2
     # via fiona
 dacite==1.9.2
     # via -r base.in
-django==4.2.20
+django==4.2.23
     # via
     #   -r base.in
     #   django-allauth
@@ -75,35 +75,35 @@ django==4.2.20
     #   django-otp
     #   django-phonenumber-field
     #   django-redis
-django-allauth==65.4.1
+django-allauth==65.9.0
     # via -r base.in
-django-anymail[sendinblue]==12.0
+django-anymail[sendinblue]==13.0
     # via -r base.in
-django-appconf==1.0.6
+django-appconf==1.1.0
     # via django-compressor
-django-braces==1.16.0
+django-braces==1.17.0
     # via -r base.in
 django-compressor==4.5.1
     # via -r base.in
-django-crispy-forms==2.3
+django-crispy-forms==2.4
     # via -r base.in
 django-environ==0.12.0
     # via -r base.in
-django-leaflet==0.31.0
+django-leaflet==0.32.0
     # via -r base.in
-django-localflavor==4.0
+django-localflavor==5.0
     # via -r base.in
 django-model-utils==5.0.0
     # via -r base.in
-django-otp[qrcode]==1.5.4
+django-otp[qrcode]==1.6.0
     # via -r base.in
-django-phonenumber-field[phonenumbers]==8.0.0
+django-phonenumber-field[phonenumbers]==8.1.0
     # via -r base.in
 django-ratelimit==4.1.0
     # via -r base.in
-django-redis==5.4.0
+django-redis==6.0.0
     # via -r base.in
-faker==35.2.0
+faker==37.4.0
     # via -r base.in
 fiona==1.10.1
     # via -r base.in
@@ -111,68 +111,68 @@ gql==3.5.3
     # via -r base.in
 graphql-core==3.2.6
     # via gql
-hiredis==3.1.0
+hiredis==3.2.1
     # via -r base.in
 idna==3.10
     # via
     #   anyio
     #   requests
     #   yarl
-kombu==5.4.2
+kombu==5.5.4
     # via celery
-markdown==3.7
+markdown==3.8.2
     # via -r base.in
-multidict==6.5.1
+multidict==6.6.3
     # via yarl
-numpy==2.2.2
+numpy==2.3.1
     # via
     #   scipy
     #   shapely
-packaging==24.2
-    # via build
-phonenumbers==8.13.54
+packaging==25.0
+    # via
+    #   build
+    #   kombu
+phonenumbers==9.0.8
     # via django-phonenumber-field
-pillow==11.1.0
+pillow==11.2.1
     # via -r base.in
 pip-tools==7.4.1
     # via -r base.in
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 propcache==0.3.2
     # via yarl
-psycopg[binary]==3.2.4
+psycopg[binary]==3.2.9
     # via -r base.in
-psycopg-binary==3.2.4
+psycopg-binary==3.2.9
     # via psycopg
 pycparser==2.22
     # via cffi
-pyproj==3.7.0
+pyproj==3.7.1
     # via -r base.in
 pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
 python-dateutil==2.9.0.post0
-    # via
-    #   celery
-    #   faker
+    # via celery
 python-slugify==8.0.4
     # via -r base.in
-python-stdnum==1.20
+python-stdnum==2.1
     # via django-localflavor
-pytz==2025.1
+pytz==2025.2
     # via -r base.in
-qrcode==8.0
+qrcode==8.2
     # via django-otp
 rcssmin==1.1.2
     # via
     #   -r base.in
     #   django-compressor
-redis==5.2.1
+redis==6.2.0
     # via
     #   -r base.in
     #   django-redis
-requests==2.32.3
+requests==2.32.4
     # via
     #   django-anymail
     #   requests-toolbelt
@@ -180,15 +180,15 @@ requests-toolbelt==1.0.0
     # via -r base.in
 rjsmin==1.2.2
     # via django-compressor
-scipy==1.15.1
+scipy==1.16.0
     # via -r base.in
-shapely==2.0.7
+shapely==2.1.1
     # via -r base.in
 six==1.17.0
     # via python-dateutil
 sniffio==1.3.1
     # via anyio
-soupsieve==2.6
+soupsieve==2.7
     # via beautifulsoup4
 sqlparse==0.5.3
     # via django
@@ -196,15 +196,14 @@ text-unidecode==1.3
     # via python-slugify
 tqdm==4.67.1
     # via -r base.in
-typing-extensions==4.12.2
+typing-extensions==4.14.0
     # via
     #   anyio
     #   beautifulsoup4
-    #   faker
     #   psycopg
-tzdata==2025.1
+tzdata==2025.2
     # via
-    #   celery
+    #   faker
     #   kombu
 urllib3==1.26.20
     # via
