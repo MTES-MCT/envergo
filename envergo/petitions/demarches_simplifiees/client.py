@@ -17,6 +17,17 @@ from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
 
+get_dossiers_for_demarche_query_path = (
+    settings.APPS_DIR
+    / "petitions"
+    / "demarches_simplifiees"
+    / "queries"
+    / "get_dossiers_for_demarche.gql"
+)
+
+with open(get_dossiers_for_demarche_query_path, "r") as file:
+    GET_DOSSIERS_FOR_DEMARCHE_QUERY = file.read()
+
 
 class DemarchesSimplifieesClient:
     def __init__(self):
@@ -32,7 +43,7 @@ class DemarchesSimplifieesClient:
 
     def execute(self, query_str: str, variables: dict = None):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            raise NotImplementedError("Demaches simplifiées is not enabled")
+            raise NotImplementedError("Démaches simplifiées is not enabled")
 
         query = gql(query_str)
         try:
@@ -172,17 +183,6 @@ class DemarchesSimplifieesClient:
     def _fetch_dossiers_page(
         self, demarche_number: str, dossiers_updated_since: datetime, cursor: str = None
     ) -> dict:
-        with open(
-            Path(
-                settings.APPS_DIR
-                / "petitions"
-                / "demarches_simplifiees"
-                / "queries"
-                / "get_dossiers_for_demarche.gql"
-            ),
-            "r",
-        ) as file:
-            query = file.read()
 
         variables = {
             "demarcheNumber": demarche_number,
@@ -190,7 +190,7 @@ class DemarchesSimplifieesClient:
             "after": cursor,
         }
         try:
-            data = self.execute(query, variables)
+            data = self.execute(GET_DOSSIERS_FOR_DEMARCHE_QUERY, variables)
         except DemarchesSimplifieesError as e:
             message_body = render_to_string(
                 "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
