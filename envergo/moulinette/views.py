@@ -2,7 +2,7 @@ import json
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
-from django.http import HttpResponseRedirect, QueryDict
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
