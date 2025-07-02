@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Literal, Optional, TypeAlias
@@ -731,7 +732,7 @@ class DossierIterator:
         if not self.buffer:
             raise StopIteration
 
-        return Dossier.from_dict(self.buffer.pop(0))
+        return self.buffer.pop(0)
 
 
 @dataclass(kw_only=True)
@@ -748,7 +749,7 @@ class Demarche:
     dateDerniereModification: ISO8601DateTime = None
     deletedDossiers: DeletedDossierConnection = None
     description: String = None
-    dossiers: DossierConnection | DossierIterator = None
+    dossiers: DossierConnection = None
     draftRevision: Revision = None
     groupeInstructeurs: list[GroupeInstructeur] = None
     id: ID = None
@@ -769,12 +770,21 @@ class Demarche:
 
     @classmethod
     def from_dict(cls, dict) -> Demarche:
-        return from_dict(data_class=Demarche, data=dict, config=PARSER_CONFIG)
+        return from_dict(data_class=cls, data=dict, config=PARSER_CONFIG)
+
+
+@dataclass(kw_only=True)
+class DemarcheWithRawDossiers(Demarche):
+    """
+    Une démarche avec un iterateur retournant les dossiers bruts sous forme de dictionnaires.
+    """
+
+    dossiers: DossierConnection | DossierIterator = None
 
     def set_dossier_iterator(
         self,
         fetch_page_func,
-        first_page: list[Dossier] = list,
+        first_page: list[dict] = list,
         has_more: bool = True,
         cursor: Optional[str] = None,
     ):
@@ -970,8 +980,9 @@ class Dossier:
     typename__: Optional[Literal["Dossier"]] = "Dossier"
 
     @classmethod
-    def from_dict(cls, dict) -> Dossier:
-        TYPE_MAP = {
+    def from_dict(cls, data: dict) -> Dossier:
+        clone = copy.deepcopy(data)
+        type_map = {
             "PersonnePhysique": PersonnePhysique,
             "PersonneMorale": PersonneMorale,
             "PersonneMoraleIncomplete": PersonneMoraleIncomplete,
@@ -1002,19 +1013,19 @@ class Dossier:
             "YesNoChamp": YesNoChamp,
         }
 
-        demandeur_data = dict.get("demandeur")
+        demandeur_data = clone.get("demandeur")
         if demandeur_data and "__typename" in demandeur_data:
             type_name = demandeur_data["__typename"]
-            output_type = TYPE_MAP.get(type_name)
+            output_type = type_map.get(type_name)
             if output_type:
-                dict["demandeur"] = from_dict(
+                clone["demandeur"] = from_dict(
                     data_class=output_type, data=demandeur_data, config=PARSER_CONFIG
                 )
         parsed_champs = []
-        for champ in dict.get("champs") or []:
+        for champ in clone.get("champs") or []:
             if champ and "__typename" in champ:
                 type_name = champ["__typename"]
-                output_type = TYPE_MAP.get(type_name)
+                output_type = type_map.get(type_name)
                 if output_type:
                     if output_type == CarteChamp:
                         parsed_champs.append(CarteChamp.from_dict(champ))
@@ -1024,14 +1035,14 @@ class Dossier:
                                 data_class=output_type, data=champ, config=PARSER_CONFIG
                             )
                         )
-        dict["champs"] = parsed_champs
+        clone["champs"] = parsed_champs
 
-        if "demarche" in dict and "revision" in dict["demarche"]:
-            dict["demarche"]["revision"] = Revision.from_dict(
-                dict["demarche"]["revision"]
+        if "demarche" in clone and "revision" in clone["demarche"]:
+            clone["demarche"]["revision"] = Revision.from_dict(
+                clone["demarche"]["revision"]
             )
 
-        return from_dict(data_class=Dossier, data=dict, config=PARSER_CONFIG)
+        return from_dict(data_class=Dossier, data=clone, config=PARSER_CONFIG)
 
     @property
     def applicant_name(self) -> str:

@@ -1,4 +1,3 @@
-import copy
 import datetime
 from collections import OrderedDict
 from decimal import Decimal
@@ -46,11 +45,7 @@ pytestmark = pytest.mark.django_db
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     """Test fetch project details from démarches simplifiées"""
-    mock_post.side_effect = [
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-    ]
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -117,9 +112,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
-    fake_dossier = (
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE).get("data", {}).get("dossier")
-    )
+    fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
     assert details == Dossier.from_dict(fake_dossier)
 
 

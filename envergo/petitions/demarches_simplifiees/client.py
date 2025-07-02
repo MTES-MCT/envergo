@@ -12,21 +12,14 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import Demarche
+from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
+from envergo.petitions.demarches_simplifiees.queries import (
+    GET_DOSSIER_QUERY,
+    GET_DOSSIERS_FOR_DEMARCHE_QUERY,
+)
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
-
-get_dossiers_for_demarche_query_path = (
-    settings.APPS_DIR
-    / "petitions"
-    / "demarches_simplifiees"
-    / "queries"
-    / "get_dossiers_for_demarche.gql"
-)
-
-with open(get_dossiers_for_demarche_query_path, "r") as file:
-    GET_DOSSIERS_FOR_DEMARCHE_QUERY = file.read()
 
 
 class DemarchesSimplifieesClient:
@@ -75,17 +68,7 @@ class DemarchesSimplifieesClient:
 
     def get_dossier(self, dossier_number) -> dict | None:
         variables = {"dossierNumber": dossier_number}
-        with open(
-            Path(
-                settings.APPS_DIR
-                / "petitions"
-                / "demarches_simplifiees"
-                / "queries"
-                / "get_dossier.gql"
-            ),
-            "r",
-        ) as file:
-            query = file.read()
+        query = GET_DOSSIER_QUERY
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
@@ -164,9 +147,9 @@ class DemarchesSimplifieesClient:
 
     def get_dossiers_for_demarche(
         self, demarche_number, dossiers_updated_since: datetime
-    ) -> Demarche | None:
+    ) -> DemarcheWithRawDossiers | None:
         first_page = self._fetch_dossiers_page(demarche_number, dossiers_updated_since)
-        demarche = Demarche.from_dict(first_page["demarche"])
+        demarche = DemarcheWithRawDossiers.from_dict(first_page["demarche"])
         demarche.set_dossier_iterator(
             lambda cursor: self._fetch_dossiers_page(
                 demarche_number, dossiers_updated_since, cursor
