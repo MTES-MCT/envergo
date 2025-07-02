@@ -73,8 +73,10 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(self, dossier_number) -> Dossier | None:
-        variables = {"dossierNumber": dossier_number}
+    def get_dossier(
+        self, dossier_number, include_champs: bool = True
+    ) -> Dossier | None:
+        variables = {"dossierNumber": dossier_number, "includeChamps": include_champs}
         with open(
             Path(
                 settings.APPS_DIR
