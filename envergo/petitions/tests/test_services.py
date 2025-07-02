@@ -124,15 +124,63 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
 
 
 @patch("envergo.petitions.services.notify")
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
+def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
 ):
     petition_project = PetitionProjectFactory()
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "interchamp": True,
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "interchamp": True,
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
+    )
     ConfigHaieFactory()
-
-    details = get_demarches_simplifiees_dossier(petition_project)
-
-    assert details is None
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    get_instructor_view_context(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
     assert (
