@@ -12,7 +12,7 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import Demarche, Dossier
+from envergo.petitions.demarches_simplifiees.models import Demarche
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
@@ -73,10 +73,8 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(
-        self, dossier_number, include_champs: bool = True
-    ) -> Dossier | None:
-        variables = {"dossierNumber": dossier_number, "includeChamps": include_champs}
+    def get_dossier(self, dossier_number) -> dict | None:
+        variables = {"dossierNumber": dossier_number}
         with open(
             Path(
                 settings.APPS_DIR
@@ -108,7 +106,6 @@ class DemarchesSimplifieesClient:
             ) as file:
                 response = json.load(file)
                 data = copy.deepcopy(response["data"])
-                dossier = Dossier.from_dict(data["dossier"])
         else:
             try:
                 data = self.execute(query, variables)
@@ -142,9 +139,7 @@ class DemarchesSimplifieesClient:
                     notify(dedent(message), "haie")
                 return None
 
-            dossier = Dossier.from_dict(data["dossier"]) if "dossier" in data else None
-
-        if dossier is None:
+        if "dossier" not in data or not data["dossier"]:
             logger.error(
                 "Demarches simplifiees API response is not well formated",
                 extra={
@@ -165,7 +160,7 @@ class DemarchesSimplifieesClient:
             notify(dedent(message), "haie")
             return None
 
-        return dossier
+        return data["dossier"]
 
     def get_dossiers_for_demarche(
         self, demarche_number, dossiers_updated_since: datetime

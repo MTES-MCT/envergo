@@ -87,6 +87,12 @@ class PetitionProject(models.Model):
         "Date de dépôt dans Démarches Simplifiées", null=True, blank=True
     )
 
+    demarches_simplifiees_raw_dossier = models.JSONField(
+        "Données brutes du dossier provenant de Démarches Simplifiées",
+        default=dict,
+        blank=True,
+    )
+
     demarches_simplifiees_last_sync = models.DateTimeField(
         "Date de la dernière synchronisation avec Démarches Simplifiées",
         null=True,
@@ -152,7 +158,7 @@ class PetitionProject(models.Model):
             and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
         )
 
-    def synchronize_with_demarches_simplifiees(self, dossier):
+    def synchronize_with_demarches_simplifiees(self, dossier: dict):
         """Update the petition project with the latest data from demarches-simplifiees.fr
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
@@ -161,13 +167,13 @@ class PetitionProject(models.Model):
             # first time we have some data about this dossier
 
             demarche_name = (
-                dossier.demarche.title
-                if dossier.demarche is not None
+                dossier["demarche"]["title"]
+                if "demarche" in dossier and "title" in dossier["demarche"]
                 else "Nom inconnu"
             )
             demarche_number = (
-                dossier.demarche.number
-                if dossier.demarche is not None
+                dossier["demarche"]["number"]
+                if "demarche" in dossier and "number" in dossier["demarche"]
                 else "Numéro inconnu"
             )
             demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
@@ -181,8 +187,8 @@ class PetitionProject(models.Model):
             )
 
             usager_email = (
-                dossier.usager.email
-                if dossier.usager and dossier.usager.email
+                dossier["usager"]["email"]
+                if "usager" in dossier and "email" in dossier.usager
                 else "non renseigné"
             )
 
@@ -233,9 +239,11 @@ class PetitionProject(models.Model):
                 **self.get_log_event_data(),
             )
 
-        self.demarches_simplifiees_state = dossier.state.value
-        if dossier.dateDepot:
-            self.demarches_simplifiees_date_depot = dossier.dateDepot
+        self.demarches_simplifiees_state = dossier["state"]
+        if "dateDepot" in dossier and dossier["dateDepot"]:
+            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
+
+        self.demarches_simplifiees_raw_dossier = dossier
 
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
