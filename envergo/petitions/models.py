@@ -188,7 +188,7 @@ class PetitionProject(models.Model):
 
             usager_email = (
                 dossier["usager"]["email"]
-                if "usager" in dossier and "email" in dossier.usager
+                if "usager" in dossier and "email" in dossier["usager"]
                 else "non renseigné"
             )
 
