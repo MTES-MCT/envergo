@@ -2,14 +2,17 @@
 
 L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier n°{{ dossier_number }}.
 
-Réponse de Démarches Simplifiées : {{ status_code }}
+Réponse de Démarches Simplifiées :
 ```
-{{ response|safe }}
+{{ error|safe }}
 ```
 
 Requête envoyée :
-* Url: {{ response.url }}
-* Body:
+* Query:
 ```
-{{ body|safe }}
+{{ query|safe }}
+```
+* Variables:
+```
+{{ variables|safe }}
 ```

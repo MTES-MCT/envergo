@@ -1,10 +1,12 @@
+import copy
 import datetime
 from collections import OrderedDict
 from decimal import Decimal
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, patch
 
 import pytest
 from django.test import override_settings
+from gql.transport.exceptions import TransportQueryError
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
@@ -15,6 +17,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
+from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.conditionnalitepac import (
     bcae8_get_instructor_view_context,
@@ -24,7 +27,7 @@ from envergo.petitions.regulations.ep import (
     ep_normandie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
-    fetch_project_details_from_demarches_simplifiees,
+    get_demarches_simplifiees_dossier,
     get_instructor_view_context,
 )
 from envergo.petitions.tests.factories import (
@@ -38,15 +41,18 @@ pytestmark = pytest.mark.django_db
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     """Test fetch project details from démarches simplifiées"""
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-    mock_post.return_value = mock_response
+    mock_post.side_effect = [
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
+    ]
 
-    config = ConfigHaieFactory(
+    ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -54,13 +60,11 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     petition_project = PetitionProjectFactory()
     moulinette = petition_project.get_moulinette()
 
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier is not None
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
-    project_details = get_instructor_view_context(petition_project, moulinette, site)
+    project_details = get_instructor_view_context(petition_project, moulinette)
     ds_data = project_details["ds_data"]
 
     assert ds_data.applicant_name == "Mme Hedy Lamarr"
@@ -84,7 +88,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     # WHEN I synchronize it with DS for the first time
-    fetch_project_details_from_demarches_simplifiees(petition_project, config, site)
+    get_demarches_simplifiees_dossier(petition_project)
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
@@ -93,18 +97,15 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-@patch("requests.post")
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
-    mock_post, caplog, haie_user, site
+    caplog, haie_user
 ):
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert (
         len(
@@ -116,22 +117,70 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
-    fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
-    assert details == fake_dossier
+    fake_dossier = (
+        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE).get("data", {}).get("dossier")
+    )
+    assert details == Dossier.from_dict(fake_dossier)
 
 
 @patch("envergo.petitions.services.notify")
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_config_is_incomplete(
-    mock_notify, haie_user, site
+def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
+    mock_notify, haie_user
 ):
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
-
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "interchamp": True,
+                    "sur_talus": False,
+                    "vieil_arbre": True,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": False,
+                    "mode_plantation": "plantation",
+                    "sur_parcelle_pac": True,
+                    "sous_ligne_electrique": True,
+                    "connexion_boisement": False,
+                },
+            },
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "interchamp": True,
+                    "sur_talus": False,
+                    "type_haie": "arbustive",
+                    "proximite_point_eau": True,
+                    "mode_destruction": "coupe_a_blanc",
+                    "sur_parcelle_pac": True,
+                    "recemment_plantee": False,
+                    "connexion_boisement": True,
+                },
+            },
+        ]
     )
-
-    assert details is None
+    ConfigHaieFactory()
+    moulinette_data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    get_instructor_view_context(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
     assert (
@@ -144,24 +193,21 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_if_confi
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
-@patch("requests.post")
+@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@patch("gql.client.Client.execute")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
-    mock_post, mock_notify, haie_user, site
+    mock_post, mock_notify, haie_user
 ):
-    mock_response = Mock()
-    mock_response.status_code = 400
-    mock_response.json.return_value = {"an error": "occurred"}
+    mock_post.side_effect = TransportQueryError(
+        "Mocked transport error", errors=[{"message": "Mocked error"}]
+    )
 
-    mock_post.return_value = mock_response
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert details is None
 
@@ -176,24 +222,20 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.services.notify")
-@patch("requests.post")
+@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
-    mock_post, mock_notify, haie_user, site
+    mock_post, mock_notify, haie_user
 ):
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"data": {"weirdely_formatted": "response"}}
-
-    mock_post.return_value = mock_response
+    mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
     config = ConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
-    details = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    details = get_demarches_simplifiees_dossier(petition_project)
 
     assert details is None
 
