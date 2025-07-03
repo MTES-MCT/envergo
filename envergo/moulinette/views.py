@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.http.request import QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -55,10 +56,14 @@ class MoulinetteMixin:
         # in between submissions
         moulinette_data = self.clean_request_get_parameters()
         if self.request.method in ("POST", "PUT"):
-            moulinette_data.update(self.request.POST)
+            for k, v in self.request.POST.items():
+                moulinette_data[k] = v
 
         if moulinette_data:
-            moulinette_data.update(compute_surfaces(moulinette_data))
+            surfaces = compute_surfaces(moulinette_data)
+            for k, v in surfaces.items():
+                moulinette_data[k] = v
+
             kwargs.update({"data": moulinette_data})
 
         return kwargs
@@ -211,7 +216,8 @@ class MoulinetteMixin:
         get_data = form_data.copy()  # keep the computed values in the catalog
         get_data.pop("address", None)
         get_data.pop("existing_surface", None)
-        get.update(get_data)
+        for k, v in get_data.items():
+            get[k] = v
 
         if hasattr(self, "moulinette"):
             moulinette = self.moulinette
