@@ -318,7 +318,9 @@ class Evaluation(models.Model):
 
         if not hasattr(self, "_moulinette"):
             raw_params = self.moulinette_params
-            raw_params.update(compute_surfaces(raw_params))
+            surfaces = compute_surfaces(raw_params)
+            for k, v in surfaces:
+                raw_params[k] = v
             form = MoulinetteFormAmenagement(
                 raw_params
             )  # there is only Amenagement evaluations
