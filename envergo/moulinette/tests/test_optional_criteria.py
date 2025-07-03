@@ -69,8 +69,8 @@ def test_edition_redirection_from_result_user_see_optional_criterion_additional_
     assert "error-text-evalenv_rubrique_41-soumis" not in res.content.decode()
 
 
-# ETQ admin, je peux voir les questions optionnelles dès l'accueil du simulateur
-def test_optional_questions_appear_on_moulinette_form(client):
+# ETQ User, je peux voir les questions optionnelles dès l'accueil du simulateur
+def test_optional_questions_appear_on_moulinette_home(client):
     url = reverse("moulinette_form")
     res = client.get(url)
 
