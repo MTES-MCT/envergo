@@ -8,6 +8,21 @@
 
 {% block title %}Instruction du dossier – Informations générales{% endblock %}
 
+{% block general_secondary_side_nav %}
+  <div>
+    <ul class="fr-sidemenu__list">
+      <li class="fr-sidemenu__item">
+        <a class="fr-sidemenu__link" href="#section-key-elements" target="_self">Éléments clés</a>
+      </li>
+      <li class="fr-sidemenu__item">
+        <a class="fr-sidemenu__link"
+           href="#section-simulation-data"
+           target="_self">Données de la simulation</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}
+
 {% block project_content %}
 
   <div class="project-inner-content">
@@ -17,7 +32,7 @@
     <section class="fr-my-3w">
       <h2>Informations générales</h2>
 
-      <h3>Éléments clés</h3>
+      <h3 id="section-key-elements">Éléments clés</h3>
       <ul class="instructor-view-list">
         {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
         {% if project_details.ds_data.city %}
@@ -75,7 +90,7 @@
          class="fr-btn fr-btn--secondary"
          rel="noopener external">Voir le résultat de la simulation</a>
 
-      <h3 class="fr-mt-4w">Données de la simulation</h3>
+      <h3 id="section-simulation-data" class="fr-mt-4w">Données de la simulation</h3>
 
       <ul class="instructor-view-list">
         {% for field in moulinette.main_form %}

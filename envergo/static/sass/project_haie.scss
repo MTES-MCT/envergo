@@ -582,17 +582,6 @@ div#project-specifications-instructor {
   }
 }
 
-.ds-item > .fr-sidemenu__link::after {
-  content: "";
-  background-image: url("/static/images/logo_demarches_simplifiees.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center right;
-  display: block;
-  width: 64px;
-  height: 64px;
-}
-
 ul.instructor-view-list {
   list-style-type: none;
   padding: 0;

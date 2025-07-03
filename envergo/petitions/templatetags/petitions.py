@@ -21,6 +21,16 @@ def criterion_instructor_view(context, regulation, criterion, project, moulinett
     )
 
 
+@register.simple_tag()
+def criterion_instructor_side_nav(regulation, criterion):
+    template = (
+        f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
+    )
+    return render_to_string(
+        template,
+    )
+
+
 @register.filter
 def display_property(hedge_property):
     return bool(hedge_property[TO_REMOVE] or hedge_property[TO_PLANT])

@@ -5,7 +5,7 @@
   "sur parcelle PAC. Les alignements d’arbres sont également exclus.
 </p>
 
-<h3>Éléments clés</h3>
+<h3 id="section-key-elements">Éléments clés</h3>
 <ul class="instructor-view-list">
   {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
   {% if project_details.ds_data.pacage %}
@@ -44,7 +44,7 @@
   {% endif %}
 </ul>
 
-<h3 class="fr-mt-4w">Données de la simulation</h3>
+<h3 id="section-simulation-data" class="fr-mt-4w">Données de la simulation</h3>
 
 {% if lineaire_detruit_pac %}
   <ul class="instructor-view-list">
