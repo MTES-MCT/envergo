@@ -49,10 +49,6 @@ class Item:
 
 @dataclass
 class DemarchesSimplifieesDetails:
-    applicant_name: str | None
-    city: str | None
-    pacage: str | None
-    usager: str
     header_sections: list | None
     champs: list | None
 
@@ -64,6 +60,9 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
+    applicant: str
+    city: str
+    organization: str
     ds_data: DemarchesSimplifieesDetails | None
 
 
@@ -143,11 +142,13 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
 
     city = None
     pacage = None
-    ds_details = None
+    organization = None
+    usager = ""
 
     if (
         not config.demarches_simplifiees_pacage_id
         or not config.demarches_simplifiees_city_id
+        or not config.demarches_simplifiees_organization_id
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",
@@ -171,45 +172,52 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        champs = dossier.champs
-
-        city_field = next(
-            (
-                champ
-                for champ in champs
-                if champ.id == config.demarches_simplifiees_city_id
-            ),
-            None,
-        )
-        if city_field:
-            city = city_field.stringValue
-
-        pacage_field = next(
-            (
-                champ
-                for champ in champs
-                if champ.id == config.demarches_simplifiees_pacage_id
-            ),
-            None,
-        )
-        if pacage_field:
-            pacage = pacage_field.stringValue
-
-        usager = dossier.usager.email
-
-        ds_details = DemarchesSimplifieesDetails(
-            dossier.applicant_name, city, pacage, usager, None, None
-        )
+        city, organization, pacage, usager = extract_data_from_fields(config, dossier)
 
     context = {
         "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
-        "usager": ds_details.usager if ds_details else "",
-        "ds_data": ds_details,
+        "usager": usager,
+        "city": city,
+        "pacage": pacage,
+        "organization": organization,
+        "applicant": dossier.applicant_name,
     }
     context.update(project_summary)
 
     return context
+
+
+def extract_data_from_fields(config, dossier):
+    champs = dossier.champs
+    city_field = next(
+        (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
+        None,
+    )
+    if city_field:
+        city = city_field.stringValue
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.stringValue
+    organization_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_organization_id
+        ),
+        None,
+    )
+    if organization_field:
+        organization = organization_field.stringValue
+    usager = dossier.usager.email or ""
+    return city, organization, pacage, usager
 
 
 def compute_instructor_informations_ds(
@@ -249,18 +257,19 @@ def compute_instructor_informations_ds(
     ]
 
     ds_details = DemarchesSimplifieesDetails(
-        dossier.applicant_name,
-        None,
-        None,
-        dossier.usager.email,
         header_sections,
         champs_display,
     )
 
+    city, organization, _, usager = extract_data_from_fields(config, dossier)
+
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager if ds_details else "",
+        usager=usager,
+        applicant=dossier.applicant_name,
+        city=city,
+        organization=organization,
         ds_data=ds_details,
     )
 

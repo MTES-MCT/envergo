@@ -35,11 +35,11 @@
       <h3 id="section-key-elements">Éléments clés</h3>
       <ul class="instructor-view-list">
         {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
-        {% if project_details.ds_data.city %}
-          {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.ds_data.city %}
+        {% if project_details.city %}
+          {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.city %}
         {% endif %}
-        {% if project_details.ds_data.applicant_name %}
-          {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.ds_data.applicant_name %}
+        {% if project_details.applicant %}
+          {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.applicant %}
         {% endif %}
       </ul>
       <h4 class="fr-mt-3w">Destruction</h4>
@@ -106,13 +106,11 @@
 
 {% block extra_body %}
   {{ block.super }}
-  {% include 'haie/moulinette/_hedge_input_modal.html' %}
   {% include 'haie/moulinette/_department_doctrine_modal.html' with config=moulinette.config %}
 {% endblock %}
 
 {% block extra_js %}
   {{ block.super }}
-  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     window.addEventListener("load", function() {

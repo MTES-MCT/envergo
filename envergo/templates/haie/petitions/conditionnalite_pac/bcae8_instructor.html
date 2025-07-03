@@ -8,8 +8,8 @@
 <h3 id="section-key-elements">Éléments clés</h3>
 <ul class="instructor-view-list">
   {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
-  {% if project_details.ds_data.pacage %}
-    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=project_details.ds_data.pacage %}
+  {% if project_details.pacage %}
+    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=project_details.pacage %}
   {% endif %}
 </ul>
 <h4 class="fr-mt-3w">Destruction</h4>
