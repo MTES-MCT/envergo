@@ -601,13 +601,21 @@ def compute_hedge_density_around_point(point_geos, radius):
     epsg_utm = get_best_epsg_for_location(point_geos.x, point_geos.y)
     centroid_meter = point_geos.transform(epsg_utm, clone=True)
     circle = centroid_meter.buffer(radius)
-
     circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
 
-    # remove the sea from the circles
-    truncated_circle = trim_land(circle)
+    # Check if the circle center is on land
+    on_land = (
+        Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
+        .filter(geometry__contains=point_geos)
+        .exists()
+    )
+    truncated_circle = None
 
-    if truncated_circle:
+    if on_land:
+        # Remove the sea from the circle
+        truncated_circle = trim_land(circle)
+
+    if on_land and truncated_circle:
         truncated_circle_m = truncated_circle.transform(
             epsg_utm, clone=True
         )  # use specific projection to compute the area in square meters
@@ -632,7 +640,7 @@ def compute_hedge_density_around_point(point_geos, radius):
         # there is no land in the circle (e.g. sea or foreign country)
         length = Distance(0)
         area_ha = 0.0
-        density = 0.0
+        density = 1.0
 
     return {
         "density": density,
