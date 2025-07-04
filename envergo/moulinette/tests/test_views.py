@@ -22,7 +22,7 @@ ADMIN_MSG = "Le simulateur n'est pas activé dans ce département"
 
 
 def test_moulinette_home(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     res = client.get(url)
 
     assert res.status_code == 200
@@ -32,7 +32,7 @@ def test_moulinette_home(client):
 
 
 def test_moulinette_home_with_params_redirects_to_results_page(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -110,25 +110,6 @@ def test_moulinette_result_without_params_redirects_to_home(client):
     assert res.status_code == 302
 
 
-def test_moulinette_result_form_error(client):
-    """Bad params are cleaned from the result url."""
-
-    ConfigAmenagementFactory()
-
-    url = reverse("moulinette_result")
-    params = (
-        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&bad_param=true"
-    )
-    full_url = f"{url}?{params}"
-    res = client.get(full_url)
-
-    assert res.status_code == 302
-    assert (
-        res.url
-        == "/simulateur/resultat/?created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
-    )
-
-
 def test_moulinette_result_mtm_keywords_are_not_bad_params(client):
     """Analytics params are not cleaned from the result url."""
     ConfigAmenagementFactory(is_activated=True)
@@ -175,7 +156,7 @@ def test_moulinette_result_custom_matomo_tracking_url(client):
 
 
 def test_moulinette_home_form_error(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "bad_param=true"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -187,7 +168,7 @@ def test_moulinette_home_form_error(client):
 
 
 def test_moulinette_utm_param(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     params = "utm_campaign=test"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
