@@ -306,10 +306,6 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
-        elif (
-            self.moulinette and self.moulinette.is_valid() and "edit" not in request.GET
-        ):
-            return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
 
@@ -371,6 +367,16 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
 class MoulinetteResultMixin:
     """Common code for views displaying moulinette results."""
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+            "data": self.get_moulinette_form_data(),
+        }
+        return kwargs
 
     def get_template_names(self):
         """Check which template to use depending on the moulinette result."""
@@ -481,11 +487,7 @@ class MoulinetteResultMixin:
         debug_result_url = update_qs(current_url, {"debug": "true"})
         form_url = reverse("moulinette_form")
         form_url = copy_qs(form_url, current_url)
-        edit_url = (
-            update_qs(form_url, {"edit": "true"})
-            if moulinette
-            else context.get("triage_url", None)
-        )
+        edit_url = form_url if moulinette else context.get("triage_url", None)
         data["result_url"] = result_url
         data["edit_url"] = edit_url
         data["current_url"] = current_url
@@ -708,7 +710,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             context["plantation_url"] = plantation_url
 
         form_url = update_qs(reverse("moulinette_form"), self.request.GET)
-        context["edit_url"] = update_qs(form_url, {"edit": "true"})
+        context["edit_url"] = form_url
         return context
 
     def log_moulinette_event(self, moulinette, context, **kwargs):

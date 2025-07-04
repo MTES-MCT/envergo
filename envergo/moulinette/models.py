@@ -2065,9 +2065,7 @@ class MoulinetteHaie(Moulinette):
             if hasattr(request, "moulinette_data")
             else request.GET
         )
-        context["triage_url"] = update_qs(
-            reverse("triage"), {**form_data.dict(), "edit": "true"}
-        )
+        context["triage_url"] = update_qs(reverse("triage"), {**form_data.dict()})
         triage_form = TriageFormHaie(data=form_data)
         if triage_form.is_valid():
             context["triage_form"] = triage_form
