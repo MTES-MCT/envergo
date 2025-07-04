@@ -1723,6 +1723,10 @@ class Moulinette(ABC):
         raise NotImplementedError
 
     @classmethod
+    def is_triage_valid(cls, triage_form):
+        return True
+
+    @classmethod
     def get_extra_context(cls, request):
         """return extra context data for the moulinette views.
         You can use this method to add some context specific to your site : Haie or Amenagement
@@ -2042,6 +2046,14 @@ class MoulinetteHaie(Moulinette):
     @classmethod
     def get_triage_params(cls):
         return set(TriageFormHaie.base_fields.keys())
+
+    @classmethod
+    def is_triage_valid(cls, triage_form):
+        """Should the triage params allow to go to next step?."""
+
+        element = triage_form.cleaned_data.get("element")
+        travaux = triage_form.cleaned_data.get("travaux")
+        return element == "haie" and travaux == "destruction"
 
     @classmethod
     def get_triage_result_template(cls, triage_form):
