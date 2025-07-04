@@ -16,17 +16,6 @@
 
         {% include '_form_header.html' with form=form %}
 
-        <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-        <input type="hidden"
-               name="department"
-               value="{{ request.GET.department|default:'' }}" />
-        <input type="hidden"
-               name="element"
-               value="{{ request.GET.element|default:'' }}" />
-        <input type="hidden"
-               name="travaux"
-               value="{{ request.GET.travaux|default:'' }}" />
-
         <div class="form-section">{% include '_radio_snippet.html' with field=form.motif %}</div>
         <div class="form-section">{% include '_radio_snippet.html' with field=form.reimplantation %}</div>
         <div class="form-section">{% include '_radio_snippet.html' with field=form.localisation_pac %}</div>
