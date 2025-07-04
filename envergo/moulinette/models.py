@@ -40,7 +40,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
@@ -2092,6 +2092,13 @@ class MoulinetteHaie(Moulinette):
             )
 
         context["is_alternative"] = bool(request.GET.get("alternative", False))
+
+        if "haies" in request.GET:
+            try:
+                hedge_data = HedgeData.objects.get(id=request.GET["haies"])
+            except Exception:
+                hedge_data = None
+            context["hedge_data"] = hedge_data
 
         return context
 
