@@ -644,3 +644,10 @@ ul#instruction-summary-list {
 .fr-icon-haie::after {
   mask-image: url("/static/icons/haie.svg");
 }
+
+div#key-elements-title-container {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}

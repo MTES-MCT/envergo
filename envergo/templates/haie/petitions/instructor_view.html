@@ -30,19 +30,17 @@
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
 
     <section class="fr-my-3w">
-      <h2>Informations générales</h2>
+      <h1>Informations générales</h1>
 
-      <h3 id="section-key-elements">Éléments clés</h3>
-      <ul class="instructor-view-list">
-        {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
-        {% if project_details.city %}
-          {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.city %}
-        {% endif %}
-        {% if project_details.applicant %}
-          {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.applicant %}
-        {% endif %}
-      </ul>
-      <h4 class="fr-mt-3w">Destruction</h4>
+      <div id="key-elements-title-container">
+        <h2 id="section-key-elements" class="fr-mr-8w">Éléments clés</h2>
+        <a class="fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+           href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}">Voir le dossier complet</a>
+      </div>
+      <h3>Motif</h3>
+      <span class="fr-text--lead">{{ moulinette.main_form.motif.field.choices|get_choice_label:moulinette.main_form.motif.value }}</span>
+
+      <h3 class="fr-mt-3w">Destruction</h3>
       <ul class="instructor-view-list">
         {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
         {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
@@ -56,7 +54,7 @@
         {% endfor %}
       </ul>
 
-      <h4 class="fr-mt-3w">Plantation</h4>
+      <h3 class="fr-mt-3w">Plantation</h3>
       {% if project_details.hedge_to_plant_by_plantation_mode %}
         <ul class="instructor-view-list">
           {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
@@ -79,16 +77,11 @@
         </ul>
       {% endif %}
       <div class="fr-my-2w">
-        <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+        <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
                 type="button"
                 data-fr-opened="false"
-                aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+                aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
       </div>
-      <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-         href="{{ project_url }}"
-         target="_blank"
-         class="fr-btn fr-btn--secondary"
-         rel="noopener external">Voir le résultat de la simulation</a>
 
       <h3 id="section-simulation-data" class="fr-mt-4w">Données de la simulation</h3>
 

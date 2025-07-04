@@ -568,9 +568,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
 
         plantation_url = reverse(
             "input_hedges",
