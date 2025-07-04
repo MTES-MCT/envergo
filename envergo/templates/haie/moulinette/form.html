@@ -25,7 +25,7 @@
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
             <div id="group-haies-content">
               <label for="id_haies">Localisation des haies à détruire</label>
-              {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
+              {% with hedges_to_remove=hedge_data.hedges_to_remove %}
                 {% if hedges_to_remove|length > 0 %}
                   <div id="statistics-container" class="fr-mb-3w">
                     <div id="statistics" class="fr-mb-3w">
