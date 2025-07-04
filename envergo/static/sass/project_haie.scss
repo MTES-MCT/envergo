@@ -588,17 +588,6 @@ div#project-specifications-instructor {
   }
 }
 
-.ds-item > .fr-sidemenu__link::after {
-  content: "";
-  background-image: url("/static/images/logo_demarches_simplifiees.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center right;
-  display: block;
-  width: 64px;
-  height: 64px;
-}
-
 ul.instructor-view-list {
   list-style-type: none;
   padding: 0;
@@ -606,10 +595,6 @@ ul.instructor-view-list {
 
 .section-ds {
   border-top: 1px solid var(--border-default-grey);
-}
-
-div#project-dossier-no {
-  border-bottom: solid 1px var(--border-default-grey);
 }
 
 .ds-files {
@@ -626,6 +611,8 @@ div#project-dossier-no {
 @media (width >= 48em) {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+    padding-right: 1.5rem;
+    border-right: solid 1px var(--border-default-grey);
   }
 
   // Apply border grey on main instead of sidemenu to have it full height
@@ -637,15 +624,6 @@ div#project-dossier-no {
     padding-left: 0;
     box-shadow: none;
   }
-
-  div#project-specifications-instructor {
-    padding-left: 1.5rem;
-    border-left: solid 1px var(--border-default-grey);
-  }
-
-  div#project-dossier-no {
-    border-bottom: solid 1px var(--border-default-grey);
-  }
 }
 
 div#invitation-token-email-html {
@@ -656,4 +634,13 @@ div#invitation-token-email-html {
 
 pre#invitation-token-email-text {
   display: none;
+}
+
+ul#instruction-summary-list {
+  list-style-type: none;
+}
+
+.fr-icon-haie::before,
+.fr-icon-haie::after {
+  mask-image: url("/static/icons/haie.svg");
 }

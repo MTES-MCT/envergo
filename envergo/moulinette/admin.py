@@ -436,6 +436,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "demarche_simplifiee_number",
                     "demarche_simplifiee_pre_fill_config",
                     "demarches_simplifiees_city_id",
+                    "demarches_simplifiees_organization_id",
                     "demarches_simplifiees_pacage_id",
                     "demarches_simplifiees_project_url_id",
                 ],

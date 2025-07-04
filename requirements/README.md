@@ -29,14 +29,6 @@ docker compose build
 
 ```bash
 rm *.txt
-pip-compile base.txt
-
-
-## How to upgrade ALL packages
-
-```bash
-rm *.txt
-pip-compile base.txt
 ./compile.sh
 ```
 
