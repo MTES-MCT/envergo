@@ -140,9 +140,9 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
     config = moulinette.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
 
-    city = None
-    pacage = None
-    organization = None
+    city = ""
+    pacage = ""
+    organization = ""
     usager = ""
     applicant = ""
 
