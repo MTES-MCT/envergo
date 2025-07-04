@@ -11,13 +11,18 @@
       {% endif %}
     </li>
     <li>
-      <span class="fr-icon-map-pin-2-line" aria-hidden="true"></span> {{ project_details.city }} | Département de la demande : {{ moulinette.department }}
+      <span class="fr-icon-map-pin-2-line" aria-hidden="true"></span>
+      {% if project_details.city %}{{ project_details.city }} |{% endif %}
+      Département de la demande : {{ moulinette.department }}
     </li>
-    <li>
-      <span class="fr-icon-user-line" aria-hidden="true"></span>
-      {{ project_details.applicant }}
-      {% if project_details.organization %}| {{ project_details.organization }}{% endif %}
-    </li>
+    {% if project_details.applicant or project_details.organization %}
+      <li>
+        <span class="fr-icon-user-line" aria-hidden="true"></span>
+        {% if project_details.applicant %}{{ project_details.applicant }}{% endif %}
+        {% if project_details.applicant and project_details.organization %}|{% endif %}
+        {% if project_details.organization %}{{ project_details.organization }}{% endif %}
+      </li>
+    {% endif %}
     <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}</li>
   </ul>
 </div>
