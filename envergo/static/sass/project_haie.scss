@@ -633,3 +633,8 @@ pre#invitation-token-email-text {
 ul#instruction-summary-list {
   list-style-type: none;
 }
+
+.fr-icon-haie::before,
+.fr-icon-haie::after {
+  mask-image: url("/static/icons/haie.svg");
+}
