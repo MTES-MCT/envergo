@@ -377,15 +377,18 @@ class MoulinetteResultMixin:
     def get_template_names(self):
         """Check which template to use depending on the moulinette result."""
 
+        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+
         moulinette = self.moulinette
         triage_form = self.triage_form
+        triage_is_valid = MoulinetteClass.is_triage_valid(triage_form)
         is_debug = bool(self.request.GET.get("debug", False))
         is_admin = self.request.user.is_staff
 
         # We want to display the moulinette result template, but must check all
         # previous cases where we cannot do it
-        if moulinette is None and triage_form is not None:
-            template_name = MoulinetteHaie.get_triage_result_template(triage_form)
+        if triage_form and not triage_is_valid:
+            template_name = MoulinetteClass.get_triage_result_template(triage_form)
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
@@ -759,11 +762,7 @@ class Triage(FormView):
         return self.request.GET.dict()
 
     def form_valid(self, form):
-        query_params = form.cleaned_data
-        if (
-            query_params["element"] == "haie"
-            and query_params["travaux"] == "destruction"
-        ):
+        if MoulinetteHaie.is_triage_valid(form):
             url = reverse("moulinette_form")
         else:
             url = reverse("moulinette_result")
@@ -771,5 +770,5 @@ class Triage(FormView):
         # We want to preserve existing querystring params when validating the form
         qs = self.request.GET.urlencode()
         url_with_params = f"{url}?{qs}"
-        url_with_params = update_qs(url_with_params, query_params)
+        url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
