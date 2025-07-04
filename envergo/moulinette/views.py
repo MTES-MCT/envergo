@@ -1,9 +1,7 @@
 import json
-from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.http.request import QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -39,23 +37,24 @@ class MoulinetteMixin:
         FormClass = MoulinetteClass.get_main_form_class()
         return FormClass
 
-    def get_initial(self):
-        return self.request.GET
+    def get_form(self):
+        form = super().get_form()
+        return form
 
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
-        }
+    def get_moulinette_form_data(self):
+        """Get the data to pass to the moulinette forms.
 
-        # We always want to submit data present in url, event if they don't belong
-        # to an actual form.
-        # This is because sometimes, when the form value change, we can add or remove
-        # some additional questions, and we don't want the user to lose those values
-        # in between submissions
+        We always want to submit data present in url, event if they don't belong
+        to an actual form.
+
+        This is because sometimes, when the form value change, we can add or remove
+        some additional questions, and we don't want the user to lose those values
+        in between submissions
+        """
         moulinette_data = self.clean_request_get_parameters()
         if self.request.method in ("POST", "PUT"):
+            # We don't use update because POST is a MultiValueDict, so django
+            # extends the variables instead of overriding them
             for k, v in self.request.POST.items():
                 moulinette_data[k] = v
 
@@ -64,9 +63,7 @@ class MoulinetteMixin:
             for k, v in surfaces.items():
                 moulinette_data[k] = v
 
-            kwargs.update({"data": moulinette_data})
-
-        return kwargs
+        return moulinette_data
 
     def clean_request_get_parameters(self):
         """Remove parameters that don't belong to the moulinette form.
@@ -85,6 +82,21 @@ class MoulinetteMixin:
 
     def get_moulinette_raw_data(self):
         return self.request.GET.copy()
+
+    def get_initial(self):
+        return self.get_moulinette_form_data()
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+        }
+
+        if self.request.method in ("POST", "PUT"):
+            kwargs["data"] = self.get_moulinette_form_data()
+
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -242,10 +254,9 @@ class MoulinetteMixin:
                     get[field.html_name] = value
 
         triage_params = moulinette.get_triage_params()
-        if triage_params:
-            get.update(
-                {key: form.data[key] for key in triage_params if key in form.data}
-            )
+        for param in triage_params:
+            if param in form.data:
+                get[param] = form.data[param]
 
         if "alternative" in self.request.GET:
             get["alternative"] = self.request.GET["alternative"]
@@ -387,15 +398,6 @@ class MoulinetteResultMixin:
             template_name = moulinette.get_result_template()
 
         return [template_name]
-
-    def get_moulinette_data(self):
-        current_url = self.request.get_full_path()
-        current_qs = (
-            self.request.moulinette_data
-            if hasattr(self.request, "moulinette_data")
-            else parse_qs(urlparse(current_url).query)
-        )
-        return current_qs
 
     def get_analytics_context_data(self, context):
         """Custom context data related to analytics.
