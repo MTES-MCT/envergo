@@ -144,6 +144,7 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
     pacage = None
     organization = None
     usager = ""
+    applicant = ""
 
     if (
         not config.demarches_simplifiees_pacage_id
@@ -172,7 +173,9 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        city, organization, pacage, usager = extract_data_from_fields(config, dossier)
+        city, organization, pacage = extract_data_from_fields(config, dossier)
+        usager = dossier.usager.email or ""
+        applicant = dossier.applicant_name or ""
 
     context = {
         "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
@@ -181,7 +184,7 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
         "city": city,
         "pacage": pacage,
         "organization": organization,
-        "applicant": dossier.applicant_name,
+        "applicant": applicant,
     }
     context.update(project_summary)
 
@@ -189,6 +192,10 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
 
 
 def extract_data_from_fields(config, dossier):
+    city = ""
+    pacage = ""
+    organization = ""
+
     champs = dossier.champs
     city_field = next(
         (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
@@ -216,13 +223,11 @@ def extract_data_from_fields(config, dossier):
     )
     if organization_field:
         organization = organization_field.stringValue
-    usager = dossier.usager.email or ""
-    return city, organization, pacage, usager
+
+    return city, organization, pacage
 
 
-def compute_instructor_informations_ds(
-    petition_project, moulinette, site
-) -> ProjectDetails:
+def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectDetails:
     """Compute ProjectDetails with instructor informations"""
     # Get ds details
     config = moulinette.config
@@ -234,6 +239,9 @@ def compute_instructor_informations_ds(
             demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
             demarche_simplifiee_number=config.demarche_simplifiee_number,
             usager="",
+            applicant="",
+            city="",
+            organization="",
             ds_data=None,
         )
 
@@ -261,13 +269,13 @@ def compute_instructor_informations_ds(
         champs_display,
     )
 
-    city, organization, _, usager = extract_data_from_fields(config, dossier)
+    city, organization, _ = extract_data_from_fields(config, dossier)
 
     return ProjectDetails(
         demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
         demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=usager,
-        applicant=dossier.applicant_name,
+        usager=dossier.usager.email or "",
+        applicant=dossier.applicant_name or "",
         city=city,
         organization=organization,
         ds_data=ds_details,

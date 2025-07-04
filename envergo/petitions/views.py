@@ -708,7 +708,6 @@ class PetitionProjectInstructorDossierDSView(
         context["project_details"] = compute_instructor_informations_ds(
             self.object,
             context["moulinette"],
-            self.request.site,
         )
 
         # Send message if info from DS is not in project details
