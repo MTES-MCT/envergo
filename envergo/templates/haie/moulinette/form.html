@@ -6,7 +6,7 @@
       <h2 id="moulinette-title">Projet de destruction de haies ou alignements d'arbres</h2>
       {% include 'haie/moulinette/_form_introduction.html' %}
 
-      <form class="fr-mb-3w"
+      <form class="fr-mb-3w spinner-form"
             method="post"
             novalidate
             autocomplete="off"
@@ -27,11 +27,11 @@
                name="travaux"
                value="{{ request.GET.travaux|default:'' }}" />
 
-        <div class="form-section">
-          {% include '_radio_snippet.html' with field=form.motif %}
-          {% include '_radio_snippet.html' with field=form.reimplantation %}
-          {% include '_radio_snippet.html' with field=form.localisation_pac %}
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.motif %}</div>
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.reimplantation %}</div>
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.localisation_pac %}</div>
 
+        <div class="form-section">
           <div id="form-group-haies"
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
             <div id="group-haies-content">
@@ -83,9 +83,9 @@
               {% endif %}
             </div>
           </div>
-
-          {% include 'haie/moulinette/_form_footer.html' %}
         </div>
+
+        {% include 'haie/moulinette/_form_footer.html' %}
       </form>
     </div>
   </div>

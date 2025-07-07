@@ -24,9 +24,9 @@
     <section>
       <h4 class="fr-mb-3w fr-mt-2w">Caractéristiques du projet</h4>
       {% if not is_read_only %}
-        <div class="button-container  hide-print">
+        <div class="button-container hide-print fr-mb-3w">
           <a href="{{ edit_url }}"
-             class="fr-btn fr-btn--tertiary-no-outline fr-mb-3w fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button"
+             class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button spinner-link"
              data-event-category="Content"
              data-event-action="Edit"
              data-event-name="ProjectTop">Modifier le projet</a>
@@ -49,9 +49,9 @@
       </p>
       {% block project_summary %}{% endblock %}
       {% if not is_read_only %}
-        <div class="button-container  hide-print">
+        <div class="button-container hide-print fr-mb-3w">
           <a href="{{ edit_url }}"
-             class="fr-btn fr-btn--tertiary-no-outline fr-mb-3w fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button"
+             class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button spinner-link"
              data-event-category="Content"
              data-event-action="Edit"
              data-event-name="Project">Modifier le projet</a>
