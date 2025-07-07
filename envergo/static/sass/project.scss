@@ -269,8 +269,8 @@ nav#evaluation-summary {
 #moulinette-form {
   counter-reset: steps;
 
-  label.step,
-  label[for="id_address"] {
+  #form-group-address label,
+  label.step {
     &::before {
       counter-increment: steps;
       content: counter(steps) " "; /* stylelint-disable-line */
@@ -286,6 +286,13 @@ nav#evaluation-summary {
 
   .form-section {
     margin-bottom: 1.5rem;
+    background-color: var(--background-default-grey);
+    padding: 1.25rem;
+    border-radius: 5px;
+
+    .fr-fieldset:last-child {
+      margin-bottom: 0;
+    }
   }
 
   #form-group-created_surface,
@@ -301,13 +308,21 @@ nav#evaluation-summary {
     }
   }
 
+  #form-section-coords .label-content {
+    font-weight: normal !important;
+  }
+
+  #form-section-map {
+    padding-bottom: 0;
+  }
+
   #form-group-address .optional-tag,
   #form-group-final_surface .optional-tag {
     display: none;
   }
 
   #additional-forms.unbound {
-    background-color: var(--background-alt-green-tilleul-verveine);
+    background-color: var(--blue-france-950-100-hover);
     padding: 1rem;
 
     .fr-input-group--error {
@@ -338,16 +353,75 @@ nav#evaluation-summary {
   }
 
   #optional-forms {
-    background-color: var(--background-contrast-grey);
-    padding: 1rem;
+    padding: 0;
+
+    /* Accordion */
+    &.fr-accordion::before {
+      box-shadow: none;
+    }
+
+    .fr-accordion__btn {
+      color: inherit;
+      font-weight: normal;
+      padding: 1.25rem 1.25rem 0.25rem;
+
+      &[aria-expanded="true"] {
+        background-color: var(--background-default-grey);
+      }
+
+      &::after {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    #option-count-wrapper {
+      padding: 0.5rem 1.25rem;
+      display: block;
+
+      &.no-options {
+        padding-bottom: 0.25rem;
+
+        .fr-badge--blue-ecume {
+          color: transparent;
+          background-color: transparent;
+          font-size: 0;
+        }
+      }
+    }
+
+    &.fr-accordion .fr-collapse--expanded {
+      padding: 1.25rem;
+    }
+
+    label small {
+      font-style: italic;
+      color: var(--text-mention-grey);
+    }
 
     .optional-form {
       .fr-input-group[id$="activate"] span.label-content {
         font-weight: bold;
       }
 
-      & > fieldset {
+      & > .fr-fieldset {
         display: none;
+        margin-left: 0;
+        padding-left: 2rem;
+
+        .fr-input-group:not(:last-child) {
+          border-bottom: 1px solid var(--border-default-grey);
+
+          & > .fr-fieldset {
+            margin-bottom: 1rem;
+          }
+        }
+      }
+
+      &:not(:last-child) {
+        & > .fr-fieldset {
+          margin-bottom: 1rem;
+        }
       }
 
       &.active > fieldset {
@@ -1781,9 +1855,6 @@ main.geometricians {
 
   // Single column moulinette form layout
   .fr-input-group-map {
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-
     figure {
       margin-top: 0;
       margin-bottom: 0;

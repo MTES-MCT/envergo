@@ -174,11 +174,18 @@
         <div id="hedge-conditions"
              v-if="mode === 'plantation' || mode === 'read_only'">
           <div class="alt fr-m-2w" id="tile-16">
-            <h3 class="fr-p-1w">Conditions à respecter pour la plantation</h3>
-
-            <div v-if="conditions.status === 'loading'"
-                 class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
-
+            <div class="tile-header fr-p-1w">
+              <h3>Conditions à respecter pour la plantation</h3>
+              <div v-if="conditions.status === 'ok' && hedges.TO_PLANT.count > 0">
+                <span :class="{ 'fr-badge--success': conditions.result, 'fr-badge--warning': !conditions.result }"
+                      class="fr-badge">
+                  <span v-if="conditions.result">Plantation adéquate</span>
+                  <span v-if="!conditions.result">Plantation insuffisante</span>
+                </span>
+              </div>
+              <div v-if="conditions.status === 'loading'"
+                   class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+            </div>
             <div id="conditions"
                  :class="conditions.status"
                  class="fr-px-1w fr-pb-2w "
