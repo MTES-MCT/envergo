@@ -21,15 +21,19 @@
           {{ form.lat.as_hidden }}
 
           {% include '_field_snippet.html' with field=form.address %}
+        </div>
 
+        <div id="form-section-map" class="form-section">
           <div class="fr-input-group fr-input-group-map">
-            <label class="step">
-              Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-              l'emplacement du projet.
-            </label>
+            <div class="fr-mb-3w">
+              <label class="step">
+                Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+                l'emplacement du projet.
+              </label>
+            </div>
             <figure class="fr-content-media">
               <div id="map-container"
-                   class="ratio-16x9 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
+                   class="ratio-16x9 ratio-sm-4x5 fr-mt-1w fr-raw-link">
                 <div class="ratio-content">
                   <div class="leaflet-container">
                     <div id="map"></div>
