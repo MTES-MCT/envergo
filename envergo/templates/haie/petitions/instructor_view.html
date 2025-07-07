@@ -16,8 +16,13 @@
       </li>
       <li class="fr-sidemenu__item">
         <a class="fr-sidemenu__link"
-           href="#section-simulation-data"
-           target="_self">Données de la simulation</a>
+           href="#section-moulinette-result"
+           target="_self">Résultats de la simulation</a>
+      </li>
+      <li class="fr-sidemenu__item">
+        <a class="fr-sidemenu__link"
+           href="#section-plantation-evaluation"
+           target="_self">Acceptabilité de la plantation</a>
       </li>
     </ul>
   </div>
@@ -29,9 +34,9 @@
 
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
     <h1>Informations générales</h1>
-    <section class="fr-my-4w">
+    <section id="section-key-elements" class="fr-my-4w">
       <div class="title-with-link-container">
-        <h2 id="section-key-elements" class="fr-mr-8w">Éléments clés</h2>
+        <h2 class="fr-mr-8w">Éléments clés</h2>
         <a class="fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}">Voir le dossier
         complet</a>
@@ -82,11 +87,11 @@
                 aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
       </div>
     </section>
-    <section class="fr-my-4w">
+    <section id="section-moulinette-result" class="fr-my-4w">
       <div class="title-with-link-container">
-        <h2 id="section-moulinette-result" class="fr-mr-8w">Résultats de la simulation</h2>
+        <h2 class="fr-mr-8w">Résultats de la simulation</h2>
         <a class="fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
-           href="{% url 'petition_project' petition_project.reference %}">Voir tous les résultats</a>
+           href="{% url 'petition_project' petition_project.reference %}">Voir les résultats</a>
       </div>
       {% for regulation in moulinette.regulations|dictsort:"display_order" %}
         <h4 class="fr-mt-3w fr-mb-0">{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h4>
@@ -96,16 +101,21 @@
         </a>
       {% endfor %}
     </section>
-    <section class="fr-my-4w">
-      <h3 id="section-simulation-data" class="fr-mt-4w">Données de la simulation</h3>
+    <section id="section-plantation-evaluation" class="fr-my-4w">
+      <h2 class="fr-mt-4w">Acceptabilité de la plantation</h2>
+      {% if plantation_evaluation.result == "adequate" %}
+        <div class="fr-alert fr-alert--success fr-mb-3w">
+          <h3 class="fr-alert__title">La plantation envisagée est adéquate</h3>
+          <p>Le projet de plantation apparaît acceptable au regard des haies détruites.</p>
+        </div>
+      {% else %}
+        <div class="fr-alert fr-alert--error fr-mb-3w">
+          <h3 class="fr-alert__title">La plantation envisagée n'est pas adéquate</h3>
+          <p>Le projet de plantation décrit n'apparaît pas acceptable au regard des haies détruites.</p>
+        </div>
+      {% endif %}
 
-      <ul class="instructor-view-list">
-        {% for field in moulinette.main_form %}
-          {% if field.name != "haies" %}
-            <li>{% field_summary field %}</li>
-          {% endif %}
-        {% endfor %}
-      </ul>
+      {% include 'haie/moulinette/_plantation_conditions.html' %}
     </section>
 
   </div>
