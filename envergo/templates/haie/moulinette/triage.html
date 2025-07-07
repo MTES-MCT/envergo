@@ -16,7 +16,7 @@
 
         {% include 'haie/moulinette/_form_introduction.html' %}
 
-        <form class="fr-mb-3w" method="post" novalidate>
+        <form class="fr-mb-3w spinner-form" method="post" novalidate>
 
           {% csrf_token %}
           {{ form.department.as_hidden }}
@@ -27,7 +27,9 @@
           <div class="hide-print submit-section cta-group">
             <a href="{% url 'home' %}"
                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line">Revenir à l'accueil</a>
-            <button type="submit" class="fr-btn">Valider</button>
+            <div>
+              <button type="submit" class="fr-btn">Valider</button>
+            </div>
           </div>
         </form>
       </div>
