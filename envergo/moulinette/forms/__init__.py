@@ -102,24 +102,25 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
     def clean(self):
         data = super().clean()
 
-        if self.errors:
-            return data
-
+        # Concerning surfaces we want to support both:
+        #  * the old form with 'existing_surface'
+        #  * the new one with 'created_surface' and 'final_surface'
+        # depending on the data provided, the other fields will be computed
+        # we should add all surfaces error on the new surface fields, as they are the only ones that are displayed
         created_surface = data.get("created_surface")
         final_surface = data.get("final_surface")
 
+        if final_surface < created_surface:
+            self.add_error(
+                "final_surface",
+                _("The total surface must be greater than the created surface"),
+            )
+
+        if self.errors:
+            return data
+
         if final_surface is None:
             self.add_error("final_surface", _("This field is required"))
-
-        # New version, project surface is provided
-        # If existing_surface is missing, we compute it
-        # If both values are somehow provided, we check that they are consistent
-        else:
-            if final_surface < created_surface:
-                self.add_error(
-                    "final_surface",
-                    _("The total surface must be greater than the created surface"),
-                )
         return data
 
 
