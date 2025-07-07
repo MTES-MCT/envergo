@@ -110,17 +110,14 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         created_surface = data.get("created_surface")
         final_surface = data.get("final_surface")
 
-        if final_surface < created_surface:
+        if final_surface is None:
+            self.add_error("final_surface", _("This field is required"))
+        elif final_surface < created_surface:
             self.add_error(
                 "final_surface",
                 _("The total surface must be greater than the created surface"),
             )
 
-        if self.errors:
-            return data
-
-        if final_surface is None:
-            self.add_error("final_surface", _("This field is required"))
         return data
 
 
