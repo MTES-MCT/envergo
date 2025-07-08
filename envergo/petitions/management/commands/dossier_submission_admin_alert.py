@@ -37,10 +37,15 @@ class Command(BaseCommand):
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         handled_demarches = []
 
+        logging.info(f"Get DS files updated since {iso8601_two_hours_ago}")
+
         for activated_department in ConfigHaie.objects.filter(
             is_activated=True, demarche_simplifiee_number__isnull=False
         ).all():
             demarche_number = activated_department.demarche_simplifiee_number
+
+            logging.info(f"Handling demarche {demarche_number} ({activated_department}")
+
             if demarche_number in handled_demarches:
                 continue
 
