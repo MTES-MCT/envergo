@@ -85,6 +85,7 @@ REGULATIONS = Choices(
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
+    ("urbanisme_haie", "Urbanisme haie"),
 )
 
 
@@ -1878,7 +1879,13 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie", "alignement_arbres"]
+    REGULATIONS = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "urbanisme_haie",
+    ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result_debug.html"
