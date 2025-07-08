@@ -48,6 +48,9 @@
       <h3>Autres réglementations concernant le projet</h3>
     {% elif result.name == "RestrictiveRegulations" %}
       <h3>Réglementations concernant le projet</h3>
+    {% elif result.name == "UnsimulatedRegulations" %}
+      <h3>Réglementations non simulées</h3>
+      <p>⚠️ Ces réglementations peuvent concerner le projet mais ne sont pas encore prises en compte par le simulateur.</p>
     {% else %}
       <h3>Autres réglementations</h3>
     {% endif %}

@@ -164,7 +164,8 @@ class ResultGroupEnum(IntEnum):
         1  # if there is some regulation in this group, the project cannot go further
     )
     RestrictiveRegulations = 2  # a dossier will be required
-    OtherRegulations = 3  # these regulations do not impact the project
+    UnsimulatedRegulations = 3  # has an impact but will not be simulated
+    OtherRegulations = 4  # these regulations do not impact the project
 
 
 RESULTS_GROUP_MAPPING = {
@@ -178,13 +179,13 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.dispense_sous_condition: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
     RESULTS.dispense: ResultGroupEnum.OtherRegulations,
     RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
-    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
 }
