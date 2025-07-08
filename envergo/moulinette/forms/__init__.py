@@ -123,17 +123,18 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
 
 REIMPLANTATION_CHOICES = (
     (
+        "replantation",
+        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
+        "Oui, en plantant une haie à un autre endroit",
+    ),
+    (
         "remplacement",
         mark_safe(
             "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
         ),
         "Oui, en remplaçant la haie détruite au même endroit",
     ),
-    (
-        "replantation",
-        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
-        "Oui, en plantant une haie à un autre endroit",
-    ),
+    
     ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
 )
 
