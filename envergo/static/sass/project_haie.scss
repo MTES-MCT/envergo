@@ -639,6 +639,7 @@ pre#invitation-token-email-text {
 
 ul#instruction-summary-list {
   list-style-type: none;
+  padding: 0;
 }
 
 .fr-icon-haie::before,
@@ -651,4 +652,10 @@ div.title-with-link-container {
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: space-between;
+}
+
+div#instructor-view-side-menu {
+  max-height: calc(
+    100vh - 9rem
+  ); // remove the header height from the sidemenu height
 }
