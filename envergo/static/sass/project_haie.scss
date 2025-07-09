@@ -647,7 +647,8 @@ ul#instruction-summary-list {
   mask-image: url("/static/icons/haie.svg");
 }
 
-div.title-with-link-container {
+div.title-with-link-container,
+.regulation-item-title {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;

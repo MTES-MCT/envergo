@@ -37,12 +37,12 @@
     <section id="section-key-elements" class="fr-my-4w">
       <div class="title-with-link-container">
         <h2 class="fr-mr-8w">Éléments clés</h2>
-        <a class="fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}">Voir le dossier
         complet</a>
       </div>
       <h3>Motif</h3>
-      <span class="fr-text--lead">{{ moulinette.main_form.motif.field.choices|get_choice_label:moulinette.main_form.motif.value }}</span>
+      <span>{{ moulinette.main_form.motif.field.choices|get_choice_label:moulinette.main_form.motif.value }}</span>
 
       <h3 class="fr-mt-3w">Destruction</h3>
       <ul class="instructor-view-list">
@@ -90,11 +90,13 @@
     <section id="section-moulinette-result" class="fr-my-4w">
       <div class="title-with-link-container">
         <h2 class="fr-mr-8w">Résultats de la simulation</h2>
-        <a class="fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project' petition_project.reference %}">Voir les résultats</a>
       </div>
       {% for regulation in moulinette.regulations|dictsort:"display_order" %}
-        <h4 class="fr-mt-3w fr-mb-0">{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h4>
+        <b class="fr-mt-3w fr-mb-0 regulation-item-title">
+          {% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}
+        </b>
         <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
            href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
           Voir plus de détails
