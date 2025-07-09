@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
+from dateutil import parser
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
@@ -241,7 +242,9 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_state = dossier["state"]
         if "dateDepot" in dossier and dossier["dateDepot"]:
-            self.demarches_simplifiees_date_depot = dossier["dateDepot"]
+            self.demarches_simplifiees_date_depot = parser.isoparse(
+                dossier["dateDepot"]
+            )
 
         self.demarches_simplifiees_raw_dossier = dossier
 
