@@ -329,7 +329,7 @@ def get_demarches_simplifiees_dossier(
     returns:
         Dossier object if found, None otherwise.
     """
-    now_utc = datetime.datetime.now(datetime.UTC)
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
 
     one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
     if (
