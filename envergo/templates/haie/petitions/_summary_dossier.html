@@ -5,9 +5,9 @@
   <ul id="instruction-summary-list">
     <li>
       {% if petition_project.demarches_simplifiees_date_depot %}
-        <span class="fr-icon-calendar-line" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot }}
+        <span class="fr-icon-calendar-line" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
       {% else %}
-        <span class="fr-icon-calendar-line" aria-hidden="true"></span> Créé le {{ petition_project.created_at }}
+        <span class="fr-icon-calendar-line" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
       {% endif %}
     </li>
     <li>
