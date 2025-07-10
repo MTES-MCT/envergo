@@ -62,6 +62,7 @@ DJANGO_APPS = [
     # "django.contrib.admin",  # it's overriden below
     "django.forms",
     "django.contrib.gis",
+    "django.contrib.sitemaps",
 ]
 THIRD_PARTY_APPS = [
     "phonenumber_field",
