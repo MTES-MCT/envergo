@@ -134,7 +134,6 @@ REIMPLANTATION_CHOICES = (
         ),
         "Oui, en remplaçant la haie détruite au même endroit",
     ),
-
     ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
 )
 
