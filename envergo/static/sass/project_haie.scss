@@ -201,6 +201,10 @@ div#app {
       }
     }
 
+    #id_address {
+      background-color: var(--grey-1000-50);
+    }
+
     #sidebar {
       bottom: 0;
       overflow-y: auto;
@@ -310,80 +314,77 @@ div#app {
           }
         }
       }
+    }
+  }
+}
 
-      div#hedge-conditions {
-        .tile-header {
-          background-color: var(--blue-france-925-125);
-          color: var(--blue-france-sun-113-625);
+div#app div#saisie-ui #sidebar div#hedge-conditions,
+section#section-plantation-evaluation div#hedge-conditions {
+  .tile-header {
+    background-color: var(--blue-france-925-125);
+    color: var(--blue-france-sun-113-625);
 
-          .fr-badge::before {
-            background: none;
-            width: 0;
-            height: 0;
-          }
-        }
+    .fr-badge::before {
+      background: none;
+      width: 0;
+      height: 0;
+    }
+  }
 
-        h3 {
-          margin: 0;
-          font-weight: 500 !important;
-          font-size: 16px !important;
-        }
+  h3 {
+    margin: 0;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+  }
 
-        div#conditions {
-          &.loading {
-            --text-title-grey: var(--text-disabled-grey);
+  div#conditions {
+    &.loading {
+      --text-title-grey: var(--text-disabled-grey);
 
-            color: var(--text-disabled-grey);
-          }
+      color: var(--text-disabled-grey);
+    }
 
-          .fr-badge {
-            margin-top: 0.2em;
+    .fr-badge {
+      margin-top: 0.2em;
 
-            &::before {
-              margin: 0;
-            }
-          }
-
-          .fr-badge--error {
-            color: var(--grey-625-425);
-            background-color: var(--background-contrast-grey);
-          }
-
-          span.fr-icon {
-            line-height: 1.75rem;
-            color: var(--grey-625-425);
-          }
-
-          span.fr-icon.success {
-            color: var(--success-425-625);
-          }
-
-          p {
-            line-height: 1.2rem;
-            font-size: 14px;
-            margin: 0;
-          }
-
-          h6 {
-            margin: 0;
-            font-weight: 500 !important;
-            font-size: 16px !important;
-          }
-
-          .condition-content {
-            display: flex;
-            margin-top: 1rem;
-
-            div {
-              margin-right: 0.8rem;
-            }
-          }
-        }
+      &::before {
+        margin: 0;
       }
     }
 
-    #id_address {
-      background-color: var(--grey-1000-50);
+    .fr-badge--error {
+      color: var(--grey-625-425);
+      background-color: var(--background-contrast-grey);
+    }
+
+    span.fr-icon {
+      line-height: 1.75rem;
+      color: var(--grey-625-425);
+    }
+
+    span.fr-icon.success {
+      color: var(--success-425-625);
+    }
+
+    p {
+      line-height: 1.2rem;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    h6 {
+      margin: 0;
+      font-weight: 500 !important;
+      font-size: 16px !important;
+    }
+
+    .condition-content {
+      display: flex;
+      margin-top: 1rem;
+
+      div {
+        margin-right: 0.8rem;
+      }
     }
   }
 }
@@ -588,17 +589,6 @@ div#project-specifications-instructor {
   }
 }
 
-.ds-item > .fr-sidemenu__link::after {
-  content: "";
-  background-image: url("/static/images/logo_demarches_simplifiees.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center right;
-  display: block;
-  width: 64px;
-  height: 64px;
-}
-
 ul.instructor-view-list {
   list-style-type: none;
   padding: 0;
@@ -606,10 +596,6 @@ ul.instructor-view-list {
 
 .section-ds {
   border-top: 1px solid var(--border-default-grey);
-}
-
-div#project-dossier-no {
-  border-bottom: solid 1px var(--border-default-grey);
 }
 
 .ds-files {
@@ -626,6 +612,8 @@ div#project-dossier-no {
 @media (width >=48em) {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+    padding-right: 1.5rem;
+    border-right: solid 1px var(--border-default-grey);
   }
 
   // Apply border grey on main instead of sidemenu to have it full height
@@ -636,15 +624,6 @@ div#project-dossier-no {
     padding-bottom: 0;
     padding-left: 0;
     box-shadow: none;
-  }
-
-  div#project-specifications-instructor {
-    padding-left: 1.5rem;
-    border-left: solid 1px var(--border-default-grey);
-  }
-
-  div#project-dossier-no {
-    border-bottom: solid 1px var(--border-default-grey);
   }
 }
 
@@ -658,10 +637,26 @@ pre#invitation-token-email-text {
   display: none;
 }
 
+ul#instruction-summary-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.fr-icon-haie::before,
+.fr-icon-haie::after {
+  mask-image: url("/static/icons/haie.svg");
+}
+
 div.title-with-link-container,
 .regulation-item-title {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: space-between;
+}
+
+div#instructor-view-side-menu {
+  max-height: calc(
+    100vh - 9rem
+  ); // remove the header height from the sidemenu height
 }

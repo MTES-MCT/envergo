@@ -1,5 +1,7 @@
 {% extends 'haie/base.html' %}
 
+{% load petitions %}
+
 {% load static %}
 
 {% block title %}
@@ -47,7 +49,7 @@
               <tbody>
                 {% for project in object_list %}
                   <tr class="project">
-                    <td>{{ project.demarches_simplifiees_dossier_number }}</td>
+                    <td>{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</td>
                     <td>{{ project.created_at|date:"SHORT_DATE_FORMAT" }}</td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{{ project.hedge_data.length_to_plant|floatformat:"0g" }}&nbsp;m</td>

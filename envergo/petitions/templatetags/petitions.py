@@ -22,6 +22,16 @@ def criterion_instructor_view(context, regulation, criterion, project, moulinett
     )
 
 
+@register.simple_tag()
+def criterion_instructor_side_nav(regulation, criterion):
+    template = (
+        f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
+    )
+    return render_to_string(
+        template,
+    )
+
+
 @register.simple_tag(takes_context=True)
 def criterion_instructor_result_details(
     context, regulation, criterion, project, moulinette
@@ -81,3 +91,9 @@ def display_property(hedge_property):
 def sum_degradee_and_buissonnante(dict_by_type):
     """Sum the values of 'degradee' and 'buissonnante' types in a dictionary."""
     return dict_by_type.get("degradee", 0) + dict_by_type.get("buissonnante", 0)
+
+
+@register.filter
+def format_ds_number(ds_number):
+    s = str(ds_number)
+    return f"{s[:4]}-{s[4:]}" if len(s) >= 8 else ds_number
