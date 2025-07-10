@@ -1,0 +1,7 @@
+{% include "hedges/_hedges_properties.html" %}
+
+{% if moulinette.catalog.protected_species %}
+  {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+{% else %}
+  <p>Pas de liste d’espèces associée à cette simulation</p>
+{% endif %}

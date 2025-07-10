@@ -656,6 +656,10 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         if not context["is_department_instructor"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):

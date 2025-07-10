@@ -40,6 +40,38 @@ def criterion_instructor_result_details(
         return ""
 
 
+@register.simple_tag
+def regulation_plantation_conditions(plantation_evaluation, regulation):
+    condition_to_display = []
+    for condition in plantation_evaluation.conditions:
+        for criterion in regulation.criteria.all():
+            if (
+                condition.criterion_evaluator == criterion.get_evaluator()
+                and condition.must_display()
+            ):
+                condition_to_display.append(condition)
+
+    template = "hedges/_plantation_conditions.html"
+    return render_to_string(
+        template,
+        context={
+            "conditions": condition_to_display,
+        },
+    )
+
+
+@register.simple_tag
+def regulation_has_condition_to_display(plantation_evaluation, regulation):
+    for condition in plantation_evaluation.conditions:
+        for criterion in regulation.criteria.all():
+            if (
+                condition.criterion_evaluator == criterion.get_evaluator()
+                and condition.must_display()
+            ):
+                return True
+    return False
+
+
 @register.filter
 def display_property(hedge_property):
     return bool(hedge_property[TO_REMOVE] or hedge_property[TO_PLANT])

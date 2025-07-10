@@ -36,7 +36,14 @@
                 </section>
               {% endfor %}
             {% endif %}
-
+            {% regulation_has_condition_to_display plantation_evaluation regulation as has_condition_to_display %}
+            {% if has_condition_to_display %}
+              <h3>Acceptabilité de la plantation</h3>
+              <section>
+                <p>Conditions de plantation à respecter pour cette réglementation :</p>
+                {% regulation_plantation_conditions plantation_evaluation regulation %}
+              </section>
+            {% endif %}
             {% for criterion in regulation.criteria.all %}
               <section id="{{ regulation.slug }}-{{ criterion.slug }}">
                 {% criterion_instructor_view regulation criterion petition_project moulinette %}
