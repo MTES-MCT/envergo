@@ -657,3 +657,11 @@ div#invitation-token-email-html {
 pre#invitation-token-email-text {
   display: none;
 }
+
+div.title-with-link-container,
+.regulation-item-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}

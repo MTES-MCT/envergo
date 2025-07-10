@@ -20,6 +20,23 @@
         {% if regulation.slug == current_regulation.slug %}
           <section class="fr-my-3w" id="{{ regulation.slug }}">
             <h1>{{ regulation.title }}</h1>
+            <div class="title-with-link-container">
+              <h2 class="fr-mr-8w">Résultats de la simulation</h2>
+              <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+                 href="{% url 'petition_project' petition_project.reference %}">Voir le résultat</a>
+            </div>
+
+            {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
+
+            {% if regulation.has_instructor_result_details_templates %}
+              <h3>Détails du résultat de la simulation</h3>
+              {% for criterion in regulation.criteria.all %}
+                <section id="{{ regulation.slug }}-{{ criterion.slug }}">
+                  {% criterion_instructor_result_details regulation criterion petition_project moulinette %}
+                </section>
+              {% endfor %}
+            {% endif %}
+
             {% for criterion in regulation.criteria.all %}
               <section id="{{ regulation.slug }}-{{ criterion.slug }}">
                 {% criterion_instructor_view regulation criterion petition_project moulinette %}
