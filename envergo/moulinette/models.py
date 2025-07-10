@@ -585,12 +585,24 @@ class Regulation(models.Model):
         """Get the result group of the regulation, depending on its impact on the project."""
         return RESULTS_GROUP_MAPPING[self.result]
 
-    def has_instructor_result_details_templates(self) -> bool:
+    def has_instructor_result_details_template(self) -> bool:
         """Check if the regulation has templates for instructor result details."""
         for criterion in self.criteria.all():
             try:
                 get_template(
                     f"haie/petitions/{self.slug}/{criterion.slug}_instructor_result_details.html"
+                )
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
+
+    def has_plantation_condition_details_template(self) -> bool:
+        """Check if the regulation has templates for plantation condition details."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(
+                    f"haie/petitions/{self.slug}/{criterion.slug}_plantation_condition_details.html"
                 )
                 return True
             except TemplateDoesNotExist:

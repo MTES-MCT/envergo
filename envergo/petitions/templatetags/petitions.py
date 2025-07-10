@@ -1,3 +1,5 @@
+from typing import Literal
+
 from django import template
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
@@ -6,20 +8,6 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.petitions.regulations import get_instructor_view_context
 
 register = template.Library()
-
-
-@register.simple_tag(takes_context=True)
-def criterion_instructor_view(context, regulation, criterion, project, moulinette):
-    template = f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor.html"
-    context_dict = context.flatten()
-    context_dict.update(
-        get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
-    )
-
-    return render_to_string(
-        template,
-        context=context_dict,
-    )
 
 
 @register.simple_tag()
@@ -33,10 +21,15 @@ def criterion_instructor_side_nav(regulation, criterion):
 
 
 @register.simple_tag(takes_context=True)
-def criterion_instructor_result_details(
-    context, regulation, criterion, project, moulinette
+def criterion_instructor_view_part(
+    context,
+    part_name: Literal["instructor_result_details", "plantation_condition_details"],
+    regulation,
+    criterion,
+    project,
+    moulinette,
 ):
-    template = f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_result_details.html"
+    template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
     context_dict = context.flatten()
     context_dict.update(
         get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
