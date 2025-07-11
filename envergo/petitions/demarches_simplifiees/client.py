@@ -57,7 +57,7 @@ class DemarchesSimplifieesClient:
                 },
             )
 
-        except (TransportError, GraphQLError) as e:
+        except (TransportError, GraphQLError, ConnectionError) as e:
             logger.error(
                 "Demarches simplifiees API request failed",
                 extra={
