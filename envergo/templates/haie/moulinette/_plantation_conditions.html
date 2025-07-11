@@ -11,7 +11,7 @@
   </div>
   <div id="conditions" class="fr-px-1w fr-pb-2w">
     {% for condition in plantation_evaluation.conditions %}
-      {% if condition.label == 'Type de haie plantée' and condition.hint %}
+      {% if condition.must_display and condition.label == 'Type de haie plantée' and condition.hint %}
         <div class="condition-hint">
           <p class="fr-my-1w">
             <span>{{ condition.hint|safe }}</span>
@@ -20,20 +20,22 @@
       {% endif %}
     {% endfor %}
     {% for condition in plantation_evaluation.conditions %}
-      <div class="condition-content">
-        <div>
-          <p class="fr-badge {% if condition.result %}fr-badge--success{% else %}fr-badge--error{% endif %}"></p>
+      {% if condition.must_display %}
+        <div class="condition-content">
+          <div>
+            <p class="fr-badge {% if condition.result %}fr-badge--success{% else %}fr-badge--error{% endif %}"></p>
+          </div>
+          <div>
+            <h6>{{ condition.label }}</h6>
+            {% if condition.hint and condition.label != 'Type de haie plantée' %}
+              <p>
+                <span class="fr-hint-text fr-mb-1w">{{ condition.hint|safe }}</span>
+              </p>
+            {% endif %}
+            <p>{{ condition.text|safe }}</p>
+          </div>
         </div>
-        <div>
-          <h6>{{ condition.label }}</h6>
-          {% if condition.hint and condition.label != 'Type de haie plantée' %}
-            <p>
-              <span class="fr-hint-text fr-mb-1w">{{ condition.hint|safe }}</span>
-            </p>
-          {% endif %}
-          <p>{{ condition.text|safe }}</p>
-        </div>
-      </div>
+      {% endif %}
     {% endfor %}
   </div>
 </div>
