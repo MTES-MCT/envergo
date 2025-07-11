@@ -136,6 +136,17 @@ class DossierState(Enum):
     refuse = "refuse"
     sans_suite = "sans_suite"
 
+    @property
+    def display_value(self):
+        map = {
+            DossierState.accepte: "Accepté",
+            DossierState.en_construction: "En construction",
+            DossierState.en_instruction: "En instruction",
+            DossierState.refuse: "Refusé",
+            DossierState.sans_suite: "Sans suite",
+        }
+        return map.get(self, "Inconnu")
+
 
 class EntrepriseEtatAdministratif(Enum):
     Actif = "Actif"

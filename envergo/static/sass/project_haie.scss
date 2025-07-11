@@ -644,3 +644,9 @@ ul#instruction-summary-list {
 .fr-icon-haie::after {
   mask-image: url("/static/icons/haie.svg");
 }
+
+#table-dossier-list {
+  td {
+    height: 72px;
+  }
+}
