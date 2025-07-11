@@ -1,4 +1,5 @@
 from django import template
+from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
@@ -26,9 +27,12 @@ def criterion_instructor_side_nav(regulation, criterion):
     template = (
         f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
     )
-    return render_to_string(
-        template,
-    )
+    try:
+        return render_to_string(
+            template,
+        )
+    except TemplateDoesNotExist:
+        return ""
 
 
 @register.filter

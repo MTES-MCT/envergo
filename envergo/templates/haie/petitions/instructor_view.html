@@ -1,5 +1,7 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
+{% load evaluations %}
+
 {% load moulinette %}
 {% load utils %}
 {% load petitions %}
@@ -7,26 +9,6 @@
 {% load static %}
 
 {% block title %}Instruction du dossier – Informations générales{% endblock %}
-
-{% block general_secondary_side_nav %}
-  <div>
-    <ul class="fr-sidemenu__list">
-      <li class="fr-sidemenu__item">
-        <a class="fr-sidemenu__link" href="#section-key-elements" target="_self">Éléments clés</a>
-      </li>
-      <li class="fr-sidemenu__item">
-        <a class="fr-sidemenu__link"
-           href="#section-moulinette-result"
-           target="_self">Résultats de la simulation</a>
-      </li>
-      <li class="fr-sidemenu__item">
-        <a class="fr-sidemenu__link"
-           href="#section-plantation-evaluation"
-           target="_self">Acceptabilité de la plantation</a>
-      </li>
-    </ul>
-  </div>
-{% endblock %}
 
 {% block project_content %}
 
@@ -93,15 +75,20 @@
         <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project' petition_project.reference %}">Voir les résultats</a>
       </div>
-      {% for regulation in moulinette.regulations|dictsort:"display_order" %}
-        <b class="fr-mt-3w fr-mb-0 regulation-item-title">
-          {% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}
-        </b>
-        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
-           href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
-          Voir plus de détails
-        </a>
-      {% endfor %}
+      <div class="fr-container--fluid">
+        {% for regulation in moulinette.regulations|dictsort:"display_order" %}
+          <div class="fr-mb-4w">
+            <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
+               href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
+              <div class="fr-grid-row">
+                <h5 class="fr-col-12 fr-col-sm-7 fr-col-md-12 fr-col-lg-7 fr-mb-2v">{{ regulation.title }}</h5>
+                <span class="fr-col-12 fr-col-sm-5 fr-col-md-12 fr-col-lg-5 fr-mb-2v">{% result_tag regulation.result regulation.result_tag_style %}</span>
+              </div>
+              <span>Voir plus de détails</span>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
     </section>
     <section id="section-plantation-evaluation" class="fr-my-4w">
       <h2 class="fr-mt-4w">Acceptabilité de la plantation</h2>
