@@ -15,9 +15,12 @@ def criterion_instructor_side_nav(regulation, criterion):
     template = (
         f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
     )
-    return render_to_string(
-        template,
-    )
+    try:
+        return render_to_string(
+            template,
+        )
+    except TemplateDoesNotExist:
+        return ""
 
 
 @register.simple_tag(takes_context=True)
