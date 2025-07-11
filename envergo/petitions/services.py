@@ -192,6 +192,7 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
 
 
 def extract_data_from_fields(config, dossier):
+    """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
     city = ""
     pacage = ""
     organization = ""
