@@ -84,11 +84,11 @@ div#app {
       position: absolute;
       background: white;
       color: black;
-      padding: 10px;
-      border: 2px solid black;
       border-radius: 0.75rem;
       z-index: 1000;
       font-size: 14px;
+      padding: 2px 6px;
+      border: 1px solid black;
     }
 
     #controls-container {
@@ -199,6 +199,26 @@ div#app {
       &.hidden {
         display: none;
       }
+    }
+
+    .leaflet-vertex-icon {
+      margin-left: -8px !important;
+      margin-top: -8px !important;
+      width: 16px !important;
+      height: 16px !important;
+      border-radius: 50%;
+      opacity: 1;
+      border: 2px solid #333;
+    }
+
+    .leaflet-middle-icon {
+      margin-left: -6px ip !important;
+      margin-top: -6px ip !important;
+      width: 12px ip !important;
+      height: 12px ip !important;
+      border-radius: 50%;
+      opacity: 0.8 !important;
+      border: 1px solid #333;
     }
 
     #sidebar {
