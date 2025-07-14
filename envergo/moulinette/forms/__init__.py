@@ -112,6 +112,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
 
         if final_surface is None:
             self.add_error("final_surface", _("This field is required"))
+        elif created_surface is None:
+            self.add_error("created_surface", _("This field is required"))
         elif final_surface < created_surface:
             self.add_error(
                 "final_surface",
