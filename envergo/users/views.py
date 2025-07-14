@@ -110,6 +110,7 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
 
 class NewsletterOptIn(FormView):
     form_class = NewsletterOptInForm
+    http_method_names = ["post"]  # js only
 
     def form_valid(self, form):
         """Send the form data to Brevo API."""
