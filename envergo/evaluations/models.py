@@ -850,3 +850,8 @@ class RecipientStatus(models.Model):
     class Meta:
         verbose_name = _("Recipient status")
         verbose_name_plural = _("Recipient statuses")
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_index", fields=["regulatory_notice_log", "recipient"]
+            )
+        ]
