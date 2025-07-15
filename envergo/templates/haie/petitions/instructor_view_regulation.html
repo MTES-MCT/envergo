@@ -19,9 +19,9 @@
       {% for regulation in moulinette.regulations %}
         {% if regulation.slug == current_regulation.slug %}
           <section class="fr-my-3w" id="moulinette-regulation-result">
-            <h1>{{ regulation.title }}</h1>
+            <h2>{{ regulation.title }}</h2>
             <div class="title-with-link-container">
-              <h2 class="fr-mr-8w">Résultats de la simulation</h2>
+              <h3 class="fr-mr-8w">Résultats de la simulation</h3>
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
                  href="{% url 'petition_project' petition_project.reference %}">Voir le résultat</a>
             </div>
@@ -29,7 +29,7 @@
             {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
 
             {% if regulation.has_instructor_result_details_template %}
-              <h3>Détails du résultat de la simulation</h3>
+              <h4>Détails du résultat de la simulation</h4>
               {% for criterion in regulation.criteria.all %}
                 <section id="{{ regulation.slug }}-{{ criterion.slug }}" class="fr-mb-5w">
                   {% criterion_instructor_view_part "instructor_result_details" regulation criterion petition_project moulinette %}
@@ -40,7 +40,7 @@
             {% regulation_has_condition_to_display plantation_evaluation regulation as has_condition_to_display %}
             {% if has_condition_to_display %}
               <section id="section-plantation-evaluation">
-                <h2>Acceptabilité de la plantation</h2>
+                <h3>Acceptabilité de la plantation</h3>
                 <p>Conditions de plantation à respecter pour cette réglementation :</p>
                 <div id="hedge-conditions">{% regulation_plantation_conditions plantation_evaluation regulation %}</div>
               </section>
@@ -48,7 +48,7 @@
 
             {% if regulation.has_plantation_condition_details_template %}
               <section class="fr-mb-5w">
-                <h3>Détails du calcul d'acceptabilité de la plantation</h3>
+                <h4>Détails du calcul d'acceptabilité de la plantation</h4>
                 {% for criterion in regulation.criteria.all %}
                   {% criterion_instructor_view_part "plantation_condition_details" regulation criterion petition_project moulinette %}
                 {% endfor %}

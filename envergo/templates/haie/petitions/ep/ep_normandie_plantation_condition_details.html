@@ -1,7 +1,7 @@
 {% load petitions %}
 {% load utils %}
 
-<h4 class="fr-mt-3w">Calcul de la compensation attendue</h4>
+<h5 class="fr-mt-3w">Calcul de la compensation attendue</h5>
 
 <ul class="instructor-view-list">
   {% include 'haie/petitions/_item.html' with label="Coefficient compensation primaire" value=replantation_coefficient|floatformat:"1g" comment="C’est-à-dire hors réduction permise par le projet de plantation" %}
@@ -14,7 +14,7 @@
   </li>
 </ul>
 
-<h4>Plantation proposée</h4>
+<h5>Plantation proposée</h5>
 <div id="normandie_plantation_table" class="fr-table">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
