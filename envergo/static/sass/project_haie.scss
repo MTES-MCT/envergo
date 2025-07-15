@@ -643,6 +643,15 @@ div#project-dossier-no {
   }
 }
 
+.ds-message {
+  background-color: var(--background-alt-grey);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
+  }
+}
+
 @media (width >=48em) {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
