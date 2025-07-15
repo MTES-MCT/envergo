@@ -453,6 +453,40 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
+def test_petition_project_instructor_messagerie_ds(
+    mock_post, instructor_haie_user_44, client, site
+):
+    """Test messagerie view"""
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
+
+    mock_post.return_value = mock_response
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory()
+
+    instructor_messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_list(
     inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
