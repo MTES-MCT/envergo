@@ -36,12 +36,6 @@
                                  href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
                                  {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
                               {{ regulation.title }}</a>
-
-                              {% if regulation.slug == current_regulation.slug %}
-                                {% for criterion in regulation.criteria.all %}
-                                  {% criterion_instructor_side_nav regulation criterion %}
-                                {% endfor %}
-                              {% endif %}
                             </li>
                           {% endfor %}
                         </ul>
