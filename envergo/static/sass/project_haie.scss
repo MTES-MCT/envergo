@@ -624,6 +624,10 @@ ul.instructor-view-list {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
     padding-right: 1.5rem;
+
+    .fr-collapse {
+      margin: 0;
+    }
   }
 
   // Apply border grey on main instead of sidemenu to have it full height
