@@ -630,6 +630,15 @@ ul.instructor-view-list {
   }
 }
 
+.ds-message {
+  background-color: var(--background-alt-grey);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
+  }
+}
+
 @media (width >=48em) {
   div#project-specifications-instructor {
     border-left: 1px solid var(--border-default-grey);
