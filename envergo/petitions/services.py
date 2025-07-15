@@ -489,6 +489,10 @@ def fetch_project_details_from_demarches_simplifiees(
     return dossier
 
 
+def fetch_project_messages_from_demarches_simplifiees(petition_project, config, site):
+    return []
+
+
 class PetitionProjectCreationProblem:
     """An object to store a problem during the creation of a petition project"""
 

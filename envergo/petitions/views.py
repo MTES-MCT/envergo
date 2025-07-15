@@ -36,6 +36,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    fetch_project_messages_from_demarches_simplifiees,
     get_instructor_view_context,
 )
 from envergo.utils.mattermost import notify
@@ -739,6 +740,30 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     matomo_category = "messagerie"
     matomo_tag = "lecture"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["messages"] = fetch_project_messages_from_demarches_simplifiees(
+            self.object,
+            context["moulinette"],
+            self.request.site,
+        )
+
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Affichage d'un dossier factice.""",
+            )
+
+        # Send message if info from DS is not in project details
+        if not context["messages"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les messages du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
 
     def get_success_url(self):
         return reverse(
