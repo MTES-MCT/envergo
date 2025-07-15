@@ -14,13 +14,6 @@
                rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
           </li>
           <li>
-            <a class="fr-btn  fr-btn--secondary fr-btn--icon-right fr-icon-mail-line"
-               title="Dossier dans Démarches Simplifiées"
-               href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}/messagerie"
-               target="_blank"
-               rel="noopener external">Contacter le pétitionnaire</a>
-          </li>
-          <li>
             <a class="fr-btn  fr-btn--secondary fr-btn--icon-right fr-icon-download-line"
                title="Dossier dans Démarches Simplifiées"
                href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger le tracé des haies</a>
