@@ -1,5 +1,4 @@
 from django import template
-from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
@@ -20,19 +19,6 @@ def criterion_instructor_view(context, regulation, criterion, project, moulinett
         template,
         context=context_dict,
     )
-
-
-@register.simple_tag()
-def criterion_instructor_side_nav(regulation, criterion):
-    template = (
-        f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
-    )
-    try:
-        return render_to_string(
-            template,
-        )
-    except TemplateDoesNotExist:
-        return ""
 
 
 @register.filter
