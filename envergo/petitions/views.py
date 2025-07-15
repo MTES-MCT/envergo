@@ -541,6 +541,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    matomo_category = "project"
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
@@ -552,7 +553,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
-                    "projet",
+                    self.matomo_category,
                     self.matomo_tag,
                     self.request,
                     **self.object.get_log_event_data(),
@@ -730,6 +731,19 @@ class PetitionProjectInstructorDossierDSView(
             )
 
         return context
+
+
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    matomo_category = "messagerie"
+    matomo_tag = "lecture"
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):

@@ -1,0 +1,19 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load utils %}
+
+{% block title %}Instruction du dossier – Messagerie{% endblock %}
+
+{% block project_content %}
+
+  <h2>Messagerie</h2>
+
+  <p class="text-light">
+    <strong>Cette page est en cours de construction.</strong>
+    En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
+    <a href="https://www.demarches-simplifiees.fr/procedures/{{ project_details.demarche_simplifiee_number }}/dossiers/{{ project_details.demarches_simplifiees_dossier_number }}/messagerie"
+       target="_blank"
+       rel="noopener external">en cliquant sur ce lien</a>.
+  </p>
+
+{% endblock %}

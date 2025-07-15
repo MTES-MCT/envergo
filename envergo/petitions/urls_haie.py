@@ -8,6 +8,7 @@ from envergo.petitions.views import (
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorView,
@@ -25,6 +26,11 @@ instruction_urlpatterns = [
         "dossier-ds/",
         PetitionProjectInstructorDossierDSView.as_view(),
         name="petition_project_instructor_dossier_ds_view",
+    ),
+    path(
+        "messagerie/",
+        PetitionProjectInstructorMessagerieView.as_view(),
+        name="petition_project_instructor_messagerie_view",
     ),
     path(
         "notes/",
