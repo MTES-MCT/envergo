@@ -15,4 +15,14 @@
     <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
   </p>
 
+  <section class="ds-messages">
+    <div class="fr-p-3w ds-message">
+      <div class="fr-mb-1w ds-message__metadata">
+        <span class="ds-message__exp">Guichet unique de la haie</span> –
+        <span class="ds-message__date">1 juillet 2025 à 9:13</span>
+      </div>
+      <div class="ds-message__content">Bonjour, nous avons bien reçu votre message.</div>
+    </div>
+    {% for message in dossier.messages %}{% endfor %}
+  </section>
 {% endblock %}
