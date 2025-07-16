@@ -10,3 +10,4 @@ class PetitionsConfig(AppConfig):
         import envergo.petitions.regulations.conditionnalitepac  # noqa
         import envergo.petitions.regulations.ep  # noqa
         import envergo.petitions.regulations.natura2000_haie  # noqa
+        import envergo.petitions.regulations.urbanisme_haie  # noqa

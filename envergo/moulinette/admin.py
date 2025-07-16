@@ -84,7 +84,7 @@ class CriterionAdminForm(forms.ModelForm):
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    perimeter = PerimeterChoiceField(queryset=Perimeter.objects.all())
+    perimeter = PerimeterChoiceField(required=False, queryset=Perimeter.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
