@@ -8,13 +8,6 @@
 
   <h2>Messagerie</h2>
 
-  <p class="text-light">
-    <strong>Cette page est en cours de construction.</strong>
-    <br>
-    En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
-    <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
-  </p>
-
   <section class="ds-messages">
     {% for message in project_details.ds_data.messages %}
       <div class="ds-message fr-my-4w fr-p-3w">
@@ -28,4 +21,12 @@
       </div>
     {% endfor %}
   </section>
+
+  <p class="text-light">
+    <strong>Cette page est en cours de construction.</strong>
+    <br>
+    En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
+    <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
+  </p>
+
 {% endblock %}
