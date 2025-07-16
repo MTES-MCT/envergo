@@ -8,7 +8,6 @@
   var LAT_FIELD_ID = 'id_lat';
   var LNG_FIELD_ID = 'id_lng';
   var IS_MAP_STATIC = {{ is_map_static|yesno:'true,false' }};
-  var SIMULATION_FORM_ID = "moulinette-form";
   var MAP_TYPE = "Form";  // This is only for analytics purpose
   var SHOW_PCI_LAYER = true;
 </script>
@@ -21,6 +20,5 @@
 <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 <script defer src="{% static 'js/libs/moulinette_map.js' %}"></script>
 <script defer src="{% static 'js/libs/map_widget_events.js' %}"></script>
-<script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
 <script defer src="{% static 'js/libs/optional_forms.js' %}"></script>
 <script defer src="{% static 'js/libs/help_sidebars.js' %}"></script>

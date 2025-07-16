@@ -519,12 +519,15 @@ class BaseMoulinetteResult(FormView):
             return res
 
         elif triage_form is not None:
+            # Matomo parameters are stored in session, but some might remain in the url.
+            # We need to prevent duplicate values
+            params = get_matomo_tags(self.request)
+            params.update(self.request.GET.dict())
             log_event(
                 "simulateur",
                 "soumission_autre",
                 self.request,
-                **self.request.GET.dict(),
-                **get_matomo_tags(self.request),
+                **params,
             )
             return res
         else:
