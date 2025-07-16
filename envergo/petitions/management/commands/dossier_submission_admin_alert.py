@@ -33,7 +33,7 @@ class Command(BaseCommand):
         two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
         handled_demarches = []
 
-        logging.info(f"Get DS files updated since {iso8601_two_hours_ago}")
+        logging.info(f"Get DS files updated since {two_hours_ago_utc}")
 
         # As long as a demarche number is set, we run the sync
         # (event if the dept is not activated yet)
