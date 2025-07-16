@@ -19,7 +19,7 @@
   <section class="ds-messages">
     {% for message in project_details.ds_data.messages %}
       <div class="ds-message fr-my-4w fr-p-3w">
-        <div class="fr-mb-1w ds-message__metadata">
+        <div class="fr-mb-2w ds-message__metadata">
           <span class="ds-message__exp">{{ message.email }}</span> –
           {% with message_date=message.createdAt|to_datetime %}
             <span class="ds-message__date">{{ message_date|date }} à {{ message_date|time:"H:i" }}</span>
