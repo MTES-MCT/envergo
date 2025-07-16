@@ -259,7 +259,13 @@ DOSSIER_FRAGMENTS = (
 GET_DOSSIER_QUERY = (
     DOSSIER_FRAGMENTS
     + """
-query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+query getDossier(
+    $dossierNumber: Int!,
+    $includeChamps: Boolean = true,
+    $includeTraitements: Boolean = false,
+    $includeMessages: Boolean = true,
+    )
+{
   dossier(number: $dossierNumber) {
     __typename
     id
@@ -303,6 +309,12 @@ query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeT
     }
     champs @include(if: $includeChamps) {
       ...ChampFragment
+    }
+    messages @include(if: $includeMessages) {
+        id,
+        createdAt,
+        email,
+        body
     }
     demarche {
       title
