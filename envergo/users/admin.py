@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.petitions.models import InvitationToken
@@ -74,7 +75,15 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
-    list_display = ["email", "name", "is_superuser", "is_staff"]
+    list_display = [
+        "email",
+        "name",
+        "date_joined",
+        "access_amenagement_col",
+        "access_haie_col",
+        "superuser_col",
+        "is_staff",
+    ]
     readonly_fields = ["last_login", "date_joined"]
     inlines = [InvitationTokenInline]
     search_fields = ["name", "email"]
@@ -84,6 +93,30 @@ class UserAdmin(auth_admin.UserAdmin):
         "groups",
         "departments",
     )
+
+    @admin.display(
+        ordering="is_superuser",
+        description="Admin",
+        boolean=True,
+    )
+    def superuser_col(self, obj):
+        return obj.is_superuser
+
+    @admin.display(
+        ordering="access_amenagement",
+        description="Amenagt.",
+        boolean=True,
+    )
+    def access_amenagement_col(self, obj):
+        return obj.access_amenagement
+
+    @admin.display(
+        ordering="access_haie",
+        description="Haie",
+        boolean=True,
+    )
+    def access_haie_col(self, obj):
+        return obj.access_haie
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == "departments":
