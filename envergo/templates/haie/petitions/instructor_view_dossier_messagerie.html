@@ -8,11 +8,16 @@
 
   <h2>Messagerie</h2>
 
-  <p class="text-light">
-    <strong>Cette page est en cours de construction.</strong>
-    <br>
-    En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
-    <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
-  </p>
+  <div class="fr-alert--info">
+    <h3 class="fr-alert__title">Cette page est en cours de construction.</h3>
+    <p>
+      En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
+      <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
+    </p>
+    <button title="Masquer le message"
+            onclick="const alert = this.parentNode; alert.parentNode.removeChild(alert)"
+            type="button"
+            class="fr-btn--close fr-btn">Masquer le message</button>
+  </div>
 
 {% endblock %}
