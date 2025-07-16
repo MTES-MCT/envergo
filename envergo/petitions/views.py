@@ -643,7 +643,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
 
 class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, UpdateView):
-    """View for petition project instructor page"""
+    """Base form view for petition project instructor pages"""
 
     form_class = PetitionProjectInstructorNotesForm
 
