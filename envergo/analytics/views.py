@@ -107,7 +107,7 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         return prefix
 
     def get(self, request, *args, **kwargs):
-        return HttpResponseRedirect(reverse("moulinette_home"))
+        return HttpResponseRedirect(reverse("moulinette_form"))
 
     def form_valid(self, form):
         """Send the feedback as a Mattermost notification."""

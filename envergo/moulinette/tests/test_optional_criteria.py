@@ -54,7 +54,7 @@ def moulinette_data(footprint):
 def test_edition_redirection_from_result_user_see_optional_criterion_additional_question(
     client,
 ):
-    url = reverse("moulinette_result")
+    url = reverse("moulinette_form")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381&edit=true"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
@@ -69,9 +69,9 @@ def test_edition_redirection_from_result_user_see_optional_criterion_additional_
     assert "error-text-evalenv_rubrique_41-soumis" not in res.content.decode()
 
 
-# ETQ User, je peux voir les questions optionnelles dès l'accueil du simulateur
-def test_optional_questions_appear_on_moulinette_home(client):
-    url = reverse("moulinette_home")
+# ETQ admin, je peux voir les questions optionnelles dès l'accueil du simulateur
+def test_optional_questions_appear_on_moulinette_form(client):
+    url = reverse("moulinette_form")
     res = client.get(url)
 
     assert res.status_code == 200
@@ -103,5 +103,5 @@ def test_optional_criterion_activation(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
-    assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/home.html")
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
