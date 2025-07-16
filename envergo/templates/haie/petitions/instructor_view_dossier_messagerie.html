@@ -23,6 +23,6 @@
       </div>
       <div class="ds-message__content">Bonjour, nous avons bien reçu votre message.</div>
     </div>
-    {% for message in dossier.messages %}{% endfor %}
+    {% for message in dossier.messages %}{{ message.body }}{% endfor %}
   </section>
 {% endblock %}
