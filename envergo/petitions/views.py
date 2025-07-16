@@ -731,12 +731,39 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+class PetitionProjectInstructorMessagerieView(
+    PetitionProjectInstructorMixin, DetailView
+):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     matomo_category = "messagerie"
     matomo_tag = "lecture"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project_details"] = compute_instructor_informations_ds(
+            self.object,
+            context["moulinette"],
+        )
+
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Affichage d'un dossier factice.""",
+            )
+
+        # Send message if info from DS is not in project details
+        if not context["project_details"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        return context
 
     def get_success_url(self):
         return reverse(

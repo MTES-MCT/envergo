@@ -51,6 +51,7 @@ class Item:
 class DemarchesSimplifieesDetails:
     header_sections: list | None
     champs: list | None
+    messages: list | None
 
 
 @dataclass
@@ -265,9 +266,12 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
         if c.id not in explication_champs_ids
     ]
 
+    messages = dossier.messages
+
     ds_details = DemarchesSimplifieesDetails(
         header_sections,
         champs_display,
+        messages,
     )
 
     city, organization, _ = extract_data_from_fields(config, dossier)
