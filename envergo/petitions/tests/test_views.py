@@ -454,17 +454,14 @@ def test_petition_project_instructor_display_dossier_ds_info(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.post")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_messagerie_ds(
     mock_post, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
-
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GET_DOSSIER_FAKE_RESPONSE
-
-    mock_post.return_value = mock_response
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
