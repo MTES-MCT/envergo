@@ -13,6 +13,7 @@ from envergo.moulinette.regulations import (  # noqa
     natura2000,
     natura2000_haie,
     sage,
+    urbanisme_haie,
 )
 
 # Note: we need to import the different modules from `regulations`, so the
