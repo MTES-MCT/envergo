@@ -568,9 +568,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
 
         plantation_url = reverse(
             "input_hedges",
@@ -654,6 +651,10 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         if not context["is_department_instructor"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):

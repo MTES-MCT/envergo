@@ -7,14 +7,13 @@
 {% block title %}Instruction du dossier{% endblock %}
 
 {% block container %}
-
-  <section class="fr-py-8w">
+  <section>
     <div class="fr-container">
       <div class="fr-grid-row">
         <div class="fr-col fr-col-12 fr-col-md-3">
           <nav class="fr-sidemenu fr-sidemenu--sticky"
                aria-labelledby="fr-sidemenu-title">
-            <div class="fr-sidemenu__inner">
+            <div id="instructor-view-side-menu" class="fr-sidemenu__inner">
               <div id="fr-sidemenu-wrapper">
                 <ul class="fr-sidemenu__list">
                   {% with request.resolver_match.url_name as url_name %}
@@ -23,26 +22,25 @@
                          href="{% url 'petition_project_instructor_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
                       Informations générales</a>
-
-                      {% if url_name == 'petition_project_instructor_view' %}
-                        {% block general_secondary_side_nav %}{% endblock %}
-                      {% endif %}
                     </li>
-                    {% for regulation in moulinette.regulations|dictsort:"display_order" %}
-                      <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
-                        <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
-                           {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
-                        {{ regulation.title }}</a>
-
-                        {% if regulation.slug == current_regulation.slug %}
-                          {% for criterion in regulation.criteria.all %}
-                            {% criterion_instructor_side_nav regulation criterion %}
+                    <li class="fr-sidemenu__item">
+                      <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
+                              aria-controls="sidemenu-3"
+                              type="button"
+                              class="fr-sidemenu__btn">Réglementations</button>
+                      <div class="fr-collapse" id="sidemenu-3">
+                        <ul class="fr-sidemenu__list">
+                          {% for regulation in moulinette.regulations|dictsort:"display_order" %}
+                            <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
+                              <a class="fr-sidemenu__link"
+                                 href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
+                                 {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
+                              {{ regulation.title }}</a>
+                            </li>
                           {% endfor %}
-                        {% endif %}
-
-                      </li>
-                    {% endfor %}
+                        </ul>
+                      </div>
+                    </li>
                     <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_ds_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}"

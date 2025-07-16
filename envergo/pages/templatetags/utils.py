@@ -135,3 +135,9 @@ def get_item(dictionary, key):
 def as_hidden(field):
     """Render the field as a hidden input without modifying the original widget."""
     return field.as_widget(widget=HiddenInput())
+
+
+@register.filter
+def get_choice_label(choices, value):
+    """Return human-readable label for a given choice value."""
+    return dict(choices).get(value, value)

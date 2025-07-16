@@ -1,5 +1,7 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
+{% load evaluations %}
+
 {% load moulinette %}
 {% load utils %}
 {% load petitions %}
@@ -8,40 +10,22 @@
 
 {% block title %}Instruction du dossier – Informations générales{% endblock %}
 
-{% block general_secondary_side_nav %}
-  <div>
-    <ul class="fr-sidemenu__list">
-      <li class="fr-sidemenu__item">
-        <a class="fr-sidemenu__link" href="#section-key-elements" target="_self">Éléments clés</a>
-      </li>
-      <li class="fr-sidemenu__item">
-        <a class="fr-sidemenu__link"
-           href="#section-simulation-data"
-           target="_self">Données de la simulation</a>
-      </li>
-    </ul>
-  </div>
-{% endblock %}
-
 {% block project_content %}
 
   <div class="project-inner-content">
 
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
+    <h2>Informations générales</h2>
+    <section id="section-key-elements" class="fr-my-4w">
+      <div class="title-with-link-container">
+        <h3 class="fr-mr-8w">Éléments clés</h3>
+        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+           href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}">Voir le dossier
+        complet</a>
+      </div>
+      <h4>Motif</h4>
+      <span>{{ moulinette.main_form.motif.field.choices|get_choice_label:moulinette.main_form.motif.value }}</span>
 
-    <section class="fr-my-3w">
-      <h2>Informations générales</h2>
-
-      <h3 id="section-key-elements">Éléments clés</h3>
-      <ul class="instructor-view-list">
-        {% include "haie/petitions/_item.html" with label="Référence interne" value=petition_project.reference %}
-        {% if project_details.city %}
-          {% include "haie/petitions/_item.html" with label="Commune principale" value=project_details.city %}
-        {% endif %}
-        {% if project_details.applicant %}
-          {% include "haie/petitions/_item.html" with label="Nom du demandeur" value=project_details.applicant %}
-        {% endif %}
-      </ul>
       <h4 class="fr-mt-3w">Destruction</h4>
       <ul class="instructor-view-list">
         {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
@@ -79,26 +63,48 @@
         </ul>
       {% endif %}
       <div class="fr-my-2w">
-        <button class="hedge-input-open-btn fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+        <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
                 type="button"
                 data-fr-opened="false"
-                aria-controls="hedge-input-modal">Voir le tracé des haies sur la carte</button>
+                aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
       </div>
-      <a title="Consulter les résultats de la simulation - ouvre une nouvelle fenêtre"
-         href="{{ project_url }}"
-         target="_blank"
-         class="fr-btn fr-btn--secondary"
-         rel="noopener external">Voir le résultat de la simulation</a>
-
-      <h3 id="section-simulation-data" class="fr-mt-4w">Données de la simulation</h3>
-
-      <ul class="instructor-view-list">
-        {% for field in moulinette.main_form %}
-          {% if field.name != "haies" %}
-            <li>{% field_summary field %}</li>
-          {% endif %}
+    </section>
+    <section id="section-moulinette-result" class="fr-my-4w">
+      <div class="title-with-link-container">
+        <h3 class="fr-mr-8w">Résultats de la simulation</h3>
+        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+           href="{% url 'petition_project' petition_project.reference %}">Voir les résultats</a>
+      </div>
+      <div class="fr-container--fluid">
+        {% for regulation in moulinette.regulations|dictsort:"display_order" %}
+          <div class="fr-mb-4w">
+            <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
+               href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
+              <div class="fr-grid-row">
+                <h5 class="fr-col-12 fr-col-sm-7 fr-col-md-12 fr-col-lg-7 fr-mb-2v">{{ regulation.title }}</h5>
+                <span class="fr-col-12 fr-col-sm-5 fr-col-md-12 fr-col-lg-5 fr-mb-2v">{% result_tag regulation.result regulation.result_tag_style %}</span>
+              </div>
+              <span>Voir plus de détails</span>
+            </a>
+          </div>
         {% endfor %}
-      </ul>
+      </div>
+    </section>
+    <section id="section-plantation-evaluation" class="fr-my-4w">
+      <h3 class="fr-mt-4w">Acceptabilité de la plantation</h3>
+      {% if plantation_evaluation.result == "adequate" %}
+        <div class="fr-alert fr-alert--success fr-mb-3w">
+          <h4 class="fr-alert__title">La plantation envisagée est adéquate</h4>
+          <p>Le projet de plantation apparaît acceptable au regard des haies détruites.</p>
+        </div>
+      {% else %}
+        <div class="fr-alert fr-alert--error fr-mb-3w">
+          <h4 class="fr-alert__title">La plantation envisagée n'est pas adéquate</h4>
+          <p>Le projet de plantation décrit n'apparaît pas acceptable au regard des haies détruites.</p>
+        </div>
+      {% endif %}
+
+      {% include 'haie/moulinette/_plantation_conditions.html' %}
     </section>
 
   </div>
