@@ -311,10 +311,10 @@ query getDossier(
       ...ChampFragment
     }
     messages @include(if: $includeMessages) {
-        id,
-        createdAt,
-        email,
-        body
+      id,
+      createdAt,
+      email,
+      body
     }
     demarche {
       title
