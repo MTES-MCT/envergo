@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.petitions.models import InvitationToken
@@ -79,6 +78,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "email",
         "name",
         "date_joined",
+        "is_active",
         "access_amenagement_col",
         "access_haie_col",
         "superuser_col",
@@ -88,6 +88,13 @@ class UserAdmin(auth_admin.UserAdmin):
     inlines = [InvitationTokenInline]
     search_fields = ["name", "email"]
     ordering = ["email"]
+    list_filter = [
+        "is_active",
+        "access_amenagement",
+        "access_haie",
+        "is_superuser",
+        "is_staff",
+    ]
 
     filter_horizontal = (
         "groups",
