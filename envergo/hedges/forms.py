@@ -13,7 +13,7 @@ class HedgePropertiesBaseForm(forms.Form):
     """Base Hedge properties form"""
 
     type_haie = forms.ChoiceField(
-        choices=(("", "Sélectionner une option"),) + HEDGE_TYPES,
+        choices=(("", "Sélectionner un type de haie"),) + HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
