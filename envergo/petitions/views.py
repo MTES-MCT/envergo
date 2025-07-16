@@ -36,6 +36,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    extract_data_from_fields,
     get_instructor_view_context,
 )
 from envergo.utils.mattermost import notify
@@ -55,7 +56,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
-        .select_related("hedge_data")
+        .select_related("hedge_data", "department__confighaie")
         .order_by("-created_at")
     )
     paginate_by = 30
@@ -80,6 +81,20 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = self.queryset.none()
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        for obj in context["object_list"]:
+            dossier = obj.prefetched_dossier
+            if dossier:
+                city, organization, _ = extract_data_from_fields(
+                    obj.department.confighaie, dossier
+                )
+                obj.city = city
+                obj.organization = organization
+
+        return context
 
 
 class PetitionProjectCreate(FormView):

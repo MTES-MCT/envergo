@@ -371,9 +371,7 @@ def get_demarches_simplifiees_dossier(
         # If the last sync is recent, we can use the cached dossier from the petition project
         dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
 
-    dossier = (
-        Dossier.from_dict(dossier_as_dict) if dossier_as_dict is not None else None
-    )
+    dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
 
 
