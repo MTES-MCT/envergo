@@ -489,6 +489,7 @@ def test_petition_project_instructor_messagerie_ds(
     content = response.content.decode()
     assert "<h2>Messagerie</h2>" in content
     assert "Il manque les infos de la PAC" in content
+    assert "2 avril 2025 à 11:01" in content
 
 
 @pytest.mark.urls("config.urls_haie")
