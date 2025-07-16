@@ -1016,6 +1016,12 @@ class ConfigHaie(ConfigBase):
         max_length=64,
     )
 
+    demarches_simplifiees_organization_id = models.CharField(
+        'Identifiant DS "Nom de votre structure"',
+        blank=True,
+        max_length=64,
+    )
+
     demarches_simplifiees_pacage_id = models.CharField(
         'Identifiant DS "numéro de PACAGE"',
         blank=True,
