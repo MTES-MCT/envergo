@@ -33,10 +33,18 @@ class Command(BaseCommand):
         two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
         handled_demarches = []
 
-        for activated_department in ConfigHaie.objects.filter(
-            is_activated=True, demarche_simplifiee_number__isnull=False
-        ).all():
+        logging.info(f"Get DS files updated since {two_hours_ago_utc}")
+
+        # As long as a demarche number is set, we run the sync
+        # (event if the dept is not activated yet)
+        departments_with_ds = ConfigHaie.objects.filter(
+            demarche_simplifiee_number__isnull=False
+        )
+        for activated_department in departments_with_ds:
             demarche_number = activated_department.demarche_simplifiee_number
+
+            logging.info(f"Handling demarche {demarche_number} ({activated_department}")
+
             if demarche_number in handled_demarches:
                 continue
 

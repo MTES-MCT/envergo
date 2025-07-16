@@ -85,7 +85,7 @@ def ep_criteria(france_map):  # noqa
         CriterionFactory(
             title="Espèces protégées",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesSimple",
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),

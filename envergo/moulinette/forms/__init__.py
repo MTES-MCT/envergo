@@ -112,6 +112,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
 
         if final_surface is None:
             self.add_error("final_surface", _("This field is required"))
+        elif created_surface is None:
+            self.add_error("created_surface", _("This field is required"))
         elif final_surface < created_surface:
             self.add_error(
                 "final_surface",
@@ -123,16 +125,16 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
 
 REIMPLANTATION_CHOICES = (
     (
+        "replantation",
+        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
+        "Oui, en plantant une haie à un autre endroit",
+    ),
+    (
         "remplacement",
         mark_safe(
             "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
         ),
         "Oui, en remplaçant la haie détruite au même endroit",
-    ),
-    (
-        "replantation",
-        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
-        "Oui, en plantant une haie à un autre endroit",
     ),
     ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
 )
