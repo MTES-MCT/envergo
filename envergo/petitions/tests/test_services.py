@@ -1,4 +1,3 @@
-import copy
 import datetime
 from collections import OrderedDict
 from decimal import Decimal
@@ -46,11 +45,8 @@ pytestmark = pytest.mark.django_db
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
     """Test fetch project details from démarches simplifiées"""
-    mock_post.side_effect = [
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE["data"]),
-    ]
+    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -60,10 +56,13 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     petition_project = PetitionProjectFactory()
     moulinette = petition_project.get_moulinette()
 
+    # WHEN I fetch it from DS for the first time
     dossier = get_demarches_simplifiees_dossier(petition_project)
+    # THEN the dossier is returned and an event is created
     assert dossier is not None
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
+    # AND the project details are correctly populated
     project_details = get_instructor_view_context(petition_project, moulinette)
     ds_data = project_details["ds_data"]
 
@@ -76,6 +75,22 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         2025, 3, 21, 10, 8, 34, tzinfo=datetime.timezone.utc
     )
     assert petition_project.demarches_simplifiees_last_sync is not None
+
+    # WHEN I fetch it again less than one hour later
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    # THEN the same dossier is returned from cache, and the DS Api is not called again
+    assert dossier is not None
+    mock_post.assert_called_once()
+
+    # WHEN I fetch it again more than one hour later
+    petition_project.demarches_simplifiees_last_sync = datetime.datetime.now(
+        datetime.timezone.utc
+    ) - datetime.timedelta(hours=2)
+    petition_project.save()
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    # THEN the cache is not used, and the DS Api called
+    assert dossier is not None
+    assert mock_post.call_count == 2
 
     # GIVEN a new dossier in Draft status With an existing creation event
     petition_project = PetitionProjectFactory(reference="DEF456")
@@ -94,6 +109,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert Event.objects.get(
         category="dossier", event="depot", session_key="a given user"
     )
+    assert mock_post.call_count == 3
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
@@ -117,9 +133,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
         )
         > 0
     )
-    fake_dossier = (
-        copy.deepcopy(GET_DOSSIER_FAKE_RESPONSE).get("data", {}).get("dossier")
-    )
+    fake_dossier = GET_DOSSIER_FAKE_RESPONSE.get("data", {}).get("dossier")
     assert details == Dossier.from_dict(fake_dossier)
 
 

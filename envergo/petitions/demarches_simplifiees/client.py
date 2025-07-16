@@ -12,21 +12,14 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import Demarche, Dossier
+from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
+from envergo.petitions.demarches_simplifiees.queries import (
+    GET_DOSSIER_QUERY,
+    GET_DOSSIERS_FOR_DEMARCHE_QUERY,
+)
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
-
-get_dossiers_for_demarche_query_path = (
-    settings.APPS_DIR
-    / "petitions"
-    / "demarches_simplifiees"
-    / "queries"
-    / "get_dossiers_for_demarche.gql"
-)
-
-with open(get_dossiers_for_demarche_query_path, "r") as file:
-    GET_DOSSIERS_FOR_DEMARCHE_QUERY = file.read()
 
 
 class DemarchesSimplifieesClient:
@@ -73,21 +66,9 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(
-        self, dossier_number, include_champs: bool = True
-    ) -> Dossier | None:
-        variables = {"dossierNumber": dossier_number, "includeChamps": include_champs}
-        with open(
-            Path(
-                settings.APPS_DIR
-                / "petitions"
-                / "demarches_simplifiees"
-                / "queries"
-                / "get_dossier.gql"
-            ),
-            "r",
-        ) as file:
-            query = file.read()
+    def get_dossier(self, dossier_number) -> dict | None:
+        variables = {"dossierNumber": dossier_number}
+        query = GET_DOSSIER_QUERY
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
@@ -108,7 +89,6 @@ class DemarchesSimplifieesClient:
             ) as file:
                 response = json.load(file)
                 data = copy.deepcopy(response["data"])
-                dossier = Dossier.from_dict(data["dossier"])
         else:
             try:
                 data = self.execute(query, variables)
@@ -142,9 +122,7 @@ class DemarchesSimplifieesClient:
                     notify(dedent(message), "haie")
                 return None
 
-            dossier = Dossier.from_dict(data["dossier"]) if "dossier" in data else None
-
-        if dossier is None:
+        if "dossier" not in data or not data["dossier"]:
             logger.error(
                 "Demarches simplifiees API response is not well formated",
                 extra={
@@ -165,13 +143,13 @@ class DemarchesSimplifieesClient:
             notify(dedent(message), "haie")
             return None
 
-        return dossier
+        return data["dossier"]
 
     def get_dossiers_for_demarche(
         self, demarche_number, dossiers_updated_since: datetime
-    ) -> Demarche | None:
+    ) -> DemarcheWithRawDossiers | None:
         first_page = self._fetch_dossiers_page(demarche_number, dossiers_updated_since)
-        demarche = Demarche.from_dict(first_page["demarche"])
+        demarche = DemarcheWithRawDossiers.from_dict(first_page["demarche"])
         demarche.set_dossier_iterator(
             lambda cursor: self._fetch_dossiers_page(
                 demarche_number, dossiers_updated_since, cursor

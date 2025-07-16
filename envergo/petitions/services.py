@@ -1,3 +1,4 @@
+import datetime
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
@@ -218,7 +219,7 @@ def compute_instructor_informations_ds(
     # Get ds details
     config = moulinette.config
 
-    dossier = get_demarches_simplifiees_dossier(petition_project, include_champs=True)
+    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
 
     if not dossier:
         return ProjectDetails(
@@ -317,28 +318,44 @@ def get_header_explanation_from_ds_demarche(demarche):
 
 
 def get_demarches_simplifiees_dossier(
-    petition_project, include_champs: bool = True
+    petition_project,
+    force_update: bool = False,
 ) -> Dossier | None:
     """Get dossier from Demarches Simplifiees either from DB if it is up to date, or from Demarches Simplifiees API.
 
     args:
         petition_project: The petition project to update with the fetched details.
-        config: The ConfigHaie object related to the project.
-        include_champs: Whether to include champs in the fetched dossier.
+        force_update: If True, forces an update from Demarches Simplifiees even if the last sync is recent.
     returns:
         Dossier object if found, None otherwise.
     """
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
 
-    ds_client = DemarchesSimplifieesClient()
+    one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
+    if (
+        force_update
+        or not petition_project.demarches_simplifiees_raw_dossier
+        or petition_project.demarches_simplifiees_last_sync is not None
+        and petition_project.demarches_simplifiees_last_sync < one_hour_ago_utc
+    ):
+        # If the last sync is older than one hour, we fetch the dossier from Demarches Simplifiees
+        dossier_number = petition_project.demarches_simplifiees_dossier_number
 
-    dossier = ds_client.get_dossier(dossier_number, include_champs=include_champs)
+        ds_client = DemarchesSimplifieesClient()
 
-    if dossier is not None:
-        # we have got a dossier from DS for this petition project,
-        # let's synchronize project
-        petition_project.synchronize_with_demarches_simplifiees(dossier)
+        dossier_as_dict = ds_client.get_dossier(dossier_number)
 
+        if dossier_as_dict is not None:
+            # we have got a dossier from DS for this petition project,
+            # let's synchronize project
+            petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
+    else:
+        # If the last sync is recent, we can use the cached dossier from the petition project
+        dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
+
+    dossier = (
+        Dossier.from_dict(dossier_as_dict) if dossier_as_dict is not None else None
+    )
     return dossier
 
 

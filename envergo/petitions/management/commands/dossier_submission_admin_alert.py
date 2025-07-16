@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
+from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 
@@ -56,7 +57,8 @@ class Command(BaseCommand):
             if not demarche:
                 continue
 
-            for dossier in demarche.dossiers:
+            for dossier_as_dict in demarche.dossiers:
+                dossier = Dossier.from_dict(dossier_as_dict)
                 dossier_number = dossier.number
                 project = PetitionProject.objects.filter(
                     demarches_simplifiees_dossier_number=dossier_number
@@ -64,15 +66,16 @@ class Command(BaseCommand):
                 if project is None:
                     self.handle_unlinked_dossier(
                         dossier,
+                        demarche,
                         activated_department,
                     )
                     continue
 
-                project.synchronize_with_demarches_simplifiees(dossier)
+                project.synchronize_with_demarches_simplifiees(dossier_as_dict)
 
             handled_demarches.append(demarche_number)
 
-    def handle_unlinked_dossier(self, dossier, config):
+    def handle_unlinked_dossier(self, dossier, demarche, config):
         """Handle a dossier that is not linked to any project in the database
 
         This dossier is not linked to any project on this environment
@@ -90,14 +93,8 @@ class Command(BaseCommand):
             "",
         )
 
-        demarche_name = (
-            dossier.demarche.title if dossier.demarche is not None else "Nom inconnu"
-        )
-        demarche_number = (
-            dossier.demarche.number
-            if dossier.demarche is not None
-            else "Numéro inconnu"
-        )
+        demarche_name = demarche.title if demarche is not None else "Nom inconnu"
+        demarche_number = demarche.number if demarche is not None else "Numéro inconnu"
         ds_url = (
             f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
             f"dossiers/{dossier.number}/"
