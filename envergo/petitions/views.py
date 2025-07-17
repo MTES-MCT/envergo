@@ -538,7 +538,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    matomo_category = "project"
+    matomo_category = "projet"
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
@@ -735,7 +735,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
-    matomo_category = "messagerie"
+    matomo_category = "message"
     matomo_tag = "lecture"
 
     def get_success_url(self):
