@@ -287,6 +287,17 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
     )
 
 
+def get_messages_from_ds(petition_project):
+    """Get messages from DS"""
+
+    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
+    messages = sorted(
+        dossier.messages, key=lambda message: message.createdAt, reverse=True
+    )
+
+    return messages
+
+
 def get_item_value_from_ds_champ(champ):
     """get item value from a dossier champ
     Ok better to do with yesno filter…
