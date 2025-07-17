@@ -3,13 +3,23 @@ from itertools import groupby
 from textwrap import dedent
 
 from django.conf import settings
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db.models import F
 from django.urls import reverse
 from django.utils.timezone import localtime
 
-from envergo.evaluations.models import RequestFile
+from envergo.evaluations.models import Request, RequestFile
 from envergo.utils.mattermost import notify
+
+
+def is_file_uploaded_from_admin(file, logs_from_admin):
+    """Check if the file was uploaded from the admin UI."""
+    return any(
+        f"RequestFile object ({file.id})" in log_entry.change_message
+        for log_entry in logs_from_admin
+    )
 
 
 class Command(BaseCommand):
@@ -35,7 +45,20 @@ class Command(BaseCommand):
             .select_related("request")
         )
         groups = groupby(files, key=lambda file: file.request)
+
+        content_type = ContentType.objects.get_for_model(Request)
         for request, files in groups:
+            # if the files were uploaded from the admin ui, we don't want to notify
+            logs_from_admin = LogEntry.objects.filter(
+                content_type=content_type,
+                object_id=request.id,
+                action_time__gte=two_ours_ago,
+            )
+            if all(
+                is_file_uploaded_from_admin(file, logs_from_admin) for file in files
+            ):
+                continue
+
             url = reverse("admin:evaluations_request_change", args=[request.id])
             message = dedent(
                 f"""\
