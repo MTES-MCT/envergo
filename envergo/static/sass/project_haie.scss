@@ -677,6 +677,12 @@ ul#instruction-summary-list {
   mask-image: url("/static/icons/haie.svg");
 }
 
+#table-dossier-list {
+  td {
+    height: 72px;
+  }
+}
+
 div.title-with-link-container {
   display: flex;
   align-items: baseline;
