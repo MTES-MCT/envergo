@@ -499,6 +499,34 @@
               "createdAt": "2025-07-17T17:25:13+02:00"
             }
           ]
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTk3NzA2MDA=",
+          "createdAt": "2025-07-17T17:57:38+02:00",
+          "email": "hedy.lamarr@example.com",
+          "body": "Nouveau message !!\r\n\r\nAvec deux pièces jointes.",
+          "discardedAt": null,
+          "correction": null,
+          "attachments": [
+            {
+              "__typename": "File",
+              "filename": "licences_libres_affiche.pdf",
+              "contentType": "application/pdf",
+              "checksum": "ya1XQHlWcNxCNteewnjQRg==",
+              "byteSize": "817604",
+              "url": "http://media.april.org/docs/affiche_copyleft/licences_libres_affiche.pdf",
+              "createdAt": "2025-07-17T17:57:39+02:00"
+            },
+            {
+              "__typename": "File",
+              "filename": "essayez_la_liberte_web.pdf",
+              "contentType": "application/pdf",
+              "checksum": "V/y1jfKsorMlhbetJOo5Bg==",
+              "byteSize": "320631",
+              "url": "http://media.april.org/docs/affiche_essayez_la_liberte/essayez_la_liberte_web.pdf",
+              "createdAt": "2025-07-17T17:57:39+02:00"
+            }
+          ]
         }
       ],
       "demarche": {
