@@ -586,6 +586,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
 
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
+
         plantation_url = reverse(
             "input_hedges",
             args=[
@@ -675,10 +679,6 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["project_details"] = get_instructor_view_context(
             self.object, context["moulinette"]
-        )
-
-        context["plantation_evaluation"] = PlantationEvaluator(
-            context["moulinette"], context["moulinette"].catalog["haies"]
         )
         return context
 
