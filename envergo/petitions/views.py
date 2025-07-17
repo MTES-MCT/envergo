@@ -37,6 +37,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
     get_instructor_view_context,
+    get_messages_from_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -570,6 +571,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
 
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
+
         plantation_url = reverse(
             "input_hedges",
             args=[
@@ -616,15 +621,21 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             moulinette.config.demarche_simplifiee_number
         )
 
+        # Send message if info from DS is not in project details
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            messages.info(
+                self.request,
+                """L'accès à l'API démarches simplifiées n'est pas activée.
+                Les données proviennent d'un dossier factice.""",
+            )
+
         return context
 
 
-class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
-    """View for petition project instructor page"""
+class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, UpdateView):
+    """Base form view for petition project instructor pages"""
 
-    template_name = "haie/petitions/instructor_view.html"
     form_class = PetitionProjectInstructorNotesForm
-    matomo_tag = "consultation_i"
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
@@ -637,24 +648,22 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_details"] = get_instructor_view_context(
-            self.object, context["moulinette"]
-        )
-
-        # Send message if info from DS is not in project details
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            messages.info(
-                self.request,
-                """L'accès à l'API démarches simplifiées n'est pas activée.
-                Les données proviennent d'un dossier factice.""",
-            )
-
         if not context["is_department_instructor"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
+        return context
 
-        context["plantation_evaluation"] = PlantationEvaluator(
-            context["moulinette"], context["moulinette"].catalog["haies"]
+
+class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view.html"
+    matomo_tag = "consultation_i"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project_details"] = get_instructor_view_context(
+            self.object, context["moulinette"]
         )
         return context
 
@@ -662,7 +671,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorRegulationView(PetitionProjectInstructorView):
+class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
@@ -713,14 +722,6 @@ class PetitionProjectInstructorDossierDSView(
         )
 
         # Send message if info from DS is not in project details
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            messages.info(
-                self.request,
-                """L'accès à l'API démarches simplifiées n'est pas activée.
-                Affichage d'un dossier factice.""",
-            )
-
-        # Send message if info from DS is not in project details
         if not context["project_details"]:
             messages.warning(
                 self.request,
@@ -731,20 +732,31 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+class PetitionProjectInstructorMessagerieView(
+    PetitionProjectInstructorMixin, DetailView
+):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     matomo_category = "message"
     matomo_tag = "lecture"
 
-    def get_success_url(self):
-        return reverse(
-            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
-        )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ds_messages"] = get_messages_from_ds(self.object)
+
+        # Send message if info from DS is not in project details
+        if not context["ds_messages"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        return context
 
 
-class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
+class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
