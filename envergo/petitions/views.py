@@ -37,6 +37,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
     get_instructor_view_context,
+    get_messages_from_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -742,13 +743,10 @@ class PetitionProjectInstructorMessagerieView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_details"] = compute_instructor_informations_ds(
-            self.object,
-            context["moulinette"],
-        )
+        context["ds_messages"] = get_messages_from_ds(self.object)
 
         # Send message if info from DS is not in project details
-        if not context["project_details"]:
+        if not context["ds_messages"]:
             messages.warning(
                 self.request,
                 """Impossible de récupérer les informations du dossier Démarches Simplifiées.
@@ -756,11 +754,6 @@ class PetitionProjectInstructorMessagerieView(
             )
 
         return context
-
-    def get_success_url(self):
-        return reverse(
-            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
-        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
