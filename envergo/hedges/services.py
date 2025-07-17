@@ -214,6 +214,17 @@ class PlantationEvaluator:
         R = self.replantation_coefficient
         conditions = []
         for regulation in self.moulinette.regulations:
+            if not regulation.is_activated():
+                continue
+
+            if regulation.has_perimeters:
+                all_perimeters = regulation.perimeters.all()
+                activated_perimeters = [p for p in all_perimeters if p.is_activated]
+                if all_perimeters and not any(activated_perimeters):
+                    continue
+                if not all_perimeters:
+                    continue
+
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
