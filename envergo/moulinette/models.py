@@ -87,6 +87,7 @@ REGULATIONS = Choices(
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
+    ("urbanisme_haie", "Urbanisme haie"),
 )
 
 
@@ -165,7 +166,8 @@ class ResultGroupEnum(IntEnum):
         1  # if there is some regulation in this group, the project cannot go further
     )
     RestrictiveRegulations = 2  # a dossier will be required
-    OtherRegulations = 3  # these regulations do not impact the project
+    UnsimulatedRegulations = 3  # has an impact but will not be simulated
+    OtherRegulations = 4  # these regulations do not impact the project
 
 
 RESULTS_GROUP_MAPPING = {
@@ -179,13 +181,13 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.dispense_sous_condition: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
     RESULTS.dispense: ResultGroupEnum.OtherRegulations,
     RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
-    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
 }
@@ -1906,7 +1908,13 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie", "alignement_arbres"]
+    REGULATIONS = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "urbanisme_haie",
+    ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result_debug.html"
