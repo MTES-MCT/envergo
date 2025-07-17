@@ -314,7 +314,10 @@ query getDossier(
       id,
       createdAt,
       email,
-      body
+      body,
+      attachments {
+        ...FileFragment
+      }
     }
     demarche {
       title
