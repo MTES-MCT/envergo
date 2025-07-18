@@ -140,7 +140,7 @@ jobs:
       - name: Create empty .env file if it does not exist
         run: touch .env
       - name: Launch services for amenagement
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+        run: DJANGO_SETTINGS_MODULE=config.settings.ci docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
       - name: Migrate database
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
       - name: Seed database
@@ -149,14 +149,14 @@ jobs:
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django bash bin/build_assets.sh
       - name: Wait for services to be ready
         run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
-      - name: Run Playwright tests
+      - name: Run Playwright tests for amenagement
         run: TEST_DIR='./e2e/amenagement' npx playwright test
 
       - name: Launch services for GUH
         run: DJANGO_SETTINGS_MODULE=config.settings.ci-guh docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
       - name: Wait for services to be ready
         run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
-      - name: Run Playwright tests
+      - name: Run Playwright tests for GUH
         run: TEST_DIR='./e2e/haie' npx playwright test
 
       - uses: actions/upload-artifact@v4
