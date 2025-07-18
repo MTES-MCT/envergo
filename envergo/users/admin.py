@@ -81,8 +81,8 @@ class UserAdmin(auth_admin.UserAdmin):
         "is_active",
         "access_amenagement_col",
         "access_haie_col",
+        "is_staff_col",
         "superuser_col",
-        "is_staff",
     ]
     readonly_fields = ["last_login", "date_joined"]
     inlines = [InvitationTokenInline]
@@ -110,8 +110,16 @@ class UserAdmin(auth_admin.UserAdmin):
         return obj.is_superuser
 
     @admin.display(
+        ordering="is_staff",
+        description="Équipe",
+        boolean=True,
+    )
+    def is_staff_col(self, obj):
+        return obj.is_staff
+
+    @admin.display(
         ordering="access_amenagement",
-        description="Amenagt.",
+        description="Amgt.",
         boolean=True,
     )
     def access_amenagement_col(self, obj):
