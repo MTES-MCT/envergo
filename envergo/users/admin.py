@@ -74,16 +74,64 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
-    list_display = ["email", "name", "is_superuser", "is_staff"]
+    list_display = [
+        "email",
+        "name",
+        "date_joined",
+        "is_active",
+        "access_amenagement_col",
+        "access_haie_col",
+        "is_staff_col",
+        "superuser_col",
+    ]
     readonly_fields = ["last_login", "date_joined"]
     inlines = [InvitationTokenInline]
     search_fields = ["name", "email"]
     ordering = ["email"]
+    list_filter = [
+        "is_active",
+        "access_amenagement",
+        "access_haie",
+        "is_superuser",
+        "is_staff",
+    ]
 
     filter_horizontal = (
         "groups",
         "departments",
     )
+
+    @admin.display(
+        ordering="is_superuser",
+        description="Admin",
+        boolean=True,
+    )
+    def superuser_col(self, obj):
+        return obj.is_superuser
+
+    @admin.display(
+        ordering="is_staff",
+        description="Équipe",
+        boolean=True,
+    )
+    def is_staff_col(self, obj):
+        return obj.is_staff
+
+    @admin.display(
+        ordering="access_amenagement",
+        description="Amgt.",
+        boolean=True,
+    )
+    def access_amenagement_col(self, obj):
+        return obj.access_amenagement
+
+    @admin.display(
+        ordering="access_haie",
+        description="Haie",
+        boolean=True,
+    )
+    def access_haie_col(self, obj):
+        return obj.access_haie
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == "departments":
