@@ -33,11 +33,11 @@ class Command(BaseCommand):
         # We also don't want to send a notification if the evalreq was just created.
         # So we only select files that were uploaded more than 1hr after the evalreq was created.
         one_hr_ago = localtime() - timedelta(hours=1)
-        two_ours_ago = localtime() - timedelta(hours=2)
+        two_hours_ago = localtime() - timedelta(hours=2)
         one_hour_delta = timedelta(hours=1)
 
         files = (
-            RequestFile.objects.filter(uploaded_at__gte=two_ours_ago)
+            RequestFile.objects.filter(uploaded_at__gte=two_hours_ago)
             .filter(uploaded_at__lt=one_hr_ago)
             .annotate(upload_delta=F("uploaded_at") - F("request__created_at"))
             .filter(upload_delta__gte=one_hour_delta)
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             logs_from_admin = LogEntry.objects.filter(
                 content_type=content_type,
                 object_id=request.id,
-                action_time__gte=two_ours_ago,
+                action_time__gte=two_hours_ago,
             )
             if all(
                 is_file_uploaded_from_admin(file, logs_from_admin) for file in files
