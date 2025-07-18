@@ -155,7 +155,7 @@ jobs:
       - name: Launch services for amenagement
         run: DJANGO_ENVERGO_AMENAGEMENT_DOMAIN=localhost docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
       - name: Wait for services to be ready
-        run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
+        run: wget --retry-connrefused --waitretry=1 --read-timeout=40 --timeout=30 --tries 30 http://localhost:3000/
       - name: Run Playwright tests for amenagement
         run: TEST_DIR='./e2e/amenagement' npx playwright test
 
