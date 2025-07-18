@@ -265,7 +265,7 @@ Les tests end-to-end sont écrits avec [Playwright](https://playwright.dev/).
 Les tests E2E permet de valider que les chemins utilisateurs critiques (faire une simulation, demander un avis, répondre à une demande d'avis, etc) fonctionnent correctement.
 Cela permet en outre de vérifier le bon fonctionnement des composants JavaScript de plus en plus présent sur les pages et pour le moment non couvert par d'autre tests.
 
-Ils se basent sur une base de données de tests dédiée contenant une jeu de données minimum présent dans ce [fichier](e2e/fixtures/db_seed.json)  et que l’on peut remplir pour les besoins de chaque test.
+Ils se basent sur une base de données de tests dédiée contenant une jeu de données minimum présent dans ce [fichier](e2e/amenagement/fixtures/db_seed.json)  et que l’on peut remplir pour les besoins de chaque test.
 
 Ils tournent dans la CI de Github.
 
