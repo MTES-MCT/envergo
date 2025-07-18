@@ -1,9 +1,0 @@
-{% extends 'haie/petitions/ep/ep_instructor_base.html' %}
-
-{% block after_hedge_properties %}
-  <h4 class="fr-mt-3w">Calcul de la compensation attendue</h4>
-
-  <ul class="instructor-view-list">
-    {% include 'haie/petitions/_item.html' with label="Coefficient compensation" value=replantation_coefficient|floatformat:"1g" %}
-  </ul>
-{% endblock %}
