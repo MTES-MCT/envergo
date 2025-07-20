@@ -39,7 +39,14 @@ class HedgePropertiesBaseForm(forms.Form):
 
 MODE_DESTRUCTION_CHOICES = (
     ("arrachage", "Arrachage"),
-    ("coupe_a_blanc", "Coupe à blanc (sur essence ne recépant pas)"),
+    (
+        "coupe_a_blanc", 
+        mark_safe(
+            "Coupe à blanc (sur essence ne recépant pas)"
+            '<span class="fr-hint-text"><a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1" target="_blank" rel="noopener">Liste des essences ne recépant pas</a></span>'
+        ),
+        "Coupe à blanc (sur essence ne recépant pas)"
+    ),
     ("autre", "Autre"),
 )
 
