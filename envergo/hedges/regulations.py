@@ -425,8 +425,8 @@ class NormandieQualityCondition(PlantationCondition):
             lines.append(
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
-                proposant de planter des haies mixtes plutôt que de type identique aux
-                haies à détruire.
+                proposant de planter des haies de type supérieur à celui des
+                haies à détruire (<a href="https://www.notion.so/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-232fe5fe4766807f8029c78ca68d319e" target="_blank" rel="noopener">voir le guide</a>).
                 """
             )
 
