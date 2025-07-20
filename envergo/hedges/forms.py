@@ -125,8 +125,11 @@ class SurTalusMixin(forms.Form):
 
 class InterchampMixin(forms.Form):
     interchamp = forms.BooleanField(
-        label="Haie inter-champ",
+        label=mark_safe(
+            'Haie inter-champ <span class="fr-hint-text">Y compris en bord de chemin entre deux parcelles</span>'
+        ),
         required=False,
+        display_label="Haie inter-champ",
     )
 
 
