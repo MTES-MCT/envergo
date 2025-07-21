@@ -491,6 +491,16 @@ def test_petition_project_instructor_messagerie_ds(
     assert "Il manque les infos de la PAC" in content
     assert "2 avril 2025 à 11:01" in content
 
+    # Test if dossier is empty
+    mock_post.return_value = "null"
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "0 message" in content
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
