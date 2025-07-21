@@ -6,6 +6,7 @@ services:
       - DJANGO_ENVERGO_AMENAGEMENT_DOMAIN=${DJANGO_ENVERGO_AMENAGEMENT_DOMAIN:-envergo.beta.gouv.fr}
       - DJANGO_ENVERGO_HAIE_DOMAIN=${DJANGO_ENVERGO_HAIE_DOMAIN:-haie.beta.gouv.fr}
     env_file:
+      - .env
       - ./envs/django
       - ./envs/postgres
 

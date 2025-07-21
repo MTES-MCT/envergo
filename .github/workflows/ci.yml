@@ -137,10 +137,12 @@ jobs:
         run: npx playwright install --with-deps
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Create empty .env file if it does not exist
-        run: touch .env
+      - name: Create .env file for GUH
+        run: echo "DJANGO_ENVERGO_HAIE_DOMAIN=localhost" >> .env
       - name: Launch services for GUH
-        run: DJANGO_ENVERGO_HAIE_DOMAIN=localhost docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+      - name: Debug container env
+        run: docker compose run --rm django env
       - name: Migrate database
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm django python manage.py migrate
       - name: Seed database
@@ -154,8 +156,12 @@ jobs:
 
       - name: Stop services before relaunch
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down
+      - name: Create .env file for amenagement
+        run: |
+          sed -i '/^DJANGO_ENVERGO_HAIE_DOMAIN=/d' .env
+          echo "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN=localhost" >> .env
       - name: Launch services for amenagement
-        run: DJANGO_ENVERGO_AMENAGEMENT_DOMAIN=localhost docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --force-recreate
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --force-recreate
       - name: Debug container env
         run: docker compose run --rm django env
       - name: Wait for services to be ready
