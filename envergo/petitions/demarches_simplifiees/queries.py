@@ -240,6 +240,18 @@ fragment EngagementJuridiqueFragment on EngagementJuridique {
 }
 """
 
+MESSAGE_FRAGMENT = """
+fragment MessageFragment on Message {
+  id,
+  createdAt,
+  email,
+  body,
+  attachments {
+  ...FileFragment
+  }
+}
+"""
+
 DOSSIER_FRAGMENTS = (
     CHAMP_FRAGMENT
     + PERSONNE_MORALE_FRAGMENT
@@ -254,6 +266,7 @@ DOSSIER_FRAGMENTS = (
     + COMMUNE_FRAGMENT
     + RNF_FRAGMENT
     + ENGAGEMENT_JURIDIQUE_FRAGMENT
+    + MESSAGE_FRAGMENT
 )
 
 GET_DOSSIER_QUERY = (
@@ -263,7 +276,7 @@ query getDossier(
     $dossierNumber: Int!,
     $includeChamps: Boolean = true,
     $includeTraitements: Boolean = false,
-    $includeMessages: Boolean = true,
+    $includeMessages: Boolean = false,
     )
 {
   dossier(number: $dossierNumber) {
@@ -311,10 +324,7 @@ query getDossier(
       ...ChampFragment
     }
     messages @include(if: $includeMessages) {
-      id,
-      createdAt,
-      email,
-      body
+      ...MessageFragment
     }
     demarche {
       title
@@ -409,6 +419,28 @@ query getDossiersForDemarche(
                 }
             }
     }
+}
+"""
+)
+
+GET_DOSSIER_MESSAGES_QUERY = (
+    MESSAGE_FRAGMENT
+    + """
+query getDossier($dossierNumber: Int!)
+{
+  dossier(number: $dossierNumber) {
+    __typename
+    id
+    number
+    archived
+    prefilled
+    state
+    dateDerniereModification
+    dateDepot
+    messages @include(if: $includeMessages) {
+      ...MessageFragment
+    }
+  }
 }
 """
 )
