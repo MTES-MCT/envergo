@@ -438,7 +438,7 @@ query getDossier($dossierNumber: Int!)
     state
     dateDerniereModification
     dateDepot
-    messages @include(if: $includeMessages) {
+    messages {
       ...MessageFragment
     }
   }
