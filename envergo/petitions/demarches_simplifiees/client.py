@@ -14,6 +14,7 @@ from graphql import GraphQLError
 
 from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
 from envergo.petitions.demarches_simplifiees.queries import (
+    GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
 )
@@ -66,9 +67,13 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(self, dossier_number) -> dict | None:
+    def get_dossier(
+        self,
+        dossier_number,
+        query=GET_DOSSIER_QUERY,
+        fake_dossier_filename="fake_dossier.json",
+    ) -> dict | None:
         variables = {"dossierNumber": dossier_number}
-        query = GET_DOSSIER_QUERY
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
@@ -83,7 +88,7 @@ class DemarchesSimplifieesClient:
                     / "petitions"
                     / "demarches_simplifiees"
                     / "data"
-                    / "fake_dossier.json"
+                    / fake_dossier_filename
                 ),
                 "r",
             ) as file:
@@ -194,6 +199,16 @@ class DemarchesSimplifieesClient:
             "hasNextPage": has_next_page,
             "endCursor": cursor,
         }
+
+    def get_dossier_messages(self, dossier_number):
+        """Get dossier messages only"""
+        fake_dossier_filename = "fake_dossier_messages.json"
+
+        data = self.get_dossier(
+            dossier_number, GET_DOSSIER_MESSAGES_QUERY, fake_dossier_filename
+        )
+
+        return data
 
 
 class DemarchesSimplifieesError(Exception):
