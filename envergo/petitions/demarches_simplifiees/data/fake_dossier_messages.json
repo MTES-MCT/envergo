@@ -15,8 +15,6 @@
           "createdAt": "2025-03-21T11:08:34+01:00",
           "email": "contact@demarches-simplifiees.fr",
           "body": "<p>[Votre dossier nº 23178443 a bien été déposé (Guichet unique de la haie – Aisne (02) / TEST)]</p><div> Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 <strong>a bien été déposé</strong>. Si besoin est, vous pouvez encore y apporter des modifications.<br><br>Vous pouvez retrouver votre simulation au lien suivant :<br>http://haie.local:8000/projet/AT9ZK7/consultation/<br><br>\n</div><div>Cordialement, <br>Le guichet unique de la haie de l'Aisne</div>",
-          "discardedAt": null,
-          "correction": null,
           "attachments": []
         },
         {
@@ -24,8 +22,6 @@
           "createdAt": "2025-04-01T14:43:34+02:00",
           "email": "contact@demarches-simplifiees.fr",
           "body": "<p>[Votre dossier nº 23178443 va être examiné (Guichet unique de la haie – Aisne (02) / TEST)]</p><div>Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 a bien été reçu et <strong>pris en charge</strong>. Il va maintenant être examiné par le service. <br><br>\n</div><div> Cordialement, <br>  <br><br>\n</div>",
-          "discardedAt": null,
-          "correction": null,
           "attachments": []
         },
         {
@@ -33,8 +29,6 @@
           "createdAt": "2025-04-01T14:43:52+02:00",
           "email": "hedy.lamarr@example.com",
           "body": "Bonjour,\r\nCeci est un message.",
-          "discardedAt": null,
-          "correction": null,
           "attachments": []
         },
         {
@@ -42,10 +36,6 @@
           "createdAt": "2025-04-02T11:01:37+02:00",
           "email": "instructeur@guh.gouv.fr",
           "body": "Il manque les infos de la PAC",
-          "discardedAt": null,
-          "correction": {
-            "dateResolution": "2025-04-02T11:03:06+02:00"
-          },
           "attachments": []
         },
         {
@@ -53,8 +43,6 @@
           "createdAt": "2025-04-02T11:03:24+02:00",
           "email": "contact@demarches-simplifiees.fr",
           "body": "<p>[Votre dossier nº 23178443 va être examiné (Guichet unique de la haie – Aisne (02) / TEST)]</p><div>Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 a bien été reçu et <strong>pris en charge</strong>. Il va maintenant être examiné par le service. <br><br>\n</div><div> Cordialement, <br>  <br><br>\n</div>",
-          "discardedAt": null,
-          "correction": null,
           "attachments": []
         },
         {
@@ -62,10 +50,6 @@
           "createdAt": "2025-07-17T17:20:25+02:00",
           "email": "instructeur@guh.gouv.fr",
           "body": "Bonjour,\r\nIl manque une pièce jointe.\r\nMerci",
-          "discardedAt": null,
-          "correction": {
-            "dateResolution": "2025-07-17T17:22:26+02:00"
-          },
           "attachments": []
         },
         {
@@ -73,10 +57,6 @@
           "createdAt": "2025-07-17T17:25:13+02:00",
           "email": "hedy.lamarr@example.com",
           "body": "Ah oui une pièce jointe comme ça.",
-          "discardedAt": null,
-          "correction": {
-            "dateResolution": null
-          },
           "attachments": [
             {
               "__typename": "File",
@@ -94,8 +74,6 @@
           "createdAt": "2025-07-17T17:57:38+02:00",
           "email": "hedy.lamarr@example.com",
           "body": "Nouveau message !!\r\n\r\nAvec deux pièces jointes.",
-          "discardedAt": null,
-          "correction": null,
           "attachments": [
             {
               "__typename": "File",

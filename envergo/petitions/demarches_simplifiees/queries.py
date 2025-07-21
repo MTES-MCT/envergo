@@ -424,7 +424,8 @@ query getDossiersForDemarche(
 )
 
 GET_DOSSIER_MESSAGES_QUERY = (
-    MESSAGE_FRAGMENT
+    FILE_FRAGMENT
+    + MESSAGE_FRAGMENT
     + """
 query getDossier($dossierNumber: Int!)
 {
