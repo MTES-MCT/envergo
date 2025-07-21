@@ -441,8 +441,20 @@ dialog.hedge-data-dialog {
     justify-content: space-between;
   }
 
-  div.fr-fieldset__element img.hedge-radio-img {
-    max-width: 100%;
+  div.fr-fieldset__element {
+    .fr-radio-rich__img {
+      padding: 16px;
+      width: 0;
+      min-width: 0;
+
+      img {
+        width: 24px;
+      }
+    }
+
+    img.hedge-radio-img {
+      max-width: 100%;
+    }
   }
 }
 

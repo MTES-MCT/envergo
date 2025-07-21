@@ -7,7 +7,11 @@
 
   {% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
 
-    {{ field|compute_input_classes }}
+    {% if field|has_custom_template %}
+      {{ field }}
+    {% else %}
+      {{ field|compute_input_classes }}
+    {% endif %}
 
     {% if nest_field_class %}</div>{% endif %}
 
