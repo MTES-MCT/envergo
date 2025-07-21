@@ -392,6 +392,11 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert response.status_code == 200
     assert f"{ep_criteria[0].regulation}" in response.content.decode()
 
+    content = response.content.decode()
+    assert "Acceptabilité de la plantation" in content
+    assert "Maintien des haies PAC" in content
+    assert "Résultats de la simulation" in content
+
     # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
