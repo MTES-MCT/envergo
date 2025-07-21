@@ -12,6 +12,19 @@ register = template.Library()
 
 
 @register.filter
+def has_custom_template(field):
+    """Should we use the field's own template.
+
+    This is a hack, since we should always override the field's templates instead
+    of defining "field snippets".
+
+    This should be fixed some day.
+    """
+
+    return hasattr(field.field.widget, "custom_template")
+
+
+@register.filter
 def is_checkbox(field):
     """Is the given field a checkbox input?."""
 
