@@ -18,7 +18,7 @@ urlpatterns = [
                 # This is another "fake" url, only for matomo tracking
                 path(
                     "saisie-destruction/",
-                    RedirectView.as_view(pattern_name="moulinette_home"),
+                    RedirectView.as_view(pattern_name="moulinette_form"),
                     name="moulinette_saisie_d",
                 ),
                 # This is another "fake" url, only for matomo tracking
