@@ -287,10 +287,12 @@ def get_messages_from_ds(petition_project):
     """Get messages from DS"""
 
     dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
+    if not dossier:
+        return None
+
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
-
     return messages
 
 
