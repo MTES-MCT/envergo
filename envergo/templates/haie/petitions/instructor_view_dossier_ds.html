@@ -80,12 +80,12 @@
   </section>
   <section>
     <h3>Données saisies pour la simulation</h3>
-    <ul class="fr-mb-3w color-text-light instructor-view-list">
+    <ul class="fr-mb-3w instructor-view-list">
       {% for field in triage_form %}
         <li>{% field_summary field %}</li>
       {% endfor %}
     </ul>
-    <hr class="separator fr-mb-3w" />
+    <hr class="fr-mb-3w" />
     <ul class="fr-mb-3w instructor-view-list">
       {% for field in moulinette.main_form %}
         {% block main_form_field %}
