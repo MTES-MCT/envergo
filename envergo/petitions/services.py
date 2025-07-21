@@ -286,10 +286,15 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
 def get_messages_from_ds(petition_project):
     """Get messages from DS"""
 
-    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
-    if not dossier:
+    # Get messages only from DS
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    ds_client = DemarchesSimplifieesClient()
+    dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
+
+    if not dossier_with_messages_as_dict:
         return None
 
+    dossier = Dossier.from_dict(dossier_with_messages_as_dict)
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
