@@ -22,9 +22,16 @@ instruction_urlpatterns = [
         name="petition_project_instructor_view",
     ),
     path(
-        "dossier-ds/",
+        "dossier-complet/",
         PetitionProjectInstructorDossierDSView.as_view(),
-        name="petition_project_instructor_dossier_ds_view",
+        name="petition_project_instructor_dossier_complet_view",
+    ),
+    path(
+        "dossier-ds/",
+        RedirectView.as_view(
+            pattern_name="petition_project_instructor_dossier_complet_view",
+            permanent=True,
+        ),
     ),
     path(
         "notes/",
