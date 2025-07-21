@@ -7,7 +7,7 @@
     <label class="fr-label"
            {% if widget.attrs.id %}for="{{ widget.attrs.id }}"{% endif %}>{{ widget.label }}</label>
 
-    <div class="fr-radio-rich__img" data-fr-inject-svg>
+    <div class="fr-radio-rich__img">
       {% with "/images/hedges/icon-"|add:widget.value|add:".png" as icon_url %}
         <img src="{% static icon_url %}" alt="" />
         <!-- L’alternative de l’image (attribut alt) doit rester vide car l’image est illustrative et ne doit pas être restituée aux technologies d’assistance -->
