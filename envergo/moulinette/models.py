@@ -588,7 +588,7 @@ class Regulation(models.Model):
         return RESULTS_GROUP_MAPPING[self.result]
 
     def has_instructor_result_details_template(self) -> bool:
-        """Check if the regulation has templates for instructor result details."""
+        """Check if the regulation has a template for instructor result details for at least one criterion."""
         for criterion in self.criteria.all():
             try:
                 get_template(
@@ -600,7 +600,7 @@ class Regulation(models.Model):
         return False
 
     def has_plantation_condition_details_template(self) -> bool:
-        """Check if the regulation has templates for plantation condition details."""
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
         for criterion in self.criteria.all():
             try:
                 get_template(
