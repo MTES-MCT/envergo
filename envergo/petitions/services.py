@@ -88,7 +88,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     length_to_plant = hedge_data.length_to_plant()
 
     hedge_to_remove_by_destruction_mode = {
-        mode: HedgeList(label=label) for mode, label in MODE_DESTRUCTION_CHOICES
+        mode: HedgeList(label=label) for mode, _, label in MODE_DESTRUCTION_CHOICES
     }
 
     for hedge in hedge_data.hedges_to_remove():

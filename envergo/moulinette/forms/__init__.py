@@ -179,7 +179,7 @@ MOTIF_CHOICES = (
         "amenagement",
         mark_safe(
             """
-            Opération d’aménagement foncier<br/>
+            Opération de construction ou d'aménagement<br/>
             <span class="fr-hint-text">
                 Création ou agrandissement d’un bâtiment, d’un lotissement, d’une infrastructure…
             </span>
@@ -190,10 +190,10 @@ MOTIF_CHOICES = (
         "amelioration_ecologique",
         mark_safe(
             """
-            Amélioration écologique<br/>
+            Amélioration environnementale<br/>
             <span class="fr-hint-text">
                 Restauration de la continuité écologique, réimplantation sur un meilleur
-                emplacement environnemental…
+                emplacement environnemental, amélioration de l'accueil de la faune et de la flore…
             </span>
             """
         ),

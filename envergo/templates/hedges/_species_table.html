@@ -8,8 +8,7 @@
             <tr>
               <th>Groupe</th>
               <th>Nom commun</th>
-              <th>Nom latin</th>
-              <th>Niveau d'enjeu</th>
+              <th>Nom scientifique</th>
             </tr>
           </thead>
           <tbody>
@@ -20,7 +19,6 @@
                 <td>
                   <i>{{ s.scientific_name }}</i>
                 </td>
-                <td>{{ s.get_level_of_concern_display }}</td>
               </tr>
             {% endfor %}
           </tbody>
