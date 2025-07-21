@@ -28,6 +28,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -584,6 +586,30 @@ class Regulation(models.Model):
     def result_group(self):
         """Get the result group of the regulation, depending on its impact on the project."""
         return RESULTS_GROUP_MAPPING[self.result]
+
+    def has_instructor_result_details_template(self) -> bool:
+        """Check if the regulation has a template for instructor result details for at least one criterion."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(
+                    f"haie/petitions/{self.slug}/{criterion.slug}_instructor_result_details.html"
+                )
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
+
+    def has_plantation_condition_details_template(self) -> bool:
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(
+                    f"haie/petitions/{self.slug}/{criterion.slug}_plantation_condition_details.html"
+                )
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
 
 
 class Criterion(models.Model):
