@@ -41,10 +41,10 @@
                         </ul>
                       </div>
                     </li>
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_ds_view' %} fr-sidemenu__item--active{% endif %}">
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_complet_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_dossier_ds_view' %}aria-current="page"{% endif %}>
+                         href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_dossier_complet_view' %}aria-current="page"{% endif %}>
                       Dossier complet</a>
                     </li>
                     <hr class="separator--lignt">
@@ -117,4 +117,12 @@
   <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
+    window.addEventListener("load", function() {
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = null;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+    });
+  </script>
 {% endblock %}

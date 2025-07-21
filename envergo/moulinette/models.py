@@ -589,23 +589,25 @@ class Regulation(models.Model):
 
     def has_instructor_result_details_template(self) -> bool:
         """Check if the regulation has a template for instructor result details for at least one criterion."""
-        for criterion in self.criteria.all():
-            try:
-                get_template(
-                    f"haie/petitions/{self.slug}/{criterion.slug}_instructor_result_details.html"
-                )
-                return True
-            except TemplateDoesNotExist:
-                pass
-        return False
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_instructor_result_details.html"
+        )
 
     def has_plantation_condition_details_template(self) -> bool:
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_plantation_condition_details.html"
+        )
+
+    def has_key_elements_template(self) -> bool:
+        """Check if the regulation has a template for key elements for at least one criterion."""
+        return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
+
+    def has_criterion_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path for at least one criterion."""
         for criterion in self.criteria.all():
             try:
-                get_template(
-                    f"haie/petitions/{self.slug}/{criterion.slug}_plantation_condition_details.html"
-                )
+                get_template(template_path.format(self.slug, criterion.slug))
                 return True
             except TemplateDoesNotExist:
                 pass

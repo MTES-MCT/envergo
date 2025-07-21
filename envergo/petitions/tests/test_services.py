@@ -589,7 +589,6 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     )
     # noqa: E501
     expected_result = {
-        "bcae8_form": ANY,
         "lineaire_detruit_pac": 27.55060841703869,
         "lineaire_to_plant_pac": 27.55060841703869,
         "motif": "\n"

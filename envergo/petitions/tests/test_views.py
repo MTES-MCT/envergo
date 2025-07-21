@@ -443,7 +443,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     project = PetitionProjectFactory()
 
     instructor_ds_url = reverse(
-        "petition_project_instructor_dossier_ds_view",
+        "petition_project_instructor_dossier_complet_view",
         kwargs={"reference": project.reference},
     )
 
