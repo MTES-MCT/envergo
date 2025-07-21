@@ -1,7 +1,7 @@
 {% load utils %}
 
 {% if field|has_custom_template %}
-  {{ field }}
+  {% include '_field_snippet.html' with field=field %}
 
 {% elif field|is_checkbox %}
   {% include '_checkbox_snippet.html' with field=field %}

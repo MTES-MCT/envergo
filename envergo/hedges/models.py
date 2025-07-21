@@ -318,11 +318,11 @@ class HedgeData(models.Model):
 
 
 HEDGE_TYPES = (
-    ("degradee", "Haie dégradée ou résiduelle basse"),
-    ("buissonnante", "Haie buissonnante basse"),
-    ("arbustive", "Haie arbustive"),
+    ("degradee", "Dégradée ou résiduelle basse"),
+    ("buissonnante", "Buissonnante basse"),
+    ("arbustive", "Arbustive"),
     ("alignement", "Alignement d'arbres"),
-    ("mixte", "Haie mixte"),
+    ("mixte", "Mixte"),
 )
 
 HEDGE_PROPERTIES = (
