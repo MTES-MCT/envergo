@@ -6,14 +6,14 @@ from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.moulinette.forms.fields import DisplayBooleanField
-from envergo.utils.fields import AllowDisabledSelect
+from envergo.utils.fields import HedgeChoiceField
 
 
 class HedgePropertiesBaseForm(forms.Form):
     """Base Hedge properties form"""
 
     type_haie = forms.ChoiceField(
-        choices=(("", "Sélectionner une option"),) + HEDGE_TYPES,
+        choices=HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
@@ -21,7 +21,7 @@ class HedgePropertiesBaseForm(forms.Form):
         target="_blank" rel="noopener">Aide</a>
         """
         ),
-        widget=AllowDisabledSelect(),
+        widget=HedgeChoiceField,
     )
     sur_parcelle_pac = forms.BooleanField(
         label="Située sur une parcelle PAC",
