@@ -5,7 +5,12 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
-from envergo.moulinette.forms.fields import DisplayBooleanField
+from envergo.moulinette.forms.fields import (
+    DisplayBooleanField,
+    DisplayChoiceField,
+    extract_choices,
+    extract_display_function,
+)
 from envergo.utils.fields import AllowDisabledSelect
 
 
@@ -38,7 +43,7 @@ class HedgePropertiesBaseForm(forms.Form):
 
 
 MODE_DESTRUCTION_CHOICES = (
-    ("arrachage", "Arrachage"),
+    ("arrachage", "Arrachage", "Arrachage"),
     (
         "coupe_a_blanc",
         mark_safe(
@@ -51,18 +56,19 @@ MODE_DESTRUCTION_CHOICES = (
         ),
         "Coupe à blanc (sur essence ne recépant pas)",
     ),
-    ("autre", "Autre"),
+    ("autre", "Autre", "Autre"),
 )
 
 
 class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
     """Hedge to remove properties form"""
 
-    mode_destruction = forms.ChoiceField(
-        choices=MODE_DESTRUCTION_CHOICES,
+    mode_destruction = DisplayChoiceField(
+        choices=extract_choices(MODE_DESTRUCTION_CHOICES),
         label="",
         widget=forms.RadioSelect,
         initial="arrachage",
+        get_display_value=extract_display_function(MODE_DESTRUCTION_CHOICES),
     )
     vieil_arbre = forms.BooleanField(
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
