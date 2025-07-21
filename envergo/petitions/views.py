@@ -744,6 +744,8 @@ class PetitionProjectInstructorDossierDSView(
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 
+        context["triage_form"] = self.object.get_triage_form()
+
         return context
 
 
