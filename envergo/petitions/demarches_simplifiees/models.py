@@ -102,7 +102,7 @@ class AddressType(Enum):
 
 
 class Civilite(Enum):
-    M = "M."
+    M = "M"
     Mme = "Mme"
 
 
