@@ -588,19 +588,19 @@ class Regulation(models.Model):
         return RESULTS_GROUP_MAPPING[self.result]
 
     def has_instructor_result_details_template(self) -> bool:
-        """Check if the regulation has templates for instructor result details."""
+        """Check if the regulation has a template for instructor result details for at least one criterion."""
         return self.has_criterion_template(
             "haie/petitions/{}/{}_instructor_result_details.html"
         )
 
     def has_plantation_condition_details_template(self) -> bool:
-        """Check if the regulation has templates for plantation condition details."""
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
         return self.has_criterion_template(
             "haie/petitions/{}/{}_plantation_condition_details.html"
         )
 
     def has_key_elements_template(self) -> bool:
-        """Check if the regulation has templates for key elements."""
+        """Check if the regulation has a template for key elements for at least one criterion."""
         return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
 
     def has_criterion_template(self, template_path) -> bool:

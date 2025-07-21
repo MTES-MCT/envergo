@@ -12,6 +12,7 @@ register = template.Library()
 
 @register.simple_tag()
 def criterion_instructor_side_nav(regulation, criterion):
+    """Render the side navigation of the instructor view for a criterion."""
     template = (
         f"haie/petitions/{regulation.slug}/{criterion.slug}_instructor_side_nav.html"
     )
@@ -32,6 +33,8 @@ def criterion_instructor_view_part(
     project,
     moulinette,
 ):
+    """Render a specific part of the instructor view for a criterion."""
+
     template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
     context_dict = context.flatten()
     context_dict.update(
@@ -48,6 +51,8 @@ def criterion_instructor_view_part(
 
 @register.simple_tag
 def regulation_plantation_conditions(plantation_evaluation, regulation):
+    """Render the subset of plantation conditions related to a given regulation."""
+
     condition_to_display = []
     for condition in plantation_evaluation.conditions:
         for criterion in regulation.criteria.all():
@@ -68,6 +73,7 @@ def regulation_plantation_conditions(plantation_evaluation, regulation):
 
 @register.simple_tag
 def regulation_has_condition_to_display(plantation_evaluation, regulation):
+    """Check if there are any plantation conditions to display for a given regulation."""
     for condition in plantation_evaluation.conditions:
         for criterion in regulation.criteria.all():
             if (
