@@ -220,9 +220,7 @@ class PlantationEvaluator:
             if regulation.has_perimeters:
                 all_perimeters = regulation.perimeters.all()
                 activated_perimeters = [p for p in all_perimeters if p.is_activated]
-                if all_perimeters and not any(activated_perimeters):
-                    continue
-                if not all_perimeters:
+                if not all_perimeters or not any(activated_perimeters):
                     continue
 
             for criterion in regulation.criteria.all():
