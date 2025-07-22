@@ -440,6 +440,26 @@ dialog.hedge-data-dialog {
     display: flex;
     justify-content: space-between;
   }
+
+  div.fr-fieldset__element {
+    .fr-radio-rich__img {
+      padding: 16px;
+      width: 0;
+      min-width: 0;
+
+      img {
+        width: 24px;
+      }
+    }
+
+    img.hedge-radio-img {
+      max-width: 100%;
+    }
+  }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none;
+  }
 }
 
 div#group-haies-content {
