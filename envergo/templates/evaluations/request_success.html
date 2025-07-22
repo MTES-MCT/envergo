@@ -7,17 +7,19 @@
 {% block article %}
   <h1>Votre demande d'avis réglementaire a bien été enregistrée</h1>
 
-  <div class="fr-alert fr-alert--success fr-mb-3w">
+  <div class="fr-alert fr-alert--success fr-mb-5w">
     <p class="fr-alert__title">Nous avons bien reçu votre demande d'avis réglementaire.</p>
-    <p>Vous recevrez une réponse dans les trois jours ouvrés.</p>
+    <p>Un email de confirmation vous a été envoyé (pensez à vérifier le dossier de courrier indésirable).</p>
+    <p>Vous recevrez une réponse à votre demande d'avis dans les trois jours ouvrés.</p>
   </div>
 
+  <h5 class="fr-mb-2w">Modifier les documents</h5>
   <p>
-    Vous pouvez <a href="{% url "request_eval_wizard_step_3" evalreq.reference %}">compléter ou modifier vos documents via ce formulaire</a>.
+    Vous pouvez à tout moment <a href="{% url "request_eval_wizard_step_3" evalreq.reference %}">ajouter, supprimer ou remplacer des documents dans votre demande</a>.
   </p>
 
   <p>
-    Pour toute question
+    Pour toute question, 
     <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter</a>.
   </p>
 
