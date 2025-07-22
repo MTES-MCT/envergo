@@ -553,6 +553,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    matomo_category = "projet"
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
@@ -564,7 +565,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
-                    "projet",
+                    self.matomo_category,
                     self.matomo_tag,
                     self.request,
                     **self.object.get_log_event_data(),
@@ -583,9 +584,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
 
         plantation_url = reverse(
             "input_hedges",
@@ -669,6 +667,10 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         if not context["is_department_instructor"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):
@@ -742,6 +744,19 @@ class PetitionProjectInstructorDossierDSView(
             )
 
         return context
+
+
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    matomo_category = "message"
+    matomo_tag = "lecture"
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):

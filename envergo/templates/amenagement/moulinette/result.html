@@ -13,6 +13,7 @@
 
 {% block project_summary %}
   <form method="post"
+        class="spinner-form"
         novalidate
         autocomplete="off"
         action="{% url "moulinette_home" %}"
@@ -130,7 +131,6 @@
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
     var PROJECT_MAP_ID = 'map';
-    var SIMULATION_FORM_ID = "moulinette-form";
     window.MAPS = window.MAPS || {};
     window.MAPS[PROJECT_MAP_ID] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
@@ -157,7 +157,6 @@
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_project_map.js' %}"></script>
-  <script defer src="{% static 'js/libs/form_submit_feedback.js' %}"></script>
   <script defer
           src="{% static 'js/libs/amenagement_result_actions_banner.js' %}"></script>
 {% endblock %}

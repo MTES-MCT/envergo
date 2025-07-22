@@ -39,10 +39,13 @@ class Command(BaseCommand):
             url = reverse("admin:evaluations_request_change", args=[request.id])
             message = dedent(
                 f"""\
-                Une demande d'avis a été mise à jour.
+                **Une [demande d'avis](https://envergo.beta.gouv.fr{url}) a été mise à jour.**
+
                 Adresse : {request.address}
+
+                Date de la demande initiale : {request.created_at:%d/%m/%Y}
+
                 {len(list(files))} nouveaux fichiers ont été ajoutés.
-                [Admin django](https://envergo.beta.gouv.fr{url})
 
                 ping {", ".join(settings.OPS_MATTERMOST_HANDLERS)}
                 """

@@ -165,6 +165,8 @@ class PetitionProject(models.Model):
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
+        logger.info(f"Synchronizing file {self.reference} with DS")
+
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
 

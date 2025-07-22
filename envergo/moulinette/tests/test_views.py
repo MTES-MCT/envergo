@@ -196,3 +196,40 @@ def test_moulinette_utm_param(client):
     assert HOME_TITLE in res.content.decode()
     assert RESULT_TITLE not in res.content.decode()
     assert FORM_ERROR not in res.content.decode()
+
+
+def test_moulinette_form_surface_field(client):
+    ConfigAmenagementFactory()
+
+    # WHEN I post a form with inconsistent surfaces
+    url = reverse("moulinette_home")
+    data = {
+        "created_surface": 1500,
+        "final_surface": 500,
+        "lng": -1.54394,
+        "lat": 47.21381,
+    }
+    res = client.post(url, data, follow=True)
+    # THEN I should get an error message
+    assert res.status_code == 200
+
+    assert (
+        "La surface impactée totale doit être au moins égale à celle des nouveaux impacts"
+        in res.content.decode()
+    )
+
+    # WHEN I post a form with inconsistent existing_surface
+    data = {
+        "created_surface": 1500,
+        "final_surface": 1500,
+        "existing_surface": -500,
+        "lng": -1.54394,
+        "lat": 47.21381,
+    }
+    res = client.post(url, data)
+    # THEN it should override existing_surface
+    assert res.status_code == 302
+    assert (
+        res.url
+        == "/simulateur/resultat/?created_surface=1500&final_surface=1500&lng=-1.54394&lat=47.21381"
+    )

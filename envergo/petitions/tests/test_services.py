@@ -64,11 +64,10 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
     # AND the project details are correctly populated
     project_details = get_instructor_view_context(petition_project, moulinette)
-    ds_data = project_details["ds_data"]
 
-    assert ds_data.applicant_name == "Mme Hedy Lamarr"
-    assert ds_data.city == "Laon (02000)"
-    assert ds_data.pacage == "123456789"
+    assert project_details["applicant"] == "Mme Hedy Lamarr"
+    assert project_details["city"] == "Laon (02000)"
+    assert project_details["pacage"] == "123456789"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
@@ -198,7 +197,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 
     args, kwargs = mock_notify.call_args
     assert (
-        "Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés"
+        "Les identifiants des champs PACAGE, commune principale et/ou structure ne sont pas renseignés"
         in args[0]
     )
     assert "haie" in args[1]
@@ -590,7 +589,6 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     )
     # noqa: E501
     expected_result = {
-        "bcae8_form": ANY,
         "lineaire_detruit_pac": 27.55060841703869,
         "lineaire_to_plant_pac": 27.55060841703869,
         "motif": "\n"
