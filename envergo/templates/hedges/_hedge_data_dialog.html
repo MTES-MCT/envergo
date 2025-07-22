@@ -1,7 +1,7 @@
 <dialog id="{{ dialog_id }}"
         aria-labelledby="{{ dialog_id }}-title"
         role="dialog"
-        class="fr-modal hedge-data-dialog">
+        class="fr-modal hedge-data-dialog{% if dialog_mode != mode %} read-only{% endif %}">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-10 fr-col-xl-9">
