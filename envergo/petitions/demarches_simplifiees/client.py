@@ -67,12 +67,14 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(
+    def _fetch_dossier(
         self,
         dossier_number,
-        query=GET_DOSSIER_QUERY,
-        fake_dossier_filename="fake_dossier.json",
+        query,
+        fake_dossier_filename,
     ) -> dict | None:
+        """Fetch dossier from DS, using specific query and fake dossier filename"""
+
         variables = {"dossierNumber": dossier_number}
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
@@ -150,6 +152,26 @@ class DemarchesSimplifieesClient:
 
         return data["dossier"]
 
+    def get_dossier(self, dossier_number):
+        """Get dossier"""
+        fake_dossier_filename = "fake_dossier.json"
+
+        data = self._fetch_dossier(
+            dossier_number, GET_DOSSIER_QUERY, fake_dossier_filename
+        )
+
+        return data
+
+    def get_dossier_messages(self, dossier_number):
+        """Get dossier messages only"""
+        fake_dossier_filename = "fake_dossier_messages.json"
+
+        data = self._fetch_dossier(
+            dossier_number, GET_DOSSIER_MESSAGES_QUERY, fake_dossier_filename
+        )
+
+        return data
+
     def get_dossiers_for_demarche(
         self, demarche_number, dossiers_updated_since: datetime
     ) -> DemarcheWithRawDossiers | None:
@@ -199,16 +221,6 @@ class DemarchesSimplifieesClient:
             "hasNextPage": has_next_page,
             "endCursor": cursor,
         }
-
-    def get_dossier_messages(self, dossier_number):
-        """Get dossier messages only"""
-        fake_dossier_filename = "fake_dossier_messages.json"
-
-        data = self.get_dossier(
-            dossier_number, GET_DOSSIER_MESSAGES_QUERY, fake_dossier_filename
-        )
-
-        return data
 
 
 class DemarchesSimplifieesError(Exception):
