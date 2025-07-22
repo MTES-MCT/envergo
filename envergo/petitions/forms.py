@@ -93,3 +93,13 @@ class ProcedureForm(forms.ModelForm):
             "stage_date": "Vous pouvez choisir une date rétroactive si nécessaire.",
             "stage_update_comment": "Ajouter un commentaire expliquant le contexte du changement.",
         }
+
+
+class PetitionProjectInstructorMessageForm(forms.Form):
+    """Form to send a message through demarche simplifie API."""
+
+    message_body = forms.CharField(widget=forms.Textarea(attrs={"rows": 8}))
+
+    def send_message(self):
+        # send message using the self.cleaned_data dictionary
+        pass
