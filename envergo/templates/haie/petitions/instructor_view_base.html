@@ -1,79 +1,104 @@
 {% extends "base.html" %}
 
+{% load petitions %}
+
 {% load static %}
 
 {% block title %}Instruction du dossier{% endblock %}
 
 {% block container %}
-
-  <section class="fr-py-8w">
+  <section>
     <div class="fr-container">
       <div class="fr-grid-row">
         <div class="fr-col fr-col-12 fr-col-md-3">
           <nav class="fr-sidemenu fr-sidemenu--sticky"
                aria-labelledby="fr-sidemenu-title">
-            <div class="fr-sidemenu__inner">
+            <div id="instructor-view-side-menu" class="fr-sidemenu__inner">
               <div id="fr-sidemenu-wrapper">
                 <ul class="fr-sidemenu__list">
-
-                  {% block project_sidemenu %}
-                    {% with request.resolver_match.url_name as url_name %}
-                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_view' %} fr-sidemenu__item--active{% endif %}">
-                        <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_view' petition_project.reference %}"
-                           {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
-                        Informations générales</a>
-                      </li>
-                      {% for regulation in moulinette.regulations|dictsort:"display_order" %}
-                        <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
-                          <a class="fr-sidemenu__link"
-                             href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
-                             {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
-                          {{ regulation.title }}</a>
-                        </li>
-                      {% endfor %}
-                      <li class="ds-item fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_ds_view' %} fr-sidemenu__item--active{% endif %}">
-                        <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_dossier_ds_view' petition_project.reference %}"
-                           {% if url_name == 'petition_project_instructor_dossier_ds_view' %}aria-current="page"{% endif %}>
-                        Formulaire rempli sur Démarches simplifiées</a>
-
-                        {% if url_name == 'petition_project_instructor_dossier_ds_view' and project_details.ds_data.header_sections %}
-                          <div id="fr-sidemenu-item-1">
-                            <ul class="fr-sidemenu__list">
-                              {% for item in project_details.ds_data.header_sections %}
-                                <li class="fr-sidemenu__item">
-                                  <a class="fr-sidemenu__link"
-                                     href="#section-{{ item|slugify }}"
-                                     target="_self">{{ item }}</a>
-                                </li>
-                              {% endfor %}
-                            </ul>
-                          </div>
-                        {% endif %}
-                      </li>
-                      <hr class="separator--lignt">
-                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_notes_view' %} fr-sidemenu__item--active{% endif %}">
-                        <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_notes_view' petition_project.reference %}"
-                           {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
-                        Notes libres pour l'instruction</a>
-                      </li>
-                    {% endwith %}
-                  {% endblock %}
-
+                  {% with request.resolver_match.url_name as url_name %}
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
+                      Informations générales</a>
+                    </li>
+                    <li class="fr-sidemenu__item">
+                      <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
+                              aria-controls="sidemenu-3"
+                              type="button"
+                              class="fr-sidemenu__btn">Réglementations</button>
+                      <div class="fr-collapse" id="sidemenu-3">
+                        <ul class="fr-sidemenu__list">
+                          {% for regulation in moulinette.regulations|dictsort:"display_order" %}
+                            <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
+                              <a class="fr-sidemenu__link"
+                                 href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
+                                 {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
+                              {{ regulation.title }}</a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_complet_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_dossier_complet_view' %}aria-current="page"{% endif %}>
+                      Dossier complet</a>
+                    </li>
+                    <hr class="separator--lignt">
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_notes_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_notes_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
+                      Notes libres pour l'instruction</a>
+                    </li>
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_messagerie_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
+                      Messagerie</a>
+                    </li>
+                  {% endwith %}
+                </ul>
+                <ul class="fr-sidemenu__list fr-btns-group fr-btns-group--icon-left fr-mt-2w">
+                  <li>
+                    <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
+                            type="button"
+                            data-fr-opened="false"
+                            aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
+                  </li>
+                  <li>
+                    <a class="fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-download-line"
+                       title="Dossier dans Démarches Simplifiées"
+                       href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger le tracé des haies</a>
+                  </li>
+                  {% if is_department_instructor %}
+                    <li>
+                      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line"
+                              id="invitation-token-modal-button"
+                              data-event-category="projet"
+                              data-event-action="invitation"
+                              data-event-name="{{ petition_project.reference }}"
+                              data-fr-opened="false"
+                              aria-controls="invitation-token-modal">
+                        Inviter une personne à consulter le dossier
+                      </button>
+                    </li>
+                  {% endif %}
                 </ul>
               </div>
             </div>
           </nav>
         </div>
         <div id="project-specifications-instructor"
-             class="fr-col fr-col-12 fr-col-md-9 fr-pl-10w">
+             class="fr-col fr-col-12 fr-col-md-9">
 
-          {% include 'haie/petitions/_summary_dossier.html' with project_details=project_details petition_project=petition_project %}
-
-          {% block project_content %}{% endblock %}
-
+          {% include 'haie/petitions/_summary_dossier.html' %}
+          <div class="fr-pl-10w">
+            {% block project_content %}{% endblock %}
+          </div>
         </div>
       </div>
     </div>
@@ -83,10 +108,20 @@
 {% endblock %}
 {% block extra_body %}
   {% include 'haie/petitions/_invitation_token_modal.html' %}
+  {% include 'haie/moulinette/_hedge_input_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
   <script>const INVITATION_TOKEN_URL = '{{ invitation_token_url }}';</script>
   <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
+    window.addEventListener("load", function() {
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = null;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+    });
+  </script>
 {% endblock %}

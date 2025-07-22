@@ -36,6 +36,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    extract_data_from_fields,
     get_instructor_view_context,
 )
 from envergo.utils.mattermost import notify
@@ -55,7 +56,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
-        .select_related("hedge_data")
+        .select_related("hedge_data", "department__confighaie")
         .order_by("-created_at")
     )
     paginate_by = 30
@@ -80,6 +81,20 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = self.queryset.none()
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        for obj in context["object_list"]:
+            dossier = obj.prefetched_dossier
+            if dossier:
+                city, organization, _ = extract_data_from_fields(
+                    obj.department.confighaie, dossier
+                )
+                obj.city = city
+                obj.organization = organization
+
+        return context
 
 
 class PetitionProjectCreate(FormView):
@@ -511,10 +526,7 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
-        context["ds_url"] = (
-            f"https://www.demarches-simplifiees.fr/dossiers/"
-            f"{self.object.demarches_simplifiees_dossier_number}"
-        )
+        context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
@@ -541,6 +553,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    matomo_category = "projet"
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
@@ -552,7 +565,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
-                    "projet",
+                    self.matomo_category,
                     self.matomo_tag,
                     self.request,
                     **self.object.get_log_event_data(),
@@ -571,9 +584,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
-        context["project_url"] = reverse(
-            "petition_project", kwargs={"reference": self.object.reference}
-        )
 
         plantation_url = reverse(
             "input_hedges",
@@ -617,6 +627,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context["matomo_custom_url"] = self.request.build_absolute_uri(
             matomo_custom_path
         )
+        context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
+            moulinette.config.demarche_simplifiee_number
+        )
 
         return context
 
@@ -640,9 +653,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["project_details"] = get_instructor_view_context(
-            self.object,
-            context["moulinette"],
-            self.request.site,
+            self.object, context["moulinette"]
         )
 
         # Send message if info from DS is not in project details
@@ -656,6 +667,10 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
         if not context["is_department_instructor"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):
@@ -710,7 +725,6 @@ class PetitionProjectInstructorDossierDSView(
         context["project_details"] = compute_instructor_informations_ds(
             self.object,
             context["moulinette"],
-            self.request.site,
         )
 
         # Send message if info from DS is not in project details
@@ -729,7 +743,22 @@ class PetitionProjectInstructorDossierDSView(
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 
+        context["triage_form"] = self.object.get_triage_form()
+
         return context
+
+
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    matomo_category = "message"
+    matomo_tag = "lecture"
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):

@@ -28,6 +28,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -85,6 +87,7 @@ REGULATIONS = Choices(
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
+    ("urbanisme_haie", "Urbanisme haie"),
 )
 
 
@@ -163,7 +166,8 @@ class ResultGroupEnum(IntEnum):
         1  # if there is some regulation in this group, the project cannot go further
     )
     RestrictiveRegulations = 2  # a dossier will be required
-    OtherRegulations = 3  # these regulations do not impact the project
+    UnsimulatedRegulations = 3  # has an impact but will not be simulated
+    OtherRegulations = 4  # these regulations do not impact the project
 
 
 RESULTS_GROUP_MAPPING = {
@@ -177,13 +181,13 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.dispense_sous_condition: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
     RESULTS.dispense: ResultGroupEnum.OtherRegulations,
     RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
-    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
 }
@@ -582,6 +586,32 @@ class Regulation(models.Model):
     def result_group(self):
         """Get the result group of the regulation, depending on its impact on the project."""
         return RESULTS_GROUP_MAPPING[self.result]
+
+    def has_instructor_result_details_template(self) -> bool:
+        """Check if the regulation has a template for instructor result details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_instructor_result_details.html"
+        )
+
+    def has_plantation_condition_details_template(self) -> bool:
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_plantation_condition_details.html"
+        )
+
+    def has_key_elements_template(self) -> bool:
+        """Check if the regulation has a template for key elements for at least one criterion."""
+        return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
+
+    def has_criterion_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path for at least one criterion."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(template_path.format(self.slug, criterion.slug))
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
 
 
 class Criterion(models.Model):
@@ -1012,6 +1042,12 @@ class ConfigHaie(ConfigBase):
 
     demarches_simplifiees_city_id = models.CharField(
         'Identifiant DS "Commune principale"',
+        blank=True,
+        max_length=64,
+    )
+
+    demarches_simplifiees_organization_id = models.CharField(
+        'Identifiant DS "Nom de votre structure"',
         blank=True,
         max_length=64,
     )
@@ -1872,7 +1908,13 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie", "alignement_arbres"]
+    REGULATIONS = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "urbanisme_haie",
+    ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
     debug_result_template = "haie/moulinette/result_debug.html"

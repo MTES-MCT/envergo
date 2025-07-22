@@ -84,7 +84,7 @@ class CriterionAdminForm(forms.ModelForm):
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    perimeter = PerimeterChoiceField(queryset=Perimeter.objects.all())
+    perimeter = PerimeterChoiceField(required=False, queryset=Perimeter.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -436,6 +436,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "demarche_simplifiee_number",
                     "demarche_simplifiee_pre_fill_config",
                     "demarches_simplifiees_city_id",
+                    "demarches_simplifiees_organization_id",
                     "demarches_simplifiees_pacage_id",
                     "demarches_simplifiees_project_url_id",
                 ],

@@ -1,18 +1,26 @@
-import json
+import datetime
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from textwrap import dedent
 from typing import Any, List
 
-import requests
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import Hedge
+from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
+from envergo.petitions.demarches_simplifiees.models import (
+    CheckboxChamp,
+    Dossier,
+    ExplicationChampDescriptor,
+    HeaderSectionChampDescriptor,
+    PieceJustificativeChamp,
+    YesNoChamp,
+)
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
@@ -41,10 +49,6 @@ class Item:
 
 @dataclass
 class DemarchesSimplifieesDetails:
-    applicant_name: str | None
-    city: str | None
-    pacage: str | None
-    usager: str
     header_sections: list | None
     champs: list | None
 
@@ -56,6 +60,9 @@ class ProjectDetails:
     demarches_simplifiees_dossier_number: int
     demarche_simplifiee_number: int
     usager: str
+    applicant: str
+    city: str
+    organization: str
     ds_data: DemarchesSimplifieesDetails | None
 
 
@@ -81,7 +88,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     length_to_plant = hedge_data.length_to_plant()
 
     hedge_to_remove_by_destruction_mode = {
-        mode: HedgeList(label=label) for mode, label in MODE_DESTRUCTION_CHOICES
+        mode: HedgeList(label=label) for mode, _, label in MODE_DESTRUCTION_CHOICES
     }
 
     for hedge in hedge_data.hedges_to_remove():
@@ -123,7 +130,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     return context
 
 
-def get_instructor_view_context(petition_project, moulinette, site) -> dict:
+def get_instructor_view_context(petition_project, moulinette) -> dict:
     """Build context for ProjectDetails instructor page view"""
 
     # Build project details
@@ -131,186 +138,18 @@ def get_instructor_view_context(petition_project, moulinette, site) -> dict:
 
     # Get ds details
     config = moulinette.config
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
+    dossier = get_demarches_simplifiees_dossier(petition_project)
 
-    city = None
-    pacage = None
-    ds_details = None
-
-    if dossier:
-        applicant = dossier.get("demandeur") or {}
-        applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-        applicant_name = (
-            None
-            if applicant_name is None or applicant_name.strip() == ""
-            else applicant_name
-        )
-        champs = dossier.get("champs", [])
-
-        city_field = next(
-            (
-                champ
-                for champ in champs
-                if champ["id"] == config.demarches_simplifiees_city_id
-            ),
-            None,
-        )
-        if city_field:
-            city = city_field.get("stringValue", None)
-
-        pacage_field = next(
-            (
-                champ
-                for champ in champs
-                if champ["id"] == config.demarches_simplifiees_pacage_id
-            ),
-            None,
-        )
-        if pacage_field:
-            pacage = pacage_field.get("stringValue", None)
-
-        usager = (dossier.get("usager") or {}).get("email", "")
-
-        ds_details = DemarchesSimplifieesDetails(
-            applicant_name, city, pacage, usager, None, None
-        )
-
-    context = {
-        "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
-        "demarche_simplifiee_number": config.demarche_simplifiee_number,
-        "usager": ds_details.usager if ds_details else "",
-        "ds_data": ds_details,
-    }
-    context.update(project_summary)
-
-    return context
-
-
-def compute_instructor_informations_ds(
-    petition_project, moulinette, site
-) -> ProjectDetails:
-    """Compute ProjectDetails with instructor informations"""
-    # Get ds details
-    config = moulinette.config
-
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site
-    )
-
-    if not dossier:
-        return ProjectDetails(
-            demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-            demarche_simplifiee_number=config.demarche_simplifiee_number,
-            usager="",
-            ds_data=None,
-        )
-
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    demarche = dossier.get("demarche")
-    header_sections = None
-    champs = dossier.get("champs", [])
-
-    if demarche:
-        header_sections, explication_champs_ids = (
-            get_header_explanation_from_ds_demarche(demarche)
-        )
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    # Build champs_display list without explication_champs
-    champs_display = [
-        Item(
-            c.get("label"),
-            get_item_value_from_ds_champs(c),
-            None,
-            None,
-        )
-        for c in champs
-        if c.get("id") not in explication_champs_ids
-    ]
-
-    ds_details = DemarchesSimplifieesDetails(
-        applicant_name, None, None, usager, header_sections, champs_display
-    )
-
-    return ProjectDetails(
-        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-        demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager if ds_details else "",
-        ds_data=ds_details,
-    )
-
-
-def get_item_value_from_ds_champs(champs):
-    """get item value from dossier champs
-    Ok better to do with yesno filter…
-    """
-
-    type_name = champs.get("__typename") or ""
-    value = champs.get("stringValue") or ""
-
-    if type_name == "CheckboxChamp":
-        if champs.get("checked"):
-            value = "oui"
-        else:
-            value = "non"
-    elif type_name == "YesNoChamp":
-        if champs.get("selected"):
-            value = "oui"
-        else:
-            value = "non"
-    elif type_name == "PieceJustificativeChamp":
-        pieces = champs.get("files") or []
-        value = ItemFiles(
-            [
-                FileInfo(
-                    p["filename"],
-                    p["contentType"],
-                    p["url"],
-                )
-                for p in pieces
-            ]
-        )
-
-    return value
-
-
-def get_header_explanation_from_ds_demarche(demarche):
-    """Get header sections and explanation from demarche champDescriptors"""
-
-    champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
-    header_sections = []
-    explication_champs = []
-
-    if champ_descriptors:
-        for champ_descriptor in champ_descriptors:
-            type_name = champ_descriptor.get("__typename", "")
-            if type_name == "HeaderSectionChampDescriptor":
-                label = champ_descriptor.get("label", "")
-                header_sections.append(label)
-            if type_name == "ExplicationChampDescriptor":
-                champ_id = champ_descriptor.get("id")
-                explication_champs.append(champ_id)
-
-    return header_sections, explication_champs
-
-
-def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config, site
-) -> dict | None:
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    city = ""
+    pacage = ""
+    organization = ""
+    usager = ""
+    applicant = ""
 
     if (
         not config.demarches_simplifiees_pacage_id
         or not config.demarches_simplifiees_city_id
+        or not config.demarches_simplifiees_organization_id
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",
@@ -322,170 +161,217 @@ def fetch_project_details_from_demarches_simplifiees(
             "admin:moulinette_confighaie_change",
             args=[config.id],
         )
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
             "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
             context={
                 "department": config.department.department,
-                "domain": site.domain,
+                "domain": current_site.domain,
                 "admin_url": admin_url,
             },
         )
         notify(dedent(message), "haie")
-        return None
 
-    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
-    variables = f"""{{
-              "dossierNumber":{dossier_number}
-            }}"""
+    if dossier:
+        city, organization, pacage = extract_data_from_fields(config, dossier)
+        usager = dossier.usager.email or ""
+        applicant = dossier.applicant_name or ""
 
-    query = ""
-
-    with open(
-        Path(
-            settings.APPS_DIR
-            / "petitions"
-            / "demarches_simplifiees"
-            / "queries"
-            / "get_dossier.gql"
-        ),
-        "r",
-    ) as file:
-        query = file.read()
-
-    body = {
-        "query": query,
-        "variables": variables,
+    context = {
+        "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
+        "demarche_simplifiee_number": config.demarche_simplifiee_number,
+        "usager": usager,
+        "city": city,
+        "pacage": pacage,
+        "organization": organization,
+        "applicant": applicant,
     }
+    context.update(project_summary)
 
-    dossier = None
+    return context
 
-    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-        logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing."
-            f"Use fake dossier if dossier is not draft."
-            f"\nrequest.url: {api_url}"
-            f"\nrequest.body: {body}"
+
+def extract_data_from_fields(config, dossier):
+    """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
+    city = ""
+    pacage = ""
+    organization = ""
+
+    champs = dossier.champs
+    city_field = next(
+        (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
+        None,
+    )
+    if city_field:
+        city = city_field.stringValue
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.stringValue
+    organization_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_organization_id
+        ),
+        None,
+    )
+    if organization_field:
+        organization = organization_field.stringValue
+
+    return city, organization, pacage
+
+
+def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectDetails:
+    """Compute ProjectDetails with instructor informations"""
+    # Get ds details
+    config = moulinette.config
+
+    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
+
+    if not dossier:
+        return ProjectDetails(
+            demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+            demarche_simplifiee_number=config.demarche_simplifiee_number,
+            usager="",
+            applicant="",
+            city="",
+            organization="",
+            ds_data=None,
         )
-        with open(
-            Path(
-                settings.APPS_DIR
-                / "petitions"
-                / "demarches_simplifiees"
-                / "data"
-                / "fake_dossier.json"
-            ),
-            "r",
-        ) as file:
-            response = json.load(file)
-            dossier = response.get("data", {}).get("dossier") or {}
+
+    demarche = dossier.demarche
+    champs = dossier.champs
+
+    header_sections, explication_champs_ids = get_header_explanation_from_ds_demarche(
+        demarche
+    )
+
+    # Build champs_display list without explication_champs
+    champs_display = [
+        Item(
+            c.label,
+            get_item_value_from_ds_champ(c),
+            None,
+            None,
+        )
+        for c in champs
+        if c.id not in explication_champs_ids
+    ]
+
+    ds_details = DemarchesSimplifieesDetails(
+        header_sections,
+        champs_display,
+    )
+
+    city, organization, _ = extract_data_from_fields(config, dossier)
+
+    return ProjectDetails(
+        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
+        demarche_simplifiee_number=config.demarche_simplifiee_number,
+        usager=dossier.usager.email or "",
+        applicant=dossier.applicant_name or "",
+        city=city,
+        organization=organization,
+        ds_data=ds_details,
+    )
+
+
+def get_item_value_from_ds_champ(champ):
+    """get item value from a dossier champ
+    Ok better to do with yesno filter…
+    """
+
+    value = champ.stringValue or ""
+
+    if isinstance(champ, CheckboxChamp):
+        if champ.value:
+            value = "oui"
+        else:
+            value = "non"
+    elif isinstance(champ, YesNoChamp):
+        if champ.value:
+            value = "oui"
+        else:
+            value = "non"
+    elif isinstance(champ, PieceJustificativeChamp):
+        pieces = champ.files or []
+        value = ItemFiles(
+            [
+                FileInfo(
+                    p.filename,
+                    p.contentType,
+                    p.url,
+                )
+                for p in pieces
+            ]
+        )
+
+    return value
+
+
+def get_header_explanation_from_ds_demarche(demarche):
+    """Get header sections and explanation from demarche champDescriptors"""
+
+    champ_descriptors = demarche.revision.champDescriptors
+    header_sections = []
+    explication_champs = []
+
+    if champ_descriptors:
+        for champ_descriptor in champ_descriptors:
+            if isinstance(champ_descriptor, HeaderSectionChampDescriptor):
+                label = champ_descriptor.label
+                header_sections.append(label)
+            if isinstance(champ_descriptor, ExplicationChampDescriptor):
+                champ_id = champ_descriptor.id
+                explication_champs.append(champ_id)
+
+    return header_sections, explication_champs
+
+
+def get_demarches_simplifiees_dossier(
+    petition_project,
+    force_update: bool = False,
+) -> Dossier | None:
+    """Get dossier from Demarches Simplifiees either from DB if it is up to date, or from Demarches Simplifiees API.
+
+    args:
+        petition_project: The petition project to update with the fetched details.
+        force_update: If True, forces an update from Demarches Simplifiees even if the last sync is recent.
+    returns:
+        Dossier object if found, None otherwise.
+    """
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+
+    one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
+    if (
+        force_update
+        or not petition_project.demarches_simplifiees_raw_dossier
+        or petition_project.demarches_simplifiees_last_sync is not None
+        and petition_project.demarches_simplifiees_last_sync < one_hour_ago_utc
+    ):
+        # If the last sync is older than one hour, we fetch the dossier from Demarches Simplifiees
+        dossier_number = petition_project.demarches_simplifiees_dossier_number
+
+        ds_client = DemarchesSimplifieesClient()
+
+        dossier_as_dict = ds_client.get_dossier(dossier_number)
+
+        if dossier_as_dict is not None:
+            # we have got a dossier from DS for this petition project,
+            # let's synchronize project
+            petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
     else:
-        response = requests.post(
-            api_url,
-            json=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-            },
-        )
+        # If the last sync is recent, we can use the cached dossier from the petition project
+        dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
 
-        logger.info(
-            f"""
-                Demarches simplifiees API request status: {response.status_code}"
-                * response.text: {response.text},
-                * response.status_code: {response.status_code},
-                * request.url: {api_url},
-                * request.body: {body},
-                """,
-        )
-
-        if response.status_code >= 400:
-            logger.error(
-                "Demarches simplifiees API request failed",
-                extra={
-                    "response.text": response.text,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
-
-            message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
-                context={
-                    "dossier_number": dossier_number,
-                    "status_code": response.status_code,
-                    "response": response.text,
-                    "api_url": api_url,
-                    "body": body,
-                },
-            )
-            notify(dedent(message), "haie")
-            return None
-
-        data = response.json() or {}
-
-        dossier = (data.get("data") or {}).get("dossier")
-
-    if dossier is None:
-
-        if (
-            any(
-                error["extensions"]["code"] == "not_found"
-                for error in data.get("errors") or []
-            )
-            and not petition_project.is_dossier_submitted
-        ):
-            # the dossier is not found, but it's normal if the project is not submitted
-            logger.info(
-                "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
-                extra={
-                    "response.json": data,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
-            return None
-
-        logger.error(
-            "Demarches simplifiees API response is not well formated",
-            extra={
-                "response.json": data,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
-            },
-        )
-
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
-            context={
-                "status_code": response.status_code,
-                "response": response.text,
-                "api_url": api_url,
-                "body": body,
-                "command": "fetch_project_details_from_demarches_simplifiees",
-            },
-        )
-        notify(dedent(message), "haie")
-        return None
-
-    # we have got a dossier from DS for this petition project,
-    # let's synchronize project
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
-
-    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
-    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
-    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
-
-    ds_url = (
-        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-        f"{dossier_number}"
-    )
-    petition_project.synchronize_with_demarches_simplifiees(
-        dossier, site, demarche_label, ds_url
-    )
-
+    dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
 
 
@@ -570,12 +456,12 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
-            dossier_url = None
+            dossier_url = self._petition_project.demarches_simplifiees_petitioner_url
             if self.config:
                 dossier_url = (
-                    f"https://www.demarches-simplifiees.fr/procedures/"
-                    f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self._petition_project.demarches_simplifiees_dossier_number}"
+                    self._petition_project.get_demarches_simplifiees_instructor_url(
+                        self.config.demarche_simplifiee_number
+                    )
                 )
 
             message = render_to_string(

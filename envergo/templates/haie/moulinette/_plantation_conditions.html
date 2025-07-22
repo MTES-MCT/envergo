@@ -1,0 +1,13 @@
+<div id="hedge-conditions" class="alt">
+  <div class="tile-header fr-p-1w">
+    <h4>Conditions à respecter pour la plantation</h4>
+    <div>
+      {% if plantation_evaluation.result == "adequate" %}
+        <span class="fr-badge  fr-badge--success">Plantation adéquate</span>
+      {% else %}
+        <span class="fr-badge  fr-badge--warning">Plantation insuffisante</span>
+      {% endif %}
+    </div>
+  </div>
+  {% include 'hedges/_plantation_conditions.html' with conditions=plantation_evaluation.conditions %}
+</div>

@@ -62,6 +62,7 @@ DJANGO_APPS = [
     # "django.contrib.admin",  # it's overriden below
     "django.forms",
     "django.contrib.gis",
+    "django.contrib.sitemaps",
 ]
 THIRD_PARTY_APPS = [
     "phonenumber_field",
@@ -403,6 +404,7 @@ DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
     "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
+    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.fr",
     "PRE_FILL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
         default="https://www.demarches-simplifiees.fr/api/public/v1/",

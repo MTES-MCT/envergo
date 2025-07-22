@@ -1,7 +1,7 @@
 from django.utils.module_loading import import_string
 
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8, Bcae8Form
+from envergo.moulinette.regulations.conditionnalitepac import Bcae8
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 from envergo.petitions.services import HedgeList
 
@@ -26,7 +26,6 @@ def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -
 
     context = {
         "motif": next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
-        "bcae8_form": Bcae8Form(data=moulinette.catalog),
         "lineaire_detruit_pac": lineaire_detruit_pac,
         "lineaire_to_plant_pac": lineaire_to_plant_pac,
     }
