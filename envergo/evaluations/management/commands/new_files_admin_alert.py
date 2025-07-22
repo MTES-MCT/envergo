@@ -47,7 +47,9 @@ class Command(BaseCommand):
         groups = groupby(files, key=lambda file: file.request)
 
         content_type = ContentType.objects.get_for_model(Request)
-        for request, files in groups:
+        for request, files_iter in groups:
+            files = list(files_iter)
+
             # if the files were uploaded from the admin ui, we don't want to notify
             logs_from_admin = LogEntry.objects.filter(
                 content_type=content_type,
