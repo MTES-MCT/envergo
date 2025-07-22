@@ -275,7 +275,6 @@ query getDossier(
     $dossierNumber: Int!,
     $includeChamps: Boolean = true,
     $includeTraitements: Boolean = false,
-    $includeMessages: Boolean = false,
     )
 {
   dossier(number: $dossierNumber) {
@@ -321,9 +320,6 @@ query getDossier(
     }
     champs @include(if: $includeChamps) {
       ...ChampFragment
-    }
-    messages @include(if: $includeMessages) {
-      ...MessageFragment
     }
     demarche {
       title
