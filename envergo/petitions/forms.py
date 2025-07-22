@@ -54,3 +54,13 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
             "ou à la collaboration entre services instructeurs. "
             "Cliquer sur « Enregistrer » pour sauvegarder."
         }
+
+
+class PetitionProjectInstructorMessageForm(forms.Form):
+    """Form to send a message through demarche simplifie API."""
+
+    message_body = forms.CharField(widget=forms.Textarea(attrs={"rows": 8}))
+
+    def send_message(self):
+        # send message using the self.cleaned_data dictionary
+        pass

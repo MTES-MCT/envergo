@@ -16,6 +16,23 @@
     </p>
   </div>
 
+  <section class="ds-messages fr-my-4w">
+    <p>Envoyer un message</p>
+    <form method="post"
+          action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+      {% csrf_token %}
+
+      <div id="field-instructor_free_mention" class="fr-my-2w">
+        {% include '_field_snippet.html' with field=form.message_body %}
+        <button type="submit"
+                class="fr-btn fr-btn--primary"
+                formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </section>
+
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">
