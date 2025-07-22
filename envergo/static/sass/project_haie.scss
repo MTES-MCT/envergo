@@ -456,6 +456,10 @@ dialog.hedge-data-dialog {
       max-width: 100%;
     }
   }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none;
+  }
 }
 
 div#group-haies-content {
