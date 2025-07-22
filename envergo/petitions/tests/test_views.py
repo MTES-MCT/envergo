@@ -392,6 +392,11 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert response.status_code == 200
     assert f"{ep_criteria[0].regulation}" in response.content.decode()
 
+    content = response.content.decode()
+    assert "Acceptabilité de la plantation" in content
+    assert "Maintien des haies PAC" in content
+    assert "Résultats de la simulation" in content
+
     # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
@@ -452,6 +457,37 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
     assert "Données saisies pour la simulation" in content
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_petition_project_instructor_messagerie_ds(
+    mock_post, instructor_haie_user_44, client, site
+):
+    """Test messagerie view"""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory()
+
+    instructor_messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
 
 
 @pytest.mark.urls("config.urls_haie")

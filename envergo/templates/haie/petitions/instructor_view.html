@@ -117,13 +117,5 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
-    window.addEventListener("load", function() {
-      let iframeUrl = HEDGES_PLANTATION_URL;
-      let redirectUrl = null;
-      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
-    });
-  </script>
   <script defer src="{% static 'js/libs/form_project_instruction.js' %}"></script>
 {% endblock %}

@@ -88,7 +88,7 @@ def get_project_context(petition_project, moulinette) -> dict:
     length_to_plant = hedge_data.length_to_plant()
 
     hedge_to_remove_by_destruction_mode = {
-        mode: HedgeList(label=label) for mode, label in MODE_DESTRUCTION_CHOICES
+        mode: HedgeList(label=label) for mode, _, label in MODE_DESTRUCTION_CHOICES
     }
 
     for hedge in hedge_data.hedges_to_remove():
@@ -371,9 +371,7 @@ def get_demarches_simplifiees_dossier(
         # If the last sync is recent, we can use the cached dossier from the petition project
         dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
 
-    dossier = (
-        Dossier.from_dict(dossier_as_dict) if dossier_as_dict is not None else None
-    )
+    dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
 
 
