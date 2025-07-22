@@ -152,6 +152,8 @@ jobs:
       - name: Run Playwright tests for GUH
         run: TEST_DIR='./e2e/haie' npx playwright test
 
+      - name: Stop services before relaunch
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down --volumes --remove-orphans
       - name: Create .env file for amenagement
         run: |
           sed -i '/^DJANGO_ENVERGO_HAIE_DOMAIN=/d' .env
