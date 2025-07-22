@@ -36,6 +36,7 @@ from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
+    PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
 )
@@ -778,13 +779,12 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(
-    PetitionProjectInstructorMixin, DetailView
-):
-    """View for petition project instructor page"""
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateView):
+    """View for petition project instructor page with demarche simplifiées messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
+    form_class = PetitionProjectInstructorMessageForm
     event_action = "lecture"
 
     def get_context_data(self, **kwargs):
