@@ -216,3 +216,7 @@ def test_new_files_user_alert_with_new_file_from_admin(
     call_command("new_files_admin_alert")
 
     mock_notify.assert_called_once()
+
+    args, kwargs = mock_notify.call_args_list[0]
+    assert "2 nouveaux fichiers ont été ajoutés" in args[0]
+    assert "amenagement" in args[1]
