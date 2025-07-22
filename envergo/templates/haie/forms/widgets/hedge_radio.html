@@ -1,6 +1,6 @@
 {% with id=widget.attrs.id %}
   <fieldset {% if id %}id="{{ id }}"{% endif %}
-            class="fr-fieldset{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %} fr-container--fluid">
+            class="fr-fieldset{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %} fr-container--fluid fr-mt-1w">
     <div class="fr-grid-row">
       {% for group, options, index in widget.optgroups %}
         {% for widget in options %}
