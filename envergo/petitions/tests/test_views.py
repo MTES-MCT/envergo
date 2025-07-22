@@ -452,8 +452,11 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert response.status_code == 200
 
     content = response.content.decode()
-    assert "Formulaire rempli sur Démarches simplifiées" in content
+    assert "Formulaire détaillé et pièces jointes" in content
     assert "Vous déposez cette demande en tant que :" in content
+
+    assert "Données saisies pour la simulation" in content
+    assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
 @pytest.mark.urls("config.urls_haie")
