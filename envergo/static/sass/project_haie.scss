@@ -687,3 +687,25 @@ div.title-with-link-container {
   flex-wrap: wrap;
   justify-content: space-between;
 }
+
+#table-dossier-list {
+  td,
+  th {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  th {
+    line-height: 1.2rem;
+  }
+
+  td {
+    height: 72px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
