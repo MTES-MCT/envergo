@@ -449,8 +449,8 @@ TYPE_STATIONNEMENT_CHOICES = (
         "private",
         {
             "label": "Entièrement privé",
-            "help_text": """Emplacements réservés uniquement aux résidents d’un immeuble
-            ou aux employés d’une entreprise ; en sous-sol ou en extérieur""",
+            "help_text": """Emplacements attachés à des logements ou réservés aux employés
+            d’une entreprise ; en sous-sol ou en extérieur.""",
         },
         "Entièrement privé",
     ),
