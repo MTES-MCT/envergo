@@ -25,7 +25,7 @@ test('Instructor can instruct a project', async ({ page }) => {
   await expect(page.getByText('Détails du calcul d\'acceptabilité de la plantation')).toBeVisible();
 
   await page.getByRole('link', { name: 'Dossier complet', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Dossier complet'})).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dossier complet' })).toBeVisible();
   await expect(page.getByText('Formulaire détaillé et pièces jointes')).toBeVisible();
   await expect(page.getByText('Données saisies pour la simulation')).toBeVisible();
 
