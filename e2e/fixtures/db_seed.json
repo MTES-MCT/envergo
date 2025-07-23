@@ -363,7 +363,9 @@
       "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
       "weight": 1,
       "activation_mode": "department_centroid",
-      "evaluator_settings":{"replantation_coefficient": 2}
+      "evaluator_settings": {
+        "replantation_coefficient": 2
+      }
     }
   },
   {
@@ -378,7 +380,9 @@
       "evaluator": "envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
       "weight": 2,
       "activation_mode": "department_centroid",
-      "evaluator_settings":{"replantation_coefficient": 1.5}
+      "evaluator_settings": {
+        "replantation_coefficient": 1.5
+      }
     }
   },
   {
@@ -393,7 +397,9 @@
       "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
       "weight": 3,
       "activation_mode": "hedges_intersection",
-      "evaluator_settings":{"result": "non_soumis"}
+      "evaluator_settings": {
+        "result": "non_soumis"
+      }
     }
   },
   {
@@ -408,7 +414,7 @@
       "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
       "weight": 1,
       "activation_mode": "department_centroid",
-      "evaluator_settings":{}
+      "evaluator_settings": {}
     }
   },
   {
@@ -426,6 +432,135 @@
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
       "demarche_simplifiee_number": "123456"
+    }
+  },
+  {
+    "model": "petitions.PetitionProject",
+    "pk": 1,
+    "fields": {
+      "reference": "EGRAZY",
+      "moulinette_url": "http://localhost:3000/moulinette/result_p/?motif=chemin_acces&reimplantation=replantation&localisation_pac=oui&haies=91774784-9563-4b3f-ab48-e19cec574df3&lineaire_total=5000&travaux=destruction&element=haie&department=44",
+      "hedge_data_id": "91774784-9563-4b3f-ab48-e19cec574df3",
+      "demarches_simplifiees_dossier_number": "123456",
+      "demarches_simplifiees_state": "en_construction",
+      "demarches_simplifiees_date_depot": "2023-04-18T16:08:41.355Z",
+      "demarches_simplifiees_last_sync": "2023-04-18T16:08:41.355Z",
+      "department_id": "63"
+    }
+  },
+  {
+    "model": "hedges.HedgeData",
+    "pk": "91774784-9563-4b3f-ab48-e19cec574df3",
+    "fields": {
+      "created_at": "2023-04-18T16:08:41.355Z",
+      "data": [
+        {
+          "id": "P1",
+          "type": "TO_PLANT",
+          "latLngs": [
+            {
+              "lat": 47.233790282742724,
+              "lng": -1.7072153091430664
+            },
+            {
+              "lat": 47.233571733176056,
+              "lng": -1.7072153091430664
+            },
+            {
+              "lat": 47.233571733176056,
+              "lng": -1.707429885864258
+            }
+          ],
+          "additionalData": {
+            "bord_voie": true,
+            "sur_talus": false,
+            "type_haie": "alignement",
+            "interchamp": false,
+            "proximite_mare": false,
+            "mode_plantation": "plantation",
+            "sur_parcelle_pac": true,
+            "sous_ligne_electrique": false,
+            "essences_non_bocageres": false
+          }
+        },
+        {
+          "id": "P2",
+          "type": "TO_PLANT",
+          "latLngs": [
+            {
+              "lat": 47.233790282742724,
+              "lng": -1.707429885864258
+            },
+            {
+              "lat": 47.233571733176056,
+              "lng": -1.7072153091430664
+            }
+          ],
+          "additionalData": {
+            "bord_voie": false,
+            "sur_talus": false,
+            "type_haie": "mixte",
+            "interchamp": false,
+            "proximite_mare": false,
+            "mode_plantation": "plantation",
+            "sur_parcelle_pac": true,
+            "sous_ligne_electrique": false,
+            "essences_non_bocageres": false
+          }
+        },
+        {
+          "id": "D1",
+          "type": "TO_REMOVE",
+          "latLngs": [
+            {
+              "lat": 47.233382322822585,
+              "lng": -1.7084383964538576
+            },
+            {
+              "lat": 47.233382322822585,
+              "lng": -1.7082238197326662
+            }
+          ],
+          "additionalData": {
+            "bord_voie": true,
+            "sur_talus": false,
+            "type_haie": "alignement",
+            "interchamp": false,
+            "vieil_arbre": false,
+            "proximite_mare": false,
+            "mode_destruction": "arrachage",
+            "sur_parcelle_pac": true,
+            "recemment_plantee": false,
+            "essences_non_bocageres": false
+          }
+        },
+        {
+          "id": "D2",
+          "type": "TO_REMOVE",
+          "latLngs": [
+            {
+              "lat": 47.233382322822585,
+              "lng": -1.7062926292419436
+            },
+            {
+              "lat": 47.233382322822585,
+              "lng": -1.7060780525207522
+            }
+          ],
+          "additionalData": {
+            "bord_voie": false,
+            "sur_talus": false,
+            "type_haie": "mixte",
+            "interchamp": false,
+            "vieil_arbre": false,
+            "proximite_mare": true,
+            "mode_destruction": "arrachage",
+            "sur_parcelle_pac": true,
+            "recemment_plantee": false,
+            "essences_non_bocageres": false
+          }
+        }
+      ]
     }
   }
 ]

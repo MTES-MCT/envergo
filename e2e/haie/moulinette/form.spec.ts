@@ -74,6 +74,8 @@ test('A petitioner can submit a project', async ({ page }) => {
 
   await expect(page.getByText('La demande d’autorisation est prête à être complétée')).toBeVisible();
   await expect(page.getByText('La plantation envisagée est adéquate')).toBeVisible();
-  await expect(page.getByText('Déposer une demande d\'autorisation')).toBeVisible();
+  const buttons = page.getByText("Déposer une demande d'autorisation");
+  await expect(buttons.nth(0)).toBeVisible();
+  await expect(buttons.nth(1)).toBeVisible();
 
 });
