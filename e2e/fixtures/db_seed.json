@@ -83,6 +83,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 1,
     "fields": {
       "backend_title": "LSE > Zone humide",
       "title": "Impact sur une zone humide",
@@ -101,6 +102,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 2,
     "fields": {
       "backend_title": "LSE > Zone inondable",
       "title": "Impact sur une zone inondable",
@@ -119,6 +121,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 3,
     "fields": {
       "backend_title": "LSE > 2150",
       "title": "Impact sur l'écoulement des eaux pluviales",
@@ -136,35 +139,8 @@
     }
   },
   {
-    "model": "moulinette.regulation",
-    "fields": {
-      "id": 5,
-      "regulation": "conditionnalite_pac",
-      "weight": 1,
-      "show_map": false,
-      "polygon_color": "blue"
-    }
-  },
-  {
     "model": "moulinette.criterion",
-    "fields": {
-      "backend_title": "Conditionnalité PAC > BCAE8",
-      "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
-      "subtitle": "",
-      "header": "",
-      "regulation": 5,
-      "activation_map": 36,
-      "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
-      "weight": 1,
-      "required_action": "",
-      "required_action_stake": "",
-      "project_impact": "",
-      "discussion_contact": ""
-    }
-  },
-  {
-    "model": "moulinette.criterion",
+    "pk": 4,
     "fields": {
       "backend_title": "N2000 > Zone humide - 44",
       "title": "Impact sur zone humide Natura 2000",
@@ -183,6 +159,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 5,
     "fields": {
       "backend_title": "N2000 > Zone inondable - 44",
       "title": "Impact sur zone inondable Natura 2000",
@@ -201,6 +178,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 6,
     "fields": {
       "backend_title": "N2000 > IOTA",
       "title": "Natura 2000 si dossier Loi sur l'eau",
@@ -219,6 +197,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 7,
     "fields": {
       "backend_title": "Eval Env > Emprise",
       "title": "Emprise au sol créée",
@@ -237,6 +216,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 8,
     "fields": {
       "backend_title": "Eval Env > Surface plancher",
       "title": "Surface de plancher créée",
@@ -255,6 +235,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 9,
     "fields": {
       "backend_title": "Eval Env > Terrain d'assiette",
       "title": "Terrain d'assiette",
@@ -273,6 +254,7 @@
   },
   {
     "model": "moulinette.criterion",
+    "pk": 10,
     "fields": {
       "backend_title": "Eval Env > Autres rubriques",
       "title": "Autres rubriques",
@@ -283,34 +265,6 @@
       "activation_distance": 0,
       "evaluator": "envergo.moulinette.regulations.evalenv.OtherCriteria",
       "weight": 4,
-      "required_action": "",
-      "required_action_stake": "",
-      "project_impact": "",
-      "discussion_contact": ""
-    }
-  },
-  {
-    "model": "moulinette.regulation",
-    "fields": {
-      "id": 6,
-      "regulation": "dep",
-      "weight": 2,
-      "show_map": false,
-      "polygon_color": "blue"
-    }
-  },
-  {
-    "model": "moulinette.criterion",
-    "fields": {
-      "backend_title": "DEP > DEP",
-      "title": "Espèces protégées",
-      "subtitle": "",
-      "header": "",
-      "regulation": 6,
-      "activation_map": 36,
-      "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.ep.EspecesProtegeesSimple",
-      "weight": 1,
       "required_action": "",
       "required_action_stake": "",
       "project_impact": "",
@@ -354,6 +308,124 @@
       "area": 1394050951971,
       "npoints": 5,
       "created_at": "2023-04-18T16:08:41.355Z"
+    }
+  },
+  {
+    "model": "moulinette.regulation",
+    "pk": 11,
+    "fields": {
+      "regulation": "conditionnalite_pac",
+      "weight": 4,
+      "show_map": false,
+      "polygon_color": "blue"
+    }
+  },
+  {
+    "model": "moulinette.regulation",
+    "pk": 12,
+    "fields": {
+      "regulation": "ep",
+      "weight": 2,
+      "show_map": false,
+      "polygon_color": "blue"
+    }
+  },
+  {
+    "model": "moulinette.regulation",
+    "pk": 13,
+    "fields": {
+      "regulation": "natura2000_haie",
+      "weight": 3,
+      "show_map": false,
+      "polygon_color": "blue",
+      "map_factory_name": "envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory"
+    }
+  },
+  {
+    "model": "moulinette.regulation",
+    "pk": 14,
+    "fields": {
+      "regulation": "alignement_arbres",
+      "weight": 1,
+      "show_map": false,
+      "polygon_color": "blue"
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 100,
+    "fields": {
+      "backend_title": "Conditionnalité PAC > BCAE8",
+      "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
+      "regulation": 11,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings":{"replantation_coefficient": 2}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 101,
+    "fields": {
+      "backend_title": "EP > EP Aisne",
+      "title": "Espèces protégées",
+      "regulation": 12,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
+      "weight": 2,
+      "activation_mode": "department_centroid",
+      "evaluator_settings":{"replantation_coefficient": 1.5}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 102,
+    "fields": {
+      "backend_title": "Natura 2000 Haie > Haie 02",
+      "title": "Natura 2000",
+      "regulation": 13,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+      "weight": 3,
+      "activation_mode": "hedges_intersection",
+      "evaluator_settings":{"result": "non_soumis"}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 103,
+    "fields": {
+      "backend_title": "Alignements d'arbres (L350-3)",
+      "title": "Alignements d'arbres (L350-3)",
+      "regulation": 14,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings":{}
+    }
+  },
+  {
+    "model": "moulinette.confighaie",
+    "pk": 1,
+    "fields": {
+      "department": 63,
+      "is_activated": true,
+      "regulations_available": [
+        "alignement_arbres",
+        "natura2000_haie",
+        "conditionnalite_pac",
+        "ep"
+      ],
+      "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
+      "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
+      "demarche_simplifiee_number": "123456"
     }
   }
 ]
