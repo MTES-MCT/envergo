@@ -16,7 +16,7 @@ test('Instructor can instruct a project', async ({ page }) => {
   await page.getByRole('button', { name: 'Réglementations' }).click();
   await page.getByRole('link', { name: 'Espèces protégées', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Espèces protégées', level: 2})).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Espèces protégées', level: 2 })).toBeVisible();
   await expect(page.getByText('Données saisies pour la simulation')).toBeVisible();
   await expect(page.getByText('Formulaire détaillé et pièces jointes')).toBeVisible();
   await expect(page.getByText('Résultats de la simulation')).toBeVisible();
