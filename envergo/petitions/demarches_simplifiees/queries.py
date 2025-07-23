@@ -240,6 +240,18 @@ fragment EngagementJuridiqueFragment on EngagementJuridique {
 }
 """
 
+MESSAGE_FRAGMENT = """
+fragment MessageFragment on Message {
+  id,
+  createdAt,
+  email,
+  body,
+  attachments {
+  ...FileFragment
+  }
+}
+"""
+
 DOSSIER_FRAGMENTS = (
     CHAMP_FRAGMENT
     + PERSONNE_MORALE_FRAGMENT
@@ -259,7 +271,12 @@ DOSSIER_FRAGMENTS = (
 GET_DOSSIER_QUERY = (
     DOSSIER_FRAGMENTS
     + """
-query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+query getDossier(
+    $dossierNumber: Int!,
+    $includeChamps: Boolean = true,
+    $includeTraitements: Boolean = false,
+    )
+{
   dossier(number: $dossierNumber) {
     __typename
     id
@@ -397,6 +414,29 @@ query getDossiersForDemarche(
                 }
             }
     }
+}
+"""
+)
+
+GET_DOSSIER_MESSAGES_QUERY = (
+    FILE_FRAGMENT
+    + MESSAGE_FRAGMENT
+    + """
+query getDossier($dossierNumber: Int!)
+{
+  dossier(number: $dossierNumber) {
+    __typename
+    id
+    number
+    archived
+    prefilled
+    state
+    dateDerniereModification
+    dateDepot
+    messages {
+      ...MessageFragment
+    }
+  }
 }
 """
 )
