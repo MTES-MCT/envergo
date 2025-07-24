@@ -221,19 +221,26 @@ def show_plantation_result(context, plantation_evaluation):
     template_name = (
         f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
     )
-    try:
-        content = render_to_string((template_name,), context_data)
-    except TemplateDoesNotExist:
-        logger.error(
-            "Template for GUH global plantation result is missing.",
-            extra={
-                "result": plantation_evaluation.global_result,
-                "template_name": template_name,
-            },
-        )
-        content = ""
 
-    return content
+    if (
+        context.get("is_alternative", False)
+        and not plantation_evaluation.display_for_alternatives
+    ):
+        html = ""
+    else:
+        try:
+            content = render_to_string((template_name,), context_data)
+            html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
+        except TemplateDoesNotExist:
+            logger.error(
+                "Template for GUH global plantation result is missing.",
+                extra={
+                    "result": plantation_evaluation.global_result,
+                    "template_name": template_name,
+                },
+            )
+            html = ""
+    return mark_safe(html)
 
 
 @register.simple_tag(takes_context=True)
