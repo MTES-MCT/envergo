@@ -15,6 +15,8 @@
     </div>
   </div>
   {% with "/images/hedges/hedge-type-"|add:widget.value|add:".jpg" as image_url %}
-    <img class="hedge-radio-img" alt="" src="{% static image_url %}" />
+    <label for="{{ widget.attrs.id }}">
+      <img class="hedge-radio-img" alt="" src="{% static image_url %}" />
+    </label>
   {% endwith %}
 </div>
