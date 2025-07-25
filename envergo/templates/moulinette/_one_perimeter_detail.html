@@ -8,9 +8,8 @@
   {% endif %}
 
   {% if perimeter.url %}
-    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">
-      {{ perimeter.name }}
-    </a>{% if perimeter.distance > 10 %}
+    <a href="{{ perimeter.url }}" target="_blank" rel="noopener">{{ perimeter.name }}</a>
+    {% if perimeter.distance > 10 %}
       (distance : {{ perimeter.distance }} m){% endif %}.
   {% else %}
     {{ perimeter.name }}{% if perimeter.distance > 10 %}
