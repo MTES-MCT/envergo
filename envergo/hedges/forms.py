@@ -11,14 +11,14 @@ from envergo.moulinette.forms.fields import (
     extract_choices,
     extract_display_function,
 )
-from envergo.utils.fields import AllowDisabledSelect
+from envergo.utils.fields import HedgeChoiceField
 
 
 class HedgePropertiesBaseForm(forms.Form):
     """Base Hedge properties form"""
 
     type_haie = forms.ChoiceField(
-        choices=(("", "Sélectionner un type de haie"),) + HEDGE_TYPES,
+        choices=HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
@@ -26,7 +26,7 @@ class HedgePropertiesBaseForm(forms.Form):
         target="_blank" rel="noopener">Aide</a>
         """
         ),
-        widget=AllowDisabledSelect(),
+        widget=HedgeChoiceField,
     )
     sur_parcelle_pac = forms.BooleanField(
         label="Située sur une parcelle PAC",

@@ -46,7 +46,11 @@ const latLngsLength = (latLngs) => {
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
 
-  const isReadonly = (hedgeType !== TO_PLANT || mode !== PLANTATION_MODE) && (hedgeType !== TO_REMOVE || mode !== REMOVAL_MODE);
+  const isReadonly = (
+    mode === READ_ONLY_MODE ||
+    (hedgeType === TO_PLANT && mode === REMOVAL_MODE) ||
+    (hedgeType === TO_REMOVE && mode === PLANTATION_MODE)
+  );
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
 
   const dialogId = `${dialogMode}-hedge-data-dialog`
