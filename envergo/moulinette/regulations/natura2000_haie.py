@@ -29,7 +29,12 @@ class Natura2000Haie(CriterionEvaluator):
     }
 
     def get_result_data(self):
-        """Returns if a non-alignement hedge intersects the n2000 zone."""
+        """Returns if a non-alignement hedge intersects the n2000 zone.
+
+        If we are evaluating this criterion, it means that *some* hedges have intersected
+        a n2000 zone. But since some hedge types are excluded, we have to run a more
+        specific check again.
+        """
 
         # We have to import here to prevent circular import error
         from envergo.moulinette.fields import classpath
