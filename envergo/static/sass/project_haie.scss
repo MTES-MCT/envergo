@@ -473,7 +473,7 @@ dialog.hedge-data-dialog {
   }
 
   &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
-    display: none;
+    display: none !important;
   }
 }
 
