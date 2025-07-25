@@ -114,7 +114,7 @@
 
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script>
-    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}"{% if is_alternative %} + "?alternative=True" {% endif %};
     var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
 
     window.addEventListener("load", function() {

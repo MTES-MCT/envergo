@@ -41,7 +41,7 @@
                 class="fr-btn fr-btn--icon-left fr-icon-link btn--copy-to-clipboard">
           Copier le lien de cette page
         </button>
-      {% elif plantation_evaluation.global_result == "soumis" %}
+      {% elif plantation_evaluation.global_result == "soumis" and is_result_plantation %}
         <button id="demarche-simplifiee-banner-btn"
                 class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
                 aria-controls="demarches-simplifiees-modal"

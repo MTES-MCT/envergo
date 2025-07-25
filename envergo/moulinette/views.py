@@ -235,6 +235,9 @@ class MoulinetteMixin:
                 {key: form.data[key] for key in triage_params if key in form.data}
             )
 
+        if "alternative" in self.request.GET:
+            get["alternative"] = self.request.GET["alternative"]
+
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
@@ -280,7 +283,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
-        elif self.moulinette:
+        elif self.moulinette and not context.get("is_alternative", False):
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
@@ -350,14 +353,8 @@ class MoulinetteResultMixin:
         moulinette_data = self.get_moulinette_data()
         current_params = set(moulinette_data.keys())
 
-        # We don't want to take analytics params and "alternative" into account, so they stay in the url
-        current_params = set(
-            [
-                p
-                for p in current_params
-                if not p.startswith("mtm_") and p != "alternative"
-            ]
-        )
+        # We don't want to take analytics params into account, so they stay in the url
+        current_params = set([p for p in current_params if not p.startswith("mtm_")])
         return expected_params == current_params
 
     def get_moulinette_data(self):
