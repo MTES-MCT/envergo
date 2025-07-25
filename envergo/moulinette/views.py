@@ -377,7 +377,7 @@ class MoulinetteResultMixin:
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
-
+        is_alternative = bool(self.request.GET.get("alternative", False))
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -420,13 +420,17 @@ class MoulinetteResultMixin:
 
         elif moulinette and moulinette.has_missing_data():
             if context["additional_forms_bound"]:
-                context["matomo_custom_url"] = matomo_invalid_form_url
+                data["matomo_custom_url"] = matomo_invalid_form_url
             else:
-                context["matomo_custom_url"] = matomo_missing_data_url
+                data["matomo_custom_url"] = matomo_missing_data_url
 
-        elif context.get("triage_form", None):
-            context["matomo_custom_url"] = matomo_out_of_scope_result_url
+        elif not moulinette and context.get("triage_form", None):
+            data["matomo_custom_url"] = matomo_out_of_scope_result_url
 
+        if is_alternative:
+            data["matomo_custom_url"] = update_qs(
+                data["matomo_custom_url"], {"alternative": "true"}
+            )
         return data
 
     def get_urls_context_data(self, context):
