@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
+from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
@@ -127,7 +128,9 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode
-        context["matomo_custom_url"] = self.get_matomo_custom_url(mode)
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.get_matomo_custom_url(mode), self.request
+        )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
 
         return context
