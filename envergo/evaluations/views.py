@@ -24,7 +24,11 @@ from django.views.generic import (
 )
 from django.views.generic.edit import BaseFormView
 
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import (
+    is_request_from_a_bot,
+    log_event,
+    update_url_with_matomo_params,
+)
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
     RequestForm,
@@ -149,7 +153,9 @@ class EvaluationDetail(
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
-        context["matomo_custom_url"] = "/avis/+ref_ar+/"
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/+ref_ar+/", self.request
+        )
         context["evaluation_content"] = self.get_evaluation_content()
         return context
 
@@ -318,7 +324,9 @@ class WizardStepMixin:
         form = self.get_form(self.get_form_class())
         if form.is_bound and not form.is_valid():
             # as it is not a complete url, Matomo concatenate it to the current url, which is OK for us
-            context["matomo_custom_url"] = "erreur-validation/"
+            context["matomo_custom_url"] = update_url_with_matomo_params(
+                "erreur-validation/", self.request
+            )
         return context
 
 
@@ -486,7 +494,9 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         context["max_files"] = settings.MAX_EVALREQ_FILES
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
-        context["matomo_custom_url"] = "/avis/formulaire/etape-3/+ref_ar+/"
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/formulaire/etape-3/+ref_ar+/", self.request
+        )
 
         return context
 
@@ -577,7 +587,9 @@ class RequestSuccess(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["matomo_custom_url"] = "/avis/formulaire/succès/+ref_ar+/"
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/formulaire/succès/+ref_ar+/", self.request
+        )
         return context
 
 
@@ -601,6 +613,8 @@ class SelfDeclaration(EvaluationDetailMixin, DetailView):
         context["address"] = quote_plus(self.object.address, safe="")
         context["application_number"] = self.object.application_number
         context["redirect_url"] = f"{self.object.get_absolute_url()}?tally=ok"
-        context["matomo_custom_url"] = "/avis/+ref_ar+/conformite/"
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/+ref_ar+/conformite/", self.request
+        )
 
         return context
