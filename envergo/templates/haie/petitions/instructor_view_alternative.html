@@ -28,7 +28,10 @@
         demande.
       </p>
       <p>
-        <a class="fr-btn" href="{{ alternative_form_url }}">Faire une simulation alternative</a>
+        <a id="alternative-simulation-link"
+           class="fr-btn"
+           href="{{ alternative_form_url }}">Faire une simulation
+        alternative</a>
       </p>
     </section>
   </div>
@@ -36,7 +39,32 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
-  <script>var SOURCE_PAGE = "instruction";</script>
-  <script defer src="{% static 'js/libs/form_project_instruction.js' %}"></script>
+  <script>
+    window.addEventListener('load', function () {
+      const alternativeBtn = document.getElementById('alternative-simulation-link');
+      alternativeBtn.addEventListener('click', function (evt) {
+        // Block the navigation for sending an analytics event before
+        evt.preventDefault();
+        const href = alternativeBtn.href;
+
+        let url = EVENTS_URL;
+        let token = CSRF_TOKEN;
+        let headers = {"X-CSRFToken": token};
+        let data = new FormData();
+        data.append("category", "projet");
+        data.append("action", "simulation_alt");
+        data.append("metadata", JSON.stringify({
+          "reference": "{{ petition_project.reference }}"
+        }));
+        fetch(url, {
+          headers: headers, body: data, method: 'POST'
+        }).catch(error => {
+          console.warn('Tracking failed:', error);
+          // We still want to navigate even on failure
+        });
+        // Proceed with navigation manually
+        window.location.href = href;
+      });
+    });
+  </script>
 {% endblock %}
