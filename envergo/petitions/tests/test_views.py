@@ -1,4 +1,7 @@
+import html
+import re
 from unittest.mock import Mock, patch
+from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
@@ -763,3 +766,96 @@ def test_petition_project_instructor_form(
         project.instructor_free_mention
         == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
+    """Test alternative flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the alternative page by no user is loged in
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 403
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(alternative_url)
+
+    # THEN the page is displayed
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulation alternative</h2>" in content
+
+    # Find all href attributes in the HTML
+    hrefs = re.findall(r'href="([^"]+)"', content)
+
+    alternative_url = None
+    for raw_href in hrefs:
+        href = html.unescape(raw_href)
+        parsed_url = urlparse(href)
+        qs = parse_qs(parsed_url.query)
+        if qs.get("alternative") == ["true"]:
+            # Found the first matching href
+            assert href.startswith("/")
+            alternative_url = href
+            break
+    else:
+        assert False, "No href with alternative=true found"
+
+    # WHEN the user create an alternative
+    res = client.get(alternative_url)
+
+    # THEN the alternative form is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        in content
+    )
+
+    # WHEN the user visit the result page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+
+    # WHEN the user visit the result plantation page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat-plantation/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+    assert "La demande d'autorisation est prête à être complétée" not in content
+    assert "Copier le lien de cette page" in content

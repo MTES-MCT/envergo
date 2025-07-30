@@ -61,9 +61,10 @@
         }).catch(error => {
           console.warn('Tracking failed:', error);
           // We still want to navigate even on failure
+        }).finally(() => {
+          // Proceed with navigation manually
+          window.location.href = href;
         });
-        // Proceed with navigation manually
-        window.location.href = href;
       });
     });
   </script>
