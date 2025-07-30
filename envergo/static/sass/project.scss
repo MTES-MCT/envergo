@@ -1266,10 +1266,13 @@ $content-max-width: 40rem;
     }
 
     #project-result {
-      margin-left: $result-margin-left;
+      & > section#project-result-top-bar {
+        margin-left: $main-column-margin-left;
+        max-width: inherit;
+      }
 
-      & > section {
-        margin: 0;
+      & > section#project-result-content {
+        margin: 0 0 0 $result-margin-left;
       }
     }
 

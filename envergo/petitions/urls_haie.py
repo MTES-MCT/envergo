@@ -7,6 +7,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
+    PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
@@ -43,6 +44,11 @@ instruction_urlpatterns = [
         "notes/",
         PetitionProjectInstructorNotesView.as_view(),
         name="petition_project_instructor_notes_view",
+    ),
+    path(
+        "alternative/",
+        PetitionProjectInstructorAlternativeView.as_view(),
+        name="petition_project_instructor_alternative_view",
     ),
     path(
         "<slug:regulation>/",

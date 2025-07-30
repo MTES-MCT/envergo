@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import tempfile
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import fiona
 import requests
@@ -781,6 +781,27 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
+
+
+class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
+    """View for creating an alternative of a petition project by the instructor"""
+
+    template_name = "haie/petitions/instructor_view_alternative.html"
+    matomo_tag = ""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        parsed_moulinette_url = urlparse(self.object.moulinette_url)
+        qs_dict = parse_qs(parsed_moulinette_url.query)
+        flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
+        flat_qs["alternative"] = "true"
+        alternative_form_url = (
+            f"{reverse("moulinette_home")}?{urlencode(flat_qs, doseq=True)}"
+        )
+
+        context["alternative_form_url"] = alternative_form_url
+        return context
 
 
 class PetitionProjectHedgeDataExport(DetailView):

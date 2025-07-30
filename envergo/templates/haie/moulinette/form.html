@@ -1,5 +1,17 @@
 {% load utils humanize %}
 
+{% if is_alternative %}
+  <div class="fr-notice fr-notice--info">
+    <div class="fr-container">
+      <div class="fr-notice__body">
+        <p>
+          <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+          <span><b>Simulation alternative</b> à la simulation initiale</span>
+        </p>
+      </div>
+    </div>
+  </div>
+{% endif %}
 <div id="moulinette-grid">
   <div id="moulinette-col" class="fr-col">
     <div id="moulinette" class="moulinette">
@@ -113,7 +125,7 @@
     let hedgeId = hedgeIdField.value;
     let iframeUrl = baseUrl;
     if (hedgeId) {
-      iframeUrl += hedgeId + "/";
+      iframeUrl += hedgeId + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
     }
     let redirectUrl = null;
 
@@ -142,7 +154,7 @@
       }
 
       hedgeIdField.value = data.input_id;
-      let iframeUrl = baseUrl + data.input_id + "/";
+      let iframeUrl = baseUrl + data.input_id + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
       this.iframeUrl = iframeUrl;
     };
 
