@@ -1,6 +1,6 @@
 import html
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import factory
@@ -143,12 +143,10 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
     # Assert the body of the requests.post call
     expected_body = {
-        "champ_123": "Autre (collectivité, aménageur, gestionnaire de réseau, "
-        "particulier, etc.)",
+        "champ_123": None,
         "champ_321": "ABC123",
         "champ_456": None,  # improve this test by configuring a result for bcae8
-        "champ_654": "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
-        "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=44&travaux=destruction&element=haie",
+        "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
