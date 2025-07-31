@@ -763,7 +763,7 @@ class PetitionProjectInstructorMessagerieView(
         context["ds_messages"] = get_messages_from_ds(self.object)
 
         # Send message if info from DS is not in project details
-        if not context["ds_messages"]:
+        if context["ds_messages"] is None:
             messages.warning(
                 self.request,
                 """Impossible de récupérer les informations du dossier Démarches Simplifiées.
