@@ -81,7 +81,13 @@ def test_dossier_submission_admin_alert(
             "number": 103363,
             "dossiers": {
                 "pageInfo": {"hasNextPage": False, "endCursor": None},
-                "nodes": [],
+                "nodes": [
+                    {
+                        "number": 21059676,
+                        "state": "en_construction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                    },
+                ],
             },
         }
     }
@@ -100,9 +106,13 @@ def test_dossier_submission_admin_alert(
         "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
         in args[0]
     )
+    assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
     assert "haie" in args[1]
 
-    assert mock_notify_command.call_count == 1
+    args, kwargs = mock_notify_model.call_args_list[0]
+    assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
+
+    assert mock_notify_command.call_count == 2
     assert mock_notify_model.call_count == 1
     project.refresh_from_db()
     assert project.demarches_simplifiees_date_depot == datetime.datetime(
