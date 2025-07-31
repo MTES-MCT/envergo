@@ -493,6 +493,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert "Il manque les infos de la PAC" in content
     assert "2 avril 2025 à 11:01" in content
     assert "8 messages" in content
+    assert "Coriandrum_sativum" in content
 
     # Test if dossier has zero messages
     mock_post.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
