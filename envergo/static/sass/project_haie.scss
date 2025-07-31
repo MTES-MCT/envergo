@@ -709,3 +709,11 @@ div.title-with-link-container {
     text-overflow: ellipsis;
   }
 }
+
+div#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  p {
+    margin: auto;
+  }
+}
