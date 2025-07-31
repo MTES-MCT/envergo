@@ -22,17 +22,27 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
 
+DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
+    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
+)
+
 with open(
-    Path(
-        settings.APPS_DIR
-        / "petitions"
-        / "demarches_simplifiees"
-        / "data"
-        / "fake_dossier.json"
-    ),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json"),
     "r",
 ) as file:
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages.json"),
+    "r",
+) as file:
+    GET_DOSSIER_MESSAGES_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_0.json"),
+    "r",
+) as file:
+    GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
 
 
 class PetitionProjectFactory(DjangoModelFactory):
