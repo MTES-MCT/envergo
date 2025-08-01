@@ -394,6 +394,23 @@ query getDossiersForDemarche(
                     champs @include(if: $includeChamps) {
                       ...ChampFragment
                     }
+                    demarche {
+                      title
+                      number
+                      revision {
+                        champDescriptors
+                        {
+                          id
+                          __typename
+                          ... on HeaderSectionChampDescriptor {
+                            label
+                          }
+                          ... on ExplicationChampDescriptor {
+                            label
+                          }
+                        }
+                      }
+                    }
                 }
             }
     }

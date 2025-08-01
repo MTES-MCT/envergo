@@ -184,18 +184,13 @@ class DemarchesSimplifieesClient:
             notify(message_body, "haie")
             raise e
 
-        demarche_light = copy.deepcopy(data["demarche"])
-        demarche_light.pop("dossiers", None)
-
         dossiers = data["demarche"]["dossiers"]
         has_next_page = dossiers.get("pageInfo", {}).get("hasNextPage", False)
         cursor = dossiers.get("pageInfo", {}).get("endCursor", None)
-        dossiers_with_demarche = [
-            {**d, "demarche": demarche_light} for d in dossiers["nodes"]
-        ]
+
         return {
             "demarche": data["demarche"],
-            "dossiers": dossiers_with_demarche,
+            "dossiers": dossiers["nodes"],
             "hasNextPage": has_next_page,
             "endCursor": cursor,
         }

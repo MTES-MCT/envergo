@@ -56,6 +56,10 @@ def test_dossier_submission_admin_alert(
                         "number": 21059675,
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
                     },
                     {
                         "number": 123,
@@ -68,6 +72,10 @@ def test_dossier_submission_admin_alert(
                                 "stringValue": "",
                             },
                         ],
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
                     },
                 ],
             },
@@ -86,6 +94,10 @@ def test_dossier_submission_admin_alert(
                         "number": 21059676,
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
                     },
                 ],
             },
