@@ -571,6 +571,14 @@ def test_petition_project_instructor_messagerie_ds(
     assert "<h2>Messagerie</h2>" in content
     assert "Impossible de récupérer les informations du dossier" in content
 
+    # Test send message
+    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    client.force_login(instructor_haie_user_44)
+    message_data = {"message_body": "test"}
+    response = client.post(instructor_messagerie_url, message_data)
+    assert response.status_code == 302
+    assert response.url == instructor_messagerie_url
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
