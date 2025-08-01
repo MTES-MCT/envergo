@@ -6,6 +6,8 @@
 
 {% block title %}Instruction du dossier{% endblock %}
 
+{% block messages %}{# Move messages block between title and content #}{% endblock %}
+
 {% block container %}
   <section>
     <div class="fr-container">
@@ -97,6 +99,8 @@
 
           {% include 'haie/petitions/_summary_dossier.html' %}
           <div class="fr-pl-10w">
+            {% block project_view_title %}{% endblock %}
+            {% include '_messages.html' %}
             {% block project_content %}{% endblock %}
           </div>
         </div>
