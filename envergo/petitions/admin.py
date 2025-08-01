@@ -4,17 +4,13 @@ from django.contrib import admin
 from envergo.petitions.models import InvitationToken, PetitionProject
 
 
-def email_as_label(user):
-    return user.email or user.name or str(user.id)
-
-
 class InvitationTokenInlineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user_field = self.fields["user"]
         created_by_field = self.fields["created_by"]
-        user_field.label_from_instance = email_as_label
-        created_by_field.label_from_instance = email_as_label
+        user_field.label_from_instance = lambda user: user.email
+        created_by_field.label_from_instance = lambda user: user.email
 
 
 class InvitationTokenInline(admin.TabularInline):
@@ -58,8 +54,8 @@ class InvitationTokenAdminForm(forms.ModelForm):
         user_field = self.fields["user"]
         created_by_field = self.fields["created_by"]
 
-        user_field.label_from_instance = email_as_label
-        created_by_field.label_from_instance = email_as_label
+        user_field.label_from_instance = lambda user: user.email
+        created_by_field.label_from_instance = lambda user: user.email
 
 
 @admin.register(InvitationToken)
@@ -84,6 +80,6 @@ class InvitationTokenAdmin(admin.ModelAdmin):
 
     def created_by_list(self, obj):
         created_by = obj.created_by
-        return (email_as_label(created_by)) if created_by else ""
+        return created_by.email if created_by else ""
 
     created_by_list.short_description = "Compte invitant"
