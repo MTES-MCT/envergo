@@ -292,17 +292,30 @@ $ npx playwright install
 
 #### Lancer les tests
 
-Vous devez tout d'abord lancer l'application en pointant vers la base de test et avec le bon fichier de settings :
+Vous devez tout d'abord lancer l'application en pointant vers la base de test, avec le bon fichier de settings
+et en définissant le site que vous souhaitez tester :
 
+Pour aménagement :
 ```bash
-$ POSTGRES_DB=envergo-test docker compose -f docker-compose.yml -f docker-compose.e2e.yml  up -d
+$ POSTGRES_DB=envergo-test DJANGO_ENVERGO_AMENAGEMENT_DOMAIN=localhost docker compose -f docker-compose.yml -f docker-compose.e2e.yml  up -d
+```
+Pour le GUH :
+```bash
+$ POSTGRES_DB=envergo-test DJANGO_ENVERGO_HAIE_DOMAIN=localhost docker compose -f docker-compose.yml -f docker-compose.e2e.yml  up -d
 ```
 
 Enfin vous pouvez lancer les tests avec l'une des commandes suivantes :
 
+Pour aménagement :
 ```bash
-$ npx playwright test --ui # pour lancer les tests dans un navigateur
-$ npx playwright test # pour lancer les tests dans un shell
+$ TEST_DIR='./e2e/amenagement' npx playwright test --ui # pour lancer les tests dans un navigateur
+$ TEST_DIR='./e2e/amenagement' npx playwright test # pour lancer les tests dans un shell
+```
+
+Pour le GUH :
+```bash
+$ TEST_DIR='./e2e/haie' npx playwright test --ui # pour lancer les tests dans un navigateur
+$ TEST_DIR='./e2e/haie' npx playwright test # pour lancer les tests dans un shell
 ```
 
 ## Recette et déploiement
