@@ -369,6 +369,11 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             },
         },
         "replantation_coefficient": Decimal("1.5"),
+        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
+        "center=43.069199999999995,0.44220000000000004&zoom=16",
+        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
+        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST"
+        "::GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
 
@@ -516,6 +521,11 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "reduced_lpm": 31,
         },
         "replantation_coefficient": Decimal("1.40"),
+        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
+        "center=43.069199999999995,0.44220000000000004&zoom=16",
+        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
+        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::"
+        "GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
 
@@ -604,5 +614,10 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "replanting_ratio": 1.0,
         "replanting_ratio_comment": "Linéaire à planter / linéaire à détruire, sur "
         "parcelle PAC",
+        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
+        "center=43.069199999999995,0.44220000000000004&zoom=16",
+        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
+        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::"
+        "GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
