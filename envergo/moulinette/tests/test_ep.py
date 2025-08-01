@@ -399,6 +399,40 @@ def test_ep_normandie_dispense_l350(ep_normandie_criterion, france_map):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "dispense_L350"
 
 
+def test_ep_normandie_a_verifier_l350(ep_normandie_criterion, france_map):  # noqa
+    regulation = RegulationFactory(regulation="alignement_arbres", weight=0)
+    CriterionFactory(
+        title="Alignement arbres > L350-3",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    ),
+    ConfigHaieFactory()
+
+    hedge_lt20m_1 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.139679227936156, "lng": -0.17190009355545047},
+            {"lat": 49.13965115197173, "lng": -0.17171099781990054},
+        ],
+        additionalData__type_haie="alignement",
+        additionalData__bord_voie=True,
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
+
+    data = {
+        "profil": "autre",
+        "motif": "embellissement",
+        "reimplantation": "replantation",
+        "department": "44",
+        "haies": hedges,
+    }
+
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.is_evaluation_available()
+    assert moulinette.ep.ep_normandie.result_code == "a_verifier_L350"
+
+
 def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
     ep_normandie_criterion, france_map  # noqa
 ):

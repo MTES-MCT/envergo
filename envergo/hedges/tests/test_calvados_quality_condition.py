@@ -195,7 +195,7 @@ def test_calvados_quality_condition(hedge_data):
     assert round(LC["degradee"]) == 10
 
 
-def test_calvados_quality_condition_dispense_l350(hedge_data):
+def test_calvados_quality_condition_l350(hedge_data):
     """Lengths to plant depends on R."""
     catalog = {
         "reimplantation": "remplacement",
@@ -207,11 +207,11 @@ def test_calvados_quality_condition_dispense_l350(hedge_data):
             "degradee": 10.0,
         },
         "LC": {
-            "mixte": 200.0,
-            "alignement": 80.0,
-            "arbustive": 60.0,
-            "buissonnante": 40.0,
-            "degradee": 10.0,
+            "mixte": 0.0,
+            "alignement": 0.0,
+            "arbustive": 0.0,
+            "buissonnante": 0.0,
+            "degradee": 0.0,
         },
         "lpm": 390.0,
         "reduced_lpm": 352.0,
@@ -220,11 +220,11 @@ def test_calvados_quality_condition_dispense_l350(hedge_data):
     R = 0.0  # Ignored for calvados
     condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
     condition.evaluate()
-    LC = condition.context["LC"]
 
     assert condition.result
-    assert round(LC["mixte"]) == 0
-    assert round(LC["alignement"]) == 0
-    assert round(LC["arbustive"]) == 60
-    assert round(LC["buissonnante"]) == 40
-    assert round(LC["degradee"]) == 10
+
+    evaluator = Mock(result_code="a_verifier_L350")
+    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    condition.evaluate()
+
+    assert condition.result

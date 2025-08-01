@@ -366,8 +366,11 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
-        if self.criterion_evaluator.result_code == "dispense_L350":
-            # If the EP Normandie result code is "dispense_L350",
+        if (
+            self.criterion_evaluator.result_code == "dispense_L350"
+            or self.criterion_evaluator.result_code == "a_verifier_L350"
+        ):
+            # If the EP Normandie result code is "dispense_L350" or "a_verifier_L350,
             # we consider that the condition is always valid.
             self.result = True
 
