@@ -816,6 +816,11 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
             "reference": self.object.reference,
         }
 
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
+
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
