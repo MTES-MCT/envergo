@@ -136,8 +136,9 @@ class EspecesProtegeesNormandie(
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
-        "dispense_L350": RESULTS.dispense,
+        "dispense_L350": RESULTS.dispense_sous_condition,
         "dispense": RESULTS.dispense_sous_condition,
+        "a_verifier_L350": RESULTS.a_verifier,
     }
 
     CODE_MATRIX = {
@@ -486,18 +487,32 @@ class EspecesProtegeesNormandie(
             and hasattr(self.moulinette, "alignement_arbres")
             and self.moulinette.alignement_arbres.is_activated
             and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
-            and self.moulinette.alignement_arbres.alignement_arbres.result_code
-            == "soumis_securite"
         ):
-            result = "dispense_L350"
+            if (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_securite"
+            ):
+                result = "dispense_L350"
+            elif (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_esthetique"
+            ):
+                result = "a_verifier_L350"
+            elif (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_autorisation"
+            ):
+                result = "a_verifier_L350"
+            else:  # non soumis
+                result = super().get_result_code(result_data)
         else:
             result = super().get_result_code(result_data)
 
         return result
 
     def get_replantation_coefficient(self):
-        if self.result_code == "dispense_L350":
-            # If the result is "dispense_L350", the replantation coefficient is 1.0
+        if self.result_code == "dispense_L350" or self.result_code == "a_verifier_L350":
+            # If the result is "dispense_L350" or "a_verifier_L350", the replantation coefficient is 1.0
             return 1.0
 
         return self.catalog.get("aggregated_r")
