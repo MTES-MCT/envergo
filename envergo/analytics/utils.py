@@ -93,6 +93,9 @@ def extract_matomo_url_from_request(request):
     is_edit = bool(request.GET.get("edit", False))
     if is_edit:
         params["edit"] = "true"
+    is_alternative = bool(request.GET.get("alternative", False))
+    if is_alternative:
+        params["alternative"] = "true"
     bare_url = request.build_absolute_uri(request.path)
 
     return update_qs(bare_url, params)
