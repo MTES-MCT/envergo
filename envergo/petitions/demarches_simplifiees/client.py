@@ -223,13 +223,20 @@ class DemarchesSimplifieesClient:
             "endCursor": cursor,
         }
 
-    def dossier_send_message(self, dossier_number, message_body) -> dict:
-        """Dossier send message"""
+    def dossier_send_message(
+        self, dossier_number, dossier_id, message_body, instructeur_id=None
+    ) -> dict:
+        """Dossier send message query"""
+
+        instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+        if not instructeur_id:
+            logger.warning("Missing instructeur id.")
+            return None
 
         variables = {
             "input": {
-                "dossierId": "ABCD",
-                "instructeurId": "EFGH",
+                "dossierId": dossier_id,
+                "instructeurId": instructeur_id,
                 "body": message_body,
             }
         }
@@ -261,7 +268,7 @@ class DemarchesSimplifieesClient:
                     )
                 ):
                     logger.info(
-                        "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
+                        "Le message n'a pas été envoyé.",
                         extra={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
