@@ -1,0 +1,11 @@
+{
+  "data": {
+    "dossierEnvoyerMessage": {
+      "message": null,
+      "errors": [{
+        "message": "Le jeton utilisé est configuré seulement en lecture"
+      }],
+      "clientMutationId": 1234
+    }
+  }
+}
