@@ -22,7 +22,7 @@
           action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
       {% csrf_token %}
 
-      <div id="field-instructor_free_mention" class="fr-my-2w">
+      <div id="field-message_body" class="fr-my-2w">
         {% include '_field_snippet.html' with field=form.message_body %}
         <button type="submit"
                 class="fr-btn fr-btn--primary"
