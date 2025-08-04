@@ -829,9 +829,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, site):
     """Test send message for project via demarches simplifiées"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées

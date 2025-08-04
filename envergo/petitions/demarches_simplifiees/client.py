@@ -280,7 +280,6 @@ class DemarchesSimplifieesClient:
                     )
                     notify(dedent(message), "haie")
                 return None
-        self.execute()
         # Return message dict
         return data
 
