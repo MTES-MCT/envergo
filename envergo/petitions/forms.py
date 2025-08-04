@@ -57,7 +57,7 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
 
 
 class PetitionProjectInstructorMessageForm(forms.ModelForm):
-    """Form to send a message through demarche simplifie API."""
+    """Form to send a message through demarches simplifiées API."""
 
     message_body = forms.CharField(widget=forms.Textarea(attrs={"rows": 8}))
 
@@ -66,7 +66,3 @@ class PetitionProjectInstructorMessageForm(forms.ModelForm):
         fields = [
             "message_body",
         ]
-
-    def send_message(self):
-        # send message using the self.cleaned_data dictionary
-        pass
