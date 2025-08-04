@@ -376,7 +376,6 @@ query getDossiersForDemarche(
 }
 """
 )
-
 GET_DOSSIER_MESSAGES_QUERY = (
     FILE_FRAGMENT
     + MESSAGE_FRAGMENT
@@ -406,3 +405,36 @@ query getDossier($dossierNumber: Int!)
 }
 """
 )
+
+GET_DOSSIER_ID_BY_NUMBER_QUERY = """
+query getDossierIdByNumber($dossierNumber: Int!) {
+  dossier(number: $dossierNumber) {
+    id
+  }
+}
+"""
+
+GET_INSTRUCTEURS_FOR_DOSSIER_QUERY = """
+query getInstructeursForDossier($dossierNumber: Int!) {
+  dossier(number: $dossierNumber) {
+    instructeurs {
+      id
+      email
+    }
+  }
+}
+"""
+
+DOSSIER_ENVOYER_MESSAGE_MUTATION = """
+mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
+  dossierEnvoyerMessage(input: $input) {
+    message {
+      body
+    }
+    errors {
+      message
+    }
+    clientMutationId
+  }
+}
+"""

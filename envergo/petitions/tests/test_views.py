@@ -26,6 +26,7 @@ from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
@@ -541,6 +542,7 @@ def test_petition_project_instructor_messagerie_ds(
     )
 
     client.force_login(instructor_haie_user_44)
+
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -553,7 +555,6 @@ def test_petition_project_instructor_messagerie_ds(
 
     # Test if dossier has zero messages
     mock_post.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
-    client.force_login(instructor_haie_user_44)
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -563,7 +564,6 @@ def test_petition_project_instructor_messagerie_ds(
 
     # Test if dossier is empty
     mock_post.return_value = "null"
-    client.force_login(instructor_haie_user_44)
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -572,12 +572,11 @@ def test_petition_project_instructor_messagerie_ds(
     assert "Impossible de récupérer les informations du dossier" in content
 
     # Test send message
-    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
-    client.force_login(instructor_haie_user_44)
+    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
     message_data = {"message_body": "test"}
-    response = client.post(instructor_messagerie_url, message_data)
-    assert response.status_code == 302
-    assert response.url == instructor_messagerie_url
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    content = response.content.decode()
+    assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
 
 
 @pytest.mark.urls("config.urls_haie")

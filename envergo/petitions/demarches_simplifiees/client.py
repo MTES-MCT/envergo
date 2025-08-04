@@ -14,6 +14,7 @@ from graphql import GraphQLError
 
 from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
 from envergo.petitions.demarches_simplifiees.queries import (
+    DOSSIER_ENVOYER_MESSAGE_MUTATION,
     GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
@@ -21,6 +22,11 @@ from envergo.petitions.demarches_simplifiees.queries import (
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
+
+
+DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
+    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
+)
 
 
 class DemarchesSimplifieesClient:
@@ -85,13 +91,7 @@ class DemarchesSimplifieesClient:
                 f"\nvariables: {variables}"
             )
             with open(
-                Path(
-                    settings.APPS_DIR
-                    / "petitions"
-                    / "demarches_simplifiees"
-                    / "data"
-                    / fake_dossier_filename
-                ),
+                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
                 "r",
             ) as file:
                 response = json.load(file)
@@ -221,6 +221,68 @@ class DemarchesSimplifieesClient:
             "hasNextPage": has_next_page,
             "endCursor": cursor,
         }
+
+    def dossier_send_message(self, dossier_number, message_body) -> dict:
+        """Dossier send message"""
+
+        variables = {
+            "input": {
+                "dossierId": "ABCD",
+                "instructeurId": "EFGH",
+                "body": message_body,
+            }
+        }
+
+        query = DOSSIER_ENVOYER_MESSAGE_MUTATION
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"Use fake dossier if dossier is not draft."
+                f"\nquery: {query}"
+                f"\nvariables: {variables}"
+            )
+            with open(
+                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json",
+                "r",
+            ) as file:
+                response = json.load(file)
+                data = copy.deepcopy(response["data"])
+        else:
+            try:
+                data = self.execute(query, variables)
+            except DemarchesSimplifieesError as e:
+                if any(
+                    error.get("extensions", {}).get("code") == "not_found"
+                    and any(path == "dossier" for path in error.get("path", []))
+                    for error in (
+                        e.__cause__.errors if hasattr(e.__cause__, "errors") else []
+                    )
+                ):
+                    logger.info(
+                        "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
+                        extra={
+                            "dossier_number": dossier_number,
+                            "error": e.__cause__ if e.__cause__ else e.message,
+                            "query": e.query,
+                            "variables": e.variables,
+                        },
+                    )
+                else:
+                    message = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                        context={
+                            "dossier_number": dossier_number,
+                            "error": e.__cause__ if e.__cause__ else e.message,
+                            "query": e.query,
+                            "variables": e.variables,
+                        },
+                    )
+                    notify(dedent(message), "haie")
+                return None
+        self.execute()
+        # Return message dict
+        return data
 
 
 class DemarchesSimplifieesError(Exception):

@@ -49,6 +49,7 @@ from envergo.petitions.services import (
     get_context_from_ds,
     get_messages_and_senders_from_ds,
     get_project_context,
+    send_message_dossier_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -810,6 +811,24 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
             )
 
         return context
+
+    def form_valid(self, form):
+        """Send message"""
+        ds_response = send_message_dossier_ds(
+            self.object, form.cleaned_data["message_body"]
+        )
+        if ds_response is None or "errors" in ds_response.keys():
+            messages.warning(
+                self.request,
+                """Une erreur est survenue à l'envoi du message.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+        elif "dossierEnvoyerMessage" in ds_response.keys():
+            messages.success(
+                self.request,
+                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+            )
+        return super().form_valid(form)
 
     def get_log_event_data(self):
         return {
