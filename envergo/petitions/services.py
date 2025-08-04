@@ -301,6 +301,18 @@ def get_messages_from_ds(petition_project):
     return messages
 
 
+def send_message_dossier_ds(petition_project, message_body):
+    """Send message via DS API for a given dossier"""
+    # Get dossier ID
+    # Get Instructor ID
+    # Send message
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    ds_client = DemarchesSimplifieesClient()
+    response = ds_client.dossier_send_message(dossier_number, message_body)
+
+    return response
+
+
 def get_item_value_from_ds_champ(champ):
     """get item value from a dossier champ
     Ok better to do with yesno filter…
