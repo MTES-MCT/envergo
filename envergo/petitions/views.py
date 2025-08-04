@@ -814,16 +814,18 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
     def form_valid(self, form):
         """Send message"""
-        ds_response = send_message_dossier_ds(
-            self.object, form.cleaned_data["message_body"]
-        )
-        if ds_response is None or "errors" in ds_response.keys():
+        message_body = form.cleaned_data["message_body"]
+        ds_response = send_message_dossier_ds(self.object, message_body)
+        if ds_response is None or (
+            "errors" in ds_response and ds_response["errors"] is not None
+        ):
             messages.warning(
                 self.request,
                 """Une erreur est survenue à l'envoi du message.
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
-        elif "dossierEnvoyerMessage" in ds_response.keys():
+
+        elif "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
                 """Le message a bien été envoyé sur Démarches Simplifiées.""",

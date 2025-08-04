@@ -39,6 +39,7 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
@@ -863,9 +864,30 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
 
     # THEN messages has this new message
     assert response == {
-        "dossierEnvoyerMessage": {
-            "clientMutationId": "1234",
-            "errors": None,
-            "message": {"body": "Bonjour ! Un nouveau message"},
-        }
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+    }
+
+    # WHEN I send message for this dossier
+    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    message_body = "Bonjour ! Un nouveau message"
+    response = send_message_dossier_ds(petition_project, message_body)
+
+    # THEN messages has this new message
+    assert response == {
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+    }
+
+    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
+    message_body = "Bonjour ! Un nouveau message"
+    response = send_message_dossier_ds(petition_project, message_body)
+
+    # THEN messages has this new message
+    assert response == {
+        "message": None,
+        "errors": [{"message": "Le jeton utilisé est configuré seulement en lecture"}],
+        "clientMutationId": 1234,
     }

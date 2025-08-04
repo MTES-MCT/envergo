@@ -48,6 +48,12 @@ with open(
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
 
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_error.json"),
+    "r",
+) as file:
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
+
 
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:

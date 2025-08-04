@@ -71,6 +71,7 @@ class DemarchesSimplifieesClient:
                 variables=variables,
                 message=str(e),
             ) from e
+
         return result
 
     def _fetch_dossier(
@@ -280,11 +281,26 @@ class DemarchesSimplifieesClient:
                     )
                     notify(dedent(message), "haie")
                 return None
-        # Return message dict
-        return data
+
+        query_name = "dossierEnvoyerMessage"
+        if query_name not in data:
+            logger.error(
+                "Error when sending message to Demarches Simplifiees",
+                extra={
+                    "response": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            return None
+
+        # Return query response content
+        return data["dossierEnvoyerMessage"]
 
 
 class DemarchesSimplifieesError(Exception):
+    """Démarches Simplifiées client Exception"""
+
     def __init__(self, query: str, variables: dict, message: str = None):
         super().__init__()
         self.message = message
