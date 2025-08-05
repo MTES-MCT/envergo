@@ -17,6 +17,7 @@ from envergo.hedges.regulations import (
     QualityCondition,
     SafetyCondition,
     StrenghteningCondition,
+    EssencesBocageresCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 from envergo.utils.fields import get_human_readable_value
@@ -127,6 +128,7 @@ class EspecesProtegeesNormandie(
         LineaireSurTalusCondition,
         LineaireInterchamp,
         NormandieQualityCondition,
+        EssencesBocageresCondition,
     ]
 
     RESULT_MATRIX = {
@@ -402,17 +404,20 @@ class EspecesProtegeesNormandie(
 
             if hedge.length <= 10:
                 r = D(0)
-            elif hedge.length <= 20:
-                r = D(1)
-            elif (
-                reimplantation == "remplacement"
-                and hedge.mode_destruction == "coupe_a_blanc"
-            ):
+            elif hedge.prop("essences_non_bocageres"):
                 r = D(1)
             else:
-                r = self.COEFFICIENT_MATRIX[
-                    (hedge.hedge_type, density_ratio_range, zone_id)
-                ]
+                if hedge.length <= 20:
+                    r = D(1)
+                elif (
+                    reimplantation == "remplacement"
+                    and hedge.mode_destruction == "coupe_a_blanc"
+                ):
+                    r = D(1)
+                else:
+                    r = self.COEFFICIENT_MATRIX[
+                        (hedge.hedge_type, density_ratio_range, zone_id)
+                    ]
 
             all_r.append(r)
             minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
