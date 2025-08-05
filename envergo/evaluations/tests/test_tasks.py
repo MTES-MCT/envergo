@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from envergo.evaluations.tasks import post_evalreq_to_automation
-from envergo.evaluations.tests.factories import RequestFactory
+from envergo.evaluations.tests.factories import RequestFactory, RequestFileFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -30,6 +30,24 @@ def test_request_history_first_request(mock_post):
 
     # There is no previous request, so the history is zero
     assert payload["request_history"]["instructor1@example.com"] == 0
+
+
+@patch("envergo.evaluations.tasks.post")
+def test_request_files(mock_post):
+    """The request files are joined to the payload."""
+
+    evalreq = RequestFactory(
+        user_type="instructor", urbanism_department_emails=["instructor1@example.com"]
+    )
+    RequestFileFactory(request=evalreq)
+    RequestFileFactory(request=evalreq)
+    RequestFileFactory(request=evalreq)
+    post_evalreq_to_automation(evalreq.id, "envergo.local")
+
+    mock_post.assert_called_once()
+    payload = mock_post.call_args.kwargs["json"]
+    assert "files" in payload
+    assert len(payload["files"]) == 3
 
 
 @patch("envergo.evaluations.tasks.post")
