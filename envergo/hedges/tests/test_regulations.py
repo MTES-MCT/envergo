@@ -4,13 +4,13 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.regulations import (
+    EssencesBocageresCondition,
     MinLengthCondition,
     MinLengthPacCondition,
     QualityCondition,
     SafetyCondition,
     StrenghteningCondition,
     TreeAlignmentsCondition,
-    EssencesBocageresCondition,
 )
 from envergo.hedges.tests.factories import HedgeDataFactory
 

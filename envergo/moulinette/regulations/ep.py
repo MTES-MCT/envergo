@@ -9,6 +9,7 @@ from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HEDGE_TYPES
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
+    EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
     MinLengthCondition,
@@ -17,7 +18,6 @@ from envergo.hedges.regulations import (
     QualityCondition,
     SafetyCondition,
     StrenghteningCondition,
-    EssencesBocageresCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 from envergo.utils.fields import get_human_readable_value
