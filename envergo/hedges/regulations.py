@@ -582,6 +582,7 @@ class LineaireSurTalusCondition(PlantationCondition):
         }
         return self
 
+
 class EssencesBocageresCondition(PlantationCondition):
     label = "Essences bocagères"
     order = 5
