@@ -17,6 +17,7 @@ from envergo.hedges.regulations import (
     QualityCondition,
     SafetyCondition,
     StrenghteningCondition,
+    EssencesBocageresCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
 from envergo.utils.fields import get_human_readable_value
@@ -127,6 +128,7 @@ class EspecesProtegeesNormandie(
         LineaireSurTalusCondition,
         LineaireInterchamp,
         NormandieQualityCondition,
+        EssencesBocageresCondition,
     ]
 
     RESULT_MATRIX = {
