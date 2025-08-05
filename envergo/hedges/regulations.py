@@ -587,7 +587,10 @@ class EssencesBocageresCondition(PlantationCondition):
     label = "Essences bocagères"
     order = 5
     valid_text = "Toutes les haies à planter sont composées d'essences bocagères"
-    invalid_text = "Au moins une haie à planter est composée d’essences non bocagères. Elles ne sont pas acceptées en guise de compensation."
+    invalid_text = """
+        Au moins une haie à planter est composée d’essences non bocagères.
+        Elles ne sont pas acceptées en guise de compensation.
+    """
 
     def evaluate(self):
 
