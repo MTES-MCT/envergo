@@ -2,6 +2,8 @@ from collections import defaultdict
 from decimal import Decimal as D
 
 from django.contrib.gis.geos import GEOSGeometry
+from django import forms
+from django.core.validators import RegexValidator
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
@@ -113,6 +115,32 @@ def get_hedge_compensation_details(hedge, r):
     }
 
 
+PACAGE_RE = r'[0-9]{9}'
+
+
+class EPNormandieForm(forms.Form):
+    numero_pacage = forms.CharField(
+        label="Quel est le numéro PACAGE de l'exploitation ?",
+        required=True,
+        validators=[RegexValidator(
+            PACAGE_RE,
+            message="Saisissez une valeur composée de 9 chiffres, sans espace.")],
+        widget=forms.TextInput(
+            attrs={"placeholder": "012345678"}
+        ),
+
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        localisation_pac = self.data.get("localisation_pac")
+        if localisation_pac == "non":
+            self.fields = {}
+            return
+
+
+
+
 class EspecesProtegeesNormandie(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
@@ -128,6 +156,7 @@ class EspecesProtegeesNormandie(
         LineaireInterchamp,
         NormandieQualityCondition,
     ]
+    form_class = EPNormandieForm
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
