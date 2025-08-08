@@ -21,6 +21,7 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
+from envergo.hedges.models import Pacage
 from envergo.utils.fields import get_human_readable_value
 
 
@@ -115,20 +116,20 @@ def get_hedge_compensation_details(hedge, r):
     }
 
 
-PACAGE_RE = r'[0-9]{9}'
+PACAGE_RE = r"[0-9]{9}"
 
 
 class EPNormandieForm(forms.Form):
     numero_pacage = forms.CharField(
         label="Quel est le numéro PACAGE de l'exploitation ?",
         required=True,
-        validators=[RegexValidator(
-            PACAGE_RE,
-            message="Saisissez une valeur composée de 9 chiffres, sans espace.")],
-        widget=forms.TextInput(
-            attrs={"placeholder": "012345678"}
-        ),
-
+        validators=[
+            RegexValidator(
+                PACAGE_RE,
+                message="Saisissez une valeur composée de 9 chiffres, sans espace.",
+            )
+        ],
+        widget=forms.TextInput(attrs={"placeholder": "012345678"}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -137,8 +138,6 @@ class EPNormandieForm(forms.Form):
         if localisation_pac == "non":
             self.fields = {}
             return
-
-
 
 
 class EspecesProtegeesNormandie(
@@ -361,6 +360,18 @@ class EspecesProtegeesNormandie(
         ("mixte", "lt_0.5", "normandie_groupe_absent"): D("2.6"),
     }
 
+    def get_exploitation_density(self, numero_pacage):
+        if not numero_pacage:
+            return None
+
+        pacage = Pacage.objects.filter(pacage_num=numero_pacage).first()
+        if pacage is None:
+            densite = None
+        else:
+            densite = float(pacage.exploitation_density)
+
+        return densite
+
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
 
@@ -374,8 +385,18 @@ class EspecesProtegeesNormandie(
         minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
 
-        density_200 = haies.density.get("density_200")
+        density_exploitation = self.get_exploitation_density(
+            catalog.get("numero_pacage")
+        )
         density_5000 = haies.density.get("density_5000")
+        if density_exploitation:
+            # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
+            # We then pick a coefficient corresponding to the Normandie average : 1
+            density_ratio = (
+                density_exploitation / density_5000 if density_5000 != 0 else 1.0
+            )
+        else:
+            density_ratio = 1.0
 
         centroid_shapely = haies.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
@@ -397,10 +418,6 @@ class EspecesProtegeesNormandie(
             if zonage
             else "normandie_groupe_absent"
         )
-
-        # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
-        # We then pick a coefficient corresponding to the Normandie average : 1
-        density_ratio = density_200 / density_5000 if density_5000 != 0 else 1
 
         # Determine the density ratio range for coefficient lookup
         if density_ratio > 1.6:
@@ -486,8 +503,8 @@ class EspecesProtegeesNormandie(
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
-        catalog["density_200"] = density_200
         catalog["density_5000"] = density_5000
+        catalog["density_exploitation"] = density_exploitation
         catalog["density_zone"] = zone_id
         catalog["hedges_compensation_details"] = hedges_details
         return catalog
