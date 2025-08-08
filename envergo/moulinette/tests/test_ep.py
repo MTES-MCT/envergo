@@ -105,6 +105,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -135,6 +136,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -179,6 +181,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -223,6 +226,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -257,6 +261,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -290,6 +295,7 @@ def test_ep_normandie_interdit_remplacement(
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -323,6 +329,7 @@ def test_ep_normandie_derogation_simplifiee(
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -357,6 +364,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -391,6 +399,7 @@ def test_ep_normandie_dispense_l350(ep_normandie_criterion, france_map):  # noqa
         "motif": "securite",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -427,6 +436,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
         "motif": "securite",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
