@@ -465,7 +465,7 @@ PACAGE_RE = r"[0-9]{9}"
 class Pacage(models.Model):
     """Holds data related to pacage numbers."""
 
-    pacage = models.CharField(
+    pacage_num = models.CharField(
         "Numéro de PACAGE", validators=[RegexValidator(PACAGE_RE)], primary_key=True
     )
     exploitation_density = models.DecimalField(

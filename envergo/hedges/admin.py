@@ -15,6 +15,7 @@ from envergo.hedges.models import (
     Species,
     SpeciesMap,
     SpeciesMapFile,
+    Pacage,
 )
 from envergo.hedges.tasks import process_species_map_file
 
@@ -209,3 +210,8 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
         process_species_map_file.delay(map.id)
         msg = "Votre fichier est en cours de traitement."
         self.message_user(request, msg, level=messages.INFO)
+
+
+@admin.register(Pacage)
+class PacageAdmin(admin.ModelAdmin):
+    list_display = ["pacage_num", "exploitation_density"]
