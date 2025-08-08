@@ -12,10 +12,10 @@ from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     HEDGE_TYPES,
     HedgeData,
+    Pacage,
     Species,
     SpeciesMap,
     SpeciesMapFile,
-    Pacage,
 )
 from envergo.hedges.tasks import process_species_map_file
 
@@ -215,3 +215,5 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
 @admin.register(Pacage)
 class PacageAdmin(admin.ModelAdmin):
     list_display = ["pacage_num", "exploitation_density"]
+    search_fields = ["pacage_num"]
+    readonly_fields = ["pacage_num", "exploitation_density"]
