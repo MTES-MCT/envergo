@@ -4,6 +4,7 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.regulations import (
+    EssencesBocageresCondition,
     MinLengthCondition,
     MinLengthPacCondition,
     QualityCondition,
@@ -409,3 +410,20 @@ def test_alignement_arbres_condition():
     assert condition.result
     assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 90
     assert condition.context["aa_bord_voie_delta"] == 0.0
+
+
+def test_essences_bocageres_condition(calvados_hedge_data):
+    hedge_data = calvados_hedge_data
+    catalog = {}
+    condition = EssencesBocageresCondition(
+        hedge_data, 1.0, criterion_evaluator, catalog
+    )
+    condition.evaluate()
+    assert condition.result
+
+    hedge_data.data[-1]["additionalData"]["essences_non_bocageres"] = True
+    condition = EssencesBocageresCondition(
+        hedge_data, 1.0, criterion_evaluator, catalog
+    )
+    condition.evaluate()
+    assert not condition.result
