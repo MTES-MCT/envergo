@@ -817,7 +817,16 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         message_body = form.cleaned_data["message_body"]
         ds_response = send_message_dossier_ds(self.object, message_body)
 
-        if "message" in ds_response and ds_response["message"] is not None:
+        if ds_response is None or (
+            "errors" in ds_response and ds_response["errors"] is not None
+        ):
+            messages.warning(
+                self.request,
+                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        elif "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
                 """Le message a bien été envoyé sur Démarches Simplifiées.""",
@@ -832,12 +841,6 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
                 **get_matomo_tags(self.request),
             )
 
-        else:
-            messages.warning(
-                self.request,
-                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
-            )
         return super().form_valid(form)
 
     def get_log_event_data(self):
