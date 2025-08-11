@@ -40,7 +40,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
@@ -1479,6 +1479,9 @@ class Moulinette(ABC):
 
         return form_errors
 
+    def is_valid(self):
+        return not bool(self.form_errors())
+
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
 
@@ -1675,6 +1678,10 @@ class Moulinette(ABC):
     def get_triage_params(cls):
         """Add some data to display on the debug page"""
         raise NotImplementedError
+
+    @classmethod
+    def is_triage_valid(cls, triage_form):
+        return True
 
     @classmethod
     def get_extra_context(cls, request):
@@ -1997,7 +2004,15 @@ class MoulinetteHaie(Moulinette):
         return set(TriageFormHaie.base_fields.keys())
 
     @classmethod
-    def get_triage_template(cls, triage_form):
+    def is_triage_valid(cls, triage_form):
+        """Should the triage params allow to go to next step?."""
+
+        element = triage_form.cleaned_data.get("element")
+        travaux = triage_form.cleaned_data.get("travaux")
+        return element == "haie" and travaux == "destruction"
+
+    @classmethod
+    def get_triage_result_template(cls, triage_form):
         """Return the template to display the triage out of scope result."""
         if (
             triage_form["element"].value() == "haie"
@@ -2018,9 +2033,7 @@ class MoulinetteHaie(Moulinette):
             if hasattr(request, "moulinette_data")
             else request.GET
         )
-        context["triage_url"] = update_qs(
-            reverse("triage"), {**form_data.dict(), "edit": "true"}
-        )
+        context["triage_url"] = update_qs(reverse("triage"), {**form_data.dict()})
         triage_form = TriageFormHaie(data=form_data)
         if triage_form.is_valid():
             context["triage_form"] = triage_form
@@ -2045,6 +2058,13 @@ class MoulinetteHaie(Moulinette):
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
+
+        if "haies" in request.GET:
+            try:
+                hedge_data = HedgeData.objects.get(id=request.GET["haies"])
+            except Exception:
+                hedge_data = None
+            context["hedge_data"] = hedge_data
 
         return context
 
