@@ -650,6 +650,15 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, UpdateView):
 
         return super().post(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            **get_matomo_tags(self.request),
+        )
+        return super().form_valid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["project_details"] = get_instructor_view_context(

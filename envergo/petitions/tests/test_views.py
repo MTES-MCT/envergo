@@ -338,10 +338,13 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
+    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
+
+    assert Event.objects.filter(category="projet", event="edition_notes").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
