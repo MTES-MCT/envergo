@@ -267,8 +267,8 @@ class DemarchesSimplifieesClient:
                         e.__cause__.errors if hasattr(e.__cause__, "errors") else []
                     )
                 ):
-                    logger.info(
-                        "Le message n'a pas été envoyé.",
+                    logger.error(
+                        "Error when sending message to Demarches Simplifiees",
                         extra={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
@@ -278,7 +278,7 @@ class DemarchesSimplifieesClient:
                     )
                 else:
                     message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
                         context={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
