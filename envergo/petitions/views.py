@@ -850,6 +850,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 ),
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
             )
+            log_event(
+                "projet",
+                "invitation",
+                self.request,
+                **{"project_reference": project.reference},
+                **get_matomo_tags(self.request),
+            )
             return JsonResponse({"invitation_url": invitation_url})
         else:
             return JsonResponse(
