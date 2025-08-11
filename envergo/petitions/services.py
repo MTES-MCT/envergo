@@ -295,6 +295,12 @@ def get_messages_from_ds(petition_project):
         return None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+
+    # Save dossier.id in object
+    if dossier.id and not petition_project.demarches_simplifiees_dossier_id:
+        petition_project.demarches_simplifiees_dossier_id = dossier.id
+        petition_project.save()
+
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
@@ -306,10 +312,9 @@ def send_message_dossier_ds(petition_project, message_body):
 
     # Get dossier ID
     dossier_number = petition_project.demarches_simplifiees_dossier_number
-    dossier = get_demarches_simplifiees_dossier(petition_project)
-    if dossier:
-        dossier_id = dossier.id
-    else:
+    dossier_id = petition_project.demarches_simplifiees_dossier_id
+
+    if not dossier_id or not dossier_number:
         return None
 
     # Send message
