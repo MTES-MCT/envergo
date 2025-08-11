@@ -1,0 +1,11 @@
+{
+  "data": {
+    "dossierEnvoyerMessage": {
+      "message": {
+        "body": "Bonjour ! Un nouveau message"
+      },
+      "errors": null,
+      "clientMutationId": "1234"
+    }
+  }
+}
