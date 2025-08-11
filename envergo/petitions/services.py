@@ -272,7 +272,6 @@ def send_message_dossier_ds(petition_project, message_body):
     # Get dossier ID
     dossier_number = petition_project.demarches_simplifiees_dossier_number
     dossier_id = petition_project.demarches_simplifiees_dossier_id
-
     if not dossier_id or not dossier_number:
         return None
 
