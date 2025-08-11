@@ -785,8 +785,8 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
-    form_class = PetitionProjectInstructorMessageForm
     event_action = "lecture"
+    form_class = PetitionProjectInstructorMessageForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -816,19 +816,27 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         """Send message"""
         message_body = form.cleaned_data["message_body"]
         ds_response = send_message_dossier_ds(self.object, message_body)
-        if ds_response is None or (
-            "errors" in ds_response and ds_response["errors"] is not None
-        ):
+
+        if "message" in ds_response and ds_response["message"] is not None:
+            messages.success(
+                self.request,
+                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+            )
+
+            # Log matomo event
+            log_event(
+                self.matomo_category,
+                "envoi",
+                self.request,
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
+        else:
             messages.warning(
                 self.request,
                 """Une erreur est survenue à l'envoi du message.
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
-            )
-
-        elif "message" in ds_response and ds_response["message"] is not None:
-            messages.success(
-                self.request,
-                """Le message a bien été envoyé sur Démarches Simplifiées.""",
             )
         return super().form_valid(form)
 
