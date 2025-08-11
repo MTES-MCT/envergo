@@ -440,6 +440,41 @@ dialog.hedge-data-dialog {
     display: flex;
     justify-content: space-between;
   }
+
+  fieldset#id_removal-type_haie,
+  fieldset#id_plantation-type_haie {
+    div.fr-grid-row {
+      align-items: center;
+    }
+
+    div.fr-fieldset__element {
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+
+      .fr-radio-rich {
+        flex-grow: 1;
+      }
+
+      .fr-radio-rich__pictogram {
+        padding: 16px;
+        width: 0;
+        min-width: 0;
+
+        img {
+          width: 24px;
+        }
+      }
+
+      img.hedge-radio-img {
+        max-width: 100%;
+      }
+    }
+  }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none !important;
+  }
 }
 
 div#group-haies-content {
@@ -630,7 +665,7 @@ ul.instructor-view-list {
   }
 }
 
-@media (width >= 48em) {
+@media (width >=48em) {
   div#project-specifications-instructor {
     border-left: 1px solid var(--border-default-grey);
   }
@@ -644,6 +679,10 @@ ul.instructor-view-list {
   .fr-sidemenu--sticky {
     top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
     padding-right: 1.5rem;
+
+    .fr-collapse {
+      margin: 0;
+    }
   }
 
   // Apply border grey on main instead of sidemenu to have it full height
@@ -682,4 +721,26 @@ div.title-with-link-container {
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: space-between;
+}
+
+#table-dossier-list {
+  td,
+  th {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  th {
+    line-height: 1.2rem;
+  }
+
+  td {
+    height: 72px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

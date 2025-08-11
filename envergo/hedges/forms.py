@@ -5,15 +5,20 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
-from envergo.moulinette.forms.fields import DisplayBooleanField
-from envergo.utils.fields import AllowDisabledSelect
+from envergo.moulinette.forms.fields import (
+    DisplayBooleanField,
+    DisplayChoiceField,
+    extract_choices,
+    extract_display_function,
+)
+from envergo.utils.fields import HedgeChoiceField
 
 
 class HedgePropertiesBaseForm(forms.Form):
     """Base Hedge properties form"""
 
     type_haie = forms.ChoiceField(
-        choices=(("", "Sélectionner une option"),) + HEDGE_TYPES,
+        choices=HEDGE_TYPES,
         label=mark_safe(
             """
         <span>Type de haie</span>
@@ -21,7 +26,7 @@ class HedgePropertiesBaseForm(forms.Form):
         target="_blank" rel="noopener">Aide</a>
         """
         ),
-        widget=AllowDisabledSelect(),
+        widget=HedgeChoiceField,
     )
     sur_parcelle_pac = forms.BooleanField(
         label="Située sur une parcelle PAC",
@@ -38,20 +43,32 @@ class HedgePropertiesBaseForm(forms.Form):
 
 
 MODE_DESTRUCTION_CHOICES = (
-    ("arrachage", "Arrachage"),
-    ("coupe_a_blanc", "Coupe à blanc (sur essence ne recépant pas)"),
-    ("autre", "Autre"),
+    ("arrachage", "Arrachage", "Arrachage"),
+    (
+        "coupe_a_blanc",
+        mark_safe(
+            """Coupe à blanc (sur essence ne recépant pas)
+            <span class="fr-hint-text">
+            <a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+               target="_blank" rel="noopener">
+            Liste des essences ne recépant pas</a></span>
+            """
+        ),
+        "Coupe à blanc (sur essence ne recépant pas)",
+    ),
+    ("autre", "Autre", "Autre"),
 )
 
 
 class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
     """Hedge to remove properties form"""
 
-    mode_destruction = forms.ChoiceField(
-        choices=MODE_DESTRUCTION_CHOICES,
+    mode_destruction = DisplayChoiceField(
+        choices=extract_choices(MODE_DESTRUCTION_CHOICES),
         label="",
         widget=forms.RadioSelect,
         initial="arrachage",
+        get_display_value=extract_display_function(MODE_DESTRUCTION_CHOICES),
     )
     vieil_arbre = forms.BooleanField(
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
@@ -124,9 +141,12 @@ class SurTalusMixin(forms.Form):
 
 
 class InterchampMixin(forms.Form):
-    interchamp = forms.BooleanField(
-        label="Haie inter-champ",
+    interchamp = DisplayBooleanField(
+        label=mark_safe(
+            'Haie inter-champ <span class="fr-hint-text">Y compris en bord de chemin entre deux parcelles</span>'
+        ),
         required=False,
+        display_label="Haie inter-champ",
     )
 
 

@@ -22,6 +22,7 @@ from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.urls import extract_param_from_url
@@ -324,6 +325,12 @@ class PetitionProject(models.Model):
             )
         return None
 
+    @property
+    def prefetched_dossier(self) -> Dossier | None:
+        """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
+        dossier_as_dict = self.demarches_simplifiees_raw_dossier
+        return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
+
 
 def one_month_from_now():
     return timezone.now() + timedelta(days=30)
@@ -363,7 +370,7 @@ class InvitationToken(models.Model):
         null=True,
         blank=True,
         related_name="invitation_tokens",
-        verbose_name="Utilisateur invité",
+        verbose_name="Compte invité",
     )
 
     # Meta fields

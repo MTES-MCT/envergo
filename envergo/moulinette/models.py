@@ -28,6 +28,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -584,6 +586,32 @@ class Regulation(models.Model):
     def result_group(self):
         """Get the result group of the regulation, depending on its impact on the project."""
         return RESULTS_GROUP_MAPPING[self.result]
+
+    def has_instructor_result_details_template(self) -> bool:
+        """Check if the regulation has a template for instructor result details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_instructor_result_details.html"
+        )
+
+    def has_plantation_condition_details_template(self) -> bool:
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_plantation_condition_details.html"
+        )
+
+    def has_key_elements_template(self) -> bool:
+        """Check if the regulation has a template for key elements for at least one criterion."""
+        return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
+
+    def has_criterion_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path for at least one criterion."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(template_path.format(self.slug, criterion.slug))
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
 
 
 class Criterion(models.Model):

@@ -21,6 +21,7 @@ from enum import Enum
 from typing import Literal, Optional, TypeAlias
 
 from dacite import Config, from_dict
+from dateutil import parser
 
 
 def str_to_int(val):
@@ -135,6 +136,28 @@ class DossierState(Enum):
     en_instruction = "en_instruction"
     refuse = "refuse"
     sans_suite = "sans_suite"
+
+    @property
+    def display_value(self):
+        map = {
+            DossierState.accepte: "Accepté",
+            DossierState.en_construction: "En construction",
+            DossierState.en_instruction: "En instruction",
+            DossierState.refuse: "Refusé",
+            DossierState.sans_suite: "Classé sans suite",
+        }
+        return map.get(self, "Inconnu")
+
+    @property
+    def color(self):
+        map = {
+            DossierState.accepte: "green-emeraude",
+            DossierState.en_construction: "purple-glycine",
+            DossierState.en_instruction: "yellow-tournesol",
+            DossierState.refuse: "error",
+            DossierState.sans_suite: "pink-tuile",
+        }
+        return map.get(self, "")
 
 
 class EntrepriseEtatAdministratif(Enum):
@@ -1067,6 +1090,10 @@ class Dossier:
             if applicant_name is None or applicant_name.strip() == ""
             else applicant_name.strip()
         )
+
+    @property
+    def date_depot(self):
+        return parser.isoparse(self.dateDepot) if self.dateDepot else None
 
 
 @dataclass(kw_only=True)

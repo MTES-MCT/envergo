@@ -36,6 +36,7 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    extract_data_from_fields,
     get_instructor_view_context,
 )
 from envergo.utils.mattermost import notify
@@ -55,7 +56,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
-        .select_related("hedge_data")
+        .select_related("hedge_data", "department__confighaie")
         .order_by("-created_at")
     )
     paginate_by = 30
@@ -80,6 +81,20 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = self.queryset.none()
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        for obj in context["object_list"]:
+            dossier = obj.prefetched_dossier
+            if dossier:
+                city, organization, _ = extract_data_from_fields(
+                    obj.department.confighaie, dossier
+                )
+                obj.city = city
+                obj.organization = organization
+
+        return context
 
 
 class PetitionProjectCreate(FormView):
@@ -538,6 +553,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    matomo_category = "projet"
     matomo_tag = "consultation_i"
 
     def get(self, request, *args, **kwargs):
@@ -549,7 +565,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if self.object.has_user_as_instructor(user):
             if self.matomo_tag:
                 log_event(
-                    "projet",
+                    self.matomo_category,
                     self.matomo_tag,
                     self.request,
                     **self.object.get_log_event_data(),
@@ -727,7 +743,22 @@ class PetitionProjectInstructorDossierDSView(
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 
+        context["triage_form"] = self.object.get_triage_form()
+
         return context
+
+
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    matomo_category = "message"
+    matomo_tag = "lecture"
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorView):
