@@ -5,7 +5,9 @@
 <p>Options pour rendre le projet autorisable :</p>
 
 <ul>
-  <li>réduire la longueur de haie détruite pour passer sous le seuil de 2 % du linéaire total de l’exploitation</li>
+  {% if not is_lte_2percent_pac %}
+    <li>réduire la longueur de haie détruite pour passer sous le seuil de 2 % du linéaire total de l’exploitation</li>
+  {% endif %}
   <li>
     se faire accompagner par un organisme habilité à justifier que le nouvel emplacement est meilleur sur le plan environnemental que celui de la haie détruite (la liste de ces organismes est <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre"
     target="_blank"
