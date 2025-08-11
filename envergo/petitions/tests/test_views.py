@@ -11,6 +11,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
@@ -340,10 +341,13 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
+    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
+
+    assert Event.objects.filter(category="projet", event="edition_notes").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -647,6 +651,8 @@ def test_petition_project_invitation_token(
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
+    event = Event.objects.get(category="projet", event="invitation")
+    assert event.metadata["project_reference"] == project.reference
 
 
 @pytest.mark.urls("config.urls_haie")
