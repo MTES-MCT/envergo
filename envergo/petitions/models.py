@@ -94,6 +94,10 @@ class PetitionProject(models.Model):
         help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
     )
 
+    demarches_simplifiees_dossier_id = models.CharField(
+        help_text=_("Dossier ID on demarches-simplifiees.fr"), blank=True, null=True
+    )
+
     demarches_simplifiees_state = models.CharField(
         _("State of the dossier on demarches-simplifiees.fr"),
         max_length=20,
