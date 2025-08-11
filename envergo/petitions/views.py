@@ -835,7 +835,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         else:
             messages.warning(
                 self.request,
-                """Une erreur est survenue à l'envoi du message.
+                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
         return super().form_valid(form)
