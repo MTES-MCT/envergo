@@ -98,7 +98,12 @@ class ProcedureForm(forms.ModelForm):
 class PetitionProjectInstructorMessageForm(forms.ModelForm):
     """Form to send a message through demarches simplifiées API."""
 
-    message_body = forms.CharField(widget=forms.Textarea(attrs={"rows": 8}))
+    message_body = forms.CharField(
+        label="Votre message",
+        widget=forms.Textarea(
+            attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
+        ),
+    )
 
     class Meta:
         model = PetitionProject
