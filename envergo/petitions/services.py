@@ -267,7 +267,6 @@ def send_message_dossier_ds(petition_project, message_body):
     # Get dossier ID
     dossier_number = petition_project.demarches_simplifiees_dossier_number
     dossier = get_demarches_simplifiees_dossier(petition_project)
-    breakpoint()
     if dossier:
         dossier_id = dossier.id
     else:

@@ -525,10 +525,22 @@ def test_petition_project_instructor_display_dossier_ds_info(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_messagerie_ds(
-    mock_post, instructor_haie_user_44, client, site
+    mock_ds_query_execute, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
-    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+
+    mock_response1_get_messages = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_response2_get_0_messages = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
+    mock_response3_get_dossier_none = "null"
+    mock_response4_get_dossier = GET_DOSSIER_FAKE_RESPONSE["data"]
+    mock_response5_send_message = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    mock_ds_query_execute.side_effect = [
+        mock_response1_get_messages,
+        mock_response2_get_0_messages,
+        mock_response3_get_dossier_none,
+        mock_response4_get_dossier,
+        mock_response5_send_message,
+    ]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -543,6 +555,7 @@ def test_petition_project_instructor_messagerie_ds(
 
     client.force_login(instructor_haie_user_44)
 
+    # Test dossier get messages : mock_response1_get_messages
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -553,8 +566,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert "8 messages" in content
     assert "Coriandrum_sativum" in content
 
-    # Test if dossier has zero messages
-    mock_post.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
+    # Test if dossier has zero messages : mock_response2_get_0_messages
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -562,8 +574,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert "<h2>Messagerie</h2>" in content
     assert "0 message" in content
 
-    # Test if dossier is empty
-    mock_post.return_value = "null"
+    # Test if dossier is empty : mock_response3_get_dossier_none
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -571,8 +582,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert "<h2>Messagerie</h2>" in content
     assert "Impossible de récupérer les informations du dossier" in content
 
-    # Test send message
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    # Test send message : mock_response4_get_dossier, mock_response5_send_message
     message_data = {"message_body": "test"}
     response = client.post(instructor_messagerie_url, message_data, follow=True)
     content = response.content.decode()
