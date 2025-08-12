@@ -68,3 +68,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    def is_instructor(self):
+        return self.is_superuser or all(
+            (
+                self.is_active,
+                self.access_haie,
+                self.departments.exists() or self.invitation_tokens.exists(),
+            )
+        )
