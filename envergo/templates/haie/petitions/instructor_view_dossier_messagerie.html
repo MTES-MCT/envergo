@@ -1,6 +1,6 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load utils petitions %}
+{% load utils petitions static %}
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
@@ -58,7 +58,7 @@
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
               <div class="fr-download">
-                <a class="fr-link" target="_blank" href="{{ pj.url }}">
+                <a class="fr-link ds-message__pj" target="_blank" href="{{ pj.url }}">
                   <span class="fr-sr-only">Télécharger le fichier</span>
                   {{ pj.filename }}
                   <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
@@ -72,4 +72,8 @@
     </section>
   {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/project_messagerie_analytics.js' %}"></script>
 {% endblock %}
