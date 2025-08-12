@@ -14,6 +14,7 @@ from graphql import GraphQLError
 
 from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
 from envergo.petitions.demarches_simplifiees.queries import (
+    GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
 )
@@ -66,9 +67,15 @@ class DemarchesSimplifieesClient:
             ) from e
         return result
 
-    def get_dossier(self, dossier_number) -> dict | None:
+    def _fetch_dossier(
+        self,
+        dossier_number,
+        query,
+        fake_dossier_filename,
+    ) -> dict | None:
+        """Fetch dossier from DS, using specific query and fake dossier filename"""
+
         variables = {"dossierNumber": dossier_number}
-        query = GET_DOSSIER_QUERY
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
@@ -83,7 +90,7 @@ class DemarchesSimplifieesClient:
                     / "petitions"
                     / "demarches_simplifiees"
                     / "data"
-                    / "fake_dossier.json"
+                    / fake_dossier_filename
                 ),
                 "r",
             ) as file:
@@ -144,6 +151,26 @@ class DemarchesSimplifieesClient:
             return None
 
         return data["dossier"]
+
+    def get_dossier(self, dossier_number):
+        """Get dossier"""
+        fake_dossier_filename = "fake_dossier.json"
+
+        data = self._fetch_dossier(
+            dossier_number, GET_DOSSIER_QUERY, fake_dossier_filename
+        )
+
+        return data
+
+    def get_dossier_messages(self, dossier_number):
+        """Get dossier messages only"""
+        fake_dossier_filename = "fake_dossier_messages.json"
+
+        data = self._fetch_dossier(
+            dossier_number, GET_DOSSIER_MESSAGES_QUERY, fake_dossier_filename
+        )
+
+        return data
 
     def get_dossiers_for_demarche(
         self, demarche_number, dossiers_updated_since: datetime

@@ -7,6 +7,7 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.utils.dateparse import parse_datetime
 
 register = template.Library()
 
@@ -154,3 +155,9 @@ def as_hidden(field):
 def get_choice_label(choices, value):
     """Return human-readable label for a given choice value."""
     return dict(choices).get(value, value)
+
+
+@register.filter
+def to_datetime(value):
+    """Parse ISO string and return datetime.datetime or datetime.timezone"""
+    return parse_datetime(value)
