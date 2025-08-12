@@ -36,7 +36,20 @@
             {% endwith %}
           </div>
           <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>
+
+          <div class="fr-mt-2w">
+          {% for pj in message.attachments %}
+            <div class="fr-download">
+              <a class="fr-link" target="_blank" href="{{ pj.url }}">
+                <span class="fr-sr-only">Télécharger le fichier</span>
+                {{ pj.filename }}
+                <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
+              </a>
+            </div>
+          {% endfor %}
+
         </div>
+      </div>
       {% endfor %}
     </section>
   {% endif %}
