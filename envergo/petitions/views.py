@@ -834,7 +834,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
             # Log matomo event
             log_event(
-                self.matomo_category,
+                self.event_category,
                 "envoi",
                 self.request,
                 **self.object.get_log_event_data(),

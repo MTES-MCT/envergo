@@ -543,6 +543,7 @@ def test_petition_project_instructor_messagerie_ds(
     client.force_login(instructor_haie_user_44)
 
     # Test dossier get messages
+    assert not Event.objects.filter(category="message", event="lecture").exists()
     mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
@@ -553,6 +554,8 @@ def test_petition_project_instructor_messagerie_ds(
     assert "mer. 2 avril 2025 11h01" in content
     assert "8 messages" in content
     assert "Coriandrum_sativum" in content
+
+    assert Event.objects.filter(category="message", event="lecture").exists()
 
     # Test if dossier has zero messages
     mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
@@ -573,11 +576,13 @@ def test_petition_project_instructor_messagerie_ds(
     assert "Impossible de récupérer les informations du dossier" in content
 
     # Test send message
+    assert not Event.objects.filter(category="message", event="envoi").exists()
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
     message_data = {"message_body": "test"}
     response = client.post(instructor_messagerie_url, message_data, follow=True)
     content = response.content.decode()
     assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
+    assert Event.objects.filter(category="message", event="envoi").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
