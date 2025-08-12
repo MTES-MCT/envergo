@@ -661,6 +661,15 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
 
         return super().post(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            **get_matomo_tags(self.request),
+        )
+        return super().form_valid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if not context["is_department_instructor"]:
@@ -861,6 +870,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                     )
                 ),
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+            )
+            log_event(
+                "projet",
+                "invitation",
+                self.request,
+                **{"project_reference": project.reference},
+                **get_matomo_tags(self.request),
             )
             return JsonResponse({"invitation_url": invitation_url})
         else:
