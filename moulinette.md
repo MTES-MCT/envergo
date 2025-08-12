@@ -1,7 +1,7 @@
-# Le simulateur EnvErgo (aka la Moulinette)
+# Le simulateur Envergo (aka la Moulinette)
 
 Le simulateur (affectueusement dénommé en interne « la Moulinette ») est un
-composant essentiel d'EnvErgo.
+composant essentiel d'Envergo.
 
 Cette page en dresse une rapide présentation technique. Elle est a destination des
 personnes qui veulent acquérir une compréhension technique de son fonctionnement.
