@@ -295,10 +295,32 @@ def get_messages_from_ds(petition_project):
         return None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+
+    # Save dossier.id in object
+    if dossier.id and not petition_project.demarches_simplifiees_dossier_id:
+        petition_project.demarches_simplifiees_dossier_id = dossier.id
+        petition_project.save()
+
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
     return messages
+
+
+def send_message_dossier_ds(petition_project, message_body):
+    """Send message via DS API for a given dossier"""
+
+    # Get dossier ID
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    dossier_id = petition_project.demarches_simplifiees_dossier_id
+    if not dossier_id or not dossier_number:
+        return None
+
+    # Send message
+    ds_client = DemarchesSimplifieesClient()
+    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+
+    return response
 
 
 def get_item_value_from_ds_champ(champ):

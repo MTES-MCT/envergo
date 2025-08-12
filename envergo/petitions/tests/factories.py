@@ -3,10 +3,12 @@ from copy import copy
 from pathlib import Path
 
 import factory
-from django.conf import settings
 from factory.django import DjangoModelFactory
 
 from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.petitions.demarches_simplifiees.client import (
+    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
+)
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.users.tests.factories import UserFactory
 
@@ -17,14 +19,11 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
     "GRAPHQL_API_URL": "https://www.demarches-simplifiees.example.com/api/v2/graphql",
     "GRAPHQL_API_BEARER_TOKEN": None,
     "DOSSIER_DOMAIN_BLACK_LIST": [],
+    "INSTRUCTEUR_ID": "ABCD1234",
 }
 
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
-
-DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
-    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
-)
 
 with open(
     Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json"),
@@ -43,6 +42,18 @@ with open(
     "r",
 ) as file:
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json"),
+    "r",
+) as file:
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_error.json"),
+    "r",
+) as file:
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
 
 
 class PetitionProjectFactory(DjangoModelFactory):

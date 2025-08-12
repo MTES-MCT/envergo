@@ -1,6 +1,6 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load utils %}
+{% load utils static %}
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
@@ -15,6 +15,23 @@
       <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
     </p>
   </div>
+
+  <section class="ds-messages fr-my-4w">
+    <h4>Envoyer un message</h4>
+    <form method="post"
+          action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+      {% csrf_token %}
+
+      <div id="field-message_body" class="fr-my-2w">
+        {% include '_field_snippet.html' with field=form.message_body %}
+        <button type="submit"
+                class="fr-btn fr-btn--primary"
+                formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+          Envoyer le message
+        </button>
+      </div>
+    </form>
+  </section>
 
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
@@ -36,22 +53,25 @@
             {% endwith %}
           </div>
           <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>
-
           <div class="fr-mt-2w">
-          {% for pj in message.attachments %}
-            <div class="fr-download">
-              <a class="fr-link" target="_blank" href="{{ pj.url }}">
-                <span class="fr-sr-only">Télécharger le fichier</span>
-                {{ pj.filename }}
-                <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
-              </a>
-            </div>
-          {% endfor %}
+            {% for pj in message.attachments %}
+              <div class="fr-download">
+                <a class="fr-link ds-message__pj" target="_blank" href="{{ pj.url }}">
+                  <span class="fr-sr-only">Télécharger le fichier</span>
+                  {{ pj.filename }}
+                  <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
+                </a>
+              </div>
+            {% endfor %}
 
+          </div>
         </div>
-      </div>
       {% endfor %}
     </section>
   {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/project_messagerie_analytics.js' %}"></script>
 {% endblock %}
