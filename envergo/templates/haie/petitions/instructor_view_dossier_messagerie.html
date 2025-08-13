@@ -11,7 +11,10 @@
         <h2>Messagerie</h2>
       </div>
       <div>
-        <button type="button" class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
+        <button aria-controls="modal-new-message"
+                data-fr-opened="false"
+                type="button"
+                class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
       </div>
     </div>
   </div>
@@ -26,23 +29,6 @@
       <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
     </p>
   </div>
-
-  <section class="ds-messages fr-my-4w">
-    <h4>Envoyer un message</h4>
-    <form method="post"
-          action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
-      {% csrf_token %}
-
-      <div id="field-message_body" class="fr-my-2w">
-        {% include '_field_snippet.html' with field=form.message_body %}
-        <button type="submit"
-                class="fr-btn fr-btn--primary"
-                formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
-          Envoyer le message
-        </button>
-      </div>
-    </form>
-  </section>
 
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
@@ -82,5 +68,7 @@
       {% endfor %}
     </section>
   {% endif %}
+
+  {% include 'haie/petitions/_new_message_modal.html' %}
 
 {% endblock %}
