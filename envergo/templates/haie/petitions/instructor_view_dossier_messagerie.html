@@ -4,7 +4,18 @@
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
-{% block project_view_title %}<h2>Messagerie</h2>{% endblock %}
+{% block project_view_title %}
+  <div class="fr-container--fluid">
+    <div class="fr-grid-row">
+      <div class="fr-col">
+        <h2>Messagerie</h2>
+      </div>
+      <div>
+        <button type="button" class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
 
 {% block project_content %}
 
