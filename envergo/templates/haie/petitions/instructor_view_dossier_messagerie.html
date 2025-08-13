@@ -72,3 +72,21 @@
   {% include 'haie/petitions/_new_message_modal.html' %}
 
 {% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    FORM_ID = 'petition-new-message-form';
+    CONTACT_SECTION_ID = 'contact-section';
+    DROPZONE_FORM = 'petition-new-message-form';
+    DROPZONE_FIELD = 'id-additional_files-dropzone';
+    DROPZONE_UPLOAD_URL = '{% url "petition_project_instructor_messagerie_view" petition_project.reference %}';
+    DROPZONE_MAX_FILES = 25;
+  </script>
+  {{ uploaded_files|json_script:'uploaded-files' }}
+  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
+  <script defer src="{% static 'js/libs/configure-upload-form.js' %}"></script>
+{% endblock %}
