@@ -17,11 +17,18 @@
             <h2 id="modal-new-message-title" class="fr-modal__title">Nouveau message au pétitionnaire</h2>
 
             <form method="post"
+                  class="dropzone"
+                  id="petition-new-message-form"
+                  novalidate
+                  enctype="multipart/form-data"
                   action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
               {% csrf_token %}
 
               <div id="field-message_body" class="fr-my-2w">
                 {% include '_field_snippet.html' with field=form.message_body %}
+
+                {% include '_dropzone_snippet.html' with field=form.additional_files %}
+
                 <button type="submit"
                         class="fr-btn fr-btn--primary"
                         formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
