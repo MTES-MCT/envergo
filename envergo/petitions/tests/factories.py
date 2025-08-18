@@ -55,6 +55,8 @@ with open(
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
 
+FILE_TEST_PATH = Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
+
 
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
