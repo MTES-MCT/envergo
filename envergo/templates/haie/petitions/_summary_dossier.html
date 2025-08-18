@@ -1,28 +1,26 @@
 {% load petitions %}
 
-<div class="alt fr-py-4w fr-mb-4w fr-pl-10w">
-  <h1>Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
-  <ul id="instruction-summary-list" class="fr-text--sm">
-    <li>
-      {% if petition_project.demarches_simplifiees_date_depot %}
-        <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
-      {% else %}
-        <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
-      {% endif %}
-    </li>
-    <li>
-      <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-      {% if project_details.city %}{{ project_details.city }} |{% endif %}
-      Département de la demande : {{ moulinette.department }}
-    </li>
-    {% if project_details.applicant or project_details.organization %}
-      <li>
-        <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
-        {% if project_details.applicant %}{{ project_details.applicant }}{% endif %}
-        {% if project_details.applicant and project_details.organization %}|{% endif %}
-        {% if project_details.organization %}{{ project_details.organization }}{% endif %}
-      </li>
+<h1>Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
+<ul id="instruction-summary-list" class="fr-text--sm">
+  <li>
+    {% if petition_project.demarches_simplifiees_date_depot %}
+      <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
+    {% else %}
+      <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
     {% endif %}
-    <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}</li>
-  </ul>
-</div>
+  </li>
+  <li>
+    <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
+    {% if project_details.city %}{{ project_details.city }} |{% endif %}
+    Département de la demande : {{ moulinette.department }}
+  </li>
+  {% if project_details.applicant or project_details.organization %}
+    <li>
+      <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
+      {% if project_details.applicant %}{{ project_details.applicant }}{% endif %}
+      {% if project_details.applicant and project_details.organization %}|{% endif %}
+      {% if project_details.organization %}{{ project_details.organization }}{% endif %}
+    </li>
+  {% endif %}
+  <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}</li>
+</ul>
