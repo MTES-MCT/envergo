@@ -670,11 +670,15 @@ ul.instructor-view-list {
 
 .instructor-project__main {
   background-color: var(--background-alt-grey);
-}
 
-.messages {
-  padding-bottom: 1rem !important;
-  padding-top: 1rem !important;
+  .dj-messages {
+    padding-bottom: 1rem !important;
+    padding-top: 1rem !important;
+  }
+
+  .dj-message {
+    background-color: var(--background-default-grey);
+  }
 }
 
 .ds-message {
