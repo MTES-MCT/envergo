@@ -683,6 +683,7 @@ ul.instructor-view-list {
 
 .ds-message {
   background-color: var(--background-default-grey);
+  border-left: 0.25rem solid var(--grey-425-625);
   padding: 2rem;
 
   &__exp {
