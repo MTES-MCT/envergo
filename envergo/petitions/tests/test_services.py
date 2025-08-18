@@ -868,6 +868,7 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
         "clientMutationId": "1234",
         "errors": None,
         "message": {"body": "Bonjour ! Un nouveau message"},
+        "attachments": [{"filename": "Coriandrum_sativum.jpg"}],
     }
 
     # WHEN I send malformated
