@@ -97,11 +97,16 @@
         <div id="project-specifications-instructor"
              class="fr-col fr-col-12 fr-col-md-9">
 
-          {% include 'haie/petitions/_summary_dossier.html' %}
-          <div class="fr-pl-10w">
+          <div class="instructor-project__summary alt fr-py-4w fr-pl-10w">
+            {% include 'haie/petitions/_summary_dossier.html' %}
+          </div>
+
+          <div class="instructor-project__main fr-pl-10w fr-p-4w">
             {% block project_view_title %}{% endblock %}
             {% include '_messages.html' %}
-            {% block project_content %}{% endblock %}
+            <div class="instructor-project__content">
+              {% block project_content %}{% endblock %}
+            </div>
           </div>
         </div>
       </div>
