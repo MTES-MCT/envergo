@@ -283,14 +283,29 @@ def test_compute_instructor_information(mock_get_dossier):
 
     # Then I should have correct data for each field type
     champs = project_details.ds_data.champs
-    [yesno_champ] = [
+    [yesno_champ_yes] = [
         c
         for c in champs
         if c.label
         == "Êtes-vous propriétaire de tous les terrains sur lesquels se situent les haies à détruire ?"
     ]
+    [yesno_champ_no] = [
+        c for c in champs if c.label == "Présence de vieux arbres fissurés ou à cavité"
+    ]
+    [checkbox_champ_checked] = [
+        c
+        for c in champs
+        if c.label
+        == "Je m'engage à ne démarrer mes travaux qu'en cas d'acceptation de ma demande"
+    ]
 
-    assert yesno_champ.value == "oui"
+    assert yesno_champ_yes.value == "oui"
+    assert yesno_champ_no.value == "non"
+    assert checkbox_champ_checked.value == "oui"
+
+
+def test_get_item_value_from_dict():
+    """Test get item value for each champ type"""
 
 
 def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
