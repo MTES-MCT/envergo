@@ -29,7 +29,7 @@ from envergo.petitions.services import (
     compute_instructor_informations_ds,
     get_demarches_simplifiees_dossier,
     get_instructor_view_context,
-    get_messages_from_ds,
+    get_messages_and_senders_from_ds,
     send_message_dossier_ds,
 )
 from envergo.petitions.tests.factories import (
@@ -684,7 +684,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, site):
+def test_messagerie_via_demarches_simplifiees(mock_post, haie_user, site):
     """Test send message for project via demarches simplifiées"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -702,10 +702,14 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
 
     # WHEN I get messages for this dossier
     mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
-    messages = get_messages_from_ds(petition_project)
+    messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
+        petition_project
+    )
 
     # THEN Messages are returned
     assert len(messages) == 8
+    assert instructor_emails == ["instructeur@guh.gouv.fr"]
+    assert petitioner_email == "hedy.lamarr@example.com"
 
     # WHEN I send message for this dossier
     mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]

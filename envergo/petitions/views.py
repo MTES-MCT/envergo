@@ -39,7 +39,7 @@ from envergo.petitions.services import (
     compute_instructor_informations_ds,
     extract_data_from_fields,
     get_instructor_view_context,
-    get_messages_from_ds,
+    get_messages_and_senders_from_ds,
     send_message_dossier_ds,
 )
 from envergo.utils.mattermost import notify
@@ -771,7 +771,17 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ds_messages"] = get_messages_from_ds(self.object)
+
+        ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
+            get_messages_and_senders_from_ds(self.object)
+        )
+
+        context["ds_messages"] = ds_messages
+        context["ds_sender_emails_categories"] = {
+            "petitioner": ds_petitioner_email,
+            "instructor": ds_instructeurs_emails,
+            "automatic": "contact@demarches-simplifiees.fr",
+        }
 
         # Send message if info from DS is not in project details
         if context["ds_messages"] is None:

@@ -432,6 +432,13 @@ query getDossier($dossierNumber: Int!)
     state
     dateDerniereModification
     dateDepot
+    instructeurs {
+      email
+      id
+    }
+    usager {
+      email
+    }
     messages {
       ...MessageFragment
     }
