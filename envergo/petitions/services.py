@@ -283,8 +283,15 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
     )
 
 
-def get_messages_and_senders_from_ds(petition_project):
-    """Get messages from DS"""
+def get_messages_and_senders_from_ds(
+    petition_project,
+) -> (List | None, List | None, str | None):
+    """Get messages and sender emails from DS
+
+    :param petition_project: PetitionProject object
+
+    :return: tuple (messages list, instructor emails list, petitioner email)
+    """
 
     # Get messages only from DS
     dossier_number = petition_project.demarches_simplifiees_dossier_number
