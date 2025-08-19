@@ -316,10 +316,6 @@ def test_compute_instructor_information(mock_get_dossier):
     assert checkbox_champ_checked.value == "oui"
 
 
-def test_get_item_value_from_dict():
-    """Test get item value for each champ type"""
-
-
 def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     hedges = HedgeDataFactory(
         data=[
