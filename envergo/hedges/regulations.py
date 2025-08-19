@@ -127,7 +127,7 @@ class MinLengthPacCondition(PlantationCondition):
 class QualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
-    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    valid_text = "Le type de haie plantée convient."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
@@ -314,7 +314,7 @@ HEDGE_KEYS = OrderedDict(
 class NormandieQualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
-    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    valid_text = "Le type de haie plantée convient."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
