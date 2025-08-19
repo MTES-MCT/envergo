@@ -85,15 +85,18 @@ def regulation_has_condition_to_display(plantation_evaluation, regulation):
 
 
 @register.simple_tag
-def ds_sender_category(message_email):
+def ds_sender_category(message_sender_email, sender_emails_categories):
     """Return appropriate class according to the sender"""
 
-    if message_email == "contact@demarches-simplifiees.fr":
-        return "automatic"
-    elif message_email == "instructeur@guh.gouv.fr":
-        return "instructor"
-    else:
-        return "petitioner"
+    for key, item in sender_emails_categories.items():
+        if isinstance(item, list):
+            if message_sender_email in item:
+                return key
+        else:
+            if message_sender_email == item:
+                return key
+
+    return "instructor"
 
 
 @register.filter
