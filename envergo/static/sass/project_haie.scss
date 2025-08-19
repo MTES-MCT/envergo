@@ -683,11 +683,24 @@ ul.instructor-view-list {
 
 .ds-message {
   background-color: var(--background-default-grey);
-  border-left: 0.25rem solid var(--grey-425-625);
+  border-left: 3px solid var(--grey-425-625);
   padding: 2rem;
 
   &__exp {
     font-weight: bold;
+  }
+
+  &--instructor {
+    border-color: var(--blue-france-main-525);
+  }
+
+  &--petitioner {
+    border-color: var(--yellow-tournesol-850-200);
+  }
+
+  &--instructor,
+  &--automatic {
+    margin-left: 5rem;
   }
 }
 
