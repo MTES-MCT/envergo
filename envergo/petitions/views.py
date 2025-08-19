@@ -554,6 +554,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    page_css_classname = ""
     event_category = "projet"
     event_action = "consultation_i"
 
@@ -589,6 +590,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context["plantation_evaluation"] = PlantationEvaluator(
             context["moulinette"], context["moulinette"].catalog["haies"]
         )
+
+        context["page_css_classname"] = self.page_css_classname
 
         plantation_url = reverse(
             "input_hedges",
@@ -673,6 +676,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
+    page_css_classname = "instruction"
     event_action = "consultation_i"
 
     def get_context_data(self, **kwargs):
@@ -690,6 +694,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    page_css_classname = "instruction-regulation"
     event_action = ""
 
     def get_context_data(self, **kwargs):
@@ -727,6 +732,7 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
+    page_css_classname = "instruction-dossier-complet"
     event_action = ""
 
     def get_context_data(self, **kwargs):
@@ -755,6 +761,7 @@ class PetitionProjectInstructorMessagerieView(
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    page_css_classname = "instruction-messagerie"
     event_category = "message"
     event_action = "lecture"
 
@@ -787,6 +794,7 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
+    page_css_classname = "instruction-notes"
     event_action = ""
 
     def get_success_url(self):
