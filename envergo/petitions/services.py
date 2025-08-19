@@ -292,7 +292,7 @@ def get_messages_and_senders_from_ds(petition_project):
     dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
     if not dossier_with_messages_as_dict:
-        return None
+        return None, None, None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
     petitioner_email = dossier.usager.email

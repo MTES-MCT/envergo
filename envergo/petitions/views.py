@@ -761,14 +761,14 @@ class PetitionProjectInstructorMessagerieView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        messages, instructeurs_emails, petitioner_email = (
+        ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
             get_messages_and_senders_from_ds(self.object)
         )
 
-        context["ds_messages"] = messages
-        context["ds_sender_emails_category"] = {
-            "petitioner": petitioner_email,
-            "instructor": instructeurs_emails,
+        context["ds_messages"] = ds_messages
+        context["ds_sender_emails_categories"] = {
+            "petitioner": ds_petitioner_email,
+            "instructor": ds_instructeurs_emails,
             "automatic": "contact@demarches-simplifiees.fr",
         }
 

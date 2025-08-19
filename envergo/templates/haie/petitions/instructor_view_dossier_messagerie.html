@@ -29,7 +29,7 @@
       </p>
 
       {% for message in ds_messages|slice:":num_messages_displayed" %}
-        <div class="ds-message ds-message--{% ds_sender_category message.email %} fr-mb-3w fr-p-3w">
+        <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
             {% with message_date=message.createdAt|to_datetime %}
