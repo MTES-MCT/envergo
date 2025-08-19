@@ -84,6 +84,18 @@ def regulation_has_condition_to_display(plantation_evaluation, regulation):
     return False
 
 
+@register.simple_tag
+def ds_sender_category(message_email):
+    """Return appropriate class according to the sender"""
+
+    if message_email == "contact@demarches-simplifiees.fr":
+        return "automatic"
+    elif message_email == "instructeur@guh.gouv.fr":
+        return "instructor"
+    else:
+        return "petitioner"
+
+
 @register.filter
 def display_property(hedge_property):
     return bool(hedge_property[TO_REMOVE] or hedge_property[TO_PLANT])
