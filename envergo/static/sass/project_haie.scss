@@ -667,39 +667,32 @@ ul.instructor-view-list {
 
 /* Instructeur Messagerie */
 
-.instructor-project__main {
-  background-color: var(--background-alt-grey);
+.instruction-messagerie {
+  .instructor-project__main {
+    background-color: var(--background-alt-grey);
+  }
 
   .dj-messages {
     padding-bottom: 1rem !important;
     padding-top: 1rem !important;
   }
 
-  .dj-message {
+  .ds-message {
     background-color: var(--background-default-grey);
-  }
-}
+    border-left: 3px solid var(--grey-425-625);
+    padding: 2rem;
 
-.ds-message {
-  background-color: var(--background-default-grey);
-  border-left: 3px solid var(--grey-425-625);
-  padding: 2rem;
+    &__exp {
+      font-weight: bold;
+    }
 
-  &__exp {
-    font-weight: bold;
-  }
+    &--instructor {
+      border-color: var(--blue-france-main-525);
+    }
 
-  &--instructor {
-    border-color: var(--blue-france-main-525);
-  }
-
-  &--petitioner {
-    border-color: var(--yellow-tournesol-850-200);
-  }
-
-  &--instructor,
-  &--automatic {
-    margin-left: 5rem;
+    &--petitioner {
+      border-color: var(--yellow-tournesol-850-200);
+    }
   }
 }
 
@@ -731,6 +724,15 @@ ul.instructor-view-list {
     padding-bottom: 0;
     padding-left: 0;
     box-shadow: none;
+  }
+
+  .instruction-messagerie {
+    .ds-message {
+      &--instructor,
+      &--automatic {
+        margin-left: 5rem;
+      }
+    }
   }
 }
 
