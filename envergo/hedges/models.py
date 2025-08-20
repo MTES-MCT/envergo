@@ -9,7 +9,7 @@ from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod
-from shapely import LineString, MultiLineString, centroid, union_all
+from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
@@ -199,12 +199,6 @@ class HedgeData(models.Model):
             max_y = max(max_y, y1)
         box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
         return box
-
-    def get_hedges_geometry(self, hedges):
-        """Return the MultiLine with the hedge geometry."""
-        lines = [hedge.geometry for hedge in hedges]
-        multiline = MultiLineString(lines)
-        return GEOSGeometry(multiline.wkb_hex)
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]

@@ -370,7 +370,7 @@ class InvitationToken(models.Model):
         null=True,
         blank=True,
         related_name="invitation_tokens",
-        verbose_name="Utilisateur invité",
+        verbose_name="Compte invité",
     )
 
     # Meta fields

@@ -4,9 +4,9 @@
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
-{% block project_content %}
+{% block project_view_title %}<h2>Messagerie</h2>{% endblock %}
 
-  <h2>Messagerie</h2>
+{% block project_content %}
 
   <div class="fr-alert fr-alert--info">
     <h3 class="fr-alert__title">Cette page est en cours de construction.</h3>
@@ -15,5 +15,43 @@
       <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
     </p>
   </div>
+
+  {% if ds_messages is not None %}
+    <section class="ds-messages fr-my-4w">
+      <p class="fr-mb-1w">
+        {% with num_messages=ds_messages|length num_messages_displayed=20 %}
+          {% if num_messages <= num_messages_displayed %}
+            {{ num_messages }} message{{ num_messages|pluralize }}
+          {% else %}
+            {{ num_messages_displayed }} messages affichés sur {{ num_messages }} messages
+          {% endif %}
+        {% endwith %}
+      </p>
+      {% for message in ds_messages|slice:":num_messages_displayed" %}
+        <div class="ds-message fr-mb-3w fr-p-3w">
+          <div class="fr-mb-2w ds-message__metadata">
+            <span class="ds-message__exp">{{ message.email }}</span> –
+            {% with message_date=message.createdAt|to_datetime %}
+              <span class="ds-message__date">{{ message_date|date }} à {{ message_date|time:"H:i" }}</span>
+            {% endwith %}
+          </div>
+          <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>
+
+          <div class="fr-mt-2w">
+            {% for pj in message.attachments %}
+              <div class="fr-download">
+                <a class="fr-link" target="_blank" href="{{ pj.url }}">
+                  <span class="fr-sr-only">Télécharger le fichier</span>
+                  {{ pj.filename }}
+                  <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
+                </a>
+              </div>
+            {% endfor %}
+
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
 
 {% endblock %}

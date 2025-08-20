@@ -46,6 +46,7 @@ def settings_context(_request):
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
         "CRISP_WEBSITE_ID": crisp_website_id,
         "HAIE_FAQ_URL": settings.HAIE_FAQ_URL,
+        "HAIE_INSTRUCTORS_FAQ_URL": settings.HAIE_INSTRUCTORS_FAQ_URL,
     }
 
 

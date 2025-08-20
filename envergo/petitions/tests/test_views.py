@@ -22,6 +22,8 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
+    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
@@ -469,7 +471,7 @@ def test_petition_project_instructor_messagerie_ds(
     mock_post, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
-    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -488,6 +490,30 @@ def test_petition_project_instructor_messagerie_ds(
 
     content = response.content.decode()
     assert "<h2>Messagerie</h2>" in content
+    assert "Il manque les infos de la PAC" in content
+    assert "2 avril 2025 à 11:01" in content
+    assert "8 messages" in content
+    assert "Coriandrum_sativum" in content
+
+    # Test if dossier has zero messages
+    mock_post.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "0 message" in content
+
+    # Test if dossier is empty
+    mock_post.return_value = "null"
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "Impossible de récupérer les informations du dossier" in content
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -696,22 +722,22 @@ def test_petition_project_accept_invitation(client, haie_user, site):
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_instructor_form(
+def test_petition_project_instructor_notes_form(
     client, haie_user, instructor_haie_user_44, site
 ):
-    """Post onagre and instruction note"""
+    """Post instruction note as different users"""
 
     # GIVEN a petition project
     ConfigHaieFactory()
     project = PetitionProjectFactory()
-    instructor_form_url = reverse(
-        "petition_project_instructor_view",
+    instructor_notes_form_url = reverse(
+        "petition_project_instructor_notes_view",
         kwargs={"reference": project.reference},
     )
 
     # WHEN I post some instructor data without being logged in
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -723,7 +749,7 @@ def test_petition_project_instructor_form(
     # WHEN I post some instructor data without being authorized
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -736,7 +762,7 @@ def test_petition_project_instructor_form(
     InvitationTokenFactory(user=haie_user, petition_project=project)
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -750,14 +776,14 @@ def test_petition_project_instructor_form(
     # WHEN I post some instructor data with a department instructor
     client.force_login(instructor_haie_user_44)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
     # THEN it should update the project
     assert response.status_code == 302
-    assert "/projet/ABC123/instruction/" in response.url
+    assert response.url == instructor_notes_form_url
     project.refresh_from_db()
     assert (
         project.instructor_free_mention

@@ -1,0 +1,22 @@
+{% load static %}
+
+<div class="fr-fieldset__element fr-col-12 fr-col-sm-6 fr-col-lg-4">
+  <div class="fr-radio-group fr-radio-rich">
+    {% include "django/forms/widgets/input.html" %}
+
+    <label class="fr-label"
+           {% if widget.attrs.id %}for="{{ widget.attrs.id }}"{% endif %}>{{ widget.label }}</label>
+
+    <div class="fr-radio-rich__pictogram">
+      {% with "/images/hedges/icon-"|add:widget.value|add:".png" as icon_url %}
+        <img src="{% static icon_url %}" alt="" />
+        <!-- L’alternative de l’image (attribut alt) doit rester vide car l’image est illustrative et ne doit pas être restituée aux technologies d’assistance -->
+      {% endwith %}
+    </div>
+  </div>
+  {% with "/images/hedges/hedge-type-"|add:widget.value|add:".jpg" as image_url %}
+    <label for="{{ widget.attrs.id }}">
+      <img class="hedge-radio-img" alt="" src="{% static image_url %}" />
+    </label>
+  {% endwith %}
+</div>

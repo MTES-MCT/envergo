@@ -1,5 +1,5 @@
 from django.forms import EmailField
-from django.forms.widgets import Select
+from django.forms.widgets import RadioSelect, Select
 
 from envergo.utils.validators import NoIdnEmailValidator
 
@@ -34,3 +34,9 @@ def get_human_readable_value(choices, key):
         if choice_key == key:
             return human_readable
     return None
+
+
+class HedgeChoiceField(RadioSelect):
+    custom_template = True
+    template_name = "haie/forms/widgets/hedge_radio.html"
+    option_template_name = "haie/forms/widgets/hedge_radio_option.html"
