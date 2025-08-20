@@ -92,10 +92,10 @@
                   <h6>Densité de haie</h6>
 
                   <ul>
-                    <li>Numéro de pacage: {{ numero_pacage|default:"ND" }}</li>
+                    <li>Numéro de PACAGE : {{ numero_pacage|default:"ND" }}</li>
                     <li>Densité de l'exploitation : {{ density_exploitation|default:"ND" }}</li>
                     <li>Densité 5 km : {{ density_5000|floatformat:"2" }}</li>
-                    <li>Rapport de densité : {{ density_ratio|floatformat:"2g" }}</li>
+                    <li>Rapport de densité exploitation / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
                     <li>Identifiant zone : {{ density_zone }}</li>
                   </ul>
 

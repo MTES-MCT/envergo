@@ -16,7 +16,7 @@
       {% include 'haie/petitions/_item.html' with label="Densité haies – exploitation" value="ND (pas de donnée associée au PACAGE fourni)" %}
     {% endif %}
   {% else %}
-    {% include 'haie/petitions/_item.html' with label="Numéro de PACAGE saisi dans la simulation" value="Non demandé demandeur non exploitant" %}
+    {% include 'haie/petitions/_item.html' with label="Numéro de PACAGE saisi dans la simulation" value="Non demandé (haies hors parcelles PAC)" %}
   {% endif %}
 
   {% include 'haie/petitions/_item.html' with label="Densité haies – rayon 5 km" value=moulinette.catalog.density_5000|floatformat:"0g" unit="ml/ha" %}

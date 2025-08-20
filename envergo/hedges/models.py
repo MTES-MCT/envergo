@@ -2,9 +2,9 @@ import operator
 import uuid
 from functools import reduce
 
-from django.core.validators import RegexValidator
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
