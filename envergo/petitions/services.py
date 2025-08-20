@@ -309,12 +309,12 @@ def get_item_value_from_ds_champ(champ):
     value = champ.stringValue or ""
 
     if isinstance(champ, CheckboxChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"
     elif isinstance(champ, YesNoChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"
