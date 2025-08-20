@@ -1,14 +1,14 @@
 from collections import defaultdict
 from decimal import Decimal as D
 
-from django.contrib.gis.geos import GEOSGeometry
 from django import forms
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.validators import RegexValidator
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HEDGE_TYPES
+from envergo.hedges.models import HEDGE_TYPES, Pacage
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
     LineaireInterchamp,
@@ -21,7 +21,6 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
-from envergo.hedges.models import Pacage
 from envergo.utils.fields import get_human_readable_value
 
 
