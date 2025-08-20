@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
+from django.forms.widgets import NumberInput
 from django.template import Context, Template
 from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
@@ -162,10 +163,25 @@ def field_summary(field):
     if value is None:
         value = ""
 
-    # try to add thousands separator
+    # Try to add thousands separator
     if isinstance(value, (int, float, Decimal)):
         value = floatformat(value, "g")
-    elif isinstance(value, str) and value.isdigit():
+
+    # Some values are str, from fields with NumberInput,
+    # or from TextInput widget but numeric mode
+    # or from fields with TextInput but should not be displayed as an integer
+    # exemple :
+    # - lineaire_total in moulinette/regulation/conditionnalitepac.py : numeric mode
+    # - numero_pacage in moulinette/regulation/ep.py : not integer
+    # TODO : use NumberInput for fields waiting for digits ?
+    elif (
+        isinstance(value, str)
+        and value.isdigit()
+        and (
+            field.field.widget is NumberInput
+            or field.field.widget.attrs.get("inputmode") == "numeric"
+        )
+    ):
         try:
             value = intcomma(value)
         except (TypeError, ValueError):
