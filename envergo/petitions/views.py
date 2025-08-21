@@ -557,8 +557,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     page_css_classname = ""
-    matomo_category = "projet"
-    matomo_tag = "consultation_i"
+    event_category = "projet"
+    event_action = "consultation_i"
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -567,10 +567,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
-            if self.matomo_tag:
+            if self.event_action:
                 log_event(
-                    self.matomo_category,
-                    self.matomo_tag,
+                    self.event_category,
+                    self.event_action,
                     self.request,
                     **self.object.get_log_event_data(),
                     **get_matomo_tags(self.request),
@@ -689,7 +689,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
 
     template_name = "haie/petitions/instructor_view.html"
     page_css_classname = "instruction"
-    matomo_tag = "consultation_i"
+    event_action = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -707,7 +707,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
 
     template_name = "haie/petitions/instructor_view_regulation.html"
     page_css_classname = "instruction-regulation"
-    matomo_tag = ""
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -745,7 +745,7 @@ class PetitionProjectInstructorDossierDSView(
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
     page_css_classname = "instruction-dossier-complet"
-    matomo_tag = "consultation_i_ds"
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -772,8 +772,8 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     page_css_classname = "instruction-messagerie"
-    matomo_category = "message"
-    matomo_tag = "lecture"
+    event_category = "message"
+    event_action = "lecture"
     form_class = PetitionProjectInstructorMessageForm
 
     def get_context_data(self, **kwargs):
@@ -842,7 +842,7 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
 
     template_name = "haie/petitions/instructor_view_notes.html"
     page_css_classname = "instruction-notes"
-    matomo_tag = ""
+    event_action = ""
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
