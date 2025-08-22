@@ -51,7 +51,7 @@
 
             <p class="fr-mb-3w"><em>Avant de déposer son dossier et de remplir le formulaire complet,
               le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
-              Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.slug }} » :</em></p>
+              Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.title }} » :</em></p>
             {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
 
             {% if regulation.has_instructor_result_details_template %}
@@ -65,7 +65,7 @@
                 <h3>Acceptabilité de la plantation</h3>
                 <p class="fr-mb-3w"><em>Le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
                   Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation proposée.
-                  Voici ce qui a été affiché au demandeur pour la réglementation « {{ regulation.slug }} » :</em></p>
+                  Voici ce qui a été affiché au demandeur pour la réglementation « {{ regulation.title }} » :</em></p>
                 <div id="hedge-conditions" class="fr-ml-5w">{% regulation_plantation_conditions plantation_evaluation regulation %}</div>
               </section>
             {% endif %}
