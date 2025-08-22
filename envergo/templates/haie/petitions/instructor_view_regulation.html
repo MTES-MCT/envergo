@@ -8,7 +8,7 @@
 
 {% block title %}Instruction du dossier – {{ current_regulation.title }}{% endblock %}
 
-{% block project_view_title %}<h2>{{ current_regulation.title }}</h2>{% endblock %}
+{% block project_view_title %}<h1>{{ current_regulation.title }}</h1>{% endblock %}
 
 {% block project_content %}
 
@@ -33,45 +33,53 @@
 
           {% if regulation.has_key_elements_template %}
             <section id="section-plantation-evaluation">
-              <h3>Éléments clés</h3>
+              <h4>Éléments clés</h4>
               {% instructor_view_part "key_elements" regulation petition_project moulinette %}
             </section>
           {% endif %}
-          <section class="fr-mb-3w">
+
+          <section class="fr-mb-6w">
             {% include "haie/petitions/_regulation_form.html" %}
           </section>
+
           <section>
             <div class="title-with-link-container">
-              <h3 class="fr-mr-8w">Résultats de la simulation</h3>
+              <h2 class="fr-mr-8w">Réponse du simulateur</h2>
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
-                 href="{% url 'petition_project' petition_project.reference %}">Voir le résultat</a>
+                 href="{% url 'petition_project' petition_project.reference %}">Voir la réponse complète</a>
             </div>
 
+            <p class="fr-mb-3w"><em>Avant de déposer son dossier et de remplir le formulaire complet,
+              le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
+              Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.slug }} » :</em></p>
             {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
-            {% if regulation.has_instructor_result_details_template %}
 
+            {% if regulation.has_instructor_result_details_template %}
               <h4>Détails du résultat de la simulation</h4>
               {% instructor_view_part "instructor_result_details" regulation petition_project moulinette %}
             {% endif %}
+
+            {% regulation_has_condition_to_display plantation_evaluation regulation as has_condition_to_display %}
+            {% if has_condition_to_display %}
+              <section id="section-plantation-evaluation">
+                <h3>Acceptabilité de la plantation</h3>
+                <p class="fr-mb-3w"><em>Le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
+                  Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation proposée.
+                  Voici ce qui a été affiché au demandeur pour la réglementation « {{ regulation.slug }} » :</em></p>
+                <div id="hedge-conditions" class="fr-ml-5w">{% regulation_plantation_conditions plantation_evaluation regulation %}</div>
+              </section>
+            {% endif %}
+
+            {% if regulation.has_plantation_condition_details_template %}
+              <section class="fr-mb-5w">
+                <h4>Précisions sur le calcul d'acceptabilité de la plantation</h4>
+                {% for criterion in regulation.criteria.all %}
+                  {% instructor_view_part "plantation_condition_details" regulation petition_project moulinette criterion %}
+                {% endfor %}
+              </section>
+            {% endif %}
+
           </section>
-
-          {% regulation_has_condition_to_display plantation_evaluation regulation as has_condition_to_display %}
-          {% if has_condition_to_display %}
-            <section id="section-plantation-evaluation">
-              <h3>Acceptabilité de la plantation</h3>
-              <p>Conditions de plantation à respecter pour cette réglementation :</p>
-              <div id="hedge-conditions">{% regulation_plantation_conditions plantation_evaluation regulation %}</div>
-            </section>
-          {% endif %}
-
-          {% if regulation.has_plantation_condition_details_template %}
-            <section class="fr-mb-5w">
-              <h4>Détails du calcul d'acceptabilité de la plantation</h4>
-              {% for criterion in regulation.criteria.all %}
-                {% instructor_view_part "plantation_condition_details" regulation petition_project moulinette criterion %}
-              {% endfor %}
-            </section>
-          {% endif %}
         </section>
       {% endif %}
     {% endfor %}
