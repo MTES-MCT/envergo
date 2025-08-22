@@ -16,15 +16,6 @@
     {% for regulation in moulinette.regulations %}
       {% if regulation.slug == current_regulation.slug %}
         <section class="fr-my-3w" id="moulinette-regulation-result">
-
-          {% if regulation.has_key_elements_template %}
-            <section id="section-plantation-evaluation">
-              <h4>Éléments clés</h4>
-              {% for criterion in regulation.criteria.all %}
-                {% criterion_instructor_view_part "key_elements" regulation criterion petition_project moulinette %}
-              {% endfor %}
-            </section>
-          {% endif %}
           
           <section class="fr-mb-6w">
             {% include "haie/petitions/_regulation_form.html" %}
