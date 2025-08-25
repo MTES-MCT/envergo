@@ -25,8 +25,8 @@
            href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier
         complet</a>
       </div>
-      <h6 class="fr-mb-2w">Motif</h6>
-      <span>{{ moulinette.main_form.motif.field.choices|get_choice_label:moulinette.main_form.motif.value }}</span>
+      
+      {% include "haie/petitions/_item.html" with label="Motif du projet de destruction" value=motif %}
 
       <h6 class="fr-mt-3w fr-mb-2w">Destruction</h6>
       <ul class="instructor-view-list">
