@@ -554,8 +554,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    matomo_category = "projet"
-    matomo_tag = "consultation_i"
+    event_category = "projet"
+    event_action = "consultation_i"
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -564,10 +564,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
-            if self.matomo_tag:
+            if self.event_action:
                 log_event(
-                    self.matomo_category,
-                    self.matomo_tag,
+                    self.event_category,
+                    self.event_action,
                     self.request,
                     **self.object.get_log_event_data(),
                     **get_matomo_tags(self.request),
@@ -673,7 +673,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    matomo_tag = "consultation_i"
+    event_action = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -690,7 +690,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    matomo_tag = ""
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -727,7 +727,7 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
-    matomo_tag = "consultation_i_ds"
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -755,8 +755,8 @@ class PetitionProjectInstructorMessagerieView(
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
-    matomo_category = "message"
-    matomo_tag = "lecture"
+    event_category = "message"
+    event_action = "lecture"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -777,7 +777,7 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    matomo_tag = ""
+    event_action = ""
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
