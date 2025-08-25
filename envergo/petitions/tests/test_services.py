@@ -869,18 +869,6 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
         "message": {"body": "Bonjour ! Un nouveau message"},
     }
 
-    # WHEN I send message for this dossier
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    message_body = "Bonjour ! Un nouveau message"
-    response = send_message_dossier_ds(petition_project, message_body)
-
-    # THEN messages has this new message
-    assert response == {
-        "clientMutationId": "1234",
-        "errors": None,
-        "message": {"body": "Bonjour ! Un nouveau message"},
-    }
-
     # WHEN I send malformated
     mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
     message_body = "Bonjour ! Un nouveau message"
