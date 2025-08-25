@@ -38,7 +38,7 @@ from envergo.petitions.services import (
     compute_instructor_informations_ds,
     extract_data_from_fields,
     get_instructor_view_context,
-    get_messages_from_ds,
+    get_messages_and_senders_from_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -554,6 +554,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
+    page_css_classname = ""
     event_category = "projet"
     event_action = "consultation_i"
 
@@ -589,6 +590,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context["plantation_evaluation"] = PlantationEvaluator(
             context["moulinette"], context["moulinette"].catalog["haies"]
         )
+
+        context["page_css_classname"] = self.page_css_classname
 
         plantation_url = reverse(
             "input_hedges",
@@ -673,6 +676,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
+    page_css_classname = "instruction"
     event_action = "consultation_i"
 
     def get_context_data(self, **kwargs):
@@ -690,6 +694,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    page_css_classname = "instruction-regulation"
     event_action = ""
 
     def get_context_data(self, **kwargs):
@@ -727,6 +732,7 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
+    page_css_classname = "instruction-dossier-complet"
     event_action = ""
 
     def get_context_data(self, **kwargs):
@@ -755,12 +761,23 @@ class PetitionProjectInstructorMessagerieView(
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
+    page_css_classname = "instruction-messagerie"
     event_category = "message"
     event_action = "lecture"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ds_messages"] = get_messages_from_ds(self.object)
+
+        ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
+            get_messages_and_senders_from_ds(self.object)
+        )
+
+        context["ds_messages"] = ds_messages
+        context["ds_sender_emails_categories"] = {
+            "petitioner": ds_petitioner_email,
+            "instructor": ds_instructeurs_emails,
+            "automatic": "contact@demarches-simplifiees.fr",
+        }
 
         # Send message if info from DS is not in project details
         if context["ds_messages"] is None:
@@ -777,6 +794,7 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
+    page_css_classname = "instruction-notes"
     event_action = ""
 
     def get_success_url(self):
