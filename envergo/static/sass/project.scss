@@ -1561,6 +1561,12 @@ footer {
   }
 
   &.header-slim {
+    .fr-nav__btn {
+      // slimify nav buttons
+      min-height: 1rem;
+      padding: 0 1rem;
+    }
+
     @media (width >= 62em) {
       .fr-header__body-row {
         padding: 0.75rem 0;

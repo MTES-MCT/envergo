@@ -26,6 +26,7 @@ from envergo.petitions.regulations.ep import (
     ep_normandie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
+    compute_instructor_informations_ds,
     get_demarches_simplifiees_dossier,
     get_instructor_view_context,
 )
@@ -260,6 +261,59 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     assert "haie" in args[1]
 
     mock_notify.assert_called_once()
+
+
+@patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
+def test_compute_instructor_information(mock_get_dossier):
+    """Test compute instructor information from démarche simplifiées dossier data"""
+    mock_get_dossier.return_value = Dossier.from_dict(
+        GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
+    )
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+    moulinette = petition_project.get_moulinette()
+
+    # When I compute instructor information for a given petition project
+    project_details = compute_instructor_informations_ds(petition_project, moulinette)
+
+    # Then I should have header sections from demarche champ descriptors
+    header_sections = project_details.ds_data.header_sections
+    assert header_sections == [
+        "Identité",
+        "Description du projet",
+        "Autorisation du propriétaire",
+        "Conditionnalité PAC – BCAE8",
+        "Réglementation «\xa0Espèces protégées\xa0»",
+        "Description des haies à détruire",
+        "Description de la plantation",
+    ]
+
+    # Then I should have correct data for each field type
+    champs = project_details.ds_data.champs
+    [yesno_champ_yes] = [
+        c
+        for c in champs
+        if c.label
+        == "Êtes-vous propriétaire de tous les terrains sur lesquels se situent les haies à détruire ?"
+    ]
+    [yesno_champ_no] = [
+        c for c in champs if c.label == "Présence de vieux arbres fissurés ou à cavité"
+    ]
+    [checkbox_champ_checked] = [
+        c
+        for c in champs
+        if c.label
+        == "Je m'engage à ne démarrer mes travaux qu'en cas d'acceptation de ma demande"
+    ]
+
+    assert yesno_champ_yes.value == "oui"
+    assert yesno_champ_no.value == "non"
+    assert checkbox_champ_checked.value == "oui"
 
 
 def test_ep_aisne_get_instructor_view_context(france_map):  # noqa

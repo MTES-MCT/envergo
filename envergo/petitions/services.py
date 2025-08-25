@@ -283,6 +283,24 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
     )
 
 
+def get_messages_from_ds(petition_project):
+    """Get messages from DS"""
+
+    # Get messages only from DS
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    ds_client = DemarchesSimplifieesClient()
+    dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
+
+    if not dossier_with_messages_as_dict:
+        return None
+
+    dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+    messages = sorted(
+        dossier.messages, key=lambda message: message.createdAt, reverse=True
+    )
+    return messages
+
+
 def get_item_value_from_ds_champ(champ):
     """get item value from a dossier champ
     Ok better to do with yesno filter…
@@ -291,12 +309,12 @@ def get_item_value_from_ds_champ(champ):
     value = champ.stringValue or ""
 
     if isinstance(champ, CheckboxChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"
     elif isinstance(champ, YesNoChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"
