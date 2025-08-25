@@ -886,7 +886,7 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     message_body = "Bonjour ! Un nouveau message"
     response = send_message_dossier_ds(petition_project, message_body)
 
-    # THEN messages has this new message
+    # THEN I receive an error
     assert response == {
         "message": None,
         "errors": [{"message": "Le jeton utilisé est configuré seulement en lecture"}],
