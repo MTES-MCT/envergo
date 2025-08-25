@@ -8,7 +8,7 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HEDGE_TYPES, Pacage
+from envergo.hedges.models import HEDGE_TYPES, PACAGE_RE, Pacage
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
     LineaireInterchamp,
@@ -113,9 +113,6 @@ def get_hedge_compensation_details(hedge, r):
         "length": hedge.length,
         "r": r,
     }
-
-
-PACAGE_RE = r"[0-9]{9}"
 
 
 class EPNormandieForm(forms.Form):
