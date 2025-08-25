@@ -572,7 +572,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                     self.event_category,
                     self.event_action,
                     self.request,
-                    **self.object.get_log_event_data(),
+                    **self.get_log_event_data(),
                     **get_matomo_tags(self.request),
                 )
             return result
@@ -581,6 +581,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             return TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
+
+    def get_log_event_data(self):
+        return self.object.get_log_event_data()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -668,13 +671,15 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
+        res = super().form_valid(form)
         log_event(
             "projet",
             "edition_notes",
             self.request,
+            reference=self.object.reference,
             **get_matomo_tags(self.request),
         )
-        return super().form_valid(form)
+        return res
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -835,6 +840,11 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         return reverse(
             "petition_project_instructor_messagerie_view", kwargs=self.kwargs
         )
+
+    def get_log_event_data(self):
+        return {
+            "reference": self.object.reference,
+        }
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
