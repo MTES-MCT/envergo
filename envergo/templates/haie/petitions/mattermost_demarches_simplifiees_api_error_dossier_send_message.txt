@@ -16,5 +16,3 @@ Requête envoyée :
 ```
 {{ variables|safe }}
 ```
-
-*Cette requête est lancée automatiquement par la commande `dossier_submission_admin_alert`.*
