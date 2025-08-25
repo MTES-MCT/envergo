@@ -88,10 +88,14 @@
                 {% endif %}
                 {% if criterion|requires_hedge_density %}
                   <br />
+
                   <h6>Densité de haie</h6>
 
                   <ul>
-                    <li>Rapport de densité 200 m / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
+                    <li>Numéro de PACAGE : {{ numero_pacage|default:"ND" }}</li>
+                    <li>Densité de l'exploitation : {{ density_exploitation|default:"ND" }}</li>
+                    <li>Densité 5 km : {{ density_5000|floatformat:"2" }}</li>
+                    <li>Rapport de densité exploitation / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
                     <li>Identifiant zone : {{ density_zone }}</li>
                   </ul>
 
