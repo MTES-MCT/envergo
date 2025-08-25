@@ -249,6 +249,9 @@ def get_messages_and_senders_from_ds(
     dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
     if not dossier_with_messages_as_dict:
+        logger.error(
+            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+        )
         return None, None, None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)

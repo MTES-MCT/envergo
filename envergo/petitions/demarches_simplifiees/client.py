@@ -232,6 +232,9 @@ class DemarchesSimplifieesClient:
         if not instructeur_id:
             logger.warning("Missing instructeur id.")
             return None
+        if not dossier_id:
+            logger.warning("Missing instructeur id.")
+            return None
 
         variables = {
             "input": {
