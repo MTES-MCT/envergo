@@ -816,7 +816,7 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
     client.force_login(haie_user)
     response = client.get(alternative_url)
 
-    # THEN we should be redirected to the login page
+    # THEN we should be redirected to a 403 error page
     assert response.status_code == 403
 
     # WHEN the user is a department instructor
