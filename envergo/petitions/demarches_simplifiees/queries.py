@@ -240,6 +240,18 @@ fragment EngagementJuridiqueFragment on EngagementJuridique {
 }
 """
 
+MESSAGE_FRAGMENT = """
+fragment MessageFragment on Message {
+  id,
+  createdAt,
+  email,
+  body,
+  attachments {
+  ...FileFragment
+  }
+}
+"""
+
 DOSSIER_FRAGMENT = (
     (
         CHAMP_FRAGMENT
@@ -361,6 +373,29 @@ query getDossiersForDemarche(
                 }
             }
     }
+}
+"""
+)
+
+GET_DOSSIER_MESSAGES_QUERY = (
+    FILE_FRAGMENT
+    + MESSAGE_FRAGMENT
+    + """
+query getDossier($dossierNumber: Int!)
+{
+  dossier(number: $dossierNumber) {
+    __typename
+    id
+    number
+    archived
+    prefilled
+    state
+    dateDerniereModification
+    dateDepot
+    messages {
+      ...MessageFragment
+    }
+  }
 }
 """
 )

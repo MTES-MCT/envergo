@@ -6,7 +6,9 @@
 
 {% load static %}
 
-{% block title %}Instruction du dossier – {{ current_regulation }}{% endblock %}
+{% block title %}Instruction du dossier – {{ current_regulation.title }}{% endblock %}
+
+{% block project_view_title %}<h2>{{ current_regulation.title }}</h2>{% endblock %}
 
 {% block project_content %}
 
@@ -14,7 +16,6 @@
     {% for regulation in moulinette.regulations %}
       {% if regulation.slug == current_regulation.slug %}
         <section class="fr-my-3w" id="moulinette-regulation-result">
-          <h2>{{ regulation.title }}</h2>
 
           {% if regulation.has_key_elements_template %}
             <section id="section-plantation-evaluation">

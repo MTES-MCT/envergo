@@ -181,7 +181,7 @@ def test_bcae8_small_interdit_amelioration_culture():
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code
-        == "interdit_amelioration_culture"
+        == "interdit_transfert_parcelles"
     ), data
 
 

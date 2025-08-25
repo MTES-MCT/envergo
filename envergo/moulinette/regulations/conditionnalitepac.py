@@ -193,6 +193,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
         catalog["authorized_organizations_list_url"] = (
             settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST
         )
+        is_lte_2percent_pac = False
         haies = self.catalog.get("haies")
         if haies:
             catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
@@ -200,20 +201,22 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                 haies.lineaire_type_4_sur_parcelle_pac()
             )
 
+            lineaire_detruit_pac = haies.lineaire_detruit_pac()
+            if "lineaire_total" in catalog:
+                lineaire_total = catalog["lineaire_total"]
+                ratio_detruit = lineaire_detruit_pac / lineaire_total
+                is_lte_2percent_pac = ratio_detruit <= 0.02 or lineaire_detruit_pac <= 5
+
+        catalog["is_lte_2percent_pac"] = is_lte_2percent_pac
         return catalog
 
     def get_result_data(self):
-        is_small = False
+
         haies = self.catalog["haies"]
         lineaire_detruit_pac = haies.lineaire_detruit_pac()
         lte_10m_sections_only = all(
             section.length <= 10 for section in haies.hedges_to_remove_pac()
         )
-        ratio_detruit = 0
-        if "lineaire_total" in self.catalog:
-            lineaire_total = self.catalog["lineaire_total"]
-            ratio_detruit = lineaire_detruit_pac / lineaire_total
-            is_small = ratio_detruit <= 0.02 or lineaire_detruit_pac <= 5
 
         return (
             # Main vars
@@ -227,7 +230,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
             self.catalog.get("motif_pac"),
             # Computed vars
             lineaire_detruit_pac,
-            is_small,
+            self.catalog["is_lte_2percent_pac"],
             lte_10m_sections_only,
         )
 
@@ -252,7 +255,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
             meilleur_emplacement,
             motif_pac,
             lineaire_detruit_pac,
-            is_small,
+            is_lte_2percent_pac,
             lte_10m_sections_only,
         ) = result_data
 
@@ -261,7 +264,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
         if localisation_pac == "non" or lineaire_detruit_pac == 0:
             result_code = "non_soumis"
         else:
-            if is_small:
+            if is_lte_2percent_pac:
                 if reimplantation == "remplacement":
                     if motif == "chemin_acces":
                         # X
@@ -272,10 +275,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                     result_code = "dispense_petit"
                 elif reimplantation == "non":
                     if motif == "amelioration_culture":
-                        if transfert_parcelles == "oui":
-                            result_code = "interdit_transfert_parcelles"
-                        else:
-                            result_code = "interdit_amelioration_culture"
+                        result_code = "interdit_transfert_parcelles"
                     elif motif == "chemin_acces":
                         if lte_10m_sections_only:
                             result_code = "soumis_chemin_acces"
@@ -302,7 +302,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                         else:
                             result_code = "interdit_autre"
 
-            elif not is_small:
+            elif not is_lte_2percent_pac:
                 if reimplantation == "remplacement":
                     if motif == "chemin_acces":
                         # X
@@ -346,10 +346,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                             result_code = "interdit_autre"
                 elif reimplantation == "non":
                     if motif == "amelioration_culture":
-                        if transfert_parcelles == "oui":
-                            result_code = "interdit_transfert_parcelles"
-                        else:
-                            result_code = "interdit_amelioration_culture"
+                        result_code = "interdit_transfert_parcelles"
                     elif motif == "chemin_acces":
                         if lte_10m_sections_only:
                             result_code = "soumis_chemin_acces"
