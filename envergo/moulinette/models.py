@@ -2031,7 +2031,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(confighaie__is_activated=True, department=department_code)
+                .filter(department=department_code)
                 .select_related("confighaie")
                 .first()
             )
@@ -2045,6 +2045,8 @@ class MoulinetteHaie(Moulinette):
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
+
+        context["is_alternative"] = bool(request.GET.get("alternative", False))
 
         return context
 

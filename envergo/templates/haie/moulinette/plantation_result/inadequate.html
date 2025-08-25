@@ -13,13 +13,15 @@
             data-fr-opened="false"
             aria-controls="hedge-input-modal">Modifier les haies à planter</button>
   </p>
-  <p>
-    Vous pouvez tout de même choisir de
-    <span role="button"
-          tabindex="0"
-          class="inline-button"
-          aria-controls="demarches-simplifiees-modal"
-          data-fr-opened="false">déposer votre demande d’autorisation.</span>
-    Elle sera examinée, mais il est probable qu’un refus soit prononcé.
-  </p>
+  {% if not is_alternative %}
+    <p>
+      Vous pouvez tout de même choisir de
+      <span role="button"
+            tabindex="0"
+            class="inline-button"
+            aria-controls="demarches-simplifiees-modal"
+            data-fr-opened="false">déposer votre demande d’autorisation.</span>
+      Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+    </p>
+  {% endif %}
 {% endif %}
