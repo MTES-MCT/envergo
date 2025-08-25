@@ -1,9 +1,9 @@
 (function (exports) {
       'use strict';
 
-      const InvitationTokenModal = function (modalElt, buttonElt) {
+      const InvitationTokenModal = function (modalElt, buttonElts) {
         this.modalElt = modalElt;
-        this.buttonElt = buttonElt;
+        this.buttonElts = buttonElts;
 
         this.modalError = modalElt.querySelector("#invitation-token-modal-error");
         this.modalLoader = modalElt.querySelector("#invitation-token-modal-loading");
@@ -18,7 +18,9 @@
         this.modalLoader.style.display = "none"
         this.modalContent.style.display = "none"
 
-        this.buttonElt.addEventListener('click', this.createToken.bind(this));
+        for(const buttonElt of this.buttonElts) {
+          buttonElt.addEventListener('click', this.createToken.bind(this));
+        }
 
         const copyButton = this.modalElt.querySelector("#copy-invitation-token-btn");
         // The `navigator.clipboard` API is only available on `https` urls
@@ -92,8 +94,8 @@
     (function () {
       window.addEventListener('load', function () {
         const modal = document.getElementById('invitation-token-modal');
-        const button = document.getElementById('invitation-token-modal-button');
-        const invitationTokenModal = new InvitationTokenModal(modal, button);
+        const buttons = document.getElementsByClassName('invitation-token-modal-button');
+        const invitationTokenModal = new InvitationTokenModal(modal, buttons);
         invitationTokenModal.init();
       });
     })();
