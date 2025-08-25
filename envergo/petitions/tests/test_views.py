@@ -805,7 +805,7 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
         kwargs={"reference": project.reference},
     )
 
-    # WHEN We try to fetch the alternative page by no user is loged in
+    # WHEN We try to fetch the alternative page by no user is logged in
     response = client.get(alternative_url)
 
     # THEN we should be redirected to the login page
