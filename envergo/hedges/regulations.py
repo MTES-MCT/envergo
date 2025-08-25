@@ -586,6 +586,26 @@ class LineaireSurTalusCondition(PlantationCondition):
         return self
 
 
+class EssencesBocageresCondition(PlantationCondition):
+    label = "Essences bocagères"
+    order = 5
+    valid_text = "Toutes les haies à planter sont composées d'essences bocagères."
+    invalid_text = """
+        Au moins une haie à planter est composée d’essences non bocagères.
+        Elles ne sont pas acceptées en guise de compensation.
+    """
+
+    def evaluate(self):
+
+        def non_bocageres_filter(h):
+            return h.prop("essences_non_bocageres")
+
+        non_bocageres = filter(non_bocageres_filter, self.hedge_data.hedges_to_plant())
+        self.result = len(list(non_bocageres)) == 0
+        self.context = {}
+        return self
+
+
 class PlantationConditionMixin:
     """A mixin for a criterion evaluator with hedge replantation conditions.
 
