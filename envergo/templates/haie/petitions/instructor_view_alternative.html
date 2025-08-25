@@ -30,7 +30,9 @@
       <p>
         <a id="alternative-simulation-link"
            class="fr-btn"
-           href="{{ alternative_form_url }}">Faire une simulation
+           href="{{ alternative_form_url }}"
+           target="_blank"
+           rel="noopener external">Faire une simulation
         alternative</a>
       </p>
     </section>
@@ -63,7 +65,7 @@
           // We still want to navigate even on failure
         }).finally(() => {
           // Proceed with navigation manually
-          window.location.href = href;
+          window.open(href, '_blank');
         });
       });
     });
