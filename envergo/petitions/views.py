@@ -29,6 +29,7 @@ from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
+    PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
 )
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
@@ -39,6 +40,7 @@ from envergo.petitions.services import (
     extract_data_from_fields,
     get_instructor_view_context,
     get_messages_from_ds,
+    send_message_dossier_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -749,14 +751,13 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(
-    PetitionProjectInstructorMixin, DetailView
-):
-    """View for petition project instructor page"""
+class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateView):
+    """View for petition project instructor page with demarche simplifiées messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
     event_action = "lecture"
+    form_class = PetitionProjectInstructorMessageForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -771,6 +772,42 @@ class PetitionProjectInstructorMessagerieView(
             )
 
         return context
+
+    def form_valid(self, form):
+        """Send message"""
+        message_body = form.cleaned_data["message_body"]
+        ds_response = send_message_dossier_ds(self.object, message_body)
+
+        if ds_response is None or (
+            "errors" in ds_response and ds_response["errors"] is not None
+        ):
+            messages.warning(
+                self.request,
+                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        elif "message" in ds_response and ds_response["message"] is not None:
+            messages.success(
+                self.request,
+                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+            )
+
+            # Log matomo event
+            log_event(
+                self.event_category,
+                "envoi",
+                self.request,
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
