@@ -10,7 +10,12 @@ from envergo.hedges.models import Pacage
 
 
 class Command(BaseCommand):
-    help = "Update PACAGE data from a csv file."
+    help = """Update PACAGE data from a csv file.
+
+    The file must be a two column csv.
+     - column 1: the pacage number
+     - column 2: the exploitation density (floating point number)
+    """
 
     def add_arguments(self, parser):
         parser.add_argument("pacage_csv_file", type=pathlib.Path, nargs=1)
