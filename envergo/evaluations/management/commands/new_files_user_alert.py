@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 from envergo.evaluations.models import RequestFile
+from envergo.evaluations.tasks import post_evalreq_to_automation
 from envergo.utils.tools import get_base_url
 
 
@@ -62,3 +63,6 @@ class Command(BaseCommand):
             )
             email.attach_alternative(html_body, "text/html")
             email.send()
+
+            # Trigger webhook to Make.com
+            post_evalreq_to_automation.delay(request.id, base_url)
