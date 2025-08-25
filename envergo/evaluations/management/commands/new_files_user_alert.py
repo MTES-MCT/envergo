@@ -14,7 +14,7 @@ from envergo.utils.tools import get_base_url
 
 
 class Command(BaseCommand):
-    help = "Post a message when a an evalreq has a new file."
+    help = "Post a message when an evalreq has a new file."
 
     def handle(self, *args, **options):
 
