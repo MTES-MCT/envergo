@@ -165,8 +165,15 @@ def post_evaluation_to_automation(evaluation_uid):
     """Send the edited evaluation data to a webhook."""
     webhook_url = settings.MAKE_COM_EVALUATION_EDITION_WEBHOOK
     evaluation = Evaluation.objects.get(uid=evaluation_uid)
+
+    # Extract the additional file urls
+    # In local environment, this will return file paths
+    # But in production, the S3 storage will return full urls
+    files = evaluation.request.additional_files.all()
+    extra_data = {"files": [f.file.storage.url(f.file.name) for f in files]}
+
     logger.info(f"Sending Evaluation to make.com {evaluation.reference}")
-    post_a_model_to_automation(evaluation, webhook_url)
+    post_a_model_to_automation(evaluation, webhook_url, **extra_data)
 
 
 def post_a_model_to_automation(model, webhook_url, **extra_data):
