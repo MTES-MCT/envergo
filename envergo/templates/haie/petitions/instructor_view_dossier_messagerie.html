@@ -1,6 +1,6 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load utils static %}
+{% load utils %}
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
@@ -71,8 +71,4 @@
     </section>
   {% endif %}
 
-{% endblock %}
-
-{% block extra_js %}
-  <script defer src="{% static 'js/libs/project_messagerie_analytics.js' %}"></script>
 {% endblock %}
