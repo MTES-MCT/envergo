@@ -25,7 +25,7 @@
            href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier
         complet</a>
       </div>
-      
+
       {% include "haie/petitions/_item.html" with label="Motif du projet de destruction" value=motif %}
 
       <h6 class="fr-mt-3w fr-mb-2w">Destruction</h6>
@@ -71,16 +71,18 @@
                 aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
       </div>
     </section>
-    
+
     <section id="section-moulinette-result" class="fr-my-4w">
       <div class="title-with-link-container">
         <h2 class="fr-mr-8w">Réponse du simulateur</h2>
         <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project' petition_project.reference %}">Voir la réponse complète</a>
       </div>
-      <p class="fr-mb-4w"><em>Avant de déposer son dossier et de remplir le formulaire complet,
-              le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
-              Voici la réponse du simulateur sur les réglementations concernant le projet&nbsp;:</em></p>
+      <p class="fr-mb-4w">
+        <em>Avant de déposer son dossier et de remplir le formulaire complet,
+          le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
+        Voici la réponse du simulateur sur les réglementations concernant le projet&nbsp;:</em>
+      </p>
       <div class="fr-container--fluid fr-ml-5w">
         {% for regulation in moulinette.regulations|dictsort:"display_order" %}
           <div class="fr-mb-3w">
@@ -97,14 +99,14 @@
       </div>
     </section>
     <p class="fr-mb-3w">
-        <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
-          Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
-      </p>
+      <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
+      Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
+    </p>
     <section id="section-plantation-evaluation" class="fr-my-4w fr-ml-5w">
       <h4 class="fr-mt-4w">Acceptabilité de la plantation</h4>
       <p class="fr-mb-3w">
         <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
-          Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
+        Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
       </p>
       {% if plantation_evaluation.result == "adequate" %}
         <div class="fr-alert fr-alert--success fr-mb-3w">
