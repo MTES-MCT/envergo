@@ -831,7 +831,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
             # Log matomo event
             log_event(
-                self.matomo_category,
+                self.event_category,
                 "envoi",
                 self.request,
                 **self.object.get_log_event_data(),
@@ -840,15 +840,15 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
 
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse(
-            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
-        )
-
     def get_log_event_data(self):
         return {
             "reference": self.object.reference,
         }
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
