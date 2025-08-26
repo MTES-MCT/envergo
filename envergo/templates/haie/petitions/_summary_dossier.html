@@ -13,7 +13,7 @@
     {% if project_details.city %}
       <li>
         <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-      {{ project_details.city }}
+        {{ project_details.city }}
       </li>
     {% endif %}
     {% if project_details.applicant or project_details.organization %}
@@ -24,6 +24,8 @@
         {% if project_details.organization %}{{ project_details.organization }}{% endif %}
       </li>
     {% endif %}
-    <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}  |  Département de la simulation : {{ moulinette.department }}</li>
+    <li class="fr-hint-text">
+      Référence interne : {{ petition_project.reference }}  |  Département de la simulation : {{ moulinette.department }}
+    </li>
   </ul>
 </div>
