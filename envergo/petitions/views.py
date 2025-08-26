@@ -22,7 +22,11 @@ from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
 
-from envergo.analytics.utils import get_matomo_tags, log_event
+from envergo.analytics.utils import (
+    get_matomo_tags,
+    log_event,
+    update_url_with_matomo_params,
+)
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
@@ -533,8 +537,8 @@ class PetitionProjectDetail(DetailView):
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
         )
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            matomo_custom_path
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
         )
 
         return context
@@ -633,8 +637,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
         )
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            matomo_custom_path
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
             moulinette.config.demarche_simplifiee_number
