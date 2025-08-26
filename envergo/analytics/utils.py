@@ -87,6 +87,12 @@ def set_visitor_id_cookie(response, value):
 
 def extract_matomo_url_from_request(request):
     """Extract bare urls with matomo params from request."""
+    bare_url = request.build_absolute_uri(request.path)
+    return update_url_with_matomo_params(bare_url, request)
+
+
+def update_url_with_matomo_params(url, request):
+    """Add matomo params from request querystring to a given url."""
 
     current_url = request.build_absolute_uri()
     params = extract_mtm_params(current_url)
@@ -96,9 +102,8 @@ def extract_matomo_url_from_request(request):
     is_alternative = bool(request.GET.get("alternative", False))
     if is_alternative:
         params["alternative"] = "true"
-    bare_url = request.build_absolute_uri(request.path)
 
-    return update_qs(bare_url, params)
+    return update_qs(url, params)
 
 
 def get_matomo_tags(request):
