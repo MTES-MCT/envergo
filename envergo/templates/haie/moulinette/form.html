@@ -113,7 +113,7 @@
     let hedgeId = hedgeIdField.value;
     let iframeUrl = baseUrl;
     if (hedgeId) {
-      iframeUrl += hedgeId + "/";
+      iframeUrl += hedgeId + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
     }
     let redirectUrl = null;
 
@@ -142,7 +142,7 @@
       }
 
       hedgeIdField.value = data.input_id;
-      let iframeUrl = baseUrl + data.input_id + "/";
+      let iframeUrl = baseUrl + data.input_id + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
       this.iframeUrl = iframeUrl;
     };
 

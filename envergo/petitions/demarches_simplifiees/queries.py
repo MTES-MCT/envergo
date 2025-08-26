@@ -252,89 +252,79 @@ fragment MessageFragment on Message {
 }
 """
 
-DOSSIER_FRAGMENTS = (
-    CHAMP_FRAGMENT
-    + PERSONNE_MORALE_FRAGMENT
-    + PERSONNE_MORALE_INCOMPLETE_FRAGMENT
-    + PERSONNE_PHYSIQUE_FRAGMENT
-    + FILE_FRAGMENT
-    + ADDRESS_FRAGMENT
-    + PAYS_FRAGMENT
-    + REGION_FRAGMENT
-    + DEPARTEMENT_FRAGMENT
-    + EPCI_FRAGMENT
-    + COMMUNE_FRAGMENT
-    + RNF_FRAGMENT
-    + ENGAGEMENT_JURIDIQUE_FRAGMENT
-)
-
-GET_DOSSIER_QUERY = (
-    DOSSIER_FRAGMENTS
-    + """
-query getDossier(
-    $dossierNumber: Int!,
-    $includeChamps: Boolean = true,
-    $includeTraitements: Boolean = false,
+DOSSIER_FRAGMENT = (
+    (
+        CHAMP_FRAGMENT
+        + PERSONNE_MORALE_FRAGMENT
+        + PERSONNE_MORALE_INCOMPLETE_FRAGMENT
+        + PERSONNE_PHYSIQUE_FRAGMENT
+        + FILE_FRAGMENT
+        + ADDRESS_FRAGMENT
+        + PAYS_FRAGMENT
+        + REGION_FRAGMENT
+        + DEPARTEMENT_FRAGMENT
+        + EPCI_FRAGMENT
+        + COMMUNE_FRAGMENT
+        + RNF_FRAGMENT
+        + ENGAGEMENT_JURIDIQUE_FRAGMENT
     )
-{
-  dossier(number: $dossierNumber) {
+    + """
+fragment DossierFragment on Dossier {
+  __typename
+  id
+  number
+  archived
+  prefilled
+  state
+  dateDerniereModification
+  dateDepot
+  motivation
+  motivationAttachment {
+    ...FileFragment
+  }
+  attestation {
+    ...FileFragment
+  }
+  pdf {
+    ...FileFragment
+  }
+  usager {
+    email
+  }
+  prenomMandataire
+  nomMandataire
+  deposeParUnTiers
+  demandeur {
     __typename
-    id
-    number
-    archived
-    prefilled
+    ...PersonnePhysiqueFragment
+    ...PersonneMoraleFragment
+    ...PersonneMoraleIncompleteFragment
+  }
+  traitements @include(if: $includeTraitements) {
     state
-    dateDerniereModification
-    dateDepot
+    emailAgentTraitant
+    dateTraitement
     motivation
-    motivationAttachment {
-      ...FileFragment
+    revision {
+      id
+      datePublication
     }
-    attestation {
-      ...FileFragment
-    }
-    pdf {
-      ...FileFragment
-    }
-    usager {
-      email
-    }
-    prenomMandataire
-    nomMandataire
-    deposeParUnTiers
-    demandeur {
-      __typename
-      ...PersonnePhysiqueFragment
-      ...PersonneMoraleFragment
-      ...PersonneMoraleIncompleteFragment
-    }
-    traitements @include(if: $includeTraitements) {
-      state
-      emailAgentTraitant
-      dateTraitement
-      motivation
-      revision {
+  }
+  champs @include(if: $includeChamps) {
+    ...ChampFragment
+  }
+  demarche {
+    title
+    number
+    revision {
+      champDescriptors {
         id
-        datePublication
-      }
-    }
-    champs @include(if: $includeChamps) {
-      ...ChampFragment
-    }
-    demarche {
-      title
-      number
-      revision {
-        champDescriptors
-        {
-          id
-          __typename
-          ... on HeaderSectionChampDescriptor {
-            label
-          }
-          ... on ExplicationChampDescriptor {
-            label
-          }
+        __typename
+        ... on HeaderSectionChampDescriptor {
+          label
+        }
+        ... on ExplicationChampDescriptor {
+          label
         }
       }
     }
@@ -343,8 +333,19 @@ query getDossier(
 """
 )
 
+GET_DOSSIER_QUERY = (
+    DOSSIER_FRAGMENT
+    + """
+query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+  dossier(number: $dossierNumber) {
+   ...DossierFragment
+  }
+}
+"""
+)
+
 GET_DOSSIERS_FOR_DEMARCHE_QUERY = (
-    DOSSIER_FRAGMENTS
+    DOSSIER_FRAGMENT
     + """
 query getDossiersForDemarche(
    $demarcheNumber: Int!,
@@ -368,49 +369,7 @@ query getDossiersForDemarche(
                     endCursor
                 }
                 nodes {
-                    __typename
-                    id
-                    number
-                    archived
-                    prefilled
-                    state
-                    dateDerniereModification
-                    dateDepot
-                    motivation
-                    motivationAttachment {
-                      ...FileFragment
-                    }
-                    attestation {
-                      ...FileFragment
-                    }
-                    pdf {
-                      ...FileFragment
-                    }
-                    usager {
-                      email
-                    }
-                    prenomMandataire
-                    nomMandataire
-                    deposeParUnTiers
-                    demandeur {
-                      __typename
-                      ...PersonnePhysiqueFragment
-                      ...PersonneMoraleFragment
-                      ...PersonneMoraleIncompleteFragment
-                    }
-                    traitements @include(if: $includeTraitements) {
-                      state
-                      emailAgentTraitant
-                      dateTraitement
-                      motivation
-                      revision {
-                        id
-                        datePublication
-                      }
-                    }
-                    champs @include(if: $includeChamps) {
-                      ...ChampFragment
-                    }
+                ...DossierFragment
                 }
             }
     }

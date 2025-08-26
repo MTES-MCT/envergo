@@ -4,11 +4,23 @@
 <h5 class="fr-mt-3w">Calcul de la compensation attendue</h5>
 
 <ul class="instructor-view-list">
-  {% include 'haie/petitions/_item.html' with label="Coefficient compensation primaire" value=replantation_coefficient|floatformat:"1g" comment="C’est-à-dire hors réduction permise par le projet de plantation" %}
+  {% include 'haie/petitions/_item.html' with label="Coefficient compensation primaire" value=replantation_coefficient|floatformat:"2g" comment="C’est-à-dire hors réduction permise par le projet de plantation" %}
   {% include 'haie/petitions/_item.html' with label="Identifiant zone" value=moulinette.catalog.density_zone %}
-  {% include 'haie/petitions/_item.html' with label="Densité haies – rayon 200 m" value=moulinette.catalog.density_200|floatformat:"0g" unit="ml/ha" %}
+
+  {% if moulinette.catalog.numero_pacage %}
+    {% include 'haie/petitions/_item.html' with label="Numéro de PACAGE saisi dans la simulation" value=moulinette.catalog.numero_pacage %}
+
+    {% if moulinette.catalog.density_exploitation is not None %}
+      {% include 'haie/petitions/_item.html' with label="Densité haies – exploitation" value=moulinette.catalog.density_exploitation|floatformat:"0g" unit="ml/ha" %}
+    {% else %}
+      {% include 'haie/petitions/_item.html' with label="Densité haies – exploitation" value="ND (pas de donnée associée au PACAGE fourni)" %}
+    {% endif %}
+  {% else %}
+    {% include 'haie/petitions/_item.html' with label="Numéro de PACAGE saisi dans la simulation" value="Non demandé (haies hors parcelles PAC)" %}
+  {% endif %}
+
   {% include 'haie/petitions/_item.html' with label="Densité haies – rayon 5 km" value=moulinette.catalog.density_5000|floatformat:"0g" unit="ml/ha" %}
-  {% include 'haie/petitions/_item.html' with label="Rapport de densité 200 m / 5 km" value=moulinette.catalog.density_ratio|floatformat:"2g" %}
+  {% include 'haie/petitions/_item.html' with label="Rapport de densité exploitation / 5 km" value=moulinette.catalog.density_ratio|floatformat:"2g" %}
   <li>
     {% include 'haie/petitions/_hedges_compensation_details.html' with hedges_compensation_details=moulinette.catalog.hedges_compensation_details %}
   </li>

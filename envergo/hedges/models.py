@@ -4,6 +4,7 @@ from functools import reduce
 
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
@@ -456,3 +457,21 @@ class SpeciesMapFile(models.Model):
 
     def __str__(self):
         return self.file.name
+
+
+PACAGE_RE = r"[0-9]{9}"
+
+
+class Pacage(models.Model):
+    """Holds data related to pacage numbers."""
+
+    pacage_num = models.CharField(
+        "Numéro de PACAGE", validators=[RegexValidator(PACAGE_RE)], primary_key=True
+    )
+    exploitation_density = models.DecimalField(
+        "Densité de l'exploitation", max_digits=5, decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Infos Pacage"
+        verbose_name_plural = "Infos Pacage"

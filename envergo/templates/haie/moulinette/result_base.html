@@ -26,6 +26,20 @@
   </ul>
 {% endblock %}
 
+{% block project-result-top-bar %}
+  {% if is_alternative %}
+    <div class="fr-notice fr-notice--info">
+      <div class="fr-container">
+        <div class="fr-notice__body">
+          <p>
+            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+            <span><b>Simulation alternative</b> à la simulation initiale</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
 {% block result %}
   {% if config and not config.is_activated %}
     <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
@@ -34,7 +48,13 @@
     </div>
   {% endif %}
 
-  {% block before-title-content %}{% endblock %}
+  {% block before-title-content %}
+    {% if not is_alternative %}
+      <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
+        <li>{% include '_share_url_btn.html' %}</li>
+      </ul>
+    {% endif %}
+  {% endblock %}
   {% block result_title %}<h1>Simulation réglementaire</h1>{% endblock %}
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
@@ -91,4 +111,16 @@
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}"{% if is_alternative %} + "?alternative=True" {% endif %};
+    var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
+
+    window.addEventListener("load", function() {
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = RESULT_P_URL;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+    });
+  </script>
 {% endblock %}

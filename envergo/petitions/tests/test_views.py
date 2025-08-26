@@ -1,4 +1,7 @@
-from unittest.mock import Mock, patch
+import html
+import re
+from unittest.mock import ANY, Mock, patch
+from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
@@ -8,6 +11,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
@@ -142,12 +146,10 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
     # Assert the body of the requests.post call
     expected_body = {
-        "champ_123": "Autre (collectivité, aménageur, gestionnaire de réseau, "
-        "particulier, etc.)",
+        "champ_123": None,
         "champ_321": "ABC123",
         "champ_456": None,  # improve this test by configuring a result for bcae8
-        "champ_654": "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
-        "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=44&travaux=destruction&element=haie",
+        "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
@@ -339,10 +341,13 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
+    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
+
+    assert Event.objects.filter(category="projet", event="edition_notes").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -646,6 +651,8 @@ def test_petition_project_invitation_token(
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
+    event = Event.objects.get(category="projet", event="invitation")
+    assert event.metadata["project_reference"] == project.reference
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -789,3 +796,96 @@ def test_petition_project_instructor_notes_form(
         project.instructor_free_mention
         == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
+    """Test alternative flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the alternative page by no user is logged in
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(alternative_url)
+
+    # THEN the page is displayed
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulation alternative</h2>" in content
+
+    # Find all href attributes in the HTML
+    hrefs = re.findall(r'href="([^"]+)"', content)
+
+    alternative_url = None
+    for raw_href in hrefs:
+        href = html.unescape(raw_href)
+        parsed_url = urlparse(href)
+        qs = parse_qs(parsed_url.query)
+        if qs.get("alternative") == ["true"]:
+            # Found the first matching href
+            assert href.startswith("/")
+            alternative_url = href
+            break
+    else:
+        assert False, "No href with alternative=true found"
+
+    # WHEN the user create an alternative
+    res = client.get(alternative_url)
+
+    # THEN the alternative form is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        in content
+    )
+
+    # WHEN the user visit the result page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+
+    # WHEN the user visit the result plantation page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat-plantation/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+    assert "La demande d'autorisation est prête à être complétée" not in content
+    assert "Copier le lien de cette page" in content

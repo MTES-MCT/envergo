@@ -329,7 +329,7 @@ class NormandieQualityCondition(PlantationCondition):
     }
 
     def evaluate(self):
-        LC = self.catalog["LC"]  # linéaire à compenser
+        LC = self.catalog["LC"].copy()  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
         LPm = LC.copy()
@@ -583,6 +583,26 @@ class LineaireSurTalusCondition(PlantationCondition):
             "length_to_plant_talus": round(length_to_plant),
             "talus_delta": ceil(max(0, delta)),
         }
+        return self
+
+
+class EssencesBocageresCondition(PlantationCondition):
+    label = "Essences bocagères"
+    order = 5
+    valid_text = "Toutes les haies à planter sont composées d'essences bocagères."
+    invalid_text = """
+        Au moins une haie à planter est composée d’essences non bocagères.
+        Elles ne sont pas acceptées en guise de compensation.
+    """
+
+    def evaluate(self):
+
+        def non_bocageres_filter(h):
+            return h.prop("essences_non_bocageres")
+
+        non_bocageres = filter(non_bocageres_filter, self.hedge_data.hedges_to_plant())
+        self.result = len(list(non_bocageres)) == 0
+        self.context = {}
         return self
 
 

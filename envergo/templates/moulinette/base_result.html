@@ -7,9 +7,11 @@
 {% block body-classes %}moulinette-result-body{% endblock %}
 
 {% block container %}
-
   <div id="project-result" class="fr-col">
-    <section class="fr-py-4w fr-px-2w">
+    <section id="project-result-top-bar">
+      {% block project-result-top-bar %}{% endblock %}
+    </section>
+    <section id="project-result-content" class="fr-py-4w fr-px-2w">
       {% block messages_in_result %}
         {% include '_messages.html' %}
       {% endblock %}

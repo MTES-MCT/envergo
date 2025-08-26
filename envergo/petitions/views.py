@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import tempfile
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import fiona
 import requests
@@ -554,8 +554,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    matomo_category = "projet"
-    matomo_tag = "consultation_i"
+    event_category = "projet"
+    event_action = "consultation_i"
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -564,12 +564,12 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
-            if self.matomo_tag:
+            if self.event_action:
                 log_event(
-                    self.matomo_category,
-                    self.matomo_tag,
+                    self.event_category,
+                    self.event_action,
                     self.request,
-                    **self.object.get_log_event_data(),
+                    **self.get_log_event_data(),
                     **get_matomo_tags(self.request),
                 )
             return result
@@ -579,12 +579,16 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 request, template="haie/petitions/403.html", status=403
             )
 
+    def get_log_event_data(self):
+        return self.object.get_log_event_data()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
 
         context["plantation_evaluation"] = PlantationEvaluator(
             context["moulinette"], context["moulinette"].catalog["haies"]
@@ -661,6 +665,17 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
 
         return super().post(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            reference=self.object.reference,
+            **get_matomo_tags(self.request),
+        )
+        return res
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if not context["is_department_instructor"]:
@@ -673,7 +688,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    matomo_tag = "consultation_i"
+    event_action = "consultation_i"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -690,7 +705,7 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    matomo_tag = ""
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -727,7 +742,7 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
-    matomo_tag = "consultation_i_ds"
+    event_action = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -755,8 +770,8 @@ class PetitionProjectInstructorMessagerieView(
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
-    matomo_category = "message"
-    matomo_tag = "lecture"
+    event_category = "message"
+    event_action = "lecture"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -772,15 +787,41 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
+    def get_log_event_data(self):
+        return {
+            "reference": self.object.reference,
+        }
+
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    matomo_tag = ""
+    event_action = ""
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
+
+
+class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
+    """View for creating an alternative of a petition project by the instructor"""
+
+    template_name = "haie/petitions/instructor_view_alternative.html"
+    matomo_tag = ""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        parsed_moulinette_url = urlparse(self.object.moulinette_url)
+        qs_dict = parse_qs(parsed_moulinette_url.query)
+        flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
+        flat_qs["alternative"] = "true"
+        alternative_form_url = (
+            f"{reverse("moulinette_home")}?{urlencode(flat_qs, doseq=True)}"
+        )
+
+        context["alternative_form_url"] = alternative_form_url
+        return context
 
 
 class PetitionProjectHedgeDataExport(DetailView):
@@ -861,6 +902,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                     )
                 ),
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+            )
+            log_event(
+                "projet",
+                "invitation",
+                self.request,
+                **{"project_reference": project.reference},
+                **get_matomo_tags(self.request),
             )
             return JsonResponse({"invitation_url": invitation_url})
         else:

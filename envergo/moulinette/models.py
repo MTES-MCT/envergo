@@ -101,10 +101,10 @@ RESULT_CASCADE = [
     RESULTS.soumis_autorisation,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
+    RESULTS.dispense_sous_condition,
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
-    RESULTS.dispense_sous_condition,
     RESULTS.non_soumis,
     RESULTS.dispense,
     RESULTS.non_concerne,
@@ -588,10 +588,8 @@ class Regulation(models.Model):
         return RESULTS_GROUP_MAPPING[self.result]
 
     def has_instructor_result_details_template(self) -> bool:
-        """Check if the regulation has a template for instructor result details for at least one criterion."""
-        return self.has_criterion_template(
-            "haie/petitions/{}/{}_instructor_result_details.html"
-        )
+        """Check if the regulation has a template for instructor result details."""
+        return self.has_template("haie/petitions/{}/instructor_result_details.html")
 
     def has_plantation_condition_details_template(self) -> bool:
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
@@ -600,8 +598,12 @@ class Regulation(models.Model):
         )
 
     def has_key_elements_template(self) -> bool:
-        """Check if the regulation has a template for key elements for at least one criterion."""
-        return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
+        """Check if the regulation has a template for key elements."""
+        return self.has_template("haie/petitions/{}/key_elements.html")
+
+    def has_instruction_guidelines_template(self) -> bool:
+        """Check if the regulation has a template for guidelines for instruction."""
+        return self.has_template("haie/petitions/{}/instruction_guidelines.html")
 
     def has_criterion_template(self, template_path) -> bool:
         """Check if the regulation has a template of the given path for at least one criterion."""
@@ -612,6 +614,14 @@ class Regulation(models.Model):
             except TemplateDoesNotExist:
                 pass
         return False
+
+    def has_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path."""
+        try:
+            get_template(template_path.format(self.slug))
+            return True
+        except TemplateDoesNotExist:
+            return False
 
 
 class Criterion(models.Model):
@@ -2031,7 +2041,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(confighaie__is_activated=True, department=department_code)
+                .filter(department=department_code)
                 .select_related("confighaie")
                 .first()
             )
@@ -2045,6 +2055,8 @@ class MoulinetteHaie(Moulinette):
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
+
+        context["is_alternative"] = bool(request.GET.get("alternative", False))
 
         return context
 
