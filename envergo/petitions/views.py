@@ -569,7 +569,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                     self.event_category,
                     self.event_action,
                     self.request,
-                    **self.object.get_log_event_data(),
+                    **self.get_log_event_data(),
                     **get_matomo_tags(self.request),
                 )
             return result
@@ -578,6 +578,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
             return TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
+
+    def get_log_event_data(self):
+        return self.object.get_log_event_data()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -661,6 +664,17 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
             )
 
         return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            reference=self.object.reference,
+            **get_matomo_tags(self.request),
+        )
+        return res
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -773,6 +787,11 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
+    def get_log_event_data(self):
+        return {
+            "reference": self.object.reference,
+        }
+
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
@@ -883,6 +902,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                     )
                 ),
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+            )
+            log_event(
+                "projet",
+                "invitation",
+                self.request,
+                **{"project_reference": project.reference},
+                **get_matomo_tags(self.request),
             )
             return JsonResponse({"invitation_url": invitation_url})
         else:
