@@ -236,6 +236,9 @@ class MoulinetteMixin:
                 {key: form.data[key] for key in triage_params if key in form.data}
             )
 
+        if "alternative" in self.request.GET:
+            get["alternative"] = self.request.GET["alternative"]
+
         url_params = get.urlencode()
         url = reverse("moulinette_result")
 
@@ -281,7 +284,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
-        elif self.moulinette:
+        elif self.moulinette and not context.get("is_alternative", False):
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
@@ -375,7 +378,7 @@ class MoulinetteResultMixin:
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
-
+        is_alternative = bool(self.request.GET.get("alternative", False))
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -417,19 +420,23 @@ class MoulinetteResultMixin:
 
         elif moulinette and moulinette.has_missing_data():
             if context["additional_forms_bound"]:
-                context["matomo_custom_url"] = update_url_with_matomo_params(
+                data["matomo_custom_url"] = update_url_with_matomo_params(
                     invalid_form_url, self.request
                 )
             else:
-                context["matomo_custom_url"] = update_url_with_matomo_params(
+                data["matomo_custom_url"] = update_url_with_matomo_params(
                     missing_data_url, self.request
                 )
 
-        elif context.get("triage_form", None):
-            context["matomo_custom_url"] = update_url_with_matomo_params(
+        elif not moulinette and context.get("triage_form", None):
+            data["matomo_custom_url"] = update_url_with_matomo_params(
                 out_of_scope_result_url, self.request
             )
 
+        if is_alternative:
+            data["matomo_custom_url"] = update_qs(
+                data["matomo_custom_url"], {"alternative": "true"}
+            )
         return data
 
     def get_urls_context_data(self, context):

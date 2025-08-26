@@ -6,6 +6,7 @@ import sys
 import zipfile
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
@@ -24,10 +25,24 @@ from scipy.interpolate import griddata
 
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
+if TYPE_CHECKING:
+    from envergo.hedges.models import HedgeData
+
 logger = logging.getLogger(__name__)
 
 EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
+
+FRANCE_LAT = 46.76305599999998
+FRANCE_LNG = 2.424722
+FRANCE_ZOOM = 6
+IGN_URL = "https://www.geoportail.gouv.fr/carte?c={0},{1}&z={2}&l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes"  # noqa
+GOOGLE_MAPS_URL = (
+    "https://www.google.com/maps/@?api=1&map_action=map&center={1},{0}&zoom={2}"
+)
+GEOPORTAIL_URL = (
+    "https://www.geoportail-urbanisme.gouv.fr/map/#tile=1&lon={0}&lat={1}&zoom={2}"
+)
 
 
 ATTRIBUTES = {
@@ -651,3 +666,37 @@ def compute_hedge_density_around_point(point_geos, radius):
             "area_ha": area_ha,
         },
     }
+
+
+def _get_centered_url(url, hedges: "HedgeData"):
+    lng = FRANCE_LNG
+    lat = FRANCE_LAT
+    zoom = FRANCE_ZOOM
+
+    if hedges:
+        # Generate urls centered on the project
+        centroid = hedges.get_centroid_to_remove()
+        lng = centroid.x
+        lat = centroid.y
+        zoom = 16
+
+    return url.format(lng, lat, zoom)
+
+
+def get_google_maps_centered_url(hedges: "HedgeData"):
+    """Return the GoogleMaps URL centered on the hedges to remove."""
+    return _get_centered_url(GOOGLE_MAPS_URL, hedges)
+
+
+def get_ign_centered_url(hedges: "HedgeData"):
+    """Return the IGN URL centered on the hedges to remove."""
+    return _get_centered_url(IGN_URL, hedges)
+
+
+def get_geoportail_urbanisme_centered_url(hedges: "HedgeData"):
+    """Return the Geoportail de l'urbanisme url centered on the hedges to remove."""
+    url = _get_centered_url(GEOPORTAIL_URL, hedges)
+    if hedges:
+        url += "&lowscale=0:0.7&municipality=0:0.7&document=0:0.7&zone_secteur,zone_secteur_psmv=0:0.7&du,psmv=1:0.7&info,info_psmv01020304050607080910111213141516171819202122232425262728293031323334353637383940414270979899=0:0.7&info,info_psmv98=0:0.7&info,info_psmv010203040506070809101112131415161718192021222324252627282930313233343536373839404142709799=0:0.7&prescription,prescription_psmv2217233006363743=0:0.7&prescription,prescription_psmv=1:0.7&prescription2217233006363743=0:0.7&prescription_psmv2217233006363743=0:0.7&prescription,prescription_psmv03041115162029383940414445=0:0.7&prescription03041115162029383940414445=0:0.7&prescription_psmv03041115162029383940414445=0:0.7&prescription,prescription_psmv141849=0:0.7&prescription141849=0:0.7&prescription_psmv141849=0:0.7&prescription,prescription_psmv0509102112242627284748=0:0.7&prescription0509102112242627284748=0:0.7&prescription_psmv0509102112242627284748=0:0.7&prescription,prescription_psmv0213195051=0:0.7&prescription0213195051=0:0.7&prescription_psmv0213195051=0:0.7"  # noqa
+
+    return url

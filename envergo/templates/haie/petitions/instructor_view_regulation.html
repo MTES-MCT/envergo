@@ -6,7 +6,9 @@
 
 {% load static %}
 
-{% block title %}Instruction du dossier – {{ current_regulation }}{% endblock %}
+{% block title %}Instruction du dossier – {{ current_regulation.title }}{% endblock %}
+
+{% block project_view_title %}<h2>{{ current_regulation.title }}</h2>{% endblock %}
 
 {% block project_content %}
 
@@ -14,14 +16,25 @@
     {% for regulation in moulinette.regulations %}
       {% if regulation.slug == current_regulation.slug %}
         <section class="fr-my-3w" id="moulinette-regulation-result">
-          <h2>{{ regulation.title }}</h2>
+
+          {% if regulation.has_instruction_guidelines_template %}
+            <section class="fr-callout fr-callout--blue-cumulus">
+              <h5>Indications pour l'instruction</h5>
+              {% instructor_view_part "instruction_guidelines" regulation petition_project moulinette %}
+              <p class="fr-mb-1w">Pour partager le dossier et demander un avis :</p>
+              <button class="fr-btn fr-mt-0 fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
+                      data-event-category="projet"
+                      data-event-action="invitation"
+                      data-event-name="{{ petition_project.reference }}"
+                      data-fr-opened="false"
+                      aria-controls="invitation-token-modal">Inviter une personne à consulter le dossier</button>
+            </section>
+          {% endif %}
 
           {% if regulation.has_key_elements_template %}
             <section id="section-plantation-evaluation">
               <h3>Éléments clés</h3>
-              {% for criterion in regulation.criteria.all %}
-                {% criterion_instructor_view_part "key_elements" regulation criterion petition_project moulinette %}
-              {% endfor %}
+              {% instructor_view_part "key_elements" regulation petition_project moulinette %}
             </section>
           {% endif %}
           <section class="fr-mb-3w">
@@ -38,11 +51,7 @@
             {% if regulation.has_instructor_result_details_template %}
 
               <h4>Détails du résultat de la simulation</h4>
-              {% for criterion in regulation.criteria.all %}
-                <section id="{{ regulation.slug }}-{{ criterion.slug }}" class="fr-mb-5w">
-                  {% criterion_instructor_view_part "instructor_result_details" regulation criterion petition_project moulinette %}
-                </section>
-              {% endfor %}
+              {% instructor_view_part "instructor_result_details" regulation petition_project moulinette %}
             {% endif %}
           </section>
 
@@ -59,7 +68,7 @@
             <section class="fr-mb-5w">
               <h4>Détails du calcul d'acceptabilité de la plantation</h4>
               {% for criterion in regulation.criteria.all %}
-                {% criterion_instructor_view_part "plantation_condition_details" regulation criterion petition_project moulinette %}
+                {% instructor_view_part "plantation_condition_details" regulation petition_project moulinette criterion %}
               {% endfor %}
             </section>
           {% endif %}

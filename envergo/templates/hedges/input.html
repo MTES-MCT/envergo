@@ -17,7 +17,16 @@
        data-conditions-url="{{ hedge_conditions_url }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
-
+    {% if is_alternative %}
+      <div class="fr-notice fr-notice--info">
+        <div class="fr-notice__body fr-ml-2w">
+          <p>
+            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+            <span><b>Simulation alternative</b> à la simulation initiale</span>
+          </p>
+        </div>
+      </div>
+    {% endif %}
     <div id="saisie-ui">
       <div id="map">
 
@@ -217,8 +226,8 @@
 
       </div>
 
-      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}
-      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" dialog_mode="plantation" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" dialog_mode="removal" %}
 
       <dialog id="cancel-modal" class="fr-modal" role="dialog">
         <div class="fr-container fr-container--fluid fr-container-md">

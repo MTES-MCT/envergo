@@ -8,6 +8,8 @@
 
 {% block title %}Instruction du dossier – Notes pour l'instructeur{% endblock %}
 
+{% block project_view_title %}<h2>Notes libres pour l'instruction</h2>{% endblock %}
+
 {% block project_content %}
 
   <div class="project-inner-content">
@@ -17,7 +19,6 @@
       {% csrf_token %}
 
       <section class="fr-my-3w" id="instructor_free_mention">
-        <h2>Notes libres pour l'instruction</h2>
         <div id="field-instructor_free_mention" class="fr-my-2w">
           {% include '_field_snippet.html' with field=form.instructor_free_mention %}
           {% if is_department_instructor %}

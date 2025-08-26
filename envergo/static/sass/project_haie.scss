@@ -440,6 +440,41 @@ dialog.hedge-data-dialog {
     display: flex;
     justify-content: space-between;
   }
+
+  fieldset#id_removal-type_haie,
+  fieldset#id_plantation-type_haie {
+    div.fr-grid-row {
+      align-items: center;
+    }
+
+    div.fr-fieldset__element {
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+
+      .fr-radio-rich {
+        flex-grow: 1;
+      }
+
+      .fr-radio-rich__pictogram {
+        padding: 16px;
+        width: 0;
+        min-width: 0;
+
+        img {
+          width: 24px;
+        }
+      }
+
+      img.hedge-radio-img {
+        max-width: 100%;
+      }
+    }
+  }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none !important;
+  }
 }
 
 div#group-haies-content {
@@ -592,7 +627,8 @@ div#project-specifications-instructor {
       --hover: var(--background-alt-grey-hover);
       --active: var(--background-alt-grey-active);
 
-      background-image: linear-gradient(
+      background-image:
+        linear-gradient(
           0deg,
           var(--border-contrast-grey),
           var(--border-contrast-grey)
@@ -630,34 +666,27 @@ ul.instructor-view-list {
   }
 }
 
+.messages {
+  padding-bottom: 1rem !important;
+  padding-top: 1rem !important;
+}
+
+.ds-message {
+  background-color: var(--background-alt-grey);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
+  }
+}
+
 @media (width >=48em) {
-  div#project-specifications-instructor {
-    border-left: 1px solid var(--border-default-grey);
+  .fr-sidemenu {
+    padding-right: 0;
   }
 
-  div#instructor-view-side-menu {
-    max-height: calc(
-      100vh - 9rem
-    ); // remove the header height from the sidemenu height
-  }
-
-  .fr-sidemenu--sticky {
-    top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
-    padding-right: 1.5rem;
-
-    .fr-collapse {
-      margin: 0;
-    }
-  }
-
-  // Apply border grey on main instead of sidemenu to have it full height
-  // Don't use sticky-full-height because side menu scroll up at the end of the page but too early
-  .fr-sidemenu__inner {
-    padding: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    box-shadow: none;
+  main.header-slim-displayed div#instructor-view-side-menu {
+    padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 }
 
@@ -708,4 +737,16 @@ div.title-with-link-container {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+div#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  p {
+    margin: auto;
+  }
+}
+
+#faq-dropdown-btn {
+  width: 20rem;
 }

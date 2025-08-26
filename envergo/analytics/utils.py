@@ -99,6 +99,9 @@ def update_url_with_matomo_params(url, request):
     is_edit = bool(request.GET.get("edit", False))
     if is_edit:
         params["edit"] = "true"
+    is_alternative = bool(request.GET.get("alternative", False))
+    if is_alternative:
+        params["alternative"] = "true"
 
     return update_qs(url, params)
 

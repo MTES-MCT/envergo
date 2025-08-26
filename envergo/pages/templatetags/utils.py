@@ -7,8 +7,22 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.utils.dateparse import parse_datetime
 
 register = template.Library()
+
+
+@register.filter
+def has_custom_template(field):
+    """Should we use the field's own template.
+
+    This is a hack, since we should always override the field's templates instead
+    of defining "field snippets".
+
+    This should be fixed some day.
+    """
+
+    return hasattr(field.field.widget, "custom_template")
 
 
 @register.filter
@@ -141,3 +155,9 @@ def as_hidden(field):
 def get_choice_label(choices, value):
     """Return human-readable label for a given choice value."""
     return dict(choices).get(value, value)
+
+
+@register.filter
+def to_datetime(value):
+    """Parse ISO string and return datetime.datetime or datetime.timezone"""
+    return parse_datetime(value)

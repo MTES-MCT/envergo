@@ -6,12 +6,14 @@
 
 {% block title %}Instruction du dossier{% endblock %}
 
+{% block messages %}{# Move messages block between title and content #}{% endblock %}
+
 {% block container %}
   <section>
     <div class="fr-container">
       <div class="fr-grid-row">
         <div class="fr-col fr-col-12 fr-col-md-3">
-          <nav class="fr-sidemenu fr-sidemenu--sticky"
+          <nav class="fr-sidemenu fr-sidemenu--sticky-full-height"
                aria-labelledby="fr-sidemenu-title">
             <div id="instructor-view-side-menu" class="fr-sidemenu__inner">
               <div id="fr-sidemenu-wrapper">
@@ -54,6 +56,12 @@
                          {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
                       Notes libres pour l'instruction</a>
                     </li>
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_alternative_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_alternative_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_alternative_view' %}aria-current="page"{% endif %}>
+                      Simulation alternative</a>
+                    </li>
                     <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_messagerie_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
@@ -76,8 +84,7 @@
                   </li>
                   {% if is_department_instructor %}
                     <li>
-                      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line"
-                              id="invitation-token-modal-button"
+                      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
                               data-event-category="projet"
                               data-event-action="invitation"
                               data-event-name="{{ petition_project.reference }}"
@@ -97,6 +104,8 @@
 
           {% include 'haie/petitions/_summary_dossier.html' %}
           <div class="fr-pl-10w">
+            {% block project_view_title %}{% endblock %}
+            {% include '_messages.html' %}
             {% block project_content %}{% endblock %}
           </div>
         </div>
