@@ -19,7 +19,7 @@
 
           {% if regulation.has_instruction_guidelines_template %}
             <section class="fr-callout fr-callout--blue-cumulus">
-              <h5>Indications pour l'instruction</h5>
+              <h2 class="fr-h5">Indications pour l'instruction</h2>
               {% instructor_view_part "instruction_guidelines" regulation petition_project moulinette %}
               <p class="fr-mb-1w">Pour partager le dossier et demander un avis :</p>
               <button class="fr-btn fr-mt-0 fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
@@ -33,7 +33,7 @@
 
           {% if regulation.has_key_elements_template %}
             <section id="section-plantation-evaluation">
-              <h4>Éléments clés</h4>
+              <h2 class="fr-h4">Éléments clés</h2>
               {% instructor_view_part "key_elements" regulation petition_project moulinette %}
             </section>
           {% endif %}
@@ -57,7 +57,7 @@
             {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
 
             {% if regulation.has_instructor_result_details_template %}
-              <h4>Détails du résultat de la simulation</h4>
+              <h3 class="fr-h4">Détails du résultat de la simulation</h3>
               {% instructor_view_part "instructor_result_details" regulation petition_project moulinette %}
             {% endif %}
 

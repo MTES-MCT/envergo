@@ -1,7 +1,7 @@
 {% load petitions %}
 
 <div class="alt fr-py-4w fr-px-2w fr-pl-md-10w">
-  <h3>Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h3>
+  <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
   <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
     <li>
       {% if petition_project.demarches_simplifiees_date_depot %}

@@ -28,7 +28,7 @@
 
       {% include "haie/petitions/_item.html" with label="Motif du projet de destruction" value=motif %}
 
-      <h6 class="fr-mt-3w fr-mb-2w">Destruction</h6>
+      <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
       <ul class="instructor-view-list">
         {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
         {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
@@ -42,7 +42,7 @@
         {% endfor %}
       </ul>
 
-      <h6 class="fr-mt-3w fr-mb-2w">Plantation</h6>
+      <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
       {% if project_details.hedge_to_plant_by_plantation_mode %}
         <ul class="instructor-view-list">
           {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
@@ -78,6 +78,7 @@
         <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
            href="{% url 'petition_project' petition_project.reference %}">Voir la réponse complète</a>
       </div>
+      <h3 class="fr-sr-only">Réglementations</h3>
       <p class="fr-mb-4w">
         <em>Avant de déposer son dossier et de remplir le formulaire complet,
           le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
@@ -89,7 +90,7 @@
             <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
                href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
               <div class="fr-grid-row">
-                <h5 class="fr-col-12 fr-col-sm-7 fr-col-md-12 fr-col-lg-7 fr-mb-1v">{{ regulation.title }}</h5>
+                <h4 class="fr-h5 fr-col-12 fr-col-sm-7 fr-col-md-12 fr-col-lg-7 fr-mb-1v">{{ regulation.title }}</h4>
                 <span class="fr-col-12 fr-col-sm-5 fr-col-md-12 fr-col-lg-5">{% result_tag regulation.result regulation.result_tag_style %}</span>
               </div>
               <span>Aller au détail</span>
@@ -103,7 +104,7 @@
       Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
     </p>
     <section id="section-plantation-evaluation" class="fr-my-4w fr-ml-5w">
-      <h4 class="fr-mt-4w">Acceptabilité de la plantation</h4>
+      <h3 class="fr-h4 fr-mt-4w">Acceptabilité de la plantation</h3>
       <p class="fr-mb-3w">
         <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
         Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
