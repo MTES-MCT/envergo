@@ -669,17 +669,13 @@ ul.instructor-view-list {
 /* Instructeur Messagerie */
 
 .instruction-messagerie {
-  .instructor-project__main {
-    background-color: var(--background-alt-grey);
-  }
-
   .dj-messages {
     padding-bottom: 1rem !important;
     padding-top: 1rem !important;
   }
 
   .ds-message {
-    background-color: var(--background-default-grey);
+    background-color: var(--background-alt-grey);
     border-left: 3px solid var(--grey-425-625);
     padding: 2rem;
 
