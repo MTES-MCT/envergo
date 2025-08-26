@@ -329,7 +329,7 @@ class NormandieQualityCondition(PlantationCondition):
     }
 
     def evaluate(self):
-        LC = self.catalog["LC"]  # linéaire à compenser
+        LC = self.catalog["LC"].copy()  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
         LPm = LC.copy()
