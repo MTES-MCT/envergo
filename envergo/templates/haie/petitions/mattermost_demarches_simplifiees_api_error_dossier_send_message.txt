@@ -1,0 +1,18 @@
+### Envoi d'un message sur Démarches-simplifiées : :x: erreur
+
+L'API de Démarches Simplifiées a retourné une erreur lors de l'envoi d'un message sur le dossier {{dossier_number}} de la démarche n°{{demarche_number}}.
+
+Réponse de Démarches Simplifiées :
+```
+{{ error|safe }}
+```
+
+Requête envoyée :
+* Query:
+```
+{{ query|safe }}
+```
+* Variables:
+```
+{{ variables|safe }}
+```
