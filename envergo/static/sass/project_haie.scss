@@ -669,17 +669,13 @@ ul.instructor-view-list {
 /* Instructeur Messagerie */
 
 .instruction-messagerie {
-  .instructor-project__main {
-    background-color: var(--background-alt-grey);
-  }
-
   .dj-messages {
     padding-bottom: 1rem !important;
     padding-top: 1rem !important;
   }
 
   .ds-message {
-    background-color: var(--background-default-grey);
+    background-color: var(--background-alt-grey);
     border-left: 3px solid var(--grey-425-625);
     padding: 2rem;
 
@@ -704,6 +700,15 @@ ul.instructor-view-list {
 
   main.header-slim-displayed div#instructor-view-side-menu {
     padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+  }
+
+  .instruction-messagerie {
+    .ds-message {
+      &--instructor,
+      &--automatic {
+        margin-left: 5rem;
+      }
+    }
   }
 }
 
