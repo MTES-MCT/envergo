@@ -2,21 +2,29 @@
 
 {% load static moulinette %}
 
+{% block before-title-content %}
+  {{ block.super }}
+  {% if is_alternative %}
+    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
+      <li>
+        <button id="copy-btn"
+                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-link btn--copy-to-clipboard">
+          Copier le lien de cette page
+        </button>
+      </li>
+    </ul>
+  {% endif %}
+{% endblock %}
+
 {% block result_header %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
 
-  <div class="alt fr-p-3w fr-mb-3w">{% show_plantation_result plantation_evaluation %}</div>
+  {% show_plantation_result plantation_evaluation %}
 
   <p class="fr-hint-text fr-mb-3w">
     Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
     <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
-{% endblock %}
-
-{% block before-title-content %}
-  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
-    <li>{% include '_share_url_btn.html' %}</li>
-  </ul>
 {% endblock %}
 
 {% block liability_info %}
@@ -31,15 +39,10 @@
 {% block extra_js %}
   {{ block.super }}
   <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
-  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script>
-    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
-    var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
-
-    window.addEventListener("load", function() {
-      let iframeUrl = HEDGES_PLANTATION_URL;
-      let redirectUrl = RESULT_P_URL;
-      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
-    });
+    window.TEXT_TO_COPY = "{{current_url | safe}}";
+    window.SUCCESSFUL_COPY_MESSAGE = "Lien copié !";
+    window.COPY_DISABLED_MESSAGE = "Impossible de copier le lien";
   </script>
+  <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
 {% endblock %}

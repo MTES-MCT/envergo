@@ -739,6 +739,14 @@ div.title-with-link-container {
   }
 }
 
+div#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  p {
+    margin: auto;
+  }
+}
+
 #faq-dropdown-btn {
   width: 20rem;
 }

@@ -129,6 +129,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         context["mode"] = mode
         context["matomo_custom_url"] = self.get_matomo_custom_url(mode)
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
+        context["is_alternative"] = bool(self.request.GET.get("alternative", False))
 
         return context
 
