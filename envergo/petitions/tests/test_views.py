@@ -462,7 +462,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert "Formulaire détaillé et pièces jointes" in content
     assert "Vous déposez cette demande en tant que :" in content
 
-    assert "Données saisies pour la simulation" in content
+    assert "Informations saisies par le demandeur" in content
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
