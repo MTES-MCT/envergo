@@ -303,6 +303,16 @@ class WizardStepMixin:
         self.request.session.modified = True
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        log_event(
+            "erreur",
+            "formulaire-ar",
+            self.request,
+            data=form.data,
+            errors=form.errors,
+        )
+        return super().form_invalid(form)
+
     def get_file_storage(self):
         file_storage = storages["upload"]
         return file_storage

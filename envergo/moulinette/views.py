@@ -291,6 +291,16 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
+    def form_invalid(self, form):
+        log_event(
+            "erreur",
+            "formulaire-simu",
+            self.request,
+            data=form.data,
+            errors=form.errors,
+        )
+        return super().form_invalid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
@@ -522,6 +532,14 @@ class BaseMoulinetteResult(FormView):
                 or is_edit
             ):
                 self.log_moulinette_event(moulinette, context)
+            elif moulinette.has_missing_data() and context["additional_forms_bound"]:
+                log_event(
+                    "erreur",
+                    "formulaire-simu",
+                    self.request,
+                    data=moulinette.raw_data,
+                    errors=moulinette.form_errors(),
+                )
 
             return res
 
